@@ -1,0 +1,9 @@
+# remove backup script
+sudo rm /root/.backup_config
+
+# change local_settings to allow 'stage.qlands.com' as host
+echo "ALLOWED_HOST = ['stage.qlands.com']" >> ~/src/qlands/formshare/settings/local_settings.py
+
+# change local_settings to point the aws bucket elsewhere
+
+# prefix site_name with '[STAGE]'

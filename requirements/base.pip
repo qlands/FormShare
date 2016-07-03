@@ -1,0 +1,72 @@
+# pybamboo has deps in common but on newer versions.
+# on top so those will be overwritten
+pybamboo==0.5.8.1
+pytz==2014.7
+
+Django>=1.6,<1.7
+django-guardian==1.2.4
+django-registration-redux==1.1
+django-templated-email==0.4.9
+gdata==2.0.18
+httplib2==0.9
+mock==1.0.1
+httmock==1.2.2
+modilabs-python-utils==0.1.5
+Pillow==2.5.3
+poster==0.8.1
+psycopg2==2.5.4
+pymongo==2.7.2
+lxml==3.4.0
+django-nose==1.4.2
+pandas==0.12.0
+-e git+https://github.com/onaio/pyxform.git@onaio#egg=pyxform
+South==1.0
+django-reversion==1.8.4
+xlrd==0.9.3
+xlwt==0.7.5
+openpyxl==2.0.5
+celery==3.1.15
+django-celery==3.1.16
+librabbitmq==1.5.2
+python-digest==1.7
+django-digest==1.13
+-e git+https://github.com/onaio/python-json2xlsclient.git#egg=j2xclient
+
+requests==2.4.1
+elaphe==0.5.6
+
+# sms support
+dict2xml==1.3
+
+# api support
+djangorestframework==2.4.3
+djangorestframework-csv==1.3.3
+
+# cors
+django-cors-headers==0.13
+Markdown==2.5
+django-filter==0.7
+
+# captcha
+recaptcha-client==1.0.6
+unicodecsv==0.9.4
+dpath==1.2-70
+
+# tagging
+django-taggit==0.12.1
+
+# oath2 support
+django-oauth-toolkit==0.7.2
+
+# spss
+savReaderWriter
+
+# JSON data type support
+jsonfield<1.0
+django-db-readonly==0.3.2
+
+# memcached support
+pylibmc==1.3.0
+kombu
+billiard
+python-dateutil

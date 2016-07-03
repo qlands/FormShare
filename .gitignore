@@ -1,0 +1,57 @@
+/data
+error.log
+load_script.logs
+load_script.pid
+local_settings.py
+pyxform
+search_index
+tmp/*
+xform_manager_dataset.json
+
+# folder to hold csv files
+csvs
+
+# pip build dir
+build
+
+# media folder used by tests
+# TODO figure out a way to clean this up rather than ignore it.
+/formshare/test_media
+/formshare/media
+/formshare/static
+
+.~lock.*
+.DS_Store
+.idea
+.odk
+.project
+.pydevproject
+.sass-cache
+
+*.bak
+*.gz
+*.pyc
+*.sql
+*.sqlite3
+*~
+*orig
+celerybeat-schedule
+*.swp
+.venv
+*.ropeproject
+.noseids
+
+gunicorn_cfg.py
+run_gunicorn.sh
+/static
+celerybeat-schedule
+
+# bower
+/formshare/apps/main/static/bower_components
+custom_template
+/node_modules
+
+# ignore vagrant folder and files
+.vagrant
+Vagrantfile
+ansible

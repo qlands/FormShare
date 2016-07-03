@@ -1,0 +1,30 @@
+{% block subject %}{% blocktrans with username=username %}FormShare notification for {{username}}{% endblocktrans %}{% endblock %}
+{% block plain %}
+{% blocktrans with full_name=full_name message=message %}
+  Hi {{full_name}},
+
+  {{message}}
+
+  Thanks for using FormShare!
+  The Formhub Dev Team
+
+  P.S. If you have any issues please report them at <a href="https://github.com/qlands/FormShare/issues">https://github.com/qlands/FormShare/issues</a>
+{% endblocktrans %}
+{% endblock %}
+{% block html %}
+{% blocktrans with full_name=full_name message=message %}
+  <p>Hi {{full_name}},</p>
+
+  <p>
+      {{message}}
+  </p>
+
+  <p>
+      Thanks for using FormShare!
+  </p>
+
+  <p>
+      P.S. If you have any issues please report them at <a href="https://github.com/qlands/FormShare/issues">https://github.com/qlands/FormShare/issues</a>
+  </p>
+{% endblocktrans %}
+{% endblock %}

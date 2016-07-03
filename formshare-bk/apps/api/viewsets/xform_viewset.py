@@ -1,0 +1,934 @@
+import os
+import json
+
+from datetime import datetime
+
+from django.core.exceptions import ValidationError
+from django.contrib.auth.models import User
+from django.conf import settings
+from django.http import Http404, HttpResponseBadRequest, HttpResponseRedirect
+from django.utils.translation import ugettext as _
+from django.utils import six
+
+from rest_framework import exceptions
+from rest_framework import status
+from rest_framework.decorators import action, detail_route
+from rest_framework.response import Response
+from rest_framework.settings import api_settings
+from rest_framework.viewsets import ModelViewSet
+
+from formshare.libs import filters
+from formshare.libs.mixins.anonymous_user_public_forms_mixin import (
+    AnonymousUserPublicFormsMixin)
+from formshare.libs.mixins.labels_mixin import LabelsMixin
+from formshare.libs.mixins.last_modified_mixin import LastModifiedMixin
+from formshare.libs.renderers import renderers
+from formshare.libs.serializers.xform_serializer import XFormSerializer
+from formshare.libs.serializers.clone_xform_serializer import \
+    CloneXFormSerializer
+from formshare.libs.serializers.share_xform_serializer import (
+    ShareXFormSerializer)
+from formshare.apps.api import tools as utils
+from formshare.apps.api.permissions import XFormPermissions
+from formshare.apps.logger.models.xform import XForm
+from formshare.libs.utils.viewer_tools import enketo_url, EnketoError
+from formshare.apps.viewer.models.export import Export
+from formshare.libs.exceptions import NoRecordsFoundError, J2XException
+from formshare.libs.utils.export_tools import generate_export,\
+    should_create_new_export, generate_external_export
+from formshare.libs.utils.common_tags import SUBMISSION_TIME
+from formshare.libs.utils import log
+from formshare.libs.utils.export_tools import newset_export_for
+from formshare.libs.utils.logger_tools import response_with_mimetype_and_name
+from formshare.libs.utils.string import str2bool
+
+from formshare.libs.utils.csv_import import get_async_csv_submission_status
+from formshare.libs.utils.csv_import import submit_csv
+from formshare.libs.utils.csv_import import submit_csv_async
+from formshare.libs.utils.viewer_tools import _get_form_url
+
+
+EXPORT_EXT = {
+    'xls': Export.XLS_EXPORT,
+    'xlsx': Export.XLS_EXPORT,
+    'csv': Export.CSV_EXPORT,
+    'csvzip': Export.CSV_ZIP_EXPORT,
+    'savzip': Export.SAV_ZIP_EXPORT,
+    'uuid': Export.EXTERNAL_EXPORT,
+}
+
+# Supported external exports
+external_export_types = ['xls']
+
+
+def _get_export_type(export_type):
+    if export_type in EXPORT_EXT.keys():
+        export_type = EXPORT_EXT[export_type]
+    else:
+        raise exceptions.ParseError(
+            _(u"'%(export_type)s' format not known or not implemented!" %
+              {'export_type': export_type})
+        )
+
+    return export_type
+
+
+def _get_extension_from_export_type(export_type):
+    extension = export_type
+
+    if export_type == Export.XLS_EXPORT:
+        extension = 'xlsx'
+    elif export_type in [Export.CSV_ZIP_EXPORT, Export.SAV_ZIP_EXPORT]:
+        extension = 'zip'
+
+    return extension
+
+
+def _set_start_end_params(request, query):
+    format_date_for_mongo = lambda x, datetime: datetime.strptime(
+        x, '%y_%m_%d_%H_%M_%S').strftime('%Y-%m-%dT%H:%M:%S')
+
+    # check for start and end params
+    if 'start' in request.GET or 'end' in request.GET:
+        query = json.loads(query) \
+            if isinstance(query, six.string_types) else query
+        query[SUBMISSION_TIME] = {}
+
+        try:
+            if request.GET.get('start'):
+                query[SUBMISSION_TIME]['$gte'] = format_date_for_mongo(
+                    request.GET['start'], datetime)
+
+            if request.GET.get('end'):
+                query[SUBMISSION_TIME]['$lte'] = format_date_for_mongo(
+                    request.GET['end'], datetime)
+        except ValueError:
+            raise exceptions.ParseError(
+                _("Dates must be in the format YY_MM_DD_hh_mm_ss")
+            )
+        else:
+            query = json.dumps(query)
+
+        return query
+
+
+def _generate_new_export(request, xform, query, export_type):
+    query = _set_start_end_params(request, query)
+    extension = _get_extension_from_export_type(export_type)
+
+    try:
+        if export_type == Export.EXTERNAL_EXPORT:
+            export = generate_external_export(
+                export_type, xform.user.username,
+                xform.id_string, None, request.GET.get('token'), query,
+                request.GET.get('meta')
+            )
+        else:
+            export = generate_export(
+                export_type, extension, xform.user.username,
+                xform.id_string, None, query
+            )
+        audit = {
+            "xform": xform.id_string,
+            "export_type": export_type
+        }
+        log.audit_log(
+            log.Actions.EXPORT_CREATED, request.user, xform.user,
+            _("Created %(export_type)s export on '%(id_string)s'.") %
+            {
+                'id_string': xform.id_string,
+                'export_type': export_type.upper()
+            }, audit, request)
+    except NoRecordsFoundError:
+        raise Http404(_("No records found to export"))
+    except J2XException as e:
+        # j2x exception
+        return {'error': str(e)}
+    else:
+        return export
+
+
+def _get_user(username):
+    users = User.objects.filter(username=username)
+
+    return users.count() and users[0] or None
+
+
+def _get_owner(request):
+    owner = request.DATA.get('owner') or request.user
+
+    if isinstance(owner, six.string_types):
+        owner_obj = _get_user(owner)
+
+        if owner_obj is None:
+            raise ValidationError(
+                u"User with username %s does not exist." % owner)
+        else:
+            owner = owner_obj
+
+    return owner
+
+
+def response_for_format(data, format=None):
+    if format == 'xml':
+        formatted_data = data.xml
+    elif format == 'xls':
+        formatted_data = data.xls
+    else:
+        formatted_data = json.loads(data.json)
+    return Response(formatted_data)
+
+
+def should_regenerate_export(xform, export_type, request):
+    return should_create_new_export(xform, export_type) or\
+        'start' in request.GET or 'end' in request.GET or\
+        'query' in request.GET or 'meta' in request.GET or\
+        'token' in request.GET
+
+
+def value_for_type(form, field, value):
+    if form._meta.get_field(field).get_internal_type() == 'BooleanField':
+        return str2bool(value)
+
+    return value
+
+
+def external_export_response(export):
+    if isinstance(export, Export) \
+            and export.internal_status == Export.SUCCESSFUL:
+        return HttpResponseRedirect(export.export_url)
+    else:
+        http_status = status.HTTP_400_BAD_REQUEST
+
+    return Response(json.dumps(export), http_status,
+                    content_type="application/json")
+
+
+def log_export(request, xform, export_type):
+    # log download as well
+    audit = {
+        "xform": xform.id_string,
+        "export_type": export_type
+    }
+    log.audit_log(
+        log.Actions.EXPORT_DOWNLOADED, request.user, xform.user,
+        _("Downloaded %(export_type)s export on '%(id_string)s'.") %
+        {
+            'id_string': xform.id_string,
+            'export_type': export_type.upper()
+        }, audit, request)
+
+
+def custom_response_handler(request, xform, query, export_type,
+                            token=None, meta=None):
+    export_type = _get_export_type(export_type)
+
+    if export_type in external_export_types and \
+            (token is not None) or (meta is not None):
+        export_type = Export.EXTERNAL_EXPORT
+
+    # check if we need to re-generate,
+    # we always re-generate if a filter is specified
+    if should_regenerate_export(xform, export_type, request):
+        export = _generate_new_export(request, xform, query, export_type)
+    else:
+        export = newset_export_for(xform, export_type)
+        if not export.filename:
+            # tends to happen when using newset_export_for.
+            export = _generate_new_export(request, xform, query, export_type)
+
+    log_export(request, xform, export_type)
+
+    if export_type == Export.EXTERNAL_EXPORT:
+        return external_export_response(export)
+
+    # get extension from file_path, exporter could modify to
+    # xlsx if it exceeds limits
+    path, ext = os.path.splitext(export.filename)
+    ext = ext[1:]
+    id_string = None if request.GET.get('raw') else xform.id_string
+    response = response_with_mimetype_and_name(
+        Export.EXPORT_MIMES[ext], id_string, extension=ext,
+        file_path=export.filepath)
+
+    return response
+
+
+def _try_update_xlsform(request, xform, owner):
+    if xform.instances.count() > 0:
+        data = _(u"Cannot update the xls file in a form that has"
+                 u" submissions")
+        return Response(data, status=status.HTTP_400_BAD_REQUEST)
+
+    survey = \
+        utils.publish_xlsform(request, owner, xform.id_string)
+
+    if isinstance(survey, XForm):
+        serializer = XFormSerializer(
+            xform, context={'request': request})
+
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    return Response(survey, status=status.HTTP_400_BAD_REQUEST)
+
+
+class XFormViewSet(AnonymousUserPublicFormsMixin,
+                   LabelsMixin,
+                   LastModifiedMixin,
+                   ModelViewSet):
+
+    """
+Publish XLSForms, List, Retrieve Published Forms.
+
+Where:
+
+- `pk` - is the form unique identifier
+
+## Upload XLSForm
+
+To publish and xlsform, you need to provide either the xlsform via `xls_file` \
+parameter or a link to the xlsform via the `xls_url` parameter.
+Optionally, you can specify the target account where the xlsform should be \
+published using the `owner` parameter, which specifies the username to the
+account.
+
+- `xls_file`: the xlsform file.
+- `xls_url`: the url to an xlsform
+- `owner`: username to the target account (Optional)
+
+<pre class="prettyprint">
+<b>POST</b> /api/v1/forms</pre>
+> Example
+>
+>       curl -X POST -F xls_file=@/path/to/form.xls \
+https://formshare.qlands.com/api/v1/forms
+>
+> OR post an xlsform url
+>
+>       curl -X POST -d \
+"xls_url=https://formshare.qlands.com/ukanga/forms/tutorial/form.xls" \
+https://formshare.qlands.com/api/v1/forms
+
+> Response
+>
+>       {
+>           "url": "https://formshare.qlands.com/api/v1/forms/28058",
+>           "formid": 28058,
+>           "uuid": "853196d7d0a74bca9ecfadbf7e2f5c1f",
+>           "id_string": "Birds",
+>           "sms_id_string": "Birds",
+>           "title": "Birds",
+>           "allows_sms": false,
+>           "bamboo_dataset": "",
+>           "description": "",
+>           "downloadable": true,
+>           "encrypted": false,
+>           "owner": "formshare",
+>           "public": false,
+>           "public_data": false,
+>           "date_created": "2013-07-25T14:14:22.892Z",
+>           "date_modified": "2013-07-25T14:14:22.892Z"
+>       }
+
+## Get list of forms
+
+<pre class="prettyprint">
+<b>GET</b> /api/v1/forms</pre>
+
+> Request
+>
+>       curl -X GET https://formshare.qlands.com/api/v1/forms
+
+
+## Get list of forms filter by owner
+
+<pre class="prettyprint">
+<b>GET</b> /api/v1/forms?<code>owner</code>=<code>owner_username</code></pre>
+
+> Request
+>
+>       curl -X GET https://formshare.qlands.com/api/v1/forms?owner=formshare
+
+## Get Form Information
+
+<pre class="prettyprint">
+<b>GET</b> /api/v1/forms/<code>{pk}</code></pre>
+
+> Example
+>
+>       curl -X GET https://formshare.qlands.com/api/v1/forms/28058
+
+> Response
+>
+>       {
+>           "url": "https://formshare.qlands.com/api/v1/forms/28058",
+>           "formid": 28058,
+>           "uuid": "853196d7d0a74bca9ecfadbf7e2f5c1f",
+>           "id_string": "Birds",
+>           "sms_id_string": "Birds",
+>           "title": "Birds",
+>           "allows_sms": false,
+>           "bamboo_dataset": "",
+>           "description": "",
+>           "downloadable": true,
+>           "encrypted": false,
+>           "owner": "https://formshare.qlands.com/api/v1/users/formshare",
+>           "public": false,
+>           "public_data": false,
+>           "require_auth": false,
+>           "date_created": "2013-07-25T14:14:22.892Z",
+>           "date_modified": "2013-07-25T14:14:22.892Z"
+>       }
+
+## Set Form Information
+
+You can use `PUT` or `PATCH` http methods to update or set form data elements.
+If you are using `PUT`, you have to provide the `uuid, description,
+downloadable, owner, public, public_data, title` fields. \n
+ With `PATCH` you only need to provide at least one of the fields.
+
+- `xls_file`: Can only be updated when there are no submissions.
+
+<pre class="prettyprint">
+<b>PATCH</b> /api/v1/forms/<code>{pk}</code></pre>
+
+> Example
+>
+>       curl -X PATCH -d "public=True" -d "description=Le description"\
+https://formshare.qlands.com/api/v1/forms/28058
+
+> Response
+>
+>       {
+>           "url": "https://formshare.qlands.com/api/v1/forms/28058",
+>           "formid": 28058,
+>           "uuid": "853196d7d0a74bca9ecfadbf7e2f5c1f",
+>           "id_string": "Birds",
+>           "sms_id_string": "Birds",
+>           "title": "Birds",
+>           "allows_sms": false,
+>           "bamboo_dataset": "",
+>           "description": "Le description",
+>           "downloadable": true,
+>           "encrypted": false,
+>           "owner": "https://formshare.qlands.com/api/v1/users/formshare",
+>           "public": true,
+>           "public_data": false,
+>           "date_created": "2013-07-25T14:14:22.892Z",
+>           "date_modified": "2013-07-25T14:14:22.892Z"
+>       }
+
+## Delete Form
+
+<pre class="prettyprint">
+<b>DELETE</b> /api/v1/forms/<code>{pk}</code></pre>
+> Example
+>
+>       curl -X DELETE https://formshare.qlands.com/api/v1/forms/28058
+>
+> Response
+>
+>       HTTP 204 NO CONTENT
+
+## List Forms
+<pre class="prettyprint">
+<b>GET</b> /api/v1/forms
+</pre>
+> Example
+>
+>       curl -X GET https://formshare.qlands.com/api/v1/forms
+
+> Response
+>
+>       [{
+>           "url": "https://formshare.qlands.com/api/v1/forms/28058",
+>           "formid": 28058,
+>           "uuid": "853196d7d0a74bca9ecfadbf7e2f5c1f",
+>           "id_string": "Birds",
+>           "sms_id_string": "Birds",
+>           "title": "Birds",
+>           ...
+>       }, ...]
+
+## Get `JSON` | `XML` | `XLS` Form Representation
+<pre class="prettyprint">
+<b>GET</b> /api/v1/forms/<code>{pk}</code>/form.\
+<code>{format}</code></pre>
+> JSON Example
+>
+>       curl -X GET https://formshare.qlands.com/api/v1/forms/28058/form.json
+
+> Response
+>
+>        {
+>            "name": "Birds",
+>            "title": "Birds",
+>            "default_language": "default",
+>            "id_string": "Birds",
+>            "type": "survey",
+>            "children": [
+>                {
+>                    "type": "text",
+>                    "name": "name",
+>                    "label": "1. What is your name?"
+>                },
+>                ...
+>                ]
+>        }
+
+> XML Example
+>
+>       curl -X GET https://formshare.qlands.com/api/v1/forms/28058/form.xml
+
+> Response
+>
+>        <?xml version="1.0" encoding="utf-8"?>
+>        <h:html xmlns="http://www.w3.org/2002/xforms" ...>
+>          <h:head>
+>            <h:title>Birds</h:title>
+>            <model>
+>              <itext>
+>                 .....
+>          </h:body>
+>        </h:html>
+
+> XLS Example
+>
+>       curl -X GET https://formshare.qlands.com/api/v1/forms/28058/form.xls
+
+> Response
+>
+>       Xls file downloaded
+
+## Get list of forms with specific tag(s)
+
+Use the `tags` query parameter to filter the list of forms, `tags` should be a
+comma separated list of tags.
+
+<pre class="prettyprint">
+<b>GET</b> /api/v1/forms?<code>tags</code>=<code>tag1,tag2</code></pre>
+
+List forms tagged `smart` or `brand new` or both.
+> Request
+>
+>       curl -X GET https://formshare.qlands.com/api/v1/forms?tag=smart,brand+new
+
+> Response
+>        HTTP 200 OK
+>
+>       [{
+>           "url": "https://formshare.qlands.com/api/v1/forms/28058",
+>           "formid": 28058,
+>           "uuid": "853196d7d0a74bca9ecfadbf7e2f5c1f",
+>           "id_string": "Birds",
+>           "sms_id_string": "Birds",
+>           "title": "Birds",
+>           ...
+>       }, ...]
+
+
+## Get list of Tags for a specific Form
+<pre class="prettyprint">
+<b>GET</b> /api/v1/forms/<code>{pk}</code>/labels
+</pre>
+> Request
+>
+>       curl -X GET https://formshare.qlands.com/api/v1/forms/28058/labels
+
+> Response
+>
+>       ["old", "smart", "clean house"]
+
+## Tag forms
+
+A `POST` payload of parameter `tags` with a comma separated list of tags.
+
+Examples
+
+- `animal fruit denim` - space delimited, no commas
+- `animal, fruit denim` - comma delimited
+
+<pre class="prettyprint">
+<b>POST</b> /api/v1/forms/<code>{pk}</code>/labels
+</pre>
+
+Payload
+
+    {"tags": "tag1, tag2"}
+
+## Delete a specific tag
+
+<pre class="prettyprint">
+<b>DELETE</b> /api/v1/forms/<code>{pk}</code>/labels/<code>tag_name</code>
+</pre>
+
+> Request
+>
+>       curl -X DELETE \
+https://formshare.qlands.com/api/v1/forms/28058/labels/tag1
+>
+> or to delete the tag "hello world"
+>
+>       curl -X DELETE \
+https://formshare.qlands.com/api/v1/forms/28058/labels/hello%20world
+>
+> Response
+>
+>        HTTP 200 OK
+
+## Get webform/enketo link
+
+<pre class="prettyprint">
+<b>GET</b> /api/v1/forms/<code>{pk}</code>/enketo</pre>
+
+> Request
+>
+>       curl -X GET \
+https://formshare.qlands.com/api/v1/forms/28058/enketo
+>
+> Response
+>
+>       {"enketo_url": "https://h6ic6.enketo.org/webform"}
+>
+>        HTTP 200 OK
+
+## Get form data in xls, csv format.
+
+Get form data exported as xls, csv, csv zip, sav zip format.
+
+Where:
+
+- `pk` - is the form unique identifier
+- `format` - is the data export format i.e csv, xls, csvzip, savzip
+
+Params for the custom xls report
+
+- `meta`  - the metadata id containing the template url
+-  `token`  - the template url
+
+<pre class="prettyprint">
+<b>GET</b> /api/v1/forms/{pk}.{format}</code>
+</pre>
+> Example
+>
+>       curl -X GET https://formshare.qlands.com/api/v1/forms/28058.xls
+
+> Binary file export of the format specified is returned as the response for
+>the download.
+>
+> Response
+>
+>        HTTP 200 OK
+
+> Example 2 Custom XLS reports (beta)
+>
+>       curl -X GET https://formshare.qlands.com/api/v1/forms/28058.xls?meta=12121
+>                   or
+>       curl -X GET https://formshare.qlands.com/api/v1/forms/28058.xls?token={url}
+>
+> XLS file is downloaded
+>
+> Response
+>
+>        HTTP 200 OK
+
+## Get list of public forms
+
+<pre class="prettyprint">
+<b>GET</b> /api/v1/forms/public
+</pre>
+
+## Share a form with a specific user
+
+You can share a form with a  specific user by `POST` a payload with
+
+- `username` of the user you want to share the form with and
+- `role` you want the user to have on the form. Available roles are `readonly`,
+`dataentry`, `editor`, `manager`.
+
+<pre class="prettyprint">
+<b>POST</b> /api/v1/forms/<code>{pk}</code>/share
+</pre>
+
+> Example
+>
+>       curl -X POST -d '{"username": "alice", "role": "readonly"}' \
+https://formshare.qlands.com/api/v1/forms/123.json
+
+> Response
+>
+>        HTTP 204 NO CONTENT
+
+## Clone a form to a specific user account
+
+You can clone a form to a specific user account using `GET` with
+
+- `username` of the user you want to clone the form to
+
+<pre class="prettyprint">
+<b>GET</b> /api/v1/forms/<code>{pk}</code>/clone
+</pre>
+
+> Example
+>
+>       curl -X GET https://formshare.qlands.com/api/v1/forms/123/clone \
+-d username=alice
+
+> Response
+>
+>        HTTP 201 CREATED
+>       {
+>           "url": "https://formshare.qlands.com/api/v1/forms/124",
+>           "formid": 124,
+>           "uuid": "853196d7d0a74bca9ecfadbf7e2f5c1e",
+>           "id_string": "Birds_cloned_1",
+>           "sms_id_string": "Birds_cloned_1",
+>           "title": "Birds_cloned_1",
+>           ...
+>       }
+
+## Import CSV data to existing form
+- `csv_file` a valid csv file with exported \
+data (instance/submission per row)
+<pre class="prettyprint">
+<b>POST</b> /api/v1/forms/<code>{pk}</code>/csv_import
+</pre>
+> Example
+>
+>       curl -X POST https://formshare.qlands.com/api/v1/forms/123/csv_import \
+-F csv_file=@/path/to/csv_import.csv
+>
+> Response
+> If the job was executed immediately:-
+>
+>       HTTP 200 OK
+>       {
+>           "additions": 9,
+>           "updates": 0
+>       }
+>
+> If the import is a long running task:-
+>
+>       HTTP 200 OK
+>       {"job_uuid": "04874cee-5fea-4552-a6c1-3c182b8b511f"}
+>
+> You can use the `job_uuid value to check on the import progress (see below)
+## Check on CSV data import progress
+- `job_uuid` a valid csv import job_uuid returned by a long running import \
+previous call
+<pre class="prettyprint">
+<b>GET</b> /api/v1/forms/<code>{pk}</code>/csv_import?job_uuid=UUID
+</pre>
+> Example
+>
+>       curl -X GET https://formshare.qlands.com/api/v1/forms/123/csv_import?job_uuid=UUID
+>
+> Response
+> If the job is done:-
+>
+>       HTTP 200 OK
+>       {
+>           "additions": 90000,
+>           "updates": 10000
+>       }
+>
+> If the import is still running:-
+>
+>       HTTP 200 OK
+>       {
+>           "current": 100,
+>           "total": 100000
+>       }
+"""
+    renderer_classes = api_settings.DEFAULT_RENDERER_CLASSES + [
+        renderers.XLSRenderer,
+        renderers.XLSXRenderer,
+        renderers.CSVRenderer,
+        renderers.CSVZIPRenderer,
+        renderers.SAVZIPRenderer,
+        renderers.SurveyRenderer
+    ]
+    queryset = XForm.objects.all()
+    serializer_class = XFormSerializer
+    lookup_field = 'pk'
+    extra_lookup_fields = None
+    permission_classes = [XFormPermissions, ]
+    updatable_fields = set(('description', 'downloadable', 'require_auth',
+                            'shared', 'shared_data', 'title'))
+    filter_backends = (filters.AnonDjangoObjectPermissionFilter,
+                       filters.TagFilter,
+                       filters.XFormOwnerFilter)
+
+    public_forms_endpoint = 'public'
+
+    def create(self, request, *args, **kwargs):
+        try:
+            owner = _get_owner(request)
+        except ValidationError as e:
+            return Response({'message': e.messages[0]},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        survey = utils.publish_xlsform(request, owner)
+        if isinstance(survey, XForm):
+            xform = XForm.objects.get(pk=survey.pk)
+            serializer = XFormSerializer(
+                xform, context={'request': request})
+            headers = self.get_success_headers(serializer.data)
+
+            return Response(serializer.data, status=status.HTTP_201_CREATED,
+                            headers=headers)
+
+        return Response(survey, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(methods=['GET'])
+    def form(self, request, format='json', **kwargs):
+        form = self.get_object()
+        if format not in ['json', 'xml', 'xls']:
+            return HttpResponseBadRequest('400 BAD REQUEST',
+                                          content_type='application/json',
+                                          status=400)
+        return response_for_format(form, format=format)
+
+    @action(methods=['GET'])
+    def enketo(self, request, **kwargs):
+        self.object = self.get_object()
+        form_url = _get_form_url(request, self.object.user.username)
+
+        data = {'message': _(u"Enketo not properly configured.")}
+        http_status = status.HTTP_400_BAD_REQUEST
+
+        try:
+            url = enketo_url(form_url, self.object.id_string)
+        except EnketoError:
+            pass
+        else:
+            if url:
+                http_status = status.HTTP_200_OK
+                data = {"enketo_url": url}
+
+        return Response(data, http_status)
+
+    def retrieve(self, request, *args, **kwargs):
+        lookup_field = self.lookup_field
+        lookup = self.kwargs.get(lookup_field)
+
+        if lookup == self.public_forms_endpoint:
+            self.object_list = self._get_public_forms_queryset()
+
+            page = self.paginate_queryset(self.object_list)
+            if page is not None:
+                serializer = self.get_pagination_serializer(page)
+            else:
+                serializer = self.get_serializer(self.object_list, many=True)
+
+            return Response(serializer.data)
+
+        xform = self.get_object()
+        export_type = kwargs.get('format')
+        query = request.GET.get("query", {})
+        token = request.GET.get('token')
+        meta = request.GET.get('meta')
+
+        if export_type is None or export_type in ['json']:
+            # perform default viewset retrieve, no data export
+            return super(XFormViewSet, self).retrieve(request, *args, **kwargs)
+
+        return custom_response_handler(request,
+                                       xform,
+                                       query,
+                                       export_type,
+                                       token,
+                                       meta)
+
+    @action(methods=['POST'])
+    def share(self, request, *args, **kwargs):
+        self.object = self.get_object()
+
+        data = {}
+        for key, val in request.DATA.iteritems():
+            data[key] = val
+        data.update({'xform': self.object.pk})
+
+        serializer = ShareXFormSerializer(data=data)
+
+        if serializer.is_valid():
+            serializer.save()
+        else:
+            return Response(data=serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+    @action(methods=['GET'])
+    def clone(self, request, *args, **kwargs):
+        self.object = self.get_object()
+        data = {'xform': self.object.pk, 'username': request.DATA['username']}
+        serializer = CloneXFormSerializer(data=data)
+        if serializer.is_valid():
+            clone_to_user = User.objects.get(username=data['username'])
+            if not request.user.has_perm('can_add_xform',
+                                         clone_to_user.profile):
+                raise exceptions.PermissionDenied(
+                    detail=_(u"User %(user)s has no permission to add "
+                             "xforms to account %(account)s" %
+                             {'user': request.user.username,
+                              'account': data['username']}))
+            xform = serializer.save()
+            serializer = XFormSerializer(
+                xform.cloned_form, context={'request': request})
+
+            return Response(data=serializer.data,
+                            status=status.HTTP_201_CREATED)
+
+        return Response(data=serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    @detail_route(methods=['POST', 'GET'])
+    def csv_import(self, request, *args, **kwargs):
+        """ Endpoint for CSV data imports
+        Calls :py:func:`formshare.libs.utils.csv_import.submit_csv` for POST
+        requests passing the `request.FILES.get('csv_file')` upload
+        for import and
+        :py:func:formshare.libs.utils.csv_import.get_async_csv_submission_status
+        for GET requests passing `job_uuid` query param for job progress
+        polling
+        """
+        resp = {}
+        if request.method == 'GET':
+            resp.update(get_async_csv_submission_status(
+                request.QUERY_PARAMS.get('job_uuid')))
+        else:
+            csv_file = request.FILES.get('csv_file', None)
+            if csv_file is None:
+                resp.update({u'error': u'csv_file field empty'})
+            else:
+                num_rows = sum(1 for row in csv_file) - 1
+                if num_rows < settings.CSV_ROW_IMPORT_ASYNC_THRESHOLD:
+                    resp.update(submit_csv(request.user.username,
+                                           self.get_object(), csv_file))
+                else:
+                    resp.update(
+                        {u'task_id': submit_csv_async.delay(
+                            request.user.username, self.get_object(),
+                            csv_file).task_id})
+
+        return Response(
+            data=resp,
+            status=status.HTTP_200_OK if resp.get('error') is None else
+            status.HTTP_400_BAD_REQUEST)
+
+    def partial_update(self, request, *args, **kwargs):
+        try:
+            owner = _get_owner(request)
+        except ValidationError as e:
+            return Response({'message': e.messages[0]},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        self.object = self.get_object()
+
+        # updating the file
+        if request.FILES:
+            return _try_update_xlsform(request, self.object, owner)
+
+        return super(XFormViewSet, self).partial_update(request, *args,
+                                                        **kwargs)

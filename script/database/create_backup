@@ -1,0 +1,4 @@
+sudo su -
+formshare_backup restore postgres
+logout
+tar -czvf formshare.sql.tar.gz backups/postgres/formshare.sql

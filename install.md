@@ -1,0 +1,157 @@
+# Installation instructions
+## Prepare the Os
+### Ubuntu server 16 required packages  
+    sudo apt-get update
+    sudo apt-get install  postgresql-9.5-postgis-2.2 binutils libproj-dev gdal-bin memcached libmemcached-dev build-essential python-pip python-virtualenv python-dev git libssl-dev libpq-dev gfortran libatlas-base-dev libjpeg-dev libxml2-dev libxslt-dev zlib1g-dev python-software-properties ghostscript python-celery python-sphinx openjdk-8-jdk openjdk-8-jre  postgresql-9.5-postgis-scripts rabbitmq-server librabbitmq-dev mongodb-server
+
+## Database setup
+Replace username and db name accordingly. Later on you will need to indicate this parameters in the configuration file.
+
+    sudo su postgres -c "psql -c \"CREATE USER formshare WITH PASSWORD 'formshare';\""
+    sudo su postgres -c "psql -c \"CREATE DATABASE formshare OWNER formshare;\""
+    sudo su postgres -c "psql -d formshare -c \"CREATE EXTENSION IF NOT EXISTS postgis;\""
+    sudo su postgres -c "psql -d formshare -c \"CREATE EXTENSION IF NOT EXISTS postgis_topology;\""
+
+## Create python virtual environment and activate it
+Note: This instructions assume that FormShare will be installed in /opt and the user installing it is not root. The non-root-user will own the FormShare directory.
+
+    cd /opt
+    sudo virtualenv formshare
+    sudo chown -R [non-root-user] formshare
+    source /opt/formshare/bin/activate
+    mkdir /opt/formshare/src
+
+## Get the code
+    cd /opt/formshare/src
+    git clone https://github.com/qlands/FormShare.git formshare
+    cd /opt/formshare/src/formshare/
+
+## Install required python packages
+    pip install -r requirements/base.pip --allow-all-external    
+
+
+## Edit the configuration scripts
+### Edit /opt/formshare/src/formshare/formshare/settings/default_settings.py
+Find the section below and edit NAME,USER,PASSWORD with the setting you used in the database setup. If you used a different host edit HOST
+
+     DATABASES = {
+    'default': {
+    'ENGINE': 'django.contrib.gis.db.backends.postgis',
+    'NAME': 'formshare',
+    'USER': 'formshare',
+    'PASSWORD': '',
+    'HOST': '127.0.0.1',
+    'OPTIONS': {
+        # note: this option obsolete starting with django 1.6
+        'autocommit': True,
+    }}}
+
+### Edit /opt/formshare/src/formshare/formshare/settings/common.py
+Find the section below and edit HOST, PORST, NAME, USER and PASSWORD if necessary. The Installation of Mongo does not set an user or password for the database.  
+
+    MONGO_DATABASE = {
+    'HOST': 'localhost',
+    'PORT': 27017,
+    'NAME': 'formshare',
+    'USER': '',
+    'PASSWORD': ''
+    }
+
+## Test the Installation
+
+    cd /opt/formshare/src/formshare/
+    export PYTHONPATH=$PYTHONPATH:/opt/formshare/src/formshare
+    export DJANGO_SETTINGS_MODULE=formshare.settings.default_settings
+    python manage.py validate
+
+The validate should return 0 errors.
+
+In certain Linux distributions and/or versions of PostGis DJango cannot read the version of PostGIS leading to the following error:
+
+    Cannot determine PostGIS version for database. GeoDjango requires at least PostGIS version 1.3. Was the database created from a spatial database template?
+
+To bypass this error add the following line to /opt/formshare/src/formshare/formshare/settings/common.py  and update the version with the one you installed.
+
+    POSTGIS_VERSION = ( 2, 1 )
+
+## Initial db setup
+    python manage.py syncdb --noinput
+    python manage.py migrate
+
+## Setup celery service
+
+Celery is used by FormShare to run time-consuming processes like the data exports as distributed tasks.
+### Edit the /opt/formshare/src/formshare/extras/celeryd/etc/default/celeryd file
+
+Change the following lines to look like the below:
+
+      CELERYD_CHDIR="/opt/formshare/src/formshare/"
+      ENV_PYTHON="/opt/formshare/bin/python"
+      CELERYD_USER="www-data"
+      CELERYD_GROUP="www-data"
+      export DJANGO_SETTINGS_MODULE="formshare.settings.default_settings"
+
+### Set the celeryd as a service
+
+Create a symbolic link to the celery file from de init.d directory. Note /etc/default must exists.
+
+      sudo ln -s /opt/formshare/src/formshare/extras/celeryd/etc/default/celeryd /etc/default/celeryd
+      sudo ln -s /opt/formshare/src/formshare/extras/celeryd/etc/init.d/celeryd /etc/init.d/celeryd
+      sudo /etc/init.d/celeryd start
+
+The startup of celery should return something like the below:
+
+      celery multi v3.1.15 (Cipater)
+      > Starting nodes...
+      Your environment is:"formshare.settings.default_settings"
+      > w1@SlackFormshare: OK
+
+## Create a super user
+      python manage.py createsuperuser
+
+## Copy all files from your static folders into the STATIC_ROOT directory
+      python manage.py collectstatic --noinput
+
+## Run FormShare for testing
+
+    cd /opt/formshare/src/formshare
+    python manage.py runserver
+
+Running the server should return something like the below:
+
+      Your environment is:"formshare.settings.default_settings"
+      Your environment is:"formshare.settings.default_settings"
+      Validating models...
+      0 errors found
+      April 21, 2016 - 08:26:37
+      Django version 1.6.11, using settings 'formshare.settings.default_settings'
+      Starting development server at http://127.0.0.1:8000/
+      Quit the server with CONTROL-C.
+
+Using the Internet browser go to http://127.0.0.1:8000/  You will see the FormShare front page. Test the long in page with the super user.
+
+You can also start the server with a different IP address by running:
+
+    python manage.py runserver x.x.x.x:[port]
+
+## Compile api docs
+    cd docs
+    make html
+    cd ..
+
+## Make Apache web server to load FormShare
+### Install required packages
+
+    sudo apt-get install apache2 libapache2-mod-wsgi
+
+### Set the group owner of the directory /opt/formshare to be Apache
+
+    sudo chgrp -R www-data /opt/formshare/
+
+### Copy the apache configuration files to the apache conf directory
+
+    sudo cp /opt/formshare/src/formshare/extras/wsgi/apache-formshare.conf /etc/apache2/sites-available
+    cd /etc/apache2/sites-enabled
+    sudo ln -s ../sites-available/apache-formshare.conf ./apache-formshare.conf
+
+Go to http://localhost FormShare should be running from there.

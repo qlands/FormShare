@@ -1,29 +1,38 @@
 FormShare
 =================
-Collect, Analyze and Share Data!
+The continuation of FormHub
 
-.. image:: https://magnum.travis-ci.com/onaio/core.svg?token=zuW2DmA3xKoPXEdebzpS&branch=master
-  :target: https://magnum.travis-ci.com/repositories
+Collect, Analyze and Share **YOUR** Data!
 
 About
 -----
-
-Formshare is derived from the excellent `formhub <http://github.com/SEL-Columbia/formhub>`_ platform developed by the Sustainable Engineering Lab at Columbia University. Later version of FormHub were developed by OnaIO under the name of OnaData but then the code was left broken and unmaintaned in favor of an "API" based platform. Formshare is the continuation of Formhub.
+FormShare is derived from the excellent [Formhub](<http://github.com/SEL-Columbia/formhub>) platform developed by the Sustainable Engineering Lab at Columbia University. Later version of FormHub were developed by [Ona IO](https://ona.io/home/) as a software as service under the name of [OnaData](https://github.com/onaio/onadata) but then the code was left broken and unmaintained in favor of an "API" based platform. Formshare is the continuation of Formhub.
 
 FormShare was created because:
 
-* Ona.io is not maintaing the user interface. I will maintain it.
-* Most of its dependencies might change over time and break the code
-* The formhub project is to good to lose it!
+* I want to provide a open source platform to private and public organizations for them to collect their own data.
+* ODK Aggregate, in my personal opinion, is badly designed, buggy and not interoperable.
+* Ona.io will not maintain the user interface. I will maintain it.
+* There are some things that does not work. I will dedicate time to fix them.
+* Most of its dependencies might change over time and break the code. I will check them
+* The Formhub project is to good to lose it!
+
+FormShare **is not a software for service application** thus is nowhere for you to sign up and pay for a subscription. FormShare **is for organizations** to install it in their own server or cloud service to serve ODK XForms and collect the submissions.
 
 Installation
 ------------
-Please read the `Installation and Deployment Guide <install.md>`_.
+Please read the [Installation and Deployment Guide](install.md).
 
 Contributing
 ------------
 
-I will post some ideas here.
+The best way to contribute to FormShare is by posting issues. Also if you can create a fix do:
+
+1. Fork FormShare
+2. Clone your fork in your local computer
+3. Create a branch for your fix
+4. Create the fix, commit and code an push the branch
+5. Crate a pull request
 
 Code Structure
 --------------

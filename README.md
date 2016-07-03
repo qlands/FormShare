@@ -10,7 +10,7 @@ FormShare is derived from the excellent [Formhub](<http://github.com/SEL-Columbi
 
 FormShare was created because:
 
-* I want to provide a open source platform to private and public organizations for them to collect their own data.
+* I want to provide a open source **free** platform to private and public organizations for them to collect their own data.
 * ODK Aggregate, in my personal opinion, is badly designed, buggy and not interoperable.
 * Ona.io will not maintain the user interface. I will maintain it.
 * There are some things that does not work. I will dedicate time to fix them.

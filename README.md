@@ -19,6 +19,11 @@ FormShare was created because:
 
 FormShare **is not a software as service application** thus is nowhere for you to sign up and pay for a subscription. FormShare **is for organizations** to install it in their own server or cloud service to serve ODK XForms and collect the submissions.
 
+ScreenShot
+----------
+
+![Image](/Screenshot.png?raw=true "FormShare home screen")
+
 Installation
 ------------
 Please read the [Installation and Deployment Guide](install.md).

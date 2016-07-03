@@ -17,7 +17,7 @@ FormShare was created because:
 * Most of its dependencies might change over time and break the code. I will check them
 * The Formhub project is to good to lose it!
 
-FormShare **is not a software for service application** thus is nowhere for you to sign up and pay for a subscription. FormShare **is for organizations** to install it in their own server or cloud service to serve ODK XForms and collect the submissions.
+FormShare **is not a software as service application** thus is nowhere for you to sign up and pay for a subscription. FormShare **is for organizations** to install it in their own server or cloud service to serve ODK XForms and collect the submissions.
 
 Installation
 ------------

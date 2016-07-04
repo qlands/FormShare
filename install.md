@@ -2,7 +2,7 @@
 ## Prepare the Os
 ### Ubuntu server 16 required packages  
     sudo apt-get update
-    sudo apt-get install  postgresql-9.5-postgis-2.2 binutils libproj-dev gdal-bin memcached libmemcached-dev build-essential python-pip python-virtualenv python-dev git libssl-dev libpq-dev gfortran libatlas-base-dev libjpeg-dev libxml2-dev libxslt-dev zlib1g-dev python-software-properties ghostscript python-celery python-sphinx openjdk-8-jdk openjdk-8-jre  postgresql-9.5-postgis-scripts rabbitmq-server librabbitmq-dev mongodb-server
+    sudo apt-get install  postgresql-9.5-postgis-2.2 binutils libproj-dev gdal-bin memcached libmemcached-dev build-essential python-pip python-virtualenv python-dev git libssl-dev libpq-dev gfortran libatlas-base-dev libjpeg-dev libxml2-dev libxslt-dev zlib1g-dev python-software-properties ghostscript python-celery python-sphinx openjdk-8-jdk openjdk-8-jre  postgresql-9.5-postgis-scripts rabbitmq-server librabbitmq-dev mongodb-server nodejs
 
 ## Database setup
 Replace username and db name accordingly. Later on you will need to indicate this parameters in the configuration file.
@@ -109,7 +109,14 @@ The startup of celery should return something like the below:
 ## Create a super user
       python manage.py createsuperuser
 
+## Install Bower and download the necessary JavaScripts
+      sudo npm install -g bower
+      cd /opt/formshare/src/formshare
+      bower install
+
+
 ## Copy all files from your static folders into the STATIC_ROOT directory
+      cd /opt/formshare/src/formshare
       python manage.py collectstatic --noinput
 
 ## Run FormShare for testing
@@ -133,11 +140,6 @@ Using the Internet browser go to http://127.0.0.1:8000/  You will see the FormSh
 You can also start the server with a different IP address by running:
 
     python manage.py runserver x.x.x.x:[port]
-
-## Compile api docs
-    cd docs
-    make html
-    cd ..
 
 ## Make Apache web server to load FormShare
 ### Install required packages

@@ -62,8 +62,12 @@
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ next }}" />
                 {% url 'index' as url_admin %}
-                <p><b>Loggin with the administrator account to add new users</b></p>
+                <p><b>Login with the administrator account to add new users</b></p>
             </form>
         </div>
+    </div>
+    <br>
+    <div class="row">
+        <!-- Add here any logos   -->
     </div>
 {% endblock %}

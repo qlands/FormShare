@@ -2,7 +2,7 @@
 ## Prepare the Os
 ### Ubuntu server 16 required packages  
     sudo apt-get update
-    sudo apt-get install  postgresql-9.5-postgis-2.2 binutils libproj-dev gdal-bin memcached libmemcached-dev build-essential python-pip python-virtualenv python-dev git libssl-dev libpq-dev gfortran libatlas-base-dev libjpeg-dev libxml2-dev libxslt-dev zlib1g-dev python-software-properties ghostscript python-celery python-sphinx openjdk-8-jdk openjdk-8-jre  postgresql-9.5-postgis-scripts rabbitmq-server librabbitmq-dev mongodb-server nodejs
+    sudo apt-get install  postgresql-9.5-postgis-2.2 binutils libproj-dev gdal-bin memcached libmemcached-dev build-essential python-pip python-virtualenv python-dev git libssl-dev libpq-dev gfortran libatlas-base-dev libjpeg-dev libxml2-dev libxslt-dev zlib1g-dev python-software-properties ghostscript python-celery python-sphinx openjdk-8-jdk openjdk-8-jre  postgresql-9.5-postgis-scripts rabbitmq-server librabbitmq-dev mongodb-server npm
 
 ## Database setup
 Replace username and db name accordingly. Later on you will need to indicate this parameters in the configuration file.
@@ -114,6 +114,9 @@ The startup of celery should return something like the below:
       cd /opt/formshare/src/formshare
       bower install
 
+If you get "command not found" when running "bower install" do:
+
+      sudo ln -s /usr/bin/nodejs /usr/bin/node
 
 ## Copy all files from your static folders into the STATIC_ROOT directory
       cd /opt/formshare/src/formshare
@@ -150,10 +153,24 @@ You can also start the server with a different IP address by running:
 
     sudo chgrp -R www-data /opt/formshare/
 
-### Copy the apache configuration files to the apache conf directory
+### Add the following lines to /etc/apache2/sites-enabled/000-default.conf after "DocumentRoot"
 
-    sudo cp /opt/formshare/src/formshare/extras/wsgi/apache-formshare.conf /etc/apache2/sites-available
-    cd /etc/apache2/sites-enabled
-    sudo ln -s ../sites-available/apache-formshare.conf ./apache-formshare.conf
+    WSGIPassAuthorization On
+    # Deploy as a daemon (avoids conflicts between other python apps).
+    WSGIDaemonProcess formshare python-path=/opt/formshare display-name=formshare processes=2 threads=15
+    WSGIScriptAlias / /opt/formshare/src/formshare/extras/wsgi/formshare.wsgi process-group=formshare application-group=%{GLOBAL}
+    <Location "/">
+            WSGIProcessGroup formshare
+    </Location>
 
-Go to http://localhost FormShare should be running from there.
+### Restart the Apache service    
+    sudo service apache2 restart
+
+Go to http://[ip_address_of_the_server] .FormShare should be running from there. If you get a "Forbidden" message set the section "Directory" of the file /etc/apache2/apache2.conf to look like this:
+
+    <Directory />
+          Options FollowSymLinks
+          AllowOverride None
+          #Require all denied
+          Order Deny,Allow
+    </Directory>

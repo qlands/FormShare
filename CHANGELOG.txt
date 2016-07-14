@@ -1,0 +1,2 @@
+2016-07-14 -- Initial stable release 1.0
+    We need to start somewhere. Even though there are some bugs and plenty of things to do we can call this FormShare 1.0

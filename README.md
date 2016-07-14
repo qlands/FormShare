@@ -55,8 +55,8 @@ Code Structure
 Customization
 ------------
 At the moment there is no simple way to customize or extend the interface of FormShare. However you can edit some of the template files:
-  - The footer can be found at formshare/formshare/libs/templates/footer.html . You can add any extra information here to appear in all the pages.
-  - The homepage can be found at formshare/apps/main/templates/home.html . There is a section for logos there.
+  - The footer can be found at /opt/formshare/src/formshare/libs/templates/footer.html . You can add any extra information here to appear in all the pages.
+  - The homepage can be found at /opt/formshare/src/formshare/apps/main/templates/home.html . There is a section for logos there.
 
 
 Localization

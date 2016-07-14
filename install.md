@@ -3,6 +3,10 @@
 ### Ubuntu server 16 required packages  
     sudo apt-get update
     sudo apt-get install  postgresql-9.5-postgis-2.2 binutils libproj-dev gdal-bin memcached libmemcached-dev build-essential python-pip python-virtualenv python-dev git libssl-dev libpq-dev gfortran libatlas-base-dev libjpeg-dev libxml2-dev libxslt-dev zlib1g-dev python-software-properties ghostscript python-celery python-sphinx openjdk-8-jdk openjdk-8-jre  postgresql-9.5-postgis-scripts rabbitmq-server librabbitmq-dev mongodb-server npm
+    
+### Ubuntu server 14.04 required packages  
+    sudo apt-get update
+    sudo apt-get install postgresql-9.3-postgis-2.1 binutils libproj-dev gdal-bin memcached libmemcached-dev build-essential python-pip python-virtualenv python-dev git libssl-dev libpq-dev gfortran libatlas-base-dev libjpeg-dev libxml2-dev libxslt-dev zlib1g-dev python-software-properties ghostscript python-celery python-sphinx openjdk-7-jdk openjdk-7-jre  postgresql-9.3-postgis-2.1-scripts rabbitmq-server librabbitmq-dev mongodb-server npm
 
 ## Database setup
 Replace username and db name accordingly. Later on you will need to indicate this parameters in the configuration file.

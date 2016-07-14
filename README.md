@@ -1,4 +1,4 @@
-FormShare
+FormShare (Stable 1.0)
 =================
 The continuation of FormHub
 

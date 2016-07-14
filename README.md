@@ -39,7 +39,7 @@ The best way to contribute to FormShare is by posting issues. Also if you can cr
 
 1. Fork FormShare
 2. Clone your fork in your local computer
-3. Create a branch for your fix **based on the master brach**
+3. Create a branch for your fix **based on the master branch**
 4. Create the fix, commit and code an push the branch
 5. Crate a pull request
 

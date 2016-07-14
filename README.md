@@ -1,4 +1,4 @@
-FormShare
+FormShare (Current/development)(Not stable. See stable releases below)
 =================
 The continuation of FormHub
 
@@ -24,6 +24,10 @@ ScreenShot
 
 ![Image](/Screenshot.png?raw=true "FormShare home screen")
 
+Releases
+------------
+The current stable release is 1.0.0. Is available [here](https://github.com/qlands/FormShare/tree/stable-1.0) 
+
 Installation
 ------------
 Please read the [Installation and Deployment Guide](install.md).
@@ -35,7 +39,7 @@ The best way to contribute to FormShare is by posting issues. Also if you can cr
 
 1. Fork FormShare
 2. Clone your fork in your local computer
-3. Create a branch for your fix
+3. Create a branch for your fix **based on the master brach**
 4. Create the fix, commit and code an push the branch
 5. Crate a pull request
 

@@ -27,7 +27,7 @@ Note: This instructions assume that FormShare will be installed in /opt and the 
 
 ## Get the code
     cd /opt/formshare/src
-    git clone https://github.com/qlands/FormShare.git formshare
+    git clone -b stable-1.1 https://github.com/qlands/FormShare.git formshare
     cd /opt/formshare/src/formshare/
 
 ## Install required python packages

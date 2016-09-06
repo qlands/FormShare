@@ -30,11 +30,23 @@ The current stable release is 1.0.0. Is available [here](https://github.com/qlan
 
 Installation
 ------------
-Please read the [Installation and Deployment Guide](install.md).
+Please read the [Installation and Deployment Guide](install.md) if you want to install formshare yourself. You can also download the docker image :-)
 
 Docker image
 ------------
-You can download the latest stable as a docker image [here]() 
+You can download the latest stable as a docker image [here](https://hub.docker.com/r/qlands/formshare/)
+Some notes on docker:
+
+* The admin account is "admin" with password "formshare". **Remember to change this password**
+* Apache runs in port 80
+* Formshare runs in /formshare
+
+To get and run the docker image in port 80 do:
+
+    $ docker pull qlands/formshare
+    $ docker run --publish=80:80 qlands/formshare
+    
+   
 
 Contributing
 ------------
@@ -70,7 +82,7 @@ At the moment there is no simple way to customize or extend the interface of For
 Localization
 ------------
 
-To generate a locale from scratch (ex. Spanish)
+To generate a locale from scratch (e.g. Spanish)
 
 
     $ django-admin.py makemessages -l es -e py,html,email,txt ;

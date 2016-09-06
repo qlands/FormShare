@@ -20,12 +20,10 @@ RUN cd /opt
 WORKDIR /opt
 RUN virtualenv formshare
 RUN mkdir /opt/formshare/src
-WORKDIR /opt/formshare/src
-RUN git clone https://github.com/qlands/FormShare.git formshare
+RUN mkdir /opt/formshare/src/formshare
+COPY . /opt/formshare/src/formshare
 
-WORKDIR /opt
 RUN . /opt/formshare/bin/activate && /etc/init.d/mongodb start && /etc/init.d/postgresql start && pip install -r /opt/formshare/src/formshare/requirements/base.pip --allow-all-external && cd /opt/formshare/src/formshare/ && export PYTHONPATH=$PYTHONPATH:/opt/formshare/src/formshare && export DJANGO_SETTINGS_MODULE=formshare.settings.default_settings && python manage.py syncdb --noinput && python manage.py migrate
-
 
 #Installs celery
 RUN ln -s /opt/formshare/src/formshare/extras/celeryd/etc/default/celeryd /etc/default/celeryd
@@ -47,7 +45,7 @@ RUN cd /opt/formshare/src/formshare && bower install
 USER root
 RUN chown -R root /opt/formshare
 
-RUN . /opt/formshare/bin/activate && /etc/init.d/mongodb start && /etc/init.d/postgresql start && cd /opt/formshare/src/formshare/ && export PYTHONPATH=$PYTHONPATH:/opt/formshare/src/formshare && export DJANGO_SETTINGS_MODULE=formshare.settings.default_settings && python manage.py collectstatic --noinput && echo "from django.contrib.auth.models import User; User.objects.create_superuser('admin', 'admin@example.com', 'formshare')" | python manage.py shell
+RUN . /opt/formshare/bin/activate && /etc/init.d/mongodb start && /etc/init.d/postgresql start && cd /opt/formshare/src/formshare/ && export PYTHONPATH=$PYTHONPATH:/opt/formshare/src/formshare && export DJANGO_SETTINGS_MODULE=formshare.settings.default_settings && python manage.py collectstatic --noinput && echo "from django.contrib.auth.models import User; User.objects.create_superuser('admin', 'admin@example.com', 'formshare')" | python manage.py shell && echo "from django.contrib.sites.models import Site; site = Site.objects.get(id=1); site.name = 'FormShare'; site.save()" | python manage.py shell
 
 EXPOSE 80
 

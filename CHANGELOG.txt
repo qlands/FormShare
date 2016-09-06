@@ -1,2 +1,14 @@
+2016-09-06 -- Version 1.1.0
+    - Formshare is now available as a docker container.
+    - Patched several bits of code so Formshare can run in other locations than / . For example: /formshare
+    - Fixed break in celery with the new version of billiard.
+    - Added multilingual support (English / Spanish).
+    - Removed the registration URLs because they are no needed.
+    - Changed requirements to not point to Ona account in github.
+    - Some other minor changes
+
 2016-07-14 -- Initial stable release 1.0
     We need to start somewhere. Even though there are some bugs and plenty of things to do we can call this FormShare 1.0
+
+
+

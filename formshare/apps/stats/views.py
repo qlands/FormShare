@@ -6,7 +6,7 @@ from django.shortcuts import render
 
 from formshare.apps.logger.models import XForm
 from formshare.apps.stats.utils import get_form_submissions_per_day
-
+from django.conf import settings
 
 @login_required
 def stats(request, username=None, id_string=None):
@@ -15,16 +15,17 @@ def stats(request, username=None, id_string=None):
             XForm, user=request.user, id_string__iexact=id_string)
         data = {
             'xform': xform,
-            'context.submission_stats': get_form_submissions_per_day(xform)
+            'context.submission_stats': get_form_submissions_per_day(xform),'APP_ROOT': settings.APP_ROOT
         }
     else:
-        data = {'xforms': XForm.objects.filter(user=request.user)}
+        data = {'xforms': XForm.objects.filter(user=request.user),'APP_ROOT': settings.APP_ROOT}
     return render(request, 'form-stats.html', data)
 
 
 @staff_member_required
 def submissions(request):
     stats = {}
+    stats['APP_ROOT']= settings.APP_ROOT
     stats['submission_count'] = {}
     stats['submission_count']['total_submission_count'] = 0
 

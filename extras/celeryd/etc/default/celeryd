@@ -2,7 +2,7 @@
 CELERYD_NODES="w1"
 
 # Where to chdir at start.
-CELERYD_CHDIR="/opt/formshare/src/formshare/"
+CELERYD_CHDIR="/opt/formshare/src/formshare"
 
 # Python interpreter from environment, if using virtualenv
 ENV_PYTHON="/opt/formshare/bin/python"

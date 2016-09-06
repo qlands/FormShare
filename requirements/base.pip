@@ -19,7 +19,7 @@ pymongo==2.7.2
 lxml==3.4.0
 django-nose==1.4.2
 pandas==0.12.0
--e git+https://github.com/onaio/pyxform.git@onaio#egg=pyxform
+-e git+https://github.com/XLSForm/pyxform.git#egg=pyxform
 South==1.0
 django-reversion==1.8.4
 xlrd==0.9.3
@@ -30,7 +30,7 @@ django-celery==3.1.16
 librabbitmq==1.5.2
 python-digest==1.7
 django-digest==1.13
--e git+https://github.com/onaio/python-json2xlsclient.git#egg=j2xclient
+-e git+https://github.com/qlands/python-json2xlsclient.git@stable#egg=j2xclient
 
 requests==2.4.1
 elaphe==0.5.6
@@ -68,5 +68,5 @@ django-db-readonly==0.3.2
 # memcached support
 pylibmc==1.3.0
 kombu
-billiard
+billiard==3.3.0.23
 python-dateutil

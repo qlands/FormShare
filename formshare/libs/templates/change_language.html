@@ -1,6 +1,6 @@
 {% load i18n %}
 <div id="language-bar" class="container">
-<form action="/i18n/setlang/" method="post">
+<form action="{{APP_ROOT}}i18n/setlang/" method="post">
    {% csrf_token %}
    <input name="next" type="hidden" value="{{ redirect_to }}" />
    <select name="language" onchange="this.form.submit();">

@@ -1,5 +1,5 @@
-FormShare (Current/development)(Not stable. See stable releases below)
-=================
+FormShare
+=========
 The continuation of FormHub
 
 Collect, Analyze and Share **YOUR** Data!
@@ -31,6 +31,10 @@ The current stable release is 1.0.0. Is available [here](https://github.com/qlan
 Installation
 ------------
 Please read the [Installation and Deployment Guide](install.md).
+
+Docker image
+------------
+You can download the latest stable as a docker image [here]() 
 
 Contributing
 ------------
@@ -69,19 +73,16 @@ Localization
 To generate a locale from scratch (ex. Spanish)
 
 
-
     $ django-admin.py makemessages -l es -e py,html,email,txt ;
     $ for app in {main,viewer} ; do cd formshare/apps/${app} && django-admin.py makemessages -d djangojs -l es && cd - ; done
 
 To update PO files
 
 
-
     $ django-admin.py makemessages -a ;
     $ for app in {main,viewer} ; do cd formshare/apps/${app} && django-admin.py makemessages -d djangojs -a && cd - ; done
 
 To compile MO files and update live translations
-
 
 
     $ django-admin.py compilemessages ;

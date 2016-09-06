@@ -18,6 +18,7 @@ urlpatterns = patterns(
     '',
     # change Language
     (r'^i18n/', include('django.conf.urls.i18n')),
+    url(r'^accounts/logout/$', 'formshare.apps.main.registration_views.LogoutView'),
     url('^api/v1/', include(router.urls)),
     url(r'^api/v1', RedirectView.as_view(url='/api/v1/'),name='apiurl'),
     url(r'^api-docs/', RedirectView.as_view(url=reverse_lazy('apiurl')),name='docroot'),

@@ -165,7 +165,7 @@ def bulksubmission_form(request, username=None):
     if request.user.username == username:
         return render(request, 'bulk_submission_form.html')
     else:
-        return HttpResponseRedirect('/%s' % request.user.username)
+        return HttpResponseRedirect(settings.APP_ROOT + '%s' % request.user.username)
 
 
 @require_GET
@@ -392,7 +392,7 @@ def download_xlsform(request, username, id_string):
                                u'<strong>%(id)s</strong>')
                              % {'id': id_string})
 
-        return HttpResponseRedirect("/%s" % username)
+        return HttpResponseRedirect(settings.APP_ROOT + "%s" % username)
 
 
 def download_jsonform(request, username, id_string):
@@ -435,7 +435,7 @@ def delete_xform(request, username, id_string):
         {
             'id_string': xform.id_string,
         }, audit, request)
-    return HttpResponseRedirect('/')
+    return HttpResponseRedirect(settings.APP_ROOT + "%s" % username)
 
 
 @is_owner
@@ -453,7 +453,7 @@ def toggle_downloadable(request, username, id_string):
             'downloadable':
             _("downloadable") if xform.downloadable else _("un-downloadable")
         }, audit, request)
-    return HttpResponseRedirect("/%s" % username)
+    return HttpResponseRedirect(settings.APP_ROOT + "%s" % username)
 
 
 def enter_data(request, username, id_string):

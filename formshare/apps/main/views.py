@@ -68,7 +68,11 @@ def home(request):
         return HttpResponseRedirect(
             reverse(profile, kwargs={'username': request.user.username}))
 
-    return render(request, 'home.html')
+    data = {
+        'APP_ROOT': settings.APP_ROOT
+    }
+
+    return render(request, 'home.html', data)
 
 
 @login_required
@@ -161,7 +165,7 @@ def clone_xlsform(request, username):
 def profile(request, username):
     content_user = get_object_or_404(User, username__iexact=username)
     form = QuickConverter()
-    data = {'form': form}
+    data = {'form': form,'APP_ROOT': settings.APP_ROOT}
 
     # xlsform submission...
     if request.method == 'POST' and request.user.is_authenticated():
@@ -214,8 +218,8 @@ def profile(request, username):
         form = QuickConverterFile()
         form_url = QuickConverterURL()
 
-        request_url = request.build_absolute_uri(
-            "/%s" % request.user.username)
+        request_url = request.build_absolute_uri(settings.APP_ROOT +
+            "%s" % request.user.username)
         url = request_url
         xforms = XForm.objects.filter(user=content_user)\
             .select_related('user', 'instances')
@@ -253,7 +257,6 @@ def profile(request, username):
         })
     # for any other user -> profile
     set_profile_data(data, content_user)
-
     return render(request, "profile.html", data)
 
 
@@ -263,7 +266,7 @@ def members_list(request):
     users = User.objects.all()
     template = 'people.html'
 
-    return render(request, template, {'template': template, 'users': users})
+    return render(request, template, {'template': template, 'users': users, 'APP_ROOT': settings.APP_ROOT})
 
 
 @login_required
@@ -291,7 +294,7 @@ def profile_settings(request, username):
             instance=profile, initial={"email": content_user.email})
 
     return render(request, "settings.html",
-                  {'content_user': content_user, 'form': form})
+                  {'content_user': content_user, 'form': form, 'APP_ROOT': settings.APP_ROOT})
 
 
 @require_GET
@@ -302,6 +305,7 @@ def public_profile(request, username):
     data = {}
     set_profile_data(data, content_user)
     data['is_owner'] = request.user == content_user
+    data['APP_ROOT'] = settings.APP_ROOT
     audit = {}
     audit_log(
         Actions.PUBLIC_PROFILE_ACCESSED, request.user, content_user,
@@ -316,9 +320,11 @@ def dashboard(request):
     data = {
         'form': QuickConverter(),
         'content_user': content_user,
-        'url': request.build_absolute_uri("/%s" % request.user.username)
+        'url': request.build_absolute_uri(settings.APP_ROOT + "%s" % request.user.username),
+        'APP_ROOT': settings.APP_ROOT
     }
     set_profile_data(data, content_user)
+
 
     return render(request, "dashboard.html", data)
 
@@ -342,7 +348,7 @@ def set_xform_owner_data(data, xform, request, username, id_string):
         data['sms_compatible'] = check_form_sms_compatibility(
             None, json_survey=json.loads(xform.json))
     else:
-        url_root = request.build_absolute_uri('/')[:-1]
+        url_root = request.build_absolute_uri(settings.APP_ROOT)[:-1]
         data['sms_providers_doc'] = providers_doc(
             url_root=url_root,
             username=username,
@@ -403,6 +409,7 @@ def show(request, username=None, id_string=None, uuid=None):
     data['media_upload'] = MetaData.media_upload(xform)
     data['mapbox_layer'] = MetaData.mapbox_layer_upload(xform)
     data['external_export'] = MetaData.external_export(xform)
+    data['APP_ROOT'] = settings.APP_ROOT
 
     if is_owner:
         set_xform_owner_data(data, xform, request, username, id_string)
@@ -417,6 +424,7 @@ def show(request, username=None, id_string=None, uuid=None):
 def api_token(request, username=None):
     user = get_object_or_404(User, username=username)
     data = {}
+    data['APP_ROOT']= settings.APP_ROOT
     data['token_key'], created = Token.objects.get_or_create(user=user)
 
     return render(request, "api_token.html", data)
@@ -754,45 +762,45 @@ def edit(request, username, id_string):
 def getting_started(request):
     template = 'getting_started.html'
 
-    return render(request, 'base.html', {'template': template})
+    return render(request, 'base.html', {'template': template,'APP_ROOT': settings.APP_ROOT})
 
 
 def support(request):
     template = 'support.html'
 
-    return render(request, 'base.html', {'template': template})
+    return render(request, 'base.html', {'template': template,'APP_ROOT': settings.APP_ROOT})
 
 
 
 def xls2xform(request):
     template = 'xls2xform.html'
 
-    return render(request, 'base.html', {'template': template})
+    return render(request, 'base.html', {'template': template,'APP_ROOT': settings.APP_ROOT})
 
 
 def tutorial(request):
     template = 'tutorial.html'
     username = request.user.username if request.user.username else \
         'your-user-name'
-    url = request.build_absolute_uri("/%s" % username)
+    url = request.build_absolute_uri(settings.APP_ROOT + "%s" % username)
 
-    return render(request, 'base.html', {'template': template, 'url': url})
+    return render(request, 'base.html', {'template': template, 'url': url,'APP_ROOT': settings.APP_ROOT})
 
 
 def about_us(request):
     a_flatpage = '/about-us/'
     username = request.user.username if request.user.username else \
         'your-user-name'
-    url = request.build_absolute_uri("/%s" % username)
+    url = request.build_absolute_uri(settings.APP_ROOT + "%s" % username)
 
-    return render(request, 'base.html', {'a_flatpage': a_flatpage, 'url': url})
+    return render(request, 'base.html', {'a_flatpage': a_flatpage, 'url': url,'APP_ROOT': settings.APP_ROOT})
 
 
 
 def syntax(request):
     template = 'syntax.html'
 
-    return render(request, 'base.html', {'template': template})
+    return render(request, 'base.html', {'template': template,'APP_ROOT': settings.APP_ROOT})
 
 
 def form_gallery(request):
@@ -809,6 +817,7 @@ def form_gallery(request):
         x.id_string + XForm.CLONED_SUFFIX for x in data['shared_forms']
     ]
     # build list of id_strings for forms this user has cloned
+    data['APP_ROOT'] = settings.APP_ROOT
     data['cloned'] = [
         x.id_string.split(XForm.CLONED_SUFFIX)[0]
         for x in XForm.objects.filter(
@@ -993,6 +1002,7 @@ def form_photos(request, username, id_string):
             image_urls.append(data)
 
     data['images'] = image_urls
+    data['APP_ROOT'] = settings.APP_ROOT
     data['profilei'], created = UserProfile.objects.get_or_create(user=owner)
 
     return render(request, 'form_photos.html', data)
@@ -1230,7 +1240,7 @@ def update_xform(request, username, id_string):
 def activity(request, username):
     owner = get_object_or_404(User, username=username)
 
-    return render(request, 'activity.html', {'user': owner})
+    return render(request, 'activity.html', {'user': owner,'APP_ROOT': settings.APP_ROOT})
 
 
 def activity_fields(request):

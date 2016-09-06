@@ -153,17 +153,18 @@ You can also start the server with a different IP address by running:
 
     sudo apt-get install apache2 libapache2-mod-wsgi
 
-### Set the group owner of the directory /opt/formshare to be Apache
+### Set the group owner of the directory /opt/formshare to be Apache and allow it write access
 
-    sudo chgrp -R www-data /opt/formshare/
+    sudo chown -R www-data /opt/formshare/
+    sudo chmod -R g+w /opt/formshare/
 
 ### Add the following lines to /etc/apache2/sites-enabled/000-default.conf after "DocumentRoot"
 
     WSGIPassAuthorization On
     # Deploy as a daemon (avoids conflicts between other python apps).
     WSGIDaemonProcess formshare python-path=/opt/formshare display-name=formshare processes=2 threads=15
-    WSGIScriptAlias / /opt/formshare/src/formshare/extras/wsgi/formshare.wsgi process-group=formshare application-group=%{GLOBAL}
-    <Location "/">
+    WSGIScriptAlias /formshare /opt/formshare/src/formshare/extras/wsgi/formshare.wsgi process-group=formshare application-group=%{GLOBAL}
+    <Location "/formshare">
             WSGIProcessGroup formshare
     </Location>
 

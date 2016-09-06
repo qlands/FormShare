@@ -200,7 +200,7 @@ def add_submission_with(request, username, id_string):
     if settings.DEBUG:
         openrosa_url = "https://dev.formhub.org/{}".format(username)
     else:
-        openrosa_url = request.build_absolute_uri("/{}".format(username))
+        openrosa_url = request.build_absolute_uri(settings.APP_ROOT + "{}".format(username))
     payload = {'return_url': return_url,
                'form_id': id_string,
                'server_url': openrosa_url,

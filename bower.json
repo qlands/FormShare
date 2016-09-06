@@ -27,5 +27,10 @@
     "dimple": "~1.1.3",
     "backgrid-filter": "~0.3.5",
     "backgrid-paginator": "~0.3.5"
+  },
+  "resolutions": {
+    "jquery": "1.10.2",
+    "underscore": "1.8.3",
+    "backbone": "1.2.3"
   }
 }

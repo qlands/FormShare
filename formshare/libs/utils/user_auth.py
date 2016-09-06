@@ -14,6 +14,7 @@ from formshare.apps.api.models import Team
 from formshare.apps.logger.models import Project
 from formshare.apps.main.models import UserProfile
 from formshare.apps.logger.models import XForm, Note
+from django.conf import settings
 
 
 class HttpResponseNotAuthorized(HttpResponse):
@@ -27,12 +28,12 @@ class HttpResponseNotAuthorized(HttpResponse):
 
 def check_and_set_user(request, username):
     if username != request.user.username:
-        return HttpResponseRedirect("/%s" % username)
+        return HttpResponseRedirect(settings.APP_ROOT + "%s" % username)
     content_user = None
     try:
         content_user = User.objects.get(username=username)
     except User.DoesNotExist:
-        return HttpResponseRedirect("/")
+        return HttpResponseRedirect(settings.APP_ROOT)
     return content_user
 
 

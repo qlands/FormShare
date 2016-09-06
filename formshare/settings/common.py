@@ -56,14 +56,14 @@ LANGUAGE_CODE = 'en-us'
 ugettext = lambda s: s
 
 LANGUAGES = (
-    ('fr', u'Français'),
-    ('en', u'English'),
-    ('es', u'Español'),
-    ('it', u'Italiano'),
-    ('km', u'ភាសាខ្មែរ'),
-    ('ne', u'नेपाली'),
-    ('nl', u'Nederlands'),
-    ('zh', u'中文'),
+    #('fr', u'Français'),
+    ('en-us', u'English'),
+    ('es', u'Español')
+    #('it', u'Italiano'),
+    #('km', u'ភាសាខ្មែរ'),
+    #('ne', u'नेपाली'),
+    #('nl', u'Nederlands'),
+    #('zh', u'中文'),
 )
 
 SITE_ID = 1
@@ -76,10 +76,14 @@ USE_I18N = True
 # calendars according to the current locale
 USE_L10N = True
 
+# This is the application root.
+# Example:" /formshare/ for hosting Formshare in like http://example.com/formshare
+APP_ROOT = '/formshare/'
+
 # URL that handles the media served from MEDIA_ROOT. Make sure to use a
 # trailing slash.
 # Examples: "http://media.lawrence.com/media/", "http://example.com/media/"
-MEDIA_URL = 'http://localhost:8000/media/'
+MEDIA_URL = APP_ROOT + 'media/'
 
 # Absolute path to the directory static files should be collected to.
 # Don't put anything in this directory yourself; store your static files
@@ -89,7 +93,7 @@ STATIC_ROOT = os.path.join(PROJECT_ROOT, 'static')
 
 # URL prefix for static files.
 # Example: "http://media.lawrence.com/static/"
-STATIC_URL = '/static/'
+STATIC_URL = APP_ROOT + 'static/'
 
 # Enketo URL
 ENKETO_URL = 'https://enketo.formhub.org/'
@@ -100,13 +104,13 @@ ENKETO_API_TOKEN = ''
 ENKETO_API_INSTANCE_IFRAME_URL = ENKETO_URL + "api_v1/instance/iframe"
 
 # Login URLs
-LOGIN_URL = '/accounts/login/'
-LOGIN_REDIRECT_URL = '/login_redirect/'
+LOGIN_URL = APP_ROOT + 'accounts/login/'
+LOGIN_REDIRECT_URL = APP_ROOT + 'login_redirect/'
 
 # URL prefix for admin static files -- CSS, JavaScript and images.
 # Make sure to use a trailing slash.
 # Examples: "http://foo.com/static/admin/", "/static/admin/".
-ADMIN_MEDIA_PREFIX = '/static/admin/'
+ADMIN_MEDIA_PREFIX = APP_ROOT + 'static/admin/'
 
 # Additional locations of static files
 STATICFILES_DIRS = (

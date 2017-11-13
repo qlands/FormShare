@@ -1,0 +1,2 @@
+include *.txt *.ini *.cfg *.rst
+recursive-include formshare *.ico *.png *.css *.gif *.jpg *.pt *.txt *.mak *.mako *.js *.html *.xml *.jinja2 *.po *.css *.eot *.gif *.jpg *.js *.json *.less *.map *.md *.otf *.png *.scss *.svg *.ttf *.txt *.woff *.woff2

@@ -20,7 +20,7 @@ requires = [
     'zope.sqlalchemy',
     'waitress',
     'webhelpers',
-    'pyutilib== 5.4.1',
+    'pyutilib == 5.4.1',
     'MySQL-python',
     'PyCrypto',
     'Babel',

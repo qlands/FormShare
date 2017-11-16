@@ -1,0 +1,32 @@
+# English translations for formshare.
+# Copyright (C) 2017 ORGANIZATION
+# This file is distributed under the same license as the formshare project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2017.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: formshare 0.0\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2017-11-15 22:42-0600\n"
+"PO-Revision-Date: 2017-11-15 22:40-0600\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: en\n"
+"Language-Team: en <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.5.1\n"
+
+#: formshare/templates/layout.jinja2:58
+msgid "Copyright &copy; Pylons Project"
+msgstr ""
+
+#: formshare/templates/snippets/my_snippet.jinja2:2
+msgid "Hello from Snippet"
+msgstr ""
+
+#: formshare/views/basic_views.py:10
+msgid "Formshare"
+msgstr ""
+

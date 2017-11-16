@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+    formshare.config.jinja_extensions
+    ~~~~~~~~~~~~~~~~~~
+
+    Provides a series of extension to jinja2.
+
+    :copyright: (c) 2017 by QLands Technology Consultants.
+    :license: AGPL, see LICENSE for more details.
+"""
+
 from jinja2 import nodes
 from jinja2 import ext
 import logging

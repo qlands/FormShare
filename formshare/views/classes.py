@@ -1,3 +1,15 @@
+# -*- coding: utf-8 -*-
+"""
+    formshare.resources.resources
+    ~~~~~~~~~~~~~~~~~~
+
+    Provides the basic view classes for FormShare and
+    the Digest Authorization for ODK
+
+    :copyright: (c) 2017 by QLands Technology Consultants.
+    :license: AGPL, see LICENSE for more details.
+"""
+
 from pyramid.security import authenticated_userid
 from ..config.auth import getUserData
 from pyramid.httpexceptions import HTTPFound
@@ -8,7 +20,6 @@ from pyramid.response import Response
 from hashlib import md5
 import uuid
 
-#ODKView is a Digest Authorization view. It automates all the Digest work
 class odkView(object):
     def __init__(self, request):
         self.request = request

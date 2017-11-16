@@ -1,5 +1,5 @@
 '''
-Provides plugin services to the host application
+Provides plugin services to the FormShare
 
 This code is based on CKAN 
 :Copyright (C) 2007 Open Knowledge Foundation

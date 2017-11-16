@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+    formshare.config.mainresources
+    ~~~~~~~~~~~~~~~~~~
+
+    Provides the main JS and CSS resources to FormShare.
+
+    :copyright: (c) 2017 by QLands Technology Consultants.
+    :license: AGPL, see LICENSE for more details.
+"""
+
 import formshare.resources as r
 import os
 

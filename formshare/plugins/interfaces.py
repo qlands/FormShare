@@ -14,7 +14,8 @@ __all__ = [
     'IRoutes',
     'IConfig',
     'IResource',
-    'IPluginObserver'
+    'IPluginObserver',
+    'IPluralize'
 ]
 
 
@@ -38,47 +39,47 @@ class Interface(_pca_Interface):
 
 class IRoutes(Interface):
     """
-    Plugin into the creation of routes of the host program.
+    Plugin into the creation of routes.
 
     """
     def before_mapping(self,config):
         """
-        Called before the mapping of router of the host app.
+        Called before the mapping of routes made by FormShare.
 
-        :param config: ``pyramid.config`` object that can be used to call add_view
+        :param config: ``pyramid.config`` object
         :return Returns a dict array [{'name':'myroute','path':'/myroute','view',viewDefinition,'renderer':'renderere_used'}]
         """
         return []
 
     def after_mapping(self,config):
         """
-        Called after the mapping of router of the host app
+        Called after the mapping of routes made by FormShare.
 
-        :param config: ``pyramid.config`` object that can be used to call add_view
+        :param config: ``pyramid.config`` object
         :return Returns a dict array [{'name':'myroute','path':'/myroute','view',viewDefinition,'renderer':'renderere_used'}]
         """
         return []
 
 class IConfig(Interface):
     """
-    Allows the modification of the Pyramid config 
+    Allows the modification of the Pyramid config. For example to add new templates or static directories
     """
 
     def update_config(self, config):
         """
-        Called in the init of the host application.
+        Called by FormShare during the initialization of the environment
 
         :param config: ``pyramid.config`` object
         """
 
 class IResource(Interface):
     """
-        Allows to hook into the creation of FanStatic libraries and resources         
+        Allows to hook into the creation of JS and CSS libraries or resources
     """
 
     def add_libraries(self,config):
         """
-        Called by the host application so plugins can add new FanStatic libraries AFTER the host
+        Called by FormShare so plugins can add new JS and CSS libraries to FormShare
 
         :param config: ``pyramid.config`` object
         :return Returns a dict array [{'name':'mylibrary','path':'/path/to/my/resources'}]
@@ -87,7 +88,7 @@ class IResource(Interface):
 
     def add_JSResources(self,config):
         """
-        Called by the host application so plugins can add new FanStatic JS Resources AFTER the host
+        Called by FormShare so plugins can add new JS Resources
         
         :param config: ``pyramid.config`` object        
         :return Returns a dict array [{'libraryname':'mylibrary','id':'myResourceID','file':'/relative/path/to/jsFile','depends':'resourceID'}]
@@ -96,7 +97,7 @@ class IResource(Interface):
 
     def add_CSSResources(self, config):
         """
-        Called by the host application so plugins can add new FanStatic JS Resources AFTER the host
+        Called by FormShare so plugins can add new FanStatic CSS Resources
 
         :param config: ``pyramid.config`` object        
         :return Returns a dict array [{'libraryname':'mylibrary','id':'myResourceID','file':'/relative/path/to/jsFile','depends':'resourceID'}]
@@ -105,7 +106,7 @@ class IResource(Interface):
 
 class IPluralize(Interface):
     """
-        Allows to hook into the pluralization function so plugins can extend the pluralization of formshare
+        Allows to hook into the pluralization function so plugins can extend the pluralization of FormShare
     """
     def pluralize(self,noun,locale):
         """

@@ -1,3 +1,14 @@
+# -*- coding: utf-8 -*-
+"""
+    formshare.config.environment
+    ~~~~~~~~~~~~~~~~~~
+
+    Provides the basic Pyramid environment for FormShare.
+
+    :copyright: (c) 2017 by QLands Technology Consultants.
+    :license: AGPL, see LICENSE for more details.
+"""
+
 import os
 from pyramid.session import SignedCookieSessionFactory
 import formshare.plugins as p
@@ -45,24 +56,30 @@ def load_environment(settings,config,apppath):
     config.add_subscriber('formshare.i18n.i18n.add_renderer_globals', 'pyramid.events.BeforeRender')
     config.add_subscriber('formshare.i18n.i18n.add_localizer', 'pyramid.events.NewRequest')
 
+    #Register jinja2
     config.registry.settings['jinja2.extensions'] = ['jinja2.ext.i18n', 'jinja2.ext.do', 'jinja2.ext.with_',SnippetExtension, extendThis, CSSResourceExtension, JSResourceExtension]
     config.include('pyramid_jinja2')
+
+    #Add url_for_static to the request so plugins can use static resources
     config.add_request_method(__url_for_static, 'url_for_static')
+    #Add active resources to the request. This control the injection of resources into a request
     config.add_request_method(requestResources, 'activeResources', reify=True)
+    #Add a series of helper functions to the request like pluralize
     config.add_request_method(__helper, 'h', reify=True)
 
     # Add core library and resources
     createResources(apppath,config)
 
+    #Add the template directories
     templatesPathArray = []
     templatesPath = os.path.join(apppath, 'templates')
     templatesPathArray.append(templatesPath)
-
     config.add_settings(templatesPaths=templatesPathArray)
 
+    #Add the static view
     staticPath = os.path.join(apppath, 'static')
     config.add_static_view('static', staticPath, cache_max_age=3600)
-
+    #Add the template directories to jinja2
     config.add_jinja2_search_path(templatesPath)
 
     # Load all connected plugins

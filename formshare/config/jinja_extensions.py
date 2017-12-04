@@ -13,11 +13,12 @@ from jinja2 import nodes
 from jinja2 import ext
 import logging
 from jinja2 import Environment
-from webhelpers.html import literal
+from webhelpers2.html import literal
 from jinja2 import FileSystemLoader
 import os,re
 import formshare.resources as r
 from pyramid.threadlocal import get_current_request
+import sys
 
 
 jinjaEnv = Environment()
@@ -131,7 +132,7 @@ class BaseExtension(ext.Extension):
 
     def parse(self, parser):
         stream = parser.stream
-        tag = stream.next()
+        tag = next(stream)
         # get arguments
         args = []
         kwargs = []
@@ -139,7 +140,7 @@ class BaseExtension(ext.Extension):
             if args or kwargs:
                 stream.expect('comma')
             if stream.current.test('name') and stream.look().test('assign'):
-                key = nodes.Const(stream.next().value)
+                key = nodes.Const(next(stream).value)
                 stream.skip()
                 value = parser.parse_expression()
                 kwargs.append(nodes.Pair(key, value, lineno=key.lineno))
@@ -206,6 +207,10 @@ def regularise_html(html):
 
 
     '''
+
+    if sys.version_info >= (3, 0):
+        def xrange(*args, **kwargs):
+            return iter(range(*args, **kwargs))
 
     if html is None:
         return

@@ -1,0 +1,68 @@
+<div class="row border-bottom">
+    <nav class="navbar navbar-static-top" role="navigation" style="margin-bottom: 0">
+        <div class="navbar-header">
+            {% block barbutton %}
+                <a class="navbar-minimalize minimalize-styl-2 btn btn-primary " href="#"><i class="fa fa-bars"></i> </a>
+            {% endblock barbutton %}
+            {% block search %}
+                <form role="search" class="navbar-form-custom" action="search_results.html">
+                    <div class="form-group">
+                        <input type="text" placeholder="{{ _("Search for something...") }}" class="form-control" name="top-search" id="top-search">
+                    </div>
+                </form>
+            {% endblock search %}
+        </div>
+        {% block navbartoplinks %}
+            <ul class="nav navbar-top-links navbar-right">
+                <li>
+                    {% block welcome %}
+                        <span class="m-r-sm text-muted welcome-message">{{ _("FormShare") }}</span>
+                    {% endblock welcome %}
+                </li>
+                {% block messages %}
+                    <li class="dropdown">
+                        {% block messagehead %}
+                            <a class="dropdown-toggle count-info" data-toggle="dropdown" href="#">
+                                <i class="fa fa-envelope"></i>  <span class="label label-warning">16</span>
+                            </a>
+                        {% endblock messagehead %}
+                        <ul class="dropdown-menu dropdown-messages">
+                            {% block messageitems %}
+                                {% snippet 'dashboard/snippets/message/message_items.jinja2', request=request %}
+                            {% endblock messageitems %}
+                        </ul>
+                    </li>
+                {% endblock messages %}
+                {% block alerts %}
+                    <li class="dropdown">
+                        {% block alerthead %}
+                            <a class="dropdown-toggle count-info" data-toggle="dropdown" href="#">
+                                <i class="fa fa-bell"></i>  <span class="label label-primary">8</span>
+                            </a>
+                        {% endblock alerthead %}
+                        <ul class="dropdown-menu dropdown-alerts">
+                            {% block alertitems %}
+                                {% snippet 'dashboard/snippets/message/alert_items.jinja2', request=request %}
+                            {% endblock alertitems %}
+                        </ul>
+                    </li>
+                {% endblock alerts %}
+
+                {% block logout %}
+                    <li>
+                        <a href="login.html">
+                            <i class="fa fa-sign-out"></i> {{ _("Log out") }}
+                        </a>
+                    </li>
+                {% endblock logout %}
+                {% block sidebar %}
+                    <li>
+                        <a class="right-sidebar-toggle">
+                            <i class="fa fa-tasks"></i>
+                        </a>
+                    </li>
+                {% endblock sidebar %}
+            </ul>
+        {% endblock navbartoplinks %}
+    </nav>
+</div>

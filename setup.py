@@ -19,9 +19,9 @@ requires = [
     'transaction',
     'zope.sqlalchemy',
     'waitress',
-    'webhelpers',
+    'webhelpers2',
     'pyutilib == 5.4.1',
-    'MySQL-python',
+    'mysql-connector-python',
     'PyCrypto',
     'Babel',
     'lingua',
@@ -32,9 +32,11 @@ requires = [
     'gunicorn',
     'gevent',
     'ago',
-    'pattern',
     'lxml',
-    'celery'
+    'celery',
+    'nltk',
+    'numpy',
+    'numba'
 ]
 
 tests_require = [

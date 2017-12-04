@@ -15,7 +15,10 @@ __all__ = [
     'IConfig',
     'IResource',
     'IPluginObserver',
-    'IPluralize'
+    'IPluralize',
+    'ISchema',
+    'IDatabase',
+    'IAuthorize'
 ]
 
 
@@ -116,6 +119,92 @@ class IPluralize(Interface):
             :param locale: ``The current locate code e.g. en``
             :return the noun in plural form
         """
+
+
+class ISchema(Interface):
+    """
+        Allows to hook into the schema layer and add new fields into it.
+        The schema is a layer on top of the database schema so plugin developers can
+        add new fields to FormShare tables without affecting the structure
+        of the database. New fields are stored in extra as JSON keys
+    """
+
+    def update_schema(self, config):
+        """
+        Called by the host application so plugins can add new fields to table schemata
+
+        :param config: ``pyramid.config`` object
+        :return Returns a dict array [{'schema':'schema_to_update','fieldname':'myfield','fielddesc':'A good description of myfield'}]
+
+        Plugin writers should use the utility functions:
+            - addFieldToUserSchema
+            - addFieldToProjectSchema
+            - addFieldToEnumeratorSchema
+            - addFieldToEnumeratorGroupSchema
+            - addFieldToDataUserSchema
+            - addFieldToDataGroupSchema
+            - addFieldToFormSchema
+
+
+        Instead of constructing the dict by themselves to ensure API compatibility
+
+        """
+        return []
+
+class IDatabase(Interface):
+    """
+        Allows to hook into the database schema so plugins can add new tables
+        After calling this
+    """
+
+    def update_schema(self, config, Base):
+        """
+        Called by the host application so plugins can add new tables to the database schema
+
+        :param config: ``pyramid.config`` object
+        :param Base: ``Sqlalchemy's declarative base`` object
+
+        """
+
+class IAuthorize(Interface):
+    """
+        Allows to hook into the user authorization
+        After calling this
+    """
+
+    def after_login(self, request, user):
+        """
+        Called by the host application so plugins can modify the login of users
+
+        :param request: ``pyramid.request`` object
+        :param user: user object
+        :return Return true or false if the login should continue. If False then a message should state why
+
+        """
+        return True,""
+
+    def before_register(self, request, registrant):
+        """
+        Called by the host application so plugins can do something before registering a user
+
+        :param request: ``pyramid.request`` object
+        :param registrant: Dictionary containing the details of the registrant
+        :return Return true or false if the registrant should be added. If False then a message should state why
+
+        """
+        return True,""
+
+    def after_register(self, request, registrant):
+        """
+        Called by the host application so plugins do something after registering a user
+
+        :param request: ``pyramid.request`` object
+        :param registrant: Dictionary containing the details of the registrant
+
+        """
+
+
+
 
 class IPluginObserver(Interface):
     """

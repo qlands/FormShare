@@ -26,7 +26,7 @@ def jinja2_cleaner(fileobj, *args, **kw):
 
     for lineno, func, message, finder in raw_extract:
 
-        if isinstance(message, basestring):
+        if isinstance(message, str):
             message = je.regularise_html(message)
         elif message is not None:
             message = (je.regularise_html(message[0])

@@ -1,0 +1,39 @@
+{% extends 'dashboard/page.jinja2' %}
+
+{% block title %}
+    <title>{{ _("FormShare | Dashboard") }}</title>
+{% endblock title %}
+
+{% block css %}
+    {% cssresource request,'dashboard','font-awesome' %}
+    {% cssresource request,'dashboard','toastr' %}
+    {% cssresource request,'dashboard','style' %}
+{% endblock css %}
+
+{% block mainnav %}
+    {% snippet 'dashboard/snippets/mainnav.jinja2', request=request %}
+{% endblock mainnav %}
+
+{% block pageheader %}
+    {% snippet 'dashboard/snippets/header.jinja2', request=request %}
+{% endblock pageheader %}
+
+{% block breadcrumbs %}
+    {% snippet 'dashboard/snippets/breadcrumbs.jinja2', request=request %}
+{% endblock breadcrumbs %}
+
+{% block maincontent %}
+    Here comes the content
+{% endblock maincontent %}
+
+{% block footer %}
+    {% snippet 'dashboard/snippets/footer.jinja2', request=request, fixed=True %}
+{% endblock footer %}
+
+{% block sidebar %}
+    {% snippet 'dashboard/snippets/sidebar.jinja2', request=request %}
+{% endblock sidebar %}
+
+{% block toastr %}
+    {% snippet 'dashboard/snippets/toastr.jinja2', request=request, timeout=4000, title="Hello!", message='Welcome to FormShare', type='info' %}
+{% endblock toastr %}

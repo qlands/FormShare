@@ -11,7 +11,8 @@
 
 from ..plugins.utilities import addRoute
 import formshare.plugins as p
-from ..views.basic_views import notfound_view,home_view,logout_view
+from ..views.basic_views import notfound_view,home_view,logout_view,login_view,register_view
+from ..views.dashboard import dashboard_view
 
 route_list = []
 
@@ -39,8 +40,13 @@ def loadRoutes(config):
 
     #FormShare routes
     routes = []
-    routes.append(addRoute('home', '/', home_view, 'mytemplate.jinja2'))
+    routes.append(addRoute('home', '/', home_view, 'landing/index.jinja2'))
+    routes.append(addRoute('login', '/login', login_view, 'dashboard/login.jinja2'))
+    routes.append(addRoute('register', '/register', register_view, 'dashboard/register.jinja2'))
     routes.append(addRoute('logout', '/logout', logout_view, None))
+
+    routes.append(addRoute('dashboard', '/dashboard', dashboard_view, 'dashboard/index.jinja2'))
+
     appendToRoutes(routes)
 
     #Add the not found route

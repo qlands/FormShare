@@ -11,12 +11,12 @@
 
 from ago import human
 import arrow
-from pattern.text.en import pluralize as pluralize_en
-from pattern.text.es import pluralize as pluralize_es
-from pattern.text.de import pluralize as pluralize_de
-from pattern.text.fr import pluralize as pluralize_fr
-from pattern.text.it import pluralize as pluralize_it
-from pattern.text.nl import pluralize as pluralize_nl
+from .pattern.text.en import pluralize as pluralize_en
+from .pattern.text.es import pluralize as pluralize_es
+from .pattern.text.de import pluralize as pluralize_de
+from .pattern.text.fr import pluralize as pluralize_fr
+from .pattern.text.it import pluralize as pluralize_it
+from .pattern.text.nl import pluralize as pluralize_nl
 import formshare.plugins as p
 
 __all__ = [
@@ -39,7 +39,10 @@ class helper:
     def pluralize(self,noun,size):
         if size == 1:
             return noun
-        language = "en"
+        language = None
+
+        if self.request.locale_name.find('en') >= 0:
+            language = "en"
         if self.request.locale_name.find('es') >= 0:
             language = "es"
         if self.request.locale_name.find('de') >= 0:
@@ -51,25 +54,31 @@ class helper:
         if self.request.locale_name.find('nl') >= 0:
             language = "nl"
 
-        if language == "es":
-            return pluralize_es(noun)
-        if language == "de":
-            return pluralize_de(noun)
-        if language == "de":
-            return pluralize_de(noun)
-        if language == "fr":
-            return pluralize_fr(noun)
-        if language == "it":
-            return pluralize_it(noun)
-        if language == "nl":
-            return pluralize_nl(noun)
+        plural = noun
 
-        #Call connected plugins to see if they have extended formshare pluralize function
+        if language == "en":
+            plural = pluralize_en(noun)
+        if language == "es":
+            plural = pluralize_es(noun)
+        if language == "de":
+            plural = pluralize_de(noun)
+        if language == "de":
+            plural = pluralize_de(noun)
+        if language == "fr":
+            plural = pluralize_fr(noun)
+        if language == "it":
+            plural = pluralize_it(noun)
+        if language == "nl":
+            plural = pluralize_nl(noun)
+
+
+        #Call connected plugins to see if they have extended or overwrite formshare pluralize function
         for plugin in p.PluginImplementations(p.IPluralize):
             res = plugin.pluralize(noun,self.request.locale_name)
             if res != "":
-                return res
+                plural = res
         #Will return English pluralization if none of the above happens
-        return pluralize_en(noun)
+        # return pluralize_en(noun)
+        return plural
 
 

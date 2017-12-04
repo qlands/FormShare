@@ -1,0 +1,12 @@
+{% macro csrf_token(request) %}
+  <input type="hidden" name="csrf_token" value="{{ request.session.get_csrf_token() }}">
+{% endmacro %}
+
+{% macro display_errors(errors) %}
+    {% for error in errors %}
+        <div class="alert alert-danger alert-dismissable">
+            <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
+            {{ error }}.
+        </div>
+    {% endfor %}
+{% endmacro %}

@@ -13,9 +13,12 @@ import os
 from pyramid.session import SignedCookieSessionFactory
 import formshare.plugins as p
 import formshare.resources as r
-from jinja_extensions import initialize, SnippetExtension, extendThis, CSSResourceExtension,JSResourceExtension
-from mainresources import createResources
-from ..utility import helper
+from formshare.models import addColumnToSchema
+from formshare.models.meta import Base, metadata
+from sqlalchemy.orm import configure_mappers
+from .jinja_extensions import initialize, SnippetExtension, extendThis, CSSResourceExtension,JSResourceExtension
+from .mainresources import createResources
+from ..utility.helpers import helper
 from .routes import loadRoutes
 
 my_session_factory = SignedCookieSessionFactory('`h6N[wQ8@S"B$bGy;')
@@ -107,6 +110,27 @@ def load_environment(settings,config,apppath):
         jsResources = plugin.add_JSResources(config)
         for resource in jsResources:
             r.addJSResource(resource["libraryname"], resource["id"], resource["file"], resource["depends"])
+
+    # Call any connected plugins to add their modifications into the schema
+    schemas_allowed = ["user", "project", "enumerator", "enumgroup", "datauser", "datagroup", "form"]
+    for plugin in p.PluginImplementations(p.ISchema):
+        schemaFields = plugin.update_schema(config)
+        for field in schemaFields:
+            if field["schema"] in schemas_allowed:
+                addColumnToSchema(field["schema"], field["fieldname"], field["fielddesc"])
+
+    #Call any connected plugins to add their tables
+    for plugin in p.PluginImplementations(p.IDatabase):
+        plugin.update_schema(config,Base)
+
+    # run configure_mappers after calling plugins implementing IDatabase
+    # all relationships can be setup
+    configure_mappers()
+
+    # print "**********************88"
+    # for table in metadata.sorted_tables:
+    #     print table.name
+    # print "**********************88"
 
 
     # jinjaEnv is used by the jinja2 extensions so we get it from the config

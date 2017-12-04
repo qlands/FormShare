@@ -9,6 +9,8 @@ from .formshare import Datagroup,Datauser,Enumerator,Enumgroup,\
     Enumingroup,Form,Groupaccess,Grpsubmitter,Log,Project,\
     Submitter,User,Useraccess,Useringroup  # flake8: noqa
 
+from .schema import *
+
 # run configure_mappers after defining all of the models to ensure
 # all relationships can be setup
 configure_mappers()
@@ -77,3 +79,5 @@ def includeme(config):
         'dbsession',
         reify=True
     )
+
+    initialize_schema()

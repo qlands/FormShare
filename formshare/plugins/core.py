@@ -12,8 +12,7 @@ from pyutilib.component.core import implements
 from pyutilib.component.core import ExtensionPoint as PluginImplementations
 from pyutilib.component.core import SingletonPlugin as _pca_SingletonPlugin
 from pyutilib.component.core import Plugin as _pca_Plugin
-
-import interfaces
+from .interfaces import IPluginObserver
 
 __all__ = [
     'PluginImplementations', 'implements',
@@ -91,7 +90,7 @@ def load(*plugins):
     '''
     output = []
 
-    observers = PluginImplementations(interfaces.IPluginObserver)
+    observers = PluginImplementations(IPluginObserver)
     for plugin in plugins:
         if plugin in _PLUGINS:
             raise Exception('Plugin `%s` already loaded' % plugin)
@@ -132,7 +131,7 @@ def unload(*plugins):
     Unload named plugin(s).
     '''
 
-    observers = PluginImplementations(interfaces.IPluginObserver)
+    observers = PluginImplementations(IPluginObserver)
 
     for plugin in plugins:
         if plugin in _PLUGINS:
@@ -174,7 +173,7 @@ def _get_service(plugin_name):
     :return: the service object
     '''
 
-    if isinstance(plugin_name, basestring):
+    if isinstance(plugin_name, str):
         for group in GROUPS:
             iterator = iter_entry_points(
                 group=group,

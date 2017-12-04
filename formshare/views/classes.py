@@ -17,14 +17,15 @@ from pyramid.session import check_csrf_token
 from pyramid.httpexceptions import HTTPNotFound
 from formencode.variabledecode import variable_decode
 from pyramid.response import Response
-from hashlib import md5
-import uuid
+import hashlib
+from babel import Locale
+import uuid,sys
 
 class odkView(object):
     def __init__(self, request):
         self.request = request
         self._ = self.request.translate
-        self.nonce = md5(str(uuid.uuid4())).hexdigest()
+        self.nonce = hashlib.md5(str(uuid.uuid4())).hexdigest()
         self.opaque = request.registry.settings['auth.opaque']
         self.realm = request.registry.settings['auth.realm']
         self.authHeader = {}
@@ -42,20 +43,20 @@ class odkView(object):
         HA1 = ""
         HA2 = ""
         if self.authHeader["qop"] == 'auth':
-            HA1 = md5(self.user + ":" + self.realm + ":" + correctPassword)
-            HA2 = md5(self.request.method + ":" + self.authHeader["uri"])
+            HA1 = hashlib.md5(self.user + ":" + self.realm + ":" + correctPassword)
+            HA2 = hashlib.md5(self.request.method + ":" + self.authHeader["uri"])
         if self.authHeader["qop"] == 'auth-int':
-            HA1 = md5(self.user + ":" + self.realm + ":" + correctPassword)
-            MD5Body = md5(self.request.body).hexdigest()
-            HA2 = md5(self.request.method + ":" + self.authHeader["uri"] + ":" + MD5Body)
+            HA1 = hashlib.md5(self.user + ":" + self.realm + ":" + correctPassword)
+            MD5Body = hashlib.md5(self.request.body).hexdigest()
+            HA2 = hashlib.md5(self.request.method + ":" + self.authHeader["uri"] + ":" + MD5Body)
         if HA1 == "":
-            HA1 = md5(self.user + ":" + self.realm + ":" + correctPassword)
-            HA2 = md5(self.request.method + ":" + self.authHeader["uri"])
+            HA1 = hashlib.md5(self.user + ":" + self.realm + ":" + correctPassword)
+            HA2 = hashlib.md5(self.request.method + ":" + self.authHeader["uri"])
 
         authLine = ":".join(
             [HA1.hexdigest(), self.authHeader["nonce"], self.authHeader["nc"], self.authHeader["cnonce"], self.authHeader["qop"], HA2.hexdigest()])
 
-        resp = md5(authLine)
+        resp = hashlib.md5(authLine)
         if resp.hexdigest() == self.authHeader["response"]:
             return True
         else:
@@ -68,10 +69,16 @@ class odkView(object):
         return reponse
 
     def createXMLResponse(self,XMLData):
+
+        if sys.version_info >= (3, 0):
+            def unicode(object,encoding="utf-8"):
+                return str(object)
+
         headers = [('Content-Type', 'text/xml; charset=utf-8'), ('X-OpenRosa-Accept-Content-Length', '10000000'),
                    ('Content-Language', self.request.locale_name), ('Vary', 'Accept-Language,Cookie,Accept-Encoding'),
                    ('X-OpenRosa-Version', '1.0'), ('Allow', 'GET, HEAD, OPTIONS')]
         response = Response(headerlist=headers, status=200)
+
         response.text = unicode(XMLData, "utf-8")
         return response
 
@@ -100,9 +107,19 @@ class publicView(object):
     def __init__(self, request):
         self.request = request
         self._ = self.request.translate
+        self.resultDict = {}
+        self.errors = []
+        locale = Locale(request.locale_name)
+        if locale.character_order == "left-to-right":
+            self.resultDict["rtl"] = False
+        else:
+            self.resultDict["rtl"] = True
 
     def __call__(self):
-        return self.processView()
+        self.resultDict["errors"] = self.errors
+        processDict = self.processView()
+        self.resultDict.update(processDict)
+        return self.resultDict
 
     def processView(self):
         return {}
@@ -111,11 +128,19 @@ class publicView(object):
         dct = variable_decode(self.request.POST)
         return dct
 
+
 class privateView(object):
     def __init__(self, request):
         self.request = request
         self.user = None
         self._ = self.request.translate
+        self.errors = []
+        self.resultDict = {}
+        locale = Locale(request.locale_name)
+        if locale.character_order == "left-to-right":
+            self.resultDict["rtl"] = False
+        else:
+            self.resultDict["rtl"] = True
 
     def __call__(self):
         login = authenticated_userid(self.request)
@@ -128,7 +153,11 @@ class privateView(object):
             if not safe:
                 return HTTPNotFound()
 
-        return self.processView()
+        self.resultDict["activeUser"] = self.user
+        self.resultDict["errors"] = self.errors
+        processDict = self.processView()
+        self.resultDict.update(processDict)
+        return self.resultDict
 
     def processView(self):
         return {'activeUser': self.user}

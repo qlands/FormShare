@@ -11,7 +11,7 @@
 """
 
 from pyramid.security import authenticated_userid
-from ..config.auth import getUserData
+from ..config.auth import getUserData, getCollaboratorData
 from pyramid.httpexceptions import HTTPFound
 from pyramid.session import check_csrf_token
 from pyramid.httpexceptions import HTTPNotFound
@@ -19,13 +19,15 @@ from formencode.variabledecode import variable_decode
 from pyramid.response import Response
 import hashlib
 from babel import Locale
-import uuid,sys
+import uuid
+from ast import literal_eval
+from formshare.processes import getProjectIDFromName
 
 class odkView(object):
     def __init__(self, request):
         self.request = request
         self._ = self.request.translate
-        self.nonce = hashlib.md5(str(uuid.uuid4())).hexdigest()
+        self.nonce = hashlib.md5(str(uuid.uuid4()).encode()).hexdigest()
         self.opaque = request.registry.settings['auth.opaque']
         self.realm = request.registry.settings['auth.realm']
         self.authHeader = {}
@@ -37,26 +39,29 @@ class odkView(object):
         autharray = authheader.split(",")
         for e in autharray:
             t = e.split("=")
-            self.authHeader[t[0]] = t[1]
+            if len(t) == 2:
+                self.authHeader[t[0]] = t[1]
+            else:
+                self.authHeader[t[0]] = t[1] + "=" + t[2]
 
     def authorize(self,correctPassword):
         HA1 = ""
         HA2 = ""
         if self.authHeader["qop"] == 'auth':
-            HA1 = hashlib.md5(self.user + ":" + self.realm + ":" + correctPassword)
-            HA2 = hashlib.md5(self.request.method + ":" + self.authHeader["uri"])
+            HA1 = hashlib.md5((self.user + ":" + self.realm + ":" + correctPassword).encode())
+            HA2 = hashlib.md5((self.request.method + ":" + self.authHeader["uri"]).encode())
         if self.authHeader["qop"] == 'auth-int':
-            HA1 = hashlib.md5(self.user + ":" + self.realm + ":" + correctPassword)
+            HA1 = hashlib.md5((self.user + ":" + self.realm + ":" + correctPassword).encode())
             MD5Body = hashlib.md5(self.request.body).hexdigest()
-            HA2 = hashlib.md5(self.request.method + ":" + self.authHeader["uri"] + ":" + MD5Body)
+            HA2 = hashlib.md5((self.request.method + ":" + self.authHeader["uri"] + ":" + MD5Body).encode())
         if HA1 == "":
-            HA1 = hashlib.md5(self.user + ":" + self.realm + ":" + correctPassword)
+            HA1 = hashlib.md5((self.user + ":" + self.realm + ":" + correctPassword).encode())
             HA2 = hashlib.md5(self.request.method + ":" + self.authHeader["uri"])
 
         authLine = ":".join(
             [HA1.hexdigest(), self.authHeader["nonce"], self.authHeader["nc"], self.authHeader["cnonce"], self.authHeader["qop"], HA2.hexdigest()])
 
-        resp = hashlib.md5(authLine)
+        resp = hashlib.md5(authLine.encode())
         if resp.hexdigest() == self.authHeader["response"]:
             return True
         else:
@@ -69,17 +74,12 @@ class odkView(object):
         return reponse
 
     def createXMLResponse(self,XMLData):
-
-        if sys.version_info >= (3, 0):
-            def unicode(object,encoding="utf-8"):
-                return str(object)
-
         headers = [('Content-Type', 'text/xml; charset=utf-8'), ('X-OpenRosa-Accept-Content-Length', '10000000'),
                    ('Content-Language', self.request.locale_name), ('Vary', 'Accept-Language,Cookie,Accept-Encoding'),
                    ('X-OpenRosa-Version', '1.0'), ('Allow', 'GET, HEAD, OPTIONS')]
         response = Response(headerlist=headers, status=200)
 
-        response.text = unicode(XMLData, "utf-8")
+        response.text = str(XMLData, "utf-8")
         return response
 
 
@@ -118,8 +118,11 @@ class publicView(object):
     def __call__(self):
         self.resultDict["errors"] = self.errors
         processDict = self.processView()
-        self.resultDict.update(processDict)
-        return self.resultDict
+        if type(processDict) == dict:
+            self.resultDict.update(processDict)
+            return self.resultDict
+        else:
+            return processDict
 
     def processView(self):
         return {}
@@ -143,10 +146,17 @@ class privateView(object):
             self.resultDict["rtl"] = True
 
     def __call__(self):
-        login = authenticated_userid(self.request)
-        self.user = getUserData(login,self.request)
-        if (self.user == None):
-            return HTTPFound(location=self.request.route_url('login'))
+        loginData = authenticated_userid(self.request)
+        if loginData is not None:
+            loginData = literal_eval(loginData)
+            if loginData["group"] == "mainApp":
+                self.user = getUserData(loginData["login"],self.request)
+                if self.user is None:
+                    return HTTPFound(location=self.request.route_url('login',_query={'next':self.request.url}))
+            else:
+                return HTTPFound(location=self.request.route_url('login', _query={'next': self.request.url}))
+        else:
+            return HTTPFound(location=self.request.route_url('login', _query={'next': self.request.url}))
 
         if self.request.method == 'POST':
             safe = check_csrf_token(self.request,raises=False)
@@ -156,11 +166,68 @@ class privateView(object):
         self.resultDict["activeUser"] = self.user
         self.resultDict["errors"] = self.errors
         processDict = self.processView()
-        self.resultDict.update(processDict)
-        return self.resultDict
+        if type(processDict) == dict:
+            self.resultDict.update(processDict)
+            return self.resultDict
+        else:
+            return processDict
 
     def processView(self):
         return {'activeUser': self.user}
+
+    def getPostDict(self):
+        dct = variable_decode(self.request.POST)
+        return dct
+
+class collaboratorView(object):
+    def __init__(self, request):
+        self.request = request
+        self.projectID = ""
+        self.collaborator = None
+        self._ = self.request.translate
+        self.errors = []
+        self.resultDict = {}
+        locale = Locale(request.locale_name)
+        if locale.character_order == "left-to-right":
+            self.resultDict["rtl"] = False
+        else:
+            self.resultDict["rtl"] = True
+
+    def __call__(self):
+        projectName = self.request.matchdict['pname']
+        userID = self.request.matchdict['userid']
+        self.projectID = getProjectIDFromName(self.request, userID, projectName)
+        if self.projectID is None:
+            raise HTTPNotFound()
+
+        loginData = authenticated_userid(self.request)
+        if loginData is not None:
+            loginData = literal_eval(loginData)
+            if loginData["group"] == "collaborators":
+                self.collaborator = getCollaboratorData(self.projectID,loginData["login"],self.request)
+                if self.collaborator is None:
+                    return HTTPFound(location=self.request.route_url('login',_query={'next':self.request.url}))
+            else:
+                return HTTPFound(location=self.request.route_url('login', _query={'next': self.request.url}))
+        else:
+            return HTTPFound(location=self.request.route_url('login', _query={'next': self.request.url}))
+
+        if self.request.method == 'POST':
+            safe = check_csrf_token(self.request,raises=False)
+            if not safe:
+                raise HTTPNotFound()
+
+        self.resultDict["activeCollaborator"] = self.collaborator
+        self.resultDict["errors"] = self.errors
+        processDict = self.processView()
+        if type(processDict) == dict:
+            self.resultDict.update(processDict)
+            return self.resultDict
+        else:
+            return processDict
+
+    def processView(self):
+        return {'activeCollaborator': self.collaborator}
 
     def getPostDict(self):
         dct = variable_decode(self.request.POST)

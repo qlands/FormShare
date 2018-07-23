@@ -11,12 +11,7 @@
 
 from ago import human
 import arrow
-from .pattern.text.en import pluralize as pluralize_en
-from .pattern.text.es import pluralize as pluralize_es
-from .pattern.text.de import pluralize as pluralize_de
-from .pattern.text.fr import pluralize as pluralize_fr
-from .pattern.text.it import pluralize as pluralize_it
-from .pattern.text.nl import pluralize as pluralize_nl
+import inflect
 import formshare.plugins as p
 
 __all__ = [
@@ -25,6 +20,7 @@ __all__ = [
 
 class helper:
     request = None
+    activeMenu = None
     def __init__(self, request):
         self.request = request
 
@@ -57,19 +53,8 @@ class helper:
         plural = noun
 
         if language == "en":
-            plural = pluralize_en(noun)
-        if language == "es":
-            plural = pluralize_es(noun)
-        if language == "de":
-            plural = pluralize_de(noun)
-        if language == "de":
-            plural = pluralize_de(noun)
-        if language == "fr":
-            plural = pluralize_fr(noun)
-        if language == "it":
-            plural = pluralize_it(noun)
-        if language == "nl":
-            plural = pluralize_nl(noun)
+            pl = inflect.engine()
+            plural = pl.plural(noun)
 
 
         #Call connected plugins to see if they have extended or overwrite formshare pluralize function
@@ -81,4 +66,31 @@ class helper:
         # return pluralize_en(noun)
         return plural
 
+    def setActiveMenu(self,menuItem):
+        self.activeMenu = menuItem
+
+    def getActiveMenu(self):
+        return self.activeMenu
+
+    def setActiveDashBoard(self,dashBoard):
+        session = self.request.session
+        session['dashboard'] = dashBoard
+
+    def getActiveDashBoard(self):
+        session = self.request.session
+        if 'dashboard' in session:
+            return session['dashboard']
+        else:
+            return None
+
+    def setActiveProject(self,project):
+        session = self.request.session
+        session['project'] = project
+
+    def getActiveProject(self):
+        session = self.request.session
+        if 'project' in session:
+            return session['project']
+        else:
+            return None
 

@@ -39,6 +39,8 @@ def createResources(apppath,config):
     r.addCSSResource('dashboard', 'style', 'css/style.css')
     r.addCSSResource('dashboard', 'toastr', 'css/plugins/toastr/toastr.min.css',None)
     r.addCSSResource('dashboard', 'rtl', 'css/plugins/bootstrap-rtl/bootstrap-rtl.min.css', 'bootstrap')
+    r.addCSSResource('dashboard', 'leaflet', 'js/plugins/leaflet/leaflet/leaflet.css', None)
+    r.addCSSResource('dashboard', 'chosen', 'css/plugins/chosen/bootstrap-chosen.css', 'bootstrap')
 
     r.addJSResource('dashboard', 'jquery', 'js/jquery-3.1.1.min.js')
     r.addJSResource('dashboard', 'bootstrap', 'js/bootstrap.min.js')
@@ -47,5 +49,8 @@ def createResources(apppath,config):
     r.addJSResource('dashboard', 'inspinia', 'js/inspinia.js')
     r.addJSResource('dashboard', 'pace', 'js/plugins/pace/pace.min.js')
     r.addJSResource('dashboard', 'toastr', 'js/plugins/toastr/toastr.min.js')
+    r.addJSResource('dashboard', 'chartjs', 'js/plugins/chartJs/Chart.min.js','pace')
+    r.addJSResource('dashboard', 'leaflet', 'js/plugins/leaflet/leaflet/leaflet.js', None)
+    r.addJSResource('dashboard', 'chosen', 'js/plugins/chosen/chosen.jquery.js', 'bootstrap')
 
 

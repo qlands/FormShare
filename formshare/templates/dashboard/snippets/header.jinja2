@@ -50,7 +50,7 @@
 
                 {% block logout %}
                     <li>
-                        <a href="login.html">
+                        <a href="{{ request.route_url('logout') }}">
                             <i class="fa fa-sign-out"></i> {{ _("Log out") }}
                         </a>
                     </li>

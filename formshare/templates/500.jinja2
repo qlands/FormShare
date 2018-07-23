@@ -1,0 +1,27 @@
+{% extends 'dashboard/page.jinja2' %}
+
+{% block title %}
+    <title>{{ _("Application error") }}</title>
+{% endblock %}
+
+{% block css %}
+    {% cssresource request,'dashboard','style' %}
+{% endblock css %}
+
+{% block bodyclass %}gray-bg{% endblock bodyclass %}
+
+{% block bodycontent %}
+    <div class="middle-box text-center animated fadeInDown">
+        <h1>500</h1>
+        <h3 class="font-bold">Internal Server Error</h3>
+
+        <div class="error-desc">
+            The server encountered something unexpected that didn't allow it to complete the request. We apologize.<br/>
+            You can go back to main page: <br/><a href="{{ request.route_url('dashboard') }}" class="btn btn-primary m-t">Dashboard</a>
+        </div>
+    </div>
+{% endblock bodycontent %}
+
+{% block mainscripts %}
+    {% jsresource request,'dashboard','bootstrap' %}
+{% endblock mainscripts %}

@@ -1,0 +1,35 @@
+<li class="nav-header">
+    <div class="dropdown profile-element"> <span>
+        <img alt="image" class="img-circle" src="{{ activeUser.gravatarURL }}" />
+    </span>
+        <a data-toggle="dropdown" class="dropdown-toggle" href="#">
+            <span class="clear">
+                <span class="block m-t-xs">
+                    {% block actUserName %}
+                        <strong class="font-bold">{{ activeUser.fullName }}</strong>
+                    {% endblock actUserName %}
+                </span>
+                <span class="text-muted text-xs block">
+                    {% block actUserTitle %}
+                        10 projects <b class="caret"></b>
+                    {% endblock actUserTitle %}
+                </span>
+            </span>
+        </a>
+        {% block userDropMenu %}
+            <ul class="dropdown-menu animated fadeInRight m-t-xs">
+                {% block userDropItems %}
+                    <li><a href="profile.html">Profile</a></li>
+                    <li><a href="contacts.html">Projects</a></li>
+                    <li class="divider"></li>
+                    <li><a href="{{ request.route_url('logout') }}">Logout</a></li>
+                {% endblock userDropItems %}
+            </ul>
+        {% endblock userDropMenu %}
+    </div>
+    <div class="logo-element">
+        {% block logoAbbreviation %}
+            FS
+        {% endblock logoAbbreviation %}
+    </div>
+</li>

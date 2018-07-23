@@ -11,8 +11,10 @@
 
 from ..plugins.utilities import addRoute
 import formshare.plugins as p
-from ..views.basic_views import notfound_view,home_view,logout_view,login_view,register_view
+from ..views.basic_views import notfound_view,home_view,logout_view,login_view,register_view,collaboratorsLogin_view
 from ..views.dashboard import dashboard_view
+from ..views.projects import projects_view,projectDetails_view
+from ..views.form import formDetails_view
 
 route_list = []
 
@@ -42,10 +44,14 @@ def loadRoutes(config):
     routes = []
     routes.append(addRoute('home', '/', home_view, 'landing/index.jinja2'))
     routes.append(addRoute('login', '/login', login_view, 'dashboard/login.jinja2'))
+    routes.append(addRoute('collaboratorslogin', '/collaborator_access/{userid}/{pname}/login', collaboratorsLogin_view, 'collaborators/login.jinja2'))
     routes.append(addRoute('register', '/register', register_view, 'dashboard/register.jinja2'))
     routes.append(addRoute('logout', '/logout', logout_view, None))
 
     routes.append(addRoute('dashboard', '/dashboard', dashboard_view, 'dashboard/index.jinja2'))
+    routes.append(addRoute('projects', '/projects', projects_view, 'dashboard/projects.jinja2'))
+    routes.append(addRoute('project_details', '/project/{projid}', projectDetails_view, 'dashboard/project_details.jinja2'))
+    routes.append(addRoute('form_details', '/project/{projid}/forms/{formid}', formDetails_view, 'dashboard/form_details.jinja2'))
 
     appendToRoutes(routes)
 

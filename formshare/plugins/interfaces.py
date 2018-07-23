@@ -183,6 +183,17 @@ class IAuthorize(Interface):
         """
         return True,""
 
+    def after_collaborator_login(self, request, collaborator):
+        """
+        Called by the host application so plugins can modify the login of collaborators
+
+        :param request: ``pyramid.request`` object
+        :param collaborator: collaborator object
+        :return Return true or false if the login should continue. If False then a message should state why
+
+        """
+        return True,""
+
     def before_register(self, request, registrant):
         """
         Called by the host application so plugins can do something before registering a user

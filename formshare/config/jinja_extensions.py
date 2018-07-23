@@ -18,7 +18,6 @@ from jinja2 import FileSystemLoader
 import os,re
 import formshare.resources as r
 from pyramid.threadlocal import get_current_request
-import sys
 
 
 jinjaEnv = Environment()
@@ -208,15 +207,11 @@ def regularise_html(html):
 
     '''
 
-    if sys.version_info >= (3, 0):
-        def xrange(*args, **kwargs):
-            return iter(range(*args, **kwargs))
-
     if html is None:
         return
     html = re.sub('\n', ' ', html)
     matches = re.findall('(<[^>]*>|%[^%]\([^)]*\)\w|[^<%]+|%)', html)
-    for i in xrange(len(matches)):
+    for i in range(len(matches)):
         match = matches[i]
         if match.startswith('<') or match.startswith('%'):
             continue

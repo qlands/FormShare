@@ -34,10 +34,13 @@ requires = [
     'ago',
     'lxml',
     'celery',
-    'nltk',
-    'numpy',
-    'numba'
+    'inflect',
+    'validate_email'
 ]
+
+postgresql_requires = ['psycopg2']
+
+sqlserver_requires = ['pyodbc']
 
 tests_require = [
     'WebTest >= 1.3.1',  # py3 compat
@@ -72,7 +75,8 @@ setup(
             'main = formshare:main',
         ],
         'console_scripts': [
-            'initialize_formshare_db = formshare.scripts.initializedb:main',
+            'create_organization = formshare.scripts.createorg:main',
+            'create_superuser = formshare.scripts.createsuperuser:main',
         ],
     },
 )

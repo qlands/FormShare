@@ -1,0 +1,46 @@
+{% extends 'dashboard/page.jinja2' %}
+
+{% block title %}
+    <title>{{ _("FormShare | Dashboard") }}</title>
+{% endblock title %}
+
+{% block mainnav %}
+    {% snippet 'dashboard/snippets/mainnav.jinja2', request=request,activeUser=activeUser %}
+{% endblock mainnav %}
+
+{% block pageheader %}
+    {% snippet 'dashboard/snippets/header.jinja2', request=request %}
+{% endblock pageheader %}
+
+{% block breadcrumbs %}
+    {% snippet 'dashboard/snippets/projects/project_breadcrumbs.jinja2', request=request %}
+{% endblock breadcrumbs %}
+
+{% block maincontent %}
+    <div class="ibox">
+        <div class="ibox-title">
+            <h5>All projects in your account</h5>
+            <div class="ibox-tools">
+                <a href="" class="btn btn-primary btn-xs">Create new project</a>
+            </div>
+        </div>
+        <div class="ibox-content">
+            <div class="row m-b-sm m-t-sm">
+                <div class="col-md-1">
+                    <button type="button" id="loading-example-btn" class="btn btn-white btn-sm" ><i class="fa fa-refresh"></i> Refresh</button>
+                </div>
+                <div class="col-md-11">
+                    <div class="input-group"><input type="text" placeholder="Search" class="input-sm form-control"> <span class="input-group-btn">
+                        <button type="button" class="btn btn-sm btn-primary"> Go!</button> </span></div>
+                </div>
+            </div>
+            <div class="project-list">
+                <table class="table table-hover">
+                    <tbody>
+                        {% snippet 'dashboard/snippets/projects/project_item.jinja2', request=request %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock maincontent %}

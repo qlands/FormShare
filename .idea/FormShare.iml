@@ -4,7 +4,7 @@
     <content url="file://$MODULE_DIR$">
       <excludeFolder url="file://$MODULE_DIR$/formshare.egg-info" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.6 (env_formshare_py3)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.6 (env_formshare)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="R Skeletons" level="application" />
     <orderEntry type="library" name="R User Library" level="project" />

@@ -5,9 +5,11 @@ import zope.sqlalchemy
 
 # import or define all models here to ensure they are attached to the
 # Base.metadata prior to any initialization routines
-from .formshare import Datagroup,Datauser,Enumerator,Enumgroup,\
-    Enumingroup,Form,Groupaccess,Grpsubmitter,Log,Project,\
-    Submitter,User,Useraccess,Useringroup  # flake8: noqa
+# from .formshare import Datagroup,Datauser,Enumerator,Enumgroup,\
+#     Enumingroup,Form,Groupaccess,Grpsubmitter,Log,Project,\
+#     Submitter,User,Useraccess,Useringroup  # flake8: noqa
+from .formshare import Collaboratorlog,User,Userlog,Project,Collaborator,Collgroup,Form,\
+    Collingroup,Formacces,Formgrpacces,Jsonlog,Septable,Submission,Jsonhistory,Sepsection,Sepitem
 
 from .schema import *
 

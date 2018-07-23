@@ -5,61 +5,64 @@
 {% endblock css %}
 
 {% block body %}
-    <div id="wrapper">
-        {% block wrapper %}
-            {% block mainnav %}
-                {#
+    {% block bodycontent %}
+        <div id="wrapper">
+            {% block wrapper %}
+                {% block mainnav %}
+                    {#
                     Extend this section with the below script to have the main navigation bar
                     {% snippet 'dashboard/snippets/mainnav.jinja2', request=request %}
                  #}
-            {% endblock mainnav %}
-            <div id="page-wrapper" class="gray-bg">
-                {% block pagewrapper %}
-                    {% block pageheader %}
-                        {#
+                {% endblock mainnav %}
+                <div id="page-wrapper" class="gray-bg">
+                    {% block pagewrapper %}
+                        {% block pageheader %}
+                            {#
                             Extend this section with the below script to have the page header
                             {% snippet 'dashboard/snippets/header.jinja2', request=request %}
                          #}
-                    {% endblock pageheader %}
-                    {% block dashheader %}
-                        <div class="row wrapper border-bottom white-bg page-heading">
-                            {% block breadcrumbs %}
-                                {#
+                        {% endblock pageheader %}
+                        {% block dashheader %}
+                            <div class="row wrapper border-bottom white-bg page-heading">
+                                {% block breadcrumbs %}
+                                    {#
                                     Extend this section to have breadcrumbs
                                     {% snippet 'formshare/templates/dashboard/snippets/breadcrumbs.jinja2', request=request %}
                                  #}
-                            {% endblock breadcrumbs %}
-                        </div>
-                    {% endblock dashheader %}
+                                {% endblock breadcrumbs %}
+                            </div>
+                        {% endblock dashheader %}
+                        {% block main_section %}
+                            <div class="wrapper wrapper-content">
+                                {% block maincontent %}
 
-                    <div class="wrapper wrapper-content">
-                        {% block maincontent %}
-
-                        {% endblock maincontent %}
-                    </div>
-                    {% block footer %}
-                        {#
+                                {% endblock maincontent %}
+                            </div>
+                        {% endblock main_section %}
+                        {% block footer %}
+                            {#
                             Extend this section with the below snipped to have a page footer
                             {% snippet 'dashboard/snippets/footer.jinja2', request=request, fixed=True %}
                         #}
-                    {% endblock footer %}
-                {% endblock pagewrapper %}
-            </div>
-            {% block smallchat %}
-                {#
+                        {% endblock footer %}
+                    {% endblock pagewrapper %}
+                </div>
+                {% block smallchat %}
+                    {#
                         Extend this block with an edited version of the snippet if you require a small chat window
                         {% snippet 'dashboard/snippets/chat.jinja2', request=request %}
                      #}
-            {% endblock smallchat %}
-            {% block sidebar %}
-                {#
+                {% endblock smallchat %}
+                {% block sidebar %}
+                    {#
                         Extend this block with an edited version of the snippet if you require a side bar
                         The side bar action button is defined in the header snippet
                         {% snippet 'dashboard/snippets/sidebar.jinja2', request=request %}
                     #}
-            {% endblock sidebar %}
-        {% endblock wrapper %}
-    </div>
+                {% endblock sidebar %}
+            {% endblock wrapper %}
+        </div>
+    {% endblock bodycontent %}
     {% block scripts %}
         {% block mainscripts %}
             {% jsresource request,'dashboard','pace' %}

@@ -1,0 +1,474 @@
+{% extends 'dashboard/page.jinja2' %}
+
+{% block title %}
+    <title>{{ _("FormShare | Dashboard") }}</title>
+{% endblock title %}
+
+{% block css %}
+    {{ super() }}
+    {% cssresource request,'dashboard','leaflet' %}
+{% endblock css %}
+
+{% block mainnav %}
+    {% snippet 'dashboard/snippets/mainnav.jinja2', request=request,activeUser=activeUser %}
+{% endblock mainnav %}
+
+{% block pageheader %}
+    {% snippet 'dashboard/snippets/header.jinja2', request=request %}
+{% endblock pageheader %}
+
+{% block breadcrumbs %}
+    {% snippet 'dashboard/snippets/projects/form_details_breadcrumbs.jinja2', request=request,projectID=projectID,projectName=projectName,formID=formID,formName=formName %}
+{% endblock breadcrumbs %}
+
+{% block main_section %}
+    <div class="row">
+        <div class="col-lg-9">
+            <div class="wrapper wrapper-content animated fadeInUp">
+                <div class="ibox">
+                    <div class="ibox-content">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="m-b-md">
+                                    <h2>{{ formName }}</h2>
+                                </div>
+                                <dl class="dl-horizontal">
+                                    <dt>Status:</dt> <dd><span class="label label-primary">Active</span> <button class="btn btn-default btn-circle" type="button" title="Toggle status"><i class="fa fa-refresh"></i></button></dd>
+                                </dl>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-5">
+                                <dl class="dl-horizontal">
+                                    <dt>Submissions:</dt> <dd>  162</dd>
+                                </dl>
+                            </div>
+                            <div class="col-lg-7" id="cluster_info">
+                                <dl class="dl-horizontal" >
+                                    <dt>Last Updated:</dt> <dd>16.08.2014 12:15:57</dd>
+                                    <dt>Last submission:</dt> <dd> 10.07.2014 23:36:57 </dd>
+                                </dl>
+                            </div>
+                        </div>
+                        <div class="row m-t-sm">
+                            <div class="col-lg-12">
+                                <div class="panel blank-panel">
+                                    <div class="panel-heading">
+                                        <div class="panel-options">
+                                            <ul class="nav nav-tabs">
+                                                <li class="active"><a href="#tab-1" data-toggle="tab"><i class="fa fa-mobile-phone"></i>Assigned collaborators</a></li>
+                                                <li class=""><a href="#tab-2" data-toggle="tab"><i class="fa fa-user"></i>Assigned groups</a></li>
+                                                <li class=""><a href="#tab-3" data-toggle="tab"><i class="fa fa-users"></i>Tasks</a></li>
+                                                <li class=""><a href="#tab-4" data-toggle="tab"><i class="fa fa-calendar"></i>Last activity</a></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                    <div class="panel-body">
+                                        <div class="tab-content">
+                                            <div class="tab-pane active" id="tab-1">
+                                                <div class="row m-b-sm m-t-sm">
+                                                    <div class="col-md-1">
+                                                        <button type="button" id="loading-example-btn" class="btn btn-primary btn-sm" ><i class="fa fa-plus-square"></i> Add</button>
+                                                    </div>
+                                                    <div class="col-md-11">
+                                                        <div class="input-group" style="width: 100%;">
+                                                            <input type="text" placeholder="Search" class="input-sm form-control">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="full-height-scroll" style="max-height: 300px">
+                                                    <div class="table-responsive">
+                                                        <table class="table table-striped table-hover">
+                                                            <tbody>
+                                                            <tr>
+                                                                <td class="project-title">
+                                                                    Carlos Quiros (cquiros) <span class="label label-default">Inactive</span>
+                                                                    <br/>
+                                                                    <small>14.08.2014</small>
+                                                                </td>
+                                                                <td class="project-actions">
+                                                                    <button class="btn btn-default btn-circle" type="button" title="Toggle status"><i class="fa fa-refresh"></i></button>
+                                                                    <button class="btn btn-danger btn-circle" type="button" title="Remove collaborator"><i class="fa fa-trash"></i></button>
+                                                                </td>
+                                                            </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="tab-pane" id="tab-2">
+                                                <div class="row m-b-sm m-t-sm">
+                                                    <div class="col-md-1">
+                                                        <button type="button" id="loading-example-btn" class="btn btn-primary btn-sm" ><i class="fa fa-plus-square"></i> Add</button>
+                                                    </div>
+                                                    <div class="col-md-11">
+                                                        <div class="input-group" style="width: 100%;">
+                                                            <input type="text" placeholder="Search" class="input-sm form-control">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="full-height-scroll" style="max-height: 300px">
+                                                    <div class="table-responsive">
+                                                        <table class="table table-striped table-hover">
+                                                            <tbody>
+                                                            <tr>
+                                                                <td class="project-title">
+                                                                    Data collectors (cquiros) <span class="label label-default">Inactive</span>
+                                                                    <br/>
+                                                                    <small>14.08.2014</small>
+                                                                </td>
+                                                                <td class="project-actions">
+                                                                    <button class="btn btn-danger btn-circle" type="button" title="Remove group"><i class="fa fa-trash"></i></button>
+                                                                </td>
+                                                            </tr>
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="tab-pane" id="tab-3">
+
+                                            </div>
+                                            <div class="tab-pane" id="tab-4">
+                                                <div class="full-height-scroll" style="max-height: 400px">
+                                                    <div class="activity-stream">
+                                                        <div class="stream">
+                                                            <div class="stream-badge">
+                                                                <i class="fa fa-pencil"></i>
+                                                            </div>
+                                                            <div class="stream-panel">
+                                                                <div class="stream-info">
+                                                                    <a href="#">
+                                                                        <img src="img/a5.jpg" />
+                                                                        <span>Karen Miggel</span>
+                                                                        <span class="date">Today at 01:32:40 am</span>
+                                                                    </a>
+                                                                </div>
+                                                                Add new note to the <a href="#">Martex</a>  project.
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="stream">
+                                                            <div class="stream-badge">
+                                                                <i class="fa fa-commenting-o"></i>
+                                                            </div>
+                                                            <div class="stream-panel">
+                                                                <div class="stream-info">
+                                                                    <a href="#">
+                                                                        <img src="img/a4.jpg" />
+                                                                        <span>John Mikkens</span>
+                                                                        <span class="date">Yesterday at 10:00:20 am</span>
+                                                                    </a>
+                                                                </div>
+                                                                Commented on <a href="#">Ariana</a> profile.
+                                                            </div>
+                                                        </div>
+                                                        <div class="stream">
+                                                            <div class="stream-badge">
+                                                                <i class="fa fa-circle"></i>
+                                                            </div>
+                                                            <div class="stream-panel">
+                                                                <div class="stream-info">
+                                                                    <a href="#">
+                                                                        <img src="img/a2.jpg" />
+                                                                        <img src="img/a3.jpg" />
+                                                                        <img src="img/a4.jpg" />
+                                                                        <span>Mike Johnson, Monica Smith and Karen Dortmund</span>
+                                                                        <span class="date">Yesterday at 02:13:20 am</span>
+                                                                    </a>
+                                                                </div>
+                                                                Changed status of third stage in the <a href="#">Vertex</a> project.
+                                                            </div>
+                                                        </div>
+                                                        <div class="stream">
+                                                            <div class="stream-badge">
+                                                                <i class="fa fa-circle"></i>
+                                                            </div>
+                                                            <div class="stream-panel">
+                                                                <div class="stream-info">
+                                                                    <a href="#">
+                                                                        <img src="img/a6.jpg" />
+                                                                        <span>Jessica Smith</span>
+                                                                        <span class="date">Yesterday at 08:14:41 am</span>
+                                                                    </a>
+                                                                </div>
+                                                                Add new files to own file sharing place.
+                                                            </div>
+                                                        </div>
+                                                        <div class="stream">
+                                                            <div class="stream-badge">
+                                                                <i class="fa fa-send bg-primary"></i>
+                                                            </div>
+                                                            <div class="stream-panel">
+                                                                <div class="stream-info">
+                                                                    <a href="#">
+                                                                        <img src="img/a7.jpg" />
+                                                                        <img src="img/a1.jpg" />
+                                                                        <span>Martha Farter and Mike Rodgers</span>
+                                                                        <span class="date">Yesterday at 04:18:13 am</span>
+                                                                    </a>
+                                                                </div>
+                                                                Sent email to all users participating in new project.
+                                                            </div>
+                                                        </div>
+                                                        <div class="stream">
+                                                            <div class="stream-badge">
+                                                                <i class="fa fa-tag bg-warning"></i>
+                                                            </div>
+                                                            <div class="stream-panel">
+                                                                <div class="stream-info">
+                                                                    <a href="#">
+                                                                        <img src="img/a7.jpg" />
+                                                                        <span>Mark Mickens</span>
+                                                                        <span class="date">Yesterday at 06:00:30 am</span>
+                                                                    </a>
+                                                                </div>
+                                                                Has been taged in the latest comments about the new project.
+                                                            </div>
+                                                        </div>
+                                                        <div class="stream">
+                                                            <div class="stream-badge">
+                                                                <i class="fa fa-circle"></i>
+                                                            </div>
+                                                            <div class="stream-panel">
+                                                                <div class="stream-info">
+                                                                    <a href="#">
+                                                                        <img src="img/a8.jpg" />
+                                                                        <span>Mike Johnson</span>
+                                                                        <span class="date">Yesterday at 02:13:20 am</span>
+                                                                    </a>
+                                                                </div>
+                                                                Changed status of second stage in the latest project.
+                                                            </div>
+                                                        </div>
+                                                        <div class="stream">
+                                                            <div class="stream-badge">
+                                                                <i class="fa fa-circle"></i>
+                                                            </div>
+                                                            <div class="stream-panel">
+                                                                <div class="stream-info">
+                                                                    <a href="#">
+                                                                        <img src="img/a1.jpg" />
+                                                                        <span>Jessica Smith</span>
+                                                                        <span class="date">Yesterday at 08:14:41 am</span>
+                                                                    </a>
+                                                                </div>
+                                                                Add new files to own file sharing place.
+                                                            </div>
+                                                        </div>
+                                                        <div class="stream">
+                                                            <div class="stream-badge">
+                                                                <i class="fa fa-circle"></i>
+                                                            </div>
+                                                            <div class="stream-panel">
+                                                                <div class="stream-info">
+                                                                    <a href="#">
+                                                                        <img src="img/a6.jpg" />
+                                                                        <span>Jessica Smith</span>
+                                                                        <span class="date">Yesterday at 08:14:41 am</span>
+                                                                    </a>
+                                                                </div>
+                                                                Add new files to own file sharing place.
+                                                            </div>
+                                                        </div>
+                                                        <div class="stream">
+                                                            <div class="stream-badge">
+                                                                <i class="fa fa-send"></i>
+                                                            </div>
+                                                            <div class="stream-panel">
+                                                                <div class="stream-info">
+                                                                    <a href="#">
+                                                                        <img src="img/a7.jpg" />
+                                                                        <span>Martha Farter</span>
+                                                                        <span class="date">Yesterday at 04:18:13 am</span>
+                                                                    </a>
+                                                                </div>
+                                                                Sent email to all users participating in new project.
+                                                            </div>
+                                                        </div>
+                                                        <div class="stream">
+                                                            <div class="stream-badge">
+                                                                <i class="fa fa-sliders bg-success"></i>
+                                                            </div>
+                                                            <div class="stream-panel">
+                                                                <div class="stream-info">
+                                                                    <a href="#">
+                                                                        <img src="img/a2.jpg" />
+                                                                        <span>Mark Mickens</span>
+                                                                        <span class="date">Yesterday at 06:00:30 am</span>
+                                                                    </a>
+                                                                </div>
+                                                                Has been taged in the latest comments about the new project.
+                                                            </div>
+                                                        </div>
+                                                        <div class="stream">
+                                                            <div class="stream-badge">
+                                                                <i class="fa fa-circle"></i>
+                                                            </div>
+                                                            <div class="stream-panel">
+                                                                <div class="stream-info">
+                                                                    <a href="#">
+                                                                        <img src="img/a8.jpg" />
+                                                                        <span>Mike Johnson</span>
+                                                                        <span class="date">Yesterday at 02:13:20 am</span>
+                                                                    </a>
+                                                                </div>
+                                                                Changed status of second stage in the latest project.
+                                                            </div>
+                                                        </div>
+                                                        <div class="stream">
+                                                            <div class="stream-badge">
+                                                                <i class="fa fa-circle"></i>
+                                                            </div>
+                                                            <div class="stream-panel">
+                                                                <div class="stream-info">
+                                                                    <a href="#">
+                                                                        <img src="img/a1.jpg" />
+                                                                        <span>Jessica Smith</span>
+                                                                        <span class="date">Yesterday at 08:14:41 am</span>
+                                                                    </a>
+                                                                </div>
+                                                                Add new files to own file sharing place.
+                                                            </div>
+                                                        </div>
+                                                        <div class="stream">
+                                                            <div class="stream-badge">
+                                                                <i class="fa fa-pencil"></i>
+                                                            </div>
+                                                            <div class="stream-panel">
+                                                                <div class="stream-info">
+                                                                    <a href="#">
+                                                                        <img src="img/a5.jpg" />
+                                                                        <img src="img/a2.jpg" />
+                                                                        <span>Karen Johnson and Sasha Miggel</span>
+                                                                        <span class="date">Today at 01:32:40 am</span>
+                                                                    </a>
+                                                                </div>
+                                                                Add new note to the <a href="#">Martex</a>  project.
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="stream">
+                                                            <div class="stream-badge">
+                                                                <i class="fa fa-commenting-o"></i>
+                                                            </div>
+                                                            <div class="stream-panel">
+                                                                <div class="stream-info">
+                                                                    <a href="#">
+                                                                        <img src="img/a4.jpg" />
+                                                                        <span>John Mikkens</span>
+                                                                        <span class="date">Yesterday at 10:00:20 am</span>
+                                                                    </a>
+                                                                </div>
+                                                                Commented on <a href="#">Ariana</a> profile.
+                                                            </div>
+                                                        </div>
+                                                        <div class="stream">
+                                                            <div class="stream-badge">
+                                                                <i class="fa fa-circle"></i>
+                                                            </div>
+                                                            <div class="stream-panel">
+                                                                <div class="stream-info">
+                                                                    <a href="#">
+                                                                        <img src="img/a2.jpg" />
+                                                                        <span>Mike Johnson</span>
+                                                                        <span class="date">Yesterday at 02:13:20 am</span>
+                                                                    </a>
+                                                                </div>
+                                                                Changed status of third stage in the <a href="#">Vertex</a> project.
+                                                            </div>
+                                                        </div>
+
+                                                        <div class="stream">
+                                                            <div class="stream-badge">
+                                                                <i class="fa fa-circle"></i>
+                                                            </div>
+                                                            <div class="stream-panel">
+                                                                <div class="stream-info">
+                                                                    <a href="#">
+                                                                        <img src="img/a6.jpg" />
+                                                                        <span>Jessica Smith</span>
+                                                                        <span class="date">Yesterday at 08:14:41 am</span>
+                                                                    </a>
+                                                                </div>
+                                                                Add new files to own file sharing place.
+
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3">
+            <div class="wrapper wrapper-content project-manager">
+                <h4>Project description</h4>
+                <img src="img/zender_logo.png" class="img-responsive">
+                <p class="small">
+                    There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look
+                    even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing
+                </p>
+                <p class="small font-bold">
+                    Contact: Carlos Quiros (<a href="#">quiros@qlands.com</a>)
+                </p>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <h5>Project tags</h5>
+                        <ul class="tag-list" style="padding: 0">
+                            <li><a href=""><i class="fa fa-tag"></i> Zender</a></li>
+                            <li><a href=""><i class="fa fa-tag"></i> Lorem ipsum</a></li>
+                            <li><a href=""><i class="fa fa-tag"></i> Passages</a></li>
+                            <li><a href=""><i class="fa fa-tag"></i> Variations</a></li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <h5>Project map <a href="#">[Big view]</a></h5>
+                        <div id="projmap" style="height: 250px"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <h5>Project files</h5>
+                        <ul class="list-unstyled project-files">
+                            <li><a href=""><i class="fa fa-file"></i> Project_document.docx</a><a style="color: red">[Remove]</a></li>
+                            <li><a href=""><i class="fa fa-file-picture-o"></i> Logo_zender_company.jpg</a><a style="color: red">[Remove]</a></li>
+                            <li><a href=""><i class="fa fa-stack-exchange"></i> Email_from_Alex.mln</a><a style="color: red">[Remove]</a></li>
+                            <li><a href=""><i class="fa fa-file"></i> Contract_20_11_2014.docx</a><a style="color: red">[Remove]</a></li>
+                        </ul>
+                        <div class="text-center m-t-md">
+                            <a href="#" class="btn btn-xs btn-primary">Add files</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock main_section %}
+
+{% block scriptsextra %}
+    {% jsresource request,'dashboard','leaflet' %}
+
+    <script>
+        $(document).ready(function() {
+
+            var mymap = L.map('projmap').setView([20, 5], 1);
+
+            L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                maxZoom: 18,
+                id: 'mapbox.streets',
+                accessToken: 'pk.eyJ1IjoicWxhbmRzIiwiYSI6ImNqZHB1ZDh4YzEwZHEyeG1rcjc0NmFsNzIifQ.i3YebmNDByns1c1ixZE0bA'
+            }).addTo(mymap);
+        });
+    </script>
+
+{% endblock %}

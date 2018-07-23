@@ -69,10 +69,7 @@ def mapFromSchema(data):
         if data is not None:
             for c in inspect(data).mapper.column_attrs:
                 if c.key != "extra":
-                    if isinstance(getattr(data, c.key), str):
-                        mappedData[c.key] = getattr(data, c.key).decode("utf8")
-                    else:
-                        mappedData[c.key] = getattr(data, c.key)
+                    mappedData[c.key] = getattr(data, c.key)
                 else:
                     if getattr(data, c.key) is not None:
                         jsondata = json.loads(getattr(data, c.key))
@@ -86,10 +83,7 @@ def mapFromSchema(data):
             temp = {}
             for c in inspect(row).mapper.column_attrs:
                 if c.key != "extra":
-                    if isinstance(getattr(row, c.key), str):
-                        temp[c.key] = getattr(row, c.key).decode("utf8")
-                    else:
-                        temp[c.key] = getattr(row, c.key)
+                    temp[c.key] = getattr(row, c.key)
                 else:
                     if getattr(row, c.key) is not None:
                         jsondata = json.loads(getattr(row, c.key))

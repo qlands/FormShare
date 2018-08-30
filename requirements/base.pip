@@ -19,7 +19,7 @@ pymongo==2.7.2
 lxml==3.4.0
 django-nose==1.4.2
 pandas==0.12.0
--e git+https://github.com/XLSForm/pyxform.git#egg=pyxform
+-e git+https://github.com/qlands/pyxform.git#egg=pyxform
 South==1.0
 django-reversion==1.8.4
 xlrd==0.9.3

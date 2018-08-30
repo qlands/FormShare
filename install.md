@@ -31,7 +31,7 @@ Note: This instructions assume that FormShare will be installed in /opt and the 
     cd /opt/formshare/src/formshare/
 
 ## Install required python packages
-    pip install -r requirements/base.pip --allow-all-external    
+    pip install -r requirements/base.pip    
 
 
 ## Edit the configuration scripts

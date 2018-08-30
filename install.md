@@ -168,10 +168,15 @@ You can also start the server with a different IP address by running:
             WSGIProcessGroup formshare
     </Location>
 
+### Edit the APP_ROOT directory in formshare/settings/common.py line 81"
+In the WSGIScriptAlias above you declared the root as /formshare so reflect this in common.py
+
+    APP_ROOT = '/formshare/'
+    
 ### Restart the Apache service    
     sudo service apache2 restart
 
-Go to http://[ip_address_of_the_server] .FormShare should be running from there. If you get a "Forbidden" message set the section "Directory" of the file /etc/apache2/apache2.conf to look like this:
+Go to http://[ip_address_of_the_server]/formshare .FormShare should be running from there. If you get a "Forbidden" message set the section "Directory" of the file /etc/apache2/apache2.conf to look like this:
 
     <Directory />
           Options FollowSymLinks

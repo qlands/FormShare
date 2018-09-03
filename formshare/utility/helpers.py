@@ -20,7 +20,6 @@ __all__ = [
 
 class helper:
     request = None
-    activeMenu = None
     def __init__(self, request):
         self.request = request
 
@@ -65,32 +64,4 @@ class helper:
         #Will return English pluralization if none of the above happens
         # return pluralize_en(noun)
         return plural
-
-    def setActiveMenu(self,menuItem):
-        self.activeMenu = menuItem
-
-    def getActiveMenu(self):
-        return self.activeMenu
-
-    def setActiveDashBoard(self,dashBoard):
-        session = self.request.session
-        session['dashboard'] = dashBoard
-
-    def getActiveDashBoard(self):
-        session = self.request.session
-        if 'dashboard' in session:
-            return session['dashboard']
-        else:
-            return None
-
-    def setActiveProject(self,project):
-        session = self.request.session
-        session['project'] = project
-
-    def getActiveProject(self):
-        session = self.request.session
-        if 'project' in session:
-            return session['project']
-        else:
-            return None
 

@@ -58,7 +58,7 @@ def renderResource(request,libraryName,resourceType,resourceID):
         for resource in resources:
             if not request.activeResources.resourceInRequest(libraryName,resource["resourceID"],resourceType):
                 request.activeResources.addResource(libraryName,resource["resourceID"],resourceType)
-                resourcesToInclude.append(jinjaEnv.from_string(html).render(file=request.host_url + '/' + resource["filePath"]))
+                resourcesToInclude.append(jinjaEnv.from_string(html).render(file=request.application_url + '/' + resource["filePath"]))
         return literal("\n".join(resourcesToInclude))
     else:
         return ""

@@ -10,8 +10,8 @@ from formencode.variabledecode import variable_decode
 import formshare.plugins as p
 from ..processes import register_user,getProjectIDFromName
 from ast import literal_eval
-
-
+import datetime,uuid
+from formshare.config.encdecdata import encodeData
 
 class home_view(publicView):
     def processView(self):
@@ -25,7 +25,7 @@ class notfound_view(publicView):
 class login_view(publicView):
     def processView(self):
         #If we logged in then go to dashboard
-        next = self.request.params.get('next') or self.request.route_url('dashboard')
+        nextPage = self.request.params.get('next')
         if self.request.method == 'GET':
             loginData = authenticated_userid(self.request)
             if loginData is not None:
@@ -33,13 +33,13 @@ class login_view(publicView):
                 if loginData["group"] == "mainApp":
                     currentUser = getUserData(loginData["login"], self.request)
                     if currentUser is not None:
-                        return HTTPFound(location=self.request.route_url('dashboard'))
+                        return HTTPFound(location=self.request.route_url('dashboard',userid=currentUser.login))
         else:
             safe = check_csrf_token(self.request,raises=False)
             if not safe:
-                return HTTPNotFound()
+                raise HTTPNotFound()
             data = variable_decode(self.request.POST)
-            login = data['login']
+            login = data['email']
             passwd = data['passwd']
             user = getUserData(login,self.request)
             loginData = {"login": login,"group":"mainApp"}
@@ -53,14 +53,16 @@ class login_view(publicView):
                         if not continue_with_login:
                             self.errors.append(error_message)
                             continue_login = False
+                        break  # Only one plugging will be called to extend after_login
                     if continue_login:
                         headers = remember(self.request, loginData)
-                        return HTTPFound(location=next, headers=headers)
+                        nextPage = self.request.params.get('next') or self.request.route_url('dashboard',userid=user.login)
+                        return HTTPFound(location=nextPage, headers=headers)
                 else:
-                    self.errors.append(self._("Invalid credentials"))
+                    self.errors.append(self._("The user account does not exists or the password is invalid"))
             else:
-                self.errors.append(self._("The user account does not exists"))
-        return {'next': next}
+                self.errors.append(self._("The user account does not exists or the password is invalid"))
+        return {'next': nextPage}
 
 class collaboratorsLogin_view(publicView):
     def processView(self):
@@ -82,7 +84,7 @@ class collaboratorsLogin_view(publicView):
         else:
             safe = check_csrf_token(self.request,raises=False)
             if not safe:
-                return HTTPNotFound()
+                raise HTTPNotFound()
             data = variable_decode(self.request.POST)
             login = data['login']
             passwd = data['passwd']
@@ -98,6 +100,7 @@ class collaboratorsLogin_view(publicView):
                         if not continue_with_login:
                             self.errors.append(error_message)
                             continue_login = False
+                        break #Only one plugging will be called to extend after_collaborator_login
                     if continue_login:
                         headers = remember(self.request, loginData)
                         return HTTPFound(location=next, headers=headers)
@@ -110,40 +113,58 @@ class collaboratorsLogin_view(publicView):
 def logout_view(request):
     headers = forget(request)
     loc = request.route_url('home')
-    return HTTPFound(location=loc, headers=headers)
+    raise HTTPFound(location=loc, headers=headers)
 
 class register_view(publicView):
     def processView(self):
+        if self.request.registry.settings['auth.register_users_via_web'] == 'false':
+            raise HTTPNotFound()
         #If we logged in then go to dashboard
         if self.request.method == 'GET':
             data = {}
         else:
             safe = check_csrf_token(self.request,raises=False)
             if not safe:
-                return HTTPNotFound()
+                raise HTTPNotFound()
             data = variable_decode(self.request.POST)
             if data["user_password"] != "":
                 if data["user_password"] == data["user_password2"]:
+                    data["user_cdate"] = datetime.datetime.now()
+                    data["user_apikey"] = str(uuid.uuid4())
+                    data["user_apikey"] = str(uuid.uuid4())
+                    data["user_password"] = encodeData(self.request, data["user_password"])
+                    data["user_active"] = 1
                     # Load connected plugins and check if they modify the registration of an user
                     continue_registration = True
                     for plugin in p.PluginImplementations(p.IAuthorize):
-                        continue_with_registration, error_message = plugin.before_register(self.request, data)
+                        data, continue_with_registration, error_message = plugin.before_register(self.request, data)
                         if not continue_with_registration:
                             self.errors.append(error_message)
                             continue_registration = False
+                        break  # Only one plugging will be called to extend before_register
                     if continue_registration:
                         added,error_message = register_user(self.request,data)
                         if not added:
                             self.errors.append(error_message)
                         else:
                             # Load connected plugins so they perform actions after the login is performed
+                            nextPage = self.request.route_url('dashboard',userid=data["user_id"])
+                            pluginNextPage = ''
                             for plugin in p.PluginImplementations(p.IAuthorize):
-                                plugin.after_register(self.request, data)
-                            loginData = {"login":data["user_id"],"group":"mainApp"}
-                            headers = remember(self.request, loginData)
-                            return HTTPFound(location=self.request.route_url('dashboard'), headers=headers)
+                                pluginNextPage = plugin.after_register(self.request, data)
+                                break # Only one plugging will be called to extend after_register
+                            if pluginNextPage is not None:
+                                if pluginNextPage != '':
+                                    if pluginNextPage != nextPage:
+                                        nextPage = pluginNextPage
+                            if nextPage == self.request.route_url('dashboard',userid=data["user_id"]):
+                                loginData = {"login":data["user_id"],"group":"mainApp"}
+                                headers = remember(self.request, loginData)
+                                return HTTPFound(location=self.request.route_url('dashboard',userid=data["user_id"]), headers=headers)
+                            else:
+                                return HTTPFound(nextPage)
                 else:
-                    self.errors.append(self._("The password and its retype are not the same"))
+                    self.errors.append(self._("The password and its confirmation are not the same"))
             else:
                 self.errors.append(self._("The password cannot be empty"))
-        return {'next': next, 'data':data}
+        return {'next': next, 'userdata':data}

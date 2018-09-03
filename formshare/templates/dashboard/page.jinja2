@@ -1,80 +1,72 @@
-{% extends 'dashboard/base.jinja2' %}
+{% extends 'base.jinja2' %}
 
 {% block css %}
-    {% cssresource request,'dashboard','style' %}
+    {% cssresource request,'formshare','style' %}
 {% endblock css %}
+
+{% block topScripts %}
+    {% jsresource request,'formshare','sweetalert' %}
+{% endblock topScripts %}
 
 {% block body %}
     {% block bodycontent %}
         <div id="wrapper">
             {% block wrapper %}
                 {% block mainnav %}
-                    {#
-                    Extend this section with the below script to have the main navigation bar
-                    {% snippet 'dashboard/snippets/mainnav.jinja2', request=request %}
-                 #}
+                    {% snippet 'dashboard/snippets/navbar.jinja2', request=request,activeUser=activeUser,activeMenu=activeMenu %}
                 {% endblock mainnav %}
-                <div id="page-wrapper" class="gray-bg">
+                <div id="page-wrapper" class="gray-bg dashbard-1">
                     {% block pagewrapper %}
                         {% block pageheader %}
-                            {#
-                            Extend this section with the below script to have the page header
-                            {% snippet 'dashboard/snippets/header.jinja2', request=request %}
-                         #}
+                            {% snippet 'dashboard/snippets/header.jinja2', request=request,activeUser=activeUser %}
                         {% endblock pageheader %}
                         {% block dashheader %}
                             <div class="row wrapper border-bottom white-bg page-heading">
                                 {% block breadcrumbs %}
                                     {#
-                                    Extend this section to have breadcrumbs
-                                    {% snippet 'formshare/templates/dashboard/snippets/breadcrumbs.jinja2', request=request %}
-                                 #}
+                                        Extend this section to have breadcrumbs
+                                        {% snippet 'dashboard/snippets/breadcrumbs.jinja2', request=request %}
+                                    #}
                                 {% endblock breadcrumbs %}
                             </div>
                         {% endblock dashheader %}
-                        {% block main_section %}
+                        {% block mainsection %}
                             <div class="wrapper wrapper-content">
                                 {% block maincontent %}
-
+                                    {# Here goes the content of the page #}
                                 {% endblock maincontent %}
                             </div>
-                        {% endblock main_section %}
+                        {% endblock mainsection %}
                         {% block footer %}
-                            {#
-                            Extend this section with the below snipped to have a page footer
-                            {% snippet 'dashboard/snippets/footer.jinja2', request=request, fixed=True %}
-                        #}
+                            {% snippet 'dashboard/snippets/footer.jinja2', request=request %}
                         {% endblock footer %}
                     {% endblock pagewrapper %}
                 </div>
                 {% block smallchat %}
-                    {#
-                        Extend this block with an edited version of the snippet if you require a small chat window
-                        {% snippet 'dashboard/snippets/chat.jinja2', request=request %}
-                     #}
+                    {# Uncomment this snippet to have the chat screen #}
+                    {#  {% snippet 'dashboard/snippets/chat.jinja2', request=request %}#}
                 {% endblock smallchat %}
                 {% block sidebar %}
-                    {#
-                        Extend this block with an edited version of the snippet if you require a side bar
-                        The side bar action button is defined in the header snippet
-                        {% snippet 'dashboard/snippets/sidebar.jinja2', request=request %}
-                    #}
+                    {# Uncomment this snippet to have a side bar #}
+                    {#  {% snippet 'dashboard/snippets/sidebar.jinja2', request=request %}#}
                 {% endblock sidebar %}
             {% endblock wrapper %}
         </div>
     {% endblock bodycontent %}
     {% block scripts %}
-        {% block mainscripts %}
-            {% jsresource request,'dashboard','pace' %}
-        {% endblock mainscripts %}
-        {% block toastr %}
-            {#
-                Uncomment this section if you need to add a toaster
-                {% snippet 'dashboard/snippets/toastr.jinja2', request=request, timeout=4000, message='A message to the user' %}
-            #}
-        {% endblock toastr %}
-        {% block scriptsextra %}
-
-        {% endblock scriptsextra %}
+        {% jsresource request,'formshare','inspinia' %}
+        {% set messageData = request.session.pop_flash() %}
+        {% if messageData|length > 0 %}
+            <script>
+                $(document).ready(function() {
+                    messageData = {{ messageData[0] }};
+                    swal({
+                        title: messageData.title,
+                        text: messageData.text,
+                        type: messageData.type
+                    });
+                });
+            </script>
+        {% endif %}
     {% endblock scripts %}
 {% endblock body %}

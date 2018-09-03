@@ -21,7 +21,7 @@ import hashlib
 from babel import Locale
 import uuid
 from ast import literal_eval
-from formshare.processes import getProjectIDFromName
+from formshare.processes import getProjectIDFromName,user_exists
 
 class odkView(object):
     def __init__(self, request):
@@ -138,46 +138,133 @@ class privateView(object):
         self.user = None
         self._ = self.request.translate
         self.errors = []
-        self.resultDict = {}
+        self.classResult = {}
+        self.viewResult = {}
+        self.returnRawViewResult = False
+        self.privateOnly = False
+        self.guestAccess = False
+        self.viewingSelfAccount = True
         locale = Locale(request.locale_name)
         if locale.character_order == "left-to-right":
-            self.resultDict["rtl"] = False
+            self.classResult["rtl"] = False
         else:
-            self.resultDict["rtl"] = True
+            self.classResult["rtl"] = True
+        self.classResult['activeMenu'] = ""
 
     def __call__(self):
         loginData = authenticated_userid(self.request)
+        self.guestAccess = False
+        userID = self.request.matchdict['userid']
+        if not user_exists(self.request,userID):
+            raise HTTPNotFound()
+
+        if self.request.method == 'POST':
+            if loginData is not None:
+                if loginData["group"] == "mainApp":
+                    self.user = getUserData(loginData["login"], self.request)
+                    if self.user is not None:
+                        safe = check_csrf_token(self.request,raises=False)
+                        if not safe:
+                            raise HTTPNotFound()
+                    else:
+                        raise HTTPNotFound()
+                else:
+                    raise HTTPNotFound()
+            else:
+                raise HTTPNotFound()
+
         if loginData is not None:
             loginData = literal_eval(loginData)
             if loginData["group"] == "mainApp":
                 self.user = getUserData(loginData["login"],self.request)
                 if self.user is None:
-                    return HTTPFound(location=self.request.route_url('login',_query={'next':self.request.url}))
+                    if self.request.registry.settings['auth.allow_guest_access'] == 'false' or self.privateOnly:
+                        raise HTTPFound(location=self.request.route_url('login',_query={'next':self.request.url}))
+                    else:
+                        self.guestAccess = True
             else:
-                return HTTPFound(location=self.request.route_url('login', _query={'next': self.request.url}))
+                if self.request.registry.settings['auth.allow_guest_access'] == 'false' or self.privateOnly:
+                    raise HTTPFound(location=self.request.route_url('login', _query={'next': self.request.url}))
+                else:
+                    self.guestAccess = True
         else:
-            return HTTPFound(location=self.request.route_url('login', _query={'next': self.request.url}))
-
-        if self.request.method == 'POST':
-            safe = check_csrf_token(self.request,raises=False)
-            if not safe:
-                return HTTPNotFound()
-
-        self.resultDict["activeUser"] = self.user
-        self.resultDict["errors"] = self.errors
-        processDict = self.processView()
-        if type(processDict) == dict:
-            self.resultDict.update(processDict)
-            return self.resultDict
+            if self.request.registry.settings['auth.allow_guest_access'] == 'false' or self.privateOnly:
+                raise HTTPFound(location=self.request.route_url('login', _query={'next': self.request.url}))
+            else:
+                self.guestAccess = True
+        if not self.guestAccess:
+            self.classResult["activeUser"] = self.user
+            if self.user.login != userID:
+                self.viewingSelfAccount = False
         else:
-            return processDict
+            self.classResult["activeUser"] = None
+            self.viewingSelfAccount = False
+        self.classResult["viewingSelfAccount"] = self.viewingSelfAccount
+        self.classResult["errors"] = self.errors
+        self.viewResult = self.processView()
+        if not self.returnRawViewResult:
+            self.classResult.update(self.viewResult)
+            return self.classResult
+        else:
+            return self.viewResult
 
     def processView(self):
         return {'activeUser': self.user}
 
+    def setActiveMenu(self,menuName):
+        self.classResult['activeMenu'] = menuName
+
     def getPostDict(self):
         dct = variable_decode(self.request.POST)
         return dct
+
+class dashboardView(privateView):
+    def __call__(self):
+        self.setActiveMenu('dashboard')
+        # We need to set here relevant information for the dashboard
+        privateView.__call__(self)
+        if not self.returnRawViewResult:
+            self.classResult.update(self.viewResult)
+            return self.classResult
+        else:
+            return self.viewResult
+
+class profileView(privateView):
+    def __call__(self):
+        loginData = authenticated_userid(self.request)
+        self.setActiveMenu('profile')
+        userID = self.request.matchdict['userid']
+        if self.request.method == 'POST':
+            if loginData is not None:
+                if loginData["group"] == "mainApp":
+                    self.user = getUserData(loginData["login"], self.request)
+                    if self.user is not None:
+                        if self.user.login != userID:
+                            raise HTTPFound()  # Don't alter someone else profile
+                    else:
+                        raise HTTPFound()
+                else:
+                    raise HTTPFound()
+            else:
+                raise HTTPFound()
+        privateView.__call__(self)
+        if not self.returnRawViewResult:
+            self.classResult.update(self.viewResult)
+            return self.classResult
+        else:
+            return self.viewResult
+
+class projectsView(privateView):
+    def __call__(self):
+        self.setActiveMenu('projects')
+        # We need to set here relevant information for the dashboard
+        privateView.__call__(self)
+        if not self.returnRawViewResult:
+            self.classResult.update(self.viewResult)
+            return self.classResult
+        else:
+            return self.viewResult
+
 
 class collaboratorView(object):
     def __init__(self, request):

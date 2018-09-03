@@ -1,42 +1,65 @@
-<!DOCTYPE html>
-<html {% block htmlattributes %}lang="{{ request.locale_name }}" {% endblock htmlattributes %}>
-{% block html %}
-    <head>
-        {% block head %}
-            {% block meta %}
-                <meta charset="utf-8">
-                <meta http-equiv="X-UA-Compatible" content="IE=edge">
-                <meta name="viewport" content="width=device-width, initial-scale=1">
-                <meta name="description" content="">
-                <meta name="author" content="">
-            {% endblock meta %}
-            <!-- Add Your favicon here -->
-            <!--<link rel="icon" href="img/favicon.ico">-->
+{% extends 'base.jinja2' %}
 
-            {% block title %}
-                <title>INSPINIA - Landing Page</title>
-            {% endblock title %}
+{% block css %}
+    {% cssresource request,'formshare','style' %}
+{% endblock css %}
 
-            {% block css %}
-                {% cssresource request,'landing','font-awesome' %}
-                <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-                <!--[if lt IE 9]>
-                <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
-                <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-                <![endif]-->
-                {% cssresource request,'landing','style' %}
-            {% endblock css %}
-        {% endblock head %}
-    </head>
-    <body {% block bodyattributes %} id="page-top" {% endblock bodyattributes %}>
-    {% block body %}
-        {% block bodycontent %}
-            {# This is main content of the landing page #}
-        {% endblock bodycontent %}
-        {% block js %}
-            {% jsresource request,'landing','inspinia' %}
-        {% endblock js %}
-    {% endblock body %}
-    </body>
-{% endblock html %}
-</html>
+{% block topScripts %}
+    {% jsresource request,'formshare','pace' %}
+{% endblock topScripts %}
+
+{% block bodyattributes %}id="page-top"{% endblock bodyattributes %}{% block bodyclass %} landing-page no-skin-config{% endblock bodyclass %}
+
+{% block body %}
+    {% block navbar %}
+        {# Extent this block to add the navigation #}
+        {# {% snippet 'landing/snippets/navbar.jinja2', request=request %}#}
+    {% endblock navbar %}
+    {% block slider %}
+        {# Extend this block to add the slider #}
+        {# {% snippet 'landing/snippets/slider.jinja2', request=request %}#}
+    {% endblock slider %}
+    {% block features %}
+        {# Extend this block to add the features section #}
+        {# {% snippet 'landing/snippets/features.jinja2', request=request %}#}
+    {% endblock features %}
+    {% block features2 %}
+        {# Extend this block to add the features second section #}
+        {# {% snippet 'landing/snippets/features2.jinja2', request=request %}#}
+    {% endblock features2 %}
+    {% block team %}
+        {# Extend this block to add the team section #}
+        {# {% snippet 'landing/snippets/team.jinja2', request=request %}#}
+    {% endblock team %}
+    {% block features3 %}
+        {# Extend this block to add the features third section #}
+        {# {% snippet 'landing/snippets/features3.jinja2', request=request %}#}
+    {% endblock features3 %}
+    {% block timeline %}
+        {# Extend this block to add the timeline section #}
+        {# {% snippet 'landing/snippets/timeline.jinja2', request=request %}#}
+    {% endblock timeline %}
+    {% block testimonials %}
+        {# Extend this block to add the testimonials section #}
+        {# {% snippet 'landing/snippets/testimonials.jinja2', request=request %}#}
+    {% endblock testimonials %}
+    {% block comments %}
+        {# Extend this block to add the comments section #}
+        {# {% snippet 'landing/snippets/comments.jinja2', request=request %}#}
+    {% endblock comments %}
+    {% block features4 %}
+        {# Extend this block to add four features section #}
+        {# {% snippet 'landing/snippets/features4.jinja2', request=request %}#}
+    {% endblock features4 %}
+    {% block pricing %}
+        {# Extend this block to add pricing section #}
+        {# {% snippet 'landing/snippets/pricing.jinja2', request=request %}#}
+    {% endblock pricing %}
+    {% block contact %}
+        {# Extend this block to add contact section #}
+        {# {% snippet 'landing/snippets/contact.jinja2', request=request %}#}
+    {% endblock contact %}
+    {% block scripts %}
+        {% jsresource request,'formshare','inspinia' %}
+    {% endblock scripts %}
+{% endblock body %}

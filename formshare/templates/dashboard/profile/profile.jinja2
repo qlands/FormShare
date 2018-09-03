@@ -1,0 +1,213 @@
+{% extends 'dashboard/page.jinja2' %}
+
+{% block titlesection %}{{ _("Profile") }}{% endblock titlesection %}
+
+{% block breadcrumbs %}
+    {% snippet 'dashboard/profile/snippets/brdcrbs_profile.jinja2', request=request,activeUser=activeUser %}
+{% endblock breadcrumbs %}
+
+{% block maincontent %}
+    {% snippet 'dashboard/profile/snippets/profile_head.jinja2',request=request,viewingSelfAccount=viewingSelfAccount %}
+    <div class="row">
+        <div class="col-lg-3">
+            <div class="ibox">
+                <div class="ibox-title">
+                    <h5>{{ _('About') }} Alex Smith</h5>
+                    <div class="ibox-tools">
+                        {% if viewingSelfAccount %}
+                            <a style="margin-right: 10px">
+                                <i class="fas fa-pencil-alt text-warning" title="{{ _('Edit') }}"></i>
+                            </a>
+                        {% endif %}
+                        <a class="collapse-link" style="margin-right: 10px">
+                            <i class="fas fa-chevron-up"></i>
+                        </a>
+                        <a class="fullscreen-link">
+                            <i class="fas fa-expand"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <p class="small">
+                        There are many variations of passages of Lorem Ipsum available, but the majority have
+                        suffered alteration in some form, by injected humour, or randomised words which don't.
+                        <br/>
+                        <br/>
+                        If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't
+                        anything embarrassing
+                    </p>
+
+                    <p class="small font-bold">
+                        <span><i class="fa fa-circle text-navy"></i> Online status</span>
+                    </p>
+                </div>
+            </div>
+
+            <div class="ibox">
+                <div class="ibox-title">
+                    <h5>{{ _('Collaborators') }}</h5>
+                    <div class="ibox-tools">
+                        {% if viewingSelfAccount %}
+                            <a style="margin-right: 10px">
+                                <i class="fas fa-pencil-alt text-warning" title="{{ _('Edit') }}"></i>
+                            </a>
+                        {% endif %}
+                        <a class="collapse-link" style="margin-right: 10px">
+                            <i class="fas fa-chevron-up"></i>
+                        </a>
+                        <a class="fullscreen-link">
+                            <i class="fas fa-expand"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <div class="user-friends">
+                        <a href=""><img alt="image" class="rounded-circle" src="img/a3.jpg"></a>
+                        <a href=""><img alt="image" class="rounded-circle" src="img/a1.jpg"></a>
+                        <a href=""><img alt="image" class="rounded-circle" src="img/a2.jpg"></a>
+                        <a href=""><img alt="image" class="rounded-circle" src="img/a4.jpg"></a>
+                        <a href=""><img alt="image" class="rounded-circle" src="img/a5.jpg"></a>
+                        <a href=""><img alt="image" class="rounded-circle" src="img/a6.jpg"></a>
+                        <a href=""><img alt="image" class="rounded-circle" src="img/a7.jpg"></a>
+                        <a href=""><img alt="image" class="rounded-circle" src="img/a8.jpg"></a>
+                        <a href=""><img alt="image" class="rounded-circle" src="img/a2.jpg"></a>
+                        <a href=""><img alt="image" class="rounded-circle" src="img/a1.jpg"></a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ibox">
+                <div class="ibox-title">
+                    <h5>{{ _('Social links') }}</h5>
+                    <div class="ibox-tools">
+                        {% if viewingSelfAccount %}
+                            <a style="margin-right: 10px">
+                                <i class="far fa-plus-square text-success" title="Add new file"></i>
+                            </a>
+                        {% endif %}
+                        <a class="collapse-link" style="margin-right: 10px">
+                            <i class="fas fa-chevron-up"></i>
+                        </a>
+                        <a class="fullscreen-link">
+                            <i class="fas fa-expand"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <div class="row">
+                        <div class="col-md-12">
+                            {% if viewingSelfAccount %}
+                                <small>Click/Tab and hold to remove</small>
+                            {% endif %}
+                            <ul class="tag-list" style="padding: 0">
+                                <li><a href=""><i class="far fa-envelope"></i> Email</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+{##}
+{#            <div class="ibox">#}
+{#                <div class="ibox-title">#}
+{#                    <h5>{{ _('Private message') }}</h5>#}
+{#                    <div class="ibox-tools">#}
+{#                        <a class="collapse-link" style="margin-right: 10px">#}
+{#                            <i class="fas fa-chevron-up"></i>#}
+{#                        </a>#}
+{#                        <a class="fullscreen-link">#}
+{#                            <i class="fas fa-expand"></i>#}
+{#                        </a>#}
+{#                    </div>#}
+{#                </div>#}
+{#                <div class="ibox-content">#}
+{#                    <p class="small">#}
+{#                        Send private message to Alex Smith#}
+{#                    </p>#}
+{##}
+{#                    <div class="form-group">#}
+{#                        <label>Subject</label>#}
+{#                        <input type="email" class="form-control" placeholder="Message subject">#}
+{#                    </div>#}
+{#                    <div class="form-group">#}
+{#                        <label>Message</label>#}
+{#                        <textarea class="form-control" placeholder="Your message" rows="3"></textarea>#}
+{#                    </div>#}
+{#                    <button class="btn btn-primary btn-block">Send</button>#}
+{##}
+{#                </div>#}
+{#            </div>#}
+
+        </div>
+
+        <div class="col-lg-5">
+            <div class="ibox">
+                <div class="ibox-title">
+                    <h5>{{ _('Projects') }}</h5>
+                    <div class="ibox-tools">
+                        <a class="collapse-link" style="margin-right: 10px">
+                            <i class="fas fa-chevron-up"></i>
+                        </a>
+                        <a class="fullscreen-link">
+                            <i class="fas fa-expand"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    {% snippet 'dashboard/projects/snippets/project_item.jinja2', request=request,viewingSelfAccount=viewingSelfAccount %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4 m-b-lg">
+            <div class="ibox">
+                <div class="ibox-title">
+                    <h5>{{ _('Activity') }}</h5>
+                    <div class="ibox-tools">
+                        <a class="collapse-link" style="margin-right: 10px">
+                            <i class="fas fa-chevron-up"></i>
+                        </a>
+                        <a class="fullscreen-link">
+                            <i class="fas fa-expand"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <div id="vertical-timeline" class="vertical-container light-timeline no-margins">
+                        <div class="vertical-timeline-block">
+                            <div class="vertical-timeline-icon navy-bg">
+                                <i class="fa fa-briefcase"></i>
+                            </div>
+
+                            <div class="vertical-timeline-content">
+                                <h5>Meeting</h5>
+                                <p>Conference on the sales results for the previous year. Monica please examine sales trends in marketing and products. Below please find the current status of the sale.
+                                </p>
+                                <span class="vertical-date">
+                                        Today <br>
+                                        <small>Dec 24</small>
+                                    </span>
+                            </div>
+                        </div>
+
+                        <div class="vertical-timeline-block">
+                            <div class="vertical-timeline-icon blue-bg">
+                                <i class="fa fa-file-text"></i>
+                            </div>
+
+                            <div class="vertical-timeline-content">
+                                <h5>Send documents to Mike</h5>
+                                <p>Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since.</p>
+                                <a href="#" class="btn btn-sm btn-success"> Download document </a>
+                                <span class="vertical-date">
+                                        Today <br>
+                                        <small>Dec 24</small>
+                                    </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+{% endblock maincontent %}

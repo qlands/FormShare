@@ -1,250 +1,146 @@
 {% extends 'dashboard/page.jinja2' %}
 
-{% block title %}
-    <title>{{ _("FormShare | Dashboard") }}</title>
-{% endblock title %}
+{% block titlesection %}{{ _("Dashboard") }}{% endblock titlesection %}
 
-{% block css %}
-    {% cssresource request,'dashboard','font-awesome' %}
-    {% cssresource request,'dashboard','toastr' %}
-    {% cssresource request,'dashboard','style' %}
-    {% cssresource request,'dashboard','leaflet' %}
-    {% cssresource request,'dashboard','chosen' %}
-{% endblock css %}
-
-{% block mainnav %}
-    {% snippet 'dashboard/snippets/mainnav.jinja2', request=request,activeUser=activeUser %}
-{% endblock mainnav %}
-
-{% block pageheader %}
-    {% snippet 'dashboard/snippets/header.jinja2', request=request %}
-{% endblock pageheader %}
+{#{% block css %}#}
+{#    {{ super() }}#}
+{#    {% cssresource request,'formshare','leaflet' %}#}
+{#    {% cssresource request,'formshare','chosen' %}#}
+{#    <style>#}
+{#        canvas {#}
+{#            width: 100%;#}
+{#            height: auto;#}
+{#        }#}
+{#    </style>#}
+{#{% endblock css %}#}
+{##}
+{#{% block topScripts %}#}
+{#    {{ super() }}#}
+{#    {% jsresource request,'formshare','chartjs' %}#}
+{#    {% jsresource request,'formshare','leaflet' %}#}
+{#    {% jsresource request,'formshare','chosen' %}#}
+{#{% endblock topScripts %}#}
 
 {% block dashheader %}
     <div class="row  border-bottom white-bg dashboard-header">
-
-        <div class="col-md-3">
-            <h2>Welcome {{ activeUser.fullName }}</h2>
-            <small>Here are your active projects.</small>
-            <ul class="list-group clear-list m-t">
-                <li class="list-group-item fist-item">
-                    <span class="pull-right">
-                        10 submissions (One hour ago)
-                    </span>
-                    <span class="label label-success">1</span> Project 1
-                </li>
-                <li class="list-group-item">
-                    <span class="pull-right">
-                        5 submissions (Six hours ago)
-                    </span>
-                    <span class="label label-info">2</span> Project 2
-                </li>
-                <li class="list-group-item">
-                    <span class="pull-right">
-                        40 submissions (Yesterday)
-                    </span>
-                    <span class="label label-warning">3</span> Project 3
-                </li>
-                <li class="list-group-item">
-                    <span class="pull-right">
-                        67 submissions (Two days ago)
-                    </span>
-                    <span class="label label-default">4</span> Project 4
-                </li>
-                <li class="list-group-item">
-                    <span class="pull-right">
-                        1020 submissions (A month ago)
-                    </span>
-                    <span class="label label-danger">5</span> Project 5
-                </li>
-            </ul>
-        </div>
-        <div class="col-md-6">
-            <h4>
-                Submissions around the world
-            </h4>
-            <div id="mapid" style="height: 250px"></div>
-        </div>
-        <div class="col-md-3">
-            <div class="statistic-box">
-                <h4>
-                    Your account
-                </h4>
-                <p>
-                    Your account is getting full. Purchase more space or submissions here.
-                </p>
-                <div class="row text-center">
-                    <div class="col-lg-6">
-                        <canvas id="doughnutChart2" width="80" height="80" style="margin: 18px auto 0"></canvas>
-                        <h5 >Storage</h5>
-                    </div>
-                    <div class="col-lg-6">
-                        <canvas id="doughnutChart" width="80" height="80" style="margin: 18px auto 0"></canvas>
-                        <h5 >Submissions this month</h5>
-                    </div>
-                </div>
-                <div class="m-t">
-                    <small>Lorem Ipsum is simply dummy text of the printing and typesetting industry.</small>
-                </div>
-
+        {% block project_list_section %}
+            <div class="col-md-12">
+                {% if activeUser != None  %}
+                    {% if viewingSelfAccount %}
+                        <h2>{{ _('Welcome') }} {{ activeUser.name }}</h2>
+                    {% else %}
+                        <h2>{{ _('Your are viewing others account') }}</h2>
+                    {% endif %}
+                {% endif %}
+                <h3>{{ _('Here are your three most dynamic projects.') }}</h3>
+                {% block project_list %}
+                    <ul class="list-group clear-list m-t">
+                        {% snippet 'dashboard/snippets/project_list_item.jinja2', request=request %}
+                    </ul>
+                {% endblock project_list %}
             </div>
-        </div>
+        {% endblock project_list_section %}
     </div>
 {% endblock %}
 
-{% block main_section %}
+{% block mainsection %}
     <div class="row">
         <div class="col-lg-12">
+            {% block form_list_title %}
+                <h2>{{ _('Most dynamic forms in active project') }} ()</h2>
+            {% endblock form_list_title %}
             <div class="wrapper wrapper-content">
                 <div class="row">
-                    <div class="col-lg-3">
-                        <div class="ibox float-e-margins">
-                            <div class="ibox-title">
-                                <form role="form" class="form-inline">
-                                    <div class="form-group" style="width: 100%">
-                                        <label for="exampleInputEmail2" class="sr-only">Email address</label>
-                                        <select data-placeholder="Choose a Project..." class="chosen-select"  tabindex="2">
-                                            <option value="">Select</option>
-                                            <option value="United States">United States</option>
-                                            <option value="United Kingdom">United Kingdom</option>
-                                            <option value="Afghanistan">Afghanistan</option>
-                                        </select>
-                                    </div>
-                                </form>
-                            </div>
-                            <div class="ibox-content">
-                                <small>Forms in active project.</small>
+                    {% block form_list_section %}
+                        <div class="col-md-12">
+                            {% block form_list%}
                                 <ul class="list-group clear-list m-t">
-                                    <li class="list-group-item fist-item">
-                                        <span class="pull-right">
-                                            10 submissions (One hour ago)
-                                        </span>
-                                        <span class="label label-success">1</span> Form 1
-                                    </li>
-                                    <li class="list-group-item">
-                                        <span class="pull-right">
-                                            5 submissions (Six hours ago)
-                                        </span>
-                                        <span class="label label-info">2</span> Form 2
-                                    </li>
-                                    <li class="list-group-item">
-                                        <span class="pull-right">
-                                            40 submissions (Yesterday)
-                                        </span>
-                                        <span class="label label-warning">3</span> Form 3
-                                    </li>
-                                    <li class="list-group-item">
-                                        <span class="pull-right">
-                                            67 submissions (Two days ago)
-                                        </span>
-                                        <span class="label label-default">4</span> Form 4
-                                    </li>
-                                    <li class="list-group-item">
-                                        <span class="pull-right">
-                                            1020 submissions (A month ago)
-                                        </span>
-                                        <span class="label label-danger">5</span> Form 5
-                                    </li>
+                                    {% snippet 'dashboard/snippets/form_list_item.jinja2', request=request %}
                                 </ul>
-                            </div>
+                            {% endblock form_list%}
                         </div>
-                    </div>
-                    <div class="col-lg-9">
-                        <div class="ibox float-e-margins">
-                            <div class="ibox-title">
-                                Submission Map
-                            </div>
-                            <div class="ibox-content">
-                                <div id="formMap" style="height: 400px"></div>
-                            </div>
-                        </div>
-
-                    </div>
+                    {% endblock form_list_section %}
                 </div>
             </div>
         </div>
     </div>
-{% endblock main_section %}
+{% endblock mainsection %}
 
 {% block footer %}
     {% snippet 'dashboard/snippets/footer.jinja2', request=request, fixed=True %}
 {% endblock footer %}
 
 {% block sidebar %}
-    {% snippet 'dashboard/snippets/sidebar.jinja2', request=request %}
+    {% if activeUser != None  %}
+        {% snippet 'dashboard/snippets/sidebar.jinja2', request=request %}
+    {% endif %}
 {% endblock sidebar %}
 
-{% block toastr %}
-    {% snippet 'dashboard/snippets/toastr.jinja2', request=request, timeout=4000, title="Hello!", message='Welcome to FormShare', type='info' %}
-{% endblock toastr %}
-
-{% block scriptsextra %}
-    {% jsresource request,'dashboard','chartjs' %}
-    {% jsresource request,'dashboard','leaflet' %}
-    {% jsresource request,'dashboard','chosen' %}
-    <script>
-        $(document).ready(function() {
-            var doughnutData = {
-                labels: ["1","2","3","4","5" ],
-                datasets: [{
-                    data: [300,50,100,25,60],
-                    backgroundColor: ["#1c84c6","#23c6c8","#f8ac59","#d1dade","#ed5565"]
-                }]
-            } ;
-
-
-            var doughnutOptions = {
-                responsive: false,
-                legend: {
-                    display: false
-                }
-            };
-
-
-            var ctx4 = document.getElementById("doughnutChart").getContext("2d");
-            new Chart(ctx4, {type: 'doughnut', data: doughnutData, options:doughnutOptions});
-
-            var doughnutData = {
-                labels: ["App","Software","Laptop" ],
-                datasets: [{
-                    data: [70,27,85],
-                    backgroundColor: ["#a3e1d4","#dedede","#9CC3DA"]
-                }]
-            } ;
-
-
-            var doughnutOptions = {
-                responsive: false,
-                legend: {
-                    display: false
-                }
-            };
-
-
-            var ctx4 = document.getElementById("doughnutChart2").getContext("2d");
-            new Chart(ctx4, {type: 'doughnut', data: doughnutData, options:doughnutOptions});
-
-            var mymap = L.map('mapid').setView([20, 5], 1);
-
-            L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
-                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-                maxZoom: 18,
-                id: 'mapbox.streets',
-                accessToken: 'pk.eyJ1IjoicWxhbmRzIiwiYSI6ImNqZHB1ZDh4YzEwZHEyeG1rcjc0NmFsNzIifQ.i3YebmNDByns1c1ixZE0bA'
-            }).addTo(mymap);
-
-
-            var formMap = L.map('formMap').setView([20, 5], 1);
-
-            L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
-                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-                maxZoom: 18,
-                id: 'mapbox.streets',
-                accessToken: 'pk.eyJ1IjoicWxhbmRzIiwiYSI6ImNqZHB1ZDh4YzEwZHEyeG1rcjc0NmFsNzIifQ.i3YebmNDByns1c1ixZE0bA'
-            }).addTo(formMap);
-
-            $('.chosen-select').chosen({width: "100%"});
-
-        });
-    </script>
-{% endblock scriptsextra %}
+{#{% block scripts %}#}
+{#    {{ super() }}#}
+{#    <script>#}
+{#        $(document).ready(function() {#}
+{#            var doughnutData = {#}
+{#                labels: ["1","2","3","4","5" ],#}
+{#                datasets: [{#}
+{#                    data: [300,50,100,25,60],#}
+{#                    backgroundColor: ["#1c84c6","#23c6c8","#f8ac59","#d1dade","#ed5565"]#}
+{#                }]#}
+{#            } ;#}
+{##}
+{##}
+{#            var doughnutOptions = {#}
+{#                responsive: false,#}
+{#                legend: {#}
+{#                    display: false#}
+{#                }#}
+{#            };#}
+{##}
+{##}
+{#            var ctx4 = document.getElementById("doughnutChart").getContext("2d");#}
+{#            new Chart(ctx4, {type: 'doughnut', data: doughnutData, options:doughnutOptions});#}
+{##}
+{#            var doughnutData = {#}
+{#                labels: ["App","Software","Laptop" ],#}
+{#                datasets: [{#}
+{#                    data: [70,27,85],#}
+{#                    backgroundColor: ["#a3e1d4","#dedede","#9CC3DA"]#}
+{#                }]#}
+{#            } ;#}
+{##}
+{##}
+{#            var doughnutOptions = {#}
+{#                responsive: false,#}
+{#                legend: {#}
+{#                    display: false#}
+{#                }#}
+{#            };#}
+{##}
+{##}
+{#            var ctx4 = document.getElementById("doughnutChart2").getContext("2d");#}
+{#            new Chart(ctx4, {type: 'doughnut', data: doughnutData, options:doughnutOptions});#}
+{##}
+{#            var mymap = L.map('mapid').setView([20, 5], 1);#}
+{##}
+{#            L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {#}
+{#                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',#}
+{#                maxZoom: 18,#}
+{#                id: 'mapbox.streets',#}
+{#                accessToken: 'pk.eyJ1IjoicWxhbmRzIiwiYSI6ImNqZHB1ZDh4YzEwZHEyeG1rcjc0NmFsNzIifQ.i3YebmNDByns1c1ixZE0bA'#}
+{#            }).addTo(mymap);#}
+{##}
+{##}
+{#            var formMap = L.map('formMap').setView([20, 5], 1);#}
+{##}
+{#            L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {#}
+{#                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',#}
+{#                maxZoom: 18,#}
+{#                id: 'mapbox.streets',#}
+{#                accessToken: 'pk.eyJ1IjoicWxhbmRzIiwiYSI6ImNqZHB1ZDh4YzEwZHEyeG1rcjc0NmFsNzIifQ.i3YebmNDByns1c1ixZE0bA'#}
+{#            }).addTo(formMap);#}
+{##}
+{#            $('.chosen-select').chosen({width: "100%"});#}
+{##}
+{#        });#}
+{#    </script>#}
+{#{% endblock scripts %}#}

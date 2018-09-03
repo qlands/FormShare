@@ -1,5 +1,4 @@
-import os
-import sys, getpass, datetime
+import sys, getpass, datetime, os, uuid
 import transaction
 from validate_email import validate_email
 
@@ -16,23 +15,22 @@ from formshare.models import (
     get_session_factory,
     get_tm_session,
     )
-from formshare.models import Org,User,Userorg
+from formshare.models import User
 from formshare.config.encdecdata import encodeDataWithAESKey
 
 
 def usage(argv):
     cmd = os.path.basename(argv[0])
     print('usage: %s <config_uri> org_id=value org_name=value\n'
-          "(example: %s development.ini org_id=myorganization user_email=me@mydomain.com)" % (cmd, cmd))
+          "(example: %s development.ini user_id=admin user_email=me@mydomain.com)" % (cmd, cmd))
     sys.exit(1)
-
 
 def main(argv=sys.argv):
     if len(argv) != 4:
         usage(argv)
     config_uri = argv[1]
     options = parse_vars(argv[2:])
-    if 'org_id' not in options.keys():
+    if 'user_id' not in options.keys():
         usage(argv)
     if 'user_email' not in options.keys():
         usage(argv)
@@ -64,28 +62,21 @@ def main(argv=sys.argv):
     with transaction.manager:
         dbsession = get_tm_session(session_factory, transaction.manager)
         try:
-            org_id = options["org_id"].lower()
-            org_id = org_id.replace(' ','')
-            if dbsession.query(Org).filter(Org.org_id == org_id).first() is not None:
+            if dbsession.query(User).filter(User.user_id == options["user_id"]).first() is None:
                 if dbsession.query(User).filter(User.user_email == options["user_email"]).first() is None:
-                    if dbsession.query(Userorg).filter(Userorg.org_id == org_id).filter(Userorg.user_email == options["user_email"]).first() is None:
-                        newUser = User(user_email=options["user_email"], user_password=encPass, user_active=1, user_cdate=datetime.datetime.now())
-                        dbsession.add(newUser)
-                        newUserinOrg = Userorg(org_id=org_id,user_email=options["user_email"],user_admin=1,user_joined=datetime.datetime.now())
-                        dbsession.add(newUserinOrg)
-                        print("The super user has been added with the following information:")
-                        print("Organization: %s" % (org_id))
-                        print("Email: %s" % (options["user_email"]))
-                    else:
-                        print('An user with email "%s" already exists in "%s" organization' % (options["user_email"],org_id))
-                        sys.exit(1)
+                    apiKey = str(uuid.uuid4())
+                    newUser = User(user_id=options["user_id"], user_email=options["user_email"], user_password=encPass, user_apikey=apiKey, user_super=1,
+                                   user_active=1, user_cdate=datetime.datetime.now())
+                    dbsession.add(newUser)
+                    print("The super user has been added with the following information:")
+                    print("ID: %s" % (options["user_id"]))
+                    print("Email: %s" % (options["user_email"]))
                 else:
                     print('An user with email "%s" already exists' % (options["user_email"]))
                     sys.exit(1)
             else:
-                print('The organization ID %s does not exist' % (org_id))
+                print('An user with id "%s" already exists' % (options["user_id"]))
                 sys.exit(1)
         except Exception as e:
             print(str(e))
             sys.exit(1)
-

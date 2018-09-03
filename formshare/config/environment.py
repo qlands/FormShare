@@ -27,8 +27,8 @@ my_session_factory = SignedCookieSessionFactory('`h6N[wQ8@S"B$bGy;')
 # It substitutes request.static_url because
 # static_url does not work for plugins when using
 # a full path to the static directory
-def __url_for_static(request,static_file):
-    return request.host_url + '/' + static_file
+def __url_for_static(request,static_file,library='fstatic'):
+    return request.application_url + '/' + library + "/" + static_file
 
 def __helper(request):
     h = helper(request)
@@ -81,7 +81,7 @@ def load_environment(settings,config,apppath):
 
     #Add the static view
     staticPath = os.path.join(apppath, 'static')
-    config.add_static_view('static', staticPath, cache_max_age=3600)
+    config.add_static_view('fstatic', staticPath, cache_max_age=3600)
     #Add the template directories to jinja2
     config.add_jinja2_search_path(templatesPath)
 

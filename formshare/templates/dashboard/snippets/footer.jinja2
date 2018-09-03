@@ -1,12 +1,10 @@
-<div class="footer {% if fixed %}fixed{% endif %}">
-    {% block smallmessage %}
-        <div class="pull-right">
-            10GB of <strong>250GB</strong> Free.
-        </div>
-    {% endblock smallmessage %}
-    <div>
-        {% block copyright %}
-            <strong>{{ _("Copyright") }}</strong> QLands Technology Consultants &copy; 2017
-        {% endblock copyright %}
+<div class="footer fixed">
+    {% block footer %}
+    <div class="float-right">
+        <strong>{{ _('Version') }} 1.0 (20180901)</strong>
     </div>
+    <div>
+        <strong>FormShare</strong> &copy; 2018 QLands Technology Consultants
+    </div>
+    {% endblock footer %}
 </div>

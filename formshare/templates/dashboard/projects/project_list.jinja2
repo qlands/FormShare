@@ -1,0 +1,32 @@
+{% extends 'dashboard/page.jinja2' %}
+
+{% block titlesection %}{{ _("Projects") }}{% endblock titlesection %}
+
+{% block breadcrumbs %}
+    {% snippet 'dashboard/projects/snippets/brdcrbs_prjlist.jinja2', request=request %}
+{% endblock breadcrumbs %}
+
+{% block maincontent %}
+    <div class="ibox">
+        <div class="ibox-title">
+            <h5>Active projects</h5>
+            <div class="ibox-tools">
+                <a href="" class="btn btn-primary btn-xs">Create new project</a>
+            </div>
+        </div>
+        <div class="ibox-content">
+            <div class="row m-b-sm m-t-sm">
+                <div class="col-md-1">
+                    <button type="button" id="loading-example-btn" class="btn btn-white btn-sm" ><i class="fa fa-refresh"></i> Refresh</button>
+                </div>
+                <div class="col-md-11">
+                    <div class="input-group"><input type="text" placeholder="Search" class="form-control-sm form-control"> <span class="input-group-btn">
+                                        <button type="button" class="btn btn-sm btn-primary"> Go!</button> </span></div>
+                </div>
+            </div>
+
+            {% snippet 'dashboard/projects/snippets/project_item.jinja2', request=request %}
+
+        </div>
+    </div>
+{% endblock maincontent %}

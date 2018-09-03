@@ -200,7 +200,7 @@ class IAuthorize(Interface):
 
         :param request: ``pyramid.request`` object
         :param registrant: Dictionary containing the details of the registrant
-        :return Return true or false if the registrant should be added. If False then a message should state why
+        :return Return a modified version of registrant, true or false if the registrant should be added. If False then a message should state why
 
         """
         return True,""
@@ -211,8 +211,10 @@ class IAuthorize(Interface):
 
         :param request: ``pyramid.request`` object
         :param registrant: Dictionary containing the details of the registrant
+        :return Return the next page that will be loaded after the registration. If empty or None the the Formshare dashboard will be loaded
 
         """
+        return ""
 
 
 

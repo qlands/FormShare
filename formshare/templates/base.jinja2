@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html {% block htmlattributes %}lang="{{ request.locale_name }}" {% endblock htmlattributes %}>
+{% block html %}
+    <head>
+        {% block head %}
+            {% block meta %}
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <meta http-equiv="X-UA-Compatible" content="IE=edge">
+                <meta name="description" content="FormShare Dashboard">
+                <meta name="author" content="QLands Technology Consultants">
+            {% endblock meta %}
+
+            {% block title %}
+                <title>FormShare | {% block titlesection %}{{ _('Dashboard') }}{% endblock titlesection %}</title>
+            {% endblock title %}
+
+            {% block css %}
+
+            {% endblock css %}
+
+            {% block topScripts %}
+
+            {% endblock topScripts %}
+
+            {% if rtl %}
+                {% cssresource request,'formshare','rtl' %}
+            {% endif %}
+        {% endblock head %}
+    </head>
+
+    <body {% block bodyattributes %}{% endblock bodyattributes %} class="{% if rtl %}rtls{% endif %} {% block bodyclass %}{% endblock bodyclass %}">
+    {% block body %}
+        {# Here goes the body #}
+    {% endblock body %}
+    </body>
+{% endblock html %}
+</html>

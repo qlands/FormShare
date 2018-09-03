@@ -3,6 +3,7 @@ from formshare.models import Collaborator as collaboratorModel
 from .encdecdata import decodeData
 import urllib, hashlib
 from ..models import mapFromSchema
+from validate_email import validate_email
 
 
 
@@ -11,7 +12,8 @@ class User(object):
     def __init__(self, userData):
         default = "identicon"
         size = 45
-        self.email = userData["user_id"]
+        self.id = userData["user_id"]
+        self.email = userData["user_email"]
         gravatar_url = "http://www.gravatar.com/avatar/" + hashlib.md5(self.email.lower().encode('utf8')).hexdigest() + "?"
         gravatar_url += urllib.parse.urlencode({'d':default, 's':str(size)})
         self.userData = userData
@@ -69,23 +71,26 @@ class Collaborator(object):
         gravatar_url += urllib.parse.urlencode({'d':default, 's':str(size)})
         self.gravatarURL = gravatar_url
 
-def getUserData(email,request):
-    result = mapFromSchema(request.dbsession.query(userModel).filter(userModel.user_email == email).filter(userModel.user_active == 1).first())
+def getUserData(userID,request):
+    emailValid = validate_email(userID)
+    if emailValid:
+        result = mapFromSchema(request.dbsession.query(userModel).filter(userModel.user_email == userID).filter(userModel.user_active == 1).first())
+    else:
+        result = mapFromSchema(request.dbsession.query(userModel).filter(userModel.user_id == userID).filter(userModel.user_active == 1).first())
     if result:
         result["user_password"] = ""  # Remove the password form the result
         return User(result)
     return None
 
-def getCollaboratorData(orgID,projectID, collaboratorID,request):
-    result = mapFromSchema(request.dbsession.query(collaboratorModel).filter(collaboratorModel.org_id == orgID).filter(collaboratorModel.project_id == projectID).filter(collaboratorModel.coll_id == collaboratorID).first())
+def getCollaboratorData(projectID, collaboratorID,request):
+    result = mapFromSchema(request.dbsession.query(collaboratorModel).filter(collaboratorModel.project_id == projectID).filter(collaboratorModel.coll_id == collaboratorID).first())
     if result:
         result["coll_password"] = ""  # Remove the password form the result
         return Collaborator(result,projectID)
     return None
 
-
-def checkLogin(email,password, request):
-    result = request.dbsession.query(userModel).filter(userModel.user_email == email).filter(userModel.user_active == 1).first()
+def checkLogin(userID,password, request):
+    result = request.dbsession.query(userModel).filter(userModel.user_id == userID).filter(userModel.user_active == 1).first()
     if result is None:
         return False
     else:

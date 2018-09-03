@@ -1,0 +1,73 @@
+<nav class="navbar-default navbar-static-side" role="navigation">
+    <div class="sidebar-collapse">
+        <ul class="nav metismenu" id="side-menu">
+            {% block nav_header%}
+                <li class="nav-header">
+                    <div class="dropdown profile-element">
+                        {% block nav_profile%}
+                            {% if activeUser != None %}
+                                <img alt="image" class="rounded-circle" src="{{ activeUser.gravatarURL }}"/>
+                            {% else %}
+                                <img alt="image" class="rounded-circle" src="{{ request.url_for_static('guest.png') }}"/>
+                            {% endif %}
+                            <a data-toggle="dropdown" class="dropdown-toggle" href="#">
+                                {% if activeUser != None %}
+                                    <span class="block m-t-xs font-bold">{{ activeUser.name }} <b class="caret"></b></span>
+                                {% else %}
+                                    <span class="block m-t-xs font-bold">{{ _('Guest') }} <b class="caret"></b></span>
+                                {% endif %}
+                            </a>
+                            <ul class="dropdown-menu animated fadeInRight m-t-xs">
+                                {% block nav_profile_links %}
+                                    {% if activeUser != None %}
+                                        <li><a class="dropdown-item" href="{{ request.route_url('logout') }}">{{ _('Profile') }}</a></li>
+                                    {% else %}
+                                        <li><a class="dropdown-item" href="{{ request.route_url('login') }}">{{ _('Login') }}</a></li>
+                                    {% endif %}
+                                    {% block nav_profile_links_extra %}
+
+                                    {% endblock nav_profile_links_extra %}
+                                    {% if activeUser != None %}
+                                        <li class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="{{ request.route_url('logout') }}">{{ _('Logout') }}</a></li>
+                                    {% endif %}
+                                {% endblock nav_profile_links %}
+                            </ul>
+                        {% endblock nav_profile%}
+                    </div>
+                    <div class="logo-element">
+                        {% block logo_element %}
+                            FS
+                        {% endblock logo_element %}
+                    </div>
+                </li>
+            {% endblock nav_header%}
+            {% block nav_links%}
+                {% if activeUser != None %}
+                    <li {% if activeMenu == 'dashboard' %}class="active" {% endif %}>
+                        <a href="{{ request.route_url('dashboard',userid=activeUser.login) }}"><i class="fa fa-th-large"></i> <span class="nav-label">{{ _('Dashboard') }}</span></a>
+                    </li>
+                    <li {% if activeMenu == 'projects' %}class="active" {% endif %}>
+                        <a href="layouts.html"><i class="fas fa-project-diagram"></i> <span class="nav-label">{{ _('Projects') }}</span></a>
+                    </li>
+                    <li class="special_link">
+                        <a href="#"><i class="fas fa-star"></i> <span class="nav-label">This is a big description of a active project</span> <span class="label label-info float-right">Active</span></a>
+                    </li>
+                    <li>
+                        <a href="layouts.html"><i class="fas fa-user-circle"></i> <span class="nav-label">{{ _('Enumerators') }}</span></a>
+                    </li>
+                    <li>
+                        <a href="layouts.html"><i class="fas fa-users"></i> <span class="nav-label">{{ _('Enumerator groups') }}</span></a>
+                    </li>
+                    <li>
+                        <a href="layouts.html"><i class="fab fa-wpforms"></i> <span class="nav-label">{{ _('Forms') }}</span></a>
+                    </li>
+                {% endif %}
+                {% block nav_links_extra %}
+
+                {% endblock nav_links_extra %}
+            {% endblock nav_links%}
+        </ul>
+
+    </div>
+</nav>

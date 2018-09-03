@@ -1,0 +1,63 @@
+{% extends 'base.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block titlesection %}{{ _('Sign in') }}{% endblock titlesection %}
+
+{% block css %}
+    {% cssresource request,'formshare','style' %}
+{% endblock css %}
+
+{% block topScripts %}
+    {% jsresource request,'formshare','bootstrap' %}
+{% endblock topScripts %}
+
+{% block bodyclass %}gray-bg{% endblock bodyclass %}
+
+{% block body %}
+    <div class="middle-box text-center loginscreen animated fadeInDown">
+        <div>
+            {% block logginlogo %}
+                <div>
+                    <h1 class="logo-name">FS</h1>
+                </div>
+            {% endblock logginlogo %}
+            {% block loginwelcome %}
+                <h3>{{ _('Welcome to FormShare') }}</h3>
+            {% endblock loginwelcome %}
+            {% block logingheadmsg %}
+                <p>{{ _('Sign in') }}</p>
+            {% endblock logingheadmsg %}
+            {% block login_errors %}
+                {{ form.display_errors(errors) }}
+            {% endblock login_errors %}
+            {% block loginform %}
+                <form class="m-t" role="form" method="post" action="{{ request.url }}">
+                    {{ form.csrf_token(request) }}
+                    <div class="form-group">
+                        <input type="text" name="email" class="form-control" placeholder="{{ _('Username or email address') }}" required="">
+                    </div>
+                    <div class="form-group">
+                        <input type="password" name="passwd" class="form-control" placeholder="{{ _('Password') }}" required="">
+                    </div>
+                    {% block login_extra %}
+
+                    {% endblock login_extra %}
+                    <button type="submit" class="btn btn-primary block full-width m-b">{{ _('Sign in') }}</button>
+                </form>
+            {% endblock loginform %}
+            {% block login_tools %}
+{#                <a href="#"><small>{{ _('Forgot password?') }}</small></a>#}
+                {% if request.registry.settings['auth.register_users_via_web'] == 'true' %}
+                    <p class="text-muted text-center"><small>{{ _("You don't have an account?") }}</small></p>
+                    <a class="btn btn-sm btn-white btn-block" href="{{ request.route_url('register') }}">{{ _('Sign up') }}</a>
+                {% endif %}
+            {% endblock login_tools %}
+            {% block copyright %}
+                <p class="m-t"> <small>FormShare &copy; 2018 QLands Technology Consultants</small> </p>
+            {% endblock copyright %}
+        </div>
+    </div>
+    {% block scripts %}
+
+    {% endblock scripts %}
+{% endblock body %}

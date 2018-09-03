@@ -27,8 +27,8 @@ class Collaboratorlog(Base):
     tableid = Column(String(120))
 
 
-class User(Base):
-    __tablename__ = 'user'
+class Fsuser(Base):
+    __tablename__ = 'fsuser'
 
     user_id = Column(String(120), primary_key=True)
     user_name = Column(String(120))
@@ -41,6 +41,21 @@ class User(Base):
     tags = Column(Text)
     user_active = Column(INTEGER(11), server_default=text("'1'"))
     user_apikey = Column(String(64))
+
+
+class Project(Base):
+    __tablename__ = 'project'
+
+    project_id = Column(String(64), primary_key=True)
+    project_name = Column(Text)
+    project_abstract = Column(Text)
+    project_cdate = Column(DateTime)
+    project_creator = Column(String(45))
+    project_cremail = Column(String(45))
+    project_contact = Column(String(120))
+    project_coemail = Column(String(45))
+    extra = Column(Text)
+    tags = Column(Text)
 
 
 class Userlog(Base):
@@ -60,24 +75,6 @@ class Userlog(Base):
     septable = Column(String(120))
     sepsection = Column(String(12))
     sepitem = Column(String(120))
-
-
-class Project(Base):
-    __tablename__ = 'project'
-
-    project_id = Column(String(64), primary_key=True)
-    user_id = Column(ForeignKey('user.user_id', ondelete='CASCADE'), nullable=False, index=True)
-    project_name = Column(Text)
-    project_abstract = Column(Text)
-    project_cdate = Column(String(45))
-    project_creator = Column(String(45))
-    project_cremail = Column(String(45))
-    project_contact = Column(String(120))
-    project_coemail = Column(String(45))
-    extra = Column(Text)
-    tags = Column(Text)
-
-    user = relationship('User')
 
 
 class Collaborator(Base):
@@ -118,10 +115,10 @@ class Collgroup(Base):
     project = relationship('Project')
 
 
-class Form(Base):
-    __tablename__ = 'form'
+class Odkform(Base):
+    __tablename__ = 'odkform'
     __table_args__ = (
-        ForeignKeyConstraint(['parent_project', 'parent_form'], ['form.project_id', 'form.form_id']),
+        ForeignKeyConstraint(['parent_project', 'parent_form'], ['odkform.project_id', 'odkform.form_id']),
         Index('fk_form_form1_idx', 'parent_project', 'parent_form')
     )
 
@@ -147,8 +144,20 @@ class Form(Base):
     extra = Column(Text)
     tags = Column(Text)
 
-    parent = relationship('Form', remote_side=[project_id, form_id])
+    parent = relationship('Odkform', remote_side=[project_id, form_id])
     project = relationship('Project')
+
+
+class Userproject(Base):
+    __tablename__ = 'userproject'
+
+    user_id = Column(ForeignKey('fsuser.user_id'), primary_key=True, nullable=False)
+    project_id = Column(ForeignKey('project.project_id'), primary_key=True, nullable=False, index=True)
+    access_type = Column(INTEGER(11))
+    access_date = Column(DateTime)
+
+    project = relationship('Project')
+    user = relationship('Fsuser')
 
 
 class Collingroup(Base):
@@ -174,7 +183,7 @@ class Collingroup(Base):
 class Formacces(Base):
     __tablename__ = 'formaccess'
     __table_args__ = (
-        ForeignKeyConstraint(['form_project', 'form_id'], ['form.project_id', 'form.form_id'], ondelete='CASCADE'),
+        ForeignKeyConstraint(['form_project', 'form_id'], ['odkform.project_id', 'odkform.form_id'], ondelete='CASCADE'),
         ForeignKeyConstraint(['project_id', 'coll_id'], ['collaborator.project_id', 'collaborator.coll_id'], ondelete='CASCADE'),
         Index('fk_submitter_form1_idx', 'form_project', 'form_id'),
         Index('fk_submitter_form1', 'form_project', 'form_id')
@@ -187,14 +196,14 @@ class Formacces(Base):
     coll_privileges = Column(INTEGER(11))
     access_date = Column(DateTime)
 
-    form = relationship('Form')
+    odkform = relationship('Odkform')
     project = relationship('Collaborator')
 
 
 class Formgrpacces(Base):
     __tablename__ = 'formgrpaccess'
     __table_args__ = (
-        ForeignKeyConstraint(['form_project', 'form_id'], ['form.project_id', 'form.form_id'], ondelete='CASCADE'),
+        ForeignKeyConstraint(['form_project', 'form_id'], ['odkform.project_id', 'odkform.form_id'], ondelete='CASCADE'),
         ForeignKeyConstraint(['project_id', 'group_id'], ['collgroup.project_id', 'collgroup.group_id'], ondelete='CASCADE'),
         Index('fk_grpsubmitter_form1_idx', 'form_project', 'form_id'),
         Index('fk_grpsubmitter_form1', 'form_project', 'form_id')
@@ -206,7 +215,7 @@ class Formgrpacces(Base):
     form_id = Column(String(120), primary_key=True, nullable=False)
     access_date = Column(DateTime)
 
-    form = relationship('Form')
+    odkform = relationship('Odkform')
     project = relationship('Collgroup')
 
 
@@ -214,9 +223,9 @@ class Jsonlog(Base):
     __tablename__ = 'jsonlog'
     __table_args__ = (
         ForeignKeyConstraint(['enum_project', 'coll_id'], ['collaborator.project_id', 'collaborator.coll_id']),
-        ForeignKeyConstraint(['project_id', 'form_id'], ['form.project_id', 'form.form_id'], ondelete='CASCADE'),
-        Index('fk_jsonlog_enumerator1_idx', 'enum_project', 'coll_id'),
-        Index('fk_jsonlog_form1_idx', 'project_id', 'form_id')
+        ForeignKeyConstraint(['project_id', 'form_id'], ['odkform.project_id', 'odkform.form_id'], ondelete='CASCADE'),
+        Index('fk_jsonlog_form1_idx', 'project_id', 'form_id'),
+        Index('fk_jsonlog_enumerator1_idx', 'enum_project', 'coll_id')
     )
 
     form_id = Column(String(120), primary_key=True, nullable=False)
@@ -230,13 +239,13 @@ class Jsonlog(Base):
     coll_id = Column(String(120), nullable=False)
 
     collaborator = relationship('Collaborator')
-    project = relationship('Form')
+    project = relationship('Odkform')
 
 
 class Septable(Base):
     __tablename__ = 'septable'
     __table_args__ = (
-        ForeignKeyConstraint(['project_id', 'form_id'], ['form.project_id', 'form.form_id'], ondelete='CASCADE'),
+        ForeignKeyConstraint(['project_id', 'form_id'], ['odkform.project_id', 'odkform.form_id'], ondelete='CASCADE'),
     )
 
     project_id = Column(String(64), primary_key=True, nullable=False)
@@ -244,16 +253,16 @@ class Septable(Base):
     table_name = Column(String(120), primary_key=True, nullable=False)
     table_desc = Column(Text)
 
-    project = relationship('Form')
+    project = relationship('Odkform')
 
 
 class Submission(Base):
     __tablename__ = 'submission'
     __table_args__ = (
         ForeignKeyConstraint(['enum_project', 'coll_id'], ['collaborator.project_id', 'collaborator.coll_id']),
-        ForeignKeyConstraint(['project_id', 'form_id'], ['form.project_id', 'form.form_id'], ondelete='CASCADE'),
-        Index('fk_submission_form1_idx', 'project_id', 'form_id'),
-        Index('fk_submission_enumerator1_idx', 'enum_project', 'coll_id')
+        ForeignKeyConstraint(['project_id', 'form_id'], ['odkform.project_id', 'odkform.form_id'], ondelete='CASCADE'),
+        Index('fk_submission_enumerator1_idx', 'enum_project', 'coll_id'),
+        Index('fk_submission_form1_idx', 'project_id', 'form_id')
     )
 
     project_id = Column(String(64), primary_key=True, nullable=False)
@@ -267,7 +276,7 @@ class Submission(Base):
     sameas = Column(String(64))
 
     collaborator = relationship('Collaborator')
-    project = relationship('Form')
+    project = relationship('Odkform')
 
 
 class Jsonhistory(Base):

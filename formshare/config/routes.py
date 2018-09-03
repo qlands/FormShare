@@ -15,6 +15,7 @@ from ..views.basic_views import notfound_view,home_view,logout_view,login_view,r
 from ..views.dashboard import dashboard_view
 from ..views.projects import projects_view,projectDetails_view
 from ..views.form import formDetails_view
+from ..views.profile import profile_view
 
 route_list = []
 
@@ -43,20 +44,22 @@ def loadRoutes(config):
     #FormShare routes
     routes = []
     routes.append(addRoute('home', '/', home_view, 'landing/index.jinja2'))
-    routes.append(addRoute('login', '/login', login_view, 'dashboard/login.jinja2'))
-    routes.append(addRoute('collaboratorslogin', '/collaborator_access/{userid}/{pname}/login', collaboratorsLogin_view, 'collaborators/login.jinja2'))
-    routes.append(addRoute('register', '/register', register_view, 'dashboard/register.jinja2'))
+    routes.append(addRoute('login', '/login', login_view, 'generic/login.jinja2'))
+    routes.append(addRoute('collaboratorslogin', '/collaborators/{userid}/{pname}/login', collaboratorsLogin_view, 'generic/collablogin.jinja2'))
+    routes.append(addRoute('register', '/join', register_view, 'generic/register.jinja2'))
     routes.append(addRoute('logout', '/logout', logout_view, None))
 
-    routes.append(addRoute('dashboard', '/dashboard', dashboard_view, 'dashboard/index.jinja2'))
-    routes.append(addRoute('projects', '/projects', projects_view, 'dashboard/projects.jinja2'))
-    routes.append(addRoute('project_details', '/project/{projid}', projectDetails_view, 'dashboard/project_details.jinja2'))
-    routes.append(addRoute('form_details', '/project/{projid}/forms/{formid}', formDetails_view, 'dashboard/form_details.jinja2'))
+    routes.append(addRoute('dashboard', '/{userid}', dashboard_view, 'dashboard/index.jinja2'))
+    routes.append(addRoute('profile', '/{userid}/profile', profile_view, 'dashboard/profile/profile.jinja2'))
+
+    routes.append(addRoute('projects', '/{userid}/projects', projects_view, 'dashboard/projects/project_list.jinja2'))
+    routes.append(addRoute('project_details', '/{userid}/project/{projid}', projectDetails_view, 'dashboard/projects/project_details.jinja2'))
+    routes.append(addRoute('form_details', '/{userid}/project/{projid}/form/{formid}', formDetails_view, 'dashboard/projects/forms/form_details.jinja2'))
 
     appendToRoutes(routes)
 
     #Add the not found route
-    config.add_notfound_view(notfound_view, renderer='404.jinja2')
+    config.add_notfound_view(notfound_view, renderer='generic/404.jinja2')
 
     # Call connected plugins to add any routes after FormShare
     for plugin in p.PluginImplementations(p.IRoutes):

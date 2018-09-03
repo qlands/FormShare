@@ -1,12 +1,16 @@
-<div class="col-sm-12">
-    {% block breadcrumb_title %}
-        <h2>{{ _("FormShare - Main Dashboard") }}</h2>
-    {% endblock breadcrumb_title %}
+<div class="col-sm-4">
+    <h2>This is main title</h2>
     <ol class="breadcrumb">
-        {% block breadcrumbitems %}
-            <li class="active">
-                <a href="{{ request.route_url('dashboard') }}">{{ _("Home") }}</a>
-            </li>
-        {% endblock breadcrumbitems %}
+        <li class="breadcrumb-item">
+            <a href="index.html">This is</a>
+        </li>
+        <li class="breadcrumb-item active">
+            <strong>Breadcrumb</strong>
+        </li>
     </ol>
+</div>
+<div class="col-sm-8">
+    <div class="title-action">
+        <a href="" class="btn btn-primary">This is action area</a>
+    </div>
 </div>

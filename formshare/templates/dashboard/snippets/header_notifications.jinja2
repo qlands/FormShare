@@ -1,0 +1,22 @@
+<li class="dropdown">
+    {% block header_notifications_counter %}
+    <a class="dropdown-toggle count-info" data-toggle="dropdown" href="#">
+        <i class="fa fa-bell"></i>  <span class="label label-primary">8</span>
+    </a>
+    {% endblock header_notifications_counter %}
+    {% block header_notifications_list %}
+        <ul class="dropdown-menu dropdown-menu2 dropdown-alerts dropdown-menu-right">
+            {% snippet 'dashboard/snippets/header_notification_item.jinja2', request=request %}
+            {% block header_notification_bottom %}
+                <li>
+                    <div class="text-center link-block">
+                        <a href="notifications.html" class="dropdown-item">
+                            <strong>See All Alerts</strong>
+                            <i class="fa fa-angle-right"></i>
+                        </a>
+                    </div>
+                </li>
+            {% endblock header_notification_bottom %}
+        </ul>
+    {% endblock header_notifications_list %}
+</li>

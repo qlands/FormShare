@@ -1,6 +1,5 @@
-from .classes import privateView
+from formshare.views.classes import dashboardView
 
-class dashboard_view(privateView):
+class dashboard_view(dashboardView):
     def processView(self):
-        self.request.h.setActiveMenu("dashboard")
         return {}

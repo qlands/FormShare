@@ -75,8 +75,7 @@ setup(
             'main = formshare:main',
         ],
         'console_scripts': [
-            'create_organization = formshare.scripts.createorg:main',
-            'create_superuser = formshare.scripts.createsuperuser:main',
+            'create_superuser = formshare.scripts.createsuperuser:main'
         ],
     },
 )

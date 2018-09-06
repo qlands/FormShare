@@ -18,7 +18,7 @@
                 <div id="page-wrapper" class="gray-bg dashbard-1">
                     {% block pagewrapper %}
                         {% block pageheader %}
-                            {% snippet 'dashboard/snippets/header.jinja2', request=request,activeUser=activeUser %}
+                            {% snippet 'dashboard/snippets/header.jinja2', request=request,activeUser=activeUser,showWelcome=showWelcome %}
                         {% endblock pageheader %}
                         {% block dashheader %}
                             <div class="row wrapper border-bottom white-bg page-heading">
@@ -47,8 +47,9 @@
                     {#  {% snippet 'dashboard/snippets/chat.jinja2', request=request %}#}
                 {% endblock smallchat %}
                 {% block sidebar %}
-                    {# Uncomment this snippet to have a side bar #}
-                    {#  {% snippet 'dashboard/snippets/sidebar.jinja2', request=request %}#}
+                    {% if activeUser != None  %}
+                        {% snippet 'dashboard/snippets/sidebar.jinja2', request=request %}
+                    {% endif %}
                 {% endblock sidebar %}
             {% endblock wrapper %}
         </div>
@@ -59,11 +60,11 @@
         {% if messageData|length > 0 %}
             <script>
                 $(document).ready(function() {
-                    messageData = {{ messageData[0] }};
+                    messageData = '{{ messageData[0] }}';
                     swal({
-                        title: messageData.title,
-                        text: messageData.text,
-                        type: messageData.type
+                        title: 'FormShare',
+                        text: messageData,
+                        type: "success"
                     });
                 });
             </script>

@@ -44,6 +44,7 @@ class Project(Base):
     __tablename__ = 'project'
 
     project_id = Column(Unicode(64), primary_key=True)
+    project_code = Column(Unicode(45))
     project_name = Column(UnicodeText)
     project_abstract = Column(UnicodeText)
     project_cdate = Column(DateTime)
@@ -51,6 +52,7 @@ class Project(Base):
     project_cremail = Column(Unicode(45))
     project_contact = Column(Unicode(120))
     project_coemail = Column(Unicode(45))
+    project_public = Column(INTEGER)
     extra = Column(UnicodeText)
     tags = Column(UnicodeText)
 
@@ -132,6 +134,7 @@ class Odkform(Base):
     form_sepfile = Column(UnicodeText)
     form_xlsfile = Column(UnicodeText)
     form_xmlfile = Column(UnicodeText)
+    form_public = Column(INTEGER)
     extra = Column(UnicodeText)
     tags = Column(UnicodeText)
 

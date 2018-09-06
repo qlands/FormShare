@@ -1,146 +1,105 @@
 {% extends 'dashboard/page.jinja2' %}
 
+
 {% block titlesection %}{{ _("Dashboard") }}{% endblock titlesection %}
 
-{#{% block css %}#}
-{#    {{ super() }}#}
-{#    {% cssresource request,'formshare','leaflet' %}#}
-{#    {% cssresource request,'formshare','chosen' %}#}
-{#    <style>#}
-{#        canvas {#}
-{#            width: 100%;#}
-{#            height: auto;#}
-{#        }#}
-{#    </style>#}
-{#{% endblock css %}#}
-{##}
-{#{% block topScripts %}#}
-{#    {{ super() }}#}
-{#    {% jsresource request,'formshare','chartjs' %}#}
-{#    {% jsresource request,'formshare','leaflet' %}#}
-{#    {% jsresource request,'formshare','chosen' %}#}
-{#{% endblock topScripts %}#}
+{% block css %}
+    {{ super() }}
+    {% if viewingSelfAccount == False %}
+        {% cssresource request,'formshare','bsmarkdown' %}
+    {% endif %}
+{% endblock css %}
+
+{% block topScripts %}
+    {{ super() }}
+    {% if viewingSelfAccount == False %}
+        {% jsresource request,'formshare','markdown' %}
+        {% jsresource request,'formshare','clipboard' %}
+    {% endif %}
+{% endblock topScripts %}
+
 
 {% block dashheader %}
-    <div class="row  border-bottom white-bg dashboard-header">
-        {% block project_list_section %}
-            <div class="col-md-12">
-                {% if activeUser != None  %}
-                    {% if viewingSelfAccount %}
-                        <h2>{{ _('Welcome') }} {{ activeUser.name }}</h2>
-                    {% else %}
-                        <h2>{{ _('Your are viewing others account') }}</h2>
+    {% if viewingSelfAccount %}
+        <div class="row  border-bottom white-bg dashboard-header">
+            {% block project_list_section %}
+                <div class="col-md-12">
+                    {% if activeUser != None  %}
+                        {% if viewingSelfAccount %}
+                            <h2>{{ _('Welcome') }} {{ activeUser.name }}</h2>
+                        {% else %}
+                            <h2>{{ _('Your are viewing others account') }}</h2>
+                        {% endif %}
                     {% endif %}
-                {% endif %}
-                <h3>{{ _('Here are your three most dynamic projects.') }}</h3>
-                {% block project_list %}
-                    <ul class="list-group clear-list m-t">
-                        {% snippet 'dashboard/snippets/project_list_item.jinja2', request=request %}
-                    </ul>
-                {% endblock project_list %}
-            </div>
-        {% endblock project_list_section %}
-    </div>
+                    <h3>{{ _('Here are your three most dynamic projects.') }}</h3>
+                    {% block project_list %}
+                        <ul class="list-group clear-list m-t">
+                            {% snippet 'dashboard/snippets/project_list_item.jinja2', request=request %}
+                        </ul>
+                    {% endblock project_list %}
+                </div>
+            {% endblock project_list_section %}
+        </div>
+    {% endif %}
 {% endblock %}
 
+{% block maincontent %}
+    {% if viewingSelfAccount %}
+        {{ super() }}
+    {% else %}
+        {% snippet 'dashboard/profile/snippets/profile_head.jinja2',request=request,viewingSelfAccount=viewingSelfAccount,userDetails=userDetails,activeUser=activeUser %}
+        {% snippet 'dashboard/profile/snippets/profile_details.jinja2',request=request,viewingSelfAccount=viewingSelfAccount,userDetails=userDetails,activeUser=activeUser %}
+    {% endif %}
+
+{% endblock maincontent %}
+
 {% block mainsection %}
-    <div class="row">
-        <div class="col-lg-12">
-            {% block form_list_title %}
-                <h2>{{ _('Most dynamic forms in active project') }} ()</h2>
-            {% endblock form_list_title %}
-            <div class="wrapper wrapper-content">
-                <div class="row">
-                    {% block form_list_section %}
-                        <div class="col-md-12">
-                            {% block form_list%}
-                                <ul class="list-group clear-list m-t">
-                                    {% snippet 'dashboard/snippets/form_list_item.jinja2', request=request %}
-                                </ul>
-                            {% endblock form_list%}
-                        </div>
-                    {% endblock form_list_section %}
+    {% if viewingSelfAccount %}
+        <div class="row">
+            <div class="col-lg-12">
+                {% block form_list_title %}
+                    <h2>{{ _('Most dynamic forms in active project') }} ()</h2>
+                {% endblock form_list_title %}
+                <div class="wrapper wrapper-content">
+                    <div class="row">
+                        {% block form_list_section %}
+                            <div class="col-md-12">
+                                {% block form_list%}
+                                    <ul class="list-group clear-list m-t">
+                                        {% snippet 'dashboard/snippets/form_list_item.jinja2', request=request %}
+                                    </ul>
+                                {% endblock form_list%}
+                            </div>
+                        {% endblock form_list_section %}
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
+    {% else %}
+        {{ super() }}
+    {% endif %}
 {% endblock mainsection %}
 
-{% block footer %}
-    {% snippet 'dashboard/snippets/footer.jinja2', request=request, fixed=True %}
-{% endblock footer %}
+{% block scripts %}
+    {{ super() }}
+    {% if viewingSelfAccount == False %}
+        <script>
+            $(document).ready(function() {
+                $('.scroll_content2').slimscroll();
+                new ClipboardJS('.clipboard');
+            });
+        </script>
 
-{% block sidebar %}
-    {% if activeUser != None  %}
-        {% snippet 'dashboard/snippets/sidebar.jinja2', request=request %}
+        {% if userDetails.user_about != None %}
+            <script>
+                $(document).ready(function() {
+                    var val = $("#bio_hidden").val();
+                    document.getElementById('profile_bio').innerHTML = markdown.toHTML(val);
+
+                    $('.scroll_content').slimscroll();
+                });
+            </script>
+        {% endif %}
     {% endif %}
-{% endblock sidebar %}
+{% endblock scripts %}
 
-{#{% block scripts %}#}
-{#    {{ super() }}#}
-{#    <script>#}
-{#        $(document).ready(function() {#}
-{#            var doughnutData = {#}
-{#                labels: ["1","2","3","4","5" ],#}
-{#                datasets: [{#}
-{#                    data: [300,50,100,25,60],#}
-{#                    backgroundColor: ["#1c84c6","#23c6c8","#f8ac59","#d1dade","#ed5565"]#}
-{#                }]#}
-{#            } ;#}
-{##}
-{##}
-{#            var doughnutOptions = {#}
-{#                responsive: false,#}
-{#                legend: {#}
-{#                    display: false#}
-{#                }#}
-{#            };#}
-{##}
-{##}
-{#            var ctx4 = document.getElementById("doughnutChart").getContext("2d");#}
-{#            new Chart(ctx4, {type: 'doughnut', data: doughnutData, options:doughnutOptions});#}
-{##}
-{#            var doughnutData = {#}
-{#                labels: ["App","Software","Laptop" ],#}
-{#                datasets: [{#}
-{#                    data: [70,27,85],#}
-{#                    backgroundColor: ["#a3e1d4","#dedede","#9CC3DA"]#}
-{#                }]#}
-{#            } ;#}
-{##}
-{##}
-{#            var doughnutOptions = {#}
-{#                responsive: false,#}
-{#                legend: {#}
-{#                    display: false#}
-{#                }#}
-{#            };#}
-{##}
-{##}
-{#            var ctx4 = document.getElementById("doughnutChart2").getContext("2d");#}
-{#            new Chart(ctx4, {type: 'doughnut', data: doughnutData, options:doughnutOptions});#}
-{##}
-{#            var mymap = L.map('mapid').setView([20, 5], 1);#}
-{##}
-{#            L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {#}
-{#                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',#}
-{#                maxZoom: 18,#}
-{#                id: 'mapbox.streets',#}
-{#                accessToken: 'pk.eyJ1IjoicWxhbmRzIiwiYSI6ImNqZHB1ZDh4YzEwZHEyeG1rcjc0NmFsNzIifQ.i3YebmNDByns1c1ixZE0bA'#}
-{#            }).addTo(mymap);#}
-{##}
-{##}
-{#            var formMap = L.map('formMap').setView([20, 5], 1);#}
-{##}
-{#            L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {#}
-{#                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',#}
-{#                maxZoom: 18,#}
-{#                id: 'mapbox.streets',#}
-{#                accessToken: 'pk.eyJ1IjoicWxhbmRzIiwiYSI6ImNqZHB1ZDh4YzEwZHEyeG1rcjc0NmFsNzIifQ.i3YebmNDByns1c1ixZE0bA'#}
-{#            }).addTo(formMap);#}
-{##}
-{#            $('.chosen-select').chosen({width: "100%"});#}
-{##}
-{#        });#}
-{#    </script>#}
-{#{% endblock scripts %}#}

@@ -183,17 +183,6 @@ class IAuthorize(Interface):
         """
         return True,""
 
-    def after_collaborator_login(self, request, collaborator):
-        """
-        Called by the host application so plugins can modify the login of collaborators
-
-        :param request: ``pyramid.request`` object
-        :param collaborator: collaborator object
-        :return Return true or false if the login should continue. If False then a message should state why
-
-        """
-        return True,""
-
     def before_register(self, request, registrant):
         """
         Called by the host application so plugins can do something before registering a user
@@ -216,8 +205,35 @@ class IAuthorize(Interface):
         """
         return ""
 
+    def on_authenticate_user(self, request, userID, userIsEmail):
+        """
+                Called by FormShare so plugins can modify the way FormShare gather information about the user
 
+                :param request: ``pyramid.request`` object
+                :param userID: The user ID trying to authenticate
+                :param userIsEmail: Whether the user is an email
+                :return Return None and and empty Dict to indicate that Forshare should get this in the normal way.
+                        False and None if the user must be denied.
+                        Otherwise true and then the Dict MUST contain at least the following keys:
+                        user_id : With the same userID authenticating
+                        user_email : With the email of the userID authenticating
+                        user_name : With the full name of the userID authenticating
+                        user_about : With the bio data of the userID authenticating or None
+                """
+        return None,{}
 
+    def on_authenticate_password(self, request, userID, password):
+        """
+                Called by FormShare so plugins can modify the way FormShare gather information about the user
+
+                :param request: ``pyramid.request`` object
+                :param userID: The user ID trying to authenticate
+                :param password: The password as is typed in the FormShare interface
+                :return Return None to indicate that Forshare should get this in the normal way.
+                        False if the password is incorrect.
+                        Otherwise true
+                        """
+        return False
 
 class IPluginObserver(Interface):
     """

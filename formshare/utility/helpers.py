@@ -13,6 +13,8 @@ from ago import human
 import arrow
 import inflect
 import formshare.plugins as p
+import urllib, hashlib
+from pyramid.csrf import new_csrf_token
 
 __all__ = [
     'helper'
@@ -65,3 +67,12 @@ class helper:
         # return pluralize_en(noun)
         return plural
 
+    def getGravatarUrl(self,email,size=45):
+        encodedEmail = email.encode('utf-8')
+        default = "identicon"
+        gravatar_url = "http://www.gravatar.com/avatar/" + hashlib.md5(encodedEmail.lower()).hexdigest() + "?"
+        gravatar_url += urllib.parse.urlencode({'d':default, 's':str(size)})
+        return gravatar_url
+
+    def get_csrf_token(self,request):
+        return new_csrf_token(request)

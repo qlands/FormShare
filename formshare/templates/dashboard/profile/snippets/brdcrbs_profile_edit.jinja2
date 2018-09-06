@@ -1,15 +1,14 @@
 <div class="col-sm-12">
-    {% if viewingSelfAccount %}
-    <h2>{{ _('My profile') }}</h2>
+    <h2>{{ _('Edit my profile') }}</h2>
     <ol class="breadcrumb">
         <li class="breadcrumb-item">
             <a href="{{ request.route_url("dashboard",userid=activeUser.login) }}">{{ _('Dashboard') }}</a>
         </li>
+        <li class="breadcrumb-item">
+            <a href="{{ request.route_url("profile",userid=activeUser.login) }}">{{ _('Profile') }}</a>
+        </li>
         <li class="breadcrumb-item active">
-            <strong>{{ _('Profile') }}</strong>
+            <strong>{{ _('Edit') }}</strong>
         </li>
     </ol>
-    {% else %}
-        <h2>{{ _('Profile of') }} {{ userDetails.user_name }}</h2>
-    {% endif %}
 </div>

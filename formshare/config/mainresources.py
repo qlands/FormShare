@@ -33,6 +33,7 @@ def createResources(apppath,config):
 
     r.addLibrary('formshare', os.path.join(apppath, 'jsandcss'), config)
 
+    #----------------------------Basic CSS-----------------------
     r.addCSSResource('formshare', 'bootstrap', 'css/bootstrap.min.css')
     r.addCSSResource('formshare', 'font-5', 'font-awesome/css/all.css')
     r.addCSSResource('formshare', 'font-awesome', 'font-awesome/css/v4-shims.css')
@@ -40,10 +41,8 @@ def createResources(apppath,config):
     r.addCSSResource('formshare', 'animate', 'css/animate.css')
     r.addCSSResource('formshare', 'style', 'css/style.css')
     r.addCSSResource('formshare', 'rtl', 'css/plugins/bootstrap-rtl/bootstrap-rtl.min.css', 'bootstrap')
-    r.addCSSResource('formshare', 'leaflet', 'js/plugins/leaflet/leaflet.css', None)
-    r.addCSSResource('formshare', 'chosen', 'css/plugins/chosen/bootstrap-chosen.css', 'bootstrap')
-    r.addCSSResource('formshare', 'icheck', 'css/plugins/iCheck/custom.css', None)
 
+    #----------------------------Basic JS----------------------------------------------------
     r.addJSResource('formshare', 'jquery', 'js/jquery-3.1.1.min.js')
     r.addJSResource('formshare', 'popper', 'js/popper.min.js')
     r.addJSResource('formshare', 'bootstrap', 'js/bootstrap.min.js')
@@ -51,13 +50,13 @@ def createResources(apppath,config):
     r.addJSResource('formshare', 'slimscroll', 'js/plugins/slimscroll/jquery.slimscroll.min.js')
     r.addJSResource('formshare', 'pace', 'js/plugins/pace/pace.min.js')
     r.addJSResource('formshare', 'wow', 'js/plugins/wow/wow.min.js')
-
     r.addJSResource('formshare', 'sweetalert', 'js/plugins/sweetalert/sweetalert.min.js','pace')
-    r.addJSResource('formshare', 'chartjs', 'js/plugins/chartJs/Chart.min.js','sweetalert')
-    r.addJSResource('formshare', 'leaflet', 'js/plugins/leaflet/leaflet.js', None)
-    r.addJSResource('formshare', 'chosen', 'js/plugins/chosen/chosen.jquery.js', 'bootstrap')
-    r.addJSResource('formshare', 'icheck', 'js/plugins/iCheck/icheck.min.js', None)
-
     r.addJSResource('formshare', 'inspinia', 'js/inspinia.js',None)
+
+    #----------------------------Profile----------------------------------
+    r.addCSSResource('formshare', 'bsmarkdown', 'css/plugins/bootstrap-markdown/bootstrap-markdown.min.css', 'sweetalert')
+    r.addJSResource('formshare', 'bsmarkdown', 'js/plugins/bootstrap-markdown/bootstrap-markdown.js',None)
+    r.addJSResource('formshare', 'markdown', 'js/plugins/bootstrap-markdown/markdown.js', 'bsmarkdown')
+    r.addJSResource('formshare', 'clipboard', 'js/plugins/clipboard/clipboard.js',None)
 
 

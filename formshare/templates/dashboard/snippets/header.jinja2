@@ -13,9 +13,11 @@
         <ul class="nav navbar-top-links navbar-right">
             {% block header_top_links %}
                 {% block header_top_welcome %}
-                    <li style="padding: 20px">
-                        <span class="m-r-sm text-muted welcome-message">{{ _('Welcome to FormShare') }}</span>
-                    </li>
+                    {% if showWelcome %}
+                        <li style="padding: 20px">
+                            <span class="m-r-sm text-muted welcome-message">{{ _('Welcome to FormShare') }}</span>
+                        </li>
+                    {% endif %}
                 {% endblock header_top_welcome %}
                 {% block header_messages %}
                     {% if activeUser != None %}

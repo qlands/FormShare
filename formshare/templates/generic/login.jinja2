@@ -32,7 +32,7 @@
             {% endblock login_errors %}
             {% block loginform %}
                 <form class="m-t" role="form" method="post" action="{{ request.url }}">
-                    {{ form.csrf_token(request) }}
+                    {{ form.secure_form(request,auth_token) }}
                     <div class="form-group">
                         <input type="text" name="email" class="form-control" placeholder="{{ _('Username or email address') }}" required="">
                     </div>

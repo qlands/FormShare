@@ -1,11 +1,11 @@
-from ...models import mapToSchema,User
+from ...models import mapToSchema,User,mapFromSchema
 import sys
 from sqlalchemy.exc import IntegrityError
 import logging
 from validate_email import validate_email
 
 __all__ = [
-    'register_user','user_exists'
+    'register_user','user_exists','get_user_details','update_profile'
 ]
 
 log = logging.getLogger(__name__)
@@ -41,4 +41,18 @@ def user_exists(request,userID):
         return False
     return True
 
+def get_user_details(request,userID):
+    res = request.dbsession.query(User).filter(User.user_id == userID).filter(User.user_active == 1).first()
+    if res is not None:
+        return mapFromSchema(res)
+    return {}
 
+def update_profile(request,userID,profileData):
+    mappedData = mapToSchema(User, profileData)
+    try:
+        request.dbsession.query(User).filter(User.user_id == userID).update(mappedData)
+        request.dbsession.flush()
+        return True,""
+    except:
+        log.error("Error {} when updating user user {}".format(sys.exc_info()[0], userID))
+        return False, sys.exc_info()[0]

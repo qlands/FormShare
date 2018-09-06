@@ -4,8 +4,8 @@ from .encdecdata import decodeData
 import urllib, hashlib
 from ..models import mapFromSchema
 from validate_email import validate_email
-
-
+from formshare.plugins.core import PluginImplementations
+from formshare.plugins.interfaces import IAuthorize
 
 #User class Used to store information about the user
 class User(object):
@@ -25,8 +25,16 @@ class User(object):
         else:
             self.about = userData["user_about"]
 
-    def check_password(self, passwd,request):
-        return checkLogin(self.login,passwd,request)
+    def check_password(self, password,request):
+        # Load connected plugins and check if they modify the password authentication
+        plugin_result = None
+        for plugin in PluginImplementations(IAuthorize):
+            plugin_result = plugin.on_authenticate_password(request, self.login, password)
+            break  # Only one plugging will be called to extend authenticate_user
+        if plugin_result is None:
+            return checkLogin(self.login,password,request)
+        else:
+            return plugin_result
 
     def getGravatarUrl(self,size):
         default = "identicon"
@@ -71,16 +79,38 @@ class Collaborator(object):
         gravatar_url += urllib.parse.urlencode({'d':default, 's':str(size)})
         self.gravatarURL = gravatar_url
 
+def getFormShareUserData(request,userID,isEmail):
+    if isEmail:
+        return mapFromSchema(request.dbsession.query(userModel).filter(userModel.user_email == userID).filter(
+            userModel.user_active == 1).first())
+    else:
+        return mapFromSchema(request.dbsession.query(userModel).filter(userModel.user_id == userID).filter(
+            userModel.user_active == 1).first())
+
 def getUserData(userID,request):
     emailValid = validate_email(userID)
-    if emailValid:
-        result = mapFromSchema(request.dbsession.query(userModel).filter(userModel.user_email == userID).filter(userModel.user_active == 1).first())
+    # Load connected plugins and check if they modify the user authentication
+    plugin_result = None
+    plugin_result_dict = {}
+    for plugin in PluginImplementations(IAuthorize):
+        plugin_result, plugin_result_dict = plugin.on_authenticate_user(request, userID, emailValid)
+        break  # Only one plugging will be called to extend authenticate_user
+    if plugin_result is not None:
+        if plugin_result:
+            #The plugin authenticated the user. Check now that such user exists in FormShare.
+            internalUser = getFormShareUserData(request,userID,emailValid)
+            if internalUser:
+                return User(plugin_result_dict)
+            else:
+                return None
+        else:
+            return None
     else:
-        result = mapFromSchema(request.dbsession.query(userModel).filter(userModel.user_id == userID).filter(userModel.user_active == 1).first())
-    if result:
-        result["user_password"] = ""  # Remove the password form the result
-        return User(result)
-    return None
+        result = getFormShareUserData(request,userID,emailValid)
+        if result:
+            result["user_password"] = ""  # Remove the password form the result
+            return User(result)
+        return None
 
 def getCollaboratorData(projectID, collaboratorID,request):
     result = mapFromSchema(request.dbsession.query(collaboratorModel).filter(collaboratorModel.project_id == projectID).filter(collaboratorModel.coll_id == collaboratorID).first())

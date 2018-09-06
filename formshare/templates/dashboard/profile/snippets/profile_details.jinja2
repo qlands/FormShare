@@ -1,0 +1,162 @@
+<div class="row">
+    {% block profile_user_section %}
+        <div class="col-lg-3">
+            {% block profile_user_section_about %}
+                <div class="ibox">
+                    <div class="ibox-title">
+                        <h5>{{ _('About') }} {{ userDetails.user_name  }}</h5>
+                        <div class="ibox-tools">
+                            {% if viewingSelfAccount %}
+                                <a href="{{ request.route_url('profile_edit',userid=activeUser.login) }}" style="margin-right: 10px">
+                                    <i class="fas fa-pencil-alt text-warning" title="{{ _('Edit') }}"></i>
+                                </a>
+                            {% endif %}
+                            <a class="collapse-link" style="margin-right: 10px">
+                                <i class="fas fa-chevron-up"></i>
+                            </a>
+                            <a class="fullscreen-link">
+                                <i class="fas fa-expand"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="ibox-content">
+                        {% if userDetails.user_about != None %}
+                            <textarea id="bio_hidden" style="display:none;">{{ userDetails.user_about }}</textarea>
+                            <div class="scroll_content">
+                                <small id="profile_bio">
+
+                                </small>
+                            </div>
+                        {% else %}
+                            <small id="profile_bio">{{ _('Without bio') }}</small> {% if viewingSelfAccount %} <a href="{{ request.route_url('profile_edit',userid=activeUser.login) }}"><i class="fas fa-pencil-alt text-warning" title="{{ _('Edit') }}"></i></a> {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            {% endblock profile_user_section_about %}
+            {% block profile_user_section_collaborators %}
+                <div class="ibox">
+                    <div class="ibox-title">
+                        <h5>{{ _('Collaborators') }}</h5>
+                        <div class="ibox-tools">
+                            {% if viewingSelfAccount %}
+                                <a href="{{ request.route_url('profile_edit',userid=activeUser.login) }}" style="margin-right: 10px">
+                                    <i class="fas fa-pencil-alt text-warning" title="{{ _('Edit') }}"></i>
+                                </a>
+                            {% endif %}
+                            <a class="collapse-link" style="margin-right: 10px">
+                                <i class="fas fa-chevron-up"></i>
+                            </a>
+                            <a class="fullscreen-link">
+                                <i class="fas fa-expand"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="ibox-content">
+                        {% block profile_collaborators_list %}
+                            <div class="user-friends">
+                                <a href=""><img alt="image" class="rounded-circle" src="img/a3.jpg"></a>
+                                <a href=""><img alt="image" class="rounded-circle" src="img/a1.jpg"></a>
+                                <a href=""><img alt="image" class="rounded-circle" src="img/a2.jpg"></a>
+                                <a href=""><img alt="image" class="rounded-circle" src="img/a4.jpg"></a>
+                                <a href=""><img alt="image" class="rounded-circle" src="img/a5.jpg"></a>
+                                <a href=""><img alt="image" class="rounded-circle" src="img/a6.jpg"></a>
+                                <a href=""><img alt="image" class="rounded-circle" src="img/a7.jpg"></a>
+                                <a href=""><img alt="image" class="rounded-circle" src="img/a8.jpg"></a>
+                                <a href=""><img alt="image" class="rounded-circle" src="img/a2.jpg"></a>
+                                <a href=""><img alt="image" class="rounded-circle" src="img/a1.jpg"></a>
+                            </div>
+                        {% endblock profile_collaborators_list %}
+                    </div>
+                </div>
+            {% endblock profile_user_section_collaborators %}
+            {% block profile_user_section_social %}
+                <div class="ibox">
+                    <div class="ibox-title">
+                        <h5>{{ _('Social links') }}</h5>
+                        <div class="ibox-tools">
+                            <a class="collapse-link" style="margin-right: 10px">
+                                <i class="fas fa-chevron-up"></i>
+                            </a>
+                            <a class="fullscreen-link">
+                                <i class="fas fa-expand"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="ibox-content">
+                        <div class="row">
+                            <div class="col-md-12">
+                                {% if viewingSelfAccount %}
+                                    <small>Click/Tab and hold to remove</small>
+                                {% endif %}
+                                <ul class="tag-list" style="padding: 0">
+                                    {% block profile_social_list %}
+                                        {% if activeUser != None %}
+                                            <li><a href="mailto:{{ userDetails.user_email }}"><i class="far fa-envelope"></i> Email</a></li>
+                                        {% else %}
+                                            <li><a href="{{ request.route_url('login') }}"><i class="far fa-envelope"></i> Email</a></li>
+                                        {% endif %}
+                                    {% endblock profile_social_list %}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endblock profile_user_section_social %}
+            {% block profile_user_section_extra %}
+
+            {% endblock profile_user_section_extra %}
+        </div>
+    {% endblock profile_user_section %}
+    {% block profile_project_section %}
+        <div class="col-lg-5">
+            <div class="ibox">
+                <div class="ibox-title">
+                    <h5>{{ _('Projects') }}</h5>
+                    <div class="ibox-tools">
+                        <a class="collapse-link" style="margin-right: 10px">
+                            <i class="fas fa-chevron-up"></i>
+                        </a>
+                        <a class="fullscreen-link">
+                            <i class="fas fa-expand"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    {% snippet 'dashboard/projects/snippets/project_item.jinja2', request=request,viewingSelfAccount=viewingSelfAccount %}
+                </div>
+            </div>
+            {% block profile_project_section_extra %}
+
+            {% endblock profile_project_section_extra %}
+        </div>
+    {% endblock profile_project_section %}
+    {% block profile_activity_section %}
+        <div class="col-lg-4 m-b-lg">
+            <div class="ibox">
+                <div class="ibox-title">
+                    <h5>{{ _('Activity') }}</h5>
+                    <div class="ibox-tools">
+                        <a class="collapse-link" style="margin-right: 10px">
+                            <i class="fas fa-chevron-up"></i>
+                        </a>
+                        <a class="fullscreen-link">
+                            <i class="fas fa-expand"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <div class="scroll_content2">
+                        {% block profile_activity_timeline %}
+                            <div id="vertical-timeline" class="vertical-container light-timeline no-margins">
+                                {% snippet 'dashboard/profile/snippets/timeline_item.jinja2', request=request %}
+                            </div>
+                        {% endblock profile_activity_timeline %}
+                    </div>
+                </div>
+            </div>
+            {% block profile_activity_section_extra %}
+
+            {% endblock profile_activity_section_extra %}
+        </div>
+    {% endblock profile_activity_section %}
+</div>

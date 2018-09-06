@@ -9,7 +9,7 @@ import zope.sqlalchemy
 #     Enumingroup,Form,Groupaccess,Grpsubmitter,Log,Project,\
 #     Submitter,User,Useraccess,Useringroup  # flake8: noqa
 from .formshare import Collaboratorlog,User,Userlog,Project,Collaborator,Collgroup,Odkform,\
-    Collingroup,Formacces,Formgrpacces,Jsonlog,Septable,Submission,Jsonhistory,Sepsection,Sepitem
+    Collingroup,Formacces,Formgrpacces,Jsonlog,Septable,Submission,Jsonhistory,Sepsection,Sepitem,Userproject
 
 from .schema import *
 

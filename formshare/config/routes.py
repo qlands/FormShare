@@ -15,7 +15,7 @@ from ..views.basic_views import notfound_view,home_view,logout_view,login_view,r
 from ..views.dashboard import dashboard_view
 from ..views.projects import projects_view,projectDetails_view
 from ..views.form import formDetails_view
-from ..views.profile import profile_view
+from ..views.profile import profile_view,profile_edit_view
 
 route_list = []
 
@@ -51,6 +51,7 @@ def loadRoutes(config):
 
     routes.append(addRoute('dashboard', '/{userid}', dashboard_view, 'dashboard/index.jinja2'))
     routes.append(addRoute('profile', '/{userid}/profile', profile_view, 'dashboard/profile/profile.jinja2'))
+    routes.append(addRoute('profile_edit', '/{userid}/profile/edit', profile_edit_view, 'dashboard/profile/profile_edit.jinja2'))
 
     routes.append(addRoute('projects', '/{userid}/projects', projects_view, 'dashboard/projects/project_list.jinja2'))
     routes.append(addRoute('project_details', '/{userid}/project/{projid}', projectDetails_view, 'dashboard/projects/project_details.jinja2'))

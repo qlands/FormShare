@@ -20,7 +20,7 @@
                             <ul class="dropdown-menu animated fadeInRight m-t-xs">
                                 {% block nav_profile_links %}
                                     {% if activeUser != None %}
-                                        <li><a class="dropdown-item" href="{{ request.route_url('logout') }}">{{ _('Profile') }}</a></li>
+                                        <li><a class="dropdown-item" href="{{ request.route_url('profile',userid=activeUser.login) }}">{{ _('Profile') }}</a></li>
                                     {% else %}
                                         <li><a class="dropdown-item" href="{{ request.route_url('login') }}">{{ _('Login') }}</a></li>
                                     {% endif %}

@@ -20,6 +20,7 @@ from .jinja_extensions import initialize, SnippetExtension, extendThis, CSSResou
 from .mainresources import createResources
 from ..utility.helpers import helper
 from .routes import loadRoutes
+from pyramid.csrf import SessionCSRFStoragePolicy
 
 my_session_factory = SignedCookieSessionFactory('`h6N[wQ8@S"B$bGy;')
 
@@ -53,6 +54,8 @@ class requestResources(object):
 def load_environment(settings,config,apppath):
     # Add the session factory to the confing
     config.set_session_factory(my_session_factory)
+    config.set_csrf_storage_policy(SessionCSRFStoragePolicy())
+    #config.set_default_csrf_options(require_csrf=True)
 
     # Add render subscribers for internationalization
     config.add_translation_dirs('formshare:locale')

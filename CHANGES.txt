@@ -6,4 +6,5 @@
 - Landing page
 - Registration
 - Login
-- Profile and edit profile
+- Profile (under development)
+- Edit profile

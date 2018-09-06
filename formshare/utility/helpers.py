@@ -1,8 +1,4 @@
-# -*- coding: utf-8 -*-
 """
-    formshare.resources.resources
-    ~~~~~~~~~~~~~~~~~~
-
     Provides the different helper functions to a pyramid request.
 
     :copyright: (c) 2017 by QLands Technology Consultants.

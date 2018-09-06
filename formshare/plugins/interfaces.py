@@ -1,10 +1,6 @@
 '''
 
-This file declares the PCA interfaces and their methods:
-
-This code is based on CKAN 
-:Copyright (C) 2007 Open Knowledge Foundation
-:license: AGPL V3, see LICENSE for more details.
+This file declares the PCA interfaces available in FormShare and their methods:
 
 '''
 
@@ -238,6 +234,11 @@ class IAuthorize(Interface):
 class IPluginObserver(Interface):
     """
     Plugin to the plugin loading mechanism
+
+    This code is based on CKAN
+    :Copyright (C) 2007 Open Knowledge Foundation
+    :license: AGPL V3, see LICENSE for more details.
+
     """
 
     def before_load(self, plugin):

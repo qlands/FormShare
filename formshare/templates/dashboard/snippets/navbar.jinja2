@@ -48,24 +48,24 @@
                         <a href="{{ request.route_url('dashboard',userid=activeUser.login) }}"><i class="fa fa-th-large"></i> <span class="nav-label">{{ _('Dashboard') }}</span></a>
                     </li>
                     <li {% if activeMenu == 'projects' %}class="active" {% endif %}>
-                        <a href="layouts.html"><i class="fas fa-project-diagram"></i> <span class="nav-label">{{ _('Projects') }}</span></a>
+                        <a href="#"><i class="fas fa-project-diagram"></i> <span class="nav-label">{{ _('Projects') }}</span></a>
                     </li>
                     <li class="special_link">
                         <a href="#"><i class="fas fa-star"></i> <span class="nav-label">This is a big description of a active project</span> <span class="label label-info float-right">Active</span></a>
                     </li>
                     <li>
-                        <a href="layouts.html"><i class="fas fa-user-circle"></i> <span class="nav-label">{{ _('Enumerators') }}</span></a>
+                        <a href="#"><i class="fas fa-user-circle"></i> <span class="nav-label">{{ _('Enumerators') }}</span></a>
                     </li>
                     <li>
-                        <a href="layouts.html"><i class="fas fa-users"></i> <span class="nav-label">{{ _('Enumerator groups') }}</span></a>
+                        <a href="#"><i class="fas fa-users"></i> <span class="nav-label">{{ _('Enumerator groups') }}</span></a>
                     </li>
                     <li>
-                        <a href="layouts.html"><i class="fab fa-wpforms"></i> <span class="nav-label">{{ _('Forms') }}</span></a>
+                        <a href="#"><i class="fab fa-wpforms"></i> <span class="nav-label">{{ _('Forms') }}</span></a>
                     </li>
-                {% endif %}
-                {% block nav_links_extra %}
+                    {% block nav_links_extra %}
 
-                {% endblock nav_links_extra %}
+                    {% endblock nav_links_extra %}
+                {% endif %}
             {% endblock nav_links%}
         </ul>
 

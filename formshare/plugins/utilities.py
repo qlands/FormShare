@@ -1,10 +1,7 @@
 '''
-These series of functions help plugin developers 
-to manipulate the host behaviour without the trouble if dealing with it
 
-This code is based on CKAN 
-:Copyright (C) 2007 Open Knowledge Foundation
-:license: AGPL V3, see LICENSE for more details.
+These series of functions help plugin developers
+to manipulate the host behaviour without the trouble if dealing with it
 
 '''
 
@@ -21,6 +18,13 @@ __all__ = [
 ]
 
 def __returnCurrentPath():
+    '''
+
+    This code is based on CKAN
+    :Copyright (C) 2007 Open Knowledge Foundation
+    :license: AGPL V3, see LICENSE for more details.
+
+    '''
     frame, filename, line_number, function_name, lines, index = \
         inspect.getouterframes(inspect.currentframe())[2]
     return os.path.dirname(filename)

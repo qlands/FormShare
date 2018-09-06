@@ -1,12 +1,8 @@
-# -*- coding: utf-8 -*-
 """
-    formshare.resources.resources
-    ~~~~~~~~~~~~~~~~~~
-
     Provides the declaration and injection of resources into Jinja2.
 
-    :copyright: (c) 2017 by QLands Technology Consultants.
-    :license: AGPL, see LICENSE for more details.
+    :copyright: (c) 2018 by QLands Technology Consultants.
+    :license: AGPL, see LICENSE.txt for more details.
 """
 
 import os

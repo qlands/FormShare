@@ -1,14 +1,3 @@
-# -*- coding: utf-8 -*-
-"""
-    formshare.config.environment
-    ~~~~~~~~~~~~~~~~~~
-
-    Provides the basic Pyramid environment for FormShare.
-
-    :copyright: (c) 2017 by QLands Technology Consultants.
-    :license: AGPL, see LICENSE for more details.
-"""
-
 import os
 from pyramid.session import SignedCookieSessionFactory
 import formshare.plugins as p

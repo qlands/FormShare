@@ -1,4 +1,9 @@
-0.0
+0.1 Alpha (First commit)
 ---
-
-- Initial version.
+- Built using Pyramid
+- Extensibility system using plugins (PyUtilib Component Architecture)
+- CSS/JS Resource Injection
+- Landing page
+- Registration
+- Login
+- Profile and edit profile

@@ -7,7 +7,7 @@ from formshare.models.meta import Base, metadata
 from sqlalchemy.orm import configure_mappers
 from .jinja_extensions import initialize, SnippetExtension, extendThis, CSSResourceExtension,JSResourceExtension
 from .mainresources import createResources
-from ..utility.helpers import helper
+import formshare.plugins.helpers as helpers
 from .routes import loadRoutes
 from pyramid.csrf import SessionCSRFStoragePolicy
 
@@ -21,7 +21,7 @@ def __url_for_static(request,static_file,library='fstatic'):
     return request.application_url + '/' + library + "/" + static_file
 
 def __helper(request):
-    h = helper(request)
+    h = helpers.helper_functions
     return h
 
 #This class handles the injection of resources
@@ -59,8 +59,6 @@ def load_environment(settings,config,apppath):
     config.add_request_method(__url_for_static, 'url_for_static')
     #Add active resources to the request. This control the injection of resources into a request
     config.add_request_method(requestResources, 'activeResources', reify=True)
-    #Add a series of helper functions to the request like pluralize
-    config.add_request_method(__helper, 'h', reify=True)
 
     # Add core library and resources
     createResources(apppath,config)
@@ -79,6 +77,10 @@ def load_environment(settings,config,apppath):
 
     # Load all connected plugins
     p.load_all(settings)
+
+    # Add a series of helper functions to the request like pluralize
+    helpers.load_plugin_helpers()
+    config.add_request_method(__helper, 'h', reify=True)
 
     # Load any change in the configuration done by connected plugins
     for plugin in p.PluginImplementations(p.IConfig):

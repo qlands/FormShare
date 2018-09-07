@@ -14,7 +14,8 @@ __all__ = [
     'IPluralize',
     'ISchema',
     'IDatabase',
-    'IAuthorize'
+    'IAuthorize',
+    'ITemplateHelpers'
 ]
 
 
@@ -22,7 +23,12 @@ from inspect import isclass
 from pyutilib.component.core import Interface as _pca_Interface
 
 class Interface(_pca_Interface):
+    """
+        This code is based on CKAN
+        :Copyright (C) 2007 Open Knowledge Foundation
+        :license: AGPL V3, see LICENSE for more details.
 
+     """
     @classmethod
     def provided_by(cls, instance):
         return cls.implemented_by(instance.__class__)
@@ -230,6 +236,29 @@ class IAuthorize(Interface):
                         Otherwise true
                         """
         return False
+
+class ITemplateHelpers(Interface):
+    u'''Add custom template helper functions.
+
+    By implementing this plugin interface plugins can provide their own
+    template helper functions, which custom templates can then access via the
+    ``request.h`` variable.
+
+    '''
+    def get_helpers(self):
+        u'''Return a dict mapping names to helper functions.
+
+        The keys of the dict should be the names with which the helper
+        functions will be made available to templates, and the values should be
+        the functions themselves. For example, a dict like:
+        ``{'example_helper': example_helper}`` allows templates to access the
+        ``example_helper`` function via ``request.h.example_helper()``.
+
+        Function names should start with the name of the extension providing
+        the function, to prevent name clashes between extensions.
+
+        '''
+
 
 class IPluginObserver(Interface):
     """

@@ -22,22 +22,22 @@ Want to see it?
 
 - Create a Python virtual environment.
 
-    python3 -m venv formshare_env
-    . ./formshare_env
+    - python3 -m venv formshare_env
+    - . ./formshare_env
 
 - Change directory into formshare.
 
-    cd formshare
+    - cd formshare
 
 - Upgrade packaging tools.
 
-    pip install --upgrade pip
-    pip install wheel
+    - pip install --upgrade pip
+    - pip install wheel
 
 - Install the project in editable mode.
 
-    pip install -r requirements.txt
-    pip install -e .
+    - pip install -r requirements.txt
+    - pip install -e .
     
 
 - Configure the database.

@@ -1,6 +1,5 @@
-{% macro secure_form(request,auth_token) %}
-  <input type="hidden" name="csrf_token" value="{{ request.h.get_csrf_token(request) }}">
-  <input type="hidden" name="auth_token" value="{{ auth_token }}">
+{% macro secure_form(request) %}
+  <input type="hidden" name="csrf_token" value="{{ request.session.get_csrf_token() }}">
 {% endmacro %}
 
 {% macro display_errors(errors) %}

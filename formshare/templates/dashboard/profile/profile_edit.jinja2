@@ -28,8 +28,8 @@
                     <div class="ibox-content">
                         {{ form.display_errors(errors) }}
                         {% block profile_edit_form %}
-                            <form class="m-t" role="form" method="post" action="{{ request.route_url('profile_edit',userid=activeUser.login) }}">
-                                {{ form.secure_form(request,auth_token) }}
+                            <form class="m-t" role="form" method="post" action="{{ request.url }}">
+                                {{ form.secure_form(request) }}
                                 <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Name') }}</label>
                                     <div class="col-sm-10"><input {% if request.registry.settings['auth.allow_edit_profile_name'] == 'false' %}readonly{% endif %} type="text" class="form-control" name="user_name" value="{{ userDetails.user_name }}"></div>
                                 </div>

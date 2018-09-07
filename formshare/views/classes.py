@@ -22,8 +22,6 @@ from babel import Locale
 import uuid
 from ast import literal_eval
 from formshare.processes import getProjectIDFromName,user_exists,get_user_details
-from formshare.config.encdecdata import encodeData,decodeData
-import base64
 import logging
 log = logging.getLogger(__name__)
 
@@ -137,11 +135,6 @@ class publicView(object):
 
 
 class privateView(object):
-    def stringToBase64(self,s):
-        return base64.b64encode(s.encode('utf-8'))
-
-    def base64ToString(self,b):
-        return base64.b64decode(b).decode('utf-8')
     def __init__(self, request):
         self.request = request
         self.user = None
@@ -155,7 +148,7 @@ class privateView(object):
         self.guestAccess = False
         self.viewingSelfAccount = True
         self.showWelcome = False
-        self.checkAuthorizationToken = True
+        self.checkCrossPost = True
         locale = Locale(request.locale_name)
         if locale.character_order == "left-to-right":
             self.classResult["rtl"] = False
@@ -172,22 +165,21 @@ class privateView(object):
         if not user_exists(self.request,self.userID):
             raise HTTPNotFound()
         self.classResult["userDetails"] = get_user_details(self.request,self.userID)
-        self.classResult["auth_token"] = encodeData(self.request, self.stringToBase64(self.request.url).decode('utf-8')).decode("utf-8")
-        if self.request.method == 'POST':
+        if self.request.method == 'POST' or self.request.method == 'PUT' or self.request.method == 'DELETE':
             if loginData is not None:
                 if loginData["group"] == "mainApp":
                     self.user = getUserData(loginData["login"], self.request)
                     if self.user is not None:
                         safe = check_csrf_token(self.request,raises=False)
                         if not safe:
+                            self.request.session.pop_flash()
                             log.error("SECURITY-CSRF error at {} ".format(self.request.url))
                             raise HTTPNotFound()
                         else:
-                            if self.checkAuthorizationToken:
-                                enc_auth_token = self.request.POST.get('auth_token', '')
-                                denc_auth_token = decodeData(self.request, enc_auth_token.encode()).decode("utf-8")
-                                if denc_auth_token != self.stringToBase64(self.request.url).decode('utf-8'):
-                                    log.error("SECURITY-CrossPost error. Posting at {} from {} ".format(self.request.url,self.base64ToString(denc_auth_token.encode('utf-8'))))
+                            if self.checkCrossPost:
+                                if self.request.referer != self.request.url:
+                                    self.request.session.pop_flash()
+                                    log.error("SECURITY-CrossPost error. Posting at {} from {} ".format(self.request.url,self.request.referer))
                                     raise HTTPNotFound()
                     else:
                         raise HTTPNotFound()

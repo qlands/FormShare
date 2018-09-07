@@ -7,8 +7,8 @@
 {% endblock logingheadmsg %}
 
 {% block loginform %}
-    <form class="m-t" role="form" method="post" action="{{ request.route_url('register') }}">
-        {{ form.secure_form(request,auth_token) }}
+    <form class="m-t" role="form" method="post" action="{{ request.url }}">
+        {{ form.secure_form(request) }}
         <div class="form-group">
             <input type="text" class="form-control" name="user_name" value="{{ userdata.user_name }}" placeholder="{{ _('Full name') }}" required="">
         </div>

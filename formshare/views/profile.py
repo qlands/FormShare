@@ -30,7 +30,7 @@ class profile_edit_view(profileView):
                     self.reloadUserDetails()
                     self.request.session.flash(self._('The profile has been updated'))
                     self.returnRawViewResult = True
-                    return  HTTPFound(location=self.request.route_url('profile_edit',userid=userID))
+                    return HTTPFound(location=self.request.url)
                 else:
                     self.errors.append(message)
             else:

@@ -2,7 +2,7 @@ from ..plugins.utilities import addRoute
 import formshare.plugins as p
 from ..views.basic_views import notfound_view,home_view,logout_view,login_view,register_view,collaboratorsLogin_view
 from ..views.dashboard import dashboard_view
-from ..views.projects import projects_view,projectDetails_view
+from ..views.projects import projects_view,projectDetails_view,project_add_view
 from ..views.form import formDetails_view
 from ..views.profile import profile_view,profile_edit_view
 
@@ -42,9 +42,12 @@ def loadRoutes(config):
     routes.append(addRoute('profile', '/user/{userid}/profile', profile_view, 'dashboard/profile/profile.jinja2'))
     routes.append(addRoute('profile_edit', '/user/{userid}/profile/edit', profile_edit_view, 'dashboard/profile/profile_edit.jinja2'))
 
-    routes.append(addRoute('projects', '/user/{userid}/projects', projects_view, 'dashboard/projects/project_list.jinja2'))
-    routes.append(addRoute('project_details', '/user/{userid}/project/{projid}', projectDetails_view, 'dashboard/projects/project_details.jinja2'))
-    routes.append(addRoute('form_details', '/user/{userid}/project/{projid}/form/{formid}', formDetails_view, 'dashboard/projects/forms/form_details.jinja2'))
+    #Projects
+    routes.append(addRoute('projects_add', '/user/{userid}/projects/add', project_add_view, 'dashboard/projects/project_add.jinja2'))
+
+    # routes.append(addRoute('projects', '/user/{userid}/projects', projects_view, 'dashboard/projects/project_list.jinja2'))
+    # routes.append(addRoute('project_details', '/user/{userid}/project/{projid}', projectDetails_view, 'dashboard/projects/project_details.jinja2'))
+    # routes.append(addRoute('form_details', '/user/{userid}/project/{projid}/form/{formid}', formDetails_view, 'dashboard/projects/forms/form_details.jinja2'))
 
     appendToRoutes(routes)
 

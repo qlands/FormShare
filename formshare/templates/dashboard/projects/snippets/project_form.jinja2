@@ -1,0 +1,35 @@
+{% import 'dashboard/macros/form.jinja2' as form %}
+{% block project_form %}
+    <form class="m-t" role="form" method="post" action="{{ request.url }}">
+        {{ form.secure_form(request) }}
+        <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Code') }}</label>
+            <div class="col-sm-10"><input type="text" class="form-control" name="project_code" value="{{ projectDetails.project_code }}"> <span class="form-text m-b-none">{{ _('The code must be unique') }}</span> </div>
+        </div>
+        <div class="hr-line-dashed"></div>
+        <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Name') }}</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" name="project_name" value="{{ projectDetails.project_name }}">
+            </div>
+        </div>
+        <div class="hr-line-dashed"></div>
+        <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Abstract') }}</label>
+            <div class="col-sm-10">
+                <textarea class="form-control" name="project_abstract" data-provide="markdown" rows="10">{% if projectDetails.project_abstract != None %}{{ projectDetails.project_abstract }}{% endif %}</textarea>
+            </div>
+        </div>
+        <div class="hr-line-dashed"></div>
+        <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Public') }}</label>
+            <div class="col-sm-10"><input type="checkbox" name="project_public" class="js-switch" {% if projectDetails|length > 0 %} {% if projectDetails.project_public == 1 %}checked{% endif %}{% else %}checked{% endif %} /><span class="form-text m-b-none">{{ _('Recommened: This means that the project information is open to the public but not neccesarily its data') }}</span></div>
+        </div>
+        <div class="hr-line-dashed"></div>
+        {% block project_form_controls_extra %}
+
+        {% endblock project_form_controls_extra %}
+
+        <div class="form-group row">
+            <div class="col-sm-4 col-sm-offset-2">
+                <button class="btn btn-primary btn-sm" type="submit">{{ _('Add project') }}</button>
+            </div>
+        </div>
+    </form>
+{% endblock project_form %}

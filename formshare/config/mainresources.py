@@ -30,4 +30,7 @@ def createResources(apppath,config):
     r.addJSResource('formshare', 'markdown', 'js/plugins/bootstrap-markdown/markdown.js', 'bsmarkdown')
     r.addJSResource('formshare', 'clipboard', 'js/plugins/clipboard/clipboard.js',None)
 
+    #------------------------------Add/Edit project--------------------------------------
+    r.addCSSResource('formshare', 'switchery', 'css/plugins/switchery/switchery.css',None)
+    r.addJSResource('formshare', 'switchery', 'js/plugins/switchery/switchery.js', None)
 

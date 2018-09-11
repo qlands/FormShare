@@ -3,6 +3,7 @@ import sys
 from sqlalchemy.exc import IntegrityError
 import logging
 from validate_email import validate_email
+import pprint
 
 __all__ = [
     'register_user','user_exists','get_user_details','update_profile'
@@ -26,7 +27,7 @@ def register_user(request,userData):
                 log.error("Duplicated user {}".format(mappedData["user_id"]))
                 return False,request.translate("Username is already taken")
             except:
-                log.error("Error {} when inserting user user {}".format(sys.exc_info()[0],mappedData["user_id"]))
+                log.error("Error {} when inserting user {}".format(sys.exc_info()[0],mappedData["user_id"]))
                 return False,sys.exc_info()[0]
         else:
             log.error("Duplicated user with email {}".format(mappedData["user_email"]))

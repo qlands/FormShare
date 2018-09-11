@@ -18,28 +18,29 @@
     {% endif %}
 {% endblock topScripts %}
 
-
 {% block dashheader %}
     {% if viewingSelfAccount %}
-        <div class="row  border-bottom white-bg dashboard-header">
-            {% block project_list_section %}
-                <div class="col-md-12">
-                    {% if activeUser != None  %}
-                        {% if viewingSelfAccount %}
-                            <h2>{{ _('Welcome') }} {{ activeUser.name }}</h2>
-                        {% else %}
-                            <h2>{{ _('Your are viewing others account') }}</h2>
+        {% if userProjects|length > 0 %}
+            <div class="row  border-bottom white-bg dashboard-header">
+                {% block project_list_section %}
+                    <div class="col-md-12">
+                        {% if activeUser != None  %}
+                            {% if viewingSelfAccount %}
+                                <h2>{{ _('Welcome') }} {{ activeUser.name }}</h2>
+                            {% else %}
+                                <h2>{{ _('Your are viewing others account') }}</h2>
+                            {% endif %}
                         {% endif %}
-                    {% endif %}
-                    <h3>{{ _('Here are your three most dynamic projects.') }}</h3>
-                    {% block project_list %}
-                        <ul class="list-group clear-list m-t">
-                            {% snippet 'dashboard/snippets/project_list_item.jinja2', request=request %}
-                        </ul>
-                    {% endblock project_list %}
-                </div>
-            {% endblock project_list_section %}
-        </div>
+                        <h3>{{ _('Here are your three most dynamic projects.') }}</h3>
+                        {% block project_list %}
+                            <ul class="list-group clear-list m-t">
+                                {% snippet 'dashboard/snippets/project_list_item.jinja2', request=request %}
+                            </ul>
+                        {% endblock project_list %}
+                    </div>
+                {% endblock project_list_section %}
+            </div>
+        {% endif %}
     {% endif %}
 {% endblock %}
 
@@ -55,26 +56,37 @@
 
 {% block mainsection %}
     {% if viewingSelfAccount %}
-        <div class="row">
-            <div class="col-lg-12">
-                {% block form_list_title %}
-                    <h2>{{ _('Most dynamic forms in active project') }} ()</h2>
-                {% endblock form_list_title %}
-                <div class="wrapper wrapper-content">
-                    <div class="row">
-                        {% block form_list_section %}
-                            <div class="col-md-12">
-                                {% block form_list%}
-                                    <ul class="list-group clear-list m-t">
-                                        {% snippet 'dashboard/snippets/form_list_item.jinja2', request=request %}
-                                    </ul>
-                                {% endblock form_list%}
-                            </div>
-                        {% endblock form_list_section %}
+        {% if userProjects|length > 0 %}
+            <div class="row">
+                <div class="col-lg-12">
+                    {% block form_list_title %}
+                        <h2>{{ _('Most dynamic forms in active project') }} ()</h2>
+                    {% endblock form_list_title %}
+                    <div class="wrapper wrapper-content">
+                        <div class="row">
+                            {% block form_list_section %}
+                                <div class="col-md-12">
+                                    {% block form_list%}
+                                        <ul class="list-group clear-list m-t">
+                                            {% snippet 'dashboard/snippets/form_list_item.jinja2', request=request %}
+                                        </ul>
+                                    {% endblock form_list%}
+                                </div>
+                            {% endblock form_list_section %}
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
+        {% else %}
+            <div class="middle-box text-center animated fadeInDown">
+                <h1><i class="fas fa-folder-plus"></i></h1>
+                <h3 class="font-bold">{{ _('It seems that you are new here!') }}</h3>
+                <div class="error-desc">
+
+                    <button type="button" onclick="location.href='{{ request.route_url('projects_add',userid=activeUser.login,_query={'next':request.route_url('dashboard',userid=activeUser.login)}) }}';" class="btn btn-w-m btn-success">{{ _('Create a new project') }}</button>
+                </div>
+            </div>
+        {% endif %}
     {% else %}
         {{ super() }}
     {% endif %}

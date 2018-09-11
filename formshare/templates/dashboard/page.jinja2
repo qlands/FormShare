@@ -13,7 +13,7 @@
         <div id="wrapper">
             {% block wrapper %}
                 {% block mainnav %}
-                    {% snippet 'dashboard/snippets/navbar.jinja2', request=request,activeUser=activeUser,activeMenu=activeMenu %}
+                    {% snippet 'dashboard/snippets/navbar.jinja2', request=request,activeUser=activeUser,activeMenu=activeMenu,activeProject=activeProject %}
                 {% endblock mainnav %}
                 <div id="page-wrapper" class="gray-bg dashbard-1">
                     {% block pagewrapper %}

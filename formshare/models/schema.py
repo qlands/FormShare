@@ -13,8 +13,7 @@ def initialize_schema():
     for table in metadata.sorted_tables:
         fields = []
         for column in table.c:
-            fields.append({'name':column.name,'storage':'db','comment':''})
-            #TODO: With SQL Alchemy 1.2 comment should be column.comment
+            fields.append({'name':column.name,'storage':'db','comment':column.comment})
         _SCHEMA.append({'name':table.name,'fields':fields})
 
 # This function add new columns to the schema in the extra field
@@ -28,7 +27,7 @@ def addColumnToSchema(tableName,fieldName,fieldComment):
             if not found:
                 _SCHEMA[pos]["fields"].append({'name':fieldName,'storage':'extra','comment':fieldComment})
             else:
-                raise Exception("Field {} is already defined".format(fieldName))
+                raise Exception("Field {} is already defined in table {}".format(fieldName,tableName))
 
 def getStorageType(tableName,fieldName):
     storageType = None
@@ -54,7 +53,7 @@ def mapToSchema(modelClass,data):
             else:
                 extraData[key] = value
     if bool(extraData):
-        mappedData["formshare_extras"] = json.dumps(extraData)
+        mappedData["extras"] = json.dumps(extraData)
     if not bool(mappedData):
         raise Exception("The mapping for table {} is empty!".format(modelClass.name))
     return mappedData

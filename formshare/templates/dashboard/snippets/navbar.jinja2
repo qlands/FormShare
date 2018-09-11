@@ -50,18 +50,20 @@
                     <li {% if activeMenu == 'projects' %}class="active" {% endif %}>
                         <a href="#"><i class="fas fa-project-diagram"></i> <span class="nav-label">{{ _('Projects') }}</span></a>
                     </li>
-                    <li class="special_link">
-                        <a href="#"><i class="fas fa-star"></i> <span class="nav-label">This is a big description of a active project</span> <span class="label label-info float-right">Active</span></a>
-                    </li>
-                    <li>
-                        <a href="#"><i class="fas fa-user-circle"></i> <span class="nav-label">{{ _('Enumerators') }}</span></a>
-                    </li>
-                    <li>
-                        <a href="#"><i class="fas fa-users"></i> <span class="nav-label">{{ _('Enumerator groups') }}</span></a>
-                    </li>
-                    <li>
-                        <a href="#"><i class="fab fa-wpforms"></i> <span class="nav-label">{{ _('Forms') }}</span></a>
-                    </li>
+                    {% if activeProject %}
+                        <li class="special_link">
+                            <a href="#"><i class="fas fa-star"></i> <span class="nav-label">{{ activeProject.project_name }}</span> <span class="label label-info float-right">Active</span></a>
+                        </li>
+                        <li>
+                            <a href="#"><i class="fas fa-user-circle"></i> <span class="nav-label">{{ _('Enumerators') }}</span></a>
+                        </li>
+                        <li>
+                            <a href="#"><i class="fas fa-users"></i> <span class="nav-label">{{ _('Enumerator groups') }}</span></a>
+                        </li>
+                        <li>
+                            <a href="#"><i class="fab fa-wpforms"></i> <span class="nav-label">{{ _('Forms') }}</span></a>
+                        </li>
+                    {% endif %}
                     {% block nav_links_extra %}
 
                     {% endblock nav_links_extra %}

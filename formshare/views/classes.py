@@ -21,7 +21,7 @@ import hashlib
 from babel import Locale
 import uuid
 from ast import literal_eval
-from formshare.processes import getProjectIDFromName,user_exists,get_user_details
+from formshare.processes import getProjectIDFromName,user_exists,get_user_details,get_active_project,get_user_projects
 import logging
 log = logging.getLogger(__name__)
 
@@ -149,6 +149,8 @@ class privateView(object):
         self.viewingSelfAccount = True
         self.showWelcome = False
         self.checkCrossPost = True
+        self.queryProjects = True
+        self.activeProject = {}
         locale = Locale(request.locale_name)
         if locale.character_order == "left-to-right":
             self.classResult["rtl"] = False
@@ -213,6 +215,25 @@ class privateView(object):
         else:
             self.classResult["activeUser"] = None
             self.viewingSelfAccount = False
+
+        if self.queryProjects:
+            if self.user is not None:
+                if self.userID == self.user.login:
+                    userProjects = get_user_projects(self.request, self.userID, self.userID,True)
+                else:
+                    userProjects = get_user_projects(self.request, self.userID, self.user.login,True)
+            else:
+                userProjects = get_user_projects(self.request,self.userID,None)
+            self.classResult["userProjects"] = userProjects
+        else:
+            self.classResult["userProjects"] = []
+
+        if self.user is not None:
+            self.activeProject = get_active_project(self.request,self.userID)
+            self.classResult['activeProject'] = self.activeProject
+        else:
+            self.classResult['activeProject'] = {}
+
         self.classResult["viewingSelfAccount"] = self.viewingSelfAccount
         self.classResult["errors"] = self.errors
         self.classResult["showWelcome"] = self.showWelcome

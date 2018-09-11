@@ -19,7 +19,7 @@ configure_mappers()
 
 
 def get_engine(settings, prefix='sqlalchemy.'):
-    return engine_from_config(settings, prefix)
+    return engine_from_config(settings, prefix, pool_recycle=2000)
 
 
 def get_session_factory(engine):

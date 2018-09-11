@@ -34,7 +34,7 @@ class User(Base):
     user_cdate = Column(DateTime)
     user_llogin = Column(DateTime)
     user_super = Column(INTEGER, server_default=text("'0'"))
-    extra = Column(UnicodeText)
+    extras = Column(UnicodeText)
     tags = Column(UnicodeText)
     user_active = Column(INTEGER, server_default=text("'1'"))
     user_apikey = Column(Unicode(64))
@@ -48,12 +48,8 @@ class Project(Base):
     project_name = Column(UnicodeText)
     project_abstract = Column(UnicodeText)
     project_cdate = Column(DateTime)
-    project_creator = Column(Unicode(45))
-    project_cremail = Column(Unicode(45))
-    project_contact = Column(Unicode(120))
-    project_coemail = Column(Unicode(45))
     project_public = Column(INTEGER)
-    extra = Column(UnicodeText)
+    extras = Column(UnicodeText)
     tags = Column(UnicodeText)
 
 
@@ -88,7 +84,7 @@ class Collaborator(Base):
     coll_email = Column(UnicodeText)
     coll_telephone = Column(Unicode(120))
     coll_prjshare = Column(INTEGER)
-    extra = Column(UnicodeText)
+    extras = Column(UnicodeText)
     tags = Column(UnicodeText)
 
     project = relationship('Project')
@@ -102,7 +98,7 @@ class Collgroup(Base):
     group_desc = Column(UnicodeText)
     group_cdate = Column(DateTime)
     group_active = Column(INTEGER)
-    extra = Column(UnicodeText)
+    extras = Column(UnicodeText)
     tags = Column(UnicodeText)
 
     project = relationship('Project')
@@ -135,7 +131,7 @@ class Odkform(Base):
     form_xlsfile = Column(UnicodeText)
     form_xmlfile = Column(UnicodeText)
     form_public = Column(INTEGER)
-    extra = Column(UnicodeText)
+    extras = Column(UnicodeText)
     tags = Column(UnicodeText)
 
     parent = relationship('Odkform', remote_side=[project_id, form_id])
@@ -147,8 +143,9 @@ class Userproject(Base):
 
     user_id = Column(ForeignKey('fsuser.user_id'), primary_key=True, nullable=False)
     project_id = Column(ForeignKey('project.project_id'), primary_key=True, nullable=False, index=True)
-    access_type = Column(INTEGER)
+    access_type = Column(INTEGER) #1=Owner,2=Admin,3=Editor,4=Member
     access_date = Column(DateTime)
+    project_active = Column(INTEGER,server_default=text("'1'"))
 
     project = relationship('Project')
     user = relationship('User')

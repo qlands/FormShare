@@ -4,7 +4,7 @@ from sqlalchemy import inspect
 from future.utils import iteritems
 
 __all__ = [
-    'initialize_schema','addColumnToSchema','mapToSchema','mapFromSchema'
+    'initialize_schema','addColumnToSchema','mapToSchema','mapFromSchema',
 ]
 
 _SCHEMA = []
@@ -54,41 +54,67 @@ def mapToSchema(modelClass,data):
             else:
                 extraData[key] = value
     if bool(extraData):
-        mappedData["extra"] = json.dumps(extraData)
+        mappedData["formshare_extras"] = json.dumps(extraData)
     if not bool(mappedData):
         raise Exception("The mapping for table {} is empty!".format(modelClass.name))
     return mappedData
 
 
 # This function maps a row/list of raw data from de database to the schema
-# Data fields that resided i the extra storage are separated into independent fields
+# Data fields that resided in the extra storage are separated into independent fields
 # The function returns the data in a dict form or an array of dict
 def mapFromSchema(data):
     if type(data) is not list:
         mappedData = {}
         if data is not None:
-            for c in inspect(data).mapper.column_attrs:
-                if c.key != "extra":
-                    mappedData[c.key] = getattr(data, c.key)
-                else:
-                    if getattr(data, c.key) is not None:
-                        jsondata = json.loads(getattr(data, c.key))
-                        if bool(jsondata):
-                            for key,value in iteritems(jsondata):
-                                mappedData[key] = value
+            if data.__class__.__name__ != 'result' :
+                for c in inspect(data).mapper.column_attrs:
+                    if c.key != "extras":
+                        mappedData[c.key] = getattr(data, c.key)
+                    else:
+                        if getattr(data, c.key) is not None:
+                            jsondata = json.loads(getattr(data, c.key))
+                            if bool(jsondata):
+                                for key,value in iteritems(jsondata):
+                                    mappedData[key] = value
+            else:
+                for tupleItem in data:
+                    for c in inspect(tupleItem).mapper.column_attrs:
+                        if c.key != "extras":
+                            mappedData[c.key] = getattr(tupleItem, c.key)
+                        else:
+                            if getattr(tupleItem, c.key) is not None:
+                                jsondata = json.loads(getattr(tupleItem, c.key))
+                                if bool(jsondata):
+                                    for key, value in iteritems(jsondata):
+                                        mappedData[key] = value
+
         return mappedData
     else:
         mappedData = []
         for row in data:
             temp = {}
-            for c in inspect(row).mapper.column_attrs:
-                if c.key != "extra":
-                    temp[c.key] = getattr(row, c.key)
-                else:
-                    if getattr(row, c.key) is not None:
-                        jsondata = json.loads(getattr(row, c.key))
-                        if bool(jsondata):
-                            for key, value in iteritems(jsondata):
-                                temp[key] = value
+            if row.__class__.__name__ != 'result':
+                for c in inspect(row).mapper.column_attrs:
+                    if c.key != "extras":
+                        temp[c.key] = getattr(row, c.key)
+                    else:
+                        if getattr(row, c.key) is not None:
+                            jsondata = json.loads(getattr(row, c.key))
+                            if bool(jsondata):
+                                for key, value in iteritems(jsondata):
+                                    temp[key] = value
+            else:
+                for tupleItem in row:
+                    for c in inspect(tupleItem).mapper.column_attrs:
+                        if c.key != "extras":
+                            temp[c.key] = getattr(tupleItem, c.key)
+                        else:
+                            if getattr(tupleItem, c.key) is not None:
+                                jsondata = json.loads(getattr(tupleItem, c.key))
+                                if bool(jsondata):
+                                    for key, value in iteritems(jsondata):
+                                        temp[key] = value
+
             mappedData.append(temp)
         return mappedData

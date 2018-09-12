@@ -8,7 +8,7 @@ import zope.sqlalchemy
 # from .formshare import Datagroup,Datauser,Enumerator,Enumgroup,\
 #     Enumingroup,Form,Groupaccess,Grpsubmitter,Log,Project,\
 #     Submitter,User,Useraccess,Useringroup  # flake8: noqa
-from .formshare import Collaboratorlog,User,Userlog,Project,Collaborator,Collgroup,Odkform,\
+from .formshare import Base,Collaboratorlog,User,Userlog,Project,Collaborator,Collgroup,Odkform,\
     Collingroup,Formacces,Formgrpacces,Jsonlog,Septable,Submission,Jsonhistory,Sepsection,Sepitem,Userproject
 
 from .schema import *
@@ -25,6 +25,7 @@ def get_engine(settings, prefix='sqlalchemy.'):
 def get_session_factory(engine):
     factory = sessionmaker()
     factory.configure(bind=engine)
+    Base.metadata.bind = engine
     return factory
 
 
@@ -73,6 +74,7 @@ def includeme(config):
 
     session_factory = get_session_factory(get_engine(settings))
     config.registry['dbsession_factory'] = session_factory
+    config.registry['dbsession_metadata'] = Base.metadata
 
     # make request.dbsession available for use in Pyramid
     config.add_request_method(

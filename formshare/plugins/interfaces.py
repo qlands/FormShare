@@ -159,12 +159,11 @@ class IDatabase(Interface):
         After calling this
     """
 
-    def update_schema(self, config, Base):
+    def update_ORM(self, metadata):
         """
-        Called by the host application so plugins can add new tables to the database schema
+        Called by FormShare so plugins can add new tables to FormShare ORM
 
-        :param config: ``pyramid.config`` object
-        :param Base: ``Sqlalchemy's declarative base`` object
+        :param metadata: FormShare ORM metadata object
 
         """
 

@@ -3,7 +3,6 @@ from pyramid.session import SignedCookieSessionFactory
 import formshare.plugins as p
 import formshare.resources as r
 from formshare.models import addColumnToSchema
-from formshare.models.meta import Base, metadata
 from sqlalchemy.orm import configure_mappers
 from .jinja_extensions import initialize, SnippetExtension, extendThis, CSSResourceExtension,JSResourceExtension
 from .mainresources import createResources
@@ -105,27 +104,18 @@ def load_environment(settings,config,apppath):
         for resource in jsResources:
             r.addJSResource(resource["libraryname"], resource["id"], resource["file"], resource["depends"])
 
-    # Call any connected plugins to add their modifications into the schema
-    schemas_allowed = ["user", "project", "enumerator", "enumgroup", "datauser", "datagroup", "form"]
+    # Call any connected plugins to add their modifications into the schema. Not all tables has extras so only
+    # certain tables are allowed
+    schemas_allowed = ["fsuser", "project", "collaborator", "collgroup", "odkform"]
     for plugin in p.PluginImplementations(p.ISchema):
         schemaFields = plugin.update_schema(config)
         for field in schemaFields:
             if field["schema"] in schemas_allowed:
                 addColumnToSchema(field["schema"], field["fieldname"], field["fielddesc"])
 
-    #Call any connected plugins to add their tables
+    #Call any connected plugins to update FormShare ORM. For example: Add new tables
     for plugin in p.PluginImplementations(p.IDatabase):
-        plugin.update_schema(config,Base)
-
-    # run configure_mappers after calling plugins implementing IDatabase
-    # all relationships can be setup
-    configure_mappers()
-
-    # print "**********************88"
-    # for table in metadata.sorted_tables:
-    #     print table.name
-    # print "**********************88"
-
+        plugin.update_ORM(config.registry['dbsession_metadata'])
 
     # jinjaEnv is used by the jinja2 extensions so we get it from the config
     jinjaEnv = config.get_jinja2_environment()

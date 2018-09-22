@@ -14,12 +14,12 @@
 {% endblock topScripts %}
 
 {% block breadcrumbs %}
-    {% snippet 'dashboard/profile/snippets/brdcrbs_profile_edit.jinja2', request=request,activeUser=activeUser %}
+    {% include 'dashboard/profile/snippets/brdcrbs_profile_edit.jinja2' %}
 {% endblock breadcrumbs %}
 
 {% block maincontent %}
     {% block profile_edit_head %}
-        {% snippet 'dashboard/profile/snippets/profile_head.jinja2',request=request,viewingSelfAccount=False,userDetails=userDetails %}
+        {% include 'dashboard/profile/snippets/profile_head.jinja2' %}
     {% endblock profile_edit_head %}
     {% block profile_edit_content %}
         <div class="row">

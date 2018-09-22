@@ -31,7 +31,7 @@
             {% endif %}
             <dl class="row mb-0">
                 <div class="col-sm-4 text-sm-right"><dt>Collaborators:</dt> </div>
-                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  16</dd></div>
+                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ userDetails.user_stats.collaborators|length }}</dd></div>
             </dl>
         </div>
     {% endblock profile_user_stats %}
@@ -39,15 +39,15 @@
         <div class="col-md-3">
             <dl class="row mb-0">
                 <div class="col-sm-4 text-sm-right"><dt>Projects:</dt> </div>
-                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  6</dd></div>
+                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ userDetails.user_stats.num_projects }}</dd></div>
             </dl>
             <dl class="row mb-0">
                 <div class="col-sm-4 text-sm-right"><dt>Last project:</dt> </div>
-                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  3 months ago</dd></div>
+                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {% if userDetails.user_stats.last_project != None  %}{{ request.h.humanize_date(userDetails.user_stats.last_project) }}{% else %}{{ _('without projects') }}{% endif %}</dd></div>
             </dl>
             <dl class="row mb-0">
                 <div class="col-sm-4 text-sm-right"><dt>Forms:</dt> </div>
-                <div class="col-sm-8 text-sm-left"><dd class="mb-1">  11</dd> </div>
+                <div class="col-sm-8 text-sm-left"><dd class="mb-1">  {{ userDetails.user_stats.num_forms }}</dd> </div>
             </dl>
         </div>
     {% endblock profile_project_stats %}

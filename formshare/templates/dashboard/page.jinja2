@@ -13,19 +13,19 @@
         <div id="wrapper">
             {% block wrapper %}
                 {% block mainnav %}
-                    {% snippet 'dashboard/snippets/navbar.jinja2', request=request,activeUser=activeUser,activeMenu=activeMenu,activeProject=activeProject %}
+                    {% include 'dashboard/snippets/navbar.jinja2' %}
                 {% endblock mainnav %}
                 <div id="page-wrapper" class="gray-bg dashbard-1">
                     {% block pagewrapper %}
                         {% block pageheader %}
-                            {% snippet 'dashboard/snippets/header.jinja2', request=request,activeUser=activeUser,showWelcome=showWelcome %}
+                            {% include 'dashboard/snippets/header.jinja2' %}
                         {% endblock pageheader %}
                         {% block dashheader %}
                             <div class="row wrapper border-bottom white-bg page-heading">
                                 {% block breadcrumbs %}
                                     {#
                                         Extend this section to have breadcrumbs
-                                        {% snippet 'dashboard/snippets/breadcrumbs.jinja2', request=request %}
+                                        {% include 'dashboard/snippets/breadcrumbs.jinja2' %}
                                     #}
                                 {% endblock breadcrumbs %}
                             </div>
@@ -38,17 +38,17 @@
                             </div>
                         {% endblock mainsection %}
                         {% block footer %}
-                            {% snippet 'dashboard/snippets/footer.jinja2', request=request %}
+                            {% include 'dashboard/snippets/footer.jinja2' %}
                         {% endblock footer %}
                     {% endblock pagewrapper %}
                 </div>
                 {% block smallchat %}
                     {# Uncomment this snippet to have the chat screen #}
-                    {#  {% snippet 'dashboard/snippets/chat.jinja2', request=request %}#}
+                    {#  {% include 'dashboard/snippets/chat.jinja2' %}#}
                 {% endblock smallchat %}
                 {% block sidebar %}
                     {% if activeUser != None  %}
-                        {% snippet 'dashboard/snippets/sidebar.jinja2', request=request %}
+                        {% include 'dashboard/snippets/sidebar.jinja2' %}
                     {% endif %}
                 {% endblock sidebar %}
             {% endblock wrapper %}

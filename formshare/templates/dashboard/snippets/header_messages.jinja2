@@ -6,7 +6,7 @@
     {% endblock header_messages_counter %}
     {% block header_messages_list %}
     <ul class="dropdown-menu dropdown-messages dropdown-menu-right">
-        {% snippet 'dashboard/snippets/header_message_item.jinja2', request=request %}
+        {% include 'dashboard/snippets/header_message_item.jinja2' %}
         {% block header_message_bottom %}
         <li>
             <div class="text-center link-block">

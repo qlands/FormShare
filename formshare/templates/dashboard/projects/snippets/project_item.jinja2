@@ -1,18 +1,25 @@
 <hr>
 <div class="row m-b-sm m-t-sm">
-    <div class="col-md-5">
-        <a href="project_detail.html">Contract with Zender Company</a> <span class="label label-primary">Active</span>
+    <div class="col-md-4">
+        <a href="#">{{ project.project_name }}</a> {% if project.project_public == 1 %} <span class="label label-primary">{{ _('Public') }}</span> {% else %} <span class="label label-warning">{{ _('Private') }}</span>{% endif %}
         <br/>
-        <small>Created 14.08.2014</small>
+        <small>{{ _('Created') }} {{ request.h.humanize_date(project.project_cdate) }} {% if project.user_id != project.owner %} by <a href="{{ request.route_url('dashboard',userid=project.owner) }}">{{ project.owner }}</a> {% endif %}</small>
     </div>
     <div class="col-md-4">
-        350 submissions within 5 forms<br/>
-        <small>Last submission by cquiros in form <a style="color: #337ab7;">"Rhomis 1"</a> two days ago</small>
+        {% if project.total_submissions > 0 %}
+            {{ project.total_submissions }} {{ request.h.pluralize(request,_('submission'),project.total_submissions) }} {{ _('within') }} {{ project.total_forms }} {{ request.h.pluralize(request,_('form'),project.total_forms) }}<br/>
+            <small>Last submission by cquiros in form <a style="color: #337ab7;">"Rhomis 1"</a> two days ago</small>
+        {% else %}
+            Without submissions
+        {% endif %}
     </div>
-    <div class="col-md-3">
+    <div class="col-md-4">
         <a href="#" class="btn btn-white btn-sm"><i class="fa fa-folder"></i> View </a>
-        {% if viewingSelfAccount %}
-            <a href="#" class="btn btn-white btn-sm"><i class="fa fa-pencil text-warning"></i> Edit </a>
+        {% if project.access_type != 4 %}
+            <a href="#" class="btn btn-white btn-sm"><i class="fas fa-pencil-alt text-warning"></i> Edit </a>
+        {% endif %}
+        {% if project.access_type == 1 or project.access_type == 2 %}
+            <a href="#" class="btn btn-white btn-sm"><i class="fas fa-trash text-danger"></i> Delete </a>
         {% endif %}
     </div>
 </div>

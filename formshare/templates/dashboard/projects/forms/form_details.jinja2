@@ -3,7 +3,7 @@
 {% block titlesection %}{{ _("Project XXX") }}{% endblock titlesection %}
 
 {% block breadcrumbs %}
-    {% snippet 'dashboard/projects/forms/snippets/brdcrbs_frmdtls.jinja2', request=request,activeUser=activeUser,projectID=projectID,projectName=projectName %}
+    {% include 'dashboard/projects/forms/snippets/brdcrbs_frmdtls.jinja2' %}
 {% endblock breadcrumbs %}
 
 {% block mainsection %}

@@ -36,13 +36,8 @@
             {% block profile_user_section_collaborators %}
                 <div class="ibox">
                     <div class="ibox-title">
-                        <h5>{{ _('Collaborators') }}</h5>
+                        <h5>{{ _('Collaborations') }}</h5>
                         <div class="ibox-tools">
-                            {% if viewingSelfAccount %}
-                                <a href="{{ request.route_url('profile_edit',userid=activeUser.login) }}" style="margin-right: 10px">
-                                    <i class="fas fa-pencil-alt text-warning" title="{{ _('Edit') }}"></i>
-                                </a>
-                            {% endif %}
                             <a class="collapse-link" style="margin-right: 10px">
                                 <i class="fas fa-chevron-up"></i>
                             </a>
@@ -54,16 +49,9 @@
                     <div class="ibox-content">
                         {% block profile_collaborators_list %}
                             <div class="user-friends">
-                                <a href=""><img alt="image" class="rounded-circle" src="img/a3.jpg"></a>
-                                <a href=""><img alt="image" class="rounded-circle" src="img/a1.jpg"></a>
-                                <a href=""><img alt="image" class="rounded-circle" src="img/a2.jpg"></a>
-                                <a href=""><img alt="image" class="rounded-circle" src="img/a4.jpg"></a>
-                                <a href=""><img alt="image" class="rounded-circle" src="img/a5.jpg"></a>
-                                <a href=""><img alt="image" class="rounded-circle" src="img/a6.jpg"></a>
-                                <a href=""><img alt="image" class="rounded-circle" src="img/a7.jpg"></a>
-                                <a href=""><img alt="image" class="rounded-circle" src="img/a8.jpg"></a>
-                                <a href=""><img alt="image" class="rounded-circle" src="img/a2.jpg"></a>
-                                <a href=""><img alt="image" class="rounded-circle" src="img/a1.jpg"></a>
+                                {% for collaborator in userDetails.user_stats.collaborators %}
+                                    <a href="{{ request.route_url('dashboard',userid=collaborator.user_id) }}"><img alt="image" title="{{ collaborator.user_name }}" class="rounded-circle" src="{{ request.h.getGravatarUrl(collaborator.user_email) }}"></a>
+                                {% endfor %}
                             </div>
                         {% endblock profile_collaborators_list %}
                     </div>
@@ -122,7 +110,9 @@
                     </div>
                 </div>
                 <div class="ibox-content">
-                    {% snippet 'dashboard/projects/snippets/project_item.jinja2', request=request,viewingSelfAccount=viewingSelfAccount %}
+                    {% for project in userProjects %}
+                        {% include 'dashboard/projects/snippets/project_item.jinja2' %}
+                    {% endfor %}
                 </div>
             </div>
             {% block profile_project_section_extra %}
@@ -148,7 +138,7 @@
                     <div class="scroll_content2">
                         {% block profile_activity_timeline %}
                             <div id="vertical-timeline" class="vertical-container light-timeline no-margins">
-                                {% snippet 'dashboard/profile/snippets/timeline_item.jinja2', request=request %}
+                                {% include 'dashboard/profile/snippets/timeline_item.jinja2' %}
                             </div>
                         {% endblock profile_activity_timeline %}
                     </div>

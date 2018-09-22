@@ -34,7 +34,7 @@
                         <h3>{{ _('Here are your three most dynamic projects.') }}</h3>
                         {% block project_list %}
                             <ul class="list-group clear-list m-t">
-                                {% snippet 'dashboard/snippets/project_list_item.jinja2', request=request %}
+                                {% include 'dashboard/snippets/project_list_item.jinja2' %}
                             </ul>
                         {% endblock project_list %}
                     </div>
@@ -48,8 +48,8 @@
     {% if viewingSelfAccount %}
         {{ super() }}
     {% else %}
-        {% snippet 'dashboard/profile/snippets/profile_head.jinja2',request=request,viewingSelfAccount=viewingSelfAccount,userDetails=userDetails,activeUser=activeUser %}
-        {% snippet 'dashboard/profile/snippets/profile_details.jinja2',request=request,viewingSelfAccount=viewingSelfAccount,userDetails=userDetails,activeUser=activeUser %}
+        {% include 'dashboard/profile/snippets/profile_head.jinja2' %}
+        {% include 'dashboard/profile/snippets/profile_details.jinja2' %}
     {% endif %}
 
 {% endblock maincontent %}
@@ -68,7 +68,7 @@
                                 <div class="col-md-12">
                                     {% block form_list%}
                                         <ul class="list-group clear-list m-t">
-                                            {% snippet 'dashboard/snippets/form_list_item.jinja2', request=request %}
+                                            {% include 'dashboard/snippets/form_list_item.jinja2' %}
                                         </ul>
                                     {% endblock form_list%}
                                 </div>

@@ -6,7 +6,7 @@
             {% endblock header_main_button %}
             {% block header_search %}
                 {% if activeUser != None %}
-                    {% snippet 'dashboard/snippets/header_search.jinja2', request=request %}
+                    {% include 'dashboard/snippets/header_search.jinja2' %}
                 {% endif %}
             {% endblock header_search %}
         </div>
@@ -21,12 +21,12 @@
                 {% endblock header_top_welcome %}
                 {% block header_messages %}
                     {% if activeUser != None %}
-                        {% snippet 'dashboard/snippets/header_messages.jinja2',request=request %}
+                        {% include 'dashboard/snippets/header_messages.jinja2' %}
                     {% endif %}
                 {% endblock header_messages %}
                 {% block header_notifications %}
                     {% if activeUser != None %}
-                        {% snippet 'dashboard/snippets/header_notifications.jinja2',request=request %}
+                        {% include 'dashboard/snippets/header_notifications.jinja2' %}
                     {% endif %}
                 {% endblock header_notifications %}
                 {% block header_logout %}

@@ -14,16 +14,16 @@
 {% endblock topScripts %}
 
 {% block breadcrumbs %}
-    {% snippet 'dashboard/profile/snippets/brdcrbs_profile.jinja2', request=request,activeUser=activeUser,viewingSelfAccount=viewingSelfAccount,userDetails=userDetails %}
+    {% include 'dashboard/profile/snippets/brdcrbs_profile.jinja2' %}
 {% endblock breadcrumbs %}
 
 {% block maincontent %}
     {% block profile_head %}
-        {% snippet 'dashboard/profile/snippets/profile_head.jinja2',request=request,viewingSelfAccount=viewingSelfAccount,userDetails=userDetails,activeUser=activeUser %}
+        {% include 'dashboard/profile/snippets/profile_head.jinja2' %}
     {% endblock profile_head %}
 
     {% block profile_details %}
-        {% snippet 'dashboard/profile/snippets/profile_details.jinja2',request=request,viewingSelfAccount=viewingSelfAccount,userDetails=userDetails,activeUser=activeUser %}
+        {% include 'dashboard/profile/snippets/profile_details.jinja2' %}
     {% endblock profile_details %}
 
 {% endblock maincontent %}

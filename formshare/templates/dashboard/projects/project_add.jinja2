@@ -16,7 +16,7 @@
 {% endblock topScripts %}
 
 {% block breadcrumbs %}
-    {% snippet 'dashboard/projects/snippets/brdcrbs_prjadd.jinja2', request=request %}
+    {% include 'dashboard/projects/snippets/brdcrbs_prjadd.jinja2' %}
 {% endblock breadcrumbs %}
 
 {% block maincontent %}
@@ -33,7 +33,7 @@
             {% block form_errors %}
                 {{ form.display_errors(errors) }}
             {% endblock form_errors %}
-            {% snippet 'dashboard/projects/snippets/project_form.jinja2', request=request,projectDetails=projectDetails %}
+            {% incluide 'dashboard/projects/snippets/project_form.jinja2' %}
         </div>
     </div>
 {% endblock maincontent %}

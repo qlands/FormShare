@@ -3,8 +3,7 @@ from pyramid.session import SignedCookieSessionFactory
 import formshare.plugins as p
 import formshare.resources as r
 from formshare.models import addColumnToSchema
-from sqlalchemy.orm import configure_mappers
-from .jinja_extensions import initialize, SnippetExtension, extendThis, CSSResourceExtension,JSResourceExtension
+from .jinja_extensions import initialize, extendThis, CSSResourceExtension,JSResourceExtension
 from .mainresources import createResources
 import formshare.plugins.helpers as helpers
 from .routes import loadRoutes
@@ -51,7 +50,7 @@ def load_environment(settings,config,apppath):
     config.add_subscriber('formshare.i18n.i18n.add_localizer', 'pyramid.events.NewRequest')
 
     #Register jinja2
-    config.registry.settings['jinja2.extensions'] = ['jinja2.ext.i18n', 'jinja2.ext.do', 'jinja2.ext.with_',SnippetExtension, extendThis, CSSResourceExtension, JSResourceExtension]
+    config.registry.settings['jinja2.extensions'] = ['jinja2.ext.i18n', 'jinja2.ext.do', 'jinja2.ext.with_', extendThis, CSSResourceExtension, JSResourceExtension]
     config.include('pyramid_jinja2')
 
     #Add url_for_static to the request so plugins can use static resources

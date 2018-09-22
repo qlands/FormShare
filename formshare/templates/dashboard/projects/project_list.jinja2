@@ -3,7 +3,7 @@
 {% block titlesection %}{{ _("Projects") }}{% endblock titlesection %}
 
 {% block breadcrumbs %}
-    {% snippet 'dashboard/projects/snippets/brdcrbs_prjlist.jinja2', request=request %}
+    {% include 'dashboard/projects/snippets/brdcrbs_prjlist.jinja2' %}
 {% endblock breadcrumbs %}
 
 {% block maincontent %}
@@ -25,7 +25,7 @@
                 </div>
             </div>
 
-            {% snippet 'dashboard/projects/snippets/project_item.jinja2', request=request %}
+            {% include 'dashboard/projects/snippets/project_item.jinja2' %}
 
         </div>
     </div>

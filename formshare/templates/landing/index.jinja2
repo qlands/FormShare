@@ -9,14 +9,14 @@
 {% endblock topScripts %}
 
 {% block navbar %}
-    {% snippet 'landing/snippets/navbar.jinja2', request=request %}
+    {% include 'landing/snippets/navbar.jinja2' %}
 {% endblock navbar %}
 {% block slider %}
-    {% snippet 'landing/snippets/slider.jinja2', request=request %}
+    {% include 'landing/snippets/slider.jinja2' %}
 {% endblock slider %}
 
 {% block contact %}
-    {% snippet 'landing/snippets/contact.jinja2', request=request %}
+    {% include 'landing/snippets/contact.jinja2' %}
 {% endblock contact %}
 
 {% block scripts %}

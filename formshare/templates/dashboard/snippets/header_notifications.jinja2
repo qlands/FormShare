@@ -6,7 +6,7 @@
     {% endblock header_notifications_counter %}
     {% block header_notifications_list %}
         <ul class="dropdown-menu dropdown-menu2 dropdown-alerts dropdown-menu-right">
-            {% snippet 'dashboard/snippets/header_notification_item.jinja2', request=request %}
+            {% include 'dashboard/snippets/header_notification_item.jinja2' %}
             {% block header_notification_bottom %}
                 <li>
                     <div class="text-center link-block">

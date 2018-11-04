@@ -2,9 +2,9 @@ from ..plugins.utilities import add_route
 import formshare.plugins as p
 from ..views.basic_views import NotFoundView, HomeView, log_out_view, LoginView, RegisterView, \
     CollaboratorsLoginView
-from ..views.dashboard import MainDashBoardView
+from ..views.dashboard import UserDashBoardView
 from ..views.projects import AddProjectView
-from ..views.profile import MainProfileView, EditProfileView
+from ..views.profile import UserProfileView, EditProfileView
 
 route_list = []
 
@@ -47,8 +47,8 @@ def load_routes(config):
     routes.append(add_route('register', '/join', RegisterView, 'generic/register.jinja2'))
     routes.append(add_route('logout', '/logout', log_out_view, None))
 
-    routes.append(add_route('dashboard', '/user/{userid}', MainDashBoardView, 'dashboard/index.jinja2'))
-    routes.append(add_route('profile', '/user/{userid}/profile', MainProfileView, 'dashboard/profile/profile.jinja2'))
+    routes.append(add_route('dashboard', '/user/{userid}', UserDashBoardView, 'dashboard/index.jinja2'))
+    routes.append(add_route('profile', '/user/{userid}/profile', UserProfileView, 'dashboard/profile/profile.jinja2'))
     routes.append(add_route('profile_edit', '/user/{userid}/profile/edit', EditProfileView,
                             'dashboard/profile/profile_edit.jinja2'))
 

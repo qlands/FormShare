@@ -108,13 +108,13 @@ def load_environment(settings, config, apppath):
 
     # Call any connected plugins to add their CSS Resources
     for plugin in p.PluginImplementations(p.IResource):
-        css_resources = plugin.add_CSSResources(config)
+        css_resources = plugin.add_css_resources(config)
         for resource in css_resources:
             r.add_css_resource(resource["libraryname"], resource["id"], resource["file"], resource["depends"])
 
     # Call any connected plugins to add their JS Resources
     for plugin in p.PluginImplementations(p.IResource):
-        js_resources = plugin.add_JSResources(config)
+        js_resources = plugin.add_js_resources(config)
         for resource in js_resources:
             r.add_js_resource(resource["libraryname"], resource["id"], resource["file"], resource["depends"])
 

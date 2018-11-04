@@ -55,7 +55,7 @@ class IRoutes(Interface):
         :return Returns a dict array [{'name':'myroute','path':'/myroute','view',viewDefinition,
                                        'renderer':'renderere_used'}]
         """
-        return []
+        raise NotImplementedError("before_mapping must be implemented in subclasses")
 
     def after_mapping(self, config):
         """
@@ -65,7 +65,7 @@ class IRoutes(Interface):
         :return Returns a dict array [{'name':'myroute','path':'/myroute','view',viewDefinition,
                                        'renderer':'renderere_used'}]
         """
-        return []
+        raise NotImplementedError("after_mapping must be implemented in subclasses")
 
 
 class IConfig(Interface):
@@ -93,9 +93,9 @@ class IResource(Interface):
         :param config: ``pyramid.config`` object
         :return Returns a dict array [{'name':'mylibrary','path':'/path/to/my/resources'}]
         """
-        return []
+        raise NotImplementedError("add_libraries must be implemented in subclasses")
 
-    def add_JSResources(self, config):
+    def add_js_resources(self, config):
         """
         Called by FormShare so plugins can add new JS Resources
         
@@ -103,9 +103,9 @@ class IResource(Interface):
         :return Returns a dict array [{'libraryname':'mylibrary','id':'myResourceID','file':'/relative/path/to/jsFile',
                                       'depends':'resourceID'}]
         """
-        return []
+        raise NotImplementedError("add_js_resources must be implemented in subclasses")
 
-    def add_CSSResources(self, config):
+    def add_css_resources(self, config):
         """
         Called by FormShare so plugins can add new FanStatic CSS Resources
 
@@ -113,7 +113,7 @@ class IResource(Interface):
         :return Returns a dict array [{'libraryname':'mylibrary','id':'myResourceID','file':'/relative/path/to/jsFile',
                                       'depends':'resourceID'}]
         """
-        return []
+        raise NotImplementedError("add_css_resources must be implemented in subclasses")
 
 
 class IPluralize(Interface):
@@ -159,7 +159,7 @@ class ISchema(Interface):
         Instead of constructing the dict by themselves to ensure API compatibility
 
         """
-        return []
+        raise NotImplementedError("update_schema must be implemented in subclasses")
 
 
 class IDatabase(Interface):
@@ -192,7 +192,7 @@ class IAuthorize(Interface):
         :return Return true or false if the login should continue. If False then a message should state why
 
         """
-        return True,""
+        raise NotImplementedError("after_login must be implemented in subclasses")
 
     def before_register(self, request, registrant):
         """
@@ -204,7 +204,7 @@ class IAuthorize(Interface):
         a message should state why
 
         """
-        return True, ""
+        raise NotImplementedError("before_register must be implemented in subclasses")
 
     def after_register(self, request, registrant):
         """
@@ -216,15 +216,15 @@ class IAuthorize(Interface):
         dashboard will be loaded
 
         """
-        return ""
+        raise NotImplementedError("on_authenticate_user must be implemented in subclasses")
 
-    def on_authenticate_user(self, request, userID, userIsEmail):
+    def on_authenticate_user(self, request, user_id, user_is_email):
         """
                 Called by FormShare so plugins can modify the way FormShare gather information about the user
 
                 :param request: ``pyramid.request`` object
-                :param userID: The user ID trying to authenticate
-                :param userIsEmail: Whether the user is an email
+                :param user_id: The user ID trying to authenticate
+                :param user_is_email: Whether the user is an email
                 :return Return None and and empty Dict to indicate that Forshare should get this in the normal way.
                         False and None if the user must be denied.
                         Otherwise true and then the Dict MUST contain at least the following keys:
@@ -233,20 +233,20 @@ class IAuthorize(Interface):
                         user_name : With the full name of the userID authenticating
                         user_about : With the bio data of the userID authenticating or None
                 """
-        return None, {}
+        raise NotImplementedError("on_authenticate_user must be implemented in subclasses")
 
-    def on_authenticate_password(self, request, userID, password):
+    def on_authenticate_password(self, request, user_id, password):
         """
                 Called by FormShare so plugins can modify the way FormShare gather information about the user
 
                 :param request: ``pyramid.request`` object
-                :param userID: The user ID trying to authenticate
+                :param user_id: The user ID trying to authenticate
                 :param password: The password as is typed in the FormShare interface
                 :return Return None to indicate that Forshare should get this in the normal way.
                         False if the password is incorrect.
                         Otherwise true
                         """
-        return False
+        raise NotImplementedError("on_authenticate_password must be implemented in subclasses")
 
 
 class ITemplateHelpers(Interface):

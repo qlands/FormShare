@@ -35,4 +35,3 @@ def create_resources(apppath, config):
     # ------------------------------Add/Edit project--------------------------------------
     r.add_css_resource('formshare', 'switchery', 'css/plugins/switchery/switchery.css', None)
     r.add_js_resource('formshare', 'switchery', 'js/plugins/switchery/switchery.js', None)
-

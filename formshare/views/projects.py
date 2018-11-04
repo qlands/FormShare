@@ -4,7 +4,7 @@ from formshare.processes import add_project
 from pyramid.httpexceptions import HTTPFound
 
 
-class FormShareProjectView(PrivateView):
+class UserProjectView(PrivateView):
     def process_view(self):
         # self.request.h.setActiveMenu("projects")
         return {}

@@ -3,7 +3,7 @@ from pyramid.httpexceptions import HTTPNotFound, HTTPFound
 from formshare.processes import update_profile
 
 
-class MainProfileView(ProfileView):
+class UserProfileView(ProfileView):
     def __init__(self, request):
         ProfileView.__init__(self, request)
         self.privateOnly = True

@@ -1,8 +1,6 @@
-'''
-
-This file declares the PCA interfaces available in FormShare and their methods:
-
-'''
+"""
+This file declares the PCA interfaces available in FormShare and their methods.
+"""
 
 
 __all__ = [
@@ -21,6 +19,7 @@ __all__ = [
 
 from inspect import isclass
 from pyutilib.component.core import Interface as _pca_Interface
+
 
 class Interface(_pca_Interface):
     """
@@ -42,28 +41,32 @@ class Interface(_pca_Interface):
         except AttributeError:
             return False
 
+
 class IRoutes(Interface):
     """
     Plugin into the creation of routes.
 
     """
-    def before_mapping(self,config):
+    def before_mapping(self, config):
         """
         Called before the mapping of routes made by FormShare.
 
         :param config: ``pyramid.config`` object
-        :return Returns a dict array [{'name':'myroute','path':'/myroute','view',viewDefinition,'renderer':'renderere_used'}]
+        :return Returns a dict array [{'name':'myroute','path':'/myroute','view',viewDefinition,
+                                       'renderer':'renderere_used'}]
         """
         return []
 
-    def after_mapping(self,config):
+    def after_mapping(self, config):
         """
         Called after the mapping of routes made by FormShare.
 
         :param config: ``pyramid.config`` object
-        :return Returns a dict array [{'name':'myroute','path':'/myroute','view',viewDefinition,'renderer':'renderere_used'}]
+        :return Returns a dict array [{'name':'myroute','path':'/myroute','view',viewDefinition,
+                                       'renderer':'renderere_used'}]
         """
         return []
+
 
 class IConfig(Interface):
     """
@@ -77,12 +80,13 @@ class IConfig(Interface):
         :param config: ``pyramid.config`` object
         """
 
+
 class IResource(Interface):
     """
         Allows to hook into the creation of JS and CSS libraries or resources
     """
 
-    def add_libraries(self,config):
+    def add_libraries(self, config):
         """
         Called by FormShare so plugins can add new JS and CSS libraries to FormShare
 
@@ -91,12 +95,13 @@ class IResource(Interface):
         """
         return []
 
-    def add_JSResources(self,config):
+    def add_JSResources(self, config):
         """
         Called by FormShare so plugins can add new JS Resources
         
         :param config: ``pyramid.config`` object        
-        :return Returns a dict array [{'libraryname':'mylibrary','id':'myResourceID','file':'/relative/path/to/jsFile','depends':'resourceID'}]
+        :return Returns a dict array [{'libraryname':'mylibrary','id':'myResourceID','file':'/relative/path/to/jsFile',
+                                      'depends':'resourceID'}]
         """
         return []
 
@@ -105,15 +110,17 @@ class IResource(Interface):
         Called by FormShare so plugins can add new FanStatic CSS Resources
 
         :param config: ``pyramid.config`` object        
-        :return Returns a dict array [{'libraryname':'mylibrary','id':'myResourceID','file':'/relative/path/to/jsFile','depends':'resourceID'}]
+        :return Returns a dict array [{'libraryname':'mylibrary','id':'myResourceID','file':'/relative/path/to/jsFile',
+                                      'depends':'resourceID'}]
         """
         return []
+
 
 class IPluralize(Interface):
     """
         Allows to hook into the pluralization function so plugins can extend the pluralization of FormShare
     """
-    def pluralize(self,noun,locale):
+    def pluralize(self, noun, locale):
         """
             Called the packages are created
 
@@ -136,7 +143,8 @@ class ISchema(Interface):
         Called by the host application so plugins can add new fields to table schemata
 
         :param config: ``pyramid.config`` object
-        :return Returns a dict array [{'schema':'schema_to_update','fieldname':'myfield','fielddesc':'A good description of myfield'}]
+        :return Returns a dict array [{'schema':'schema_to_update','fieldname':'myfield',
+                                       'fielddesc':'A good description of myfield'}]
 
         Plugin writers should use the utility functions:
             - addFieldToUserSchema
@@ -153,19 +161,21 @@ class ISchema(Interface):
         """
         return []
 
+
 class IDatabase(Interface):
     """
         Allows to hook into the database schema so plugins can add new tables
         After calling this
     """
 
-    def update_ORM(self, metadata):
+    def update_orm(self, metadata):
         """
         Called by FormShare so plugins can add new tables to FormShare ORM
 
         :param metadata: FormShare ORM metadata object
 
         """
+
 
 class IAuthorize(Interface):
     """
@@ -190,10 +200,11 @@ class IAuthorize(Interface):
 
         :param request: ``pyramid.request`` object
         :param registrant: Dictionary containing the details of the registrant
-        :return Return a modified version of registrant, true or false if the registrant should be added. If False then a message should state why
+        :return Return a modified version of registrant, true or false if the registrant should be added. If False then
+        a message should state why
 
         """
-        return True,""
+        return True, ""
 
     def after_register(self, request, registrant):
         """
@@ -201,7 +212,8 @@ class IAuthorize(Interface):
 
         :param request: ``pyramid.request`` object
         :param registrant: Dictionary containing the details of the registrant
-        :return Return the next page that will be loaded after the registration. If empty or None the the Formshare dashboard will be loaded
+        :return Return the next page that will be loaded after the registration. If empty or None the the Formshare
+        dashboard will be loaded
 
         """
         return ""
@@ -221,7 +233,7 @@ class IAuthorize(Interface):
                         user_name : With the full name of the userID authenticating
                         user_about : With the bio data of the userID authenticating or None
                 """
-        return None,{}
+        return None, {}
 
     def on_authenticate_password(self, request, userID, password):
         """
@@ -236,16 +248,18 @@ class IAuthorize(Interface):
                         """
         return False
 
+
 class ITemplateHelpers(Interface):
-    u'''Add custom template helper functions.
+    """
+    Add custom template helper functions.
 
     By implementing this plugin interface plugins can provide their own
     template helper functions, which custom templates can then access via the
     ``request.h`` variable.
-
-    '''
+    """
     def get_helpers(self):
-        u'''Return a dict mapping names to helper functions.
+        """
+        Return a dict mapping names to helper functions.
 
         The keys of the dict should be the names with which the helper
         functions will be made available to templates, and the values should be
@@ -255,8 +269,8 @@ class ITemplateHelpers(Interface):
 
         Function names should start with the name of the extension providing
         the function, to prevent name clashes between extensions.
-
-        '''
+        :return:
+        """
 
 
 class IPluginObserver(Interface):

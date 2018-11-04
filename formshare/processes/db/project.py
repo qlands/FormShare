@@ -1,113 +1,143 @@
-from formshare.models import Project,Userproject,mapToSchema,mapFromSchema,\
-    Submission,Odkform,Collaborator
-import logging,datetime,sys,uuid
+from formshare.models import Project, Userproject, map_to_schema, map_from_schema,\
+    Submission, Odkform, Collaborator
+import logging
+import datetime
+import sys
+import uuid
 from sqlalchemy.exc import IntegrityError
 
 __all__ = [
-    'getProjectIDFromName','get_user_projects','get_active_project','add_project'
+    'get_project_id_from_name', 'get_user_projects', 'get_active_project', 'add_project'
 ]
 
 log = logging.getLogger(__name__)
 
-def getProjectIDFromName(request,userID,projectName):
-    res = request.dbsession.query(Project).filter(Project.user_id == userID).filter(Project.project_name == projectName).first()
+
+def get_project_id_from_name(request, user, project_name):
+    res = request.dbsession.query(Project).filter(Project.project_id == Userproject.project_id).filter(
+        Userproject.user_id == user).filter(Project.project_name == project_name).first()
     if res is not None:
         return res.project_id
-    else:
-        return None
+    return None
 
-def get_project_submissions(request,projectID):
-    total = request.dbsession.query(Submission).filter(Submission.project_id == projectID).count()
+
+def get_forms_number(request, project):
+    total = request.dbsession.query(Odkform).filter(Odkform.project_id == project).count()
     return total
 
-def get_last_submission(request,projectID):
+
+def get_project_submissions(request, project):
+    total = request.dbsession.query(Submission).filter(Submission.project_id == project).count()
+    return total
+
+
+def get_last_submission(request, project):
     res = request.dbsession.query(Submission.submission_dtime, Odkform.form_name, Collaborator.coll_name,
                                   Project.project_id, Project.project_name).filter(
         Submission.project_id == Odkform.project_id, Submission.form_id == Odkform.form_id).filter(
         Submission.enum_project == Collaborator.project_id, Submission.coll_id == Collaborator.coll_id).filter(
-        Collaborator.project_id == Project.project_id).filter(Submission.project_id == projectID).order_by(
+        Collaborator.project_id == Project.project_id).filter(Submission.project_id == project).order_by(
         Submission.submission_dtime.desc()).first()
-    return mapFromSchema(res)
+    return map_from_schema(res)
 
-def get_user_projects(request,userID,loggedUserID,private=False):
+
+def get_project_owner(request, project):
+    res = request.dbsession.query(Userproject.user_id).filter(Userproject.project_id == project).filter(
+        Userproject.access_type == 1).first()
+    if res is not None:
+        return res.user_id
+    else:
+        return None
+
+
+def get_user_projects(request, user, logged_user, private=False):
     if private:
-        if userID == loggedUserID:
-            #The logged account is the user account = Seeing my projects
-
-            # res = request.dbsession.query(Project, Userproject).filter(
-            #     Project.project_id == Userproject.project_id).filter(
-            #     Userproject.user_id == userID).column_descriptions
-            #
-            # print("*********************************99")
-
-            res = request.dbsession.query(Project, Userproject).filter(Project.project_id == Userproject.project_id).filter(
-                Userproject.user_id == userID).all()
-            projects = mapFromSchema(res)
+        if user == logged_user:
+            # The logged account is the user account = Seeing my projects
+            res = request.dbsession.query(Project, Userproject).filter(
+                Project.project_id == Userproject.project_id).filter(Userproject.user_id == user).all()
+            projects = map_from_schema(res)
         else:
             projects = []
-            #The logged account is different as the user account =  Seeing someone elses projects
+            # The logged account is different as the user account =  Seeing someone else projects
 
-            #Get all the private project from the user
-            allUserProjects = request.dbsession.query(Project,Userproject).filter(
-                Project.project_id == Userproject.project_id).filter(Userproject.user_id == userID).all()
-            for project in allUserProjects:
-                #Check each project to see if the logged user collaborate with it
+            # Get all the projects of that user
+            all_user_projects = request.dbsession.query(Project).filter(
+                Project.project_id == Userproject.project_id).filter(Userproject.user_id == user).all()
+            for project in all_user_projects:
+                # Check each project to see if the logged user collaborate with it
                 res = request.dbsession.query(Project, Userproject).filter(
                     Project.project_id == Userproject.project_id).filter(
-                    Userproject.user_id == loggedUserID).filter(Userproject.project_id == project.project_id).first()
-                collaborativeProject = mapFromSchema(res)
-                if collaborativeProject:
-                    collaborativeProject['collaborate'] = True
-                    projects.append(collaborativeProject)
+                    Userproject.user_id == logged_user).filter(Userproject.project_id == project.project_id).first()
+                collaborative_project = map_from_schema(res)
+                if collaborative_project:
+                    collaborative_project['collaborate'] = True
+                    collaborative_project['user_id'] = user
+                    projects.append(collaborative_project)
                 else:
                     if project["project_public"] == 1:
-                        collaborativeProject['collaborate'] = False
-                        projects.append(collaborativeProject)
+                        collaborative_project['collaborate'] = False
+                        collaborative_project['user_id'] = user
+                        projects.append(collaborative_project)
     else:
         res = request.dbsession.query(Project, Userproject).filter(Project.project_id == Userproject.project_id).filter(
-            Userproject.user_id == userID).filter(Project.project_public == 1).all()
-        projects = mapFromSchema(res)
+            Userproject.user_id == user).filter(Project.project_public == 1).all()
+        projects = map_from_schema(res)
     for project in projects:
-        project['last_submission'] = get_last_submission(request,project['project_id'])
-        project['total_submissions'] = get_project_submissions(request,project['project_id'])
-
+        project['last_submission'] = get_last_submission(request, project['project_id'])
+        project['total_submissions'] = get_project_submissions(request, project['project_id'])
+        project['total_forms'] = get_forms_number(request, project['project_id'])
+        if private:
+            if project['access_type'] == 1:
+                project['owner'] = user
+            else:
+                project['owner'] = get_project_owner(request, project['project_id'])
+        else:
+            project['owner'] = get_project_owner(request, project['project_id'])
+            project['access_type'] = 4
+    projects = sorted(projects, key=lambda prj: project["project_cdate"], reverse=True)
     return projects
 
-def get_active_project(request,userID):
+
+def get_active_project(request, user):
     res = request.dbsession.query(Project, Userproject).filter(Project.project_id == Userproject.project_id).filter(
-        Userproject.user_id == userID).filter(Userproject.project_active == 1).first()
-    mappedRes = mapFromSchema(res)
-    return mappedRes
+        Userproject.user_id == user).filter(Userproject.project_active == 1).first()
+    mapped_data = map_from_schema(res)
+    return mapped_data
 
-def add_project(request,userID,projectData):
+
+def add_project(request, user, project_data):
     res = request.dbsession.query(Project).filter(Project.project_id == Userproject.project_id).filter(
-        Userproject.user_id == userID).filter(Userproject.access_type == 1).filter(
-        Project.project_code == projectData["project_code"]).first()
+        Userproject.user_id == user).filter(Userproject.access_type == 1).filter(
+        Project.project_code == project_data["project_code"]).first()
     if res is None:
-        projectData['project_id'] = str(uuid.uuid4())
-        projectData['project_cdate'] = datetime.datetime.now()
+        project_data['project_id'] = str(uuid.uuid4())
+        project_data['project_cdate'] = datetime.datetime.now()
 
-        mappedData = mapToSchema(Project, projectData)
-        newProject = Project(**mappedData)
+        mapped_data = map_to_schema(Project, project_data)
+        new_project = Project(**mapped_data)
         try:
-            request.dbsession.add(newProject)
+            request.dbsession.add(new_project)
             request.dbsession.flush()
-            newAccess = Userproject(user_id=userID,project_id=projectData['project_id'],access_type=1,access_date=projectData['project_cdate'],project_active=1)
+            new_access = Userproject(user_id=user, project_id=project_data['project_id'], access_type=1,
+                                     access_date=project_data['project_cdate'], project_active=1)
             try:
-                request.dbsession.add(newAccess)
+                request.dbsession.add(new_access)
                 request.dbsession.flush()
-            except IntegrityError as e:
-                log.error("Duplicated access for user {} in project {}".format(userID,mappedData["project_id"]))
+            except IntegrityError:
+                log.error("Duplicated access for user {} in project {}".format(user, mapped_data["project_id"]))
                 return False, request.translate("Error allocating access")
-            except:
-                log.error("Error {} when allocating access for user {} in project {}".format(sys.exc_info()[0], userID, mappedData["project_id"]))
+            except RuntimeError:
+                log.error("Error {} when allocating access for user {} in project {}".format(sys.exc_info()[0], user,
+                                                                                             mapped_data["project_id"]))
                 return False, sys.exc_info()[0]
             return True, ""
-        except IntegrityError as e:
-            log.error("Duplicated project {}".format(mappedData["project_id"]))
+        except IntegrityError:
+            log.error("Duplicated project {}".format(mapped_data["project_id"]))
             return False, request.translate("The project already exist")
-        except:
-            log.error("Error {} when inserting project {}".format(sys.exc_info()[0], mappedData["project_id"]))
+        except RuntimeError:
+            log.error("Error {} when inserting project {}".format(sys.exc_info()[0], mapped_data["project_id"]))
             return False, sys.exc_info()[0]
     else:
-        return False, request.translate("A project with name '{}' already exists in your account").format(projectData["project_code"])
+        return False, request.translate("A project with name '{}' already exists in your account").format(
+            project_data["project_code"])

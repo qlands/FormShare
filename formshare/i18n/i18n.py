@@ -9,7 +9,9 @@ def add_renderer_globals(event):
     event['_'] = request.translate
     event['localizer'] = request.localizer
 
+
 tsf = TranslationStringFactory('formshare')
+
 
 def add_localizer(event):
     request = event.request

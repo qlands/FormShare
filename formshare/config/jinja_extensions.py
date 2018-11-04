@@ -4,38 +4,42 @@ import logging
 from jinja2 import Environment
 from webhelpers2.html import literal
 from jinja2 import FileSystemLoader
-import os,re
+import os
+import re
 import formshare.resources as r
 
 
 jinjaEnv = Environment()
 log = logging.getLogger(__name__)
 
-def initialize(pathToTemplates):
-    jinjaEnv.loader = FileSystemLoader(pathToTemplates)
+
+def initialize(path_to_templates):
+    jinjaEnv.loader = FileSystemLoader(path_to_templates)
     jinjaEnv.add_extension(ext.i18n)
     jinjaEnv.add_extension(JSResourceExtension)
     jinjaEnv.add_extension(CSSResourceExtension)
-    jinjaEnv.add_extension(extendThis)
+    jinjaEnv.add_extension(ExtendThis)
 
 
-def renderResource(request,libraryName,resourceType,resourceID):
-    if resourceType == "JS" or resourceType == "CSS":
-        if resourceType == "CSS":
+def render_resource(request, library_name, resource_type, resource_id):
+    if resource_type == "JS" or resource_type == "CSS":
+        if resource_type == "CSS":
             html = '<link href="{{ file }}" rel="stylesheet">'
         else:
             html = '<script src="{{ file }}"></script>'
-        resources = r.need(libraryName,resourceID,resourceType)
-        resourcesToInclude = []
+        resources = r.need(library_name, resource_id, resource_type)
+        resources_to_include = []
         for resource in resources:
-            if not request.activeResources.resourceInRequest(libraryName,resource["resourceID"],resourceType):
-                request.activeResources.addResource(libraryName,resource["resourceID"],resourceType)
-                resourcesToInclude.append(jinjaEnv.from_string(html).render(file=request.application_url + '/' + resource["filePath"]))
-        return literal("\n".join(resourcesToInclude))
+            if not request.activeResources.resource_in_request(library_name, resource["resourceID"], resource_type):
+                request.activeResources.add_resource(library_name, resource["resourceID"], resource_type)
+                resources_to_include.append(
+                    jinjaEnv.from_string(html).render(file=request.application_url + '/' + resource["filePath"]))
+        return literal("\n".join(resources_to_include))
     else:
         return ""
 
-class extendThis(ext.Extension):
+
+class ExtendThis(ext.Extension):
     tags = ['extend_me']
 
     def __init__(self, environment):
@@ -59,16 +63,16 @@ class extendThis(ext.Extension):
         # First we remove the templates path from the file
         # so to have the just the template file or a template file in a subdirectory of templates
         for searchpath in self.searchpath:
-            template_file = template_file.replace(searchpath,'')
+            template_file = template_file.replace(searchpath, '')
 
         # Here we get the template path of the file
-        template_path = template_path.replace(template_file,'')
+        template_path = template_path.replace(template_file, '')
 
         # Find the position of the template's path in the list of paths
         index = -1
         try:
             index = self.searchpath.index(template_path)
-        except:
+        except ValueError:
             pass
         if index == -1:
             return node
@@ -89,17 +93,18 @@ class extendThis(ext.Extension):
 
         return node
 
+
 class BaseExtension(ext.Extension):
-    ''' Base class for creating custom jinja2 tags.
+    """
+    Base class for creating custom jinja2 tags.
     parse expects a tag of the format
     {% tag_name args, kw %}
     after parsing it will call _call(args, kw) which must be defined.
 
-    This code is based on CKAN 
-    :Copyright (C) 2007 Open Knowledge Foundation
+    This code is based on CKAN
+    :Copyright: (C) 2007 Open Knowledge Foundation
     :license: AGPL V3, see LICENSE for more details.
-
-    '''
+    """
 
     def parse(self, parser):
         stream = parser.stream
@@ -126,6 +131,7 @@ class BaseExtension(ext.Extension):
 
         return nodes.Output([make_call_node()]).set_lineno(tag.lineno)
 
+
 class JSResourceExtension(BaseExtension):
     tags = ['jsresource']
 
@@ -133,7 +139,8 @@ class JSResourceExtension(BaseExtension):
     def _call(cls, args, kwargs):
         assert len(args) == 3
         assert len(kwargs) == 0
-        return renderResource(args[0],args[1],"JS",args[2])
+        return render_resource(args[0], args[1], "JS", args[2])
+
 
 class CSSResourceExtension(BaseExtension):
     tags = ['cssresource']
@@ -142,5 +149,29 @@ class CSSResourceExtension(BaseExtension):
     def _call(cls, args, kwargs):
         assert len(args) == 3
         assert len(kwargs) == 0
-        return renderResource(args[0],args[1],"CSS",args[2])
+        return render_resource(args[0], args[1], "CSS", args[2])
 
+
+def regularise_html(html):
+    """
+    Take badly formatted html with strings
+
+
+    This code is based on CKAN
+    :Copyright (C) 2007 Open Knowledge Foundation
+    :license: AGPL V3, see LICENSE for more details.
+    :param html: The html to be formated
+    :return: Formated html
+    """
+
+    if html is None:
+        return
+    html = re.sub('\n', ' ', html)
+    matches = re.findall('(<[^>]*>|%[^%]\([^)]*\)\w|[^<%]+|%)', html)
+    for i in range(len(matches)):
+        match = matches[i]
+        if match.startswith('<') or match.startswith('%'):
+            continue
+        matches[i] = re.sub('\s{2,}', ' ', match)
+    html = ''.join(matches)
+    return html

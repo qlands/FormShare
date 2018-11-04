@@ -1,11 +1,10 @@
-'''
+"""
 Provides plugin services to the FormShare
 
-This code is based on CKAN 
+This code is based on CKAN
 :Copyright (C) 2007 Open Knowledge Foundation
 :license: AGPL V3, see LICENSE for more details.
-
-'''
+"""
 
 from pkg_resources import iter_entry_points
 from pyutilib.component.core import implements
@@ -41,41 +40,46 @@ _PLUGINS_SERVICE = {}
 
 
 class PluginNotFoundException(Exception):
-    '''
-    Raised when a requested plugin cannot be found.
-    '''
+    """
+     Raised when a requested plugin cannot be found.
+    """
 
 
 class Plugin(_pca_Plugin):
-    '''
+    """
     Base class for plugins which require multiple instances.
 
     Unless you need multiple instances of your plugin object you should
     probably use SingletonPlugin.
-    '''
+    """
 
 
 class SingletonPlugin(_pca_SingletonPlugin):
-    '''
+    """
     Base class for plugins which are singletons (ie most of them)
 
     One singleton instance of this class will be created when the plugin is
     loaded. Subsequent calls to the class constructor will always return the
     same singleton instance.
-    '''
+    """
 
 
 def get_plugin(plugin):
-    ''' Get an instance of a active plugin by name.  This is helpful for
-    testing. '''
+    """
+    Get an instance of a active plugin by name.  This is helpful for
+    testing.
+    :param plugin: Plugin name
+    :return: Instance of plugin name
+    """
     if plugin in _PLUGINS_SERVICE:
         return _PLUGINS_SERVICE[plugin]
 
 
 def load_all(settings):
-    '''
+    """
     Load all plugins listed in the 'formshare.plugins' settings variable.
-    '''
+    :param settings: Pytamid settings
+    """
     # Clear any loaded plugins
     unload_all()
 
@@ -85,9 +89,12 @@ def load_all(settings):
 
 
 def load(*plugins):
-    '''
+    """
     Load named plugin(s).
-    '''
+    :param plugins: Pointer to the plugins
+    :return: Return extension instance if only one was loaded. If more that one has been requested then a list of
+             instances is returned in the order they were asked for.
+    """
     output = []
 
     observers = PluginImplementations(IPluginObserver)
@@ -110,26 +117,24 @@ def load(*plugins):
 
         output.append(service)
 
-    # Return extension instance if only one was loaded.  If more that one
-    # has been requested then a list of instances is returned in the order
-    # they were asked for.
     if len(output) == 1:
         return output[0]
     return output
 
 
 def unload_all():
-    '''
+    """
     Unload (deactivate) all loaded plugins in the reverse order that they
     were loaded.
-    '''
+    """
     unload(*reversed(_PLUGINS))
 
 
 def unload(*plugins):
-    '''
+    """
     Unload named plugin(s).
-    '''
+    :param plugins: List of plugins
+    """
 
     observers = PluginImplementations(IPluginObserver)
 
@@ -154,25 +159,22 @@ def unload(*plugins):
 
 
 def plugin_loaded(name):
-    '''
+    """
     See if a particular plugin is loaded.
-    '''
+    :param name: Plugin name
+    :return: Boolean
+    """
     if name in _PLUGINS:
         return True
     return False
 
 
-
 def _get_service(plugin_name):
-    '''
+    """
     Return a service (ie an instance of a plugin class).
-
     :param plugin_name: the name of a plugin entry point
-    :type plugin_name: string
-
     :return: the service object
-    '''
-
+    """
     if isinstance(plugin_name, str):
         for group in GROUPS:
             iterator = iter_entry_points(

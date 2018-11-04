@@ -1,10 +1,11 @@
-from .classes import privateView
+from .classes import PrivateView
 
-class formDetails_view(privateView):
-    def processView(self):
-        projectID = self.request.matchdict['projid']
-        formID = self.request.matchdict['formid']
-        formName = "Test for form 1"
-        projectName = "Test of a project 1"
+
+class FormDetailsView(PrivateView):
+    def process_view(self):
+        project_id = self.request.matchdict['projid']
+        form_id = self.request.matchdict['formid']
+        form_name = "Test for form 1"
+        project_name = "Test of a project 1"
         self.request.h.setActiveMenu("projects")
-        return {'projectID': projectID, 'projectName': projectName,'formID':formID,'formName':formName}
+        return {'projectID': project_id, 'projectName': project_name, 'formID': form_id, 'formName': form_name}

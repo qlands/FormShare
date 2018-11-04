@@ -1,4 +1,8 @@
-import sys, getpass, datetime, os, uuid
+import sys
+import getpass
+import datetime
+import os
+import uuid
 import transaction
 from validate_email import validate_email
 
@@ -16,7 +20,7 @@ from formshare.models import (
     get_tm_session,
     )
 from formshare.models import User
-from formshare.config.encdecdata import encodeDataWithAESKey
+from formshare.config.encdecdata import encode_data_with_aes_key
 
 
 def usage(argv):
@@ -24,6 +28,7 @@ def usage(argv):
     print('usage: %s <config_uri> org_id=value org_name=value\n'
           "(example: %s development.ini user_id=admin user_email=me@mydomain.com)" % (cmd, cmd))
     sys.exit(1)
+
 
 def main(argv=sys.argv):
     if len(argv) != 4:
@@ -44,15 +49,15 @@ def main(argv=sys.argv):
         print("The password and its confirmation are not the same")
         sys.exit(1)
 
-    emailValid = validate_email(options["user_email"])
-    if not emailValid:
+    email_valid = validate_email(options["user_email"])
+    if not email_valid:
         print("Invalid email")
         sys.exit(1)
 
     setup_logging(config_uri)
     settings = get_appsettings(config_uri)
 
-    encPass = encodeDataWithAESKey(pass1,settings['aes.key'])
+    enc_pass = encode_data_with_aes_key(pass1, settings['aes.key'])
 
     engine = get_engine(settings)
     Base.metadata.create_all(engine)
@@ -64,10 +69,11 @@ def main(argv=sys.argv):
         try:
             if dbsession.query(User).filter(User.user_id == options["user_id"]).first() is None:
                 if dbsession.query(User).filter(User.user_email == options["user_email"]).first() is None:
-                    apiKey = str(uuid.uuid4())
-                    newUser = User(user_id=options["user_id"], user_email=options["user_email"], user_password=encPass, user_apikey=apiKey, user_super=1,
-                                   user_active=1, user_cdate=datetime.datetime.now())
-                    dbsession.add(newUser)
+                    api_pey = str(uuid.uuid4())
+                    new_user = User(user_id=options["user_id"], user_email=options["user_email"],
+                                    user_password=enc_pass, user_apikey=api_pey, user_super=1, user_active=1,
+                                    user_cdate=datetime.datetime.now())
+                    dbsession.add(new_user)
                     print("The super user has been added with the following information:")
                     print("ID: %s" % (options["user_id"]))
                     print("Email: %s" % (options["user_email"]))

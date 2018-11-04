@@ -11,7 +11,7 @@
 """
 
 from pyramid.security import authenticated_userid
-from ..config.auth import getUserData, getCollaboratorData
+from ..config.auth import get_user_data, get_collaborator_data
 from pyramid.httpexceptions import HTTPFound
 from pyramid.session import check_csrf_token
 from pyramid.httpexceptions import HTTPNotFound
@@ -21,11 +21,13 @@ import hashlib
 from babel import Locale
 import uuid
 from ast import literal_eval
-from formshare.processes import getProjectIDFromName,user_exists,get_user_details,get_active_project,get_user_projects
+from formshare.processes import get_project_id_from_name, user_exists, get_user_details, get_active_project, \
+    get_user_projects
 import logging
 log = logging.getLogger(__name__)
 
-class odkView(object):
+
+class ODKView(object):
     def __init__(self, request):
         self.request = request
         self._ = self.request.translate
@@ -35,7 +37,7 @@ class odkView(object):
         self.authHeader = {}
         self.user = ""
 
-    def getAuthDict(self):
+    def get_auth_dict(self):
         authheader = self.request.headers["Authorization"].replace(", ", ",")
         authheader = authheader.replace('"', "")
         autharray = authheader.split(",")
@@ -46,66 +48,70 @@ class odkView(object):
             else:
                 self.authHeader[t[0]] = t[1] + "=" + t[2]
 
-    def authorize(self,correctPassword):
-        HA1 = ""
-        HA2 = ""
+    def authorize(self, correct_password):
+        ha1 = ""
+        ha2 = ""
         if self.authHeader["qop"] == 'auth':
-            HA1 = hashlib.md5((self.user + ":" + self.realm + ":" + correctPassword).encode())
-            HA2 = hashlib.md5((self.request.method + ":" + self.authHeader["uri"]).encode())
+            ha1 = hashlib.md5((self.user + ":" + self.realm + ":" + correct_password).encode())
+            ha2 = hashlib.md5((self.request.method + ":" + self.authHeader["uri"]).encode())
         if self.authHeader["qop"] == 'auth-int':
-            HA1 = hashlib.md5((self.user + ":" + self.realm + ":" + correctPassword).encode())
-            MD5Body = hashlib.md5(self.request.body).hexdigest()
-            HA2 = hashlib.md5((self.request.method + ":" + self.authHeader["uri"] + ":" + MD5Body).encode())
-        if HA1 == "":
-            HA1 = hashlib.md5((self.user + ":" + self.realm + ":" + correctPassword).encode())
-            HA2 = hashlib.md5(self.request.method + ":" + self.authHeader["uri"])
+            ha1 = hashlib.md5((self.user + ":" + self.realm + ":" + correct_password).encode())
+            md5_body = hashlib.md5(self.request.body).hexdigest()
+            ha2 = hashlib.md5((self.request.method + ":" + self.authHeader["uri"] + ":" + md5_body).encode())
+        if ha1 == "":
+            ha1 = hashlib.md5((self.user + ":" + self.realm + ":" + correct_password).encode())
+            ha2 = hashlib.md5(self.request.method + ":" + self.authHeader["uri"])
 
-        authLine = ":".join(
-            [HA1.hexdigest(), self.authHeader["nonce"], self.authHeader["nc"], self.authHeader["cnonce"], self.authHeader["qop"], HA2.hexdigest()])
+        auth_line = ":".join(
+            [ha1.hexdigest(), self.authHeader["nonce"], self.authHeader["nc"], self.authHeader["cnonce"],
+             self.authHeader["qop"], ha2.hexdigest()])
 
-        resp = hashlib.md5(authLine.encode())
+        resp = hashlib.md5(auth_line.encode())
         if resp.hexdigest() == self.authHeader["response"]:
             return True
         else:
             return False
 
-    def askForCredentials(self):
+    def ask_for_credentials(self):
         headers = [('WWW-Authenticate',
-                    'Digest realm="' + self.realm + '",qop="auth,auth-int",nonce="' + self.nonce + '",opaque="' + self.opaque + '"')]
+                    'Digest realm="' + self.realm + '",qop="auth,auth-int",nonce="' + self.nonce + '",opaque="' +
+                    self.opaque + '"')]
         reponse = Response(status=401, headerlist=headers)
         return reponse
 
-    def createXMLResponse(self,XMLData):
+    def create_xmll_response(self, xml_data):
         headers = [('Content-Type', 'text/xml; charset=utf-8'), ('X-OpenRosa-Accept-Content-Length', '10000000'),
                    ('Content-Language', self.request.locale_name), ('Vary', 'Accept-Language,Cookie,Accept-Encoding'),
                    ('X-OpenRosa-Version', '1.0'), ('Allow', 'GET, HEAD, OPTIONS')]
         response = Response(headerlist=headers, status=200)
 
-        response.text = str(XMLData, "utf-8")
+        response.text = str(xml_data, "utf-8")
         return response
-
 
     def __call__(self):
         if "Authorization" in self.request.headers:
-            self.getAuthDict()
+            self.get_auth_dict()
             self.user = self.authHeader["Digest username"]
-            return self.processView()
+            return self.process_view()
         else:
-            headers = [('WWW-Authenticate',
-                        'Digest realm="' + self.realm + '",qop="auth,auth-int",nonce="' + self.nonce + '",opaque="' + self.opaque + '"')]
+            headers = [('WWW-Authenticate', 'Digest realm="' + self.realm + '",qop="auth,auth-int",nonce="' +
+                        self.nonce + '",opaque="' + self.opaque + '"')]
             reponse = Response(status=401, headerlist=headers)
             return reponse
 
-    def processView(self):
-        #At this point children of odkView have:
+    def process_view(self):
+        # At this point children of odkView have:
         # self.user which us the user requesting ODK data
         # authorize(self,correctPassword) which checks if the password in the authorization is correct
         # askForCredentials(self) which return a response to ask again for the credentials
         # createXMLResponse(self,XMLData) that can be used to return XML data to ODK with the required headers
-        return {}
+        raise NotImplementedError("process_view must be implemented in subclasses")
 
-#This is the most basic public view. Used for 404 and 500. But then used for others more advanced classes
-class publicView(object):
+
+class PublicView(object):
+    """
+    This is the most basic public view. Used for 404 and 500. But then used for others more advanced classes
+    """
     def __init__(self, request):
         self.request = request
         self._ = self.request.translate
@@ -119,22 +125,22 @@ class publicView(object):
 
     def __call__(self):
         self.resultDict["errors"] = self.errors
-        processDict = self.processView()
-        if type(processDict) == dict:
-            self.resultDict.update(processDict)
+        process_dict = self.process_view()
+        if type(process_dict) == dict:
+            self.resultDict.update(process_dict)
             return self.resultDict
         else:
-            return processDict
+            return process_dict
 
-    def processView(self):
-        return {}
+    def process_view(self):
+        raise NotImplementedError("process_view must be implemented in subclasses")
 
-    def getPostDict(self):
+    def get_post_dict(self):
         dct = variable_decode(self.request.POST)
         return dct
 
 
-class privateView(object):
+class PrivateView(object):
     def __init__(self, request):
         self.request = request
         self.user = None
@@ -159,20 +165,20 @@ class privateView(object):
         self.classResult['activeMenu'] = ""
 
     def __call__(self):
-        loginData = authenticated_userid(self.request)
-        if loginData is not None:
-            loginData = literal_eval(loginData)
+        login_data = authenticated_userid(self.request)
+        if login_data is not None:
+            login_data = literal_eval(login_data)
         self.guestAccess = False
         self.userID = self.request.matchdict['userid']
-        if not user_exists(self.request,self.userID):
+        if not user_exists(self.request, self.userID):
             raise HTTPNotFound()
-        self.classResult["userDetails"] = get_user_details(self.request,self.userID)
+        self.classResult["userDetails"] = get_user_details(self.request, self.userID)
         if self.request.method == 'POST' or self.request.method == 'PUT' or self.request.method == 'DELETE':
-            if loginData is not None:
-                if loginData["group"] == "mainApp":
-                    self.user = getUserData(loginData["login"], self.request)
+            if login_data is not None:
+                if login_data["group"] == "mainApp":
+                    self.user = get_user_data(login_data["login"], self.request)
                     if self.user is not None:
-                        safe = check_csrf_token(self.request,raises=False)
+                        safe = check_csrf_token(self.request, raises=False)
                         if not safe:
                             self.request.session.pop_flash()
                             log.error("SECURITY-CSRF error at {} ".format(self.request.url))
@@ -181,7 +187,9 @@ class privateView(object):
                             if self.checkCrossPost:
                                 if self.request.referer != self.request.url:
                                     self.request.session.pop_flash()
-                                    log.error("SECURITY-CrossPost error. Posting at {} from {} ".format(self.request.url,self.request.referer))
+                                    log.error(
+                                        "SECURITY-CrossPost error. Posting at {} from {} ".format(self.request.url,
+                                                                                                  self.request.referer))
                                     raise HTTPNotFound()
                     else:
                         raise HTTPNotFound()
@@ -190,12 +198,12 @@ class privateView(object):
             else:
                 raise HTTPNotFound()
 
-        if loginData is not None:
-            if loginData["group"] == "mainApp":
-                self.user = getUserData(loginData["login"],self.request)
+        if login_data is not None:
+            if login_data["group"] == "mainApp":
+                self.user = get_user_data(login_data["login"], self.request)
                 if self.user is None:
                     if self.request.registry.settings['auth.allow_guest_access'] == 'false' or self.privateOnly:
-                        raise HTTPFound(location=self.request.route_url('login',_query={'next':self.request.url}))
+                        raise HTTPFound(location=self.request.route_url('login', _query={'next': self.request.url}))
                     else:
                         self.guestAccess = True
             else:
@@ -219,17 +227,17 @@ class privateView(object):
         if self.queryProjects:
             if self.user is not None:
                 if self.userID == self.user.login:
-                    userProjects = get_user_projects(self.request, self.userID, self.userID,True)
+                    user_projects = get_user_projects(self.request, self.userID, self.userID, True)
                 else:
-                    userProjects = get_user_projects(self.request, self.userID, self.user.login,True)
+                    user_projects = get_user_projects(self.request, self.userID, self.user.login, True)
             else:
-                userProjects = get_user_projects(self.request,self.userID,None)
-            self.classResult["userProjects"] = userProjects
+                user_projects = get_user_projects(self.request, self.userID, None)
+            self.classResult["userProjects"] = user_projects
         else:
             self.classResult["userProjects"] = []
 
         if self.user is not None:
-            self.activeProject = get_active_project(self.request,self.userID)
+            self.activeProject = get_active_project(self.request, self.userID)
             self.classResult['activeProject'] = self.activeProject
         else:
             self.classResult['activeProject'] = {}
@@ -237,46 +245,46 @@ class privateView(object):
         self.classResult["viewingSelfAccount"] = self.viewingSelfAccount
         self.classResult["errors"] = self.errors
         self.classResult["showWelcome"] = self.showWelcome
-        self.viewResult = self.processView()
+        self.viewResult = self.process_view()
         if not self.returnRawViewResult:
             self.classResult.update(self.viewResult)
             return self.classResult
         else:
             return self.viewResult
 
-    def processView(self):
+    def process_view(self):
         return {'activeUser': self.user}
 
-    def setActiveMenu(self,menuName):
-        self.classResult['activeMenu'] = menuName
+    def set_active_menu(self, menu_name):
+        self.classResult['activeMenu'] = menu_name
 
-    def getPostDict(self):
+    def get_post_dict(self):
         dct = variable_decode(self.request.POST)
         return dct
 
-    def reloadUserDetails(self):
+    def reload_user_details(self):
         self.classResult["userDetails"] = get_user_details(self.request, self.userID)
 
-class dashboardView(privateView):
+
+class DashboardView(PrivateView):
     def __call__(self):
-        self.setActiveMenu('dashboard')
+        self.set_active_menu('dashboard')
         self.showWelcome = True
         # We need to set here relevant information for the dashboard
-        privateView.__call__(self)
+        PrivateView.__call__(self)
         if not self.returnRawViewResult:
             self.classResult.update(self.viewResult)
             return self.classResult
         else:
             return self.viewResult
 
-class profileView(privateView):
+
+class ProfileView(PrivateView):
     def __call__(self):
-        loginData = authenticated_userid(self.request)
-        if loginData is not None:
-            loginData = literal_eval(loginData)
-            self.setActiveMenu('profile')
-            userID = self.request.matchdict['userid']
-            privateView.__call__(self)
+        login_data = authenticated_userid(self.request)
+        if login_data is not None:
+            self.set_active_menu('profile')
+            PrivateView.__call__(self)
             if not self.returnRawViewResult:
                 self.classResult.update(self.viewResult)
                 return self.classResult
@@ -285,11 +293,12 @@ class profileView(privateView):
         else:
             raise HTTPNotFound()
 
-class projectsView(privateView):
+
+class ProjectsView(PrivateView):
     def __call__(self):
-        self.setActiveMenu('projects')
+        self.set_active_menu('projects')
         # We need to set here relevant information for the dashboard
-        privateView.__call__(self)
+        PrivateView.__call__(self)
         if not self.returnRawViewResult:
             self.classResult.update(self.viewResult)
             return self.classResult
@@ -297,7 +306,7 @@ class projectsView(privateView):
             return self.viewResult
 
 
-class collaboratorView(object):
+class CollaboratorView(object):
     def __init__(self, request):
         self.request = request
         self.projectID = ""
@@ -312,41 +321,41 @@ class collaboratorView(object):
             self.resultDict["rtl"] = True
 
     def __call__(self):
-        projectName = self.request.matchdict['pname']
-        userID = self.request.matchdict['userid']
-        self.projectID = getProjectIDFromName(self.request, userID, projectName)
+        project_name = self.request.matchdict['pname']
+        user_id = self.request.matchdict['userid']
+        self.projectID = get_project_id_from_name(self.request, user_id, project_name)
         if self.projectID is None:
             raise HTTPNotFound()
 
-        loginData = authenticated_userid(self.request)
-        if loginData is not None:
-            loginData = literal_eval(loginData)
-            if loginData["group"] == "collaborators":
-                self.collaborator = getCollaboratorData(self.projectID,loginData["login"],self.request)
+        login_data = authenticated_userid(self.request)
+        if login_data is not None:
+            login_data = literal_eval(login_data)
+            if login_data["group"] == "collaborators":
+                self.collaborator = get_collaborator_data(self.projectID, login_data["login"], self.request)
                 if self.collaborator is None:
-                    return HTTPFound(location=self.request.route_url('login',_query={'next':self.request.url}))
+                    return HTTPFound(location=self.request.route_url('login', _query={'next': self.request.url}))
             else:
                 return HTTPFound(location=self.request.route_url('login', _query={'next': self.request.url}))
         else:
             return HTTPFound(location=self.request.route_url('login', _query={'next': self.request.url}))
 
         if self.request.method == 'POST':
-            safe = check_csrf_token(self.request,raises=False)
+            safe = check_csrf_token(self.request, raises=False)
             if not safe:
                 raise HTTPNotFound()
 
         self.resultDict["activeCollaborator"] = self.collaborator
         self.resultDict["errors"] = self.errors
-        processDict = self.processView()
-        if type(processDict) == dict:
-            self.resultDict.update(processDict)
+        process_dict = self.process_view()
+        if type(process_dict) == dict:
+            self.resultDict.update(process_dict)
             return self.resultDict
         else:
-            return processDict
+            return process_dict
 
-    def processView(self):
+    def process_view(self):
         return {'activeCollaborator': self.collaborator}
 
-    def getPostDict(self):
+    def get_post_dict(self):
         dct = variable_decode(self.request.POST)
         return dct

@@ -1,16 +1,20 @@
-from ..plugins.utilities import addRoute
+from ..plugins.utilities import add_route
 import formshare.plugins as p
-from ..views.basic_views import notfound_view,home_view,logout_view,login_view,register_view,collaboratorsLogin_view
-from ..views.dashboard import dashboard_view
-from ..views.projects import projects_view,projectDetails_view,project_add_view
-from ..views.form import formDetails_view
-from ..views.profile import profile_view,profile_edit_view
+from ..views.basic_views import NotFoundView, HomeView, log_out_view, LoginView, RegisterView, \
+    CollaboratorsLoginView
+from ..views.dashboard import MainDashBoardView
+from ..views.projects import AddProjectView
+from ..views.profile import MainProfileView, EditProfileView
 
 route_list = []
 
-#This function append or overrides the routes to the main list
-def appendToRoutes(routeList):
-    for new_route in routeList:
+
+def append_to_routes(route_array):
+    """
+    #This function append or overrides the routes to the main list
+    :param route_array: Array of routes
+    """
+    for new_route in route_array:
         found = False
         pos = 0
         for curr_route in route_list:
@@ -24,40 +28,50 @@ def appendToRoutes(routeList):
             route_list[pos]['view'] = new_route['view']
             route_list[pos]['renderer'] = new_route['renderer']
 
-def loadRoutes(config):
-    # Call connected to plugins to add any routes before FormShare
+
+def load_routes(config):
+    """
+    Call connected to plugins to add any routes before FormShare
+    :param config: Pyramid config
+    """
     for plugin in p.PluginImplementations(p.IRoutes):
         routes = plugin.before_mapping(config)
-        appendToRoutes(routes)
+        append_to_routes(routes)
 
-    #FormShare routes
+    # FormShare routes
     routes = []
-    routes.append(addRoute('home', '/', home_view, 'landing/index.jinja2'))
-    routes.append(addRoute('login', '/login', login_view, 'generic/login.jinja2'))
-    routes.append(addRoute('collaboratorslogin', '/collaborators/{userid}/{pname}/login', collaboratorsLogin_view, 'generic/collablogin.jinja2'))
-    routes.append(addRoute('register', '/join', register_view, 'generic/register.jinja2'))
-    routes.append(addRoute('logout', '/logout', logout_view, None))
+    routes.append(add_route('home', '/', HomeView, 'landing/index.jinja2'))
+    routes.append(add_route('login', '/login', LoginView, 'generic/login.jinja2'))
+    routes.append(add_route('collaboratorslogin', '/collaborators/{userid}/{pname}/login', CollaboratorsLoginView,
+                            'generic/collablogin.jinja2'))
+    routes.append(add_route('register', '/join', RegisterView, 'generic/register.jinja2'))
+    routes.append(add_route('logout', '/logout', log_out_view, None))
 
-    routes.append(addRoute('dashboard', '/user/{userid}', dashboard_view, 'dashboard/index.jinja2'))
-    routes.append(addRoute('profile', '/user/{userid}/profile', profile_view, 'dashboard/profile/profile.jinja2'))
-    routes.append(addRoute('profile_edit', '/user/{userid}/profile/edit', profile_edit_view, 'dashboard/profile/profile_edit.jinja2'))
+    routes.append(add_route('dashboard', '/user/{userid}', MainDashBoardView, 'dashboard/index.jinja2'))
+    routes.append(add_route('profile', '/user/{userid}/profile', MainProfileView, 'dashboard/profile/profile.jinja2'))
+    routes.append(add_route('profile_edit', '/user/{userid}/profile/edit', EditProfileView,
+                            'dashboard/profile/profile_edit.jinja2'))
 
-    #Projects
-    routes.append(addRoute('projects_add', '/user/{userid}/projects/add', project_add_view, 'dashboard/projects/project_add.jinja2'))
+    # Projects
+    routes.append(add_route('projects_add', '/user/{userid}/projects/add', AddProjectView,
+                            'dashboard/projects/project_add.jinja2'))
 
-    # routes.append(addRoute('projects', '/user/{userid}/projects', projects_view, 'dashboard/projects/project_list.jinja2'))
-    # routes.append(addRoute('project_details', '/user/{userid}/project/{projid}', projectDetails_view, 'dashboard/projects/project_details.jinja2'))
-    # routes.append(addRoute('form_details', '/user/{userid}/project/{projid}/form/{formid}', formDetails_view, 'dashboard/projects/forms/form_details.jinja2'))
+    # routes.append(
+    #     addRoute('projects', '/user/{userid}/projects', projects_view, 'dashboard/projects/project_list.jinja2'))
+    # routes.append(addRoute('project_details', '/user/{userid}/project/{projid}', projectDetails_view,
+    #                        'dashboard/projects/project_details.jinja2'))
+    # routes.append(addRoute('form_details', '/user/{userid}/project/{projid}/form/{formid}', formDetails_view,
+    #                        'dashboard/projects/forms/form_details.jinja2'))
 
-    appendToRoutes(routes)
+    append_to_routes(routes)
 
-    #Add the not found route
-    config.add_notfound_view(notfound_view, renderer='generic/404.jinja2')
+    # Add the not found route
+    config.add_notfound_view(NotFoundView, renderer='generic/404.jinja2')
 
     # Call connected plugins to add any routes after FormShare
     for plugin in p.PluginImplementations(p.IRoutes):
         routes = plugin.after_mapping(config)
-        appendToRoutes(routes)
+        append_to_routes(routes)
 
     # Now add the routes and views to the Pyramid config
     for curr_route in route_list:

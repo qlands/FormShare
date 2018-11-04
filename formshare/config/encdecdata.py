@@ -1,4 +1,4 @@
-#Code from http://www.codekoala.com/posts/aes-encryption-python-using-pycrypto/
+# Code from http://www.codekoala.com/posts/aes-encryption-python-using-pycrypto/
 
 from Crypto.Cipher import AES
 import base64
@@ -7,7 +7,7 @@ import base64
 # the block size for the cipher object; must be 16, 24, or 32 for AES
 BLOCK_SIZE = 32
 
-#EncKey = "%e[~faXa.kp&<wUM&C3NLG3?/pBv4hW&"
+# EncKey = "%e[~faXa.kp&<wUM&C3NLG3?/pBv4hW&"
 
 # the character used for padding--with a block cipher such as AES, the value
 # you encrypt must be a multiple of BLOCK_SIZE in length.  This character is
@@ -15,24 +15,36 @@ BLOCK_SIZE = 32
 PADDING = '|'
 BPADDING = b'|'
 
-# one-liner to sufficiently pad the text to be encrypted
-pad = lambda s: s + (BLOCK_SIZE - len(s) % BLOCK_SIZE) * PADDING
 
-# one-liners to encrypt/encode and decrypt/decode a string
+def pad(s):
+    # pad = lambda s: s + (BLOCK_SIZE - len(s) % BLOCK_SIZE) * PADDING
+    return s + (BLOCK_SIZE - len(s) % BLOCK_SIZE) * PADDING
+
+
 # encrypt with AES, encode with base64
-EncodeAES = lambda c, s: base64.b64encode(c.encrypt(pad(s)))
-DecodeAES = lambda c, e: c.decrypt(base64.b64decode(e)).rstrip(BPADDING)
 
-def encodeData(request,data):
+def encode_aes(c, s):
+    # EncodeAES = lambda c, s: base64.b64encode(c.encrypt(pad(s)))
+    return base64.b64encode(c.encrypt(pad(s)))
+
+
+def decode_aes(c, e):
+    # DecodeAES = lambda c, e: c.decrypt(base64.b64decode(e)).rstrip(BPADDING)
+    return c.decrypt(base64.b64decode(e)).rstrip(BPADDING)
+
+
+def encode_data(request, data):
     secret = request.registry.settings['aes.key']
     cipher = AES.new(secret)
-    return EncodeAES(cipher, data)
+    return encode_aes(cipher, data)
 
-def decodeData(request,data):
+
+def decode_data(request, data):
     secret = request.registry.settings['aes.key']
     cipher = AES.new(secret)
-    return DecodeAES(cipher, data)
+    return decode_aes(cipher, data)
 
-def encodeDataWithAESKey(data,key):
+
+def encode_data_with_aes_key(data, key):
     cipher = AES.new(key)
-    return EncodeAES(cipher, data)
+    return encode_aes(cipher, data)

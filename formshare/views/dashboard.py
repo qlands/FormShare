@@ -1,6 +1,7 @@
-from formshare.views.classes import dashboardView
+from formshare.views.classes import DashboardView
 
-class dashboard_view(dashboardView):
-    def processView(self):
-        userID = self.request.matchdict['userid']
+
+class MainDashBoardView(DashboardView):
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
         return {}

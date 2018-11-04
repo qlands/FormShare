@@ -4,6 +4,7 @@ from sqlalchemy.orm import relationship
 from .meta import Base
 metadata = Base.metadata
 
+
 class Collaboratorlog(Base):
     __tablename__ = 'collaboratorlog'
 
@@ -143,9 +144,9 @@ class Userproject(Base):
 
     user_id = Column(ForeignKey('fsuser.user_id'), primary_key=True, nullable=False)
     project_id = Column(ForeignKey('project.project_id'), primary_key=True, nullable=False, index=True)
-    access_type = Column(INTEGER) #1=Owner,2=Admin,3=Editor,4=Member
+    access_type = Column(INTEGER)  # 1=Owner,2=Admin,3=Editor,4=Member
     access_date = Column(DateTime)
-    project_active = Column(INTEGER,server_default=text("'1'"))
+    project_active = Column(INTEGER, server_default=text("'1'"))
 
     project = relationship('Project')
     user = relationship('User')

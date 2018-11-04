@@ -4,93 +4,114 @@ from sqlalchemy import inspect
 from future.utils import iteritems
 
 __all__ = [
-    'initialize_schema','addColumnToSchema','mapToSchema','mapFromSchema',
-]
+    'initialize_schema', 'add_column_to_schema', 'map_to_schema', 'map_from_schema']
 
 _SCHEMA = []
+
 
 def initialize_schema():
     for table in metadata.sorted_tables:
         fields = []
         for column in table.c:
-            fields.append({'name':column.name,'storage':'db','comment':column.comment})
-        _SCHEMA.append({'name':table.name,'fields':fields})
+            fields.append({'name': column.name, 'storage': 'db', 'comment': column.comment})
+        _SCHEMA.append({'name': table.name, 'fields': fields})
 
-# This function add new columns to the schema in the extra field
-def addColumnToSchema(tableName,fieldName,fieldComment):
+
+def add_column_to_schema(table_name, field_name, field_comment):
+    """
+    This function add new columns to the schema in the extra field
+    :param table_name: Name of the table
+    :param field_name: Name of the field
+    :param field_comment: Comments on the field
+    """
     for pos in range(len(_SCHEMA)):
-        if _SCHEMA[pos]["name"] == tableName:
+        if _SCHEMA[pos]["name"] == table_name:
             found = False
             for field in _SCHEMA[pos]["fields"]:
-                if field["name"] == fieldName:
+                if field["name"] == field_name:
                     found = True
             if not found:
-                _SCHEMA[pos]["fields"].append({'name':fieldName,'storage':'extra','comment':fieldComment})
+                _SCHEMA[pos]["fields"].append({'name': field_name, 'storage': 'extra', 'comment': field_comment})
             else:
-                raise Exception("Field {} is already defined in table {}".format(fieldName,tableName))
+                raise Exception("Field {} is already defined in table {}".format(table_name, field_name))
 
-def getStorageType(tableName,fieldName):
-    storageType = None
+
+def get_storage_type(table_name, field_name):
+    """
+    Retreives the storate type of a field in a table.
+    :param table_name: Table name
+    :param field_name: Field name
+    :return: Storage type
+    """
+    storage_type = None
     for table in _SCHEMA:
-        if table["name"] == tableName:
+        if table["name"] == table_name:
             for field in table["fields"]:
-                if field["name"] == fieldName:
-                    storageType = field["storage"]
-    return storageType
+                if field["name"] == field_name:
+                    storage_type = field["storage"]
+    return storage_type
 
-# This function maps a data dict to the schema
-# Data fields that are mapped to the extra storage are converted to JSON and stored in _extra
-# Data fields that are not present in the schema are discarded
-# The function returns a mapped dict that can be used to add or update data
-def mapToSchema(modelClass,data):
-    mappedData = {}
-    extraData = {}
-    for key,value in iteritems(data):
-        storageType = getStorageType(modelClass.__table__.name,key)
-        if storageType is not None:
-            if storageType == "db":
-                mappedData[key] = value
+
+def map_to_schema(model_class, data):
+    """
+    This function maps a data dict to the schema
+    Data fields that are mapped to the extra storage are converted to JSON and stored in _extra
+    Data fields that are not present in the schema are discarded
+    :param model_class: SQLAlchemy model class
+    :param data:
+    :return: Mapped dict that can be used to add or update data
+    """
+    mapped_data = {}
+    extra_data = {}
+    for key, value in iteritems(data):
+        storage_type = get_storage_type(model_class.__table__.name, key)
+        if storage_type is not None:
+            if storage_type == "db":
+                mapped_data[key] = value
             else:
-                extraData[key] = value
-    if bool(extraData):
-        mappedData["extras"] = json.dumps(extraData)
-    if not bool(mappedData):
-        raise Exception("The mapping for table {} is empty!".format(modelClass.name))
-    return mappedData
+                extra_data[key] = value
+    if bool(extra_data):
+        mapped_data["extras"] = json.dumps(extra_data)
+    if not bool(mapped_data):
+        raise Exception("The mapping for table {} is empty!".format(model_class.__table__.name))
+    return mapped_data
 
 
-# This function maps a row/list of raw data from de database to the schema
-# Data fields that resided in the extra storage are separated into independent fields
-# The function returns the data in a dict form or an array of dict
-def mapFromSchema(data):
+def map_from_schema(data):
+    """
+    This function maps a row/list of raw data from de database to the schema
+    Data fields that resided in the extra storage are separated into independent fields
+    :param data: Data as stored in the database
+    :return: The data in a dict form or an array of dict
+    """
     if type(data) is not list:
-        mappedData = {}
+        mapped_data = {}
         if data is not None:
-            if data.__class__.__name__ != 'result' :
+            if data.__class__.__name__ != 'result':
                 for c in inspect(data).mapper.column_attrs:
                     if c.key != "extras":
-                        mappedData[c.key] = getattr(data, c.key)
+                        mapped_data[c.key] = getattr(data, c.key)
                     else:
                         if getattr(data, c.key) is not None:
                             jsondata = json.loads(getattr(data, c.key))
                             if bool(jsondata):
-                                for key,value in iteritems(jsondata):
-                                    mappedData[key] = value
+                                for key, value in iteritems(jsondata):
+                                    mapped_data[key] = value
             else:
                 for tupleItem in data:
                     for c in inspect(tupleItem).mapper.column_attrs:
                         if c.key != "extras":
-                            mappedData[c.key] = getattr(tupleItem, c.key)
+                            mapped_data[c.key] = getattr(tupleItem, c.key)
                         else:
                             if getattr(tupleItem, c.key) is not None:
                                 jsondata = json.loads(getattr(tupleItem, c.key))
                                 if bool(jsondata):
                                     for key, value in iteritems(jsondata):
-                                        mappedData[key] = value
+                                        mapped_data[key] = value
 
-        return mappedData
+        return mapped_data
     else:
-        mappedData = []
+        mapped_data = []
         for row in data:
             temp = {}
             if row.__class__.__name__ != 'result':
@@ -115,5 +136,5 @@ def mapFromSchema(data):
                                     for key, value in iteritems(jsondata):
                                         temp[key] = value
 
-            mappedData.append(temp)
-        return mappedData
+            mapped_data.append(temp)
+        return mapped_data

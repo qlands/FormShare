@@ -8,16 +8,22 @@ jinja_extensions = '''
                     formshare.config.jinja_extensions.extendThis,
                    '''
 
-# This function take badly formatted html with strings etc and make it beautiful
-# generally remove surlus whitespace and kill \n this will break <code><pre>
-# tags but they should not be being translated '''
+
 def jinja2_cleaner(fileobj, *args, **kw):
+    """
+    This function take badly formatted html with strings etc and make it beautiful
+    generally remove surlus whitespace and kill \n this will break <code><pre>
+    tags but they should not be being translated.
 
-    # Extract the messages from jinja2 files but taking into consideration custom extensions
+    This code is based on CKAN
+    Copyright (C) 2007 Open Knowledge Foundation
+    license: AGPL V3.
 
-    # This code is based on CKAN
-    # :Copyright (C) 2007 Open Knowledge Foundation
-    # :license: AGPL V3, see LICENSE for more details.
+    :param fileobj:
+    :param args:
+    :param kw:
+    :return:
+    """
 
     kw['options']['extensions'] = jinja_extensions
 
@@ -28,8 +34,7 @@ def jinja2_cleaner(fileobj, *args, **kw):
         if isinstance(message, str):
             message = je.regularise_html(message)
         elif message is not None:
-            message = (je.regularise_html(message[0])
-                       ,je.regularise_html(message[1]))
+            message = (je.regularise_html(message[0]), je.regularise_html(message[1]))
 
         yield lineno, func, message, finder
 
@@ -41,7 +46,6 @@ def extract_formshare(fileobj, *args, **kw):
     # This code is based on CKAN
     # :Copyright (C) 2007 Open Knowledge Foundation
     # :license: AGPL V3, see LICENSE for more details.
-
 
     fileobj.read()
     output = jinja2_cleaner(fileobj, *args, **kw)

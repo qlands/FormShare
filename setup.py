@@ -75,7 +75,8 @@ setup(
             'main = formshare:main',
         ],
         'console_scripts': [
-            'create_superuser = formshare.scripts.createsuperuser:main'
+            'create_superuser = formshare.scripts.createsuperuser:main',
+            'configure_celery = formshare.scripts.configurecelery:main'
         ],
     },
 )

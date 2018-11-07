@@ -2,7 +2,7 @@
     <div class="col-md-6">
         {% block profile_image %}
             <div class="profile-image">
-                <img src="{{ request.h.getGravatarUrl(userDetails.user_email,128) }}" class="rounded-circle circle-border m-b-md" alt="profile">
+                <img src="{{ request.h.get_gravatar_url(userDetails.user_email,128) }}" class="rounded-circle circle-border m-b-md" alt="profile">
             </div>
         {% endblock profile_image %}
         {% block profile_info %}

@@ -5,73 +5,58 @@
 {% endblock title %}
 
 {% block topScripts %}
-    {% jsresource request,'formshare','wow' %}
+    {% jsresource request,'formshare','pace' %}
 {% endblock topScripts %}
 
-{% block navbar %}
-    {% include 'landing/snippets/navbar.jinja2' %}
-{% endblock navbar %}
-{% block slider %}
-    {% include 'landing/snippets/slider.jinja2' %}
-{% endblock slider %}
+{% block pageheader %}
+    {% include 'dashboard/snippets/header.jinja2' %}
+{% endblock pageheader %}
 
-{% block contact %}
-    {% include 'landing/snippets/contact.jinja2' %}
-{% endblock contact %}
+{% block maincontent %}
 
-{% block scripts %}
-    {{ super() }}
-    <script>
-        $(document).ready(function () {
+    {% block slider %}
+        {% include 'landing/snippets/slider.jinja2' %}
+    {% endblock slider %}
 
-            $('body').scrollspy({
-                target: '#navbar',
-                offset: 80
-            });
+    {% block features %}
+        {# Extend this block to add the features section #}
+         {% include 'landing/snippets/features.jinja2' %}
+    {% endblock features %}
+    {% block features2 %}
+        {# Extend this block to add the features second section #}
+         {% include 'landing/snippets/features2.jinja2' %}
+    {% endblock features2 %}
+    {% block team %}
+        {# Extend this block to add the team section #}
+         {% include 'landing/snippets/team.jinja2' %}
+    {% endblock team %}
+    {% block features3 %}
+        {# Extend this block to add the features third section #}
+         {% include 'landing/snippets/features3.jinja2' %}
+    {% endblock features3 %}
+    {% block timeline %}
+        {# Extend this block to add the timeline section #}
+         {% include 'landing/snippets/timeline.jinja2' %}
+    {% endblock timeline %}
+    {% block testimonials %}
+        {# Extend this block to add the testimonials section #}
+         {% include 'landing/snippets/testimonials.jinja2' %}
+    {% endblock testimonials %}
+    {% block comments %}
+        {# Extend this block to add the comments section #}
+         {% include 'landing/snippets/comments.jinja2' %}
+    {% endblock comments %}
+    {% block features4 %}
+        {# Extend this block to add four features section #}
+         {% include 'landing/snippets/features4.jinja2' %}
+    {% endblock features4 %}
+    {% block pricing %}
+        {# Extend this block to add pricing section #}
+         {% include 'landing/snippets/pricing.jinja2' %}
+    {% endblock pricing %}
 
-            // Page scrolling feature
-            $('a.page-scroll').bind('click', function(event) {
-                var link = $(this);
-                $('html, body').stop().animate({
-                    scrollTop: $(link.attr('href')).offset().top - 50
-                }, 500);
-                event.preventDefault();
-                $("#navbar").collapse('hide');
-            });
-        });
+    {% block contact %}
+        {% include 'landing/snippets/contact.jinja2' %}
+    {% endblock contact %}
 
-        var cbpAnimatedHeader = (function() {
-            var docElem = document.documentElement,
-                header = document.querySelector( '.navbar-default' ),
-                didScroll = false,
-                changeHeaderOn = 200;
-            function init() {
-                window.addEventListener( 'scroll', function( event ) {
-                    if( !didScroll ) {
-                        didScroll = true;
-                        setTimeout( scrollPage, 250 );
-                    }
-                }, false );
-            }
-            function scrollPage() {
-                var sy = scrollY();
-                if ( sy >= changeHeaderOn ) {
-                    $(header).addClass('navbar-scroll')
-                }
-                else {
-                    $(header).removeClass('navbar-scroll')
-                }
-                didScroll = false;
-            }
-            function scrollY() {
-                return window.pageYOffset || docElem.scrollTop;
-            }
-            init();
-
-        })();
-
-        // Activate WOW.js plugin for animation on scrol
-        new WOW().init();
-
-    </script>
-{% endblock scripts %}
+{% endblock maincontent %}

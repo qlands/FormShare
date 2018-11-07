@@ -1,0 +1,22 @@
+<div class="ibox">
+    <div class="ibox-title">
+        <h5>{{ activity_tab_title or _('Activity') }}</h5>
+        <div class="ibox-tools">
+            <a class="collapse-link" style="margin-right: 10px">
+                <i class="fas fa-chevron-up"></i>
+            </a>
+            <a class="fullscreen-link">
+                <i class="fas fa-expand"></i>
+            </a>
+        </div>
+    </div>
+    <div class="ibox-content">
+        <div class="scroll_content">
+            {% block profile_activity_timeline %}
+                <div id="vertical-timeline" class="vertical-container light-timeline no-margins">
+                    {% include 'dashboard/profile/snippets/timeline_item.jinja2' %}
+                </div>
+            {% endblock profile_activity_timeline %}
+        </div>
+    </div>
+</div>

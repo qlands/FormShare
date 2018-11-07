@@ -35,3 +35,10 @@ def create_resources(apppath, config):
     # ------------------------------Add/Edit project--------------------------------------
     r.add_css_resource('formshare', 'switchery', 'css/plugins/switchery/switchery.css', None)
     r.add_js_resource('formshare', 'switchery', 'js/plugins/switchery/switchery.js', None)
+
+    # ------------------------------Project details --------------------------------------
+    r.add_js_resource('formshare', 'element_queries', 'js/plugins/css-element-queries/ElementQueries.js', None)
+    r.add_js_resource('formshare', 'element_sensors', 'js/plugins/css-element-queries/ResizeSensor.js',
+                      'element_queries')
+    r.add_css_resource('formshare', 'leaflet', 'js/plugins/leaflet/leaflet.css', None)
+    r.add_js_resource('formshare', 'leaflet', 'js/plugins/leaflet/leaflet.js', 'element_sensors')

@@ -25,7 +25,7 @@ def __url_for_static(request, static_file, library='fstatic'):
     return request.application_url + '/' + library + "/" + static_file
 
 
-def __helper():
+def __helper(request):
     h = helpers.helper_functions
     return h
 

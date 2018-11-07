@@ -11,21 +11,26 @@
         <div class="ibox-title">
             <h5>Active projects</h5>
             <div class="ibox-tools">
-                <a href="" class="btn btn-primary btn-xs">Create new project</a>
+                <a href="" class="btn btn-primary btn-xs" style="margin-right: 20px">{{ _('Create new project') }}</a>
+                <a class="fullscreen-link">
+                    <i class="fas fa-expand" style="margin-right: 10px"></i>
+                </a>
             </div>
         </div>
         <div class="ibox-content">
             <div class="row m-b-sm m-t-sm">
                 <div class="col-md-1">
-                    <button type="button" id="loading-example-btn" class="btn btn-white btn-sm" ><i class="fa fa-refresh"></i> Refresh</button>
+                    <button type="button" id="loading-example-btn" class="btn btn-white btn-sm" ><i class="fa fa-refresh"></i> {{ _('Refresh') }}</button>
                 </div>
                 <div class="col-md-11">
-                    <div class="input-group"><input type="text" placeholder="Search" class="form-control-sm form-control"> <span class="input-group-btn">
-                                        <button type="button" class="btn btn-sm btn-primary"> Go!</button> </span></div>
+                    <div class="input-group"><input type="text" placeholder="{{ _('Search within my projects') }}" class="form-control-sm form-control"> <span class="input-group-btn">
+                                        <button type="button" class="btn btn-sm btn-primary"> {{ _('Go!') }}</button> </span></div>
                 </div>
             </div>
-
-            {% include 'dashboard/projects/snippets/project_item.jinja2' %}
+            {% for project in userProjects %}
+                {% include 'dashboard/projects/snippets/project_item.jinja2' %}
+            {% endfor %}
+{#            {% include 'dashboard/projects/snippets/project_item.jinja2' %}#}
 
         </div>
     </div>

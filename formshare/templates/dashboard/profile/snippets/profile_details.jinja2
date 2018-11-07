@@ -2,93 +2,13 @@
     {% block profile_user_section %}
         <div class="col-lg-3">
             {% block profile_user_section_about %}
-                <div class="ibox">
-                    <div class="ibox-title">
-                        <h5>{{ _('About') }} {{ userDetails.user_name  }}</h5>
-                        <div class="ibox-tools">
-                            {% if viewingSelfAccount %}
-                                <a href="{{ request.route_url('profile_edit',userid=activeUser.login) }}" style="margin-right: 10px">
-                                    <i class="fas fa-pencil-alt text-warning" title="{{ _('Edit') }}"></i>
-                                </a>
-                            {% endif %}
-                            <a class="collapse-link" style="margin-right: 10px">
-                                <i class="fas fa-chevron-up"></i>
-                            </a>
-                            <a class="fullscreen-link">
-                                <i class="fas fa-expand"></i>
-                            </a>
-                        </div>
-                    </div>
-                    <div class="ibox-content">
-                        {% if userDetails.user_about != None %}
-                            <textarea id="bio_hidden" style="display:none;">{{ userDetails.user_about }}</textarea>
-                            <div class="scroll_content">
-                                <small id="profile_bio">
-
-                                </small>
-                            </div>
-                        {% else %}
-                            <small id="profile_bio">{{ _('Without bio') }}</small> {% if viewingSelfAccount %} <a href="{{ request.route_url('profile_edit',userid=activeUser.login) }}"><i class="fas fa-pencil-alt text-warning" title="{{ _('Edit') }}"></i></a> {% endif %}
-                        {% endif %}
-                    </div>
-                </div>
+                {% include 'dashboard/profile/snippets/about_tab.jinja2' %}
             {% endblock profile_user_section_about %}
             {% block profile_user_section_collaborators %}
-                <div class="ibox">
-                    <div class="ibox-title">
-                        <h5>{{ _('Collaborations') }}</h5>
-                        <div class="ibox-tools">
-                            <a class="collapse-link" style="margin-right: 10px">
-                                <i class="fas fa-chevron-up"></i>
-                            </a>
-                            <a class="fullscreen-link">
-                                <i class="fas fa-expand"></i>
-                            </a>
-                        </div>
-                    </div>
-                    <div class="ibox-content">
-                        {% block profile_collaborators_list %}
-                            <div class="user-friends">
-                                {% for collaborator in userDetails.user_stats.collaborators %}
-                                    <a href="{{ request.route_url('dashboard',userid=collaborator.user_id) }}"><img alt="image" title="{{ collaborator.user_name }}" class="rounded-circle" src="{{ request.h.getGravatarUrl(collaborator.user_email) }}"></a>
-                                {% endfor %}
-                            </div>
-                        {% endblock profile_collaborators_list %}
-                    </div>
-                </div>
+                {% include 'dashboard/profile/snippets/collaboration_tab.jinja2' %}
             {% endblock profile_user_section_collaborators %}
             {% block profile_user_section_social %}
-                <div class="ibox">
-                    <div class="ibox-title">
-                        <h5>{{ _('Social links') }}</h5>
-                        <div class="ibox-tools">
-                            <a class="collapse-link" style="margin-right: 10px">
-                                <i class="fas fa-chevron-up"></i>
-                            </a>
-                            <a class="fullscreen-link">
-                                <i class="fas fa-expand"></i>
-                            </a>
-                        </div>
-                    </div>
-                    <div class="ibox-content">
-                        <div class="row">
-                            <div class="col-md-12">
-                                {% if viewingSelfAccount %}
-                                    <small>Click/Tab and hold to remove</small>
-                                {% endif %}
-                                <ul class="tag-list" style="padding: 0">
-                                    {% block profile_social_list %}
-                                        {% if activeUser != None %}
-                                            <li><a href="mailto:{{ userDetails.user_email }}"><i class="far fa-envelope"></i> Email</a></li>
-                                        {% else %}
-                                            <li><a href="{{ request.route_url('login') }}"><i class="far fa-envelope"></i> Email</a></li>
-                                        {% endif %}
-                                    {% endblock profile_social_list %}
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                {% include 'dashboard/profile/snippets/social_tab.jinja2' %}
             {% endblock profile_user_section_social %}
             {% block profile_user_section_extra %}
 
@@ -97,24 +17,7 @@
     {% endblock profile_user_section %}
     {% block profile_project_section %}
         <div class="col-lg-5">
-            <div class="ibox">
-                <div class="ibox-title">
-                    <h5>{{ _('Projects') }}</h5>
-                    <div class="ibox-tools">
-                        <a class="collapse-link" style="margin-right: 10px">
-                            <i class="fas fa-chevron-up"></i>
-                        </a>
-                        <a class="fullscreen-link">
-                            <i class="fas fa-expand"></i>
-                        </a>
-                    </div>
-                </div>
-                <div class="ibox-content">
-                    {% for project in userProjects %}
-                        {% include 'dashboard/projects/snippets/project_item.jinja2' %}
-                    {% endfor %}
-                </div>
-            </div>
+            {% include 'dashboard/projects/snippets/project_tab.jinja2' %}
             {% block profile_project_section_extra %}
 
             {% endblock profile_project_section_extra %}
@@ -122,28 +25,7 @@
     {% endblock profile_project_section %}
     {% block profile_activity_section %}
         <div class="col-lg-4 m-b-lg">
-            <div class="ibox">
-                <div class="ibox-title">
-                    <h5>{{ _('Activity') }}</h5>
-                    <div class="ibox-tools">
-                        <a class="collapse-link" style="margin-right: 10px">
-                            <i class="fas fa-chevron-up"></i>
-                        </a>
-                        <a class="fullscreen-link">
-                            <i class="fas fa-expand"></i>
-                        </a>
-                    </div>
-                </div>
-                <div class="ibox-content">
-                    <div class="scroll_content2">
-                        {% block profile_activity_timeline %}
-                            <div id="vertical-timeline" class="vertical-container light-timeline no-margins">
-                                {% include 'dashboard/profile/snippets/timeline_item.jinja2' %}
-                            </div>
-                        {% endblock profile_activity_timeline %}
-                    </div>
-                </div>
-            </div>
+            {% include 'dashboard/profile/snippets/timeline_tab.jinja2' %}
             {% block profile_activity_section_extra %}
 
             {% endblock profile_activity_section_extra %}

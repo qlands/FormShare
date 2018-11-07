@@ -4,62 +4,37 @@
     {% cssresource request,'formshare','style' %}
 {% endblock css %}
 
-{% block topScripts %}
-    {% jsresource request,'formshare','pace' %}
-{% endblock topScripts %}
+{% block body_tag %}
+    <body {% block bodyattributes %}{% endblock bodyattributes %} class="{% if rtl %}rtls{% endif %} {% block bodyclass %} top-navigation {% endblock bodyclass %}">
+    {% block body %}
+        {% block bodycontent %}
+            <div id="wrapper">
+                {% block wrapper %}
+                    <div id="page-wrapper" class="gray-bg">
+                        {% block pagewrapper %}
+                            <div class="container">
+                            {% block pageheader %}
 
-{% block bodyattributes %}id="page-top"{% endblock bodyattributes %}{% block bodyclass %} landing-page no-skin-config{% endblock bodyclass %}
-
-{% block body %}
-    {% block navbar %}
-        {# Extent this block to add the navigation #}
-        {# {% include 'landing/snippets/navbar.jinja2' %}#}
-    {% endblock navbar %}
-    {% block slider %}
-        {# Extend this block to add the slider #}
-        {# {% include 'landing/snippets/slider.jinja2' %}#}
-    {% endblock slider %}
-    {% block features %}
-        {# Extend this block to add the features section #}
-        {# {% include 'landing/snippets/features.jinja2' %}#}
-    {% endblock features %}
-    {% block features2 %}
-        {# Extend this block to add the features second section #}
-        {# {% include 'landing/snippets/features2.jinja2' %}#}
-    {% endblock features2 %}
-    {% block team %}
-        {# Extend this block to add the team section #}
-        {# {% include 'landing/snippets/team.jinja2' %}#}
-    {% endblock team %}
-    {% block features3 %}
-        {# Extend this block to add the features third section #}
-        {# {% include 'landing/snippets/features3.jinja2' %}#}
-    {% endblock features3 %}
-    {% block timeline %}
-        {# Extend this block to add the timeline section #}
-        {# {% include 'landing/snippets/timeline.jinja2' %}#}
-    {% endblock timeline %}
-    {% block testimonials %}
-        {# Extend this block to add the testimonials section #}
-        {# {% include 'landing/snippets/testimonials.jinja2' %}#}
-    {% endblock testimonials %}
-    {% block comments %}
-        {# Extend this block to add the comments section #}
-        {# {% include 'landing/snippets/comments.jinja2' %}#}
-    {% endblock comments %}
-    {% block features4 %}
-        {# Extend this block to add four features section #}
-        {# {% include 'landing/snippets/features4.jinja2' %}#}
-    {% endblock features4 %}
-    {% block pricing %}
-        {# Extend this block to add pricing section #}
-        {# {% include 'landing/snippets/pricing.jinja2' %}#}
-    {% endblock pricing %}
-    {% block contact %}
-        {# Extend this block to add contact section #}
-        {# {% include 'landing/snippets/contact.jinja2' %}#}
-    {% endblock contact %}
-    {% block scripts %}
-        {% jsresource request,'formshare','inspinia' %}
-    {% endblock scripts %}
-{% endblock body %}
+                            {% endblock pageheader %}
+                            {% block mainsection %}
+                                <div class="wrapper wrapper-content">
+                                    {% block maincontent %}
+                                        {# Here goes the content of the page #}
+                                    {% endblock maincontent %}
+                                </div>
+                            {% endblock mainsection %}
+                            {% block footer %}
+{#                                {% include 'dashboard/snippets/footer.jinja2' %}#}
+                            {% endblock footer %}
+                            </div>
+                        {% endblock pagewrapper %}
+                    </div>
+                {% endblock wrapper %}
+            </div>
+        {% endblock bodycontent %}
+        {% block scripts %}
+            {% jsresource request,'formshare','inspinia' %}
+        {% endblock scripts %}
+    {% endblock body %}
+    </body>
+{% endblock body_tag %}

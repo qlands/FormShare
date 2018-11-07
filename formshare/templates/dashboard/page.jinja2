@@ -8,66 +8,86 @@
     {% jsresource request,'formshare','sweetalert' %}
 {% endblock topScripts %}
 
-{% block body %}
-    {% block bodycontent %}
-        <div id="wrapper">
-            {% block wrapper %}
-                {% block mainnav %}
-                    {% include 'dashboard/snippets/navbar.jinja2' %}
-                {% endblock mainnav %}
-                <div id="page-wrapper" class="gray-bg dashbard-1">
-                    {% block pagewrapper %}
-                        {% block pageheader %}
-                            {% include 'dashboard/snippets/header.jinja2' %}
-                        {% endblock pageheader %}
-                        {% block dashheader %}
-                            <div class="row wrapper border-bottom white-bg page-heading">
-                                {% block breadcrumbs %}
-                                    {#
-                                        Extend this section to have breadcrumbs
-                                        {% include 'dashboard/snippets/breadcrumbs.jinja2' %}
-                                    #}
-                                {% endblock breadcrumbs %}
-                            </div>
-                        {% endblock dashheader %}
-                        {% block mainsection %}
-                            <div class="wrapper wrapper-content">
-                                {% block maincontent %}
-                                    {# Here goes the content of the page #}
-                                {% endblock maincontent %}
-                            </div>
-                        {% endblock mainsection %}
-                        {% block footer %}
-                            {% include 'dashboard/snippets/footer.jinja2' %}
-                        {% endblock footer %}
-                    {% endblock pagewrapper %}
-                </div>
-                {% block smallchat %}
-                    {# Uncomment this snippet to have the chat screen #}
-                    {#  {% include 'dashboard/snippets/chat.jinja2' %}#}
-                {% endblock smallchat %}
-                {% block sidebar %}
-                    {% if activeUser != None  %}
-                        {% include 'dashboard/snippets/sidebar.jinja2' %}
+{% block body_tag %}
+    <body {% block bodyattributes %}{% endblock bodyattributes %} class="{% if rtl %}rtls{% endif %} {% block bodyclass %} {% if activeUser == None %} top-navigation{% endif %} {% endblock bodyclass %}">
+    {% block body %}
+        {% block bodycontent %}
+            <div id="wrapper">
+
+                {% block wrapper %}
+                    {% block mainnav %}
+                        {% if activeUser != None %}
+                            {% include 'dashboard/snippets/navbar.jinja2' %}
+                        {% endif %}
+                    {% endblock mainnav %}
+                    {% if activeUser != None %}
+                        <div id="page-wrapper" class="gray-bg dashbard-1">
+                    {% else %}
+                        <div id="page-wrapper" class="gray-bg">
                     {% endif %}
-                {% endblock sidebar %}
-            {% endblock wrapper %}
-        </div>
-    {% endblock bodycontent %}
-    {% block scripts %}
-        {% jsresource request,'formshare','inspinia' %}
-        {% set messageData = request.session.pop_flash() %}
-        {% if messageData|length > 0 %}
-            <script>
-                $(document).ready(function() {
-                    messageData = '{{ messageData[0] }}';
-                    swal({
-                        title: 'FormShare',
-                        text: messageData,
-                        type: "success"
+                        {% block pagewrapper %}
+                            {% block pageheader %}
+                                {% include 'dashboard/snippets/header.jinja2' %}
+                            {% endblock pageheader %}
+                            {% block dashheader %}
+                                {% if activeUser != None %}
+                                    <div class="row wrapper border-bottom white-bg page-heading">
+                                        {% block breadcrumbs %}
+                                            {#
+                                            Extend this section to have breadcrumbs
+                                            {% include 'dashboard/snippets/breadcrumbs.jinja2' %}
+                                        #}
+                                        {% endblock breadcrumbs %}
+                                    </div>
+                                {% endif %}
+                            {% endblock dashheader %}
+                            {% block mainsection %}
+                                <div class="wrapper wrapper-content">
+{#                                    {% if activeUser == None %}#}
+{#                                        <div class="container">#}
+{#                                    {% endif %}#}
+                                    {% block maincontent %}
+                                        {# Here goes the content of the page #}
+                                    {% endblock maincontent %}
+{#                                    {% if activeUser == None %}#}
+{#                                        </div>#}
+{#                                    {% endif %}#}
+                                </div>
+                            {% endblock mainsection %}
+                            {% block footer %}
+                                {% include 'dashboard/snippets/footer.jinja2' %}
+                            {% endblock footer %}
+                        {% endblock pagewrapper %}
+                    </div>
+                    {% block smallchat %}
+                        {# Uncomment this snippet to have the chat screen #}
+                        {#  {% include 'dashboard/snippets/chat.jinja2' %}#}
+                    {% endblock smallchat %}
+                    {% block sidebar %}
+                        {% if activeUser != None  %}
+                            {% include 'dashboard/snippets/sidebar.jinja2' %}
+                        {% endif %}
+                    {% endblock sidebar %}
+                {% endblock wrapper %}
+
+            </div>
+        {% endblock bodycontent %}
+        {% block scripts %}
+            {% jsresource request,'formshare','inspinia' %}
+            {% set messageData = request.session.pop_flash() %}
+            {% if messageData|length > 0 %}
+                <script>
+                    $(document).ready(function() {
+                        messageData = '{{ messageData[0] }}';
+                        swal({
+                            title: 'FormShare',
+                            text: messageData,
+                            type: "success"
+                        });
                     });
-                });
-            </script>
-        {% endif %}
-    {% endblock scripts %}
-{% endblock body %}
+                </script>
+            {% endif %}
+        {% endblock scripts %}
+    {% endblock body %}
+    </body>
+{% endblock body_tag %}

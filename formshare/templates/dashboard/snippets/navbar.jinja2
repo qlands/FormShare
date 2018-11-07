@@ -37,7 +37,7 @@
                     </div>
                     <div class="logo-element">
                         {% block logo_element %}
-                            FS
+                            <img alt="image" src="{{ request.url_for_static('formshare-small.png') }}"/>
                         {% endblock logo_element %}
                     </div>
                 </li>
@@ -52,7 +52,7 @@
                     </li>
                     {% if activeProject %}
                         <li class="special_link">
-                            <a href="#"><i class="fas fa-star"></i> <span class="nav-label">{{ activeProject.project_name }}</span> <span class="label label-info float-right">Active</span></a>
+                            <a href="#"><i class="fas fa-star"></i> <span class="nav-label" title="{{ activeProject.project_name }}">{{ activeProject.project_name|truncate(15,true,'...') }}</span> <span class="label label-info float-right">Active</span></a>
                         </li>
                         <li>
                             <a href="#"><i class="fas fa-user-circle"></i> <span class="nav-label">{{ _('Enumerators') }}</span></a>

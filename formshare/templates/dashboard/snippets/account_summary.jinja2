@@ -1,0 +1,29 @@
+<div class="row">
+    {% block summary_user_section %}
+        <div class="col-lg-3">
+            {% block summary_section_collaborators %}
+                {% include 'dashboard/profile/snippets/collaboration_tab.jinja2' %}
+            {% endblock summary_section_collaborators %}
+            {% block summary_section_collaborators_extra %}
+
+            {% endblock summary_section_collaborators_extra %}
+        </div>
+    {% endblock summary_user_section %}
+    {% block summary_project_section %}
+        <div class="col-lg-5">
+            {% include 'dashboard/projects/snippets/project_tab.jinja2' %}
+            {% block summary_project_section_extra %}
+
+            {% endblock summary_project_section_extra %}
+        </div>
+    {% endblock summary_project_section %}
+    {% block summary_activity_section %}
+        <div class="col-lg-4 m-b-lg">
+            {% set activity_tab_title = _('Account activity') %}
+            {% include 'dashboard/profile/snippets/timeline_tab.jinja2' %}
+            {% block summary_activity_section_extra %}
+
+            {% endblock summary_activity_section_extra %}
+        </div>
+    {% endblock summary_activity_section %}
+</div>

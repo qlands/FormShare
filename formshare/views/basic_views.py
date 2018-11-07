@@ -17,7 +17,7 @@ from formshare.config.encdecdata import encode_data
 
 class HomeView(PublicView):
     def process_view(self):
-        return {}
+        return {'activeUser': None}
 
 
 class NotFoundView(PublicView):

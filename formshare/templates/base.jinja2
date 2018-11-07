@@ -29,10 +29,12 @@
         {% endblock head %}
     </head>
 
-    <body {% block bodyattributes %}{% endblock bodyattributes %} class="{% if rtl %}rtls{% endif %} {% block bodyclass %}{% endblock bodyclass %}">
-    {% block body %}
-        {# Here goes the body #}
-    {% endblock body %}
-    </body>
+    {% block body_tag %}
+        <body {% block bodyattributes %}{% endblock bodyattributes %} class="{% if rtl %}rtls{% endif %} {% block bodyclass %}{% endblock bodyclass %}">
+        {% block body %}
+            {# Here goes the body #}
+        {% endblock body %}
+        </body>
+    {% endblock body_tag %}
 {% endblock html %}
 </html>

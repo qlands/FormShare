@@ -1,0 +1,81 @@
+<div class="ibox">
+    <div class="ibox-title">
+        <h5>Forms</h5>
+        <div class="ibox-tools">
+            <a class="collapse-link" style="margin-right: 10px">
+                <i class="fa fa-chevron-up"></i>
+            </a>
+            <a class="fullscreen-link">
+                <i class="fa fa-expand"></i>
+            </a>
+        </div>
+    </div>
+    <div class="ibox-content">
+        <div class="scroll_content">
+            <div class="row">
+                <div class="col-md-9">
+                    Total: 3.
+                    Active: 2. Inactive: 1
+                </div>
+                <div class="col-md-3">
+                    <button type="button" class="btn btn-block btn-outline btn-primary">Add new form</button>
+                </div>
+            </div>
+            <hr>
+            <div class="feed-activity-list">
+                <div class="feed-element">
+                    <a href="#" class="float-left">
+                        <img alt="image" class="rounded-circle" src="{{request.url_for_static('ODK.png')}}">
+                    </a>
+                    <div class="media-body ">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <span class="float-right">Uploaded on 12/03/2018</span>
+                                <strong><a href="#">Form 1</a></strong> <span class="badge badge-primary">With repository</span> <span class="label label-warning">Inactive</span><br>
+                                <span class="text-muted">Last submussion: Yesterday 1:21 pm - 11.06.2014 by <a class="text-info">Eduardo</a></span>
+                                <div class="progress">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated progress-bar-warning" style="width: 75%" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
+                                </div>
+                                70 of 100 submissions: <strong><a class="text-success">70 in database</a>. <a class="text-danger">5 in error logs</a></strong>
+                                <div class="actions">
+                                    <a href=""  class="btn btn-xs btn-white"><i class="fa fa-thumbs-up"></i> Like </a>
+                                    <a href=""  class="btn btn-xs btn-white"><i class="fa fa-heart"></i> Love</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="feed-element" style="margin-left: 48px">
+                    <div class="media-body ">
+                        <div class="row">
+                            <div class="col-md-12">
+                                <span class="float-right">Uploaded Yesterday</span>
+                                <strong><a href="#">Form 2</a></strong> <span class="badge badge-default"><i class="fa fa-code-fork"></i> Subversion</span> <span class="badge badge-primary">Merged</span> <span class="label label-success">Active</span><br>
+                                <span class="text-muted">Last submussion: Yesterday 1:21 pm - 11.06.2014 by <a class="text-info">Katie</a></span><br/>
+                                5 submissions
+                                <div class="actions">
+                                    <a href=""  class="btn btn-xs btn-white"><i class="fa fa-thumbs-up"></i> Like </a>
+                                    <a href=""  class="btn btn-xs btn-white"><i class="fa fa-heart"></i> Love</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="feed-element">
+                    <a href="#" class="float-left">
+                        <img alt="image" class="rounded-circle" src="{{request.url_for_static('CSPRO.png')}}">
+                    </a>
+                    <div class="media-body ">
+                        <strong><a href="#">Form 3</a></strong> <span class="badge badge-warning">In testing stage</span> <span class="label label-success">Active</span><br>
+                        <span class="text-muted">Last submussion: Yesterday 1:21 pm - 11.06.2014 by <a class="text-info">Carlos</a></span><br/>
+                        75 submissions
+                        <div class="actions">
+                            <a href=""  class="btn btn-xs btn-white"><i class="fa fa-thumbs-up"></i> Like </a>
+                            <a href=""  class="btn btn-xs btn-white"><i class="fa fa-heart"></i> Love</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

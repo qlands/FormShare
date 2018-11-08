@@ -1,37 +1,94 @@
-{% extends 'dashboard/page.jinja2' %}
+{% extends 'dashboard/index.jinja2' %}
 
-{% block titlesection %}{{ _("Projects") }}{% endblock titlesection %}
 
-{% block breadcrumbs %}
-    {% include 'dashboard/projects/snippets/brdcrbs_prjlist.jinja2' %}
-{% endblock breadcrumbs %}
+{% block titlesection %}{{ _("Projects") }} {% endblock titlesection %}
+
+{% block css %}
+    {% cssresource request,'formshare','style' %}
+{% endblock css %}
+
+{% block topScripts %}
+    {% if viewingSelfAccount == False %}
+        {% jsresource request,'formshare','markdown' %}
+        {% jsresource request,'formshare','clipboard' %}
+    {% else %}
+        {% jsresource request,'formshare','sweetalert' %}
+    {% endif %}
+{% endblock topScripts %}
+
+{% block dashheader %}
+    {% block breadcrumbs %}
+        {% if viewingSelfAccount %}
+            <div class="row wrapper border-bottom white-bg page-heading">
+                {% include 'dashboard/projects/snippets/brdcrbs_prjlist.jinja2' %}
+            </div>
+        {% endif %}
+    {% endblock breadcrumbs %}
+{% endblock dashheader %}
 
 {% block maincontent %}
-    <div class="ibox">
-        <div class="ibox-title">
-            <h5>Active projects</h5>
-            <div class="ibox-tools">
-                <a href="" class="btn btn-primary btn-xs" style="margin-right: 20px">{{ _('Create new project') }}</a>
-                <a class="fullscreen-link">
-                    <i class="fas fa-expand" style="margin-right: 10px"></i>
-                </a>
-            </div>
-        </div>
-        <div class="ibox-content">
-            <div class="row m-b-sm m-t-sm">
-                <div class="col-md-1">
-                    <button type="button" id="loading-example-btn" class="btn btn-white btn-sm" ><i class="fa fa-refresh"></i> {{ _('Refresh') }}</button>
-                </div>
-                <div class="col-md-11">
-                    <div class="input-group"><input type="text" placeholder="{{ _('Search within my projects') }}" class="form-control-sm form-control"> <span class="input-group-btn">
-                                        <button type="button" class="btn btn-sm btn-primary"> {{ _('Go!') }}</button> </span></div>
-                </div>
-            </div>
-            {% for project in userProjects %}
-                {% include 'dashboard/projects/snippets/project_item.jinja2' %}
-            {% endfor %}
-{#            {% include 'dashboard/projects/snippets/project_item.jinja2' %}#}
+    {% if viewingSelfAccount %}
+        {{ super() }}
+    {% else %}
+        {% include 'dashboard/profile/snippets/profile_head.jinja2' %}
+        {% include 'dashboard/projects/snippets/project_tab.jinja2' %}
+    {% endif %}
 
-        </div>
-    </div>
 {% endblock maincontent %}
+
+{% block mainsection %}
+    {% if viewingSelfAccount %}
+        {% if activeUser != None %}
+            <div class="row" style="margin-top: 20px">
+                <div class="col-md-12" style="text-align: right">
+                    <a href="{{ request.route_url('projects_add',userid=activeUser.login,_query={'next':request.route_url('projects',userid=activeUser.login)}) }}" class="btn btn-primary btn-xs" style="margin-right: 20px">{{ _('Create new project') }}</a>
+                </div>
+            </div>
+        {% endif %}
+        {% include 'dashboard/projects/snippets/project_tab_content.jinja2' %}
+    {% else %}
+        {{ super() }}
+    {% endif %}
+{% endblock mainsection %}
+
+{% block scripts %}
+
+{% endblock scripts %}
+
+{#{% extends 'dashboard/page.jinja2' %}#}
+{##}
+{#{% block titlesection %}{{ _("Projects") }}{% endblock titlesection %}#}
+{##}
+{#{% block breadcrumbs %}#}
+{#    {% include 'dashboard/projects/snippets/brdcrbs_prjlist.jinja2' %}#}
+{#{% endblock breadcrumbs %}#}
+{##}
+{#{% block maincontent %}#}
+{#    <div class="ibox">#}
+{#        <div class="ibox-title">#}
+{#            <h5>Active projects</h5>#}
+{#            <div class="ibox-tools">#}
+{#                <a href="{{ request.route_url('projects_add',userid=activeUser.login,_query={'next':request.route_url('projects',userid=activeUser.login)}) }}" class="btn btn-primary btn-xs" style="margin-right: 20px">{{ _('Create new project') }}</a>#}
+{#                <a class="fullscreen-link">#}
+{#                    <i class="fas fa-expand" style="margin-right: 10px"></i>#}
+{#                </a>#}
+{#            </div>#}
+{#        </div>#}
+{#        <div class="ibox-content">#}
+{#            <div class="row m-b-sm m-t-sm">#}
+{#                <div class="col-md-1">#}
+{#                    <button type="button" id="loading-example-btn" class="btn btn-white btn-sm" ><i class="fa fa-refresh"></i> {{ _('Refresh') }}</button>#}
+{#                </div>#}
+{#                <div class="col-md-11">#}
+{#                    <div class="input-group"><input type="text" placeholder="{{ _('Search within my projects') }}" class="form-control-sm form-control"> <span class="input-group-btn">#}
+{#                                        <button type="button" class="btn btn-sm btn-primary"> {{ _('Go!') }}</button> </span></div>#}
+{#                </div>#}
+{#            </div>#}
+{#            {% for project in userProjects %}#}
+{#                {% include 'dashboard/projects/snippets/project_item.jinja2' %}#}
+{#            {% endfor %}#}
+{#            {% include 'dashboard/projects/snippets/project_item.jinja2' %}#}
+{##}
+{#        </div>#}
+{#    </div>#}
+{#{% endblock maincontent %}#}

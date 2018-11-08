@@ -156,6 +156,7 @@ class PrivateView(object):
         self.showWelcome = False
         self.checkCrossPost = True
         self.queryProjects = True
+        self.user_projects = []
         self.activeProject = {}
         locale = Locale(request.locale_name)
         if locale.character_order == "left-to-right":
@@ -227,12 +228,12 @@ class PrivateView(object):
         if self.queryProjects:
             if self.user is not None:
                 if self.userID == self.user.login:
-                    user_projects = get_user_projects(self.request, self.userID, self.userID, True)
+                    self.user_projects = get_user_projects(self.request, self.userID, self.userID, True)
                 else:
-                    user_projects = get_user_projects(self.request, self.userID, self.user.login, True)
+                    self.user_projects = get_user_projects(self.request, self.userID, self.user.login, True)
             else:
-                user_projects = get_user_projects(self.request, self.userID, None)
-            self.classResult["userProjects"] = user_projects
+                self.user_projects = get_user_projects(self.request, self.userID, None)
+            self.classResult["userProjects"] = self.user_projects
         else:
             self.classResult["userProjects"] = []
 

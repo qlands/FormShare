@@ -13,6 +13,8 @@ from ast import literal_eval
 import datetime
 import uuid
 from formshare.config.encdecdata import encode_data
+from formshare.config.elasticfeeds import get_manager
+from elasticfeeds.activity import Actor, Object, Activity
 
 
 class HomeView(PublicView):
@@ -153,7 +155,20 @@ class RegisterView(PublicView):
                         if not added:
                             self.errors.append(error_message)
                         else:
-                            # Load connected plugins so they perform actions after the login is performed
+                            # Store the notifications
+                            feed_manager = get_manager(self.request)
+                            # The user follows himself
+                            print("**********************")
+                            print(data["user_id"])
+                            print("**********************")
+                            feed_manager.follow(data["user_id"], data["user_id"])
+                            # The user join FormShare
+                            actor = Actor(data["user_id"], 'person')
+                            feed_object = Object('formshare', 'platform')
+                            activity = Activity('join', actor, feed_object)
+                            feed_manager.add_activity_feed(activity)
+
+                            # Load connected plugins so they perform actions after the registration is performed
                             next_page = self.request.route_url('dashboard', userid=data["user_id"])
                             plugin_next_page = ''
                             for plugin in p.PluginImplementations(p.IAuthorize):

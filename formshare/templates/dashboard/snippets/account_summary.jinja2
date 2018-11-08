@@ -11,6 +11,7 @@
     {% endblock summary_user_section %}
     {% block summary_project_section %}
         <div class="col-lg-5">
+            {% set withoutSearch = true %}
             {% include 'dashboard/projects/snippets/project_tab.jinja2' %}
             {% block summary_project_section_extra %}
 

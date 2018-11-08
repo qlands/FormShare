@@ -48,11 +48,11 @@
                         <a href="{{ request.route_url('dashboard',userid=activeUser.login) }}"><i class="fa fa-th-large"></i> <span class="nav-label">{{ _('Dashboard') }}</span></a>
                     </li>
                     <li {% if activeMenu == 'projects' %}class="active" {% endif %}>
-                        <a href="#"><i class="fas fa-project-diagram"></i> <span class="nav-label">{{ _('Projects') }}</span></a>
+                        <a href="{{ request.route_url('projects',userid=activeUser.login) }}"><i class="fas fa-project-diagram"></i> <span class="nav-label">{{ _('Projects') }}</span></a>
                     </li>
                     {% if activeProject %}
                         <li class="special_link">
-                            <a href="#"><i class="fas fa-star"></i> <span class="nav-label" title="{{ activeProject.project_name }}">{{ activeProject.project_name|truncate(15,true,'...') }}</span> <span class="label label-info float-right">Active</span></a>
+                            <a href="{{ request.route_url('project_details', userid=activeUser.login, projcode=activeProject.project_code) }}"><i class="fas fa-star"></i> <span class="nav-label" title="{{ activeProject.project_name }}">{{ activeProject.project_name|truncate(15,true,'...') }}</span> <span class="label label-info float-right">Active</span></a>
                         </li>
                         <li>
                             <a href="#"><i class="fas fa-user-circle"></i> <span class="nav-label">{{ _('Enumerators') }}</span></a>

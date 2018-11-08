@@ -13,9 +13,10 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 
-def get_project_id_from_name(request, user, project_name):
+def get_project_id_from_name(request, user, project_code):
     res = request.dbsession.query(Project).filter(Project.project_id == Userproject.project_id).filter(
-        Userproject.user_id == user).filter(Project.project_name == project_name).first()
+        Userproject.user_id == user).filter(Project.project_code == project_code).filter(
+        Userproject.access_type == 1).first()
     if res is not None:
         return res.project_id
     return None
@@ -131,7 +132,7 @@ def add_project(request, user, project_data):
                 log.error("Error {} when allocating access for user {} in project {}".format(sys.exc_info()[0], user,
                                                                                              mapped_data["project_id"]))
                 return False, sys.exc_info()[0]
-            return True, ""
+            return True, project_data['project_id']
         except IntegrityError:
             log.error("Duplicated project {}".format(mapped_data["project_id"]))
             return False, request.translate("The project already exist")

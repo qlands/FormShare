@@ -1,7 +1,7 @@
 <hr>
 <div class="row m-b-sm m-t-sm">
     <div class="col-md-4">
-        <a href="#">{{ project.project_name }}</a> {% if project.project_public == 1 %} <span class="label label-primary">{{ _('Public') }}</span> {% else %} <span class="label label-warning">{{ _('Private') }}</span>{% endif %}
+        <a href="{{ request.route_url('project_details', userid=project.owner, projcode=project.project_code) }}">{{ project.project_name }}</a> {% if project.project_public == 1 %} <span class="label label-primary">{{ _('Public') }}</span> {% else %} <span class="label label-warning">{{ _('Private') }}</span>{% endif %}
         <br/>
         <small>{{ _('Created') }} {{ request.h.humanize_date(project.project_cdate) }} {% if project.user_id != project.owner %} by <a href="{{ request.route_url('dashboard',userid=project.owner) }}">{{ project.owner }}</a> {% endif %}</small>
     </div>
@@ -14,7 +14,7 @@
         {% endif %}
     </div>
     <div class="col-md-4">
-        <a href="#" class="btn btn-white btn-sm"><i class="fa fa-folder"></i> View </a>
+        <a href="{{ request.route_url('project_details', userid=project.owner, projcode=project.project_code) }}" class="btn btn-white btn-sm"><i class="fa fa-folder"></i> View </a>
         {% if project.access_type != 4 %}
             <a href="#" class="btn btn-white btn-sm"><i class="fas fa-pencil-alt text-warning"></i> Edit </a>
         {% endif %}

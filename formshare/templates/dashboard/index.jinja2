@@ -35,7 +35,7 @@
                                 <h2>{{ _('Your are viewing others account') }}</h2>
                             {% endif %}
                         {% endif %}
-                        <h3 style="color:white;">{{ _('Recent activity in project') }} "{{ activeProject.project_name }}"</h3>
+                        <h3 style="color:white;">{{ _('Recent activity in project') }} "<a style="color: white" href="{{ request.route_url('project_details', userid=activeUser.login, projcode=activeProject.project_code) }}" >{{ activeProject.project_name }}</a>"</h3>
                         {% include 'dashboard/snippets/active_project_summary.jinja2' %}
                     </div>
                 {% endblock project_list_section %}

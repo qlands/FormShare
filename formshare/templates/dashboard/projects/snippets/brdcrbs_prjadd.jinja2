@@ -2,7 +2,7 @@
     <h2>Add new project</h2>
     <ol class="breadcrumb">
         <li class="breadcrumb-item">
-            <a href="#">{{ _('Projects') }}</a>
+            <a href="{{ request.route_url('projects',userid=activeUser.login) }}">{{ _('Projects') }}</a>
         </li>
         <li class="breadcrumb-item active">
             <strong>{{ _('Add') }}</strong>

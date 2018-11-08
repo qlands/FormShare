@@ -54,7 +54,7 @@
         </nav>
     {% else %}
         <nav class="navbar navbar-expand-lg navbar-static-top" role="navigation">
-            <a href="#" class="navbar-brand"><img alt="image" src="{{ request.url_for_static('formshare-small-black.png') }}"/> Form<b>Share</b></a>
+            <a href="{{ request.route_url('home') }}" class="navbar-brand"><img alt="image" src="{{ request.url_for_static('formshare-small-black.png') }}"/> Form<b>Share</b></a>
             <form role="search" class="navbar-form-custom" style="display: block; !important;" action="#">
                 <div class="form-group">
                     <input type="text" placeholder="Search FormShare" class="form-control" name="top-search" id="top-search">

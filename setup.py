@@ -35,7 +35,10 @@ requires = [
     'lxml',
     'celery',
     'inflect',
-    'validate_email'
+    'validators',
+    'pairtree',
+    'simplejson',
+    'ofs'
 ]
 
 postgresql_requires = ['psycopg2']

@@ -50,6 +50,7 @@ class Project(Base):
     project_abstract = Column(UnicodeText)
     project_cdate = Column(DateTime)
     project_public = Column(INTEGER)
+    project_image = Column(UnicodeText)
     extras = Column(UnicodeText)
     tags = Column(UnicodeText)
 
@@ -142,8 +143,8 @@ class Odkform(Base):
 class Userproject(Base):
     __tablename__ = 'userproject'
 
-    user_id = Column(ForeignKey('fsuser.user_id'), primary_key=True, nullable=False)
-    project_id = Column(ForeignKey('project.project_id'), primary_key=True, nullable=False, index=True)
+    user_id = Column(ForeignKey('fsuser.user_id', ondelete='CASCADE'), primary_key=True, nullable=False)
+    project_id = Column(ForeignKey('project.project_id', ondelete='CASCADE'), primary_key=True, nullable=False, index=True)
     access_type = Column(INTEGER)  # 1=Owner,2=Admin,3=Editor,4=Member
     access_date = Column(DateTime)
     project_active = Column(INTEGER, server_default=text("'1'"))

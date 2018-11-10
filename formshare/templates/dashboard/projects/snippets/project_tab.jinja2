@@ -3,7 +3,7 @@
         <h5>Projects</h5>
         <div class="ibox-tools">
             {% if activeUser != None %}
-                <a href="{{ request.route_url('projects_add',userid=activeUser.login,_query={'next':request.route_url('projects',userid=activeUser.login)}) }}" class="btn btn-primary btn-xs" style="margin-right: 20px">{{ _('Create new project') }}</a>
+                <a href="{{ request.route_url('projects_add',userid=activeUser.login,_query={'next':request.url}) }}" class="btn btn-primary btn-xs" style="margin-right: 20px">{{ _('Create new project') }}</a>
             {% endif %}
             <a class="fullscreen-link">
                 <i class="fas fa-expand" style="margin-right: 10px"></i>

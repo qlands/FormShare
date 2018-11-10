@@ -4,7 +4,7 @@ from .encdecdata import decode_data
 import urllib
 import hashlib
 from ..models import map_from_schema
-from validate_email import validate_email
+import validators
 from formshare.plugins.core import PluginImplementations
 from formshare.plugins.interfaces import IAuthorize
 
@@ -97,7 +97,7 @@ def get_formshare_user_data(request, user, is_email):
 
 
 def get_user_data(user, request):
-    email_valid = validate_email(user)
+    email_valid = validators.email(user)
     # Load connected plugins and check if they modify the user authentication
     plugin_result = None
     plugin_result_dict = {}

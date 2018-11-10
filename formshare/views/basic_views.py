@@ -15,6 +15,7 @@ import uuid
 from formshare.config.encdecdata import encode_data
 from formshare.config.elasticfeeds import get_manager
 from elasticfeeds.activity import Actor, Object, Activity
+import validators
 
 
 class HomeView(PublicView):
@@ -135,58 +136,61 @@ class RegisterView(PublicView):
             if not safe:
                 raise HTTPNotFound()
             data = variable_decode(self.request.POST)
-            if data["user_password"] != "":
-                if data["user_password"] == data["user_password2"]:
-                    data["user_cdate"] = datetime.datetime.now()
-                    data["user_apikey"] = str(uuid.uuid4())
-                    data["user_apikey"] = str(uuid.uuid4())
-                    data["user_password"] = encode_data(self.request, data["user_password"])
-                    data["user_active"] = 1
-                    # Load connected plugins and check if they modify the registration of an user
-                    continue_registration = True
-                    for plugin in p.PluginImplementations(p.IAuthorize):
-                        data, continue_with_registration, error_message = plugin.before_register(self.request, data)
-                        if not continue_with_registration:
-                            self.errors.append(error_message)
-                            continue_registration = False
-                        break  # Only one plugging will be called to extend before_register
-                    if continue_registration:
-                        added, error_message = register_user(self.request, data)
-                        if not added:
-                            self.errors.append(error_message)
-                        else:
-                            # Store the notifications
-                            feed_manager = get_manager(self.request)
-                            # The user follows himself
-                            print("**********************")
-                            print(data["user_id"])
-                            print("**********************")
-                            feed_manager.follow(data["user_id"], data["user_id"])
-                            # The user join FormShare
-                            actor = Actor(data["user_id"], 'person')
-                            feed_object = Object('formshare', 'platform')
-                            activity = Activity('join', actor, feed_object)
-                            feed_manager.add_activity_feed(activity)
-
-                            # Load connected plugins so they perform actions after the registration is performed
-                            next_page = self.request.route_url('dashboard', userid=data["user_id"])
-                            plugin_next_page = ''
-                            for plugin in p.PluginImplementations(p.IAuthorize):
-                                plugin_next_page = plugin.after_register(self.request, data)
-                                break  # Only one plugging will be called to extend after_register
-                            if plugin_next_page is not None:
-                                if plugin_next_page != '':
-                                    if plugin_next_page != next_page:
-                                        next_page = plugin_next_page
-                            if next_page == self.request.route_url('dashboard', userid=data["user_id"]):
-                                login_data = {"login": data["user_id"], "group": "mainApp"}
-                                headers = remember(self.request, login_data)
-                                return HTTPFound(location=self.request.route_url('dashboard', userid=data["user_id"]),
-                                                 headers=headers)
+            if validators.email(data["user_email"]):
+                if data["user_password"] != "":
+                    if data["user_password"] == data["user_password2"]:
+                        data["user_cdate"] = datetime.datetime.now()
+                        data["user_apikey"] = str(uuid.uuid4())
+                        data["user_apikey"] = str(uuid.uuid4())
+                        data["user_password"] = encode_data(self.request, data["user_password"])
+                        data["user_active"] = 1
+                        # Load connected plugins and check if they modify the registration of an user
+                        continue_registration = True
+                        for plugin in p.PluginImplementations(p.IAuthorize):
+                            data, continue_with_registration, error_message = plugin.before_register(self.request, data)
+                            if not continue_with_registration:
+                                self.errors.append(error_message)
+                                continue_registration = False
+                            break  # Only one plugging will be called to extend before_register
+                        if continue_registration:
+                            added, error_message = register_user(self.request, data)
+                            if not added:
+                                self.errors.append(error_message)
                             else:
-                                return HTTPFound(next_page)
+                                # Store the notifications
+                                feed_manager = get_manager(self.request)
+                                # The user follows himself
+                                print("**********************")
+                                print(data["user_id"])
+                                print("**********************")
+                                feed_manager.follow(data["user_id"], data["user_id"])
+                                # The user join FormShare
+                                actor = Actor(data["user_id"], 'person')
+                                feed_object = Object('formshare', 'platform')
+                                activity = Activity('join', actor, feed_object)
+                                feed_manager.add_activity_feed(activity)
+
+                                # Load connected plugins so they perform actions after the registration is performed
+                                next_page = self.request.route_url('dashboard', userid=data["user_id"])
+                                plugin_next_page = ''
+                                for plugin in p.PluginImplementations(p.IAuthorize):
+                                    plugin_next_page = plugin.after_register(self.request, data)
+                                    break  # Only one plugging will be called to extend after_register
+                                if plugin_next_page is not None:
+                                    if plugin_next_page != '':
+                                        if plugin_next_page != next_page:
+                                            next_page = plugin_next_page
+                                if next_page == self.request.route_url('dashboard', userid=data["user_id"]):
+                                    login_data = {"login": data["user_id"], "group": "mainApp"}
+                                    headers = remember(self.request, login_data)
+                                    return HTTPFound(location=self.request.route_url('dashboard', userid=data["user_id"]),
+                                                     headers=headers)
+                                else:
+                                    return HTTPFound(next_page)
+                    else:
+                        self.errors.append(self._("The password and its confirmation are not the same"))
                 else:
-                    self.errors.append(self._("The password and its confirmation are not the same"))
+                    self.errors.append(self._("The password cannot be empty"))
             else:
-                self.errors.append(self._("The password cannot be empty"))
+                self.errors.append(self._("Invalid email"))
         return {'next': next, 'userdata': data}

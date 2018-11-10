@@ -3,11 +3,13 @@
         <div class="wrapper wrapper-content project-manager">
             <div class="ibox">
                 <div class="ibox-title">
-                    <h5>Project description</h5>
+                    <h5>{{ projectData.project_name }}</h5>
                     <div class="ibox-tools">
-                        <a style="margin-right: 10px">
-                            <i class="fa fa-pencil text-warning" title="Edit"></i>
-                        </a>
+                        {% if projectData.access_type != 4 %}
+                            <a href="{{ request.route_url('project_edit',userid=projectData.owner,projcode=projectData.project_code,_query={'next':request.url}) }}" style="margin-right: 10px">
+                                <i class="fa fa-pencil text-warning" title="Edit"></i>
+                            </a>
+                        {% endif %}
                         <a class="collapse-link" style="margin-right: 10px">
                             <i class="fa fa-chevron-up"></i>
                         </a>
@@ -17,23 +19,46 @@
                     </div>
                 </div>
                 <div class="ibox-content">
-                    <img src="img/zender_logo.png" class="img-fluid">
-                    <p class="small">
-                        There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look
-                        even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing
-                    </p>
-                    <p class="small font-bold">
-                        <span><i class="fa fa-circle text-info"></i> Active</span>
-                    </p>
+                    {% if projectData.project_image != None %}
+                        {% if request.h.is_valid_url(projectData.project_image) %}
+                            <img src="{{ projectData.project_image }}" class="img-fluid">
+                        {% else %}
+                            {% if projectData.project_image != None %}
+                                <img style="max-width: 30%" src="{{ request.route_url('project_stored_file', userid=userid, projcode=projectData.project_code, filename=projectData.project_image) }}" class="img-fluid">
+                            {% endif %}
+                        {% endif %}
+                        <hr>
+                    {% endif %}
+
+                    {% if projectData.project_abstract != None %}
+                        <textarea id="abstract_hidden" style="display:none;">{{ projectData.project_abstract }}</textarea>
+                        <div class="scroll_content">
+                            <small id="project_abstract">
+
+                            </small>
+                        </div>
+                    {% else %}
+                        <small id="project_abstract">{{ _('Without abstract') }}</small> {% if projectData.access_type != 4 %} <a href="{{ request.route_url('project_edit',userid=projectData.owner,projcode=projectData.project_code,_query={'next':request.url}) }}"><i class="fas fa-pencil-alt text-warning" title="{{ _('Edit') }}"></i></a> {% endif %}
+                    {% endif %}
+                    <hr>
+                    {% if projectData.project_public == 1 %}
+                        <p class="small font-bold">
+                            <span><i class="fa fa-circle text-info"></i> {{ _('Open access') }}</span>
+                        </p>
+                    {% else %}
+                        <p class="small font-bold">
+                            <span><i class="fa fa-circle text-danger"></i> {{ _('Private') }}</span>
+                        </p>
+                    {% endif %}
                 </div>
             </div>
             {% include 'dashboard/projects/snippets/project_map.jinja2' %}
             <div class="ibox">
                 <div class="ibox-title">
-                    <h5>Collaborators</h5>
+                    <h5>Enumerators</h5>
                     <div class="ibox-tools">
                         <a style="margin-right: 10px">
-                            <i class="fa fa-plus-square text-success" title="Add new collaborator"></i>
+                            <i class="fa fa-plus-square text-success" title="Add new enumerator"></i>
                         </a>
                         <a class="collapse-link">
                             <i class="fa fa-chevron-up" style="margin-right: 10px"></i>
@@ -58,12 +83,12 @@
                             </ul>
                         </div>
                     </div>
-                    <small>Collaborators in <span class="text-danger">red</span> are inactive</small>
+                    <small>Enumerators in <span class="text-danger">red</span> are inactive</small>
                 </div>
             </div>
             <div class="ibox">
                 <div class="ibox-title">
-                    <h5>Collaborator groups</h5>
+                    <h5>Enumerator groups</h5>
                     <div class="ibox-tools">
                         <a style="margin-right: 10px">
                             <i class="fa fa-plus-square text-success" title="Add new group"></i>
@@ -120,8 +145,8 @@
                     </div>
                 </div>
             </div>
-            <div class="text-center m-t-md">
-                <a href="#" class="btn btn-xs btn-warning">Edit project</a> <a href="#" class="btn btn-xs btn-danger">Remove project</a>
+            <div class="text-center m-t-md" style="margin-bottom: 20px">
+                {% if projectData.access_type != 4 %}<a href="{{ request.route_url('project_edit',userid=projectData.owner,projcode=projectData.project_code,_query={'next':request.url}) }}" class="btn btn-xs btn-warning">Edit project</a>{% endif %} {% if projectData.access_type == 1 or projectData.access_type == 2 %} <a id="delete_project" style="color: white" class="btn btn-xs btn-danger">Remove project</a> {% endif %}
             </div>
         </div>
     </div>
@@ -171,7 +196,7 @@
                             </dl>
                             <dl class="row mb-0">
                                 <div class="col-sm-4 text-sm-right">
-                                    <dt>Members:</dt>
+                                    <dt>{{ _('Collaborators:') }}</dt>
                                 </div>
                                 <div class="col-sm-8 text-sm-left">
                                     <dd class="project-people mb-1">

@@ -4,7 +4,7 @@ import datetime
 import os
 import uuid
 import transaction
-from validate_email import validate_email
+import validators
 
 from pyramid.paster import (
     get_appsettings,
@@ -49,7 +49,7 @@ def main(argv=sys.argv):
         print("The password and its confirmation are not the same")
         sys.exit(1)
 
-    email_valid = validate_email(options["user_email"])
+    email_valid = validators.email(options["user_email"])
     if not email_valid:
         print("Invalid email")
         sys.exit(1)

@@ -1,11 +1,11 @@
 <div class="col-sm-12">
-    <h2>Projects</h2>
+    <h2>{{ _('Project list') }}</h2>
     <ol class="breadcrumb">
         <li class="breadcrumb-item">
-            <a href="{{ request.route_url("dashboard", userid=activeUser.login) }}">Dashboard</a>
+            <a href="{{ request.route_url("dashboard", userid=activeUser.login) }}">{{ _('Dashboard') }}</a>
         </li>
         <li class="breadcrumb-item active">
-            <strong>Projects</strong>
+            <strong>{{ _('Projects') }}</strong>
         </li>
     </ol>
 </div>

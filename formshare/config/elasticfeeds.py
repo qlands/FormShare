@@ -61,11 +61,6 @@ def configure_manager(settings):
     except KeyError:
         max_link_size = 10000
 
-    print("******************88")
-    print(feed_index)
-    print("--------------------")
-    print(network_index)
-    print("******************88")
     feeds_manager = Manager(feed_index, network_index, host, port, url_prefix, use_ssl, number_of_shards_in_feeds,
                             number_of_replicas_in_feeds, number_of_shards_in_network, number_of_replicas_in_network,
                             False, False, max_link_size)

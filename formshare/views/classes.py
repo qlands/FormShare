@@ -238,7 +238,7 @@ class PrivateView(object):
             self.classResult["userProjects"] = []
 
         if self.user is not None:
-            self.activeProject = get_active_project(self.request, self.userID)
+            self.activeProject = get_active_project(self.request, self.user.login)
             self.classResult['activeProject'] = self.activeProject
         else:
             self.classResult['activeProject'] = {}

@@ -11,6 +11,7 @@ import inflect
 import formshare.plugins as p
 import urllib
 import hashlib
+import validators
 
 
 class HelperAttributeDict(dict):
@@ -122,6 +123,24 @@ def get_gravatar_url(email, size=45):
     gravatar_url = "http://www.gravatar.com/avatar/" + hashlib.md5(encoded_email.lower()).hexdigest() + "?"
     gravatar_url += urllib.parse.urlencode({'d': default, 's': str(size)})
     return gravatar_url
+
+@core_helper
+def is_valid_email(email):
+    """
+    Checks whether the email is valid
+    :param email: Email to check
+    :return: True of valid otherwise False
+    """
+    return validators.email(email)
+
+@core_helper
+def is_valid_url(url):
+    """
+    Checks whether the url is valid
+    :param url: Url to check
+    :return: True of valid otherwise False
+    """
+    return validators.url(url)
 
 
 def load_plugin_helpers():

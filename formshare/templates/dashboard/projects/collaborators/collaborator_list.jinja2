@@ -1,0 +1,101 @@
+{% extends 'dashboard/page.jinja2' %}
+
+{% block titlesection %}{{ _("Collaborators") }}{% endblock titlesection %}
+
+{% block css %}
+    {{ super() }}
+    {% cssresource request,'formshare','bsmarkdown' %}
+{% endblock css %}
+
+{% block topScripts %}
+    {{ super() }}
+    {% jsresource request,'formshare','markdown' %}
+    {% jsresource request,'formshare','clipboard' %}
+{% endblock topScripts %}
+
+{% block breadcrumbs %}
+    {% include 'dashboard/projects/collaborators/snippets/brdcrbs_colbrtslist.jinja2' %}
+{% endblock breadcrumbs %}
+
+{% block maincontent %}
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="ibox">
+                <div class="ibox-content">
+                    <span class="text-muted small float-right">Last modification: <i class="fa fa-clock-o"></i> 2:10 pm - 12.06.2014</span>
+                    <h2>{{ _('Collaborators') }}</h2>
+                    <p>
+                        All clients need to be verified before you can send email and set a project.
+                    </p>
+                    <div class="input-group">
+                        <input type="text" placeholder="{{ _('Search collaborators') }} " class="input form-control">
+                        <span class="input-group-append">
+                                        <button type="button" class="btn btn btn-primary"> <i class="fa fa-search"></i> Search</button>
+                                </span>
+                    </div>
+                    <div class="clients-list">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <img class="client-avatar rounded-circle" style="width: 30px" alt="image" src="{{ request.url_for_static('a2.jpg') }}">
+                                        <a href="#contact-1" class="client-link">Anthony Jackson</a>
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <i class="fa fa-envelope"></i> rooney@proin.com
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <span class="label label-primary">Active</span>
+                                        <span class="badge badge-dark">Member</span>
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <a href="#" class="btn btn-white btn-sm"><i class="fa fa-folder"></i> {{ _('Delete') }} </a>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <img class="client-avatar rounded-circle" style="width: 30px" alt="image" src="{{ request.url_for_static('a2.jpg') }}">
+                                        <a href="#contact-1" class="client-link">Anthony Jackson</a>
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <i class="fa fa-envelope"></i> rooney@proin.com
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <span class="label label-warning">Inactive</span>
+                                        <span class="badge badge-warning">Editor</span>
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <a href="#" class="btn btn-white btn-sm"><i class="fa fa-folder"></i> {{ _('Delete') }} </a>
+                                    </div>
+                                </div>
+                                <hr>
+                                <div class="row">
+                                    <div class="col-sm-3">
+                                        <img class="client-avatar rounded-circle" style="width: 30px" alt="image" src="{{ request.url_for_static('a2.jpg') }}">
+                                        <a href="#contact-1" class="client-link">Anthony Jackson</a>
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <i class="fa fa-envelope"></i> rooney@proin.com
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <span class="label label-primary">Active</span>
+                                        <span class="badge badge-danger">Administrator</span>
+                                    </div>
+                                    <div class="col-sm-3">
+                                        <a href="#" class="btn btn-white btn-sm"><i class="fa fa-folder"></i> {{ _('Delete') }} </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock maincontent %}
+
+{% block scripts %}
+    {{ super() }}
+
+{% endblock scripts %}

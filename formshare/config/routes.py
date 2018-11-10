@@ -3,8 +3,10 @@ import formshare.plugins as p
 from ..views.basic_views import NotFoundView, HomeView, log_out_view, LoginView, RegisterView, \
     CollaboratorsLoginView
 from ..views.dashboard import UserDashBoardView
-from ..views.projects import AddProjectView, ProjectListView, ProjectDetailsView
+from ..views.projects import AddProjectView, ProjectListView, ProjectDetailsView, ProjectStoredFileView, \
+    EditProjectView, DeleteProjectView
 from ..views.profile import UserProfileView, EditProfileView
+from ..views.collaborators import CollaboratorsListView
 
 route_list = []
 
@@ -60,6 +62,18 @@ def load_routes(config):
         add_route('projects', '/user/{userid}/projects', ProjectListView, 'dashboard/projects/project_list.jinja2'))
     routes.append(add_route('project_details', '/user/{userid}/project/{projcode}', ProjectDetailsView,
                             'dashboard/projects/project_details.jinja2'))
+    routes.append(
+        add_route('project_stored_file', '/user/{userid}/project/{projcode}/storage/{filename}', ProjectStoredFileView,
+                  None))
+    routes.append(add_route('project_edit', '/user/{userid}/project/{projcode}/edit', EditProjectView,
+                            'dashboard/projects/project_edit.jinja2'))
+
+    routes.append(add_route('project_delete', '/user/{userid}/project/{projcode}/delete', DeleteProjectView, None))
+
+    routes.append(add_route('collaborators', '/user/{userid}/project/{projcode}/collaborators', CollaboratorsListView,
+                            'dashboard/projects/collaborators/collaborator_list.jinja2'))
+
+
     # routes.append(addRoute('form_details', '/user/{userid}/project/{projid}/form/{formid}', formDetails_view,
     #                        'dashboard/projects/forms/form_details.jinja2'))
 

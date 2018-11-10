@@ -1,10 +1,11 @@
-{% import 'dashboard/macros/form.jinja2' as form %}
 {% block project_form %}
-    <form class="m-t" role="form" method="post" action="{{ request.url }}">
+    <form class="m-t" role="form" method="post" action="{{ request.url }}" enctype="multipart/form-data" >
         {{ form.secure_form(request) }}
-        <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Code') }}</label>
-            <div class="col-sm-10"><input type="text" class="form-control" name="project_code" value="{{ projectDetails.project_code }}"> <span class="form-text m-b-none">{{ _('The code must be unique') }}</span> </div>
-        </div>
+        {% block project_form_code %}
+            <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Code') }}</label>
+                <div class="col-sm-10"><input type="text" class="form-control" name="project_code" value="{{ projectDetails.project_code }}"> <span class="form-text m-b-none">{{ _('The code must be unique and cannot be changed afterwards') }}</span> </div>
+            </div>
+        {% endblock project_form_code %}
         <div class="hr-line-dashed"></div>
         <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Name') }}</label>
             <div class="col-sm-10">
@@ -18,18 +19,45 @@
             </div>
         </div>
         <div class="hr-line-dashed"></div>
-        <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Public') }}</label>
-            <div class="col-sm-10"><input type="checkbox" name="project_public" class="js-switch" {% if projectDetails|length > 0 %} {% if projectDetails.project_public == 1 %}checked{% endif %}{% else %}checked{% endif %} /><span class="form-text m-b-none">{{ _('Recommened: This means that the project information is open to the public but not neccesarily its data') }}</span></div>
+        <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Open access') }}</label>
+            <div class="col-sm-10"><input type="checkbox" name="project_public" class="js-switch" {% if projectDetails|length > 0 %} {% if projectDetails.project_public == 1 %}checked{% endif %}{% else %}checked{% endif %} /><span class="form-text m-b-none">{% block open_access_comment %}{{ _('(Recommended) This means that the project is visible to the public and its data will be available within 6 months from the first submission.') }}{% endblock open_access_comment %}</span></div>
+        </div>
+        <div class="hr-line-dashed"></div>
+        <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Image') }}</label>
+            <input style="display:none;" type="file" id="filetoupload" name="filetoupload"/>
+            <div id="imageinput" class="input-group col-sm-10">
+                {% if projectDetails.project_image == None %}
+                    <a id="uploadbutton" class="btn btn-white btn-bitbucket"><i class="fa fa-upload"></i> Upload</a>
+                    <a style="margin-left: 10px" id="linkbutton" class="btn btn-white btn-bitbucket"><i class="fa fa-globe"></i> Link</a>
+
+                    <input style="display:none;" type="text" class="form-control" name="project_image" id="file_name" {% if projectDetails.project_image != None %} value="{{ projectDetails.project_image }}" {% endif %}>
+                    <div style="display:none;" class="input-group-append" id="clear_section">
+                        <button id="clear_button" type="button" class="btn btn-danger btn-xs">Remove</button>
+                    </div>
+                {% else %}
+                    <a style="display:none;" id="uploadbutton" class="btn btn-white btn-bitbucket"><i class="fa fa-upload"></i> Upload</a>
+                    <a style="margin-left: 10px; display:none;" id="linkbutton" class="btn btn-white btn-bitbucket"><i class="fa fa-globe"></i> Link</a>
+
+                    <input {% if not request.h.is_valid_url(projectDetails.project_image) %}readonly {% endif %}type="text" class="form-control" name="project_image" id="file_name" value="{{ projectDetails.project_image }}">
+                    <div class="input-group-append" id="clear_section">
+                        <button id="clear_button" type="button" class="btn btn-danger btn-xs">Remove</button>
+                    </div>
+                {% endif %}
+
+
+
+            </div>
         </div>
         <div class="hr-line-dashed"></div>
         {% block project_form_controls_extra %}
 
         {% endblock project_form_controls_extra %}
-
-        <div class="form-group row">
-            <div class="col-sm-4 col-sm-offset-2">
-                <button class="btn btn-primary btn-sm" type="submit">{{ _('Add project') }}</button>
+        {% block project_form_actions %}
+            <div class="form-group row">
+                <div class="col-sm-4 col-sm-offset-2">
+                    <button class="btn btn-primary btn-sm" type="submit">{{ _('Add project') }}</button>
+                </div>
             </div>
-        </div>
+        {% endblock project_form_actions %}
     </form>
 {% endblock project_form %}

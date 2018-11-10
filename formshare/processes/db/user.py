@@ -2,7 +2,7 @@ from ...models import map_to_schema, User, map_from_schema, Userproject, Odkform
 import sys
 from sqlalchemy.exc import IntegrityError
 import logging
-from validate_email import validate_email
+import validators
 
 __all__ = [
     'register_user', 'user_exists', 'get_user_details', 'update_profile'
@@ -34,7 +34,7 @@ def get_user_stats(request, user):
 def register_user(request, user_data):
     user_data.pop('user_password2', None)
     mapped_data = map_to_schema(User, user_data)
-    email_valid = validate_email(mapped_data["user_email"])
+    email_valid = validators.email(mapped_data["user_email"])
     if email_valid:
         res = request.dbsession.query(User).filter(User.user_email == mapped_data["user_email"]).first()
         if res is None:

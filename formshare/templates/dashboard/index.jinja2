@@ -67,7 +67,7 @@
                 <h3 class="font-bold">{{ _('It seems that you are new here!') }}</h3>
                 <div class="error-desc">
 
-                    <button type="button" onclick="location.href='{{ request.route_url('projects_add',userid=activeUser.login,_query={'next':request.route_url('dashboard',userid=activeUser.login)}) }}';" class="btn btn-w-m btn-success">{{ _('Create a new project') }}</button>
+                    <button type="button" onclick="location.href='{{ request.route_url('projects_add',userid=activeUser.login,_query={'next':request.url}) }}';" class="btn btn-w-m btn-success">{{ _('Create a new project') }}</button>
                 </div>
             </div>
         {% endif %}

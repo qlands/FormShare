@@ -52,43 +52,54 @@
 {% endblock mainsection %}
 
 {% block scripts %}
+    {% jsresource request,'formshare','inspinia' %}
+    {% set messageData = request.session.pop_flash() %}
+    {% if messageData|length > 0 %}
+        <script>
+            $(document).ready(function() {
+                messageData = '{{ messageData[0] }}';
+                swal({
+                    title: 'FormShare',
+                    text: messageData,
+                    type: "success"
+                });
+            });
+        </script>
+    {% endif %}
+
+    <script>
+        $(document).ready(function() {
+            $('.delete_project').click(function () {
+                var action_url = $( this ).attr('urn');
+                swal({
+                        title: "{{ _('Are you sure?') }}",
+                        text: "{{ _('All the data in this project will be deleted!') }}",
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#DD6B55",
+                        confirmButtonText: "{{ _('Yes, delete it!') }}",
+                        cancelButtonText: "{{ _('Ups, cancel!') }}",
+                        closeOnConfirm: true,
+                        closeOnCancel: true },
+                    function (isConfirm) {
+                        if (isConfirm) {
+                            var form = document.createElement('form');
+                            form.setAttribute('method', 'post');
+                            form.setAttribute('action', action_url);
+                            form.style.display = 'hidden';
+
+                            var i = document.createElement("input"); //input element, text
+                            i.setAttribute('type',"text");
+                            i.setAttribute('name',"csrf_token");
+                            i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                            form.appendChild(i);
+
+                            document.body.appendChild(form);
+                            form.submit();
+                        }
+                    });
+            });
+        });
+    </script>
 
 {% endblock scripts %}
-
-{#{% extends 'dashboard/page.jinja2' %}#}
-{##}
-{#{% block titlesection %}{{ _("Projects") }}{% endblock titlesection %}#}
-{##}
-{#{% block breadcrumbs %}#}
-{#    {% include 'dashboard/projects/snippets/brdcrbs_prjlist.jinja2' %}#}
-{#{% endblock breadcrumbs %}#}
-{##}
-{#{% block maincontent %}#}
-{#    <div class="ibox">#}
-{#        <div class="ibox-title">#}
-{#            <h5>Active projects</h5>#}
-{#            <div class="ibox-tools">#}
-{#                <a href="{{ request.route_url('projects_add',userid=activeUser.login,_query={'next':request.route_url('projects',userid=activeUser.login)}) }}" class="btn btn-primary btn-xs" style="margin-right: 20px">{{ _('Create new project') }}</a>#}
-{#                <a class="fullscreen-link">#}
-{#                    <i class="fas fa-expand" style="margin-right: 10px"></i>#}
-{#                </a>#}
-{#            </div>#}
-{#        </div>#}
-{#        <div class="ibox-content">#}
-{#            <div class="row m-b-sm m-t-sm">#}
-{#                <div class="col-md-1">#}
-{#                    <button type="button" id="loading-example-btn" class="btn btn-white btn-sm" ><i class="fa fa-refresh"></i> {{ _('Refresh') }}</button>#}
-{#                </div>#}
-{#                <div class="col-md-11">#}
-{#                    <div class="input-group"><input type="text" placeholder="{{ _('Search within my projects') }}" class="form-control-sm form-control"> <span class="input-group-btn">#}
-{#                                        <button type="button" class="btn btn-sm btn-primary"> {{ _('Go!') }}</button> </span></div>#}
-{#                </div>#}
-{#            </div>#}
-{#            {% for project in userProjects %}#}
-{#                {% include 'dashboard/projects/snippets/project_item.jinja2' %}#}
-{#            {% endfor %}#}
-{#            {% include 'dashboard/projects/snippets/project_item.jinja2' %}#}
-{##}
-{#        </div>#}
-{#    </div>#}
-{#{% endblock maincontent %}#}

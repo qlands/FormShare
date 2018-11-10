@@ -1,5 +1,5 @@
 <div class="col-sm-12">
-    <h2>{{ _('Project details') }}</h2>
+    <h2>{{ _('Edit project') }}</h2>
     <ol class="breadcrumb">
         <li class="breadcrumb-item">
             <a href="{{ request.route_url("dashboard",userid=activeUser.login) }}">{{ _('Dashboard') }}</a>
@@ -7,8 +7,11 @@
         <li class="breadcrumb-item">
             <a href="{{ request.route_url("projects",userid=activeUser.id) }}">{{ _('Projects') }}</a>
         </li>
+        <li class="breadcrumb-item">
+            <a href="{{ request.route_url("project_details",userid=activeUser.id, projcode=projectDetails.project_code) }}">{{ projectDetails.project_name }}</a>
+        </li>
         <li class="breadcrumb-item active">
-            <strong>{{ projectData.project_name }}</strong>
+            <strong>{{ _('Edit') }}</strong>
         </li>
     </ol>
 </div>

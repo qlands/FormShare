@@ -10,16 +10,16 @@
             {{ project.total_submissions }} {{ request.h.pluralize(request,_('submission'),project.total_submissions) }} {{ _('within') }} {{ project.total_forms }} {{ request.h.pluralize(request,_('form'),project.total_forms) }}<br/>
             <small>Last submission by cquiros in form <a style="color: #337ab7;">"Rhomis 1"</a> two days ago</small>
         {% else %}
-            Without submissions
+            {{ _('Without submissions') }}
         {% endif %}
     </div>
     <div class="col-md-4">
-        <a href="{{ request.route_url('project_details', userid=project.owner, projcode=project.project_code) }}" class="btn btn-white btn-sm"><i class="fa fa-folder"></i> View </a>
+        <a href="{{ request.route_url('project_details', userid=project.owner, projcode=project.project_code) }}" class="btn btn-white btn-sm"><i class="fa fa-folder"></i> {{ _('View') }} </a>
         {% if project.access_type != 4 %}
-            <a href="#" class="btn btn-white btn-sm"><i class="fas fa-pencil-alt text-warning"></i> Edit </a>
+            <a href="{{ request.route_url('project_edit',userid=project.owner,projcode=project.project_code) }}" class="btn btn-white btn-sm"><i class="fas fa-pencil-alt text-warning"></i> {{ _('Edit') }} </a>
         {% endif %}
-        {% if project.access_type == 1 or project.access_type == 2 %}
-            <a href="#" class="btn btn-white btn-sm"><i class="fas fa-trash text-danger"></i> Delete </a>
+        {% if project.access_type == 1 %}
+            <a urn="{{ request.route_url('project_delete',userid=project.owner,projcode=project.project_code,_query={'fail':request.url}) }}" class="btn btn-white btn-sm delete_project"><i class="fas fa-trash text-danger"></i> {{ _('Delete') }} </a>
         {% endif %}
     </div>
 </div>

@@ -5,28 +5,23 @@
 
 {% block css %}
     {{ super() }}
-    {% if viewingSelfAccount == False %}
-        {% cssresource request,'formshare','bsmarkdown' %}
-         {% cssresource request,'formshare','leaflet' %}
-    {% else %}
-        {% cssresource request,'formshare','leaflet' %}
-    {% endif %}
+
+    {% cssresource request,'formshare','bsmarkdown' %}
+    {% cssresource request,'formshare','leaflet' %}
+
 {% endblock css %}
 
 {% block topScripts %}
     {{ super() }}
-    {% if viewingSelfAccount == False %}
-        {% jsresource request,'formshare','markdown' %}
-        {% jsresource request,'formshare','clipboard' %}
-        {% jsresource request,'formshare','leaflet' %}
-    {% else %}
-        {% jsresource request,'formshare','leaflet' %}
-    {% endif %}
+
+    {% jsresource request,'formshare','markdown' %}
+    {% jsresource request,'formshare','leaflet' %}
+
 {% endblock topScripts %}
 
 {% block dashheader %}
     {% block breadcrumbs %}
-        {% if viewingSelfAccount %}
+        {% if projectData.user_collaborates  %}
             <div class="row wrapper border-bottom white-bg page-heading">
                 {% include 'dashboard/projects/snippets/brdcrbs_prjdtls.jinja2' %}
             </div>
@@ -38,7 +33,9 @@
     {% if viewingSelfAccount %}
         {{ super() }}
     {% else %}
-        {% include 'dashboard/profile/snippets/profile_head.jinja2' %}
+        {% if not projectData.user_collaborates  %}
+            {% include 'dashboard/profile/snippets/profile_head.jinja2' %}
+        {% endif %}
         {% include 'dashboard/projects/snippets/project_details.jinja2' %}
     {% endif %}
 
@@ -53,98 +50,104 @@
 {% endblock mainsection %}
 
 {% block scripts %}
-    {{ super() }}
-    {% if viewingSelfAccount == False %}
+    {% jsresource request,'formshare','inspinia' %}
+    {% set messageData = request.session.pop_flash() %}
+    {% if messageData|length > 0 %}
         <script>
             $(document).ready(function() {
-                $('.scroll_content2').slimscroll();
-                new ClipboardJS('.clipboard');
+                messageData = '{{ messageData[0] }}';
+                swal({
+                    title: 'FormShare',
+                    text: messageData,
+                    type: "success"
+                });
+
             });
-        </script>
-
-        <script>
-            var mymap = L.map('projmap').setView([51.505, -0.09], 13);
-            L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
-                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-                maxZoom: 18,
-                id: 'mapbox.streets',
-                accessToken: 'pk.eyJ1IjoicWxhbmRzIiwiYSI6ImNqZHB1ZDh4YzEwZHEyeG1rcjc0NmFsNzIifQ.i3YebmNDByns1c1ixZE0bA'
-            }).addTo(mymap);
-
-            var element = document.getElementById('mapbox');
-            var full_screen = false;
-            var normal_height = $("#projmap").height();
-            new ResizeSensor(element, function() {
-                var window_width = $(window).width();
-                var element_width =  element.clientWidth;
-                if ((element_width / window_width) >= 0.80)
-                {
-                    $("#projmap").height($(window).height()-80);
-                    mymap.invalidateSize();
-                    //console.log('Changed to ' + element.clientWidth);
-                    full_screen = true;
-                }
-                else
-                {
-                    if (full_screen)
-                    {
-                        $("#projmap").height(normal_height);
-                        mymap.invalidateSize();
-                        //console.log('Back to ' + normal_height);
-                        //console.log('Changed to ' + element.clientWidth);
-                        full_screen = false;
-                    }
-                }
-            });
-
-            $('.scroll_content').slimscroll({
-                height: '300px'
-            })
-
-        </script>
-
-    {% else %}
-        <script>
-            var mymap = L.map('projmap').setView([51.505, -0.09], 13);
-            L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
-                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-                maxZoom: 18,
-                id: 'mapbox.streets',
-                accessToken: 'pk.eyJ1IjoicWxhbmRzIiwiYSI6ImNqZHB1ZDh4YzEwZHEyeG1rcjc0NmFsNzIifQ.i3YebmNDByns1c1ixZE0bA'
-            }).addTo(mymap);
-
-            var element = document.getElementById('mapbox');
-            var full_screen = false;
-            var normal_height = $("#projmap").height();
-            new ResizeSensor(element, function() {
-                var window_width = $(window).width();
-                var element_width =  element.clientWidth;
-                if ((element_width / window_width) >= 0.80)
-                {
-                    $("#projmap").height($(window).height()-80);
-                    mymap.invalidateSize();
-                    //console.log('Changed to ' + element.clientWidth);
-                    full_screen = true;
-                }
-                else
-                {
-                    if (full_screen)
-                    {
-                        $("#projmap").height(normal_height);
-                        mymap.invalidateSize();
-                        //console.log('Back to ' + normal_height);
-                        //console.log('Changed to ' + element.clientWidth);
-                        full_screen = false;
-                    }
-                }
-            });
-
-            $('.scroll_content').slimscroll({
-                height: '300px'
-            })
-
         </script>
     {% endif %}
+
+    <script>
+        $(document).ready(function() {
+            $('#delete_project').click(function () {
+                swal({
+                        title: "{{ _('Are you sure?') }}",
+                        text: "{{ _('All the data in this project will be deleted!') }}",
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#DD6B55",
+                        confirmButtonText: "{{ _('Yes, delete it!') }}",
+                        cancelButtonText: "{{ _('Ups, cancel!') }}",
+                        closeOnConfirm: true,
+                        closeOnCancel: true },
+                    function (isConfirm) {
+                        if (isConfirm) {
+                            var form = document.createElement('form');
+                            form.setAttribute('method', 'post');
+                            form.setAttribute('action', '{{ request.route_url('project_delete',userid=projectData.owner,projcode=projectData.project_code,_query={'fail':request.url}) }}');
+                            form.style.display = 'hidden';
+
+                            var i = document.createElement("input"); //input element, text
+                            i.setAttribute('type',"text");
+                            i.setAttribute('name',"csrf_token");
+                            i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                            form.appendChild(i);
+
+                            document.body.appendChild(form);
+                            form.submit();
+                        }
+                    });
+            });
+        });
+    </script>
+
+    <script>
+        var mymap = L.map('projmap').setView([51.505, -0.09], 13);
+        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+            maxZoom: 18,
+            id: 'mapbox.streets',
+            accessToken: 'pk.eyJ1IjoicWxhbmRzIiwiYSI6ImNqZHB1ZDh4YzEwZHEyeG1rcjc0NmFsNzIifQ.i3YebmNDByns1c1ixZE0bA'
+         }).addTo(mymap);
+
+        var element = document.getElementById('mapbox');
+        var full_screen = false;
+        var normal_height = $("#projmap").height();
+        new ResizeSensor(element, function() {
+            var window_width = $(window).width();
+            var element_width =  element.clientWidth;
+            if ((element_width / window_width) >= 0.80)
+            {
+                $("#projmap").height($(window).height()-80);
+                mymap.invalidateSize();
+                //console.log('Changed to ' + element.clientWidth);
+                full_screen = true;
+            }
+            else
+            {
+                if (full_screen)
+                {
+                    $("#projmap").height(normal_height);
+                    mymap.invalidateSize();
+                    //console.log('Back to ' + normal_height);
+                    //console.log('Changed to ' + element.clientWidth);
+                    full_screen = false;
+                }
+            }
+         });
+
+        {% if projectData.project_abstract != None %}
+
+            $(document).ready(function() {
+                var val = $("#abstract_hidden").val();
+                document.getElementById('project_abstract').innerHTML = markdown.toHTML(val);
+
+                $('.scroll_content').slimscroll();
+            });
+
+        {% endif %}
+
+    </script>
+
 {% endblock scripts %}
 
 {#{% extends 'dashboard/page.jinja2' %}#}

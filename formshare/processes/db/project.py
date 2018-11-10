@@ -7,8 +7,8 @@ import uuid
 from sqlalchemy.exc import IntegrityError
 
 __all__ = [
-    'get_project_id_from_name', 'get_user_projects', 'get_active_project', 'add_project'
-]
+    'get_project_id_from_name', 'get_user_projects', 'get_active_project', 'add_project', 'modify_project',
+    'delete_project', 'is_collaborator']
 
 log = logging.getLogger(__name__)
 
@@ -51,6 +51,15 @@ def get_project_owner(request, project):
         return None
 
 
+def is_collaborator(request, user, project):
+    res = request.dbsession.query(Userproject.user_id).filter(Userproject.project_id == project).filter(
+        Userproject.user_id == user).first()
+    if res is not None:
+        return True
+    else:
+        return False
+
+
 def get_user_projects(request, user, logged_user, private=False):
     if private:
         if user == logged_user:
@@ -65,11 +74,12 @@ def get_user_projects(request, user, logged_user, private=False):
             # Get all the projects of that user
             all_user_projects = request.dbsession.query(Project).filter(
                 Project.project_id == Userproject.project_id).filter(Userproject.user_id == user).all()
+            all_user_projects = map_from_schema(all_user_projects)
             for project in all_user_projects:
                 # Check each project to see if the logged user collaborate with it
                 res = request.dbsession.query(Project, Userproject).filter(
                     Project.project_id == Userproject.project_id).filter(
-                    Userproject.user_id == logged_user).filter(Userproject.project_id == project.project_id).first()
+                    Userproject.user_id == logged_user).filter(Userproject.project_id == project['project_id']).first()
                 collaborative_project = map_from_schema(res)
                 if collaborative_project:
                     collaborative_project['collaborate'] = True
@@ -77,9 +87,13 @@ def get_user_projects(request, user, logged_user, private=False):
                     projects.append(collaborative_project)
                 else:
                     if project["project_public"] == 1:
-                        collaborative_project['collaborate'] = False
-                        collaborative_project['user_id'] = user
-                        projects.append(collaborative_project)
+                        project['collaborate'] = False
+                        project['access_type'] = 4
+                        # collaborative_project['user_id'] = user
+                        # collaborative_project['project_id'] = project['project_id']
+                        #
+                        # collaborative_project['project_cdate'] = project['project_cdate']
+                        projects.append(project)
     else:
         res = request.dbsession.query(Project, Userproject).filter(Project.project_id == Userproject.project_id).filter(
             Userproject.user_id == user).filter(Project.project_public == 1).all()
@@ -104,6 +118,11 @@ def get_active_project(request, user):
     res = request.dbsession.query(Project, Userproject).filter(Project.project_id == Userproject.project_id).filter(
         Userproject.user_id == user).filter(Userproject.project_active == 1).first()
     mapped_data = map_from_schema(res)
+    user_projects = get_user_projects(request, user, user, True)
+    for project in user_projects:
+        if project['project_id'] == mapped_data['project_id']:
+            mapped_data['access_type'] = project['access_type']
+            mapped_data['owner'] = project['owner']
     return mapped_data
 
 
@@ -142,3 +161,41 @@ def add_project(request, user, project_data):
     else:
         return False, request.translate("A project with name '{}' already exists in your account").format(
             project_data["project_code"])
+
+
+def modify_project(request, user, project, project_data):
+    res = request.dbsession.query(Project).filter(Project.project_id == Userproject.project_id).filter(
+        Userproject.user_id == user).filter(Userproject.access_type == 1).filter(
+        Project.project_code == project_data["project_code"]).filter(Project.project_id != project).first()
+    if res is None:
+        mapped_data = map_to_schema(Project, project_data)
+        try:
+            request.dbsession.query(Project).filter(Project.project_id == project).update(mapped_data)
+            request.dbsession.flush()
+        except RuntimeError:
+            log.error("Error when updating project {}".format(sys.exc_info()[0], project))
+            return False, sys.exc_info()[0]
+        return True, ""
+    else:
+        return False, request.translate("A project with name '{}' already exists in your account").format(
+            project_data["project_code"])
+
+
+def delete_project(request, user, project):
+    try:
+        request.dbsession.query(Project).filter(Project.project_id == project).delete()
+        request.dbsession.flush()
+        res = request.dbsession.query(Userproject).filter(Userproject.user_id == user).filter(
+            Userproject.project_active == 1).first()
+        if res is None:
+            res = request.dbsession.query(Userproject).filter(Userproject.user_id == user).order_by(
+                Userproject.access_date.desc()).first()
+            if res is not None:
+                new_active_project = res.project_id
+                request.dbsession.query(Userproject).filter(Userproject.user_id == user).filter(
+                    Userproject.project_id == new_active_project).update({'project_active': 1})
+                request.dbsession.flush()
+    except RuntimeError:
+        log.error("Error when updating project {}".format(sys.exc_info()[0], project))
+        return False, sys.exc_info()[0]
+    return True, ""

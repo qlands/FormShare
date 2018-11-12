@@ -8,7 +8,7 @@
             <a href="{{ request.route_url("projects",userid=activeUser.id) }}">{{ _('Projects') }}</a>
         </li>
         <li class="breadcrumb-item">
-            <a href="{{ request.route_url("project_details",userid=activeUser.id, projcode=projectDetails.project_code) }}">{{ projectDetails.project_name }}</a>
+            <a href="{{ request.route_url("project_details",userid=projectDetails.owner, projcode=projectDetails.project_code) }}">{{ projectDetails.project_name }}</a>
         </li>
         <li class="breadcrumb-item active">
             <strong>{{ _('Edit') }}</strong>

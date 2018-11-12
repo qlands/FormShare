@@ -1,0 +1,57 @@
+{% block assistant_form %}
+    <form class="m-t" role="form" method="post" action="{{ request.url }}" enctype="multipart/form-data" >
+        {{ form.secure_form(request) }}
+        {% block assistant_form_code %}
+            <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('User name') }}</label>
+                <div class="col-sm-10"><input maxlength="120" type="text" class="form-control" name="coll_id" value="{{ assistantData.coll_id }}"> <span class="form-text m-b-none">{{ _('The user name must be unique and cannot be changed afterwards') }}</span> </div>
+            </div>
+        {% endblock assistant_form_code %}
+        <div class="hr-line-dashed"></div>
+        <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Full name') }}</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" name="coll_name" value="{{ assistantData.coll_name }}">
+            </div>
+        </div>
+        <div class="hr-line-dashed"></div>
+        <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Email') }}</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" name="coll_email" value="{{ assistantData.coll_email }}">
+            </div>
+        </div>
+        <div class="hr-line-dashed"></div>
+        <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Telephone') }}</label>
+            <div class="col-sm-10">
+                <input type="text" class="form-control" name="coll_telephone" value="{{ assistantData.coll_telephone }}">
+            </div>
+        </div>
+        <div class="hr-line-dashed"></div>
+        {% block assistant_form_passwords %}
+            <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Password') }}</label>
+                <div class="col-sm-10">
+                    <input type="password" class="form-control" name="coll_password">
+                </div>
+            </div>
+            <div class="hr-line-dashed"></div>
+            <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Password confirmation') }}</label>
+                <div class="col-sm-10">
+                    <input type="password" class="form-control" name="coll_password2">
+                </div>
+            </div>
+            <div class="hr-line-dashed"></div>
+        {% endblock assistant_form_passwords %}
+        <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Share among projects') }}</label>
+            <div class="col-sm-10"><input type="checkbox" name="coll_prjshare" class="js-switch" {% if assistantData|length > 0 %} {% if assistantData.coll_prjshare == 1 %}checked{% endif %}{% else %}checked{% endif %} /><span class="form-text m-b-none">{% block share_assistant_comment %}{{ _('This means that this person can assist different projects within you account.') }}{% endblock share_assistant_comment %}</span></div>
+        </div>
+        <div class="hr-line-dashed"></div>
+        {% block assistant_form_controls_extra %}
+
+        {% endblock assistant_form_controls_extra %}
+        {% block assistant_form_actions %}
+            <div class="form-group row">
+                <div class="col-sm-4 col-sm-offset-2">
+                    <button class="btn btn-primary btn-sm" type="submit">{{ _('Add assistant') }}</button>
+                </div>
+            </div>
+        {% endblock assistant_form_actions %}
+    </form>
+{% endblock assistant_form %}

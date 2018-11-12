@@ -1,6 +1,6 @@
 from formshare.views.classes import ProfileView
 from pyramid.httpexceptions import HTTPNotFound, HTTPFound
-from formshare.processes import update_profile
+from formshare.processes.db import update_profile
 
 
 class UserProfileView(ProfileView):

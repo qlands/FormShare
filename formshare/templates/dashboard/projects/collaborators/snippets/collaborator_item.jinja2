@@ -1,0 +1,28 @@
+<div class="row">
+    <div class="col-md-4">
+        <div class="text-center">
+            <img class="client-avatar rounded-circle" style="width: 30px" alt="image" src="{{ request.h.get_gravatar_url(collaborator.user_email) }}">
+            <a href="{{ request.route_url('dashboard',userid=collaborator.user_id) }}" class="client-link">{{ collaborator.user_name }}</a>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="text-center">
+            {% if collaborator.access_type == 2 %}
+                <span class="badge badge-danger">{{ _('Administrator') }}</span>
+            {% endif %}
+            {% if collaborator.access_type == 3 %}
+                <span class="badge badge-warning">{{ _('Editor') }}</span>
+            {% endif %}
+            {% if collaborator.access_type == 4 %}
+                <span class="badge badge-dark">{{ _('Member') }}</span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="action-buttons text-center">
+            <a urn="{{ collaborator.user_id }}" data-collaborator-role="{{ collaborator.access_type }}" data-collaborator-name="{{ collaborator.user_name }}" class="btn btn-white btn-sm change_role" data-toggle="modal" data-target="#myModal" ><i class="fas fa-exchange-alt"></i> {{ _('Change role') }} </a>
+            <a urn="{{ request.route_url('collaborator_remove',userid=userid,projcode=projectDetails.project_code,collid=collaborator.user_id) }}" class="btn btn-white btn-sm remove_collaborator"><i style="color: red" class="fas fa-ban"></i> {{ _('Remove') }} </a>
+        </div>
+    </div>
+</div>
+<hr>

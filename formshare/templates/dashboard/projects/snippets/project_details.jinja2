@@ -200,11 +200,9 @@
                                 </div>
                                 <div class="col-sm-8 text-sm-left">
                                     <dd class="project-people mb-1">
-                                        <a href=""><img alt="image" class="rounded-circle" src="img/a3.jpg"></a>
-                                        <a href=""><img alt="image" class="rounded-circle" src="img/a1.jpg"></a>
-                                        <a href=""><img alt="image" class="rounded-circle" src="img/a2.jpg"></a>
-                                        <a href=""><img alt="image" class="rounded-circle" src="img/a4.jpg"></a>
-                                        <a href=""><img alt="image" class="rounded-circle" src="img/a5.jpg"></a>
+                                        {% for collaborator in collaborators %}
+                                            <a href="{{ request.route_url('dashboard',userid=collaborator.user_id) }}"><img title="{{ collaborator.user_name }}" class="rounded-circle" src="{{ request.h.get_gravatar_url(collaborator.user_email) }}"></a>
+                                        {% endfor %}
                                     </dd>
                                 </div>
                             </dl>

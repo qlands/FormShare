@@ -21,7 +21,7 @@ import hashlib
 from babel import Locale
 import uuid
 from ast import literal_eval
-from formshare.processes import get_project_id_from_name, user_exists, get_user_details, get_active_project, \
+from formshare.processes.db import get_project_id_from_name, user_exists, get_user_details, get_active_project, \
     get_user_projects
 import logging
 log = logging.getLogger(__name__)

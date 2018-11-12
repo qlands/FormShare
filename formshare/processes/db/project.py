@@ -139,6 +139,9 @@ def add_project(request, user, project_data):
         try:
             request.dbsession.add(new_project)
             request.dbsession.flush()
+
+            request.dbsession.query(Userproject).filter(Userproject.user_id == user).update({'project_active': 0})
+
             new_access = Userproject(user_id=user, project_id=project_data['project_id'], access_type=1,
                                      access_date=project_data['project_cdate'], project_active=1)
             try:
@@ -148,7 +151,7 @@ def add_project(request, user, project_data):
                 log.error("Duplicated access for user {} in project {}".format(user, mapped_data["project_id"]))
                 return False, request.translate("Error allocating access")
             except RuntimeError:
-                log.error("Error {} when allocating access for user {} in project {}".format(sys.exc_info()[0], user,
+                log.error("Error {} while allocating access for user {} in project {}".format(sys.exc_info()[0], user,
                                                                                              mapped_data["project_id"]))
                 return False, sys.exc_info()[0]
             return True, project_data['project_id']
@@ -156,7 +159,7 @@ def add_project(request, user, project_data):
             log.error("Duplicated project {}".format(mapped_data["project_id"]))
             return False, request.translate("The project already exist")
         except RuntimeError:
-            log.error("Error {} when inserting project {}".format(sys.exc_info()[0], mapped_data["project_id"]))
+            log.error("Error {} while inserting project {}".format(sys.exc_info()[0], mapped_data["project_id"]))
             return False, sys.exc_info()[0]
     else:
         return False, request.translate("A project with name '{}' already exists in your account").format(
@@ -173,7 +176,7 @@ def modify_project(request, user, project, project_data):
             request.dbsession.query(Project).filter(Project.project_id == project).update(mapped_data)
             request.dbsession.flush()
         except RuntimeError:
-            log.error("Error when updating project {}".format(sys.exc_info()[0], project))
+            log.error("Error {} while updating project {}".format(sys.exc_info()[0], project))
             return False, sys.exc_info()[0]
         return True, ""
     else:
@@ -196,6 +199,6 @@ def delete_project(request, user, project):
                     Userproject.project_id == new_active_project).update({'project_active': 1})
                 request.dbsession.flush()
     except RuntimeError:
-        log.error("Error when updating project {}".format(sys.exc_info()[0], project))
+        log.error("Error {} while deleting project {}".format(sys.exc_info()[0], project))
         return False, sys.exc_info()[0]
     return True, ""

@@ -6,7 +6,9 @@ from ..views.dashboard import UserDashBoardView
 from ..views.projects import AddProjectView, ProjectListView, ProjectDetailsView, ProjectStoredFileView, \
     EditProjectView, DeleteProjectView
 from ..views.profile import UserProfileView, EditProfileView
-from ..views.collaborators import CollaboratorsListView
+from ..views.collaborators import CollaboratorsListView, RemoveCollaborator
+from ..views.assistants import AssistantsListView, AddAssistantsView, EditAssistantsView, DeleteAssistant
+from ..views.api import APIUserSearchSelect2
 
 route_list = []
 
@@ -70,12 +72,34 @@ def load_routes(config):
 
     routes.append(add_route('project_delete', '/user/{userid}/project/{projcode}/delete', DeleteProjectView, None))
 
+    # Collaborators
+
     routes.append(add_route('collaborators', '/user/{userid}/project/{projcode}/collaborators', CollaboratorsListView,
                             'dashboard/projects/collaborators/collaborator_list.jinja2'))
+    routes.append(add_route('collaborator_remove', '/user/{userid}/project/{projcode}/collaborator/{collid}/remove',
+                            RemoveCollaborator, None))
+
+    # Assistants
+    routes.append(add_route('assistants', '/user/{userid}/project/{projcode}/assistants', AssistantsListView,
+                            'dashboard/projects/assistants/assistant_list.jinja2'))
+
+    routes.append(add_route('assistant_add', '/user/{userid}/project/{projcode}/assistants/add', AddAssistantsView,
+                            'dashboard/projects/assistants/assistant_add.jinja2'))
+
+    routes.append(
+        add_route('assistant_edit', '/user/{userid}/project/{projcode}/assistant/{assistid}/edit', EditAssistantsView,
+                  'dashboard/projects/assistants/assistant_edit.jinja2'))
+
+    routes.append(
+        add_route('assistant_delete', '/user/{userid}/project/{projcode}/assistant/{assistid}/delete', DeleteAssistant,
+                  None))
 
 
     # routes.append(addRoute('form_details', '/user/{userid}/project/{projid}/form/{formid}', formDetails_view,
     #                        'dashboard/projects/forms/form_details.jinja2'))
+
+    # API
+    routes.append(add_route('api_select2_users', '/api/select2_user', APIUserSearchSelect2, 'json'))
 
     append_to_routes(routes)
 

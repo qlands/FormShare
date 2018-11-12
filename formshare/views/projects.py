@@ -1,11 +1,11 @@
 from formshare.views.classes import ProjectsView
-from formshare.processes import add_project, modify_project, delete_project, is_collaborator
+from formshare.processes.db import add_project, modify_project, delete_project, is_collaborator, \
+    get_project_id_from_name, get_project_collaborators
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from formshare.config.elasticfeeds import get_manager
 from elasticfeeds.activity import Actor, Object, Activity
-from formshare.processes import get_project_id_from_name
 import validators
-from formshare.processes import store_file, get_stream, response_stream, delete_stream, delete_bucket
+from formshare.processes.storage import store_file, get_stream, response_stream, delete_stream, delete_bucket
 from pyramid.response import Response
 
 
@@ -60,7 +60,8 @@ class ProjectDetailsView(ProjectsView):
                 raise HTTPNotFound
         else:
             raise HTTPNotFound
-        return {'projectData': project_data, 'userid': user_id}
+        return {'projectData': project_data, 'userid': user_id,
+                'collaborators': get_project_collaborators(self.request, project_id)}
 
 
 class AddProjectView(ProjectsView):
@@ -117,7 +118,7 @@ class AddProjectView(ProjectsView):
                 else:
                     self.errors.append(message)
         else:
-            project_details = {'project_image': None}
+            project_details = {'project_image': None, 'project_public': 1}
         return {'projectDetails': project_details}
 
 
@@ -254,7 +255,7 @@ class DeleteProjectView(ProjectsView):
                 self.request.session.flash(self._('The project was deleted successfully'))
                 return HTTPFound(location=success_page)
             else:
-                self.request.session.flash(self._('Unable to delete the project: ' + message))
+                self.request.session.flash(self._('Unable to delete the project: ') + message)
                 return HTTPFound(location=fail_page)
         else:
             raise HTTPNotFound

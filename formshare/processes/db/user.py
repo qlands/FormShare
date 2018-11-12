@@ -23,11 +23,52 @@ def get_user_stats(request, user):
         res["last_project"] = last_project.project_cdate
     else:
         res["last_project"] = None
+
+    my_projects = request.dbsession.query(Userproject.project_id).filter(Userproject.user_id == user).filter(
+        Userproject.access_type == 1)
+    my_collaborators = map_from_schema(request.dbsession.query(User).filter(Userproject.user_id == User.user_id).filter(
+        Userproject.access_type != 1).filter(Userproject.project_id.in_(my_projects)).distinct(User.user_id).all())
+
     not_my_projects = request.dbsession.query(Userproject.project_id).filter(Userproject.user_id == user).filter(
         Userproject.access_type != 1)
     collaborators = map_from_schema(request.dbsession.query(User).filter(Userproject.user_id == User.user_id).filter(
         Userproject.access_type == 1).filter(Userproject.project_id.in_(not_my_projects)).distinct(User.user_id).all())
-    res["collaborators"] = collaborators
+
+    if len(my_collaborators) > 0:
+        total_collaborators = my_collaborators
+    else:
+        total_collaborators = collaborators
+
+    for c1 in total_collaborators:
+        found = False
+        searched = False
+        for c2 in collaborators:
+            searched = True
+            if c1["user_id"] == c2["user_id"]:
+                found = True
+        if not found and searched:
+            total_collaborators.append(c1)
+
+    for c1 in total_collaborators:
+        found = False
+        searched = False
+        for c2 in my_collaborators:
+            searched = True
+            if c1["user_id"] == c2["user_id"]:
+                found = True
+        if not found and searched:
+            total_collaborators.append(c1)
+
+    #
+    # for c1 in collaborators:
+    #     found = False
+    #     for c2 in my_collaborators:
+    #         if c1["user_id"] == c2["user_id"]:
+    #             found = True
+    #     if not found:
+    #         total_collaborators.append(c1)
+
+    res["collaborators"] = total_collaborators
     return res
 
 

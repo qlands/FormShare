@@ -1,16 +1,23 @@
 {% extends 'dashboard/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
 
 {% block titlesection %}{{ _("Collaborators") }}{% endblock titlesection %}
 
 {% block css %}
     {{ super() }}
-    {% cssresource request,'formshare','bsmarkdown' %}
+    {% cssresource request,'formshare','select2' %}
+    <style>
+        @media (max-width: 767px) {
+            .action-buttons {
+                margin-top: 10px;
+            }
+        }
+    </style>
 {% endblock css %}
 
 {% block topScripts %}
     {{ super() }}
-    {% jsresource request,'formshare','markdown' %}
-    {% jsresource request,'formshare','clipboard' %}
+    {% jsresource request,'formshare','select2' %}
 {% endblock topScripts %}
 
 {% block breadcrumbs %}
@@ -20,76 +27,73 @@
 {% block maincontent %}
     <div class="row">
         <div class="col-lg-12">
+            {{ form.display_errors(errors) }}
             <div class="ibox">
                 <div class="ibox-content">
                     <span class="text-muted small float-right">Last modification: <i class="fa fa-clock-o"></i> 2:10 pm - 12.06.2014</span>
                     <h2>{{ _('Collaborators') }}</h2>
                     <p>
-                        All clients need to be verified before you can send email and set a project.
+                        {{ _('Collaborators can have different roles: ') }}<br/>
+                        <span class="badge badge-danger">{{ _('Administrator') }}</span> &rarr; {{ _('Can make modifications including changing collaborators') }} <br/>
+                        <span style="margin-top: 5px" class="badge badge-warning">{{ _('Editor') }}</span> &rarr; {{ _('Can make modifications but not change the collaborators') }} <br/>
+                        <span style="margin-top: 5px" class="badge badge-dark">{{ _('Member') }}</span> &rarr; {{ _('Read only access to forms and data') }}
                     </p>
                     <div class="input-group">
                         <input type="text" placeholder="{{ _('Search collaborators') }} " class="input form-control">
-                        <span class="input-group-append">
-                                        <button type="button" class="btn btn btn-primary"> <i class="fa fa-search"></i> Search</button>
-                                </span>
+                        <span class="input-group-append"><button type="button" class="btn btn btn-primary"> <i class="fa fa-search"></i> {{ _('Search') }}</button></span>
                     </div>
+                    <hr>
                     <div class="clients-list">
                         <div class="row">
                             <div class="col-lg-12">
-                                <div class="row">
-                                    <div class="col-sm-3">
-                                        <img class="client-avatar rounded-circle" style="width: 30px" alt="image" src="{{ request.url_for_static('a2.jpg') }}">
-                                        <a href="#contact-1" class="client-link">Anthony Jackson</a>
-                                    </div>
-                                    <div class="col-sm-3">
-                                        <i class="fa fa-envelope"></i> rooney@proin.com
-                                    </div>
-                                    <div class="col-sm-3">
-                                        <span class="label label-primary">Active</span>
-                                        <span class="badge badge-dark">Member</span>
-                                    </div>
-                                    <div class="col-sm-3">
-                                        <a href="#" class="btn btn-white btn-sm"><i class="fa fa-folder"></i> {{ _('Delete') }} </a>
-                                    </div>
-                                </div>
-                                <hr>
-                                <div class="row">
-                                    <div class="col-sm-3">
-                                        <img class="client-avatar rounded-circle" style="width: 30px" alt="image" src="{{ request.url_for_static('a2.jpg') }}">
-                                        <a href="#contact-1" class="client-link">Anthony Jackson</a>
-                                    </div>
-                                    <div class="col-sm-3">
-                                        <i class="fa fa-envelope"></i> rooney@proin.com
-                                    </div>
-                                    <div class="col-sm-3">
-                                        <span class="label label-warning">Inactive</span>
-                                        <span class="badge badge-warning">Editor</span>
-                                    </div>
-                                    <div class="col-sm-3">
-                                        <a href="#" class="btn btn-white btn-sm"><i class="fa fa-folder"></i> {{ _('Delete') }} </a>
-                                    </div>
-                                </div>
-                                <hr>
-                                <div class="row">
-                                    <div class="col-sm-3">
-                                        <img class="client-avatar rounded-circle" style="width: 30px" alt="image" src="{{ request.url_for_static('a2.jpg') }}">
-                                        <a href="#contact-1" class="client-link">Anthony Jackson</a>
-                                    </div>
-                                    <div class="col-sm-3">
-                                        <i class="fa fa-envelope"></i> rooney@proin.com
-                                    </div>
-                                    <div class="col-sm-3">
-                                        <span class="label label-primary">Active</span>
-                                        <span class="badge badge-danger">Administrator</span>
-                                    </div>
-                                    <div class="col-sm-3">
-                                        <a href="#" class="btn btn-white btn-sm"><i class="fa fa-folder"></i> {{ _('Delete') }} </a>
-                                    </div>
-                                </div>
+                                {% for collaborator in collaborators %}
+                                    {% include 'dashboard/projects/collaborators/snippets/collaborator_item.jinja2' %}
+                                {% endfor %}
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
+            <div class="ibox-content text-left">
+                <h2>Add collaborator</h2>
+                <small>Search by username, full name or email address</small>
+                <form role="form" method="post" action="{{ request.url }}">
+                    {{ form.secure_form(request) }}
+                    <div class="row">
+                        <div class="col-md-9">
+                            <select name="collaborator" style="width: 100%; !important;" class="js-example-data-ajax form-control"></select>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="submit" name="add_collaborator" class="btn btn-block btn-primary action-buttons"> <i class="fa fa-plus"></i> {{ _('Add collaborator') }}</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="modal inmodal" id="myModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content animated fadeIn">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                    <h4 class="modal-title">Change role</h4>
+                    <small id="rolewho" class="font-bold">Changing role of Carlos Quiros</small>
+                </div>
+                <form role="form" method="post" action="{{ request.url }}">
+                    {{ form.secure_form(request) }}
+                    <input type="hidden" id="collaborator_id" name="collaborator_id" value="">
+                    <div class="modal-body">
+                        <div>
+                            <label><input type="radio" checked value="2" id="role_admin" name="role_collaborator">{{ _('Administrator') }}</label><br/>
+                            <label><input type="radio" value="3" id="role_editor" name="role_collaborator">{{ _('Editor') }}</label><br/>
+                            <label><input type="radio" value="4" id="role_member" name="role_collaborator">{{ _('Member') }}</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
+                        <button type="submit" name="change_role" class="btn btn-primary">{{ _('Change role') }}</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -97,5 +101,84 @@
 
 {% block scripts %}
     {{ super() }}
+    <script>
+        $(document).ready(function() {
+            $('.remove_collaborator').click(function () {
+                var action_url = $( this ).attr('urn');
+                swal({
+                        title: "{{ _('Are you sure?') }}",
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#DD6B55",
+                        confirmButtonText: "{{ _('Yes, remove it!') }}",
+                        cancelButtonText: "{{ _('Oops!, cancel!') }}",
+                        closeOnConfirm: true,
+                        closeOnCancel: true },
+                    function (isConfirm) {
+                        if (isConfirm) {
+                            var form = document.createElement('form');
+                            form.setAttribute('method', 'post');
+                            form.setAttribute('action', action_url);
+                            form.style.display = 'hidden';
+
+                            var i = document.createElement("input"); //input element, text
+                            i.setAttribute('type',"text");
+                            i.setAttribute('name',"csrf_token");
+                            i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                            form.appendChild(i);
+
+                            document.body.appendChild(form);
+                            form.submit();
+                        }
+                    });
+            });
+            $('.change_role').click(function () {
+                var collaborator_id = $( this ).attr('urn');
+                var collaborator_name = $( this ).attr('data-collaborator-name');
+                var collaborator_role = $( this ).attr('data-collaborator-role');
+                $("#rolewho").text("{{ _('Changing role of') }} " + collaborator_name);
+                $("#collaborator_id").val(collaborator_id);
+                var role_admin = $( "#role_admin" );
+                var role_editor = $( "#role_editor" );
+                var role_member = $( "#role_member" );
+                role_admin.prop( "checked", false );
+                if (collaborator_role === "2")
+                    role_admin.prop( "checked", true );
+                if (collaborator_role === "3")
+                    role_editor.prop( "checked", true );
+                if (collaborator_role === "4")
+                    role_member.prop( "checked", true );
+
+            });
+        });
+    </script>
+    <script>
+        $(document).ready(function() {
+            $(".js-example-data-ajax").select2({
+                ajax: {
+                    url: "{{ request.route_url('api_select2_users') }}",
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {
+                            q: params.term, // search term
+                            page: params.page
+                        };
+                    },
+                    processResults: function (data, params) {
+                        params.page = params.page || 1;
+                        return {
+                            results: data.results,
+                            pagination: {
+                                more: (params.page * 10) < data.total
+                            }
+                        };
+                    },
+                    cache: true
+                }
+            });
+            {#$("#role").select2();#}
+        });
+    </script>
 
 {% endblock scripts %}

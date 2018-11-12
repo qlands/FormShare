@@ -2,13 +2,13 @@
     <h2>{{ _('Collaborator list') }}</h2>
     <ol class="breadcrumb">
         <li class="breadcrumb-item">
-            <a href="#">{{ _('Dashboard') }}</a>
+            <a href="{{ request.route_url("dashboard",userid=activeUser.login) }}">{{ _('Dashboard') }}</a>
         </li>
         <li class="breadcrumb-item">
-            <a href="#">{{ _('Projects') }}</a>
+            <a href="{{ request.route_url("projects",userid=activeUser.id) }}">{{ _('Projects') }}</a>
         </li>
         <li class="breadcrumb-item">
-            <a href="#">Project XXX</a>
+            <a href="{{ request.route_url("project_details",userid=projectDetails.owner, projcode=projectDetails.project_code) }}">{{ projectDetails.project_name }}</a>
         </li>
         <li class="breadcrumb-item active">
             <strong>{{ _('Collaborators') }}</strong>

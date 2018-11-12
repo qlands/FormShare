@@ -1,0 +1,41 @@
+{#<div class="row">#}
+{#    <div class="col-md-1">#}
+<span class="label">{{ assistant_count }}</span>
+{#    </div>#}
+{#</div>#}
+<div class="row">
+    <div class="col-md-3">
+        <div class="text-center">
+            {{ assistant.coll_name }}
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="text-center">
+            {{ assistant.coll_email }}
+        </div>
+    </div>
+    <div class="col-md-2">
+        <div class="text-center">
+            {{ assistant.coll_telephone }}
+        </div>
+    </div>
+    <div class="col-md-1">
+        <div class="text-center">
+            {% if assistant.coll_active == 1 %}
+                <span class="badge badge-primary">{{ _('Active') }}</span>
+            {% else %}
+                <span class="badge badge-danger">{{ _('Inactive') }}</span>
+            {% endif %}
+            {% if assistant.coll_prjshare == 1 %}
+                <span class="badge badge-dark">{{ _('Shared') }}</span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="action-buttons text-center">
+            <a href="{{ request.route_url('assistant_edit',userid=projectDetails.owner,projcode=projectDetails.project_code,assistid=assistant.coll_id) }}" class="btn btn-white btn-sm"><i class="fas fa-pencil-alt text-warning"></i> {{ _('Edit') }} </a>
+            <a urn="{{ request.route_url('assistant_delete',userid=projectDetails.owner,projcode=projectDetails.project_code,assistid=assistant.coll_id) }}" class="btn btn-white btn-sm remove_assistant"><i class="fas fa-trash text-danger"></i> {{ _('Remove') }} </a>
+        </div>
+    </div>
+</div>
+<hr>

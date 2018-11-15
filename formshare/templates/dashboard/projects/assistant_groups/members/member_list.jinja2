@@ -1,17 +1,17 @@
 {% extends 'dashboard/page.jinja2' %}
 {% import 'dashboard/macros/form.jinja2' as form %}
 
-{% block titlesection %}{{ _("Assistants") }}{% endblock titlesection %}
+{% block titlesection %}{{ _("Assistant groups") }}{% endblock titlesection %}
 
 {% block css %}
     {{ super() }}
     <style>
         @media (max-width: 767px) {
-            .action-buttons {
-                margin-top: 10px;
-            }
             .grid-header {
                 display: none;
+            }
+            .action-buttons {
+                margin-top: 10px;
             }
         }
     </style>
@@ -19,21 +19,18 @@
 
 
 {% block breadcrumbs %}
-    {% include 'dashboard/projects/assistants/snippets/brdcrbs_assistlist.jinja2' %}
+    {% include 'dashboard/projects/assistant_groups/members/snippets/brdcrbs_memlist.jinja2' %}
 {% endblock breadcrumbs %}
 
 {% block maincontent %}
     <div class="row">
-        <div class="col-lg-12">
+        <div class="col-md-12">
             {{ form.display_errors(errors) }}
             <div class="ibox">
                 <div class="ibox-content">
-                    <h2>{{ _('Assistants') }}</h2>
-                    <p>
-                        {{ _('Assistants help you collect and clean data.') }}
-                    </p>
+                    <h2>{{ _('Members in') }} "{{ groupData.group_desc }}"</h2>
                     <div class="input-group">
-                        <input type="text" placeholder="{{ _('Search assistants') }} " class="input form-control">
+                        <input type="text" placeholder="{{ _('Search members') }} " class="input form-control">
                         <span class="input-group-append"><button type="button" class="btn btn btn-primary"> <i class="fa fa-search"></i> {{ _('Search') }}</button></span>
                     </div>
                     <div style="margin-top: 10px" class="row">
@@ -41,7 +38,7 @@
 
                         </div>
                         <div class="col-md-3">
-                            <button  onclick="location.href='{{ request.route_url('assistant_add',userid=projectDetails.owner,projcode=projectDetails.project_code) }}';" class="btn btn-block btn-primary"> <i class="fa fa-plus"></i> {{ _('Add assistant') }}</button>
+                            <button class="btn btn-block btn-primary" data-toggle="modal" data-target="#myModal"> <i class="fa fa-plus"></i> {{ _('Add member') }}</button>
                         </div>
                     </div>
                     <hr class="hr-line-dashed">
@@ -50,37 +47,27 @@
                             <div class="col-lg-12">
                                 <div class="grid-header">
                                     <div class="row">
-                                        <div class="col-md-3">
+                                        <div class="col-md-4">
                                             <div class="text-center">
-                                                {{ _('Name') }}
+                                                Name
                                             </div>
                                         </div>
-                                        <div class="col-md-3">
+                                        <div class="col-md-4">
                                             <div class="text-center">
-                                                {{ _('Email') }}
+                                                Joined
                                             </div>
                                         </div>
-                                        <div class="col-md-2">
+                                        <div class="col-md-4">
                                             <div class="text-center">
-                                                {{ _('Telephone') }}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-1">
-                                            <div class="text-center">
-                                                {{ _('Status') }}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="text-center">
-                                                {{ _('Actions') }}
+                                                Actions
                                             </div>
                                         </div>
                                     </div>
                                     <hr class="hr-line-solid">
                                 </div>
-                                {% for assistant in assistants %}
-                                    {% set assistant_count = loop.index %}
-                                    {% include 'dashboard/projects/assistants/snippets/assistant_item.jinja2' %}
+                                {% for member in members %}
+                                    {% set member_count = loop.index %}
+                                    {% include 'dashboard/projects/assistant_groups/members/snippets/member_item.jinja2' %}
                                 {% endfor %}
                             </div>
                         </div>
@@ -94,35 +81,34 @@
             <div class="modal-content animated fadeIn">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                    <h4 class="modal-title">{{ _('Change password') }}</h4>
-                    <small id="password_who" class="font-bold">Change password of Carlos Quiros</small>
+                    <h4 class="modal-title">{{ _('Adding assistant') }}</h4>
                 </div>
-                <form class="m-t" id="change_form" role="form" method="post" action="">
+                <form id="member_form" role="form" method="post" action="{{ request.url }}">
                     {{ form.secure_form(request) }}
-                    <input type="hidden" id="assistant_id" name="assistant_id" value="">
-                    <div class="modal-body">
-                        <div class="form-group">
-                            <label class="col-sm-2 col-form-label">{{ _('Password') }}</label>
-                            <div class="col-sm-10">
-                                <input type="password" class="form-control" name="coll_password">
+                    <input type="hidden" id="group_id" name="group_id" value="">
+                    <div class="form-group">
+                            <label class="col-sm-2 col-form-label">{{ _('Assistant') }}</label>
+                        <div class="col-sm-10">
+                            <select name="coll_id" style="width: 100%; !important;" class="collaborator-list form-control">
+                                {% for project in assistants %}
+                                <optgroup label="{{ project.project_desc }}">
+                                    {% for assistant in project.assistants %}
+                                        <option value="{{ assistant.code }}">{{ assistant.name }}</option>
+                                    {% endfor %}
+                                </optgroup>
+                                {% endfor %}
+                            </select>
                             </div>
                         </div>
-                        <div class="hr-line-dashed"></div>
-                        <div class="form-group">
-                            <label class="col-sm-2 col-form-label">{{ _('Confirmation') }}</label>
-                            <div class="col-sm-10">
-                                <input type="password" class="form-control" name="coll_password2">
-                            </div>
-                        </div>
-                    </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
-                        <button type="submit" name="change_password" class="btn btn-primary">{{ _('Change password') }}</button>
+                        <button type="submit" name="add_assistant" class="btn btn-primary">{{ _('Add assistant') }}</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
+
 {% endblock maincontent %}
 
 {% block scripts %}
@@ -158,15 +144,14 @@
                         }
                     });
             });
-            $('.change_password').click(function () {
-                var assistant_name = $( this ).attr('data-assistant-name');
-                var action_url = $( this ).attr('urn');
-                var action_form = $( "#change_form" );
-                action_form.prop( "action", action_url );
-                $("#password_who").text("{{ _('Changing password for') }} " + assistant_name);
-            });
         });
     </script>
+    <script>
+        $(document).ready(function() {
+            $(".collaborator-list").select2();
+        });
+    </script>
+
 
 
 {% endblock scripts %}

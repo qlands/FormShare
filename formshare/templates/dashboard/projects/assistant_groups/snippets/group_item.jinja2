@@ -1,0 +1,29 @@
+{#<div class="row">#}
+{#    <div class="col-md-1">#}
+<span class="label">{{ group_count }}</span>
+{#    </div>#}
+{#</div>#}
+<div class="row">
+    <div class="col-md-4">
+        <div class="text-center">
+            {{ group.group_desc }}
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="text-center">
+            {% if group.group_active == 1 %}
+                <span class="badge badge-primary">{{ _('Active') }}</span>
+            {% else %}
+                <span class="badge badge-danger">{{ _('Inactive') }}</span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="text-center">
+            <a href="{{ request.route_url('group_members',userid=userid,projcode=projectDetails.project_code,groupid=group.group_id) }}" class="btn btn-white btn-sm action-buttons"><i class="fas fa-user-friends"></i> {{ _('Members') }} ({{ group.members }})</a>
+            <a href="{{ request.route_url('group_edit',userid=userid,projcode=projectDetails.project_code,groupid=group.group_id) }}" class="btn btn-white btn-sm action-buttons"><i class="fas fa-pencil-alt text-warning"></i> {{ _('Edit') }} </a>
+            <a urn="{{ request.route_url('group_delete',userid=userid,projcode=projectDetails.project_code,groupid=group.group_id) }}" class="btn btn-white btn-sm remove_assistant action-buttons"><i class="fas fa-trash text-danger"></i> {{ _('Delete') }} </a>
+        </div>
+    </div>
+</div>
+<hr>

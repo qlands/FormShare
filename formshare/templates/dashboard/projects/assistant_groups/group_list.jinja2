@@ -1,0 +1,122 @@
+{% extends 'dashboard/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block titlesection %}{{ _("Assistant groups") }}{% endblock titlesection %}
+
+{% block css %}
+    {{ super() }}
+    <style>
+        @media (max-width: 767px) {
+            .grid-header {
+                display: none;
+            }
+            .action-buttons {
+                margin-top: 10px;
+            }
+        }
+    </style>
+{% endblock css %}
+
+
+{% block breadcrumbs %}
+    {% include 'dashboard/projects/assistant_groups/snippets/brdcrbs_grplist.jinja2' %}
+{% endblock breadcrumbs %}
+
+{% block maincontent %}
+    <div class="row">
+        <div class="col-md-12">
+            {{ form.display_errors(errors) }}
+            <div class="ibox">
+                <div class="ibox-content">
+                    <h2>{{ _('Assistant groups') }}</h2>
+                    <p>
+                        {{ _('Groups allow you to aggregate assistants with something in common. For example, "Data collectors"') }}
+                    </p>
+                    <div class="input-group">
+                        <input type="text" placeholder="{{ _('Search groups') }} " class="input form-control">
+                        <span class="input-group-append"><button type="button" class="btn btn btn-primary"> <i class="fa fa-search"></i> {{ _('Search') }}</button></span>
+                    </div>
+                    <div style="margin-top: 10px" class="row">
+                        <div class="col-md-9">
+
+                        </div>
+                        <div class="col-md-3">
+                            <button  onclick="location.href='{{ request.route_url('group_add',userid=userid,projcode=projectDetails.project_code) }}';" class="btn btn-block btn-primary"> <i class="fa fa-plus"></i> {{ _('Add group') }}</button>
+                        </div>
+                    </div>
+                    <hr class="hr-line-dashed">
+                    <div class="clients-list">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="grid-header">
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <div class="text-center">
+                                                Description
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="text-center">
+                                                Status
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="text-center">
+                                                Actions
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr class="hr-line-solid">
+                                </div>
+                                {% for group in groups %}
+                                    {% set group_count = loop.index %}
+                                    {% include 'dashboard/projects/assistant_groups/snippets/group_item.jinja2' %}
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock maincontent %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function() {
+            $('.remove_assistant').click(function () {
+                var action_url = $( this ).attr('urn');
+                swal({
+                        title: "{{ _('Are you sure?') }}",
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#DD6B55",
+                        confirmButtonText: "{{ _('Yes, remove it!') }}",
+                        cancelButtonText: "{{ _('Oops!, cancel!') }}",
+                        closeOnConfirm: true,
+                        closeOnCancel: true },
+                    function (isConfirm) {
+                        if (isConfirm) {
+                            var form = document.createElement('form');
+                            form.setAttribute('method', 'post');
+                            form.setAttribute('action', action_url);
+                            form.style.display = 'hidden';
+
+                            var i = document.createElement("input"); //input element, text
+                            i.setAttribute('type',"text");
+                            i.setAttribute('name',"csrf_token");
+                            i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                            form.appendChild(i);
+
+                            document.body.appendChild(form);
+                            form.submit();
+                        }
+                    });
+            });
+        });
+    </script>
+
+
+{% endblock scripts %}

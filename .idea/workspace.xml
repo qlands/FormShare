@@ -1,49 +1,38 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
+  <component name="BookmarkManager">
+    <bookmark url="file://$PROJECT_DIR$/formshare/views/assistant_groups.py" line="130" />
+  </component>
   <component name="ChangeListManager">
     <list default="true" id="54165c7a-57d4-4d12-91c0-ae211a499fd8" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/formshare/processes/db/assistant.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/formshare/processes/db/collaborator.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/formshare/processes/elasticsearch/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/formshare/processes/elasticsearch/user_index.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/assistant_add.jinja2" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/assistant_edit.jinja2" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/assistant_list.jinja2" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets/assistant_form_edit.jinja2" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets/assistant_item.jinja2" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets/brdcrbs_assistadd.jinja2" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets/brdcrbs_assistedit.jinja2" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets/brdcrbs_assistlist.jinja2" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/collaborators/snippets/brdcrbs_colbrtsadd.jinja2" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/collaborators/snippets/collaborator_item.jinja2" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/formshare/views/api.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/formshare/views/assistants.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/formshare/processes/db/assistant_group.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/group_add.jinja2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/group_edit.jinja2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/group_list.jinja2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/members/member_list.jinja2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/members/snippets/brdcrbs_memlist.jinja2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/members/snippets/member_item.jinja2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/snippets/brdcrbs_groupadd.jinja2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/snippets/brdcrbs_groupedit.jinja2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/snippets/brdcrbs_grplist.jinja2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/snippets/group_form.jinja2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/snippets/group_form_edit.jinja2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/snippets/group_item.jinja2" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/formshare/views/assistant_groups.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/development.ini" beforeDir="false" afterPath="$PROJECT_DIR$/development.ini" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/config/elasticfeeds.py" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/config/elasticfeeds.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/config/environment.py" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/config/environment.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/config/mainresources.py" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/config/mainresources.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/formshare/config/routes.py" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/config/routes.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/jsandcss/css/plugins/select2/select2.min.css" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/jsandcss/css/plugins/select2/select2.min.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/jsandcss/js/plugins/select2/select2.full.min.js" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/jsandcss/js/plugins/select2/select2.full.min.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/processes/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/processes/__init__.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/formshare/processes/db/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/processes/db/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/formshare/processes/db/assistant.py" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/processes/db/assistant.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/formshare/processes/db/project.py" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/processes/db/project.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/formshare/processes/db/user.py" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/processes/db/user.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/processes/storage/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/processes/storage/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/assistant_edit.jinja2" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/assistant_edit.jinja2" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/assistant_list.jinja2" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/assistant_list.jinja2" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets/assistant_item.jinja2" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets/assistant_item.jinja2" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets/brdcrbs_assistedit.jinja2" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets/brdcrbs_assistedit.jinja2" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/formshare/templates/dashboard/projects/collaborators/collaborator_list.jinja2" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/collaborators/collaborator_list.jinja2" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/templates/dashboard/projects/collaborators/snippets/brdcrbs_colbrtslist.jinja2" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/collaborators/snippets/brdcrbs_colbrtslist.jinja2" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/templates/dashboard/projects/snippets/brdcrbs_prjedit.jinja2" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/snippets/brdcrbs_prjedit.jinja2" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/templates/dashboard/projects/snippets/project_details.jinja2" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/snippets/project_details.jinja2" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/formshare/templates/dashboard/snippets/navbar.jinja2" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/templates/dashboard/snippets/navbar.jinja2" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/views/basic_views.py" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/views/basic_views.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/views/classes.py" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/views/classes.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/views/collaborators.py" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/views/collaborators.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/views/profile.py" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/views/profile.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/views/projects.py" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/views/projects.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/formshare/views/assistants.py" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/views/assistants.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -58,7 +47,7 @@
     <session id="1157191664">
       <usages-collector id="statistics.lifecycle.project">
         <counts>
-          <entry key="project.closed" value="91" />
+          <entry key="project.closed" value="96" />
           <entry key="project.open.time.0" value="10" />
           <entry key="project.open.time.1" value="19" />
           <entry key="project.open.time.10" value="4" />
@@ -68,33 +57,33 @@
           <entry key="project.open.time.3" value="1" />
           <entry key="project.open.time.4" value="1" />
           <entry key="project.open.time.5" value="1" />
-          <entry key="project.open.time.6" value="4" />
-          <entry key="project.open.time.7" value="20" />
+          <entry key="project.open.time.6" value="5" />
+          <entry key="project.open.time.7" value="23" />
           <entry key="project.open.time.8" value="11" />
-          <entry key="project.open.time.9" value="14" />
-          <entry key="project.opened" value="92" />
+          <entry key="project.open.time.9" value="15" />
+          <entry key="project.opened" value="97" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
           <entry key="css" value="51" />
           <entry key="dummy" value="43" />
-          <entry key="gitignore" value="29" />
-          <entry key="ini" value="500" />
-          <entry key="jinja2" value="18982" />
+          <entry key="gitignore" value="41" />
+          <entry key="ini" value="511" />
+          <entry key="jinja2" value="20886" />
           <entry key="md" value="1656" />
-          <entry key="py" value="33220" />
+          <entry key="py" value="36829" />
           <entry key="txt" value="122" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
           <entry key="CSS" value="51" />
-          <entry key="Ini" value="500" />
-          <entry key="Jinja2" value="18982" />
+          <entry key="Ini" value="511" />
+          <entry key="Jinja2" value="20886" />
           <entry key="Markdown" value="1656" />
-          <entry key="PLAIN_TEXT" value="194" />
-          <entry key="Python" value="33220" />
+          <entry key="PLAIN_TEXT" value="206" />
+          <entry key="Python" value="36829" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
@@ -102,26 +91,28 @@
           <entry key="README" value="1" />
           <entry key="cfg" value="1" />
           <entry key="css" value="10" />
-          <entry key="gitignore" value="2" />
-          <entry key="ini" value="36" />
-          <entry key="jinja2" value="397" />
+          <entry key="gitignore" value="3" />
+          <entry key="ini" value="38" />
+          <entry key="jinja2" value="478" />
           <entry key="js" value="6" />
           <entry key="md" value="4" />
           <entry key="png" value="2" />
-          <entry key="py" value="619" />
+          <entry key="py" value="673" />
           <entry key="txt" value="29" />
+          <entry key="yml" value="1" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.open">
         <counts>
           <entry key="CSS" value="10" />
           <entry key="Image" value="2" />
-          <entry key="Ini" value="37" />
+          <entry key="Ini" value="39" />
           <entry key="JavaScript" value="6" />
-          <entry key="Jinja2" value="397" />
+          <entry key="Jinja2" value="478" />
           <entry key="Markdown" value="4" />
-          <entry key="PLAIN_TEXT" value="32" />
-          <entry key="Python" value="619" />
+          <entry key="PLAIN_TEXT" value="33" />
+          <entry key="Python" value="673" />
+          <entry key="YAML" value="1" />
         </counts>
       </usages-collector>
     </session>
@@ -129,40 +120,19 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/assistant_list.jinja2">
+        <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/members/member_list.jinja2">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="798">
-              <caret line="78" column="70" lean-forward="true" selection-start-line="78" selection-start-column="70" selection-end-line="78" selection-end-column="70" />
-              <folding>
-                <element signature="e#1267#1291#0#HTML" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets/assistant_item.jinja2">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="684">
-              <caret line="36" column="206" selection-start-line="36" selection-start-column="206" selection-end-line="36" selection-end-column="206" />
+            <state relative-caret-position="908">
+              <caret line="132" column="66" selection-start-line="132" selection-start-column="56" selection-end-line="132" selection-end-column="66" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/project_list.jinja2">
+        <entry file="file://$PROJECT_DIR$/formshare/views/assistant_groups.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1194">
-              <caret line="69" column="12" lean-forward="true" selection-start-line="69" selection-start-column="12" selection-end-line="69" selection-end-column="12" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/formshare/views/assistants.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="385">
-              <caret line="177" column="21" selection-start-line="177" selection-start-column="6" selection-end-line="177" selection-end-column="21" />
+            <state relative-caret-position="295">
+              <caret line="257" column="43" lean-forward="true" selection-start-line="257" selection-start-column="43" selection-end-line="257" selection-end-column="43" />
               <folding>
                 <element signature="e#0#47#0" expanded="true" />
               </folding>
@@ -171,34 +141,52 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/formshare/processes/db/assistant_group.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="808">
+              <caret line="127" column="8" selection-start-line="127" selection-start-column="8" selection-end-line="127" selection-end-column="8" />
+              <folding>
+                <element signature="e#0#98#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/.gitignore">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="1194">
+              <caret line="112" column="21" selection-start-line="112" selection-start-column="21" selection-end-line="112" selection-end-column="21" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/formshare/processes/db/assistant.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="114">
-              <caret line="6" column="71" selection-start-line="6" selection-start-column="71" selection-end-line="6" selection-end-column="71" />
+            <state relative-caret-position="1178">
+              <caret line="62" column="23" lean-forward="true" selection-start-line="62" selection-start-column="23" selection-end-line="62" selection-end-column="23" />
               <folding>
-                <element signature="e#0#73#0" expanded="true" />
-                <marker date="1541999885416" expanded="true" signature="582:767" ph="..." />
-                <marker date="1541999885416" expanded="true" signature="817:822" ph="..." />
-                <marker date="1541999885416" expanded="true" signature="2230:3005" ph="..." />
+                <element signature="e#0#95#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2">
+        <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/members/snippets/member_item.jinja2">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="798">
-              <caret line="42" column="77" selection-start-line="42" selection-start-column="64" selection-end-line="42" selection-end-column="77" />
+            <state relative-caret-position="342">
+              <caret line="18" column="164" selection-start-line="18" selection-start-column="164" selection-end-line="18" selection-end-column="164" />
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets/assistant_form_edit.jinja2">
+        <entry file="file://$PROJECT_DIR$/formshare/plugins/helpers.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="76">
-              <caret line="4" column="131" selection-start-line="4" selection-start-column="131" selection-end-line="4" selection-end-column="131" />
+            <state relative-caret-position="703">
+              <caret line="70" column="16" selection-start-line="70" selection-start-column="4" selection-end-line="70" selection-end-column="16" />
             </state>
           </provider>
         </entry>
@@ -206,8 +194,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/formshare/config/routes.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="637">
-              <caret line="93" column="35" selection-start-line="93" selection-start-column="35" selection-end-line="93" selection-end-column="35" />
+            <state relative-caret-position="675">
+              <caret line="119" column="40" selection-start-line="119" selection-start-column="40" selection-end-line="119" selection-end-column="40" />
               <folding>
                 <element signature="e#0#41#0" expanded="true" />
               </folding>
@@ -216,10 +204,10 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets/brdcrbs_assistedit.jinja2">
+        <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/assistant_list.jinja2">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="247">
-              <caret line="13" column="76" selection-start-line="13" selection-start-column="62" selection-end-line="13" selection-end-column="76" />
+            <state relative-caret-position="998">
+              <caret line="166" column="15" lean-forward="true" selection-start-line="160" selection-start-column="12" selection-end-line="166" selection-end-column="15" />
             </state>
           </provider>
         </entry>
@@ -235,7 +223,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>addLibrary(</find>
       <find>addJSResource(</find>
       <find>getGravatarUrl</find>
       <find>MD5Body</find>
@@ -265,6 +252,7 @@
       <find>collaborators</find>
       <find>user_stats</find>
       <find>onc</find>
+      <find>assistant</find>
     </findStrings>
     <replaceStrings>
       <replace>hashlib.md5(</replace>
@@ -280,6 +268,7 @@
       <replace>md5_body</replace>
       <replace>elasticsearch</replace>
       <replace>elasticfeeds</replace>
+      <replace>group</replace>
     </replaceStrings>
     <dirStrings>
       <dir>$PROJECT_DIR$/formshare/templates</dir>
@@ -297,21 +286,6 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/snippets/project_form_edit.jinja2" />
-        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/snippets/project_form.jinja2" />
-        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/snippets/project_map.jinja2" />
-        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/project_details.jinja2" />
-        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/snippets/project_item.jinja2" />
-        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/project_list.jinja2" />
-        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/snippets/brdcrbs_prjadd.jinja2" />
-        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/collaborators/snippets/brdcrbs_prjedit.jinja2" />
-        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/snippets/brdcrbs_prjdtls.jinja2" />
-        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/snippets/brdcrbs_prjlist.jinja2" />
-        <option value="$PROJECT_DIR$/formshare/processes/storage/__init__.py" />
-        <option value="$PROJECT_DIR$/formshare/processes/__init__.py" />
-        <option value="$PROJECT_DIR$/formshare/views/classes.py" />
-        <option value="$PROJECT_DIR$/formshare/views/profile.py" />
-        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/collaborators/snippets/brdcrbs_colbrtslist.jinja2" />
         <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/snippets/brdcrbs_prjedit.jinja2" />
         <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/collaborators/snippets/brdcrbs_colbrtsadd.jinja2" />
         <option value="$PROJECT_DIR$/formshare/processes/elasticsearch/userindex.py" />
@@ -326,28 +300,43 @@
         <option value="$PROJECT_DIR$/formshare/views/api.py" />
         <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/collaborators/collaborator_add.jinja2" />
         <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/collaborators/snippets/collaborator_item.jinja2" />
-        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/collaborators/collaborator_list.jinja2" />
         <option value="$PROJECT_DIR$/formshare/processes/db/collaborator.py" />
-        <option value="$PROJECT_DIR$/formshare/processes/db/project.py" />
-        <option value="$PROJECT_DIR$/development.ini" />
-        <option value="$PROJECT_DIR$/formshare/processes/db/user.py" />
         <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/snippets/project_details.jinja2" />
         <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets/brdcrbs_colbrtslist.jinja2" />
-        <option value="$PROJECT_DIR$/formshare/processes/db/__init__.py" />
-        <option value="$PROJECT_DIR$/formshare/templates/dashboard/snippets/navbar.jinja2" />
         <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/assistant_add.jinja2" />
         <option value="$PROJECT_DIR$/formshare/views/projects.py" />
         <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets/brdcrbs_assistadd.jinja2" />
         <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2" />
-        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets/brdcrbs_assistedit.jinja2" />
-        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/assistant_edit.jinja2" />
         <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets/assistant_form_edit.jinja2" />
-        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/assistant_list.jinja2" />
-        <option value="$PROJECT_DIR$/formshare/processes/db/assistant.py" />
         <option value="$PROJECT_DIR$/formshare/views/collaborators.py" />
+        <option value="$PROJECT_DIR$/formshare/processes/db/__init__.py" />
+        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/snippets/brdcrbs_grplist.jinja2" />
+        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/collaborators/collaborator_list.jinja2" />
+        <option value="$PROJECT_DIR$/formshare/processes/db/user.py" />
+        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/snippets/brdcrbs_groupadd.jinja2" />
+        <option value="$PROJECT_DIR$/formshare/templates/dashboard/snippets/navbar.jinja2" />
+        <option value="$PROJECT_DIR$/development.ini" />
+        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/snippets/group_form.jinja2" />
+        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/group_add.jinja2" />
+        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/snippets/group_form_edit.jinja2" />
         <option value="$PROJECT_DIR$/formshare/views/assistants.py" />
-        <option value="$PROJECT_DIR$/formshare/config/routes.py" />
         <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets/assistant_item.jinja2" />
+        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/assistant_list.jinja2" />
+        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/group_edit.jinja2" />
+        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/snippets/brdcrbs_groupedit.jinja2" />
+        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/assistant_edit.jinja2" />
+        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets/brdcrbs_assistedit.jinja2" />
+        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/group_list.jinja2" />
+        <option value="$PROJECT_DIR$/formshare/processes/db/project.py" />
+        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/members/snippets/brdcrbs_memlist.jinja2" />
+        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/snippets/group_item.jinja2" />
+        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/members/member_list.jinja2" />
+        <option value="$PROJECT_DIR$/formshare/processes/db/assistant.py" />
+        <option value="$PROJECT_DIR$/formshare/views/assistant_groups.py" />
+        <option value="$PROJECT_DIR$/formshare/config/routes.py" />
+        <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/members/snippets/member_item.jinja2" />
+        <option value="$PROJECT_DIR$/formshare/processes/db/assistant_group.py" />
+        <option value="$PROJECT_DIR$/.gitignore" />
       </list>
     </option>
   </component>
@@ -358,9 +347,10 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="112" />
-    <option name="width" value="1798" />
-    <option name="height" value="1392" />
+    <option name="x" value="147" />
+    <option name="y" value="91" />
+    <option name="width" value="1736" />
+    <option name="height" value="1021" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -422,137 +412,13 @@
             <path>
               <item name="FormShare" type="b2602c69:ProjectViewProjectNode" />
               <item name="FormShare" type="462c0819:PsiDirectoryNode" />
-              <item name="alembic" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="FormShare" type="b2602c69:ProjectViewProjectNode" />
-              <item name="FormShare" type="462c0819:PsiDirectoryNode" />
-              <item name="alembic" type="462c0819:PsiDirectoryNode" />
-              <item name="versions" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="FormShare" type="b2602c69:ProjectViewProjectNode" />
-              <item name="FormShare" type="462c0819:PsiDirectoryNode" />
               <item name="formshare" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="FormShare" type="b2602c69:ProjectViewProjectNode" />
               <item name="FormShare" type="462c0819:PsiDirectoryNode" />
               <item name="formshare" type="462c0819:PsiDirectoryNode" />
-              <item name="config" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="FormShare" type="b2602c69:ProjectViewProjectNode" />
-              <item name="FormShare" type="462c0819:PsiDirectoryNode" />
-              <item name="formshare" type="462c0819:PsiDirectoryNode" />
-              <item name="models" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="FormShare" type="b2602c69:ProjectViewProjectNode" />
-              <item name="FormShare" type="462c0819:PsiDirectoryNode" />
-              <item name="formshare" type="462c0819:PsiDirectoryNode" />
-              <item name="plugins" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="FormShare" type="b2602c69:ProjectViewProjectNode" />
-              <item name="FormShare" type="462c0819:PsiDirectoryNode" />
-              <item name="formshare" type="462c0819:PsiDirectoryNode" />
-              <item name="processes" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="FormShare" type="b2602c69:ProjectViewProjectNode" />
-              <item name="FormShare" type="462c0819:PsiDirectoryNode" />
-              <item name="formshare" type="462c0819:PsiDirectoryNode" />
-              <item name="processes" type="462c0819:PsiDirectoryNode" />
-              <item name="db" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="FormShare" type="b2602c69:ProjectViewProjectNode" />
-              <item name="FormShare" type="462c0819:PsiDirectoryNode" />
-              <item name="formshare" type="462c0819:PsiDirectoryNode" />
-              <item name="processes" type="462c0819:PsiDirectoryNode" />
-              <item name="elasticsearch" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="FormShare" type="b2602c69:ProjectViewProjectNode" />
-              <item name="FormShare" type="462c0819:PsiDirectoryNode" />
-              <item name="formshare" type="462c0819:PsiDirectoryNode" />
-              <item name="processes" type="462c0819:PsiDirectoryNode" />
-              <item name="storage" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="FormShare" type="b2602c69:ProjectViewProjectNode" />
-              <item name="FormShare" type="462c0819:PsiDirectoryNode" />
-              <item name="formshare" type="462c0819:PsiDirectoryNode" />
-              <item name="templates" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="FormShare" type="b2602c69:ProjectViewProjectNode" />
-              <item name="FormShare" type="462c0819:PsiDirectoryNode" />
-              <item name="formshare" type="462c0819:PsiDirectoryNode" />
-              <item name="templates" type="462c0819:PsiDirectoryNode" />
-              <item name="dashboard" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="FormShare" type="b2602c69:ProjectViewProjectNode" />
-              <item name="FormShare" type="462c0819:PsiDirectoryNode" />
-              <item name="formshare" type="462c0819:PsiDirectoryNode" />
-              <item name="templates" type="462c0819:PsiDirectoryNode" />
-              <item name="dashboard" type="462c0819:PsiDirectoryNode" />
-              <item name="projects" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="FormShare" type="b2602c69:ProjectViewProjectNode" />
-              <item name="FormShare" type="462c0819:PsiDirectoryNode" />
-              <item name="formshare" type="462c0819:PsiDirectoryNode" />
-              <item name="templates" type="462c0819:PsiDirectoryNode" />
-              <item name="dashboard" type="462c0819:PsiDirectoryNode" />
-              <item name="projects" type="462c0819:PsiDirectoryNode" />
-              <item name="assistants" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="FormShare" type="b2602c69:ProjectViewProjectNode" />
-              <item name="FormShare" type="462c0819:PsiDirectoryNode" />
-              <item name="formshare" type="462c0819:PsiDirectoryNode" />
-              <item name="templates" type="462c0819:PsiDirectoryNode" />
-              <item name="dashboard" type="462c0819:PsiDirectoryNode" />
-              <item name="projects" type="462c0819:PsiDirectoryNode" />
-              <item name="assistants" type="462c0819:PsiDirectoryNode" />
-              <item name="snippets" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="FormShare" type="b2602c69:ProjectViewProjectNode" />
-              <item name="FormShare" type="462c0819:PsiDirectoryNode" />
-              <item name="formshare" type="462c0819:PsiDirectoryNode" />
-              <item name="templates" type="462c0819:PsiDirectoryNode" />
-              <item name="dashboard" type="462c0819:PsiDirectoryNode" />
-              <item name="projects" type="462c0819:PsiDirectoryNode" />
-              <item name="collaborators" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="FormShare" type="b2602c69:ProjectViewProjectNode" />
-              <item name="FormShare" type="462c0819:PsiDirectoryNode" />
-              <item name="formshare" type="462c0819:PsiDirectoryNode" />
-              <item name="templates" type="462c0819:PsiDirectoryNode" />
-              <item name="dashboard" type="462c0819:PsiDirectoryNode" />
-              <item name="projects" type="462c0819:PsiDirectoryNode" />
-              <item name="collaborators" type="462c0819:PsiDirectoryNode" />
-              <item name="snippets" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="FormShare" type="b2602c69:ProjectViewProjectNode" />
-              <item name="FormShare" type="462c0819:PsiDirectoryNode" />
-              <item name="formshare" type="462c0819:PsiDirectoryNode" />
-              <item name="templates" type="462c0819:PsiDirectoryNode" />
-              <item name="dashboard" type="462c0819:PsiDirectoryNode" />
-              <item name="projects" type="462c0819:PsiDirectoryNode" />
-              <item name="snippets" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="FormShare" type="b2602c69:ProjectViewProjectNode" />
-              <item name="FormShare" type="462c0819:PsiDirectoryNode" />
-              <item name="formshare" type="462c0819:PsiDirectoryNode" />
-              <item name="views" type="462c0819:PsiDirectoryNode" />
+              <item name="static" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="FormShare" type="b2602c69:ProjectViewProjectNode" />
@@ -577,7 +443,7 @@
   <component name="PropertiesComponent">
     <property name="SearchEverywhereHistoryKey" value="&#9;FILE&#9;file:///home/cquiros/data/projects2017/personal/software/FormShare/formshare/config/environment.py" />
     <property name="WebServerToolWindowFactoryState" value="false" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/members/snippets" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
   <component name="RecentsManager">
@@ -589,11 +455,11 @@
       <recent name="$PROJECT_DIR$" />
     </key>
     <key name="CopyFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets" />
-      <recent name="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants" />
+      <recent name="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/members/snippets" />
+      <recent name="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/members" />
+      <recent name="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/snippets" />
+      <recent name="$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups" />
       <recent name="$PROJECT_DIR$/formshare/processes/db" />
-      <recent name="$PROJECT_DIR$/formshare/views" />
-      <recent name="$PROJECT_DIR$/formshare/templates/dashboard/projects" />
     </key>
   </component>
   <component name="RunDashboard">
@@ -665,7 +531,7 @@
     <frame x="112" y="0" width="2448" height="1388" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.32139882" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.33805162" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
@@ -737,259 +603,6 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/collaborators/snippets/brdcrbs_colbrtsadd.jinja2">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="304">
-          <caret line="16" column="29" selection-start-line="16" selection-start-column="29" selection-end-line="16" selection-end-column="29" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../env_formshare/src/elasticfeeds/src/elasticfeeds/exceptions/exceptions.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="798">
-          <caret line="72" lean-forward="true" selection-start-line="72" selection-end-line="78" selection-end-column="54" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/config/elasticfeeds.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1330">
-          <caret line="70" column="63" lean-forward="true" selection-start-line="70" selection-start-column="38" selection-end-line="70" selection-end-column="63" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/jsandcss/js/plugins/codemirror/codemirror.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="74556">
-          <caret line="3925" column="59" selection-start-line="3925" selection-start-column="59" selection-end-line="3925" selection-end-column="59" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/setup.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="779">
-          <caret line="41" column="13" selection-start-line="41" selection-start-column="13" selection-end-line="41" selection-end-column="13" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/jsandcss/js/plugins/select2/select2.full.min.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <folding>
-            <element signature="n#!!doc" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/config/mainresources.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="893">
-          <caret line="47" column="47" selection-start-line="47" selection-start-column="47" selection-end-line="47" selection-end-column="47" />
-          <folding>
-            <element signature="e#0#31#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$USER_HOME$/.PyCharm2018.2/system/python_stubs/1942222635/builtins.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="410">
-          <caret line="3610" column="8" selection-start-line="3610" selection-start-column="8" selection-end-line="3610" selection-end-column="8" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../env_formshare/lib/python3.6/site-packages/paginate/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="638">
-          <caret line="166" column="12" selection-start-line="166" selection-start-column="4" selection-end-line="166" selection-end-column="14" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/config/environment.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="95">
-          <caret line="51" lean-forward="true" selection-start-line="51" selection-end-line="51" />
-          <folding>
-            <element signature="e#0#9#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/views/api.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="475">
-          <caret line="25" column="39" lean-forward="true" selection-start-line="25" selection-start-column="39" selection-end-line="25" selection-end-column="39" />
-          <folding>
-            <element signature="e#0#46#0" expanded="true" />
-            <marker date="1541951088960" expanded="true" signature="184:185" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/processes/elasticsearch/user_index.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-2821">
-          <caret line="62" column="46" selection-start-line="62" selection-start-column="46" selection-end-line="62" selection-end-column="46" />
-          <folding>
-            <element signature="e#0#39#0" expanded="true" />
-            <marker date="1541950967359" expanded="true" signature="2732:2874" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/collaborators/collaborator_add.jinja2">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="361">
-          <caret line="19" column="25" lean-forward="true" selection-start-line="19" selection-start-column="25" selection-end-line="19" selection-end-column="25" />
-          <folding>
-            <element signature="e#899#931#0#HTML" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/requirements.txt">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="206">
-          <caret line="42" column="18" selection-start-line="42" selection-start-column="18" selection-end-line="42" selection-end-column="18" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/profile/snippets/collaboration_tab.jinja2">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="285">
-          <caret line="15" column="75" lean-forward="true" selection-start-line="15" selection-start-column="51" selection-end-line="15" selection-end-column="75" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/snippets/account_summary.jinja2">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/development.ini">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-4">
-          <caret line="53" column="25" lean-forward="true" selection-start-line="53" selection-start-column="25" selection-end-line="53" selection-end-column="25" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/views/basic_views.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2251">
-          <caret line="155" column="58" selection-start-line="155" selection-start-column="58" selection-end-line="155" selection-end-column="58" />
-          <folding>
-            <element signature="e#0#37#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/views/classes.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="396">
-          <caret line="142" column="6" selection-start-line="142" selection-start-column="6" selection-end-line="142" selection-end-column="6" />
-          <folding>
-            <element signature="e#292#341#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/processes/db/user.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="665">
-          <caret line="35" lean-forward="true" selection-start-line="35" selection-end-line="35" />
-          <folding>
-            <element signature="e#0#89#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/plugins/helpers.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="338">
-          <caret line="113" column="20" selection-start-line="113" selection-start-column="4" selection-end-line="113" selection-end-column="20" />
-          <folding>
-            <element signature="e#177#198#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/plugins/core.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/project_details.jinja2">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="285">
-          <caret line="45" column="41" lean-forward="true" selection-start-line="45" selection-start-column="41" selection-end-line="45" selection-end-column="41" />
-          <folding>
-            <element signature="e#9#15#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/snippets/project_details.jinja2">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="380">
-          <caret line="203" column="113" selection-start-line="203" selection-start-column="113" selection-end-line="203" selection-end-column="113" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets/brdcrbs_assistlist.jinja2">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="247">
-          <caret line="13" column="35" selection-start-line="13" selection-start-column="35" selection-end-line="13" selection-end-column="35" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/processes/db/project.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="776">
-          <caret line="137" column="43" lean-forward="true" selection-start-line="137" selection-start-column="30" selection-end-line="137" selection-end-column="43" />
-          <folding>
-            <element signature="e#0#121#0" expanded="true" />
-            <marker date="1541969182048" expanded="true" signature="2057:2285" ph="..." />
-            <marker date="1541969182048" expanded="true" signature="9077:9078" ph="..." />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/processes/db/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="57">
-          <caret line="3" column="24" selection-start-line="3" selection-start-column="24" selection-end-line="3" selection-end-column="24" />
-          <folding>
-            <element signature="e#0#19#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/snippets/navbar.jinja2">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="743">
-          <caret line="60" column="63" selection-start-line="60" selection-start-column="63" selection-end-line="60" selection-end-column="63" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/collaborators/collaborator_list.jinja2">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="323">
-          <caret line="56" column="48" lean-forward="true" selection-start-line="56" selection-start-column="48" selection-end-line="56" selection-end-column="48" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/snippets/project_tab_content.jinja2">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/index.jinja2">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="410">
-          <caret line="69" column="160" lean-forward="true" selection-start-line="69" selection-start-column="42" selection-end-line="69" selection-end-column="160" />
-          <folding>
-            <element signature="e#9#15#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets/brdcrbs_assistadd.jinja2">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="247">
@@ -1011,55 +624,144 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/models/formshare.py">
+    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/snippets/project_item.jinja2">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="627">
-          <caret line="80" column="11" selection-start-line="80" selection-start-column="4" selection-end-line="80" selection-end-column="11" />
+        <state relative-caret-position="399">
+          <caret line="21" column="196" lean-forward="true" selection-start-line="21" selection-start-column="196" selection-end-line="21" selection-end-column="220" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/processes/elasticsearch/user_index.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="304">
+          <caret line="44" column="10" lean-forward="true" selection-start-line="44" selection-start-column="10" selection-end-line="44" selection-end-column="10" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/elasticsearch_docker/docker-compose.yml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="456">
+          <caret line="24" column="34" selection-start-line="24" selection-start-column="34" selection-end-line="24" selection-end-column="34" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/processes/db/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="95">
+          <caret line="5" lean-forward="true" selection-start-line="5" selection-end-line="5" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/snippets/header.jinja2">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="434">
+          <caret line="109" column="60" selection-start-line="109" selection-start-column="55" selection-end-line="109" selection-end-column="60" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/snippets/brdcrbs_assistedit.jinja2" />
+    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/snippets/brdcrbs_grplist.jinja2">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="247">
+          <caret line="13" column="32" selection-start-line="13" selection-start-column="32" selection-end-line="13" selection-end-column="32" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/project_list.jinja2">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="206">
+          <caret line="69" column="12" selection-start-line="69" selection-start-column="12" selection-end-line="69" selection-end-column="12" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/processes/db/collaborator.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="152">
+          <caret line="12" column="29" selection-start-line="12" selection-start-column="4" selection-end-line="12" selection-end-column="29" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/snippets/navbar.jinja2">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="909">
+          <caret line="64" column="63" selection-start-line="64" selection-start-column="63" selection-end-line="64" selection-end-column="63" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/snippets/brdcrbs_groupadd.jinja2">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="247">
+          <caret line="13" column="43" lean-forward="true" selection-start-line="13" selection-start-column="43" selection-end-line="13" selection-end-column="43" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/development.ini">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1026">
+          <caret line="78" column="18" selection-start-line="78" selection-start-column="18" selection-end-line="78" selection-end-column="18" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/snippets/group_form.jinja2">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="361">
+          <caret line="19" column="45" lean-forward="true" selection-start-line="13" selection-start-column="8" selection-end-line="19" selection-end-column="45" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/snippets/group_form_edit.jinja2">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="76">
+          <caret line="4" column="72" selection-start-line="4" selection-start-column="60" selection-end-line="4" selection-end-column="72" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/formshare/views/projects.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="703">
-          <caret line="100" column="109" lean-forward="true" selection-start-line="99" selection-start-column="16" selection-end-line="100" selection-end-column="109" />
-          <folding>
-            <element signature="e#0#48#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="589">
+          <caret line="99" column="59" selection-start-line="99" selection-start-column="16" selection-end-line="99" selection-end-column="59" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/collaborators/snippets/collaborator_item.jinja2">
+    <entry file="file://$PROJECT_DIR$/formshare/views/collaborators.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="323">
-          <caret line="17" column="23" lean-forward="true" selection-start-line="9" selection-start-column="12" selection-end-line="17" selection-end-column="23" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/assistant_edit.jinja2">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="874">
-          <caret line="46" column="48" selection-start-line="46" selection-start-column="48" selection-end-line="46" selection-end-column="48" />
+        <state relative-caret-position="1729">
+          <caret line="94" column="72" selection-start-line="94" selection-start-column="72" selection-end-line="94" selection-end-column="72" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/assistant_add.jinja2">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="779">
-          <caret line="41" column="38" lean-forward="true" selection-start-line="41" selection-start-column="38" selection-end-line="41" selection-end-column="38" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets/brdcrbs_assistedit.jinja2">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="247">
-          <caret line="13" column="76" selection-start-line="13" selection-start-column="62" selection-end-line="13" selection-end-column="76" />
+        <state relative-caret-position="608">
+          <caret line="32" column="38" lean-forward="true" selection-start-line="30" selection-start-column="12" selection-end-line="32" selection-end-column="38" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="798">
-          <caret line="42" column="77" selection-start-line="42" selection-start-column="64" selection-end-line="42" selection-end-column="77" />
+        <state relative-caret-position="722">
+          <caret line="38" column="18" lean-forward="true" selection-start-line="28" selection-start-column="12" selection-end-line="38" selection-end-column="18" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/group_edit.jinja2">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="570">
+          <caret line="30" column="49" selection-start-line="30" selection-start-column="49" selection-end-line="30" selection-end-column="49" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/snippets/brdcrbs_groupedit.jinja2">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="304">
+          <caret line="16" column="67" selection-start-line="16" selection-start-column="67" selection-end-line="16" selection-end-column="67" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/assistant_edit.jinja2">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="418">
+          <caret line="22" column="41" selection-start-line="22" selection-start-column="41" selection-end-line="22" selection-end-column="41" />
         </state>
       </provider>
     </entry>
@@ -1070,90 +772,197 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/processes/db/assistant.py">
+    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets/brdcrbs_assistedit.jinja2">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="114">
-          <caret line="6" column="71" selection-start-line="6" selection-start-column="71" selection-end-line="6" selection-end-column="71" />
+        <state relative-caret-position="304">
+          <caret line="16" column="70" selection-start-line="16" selection-start-column="70" selection-end-line="16" selection-end-column="70" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/config/auth.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-1111" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/processes/db/user.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="947">
+          <caret line="107" column="4" selection-start-line="107" selection-start-column="4" selection-end-line="107" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/views/profile.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="589">
+          <caret line="31" column="42" lean-forward="true" selection-start-line="31" selection-start-column="42" selection-end-line="31" selection-end-column="42" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/config/encdecdata.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="646">
+          <caret line="35" column="4" selection-start-line="35" selection-start-column="4" selection-end-line="35" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/views/basic_views.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="475">
+          <caret line="25" lean-forward="true" selection-start-line="25" selection-end-line="25" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/processes/db/project.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="92">
+          <caret line="8" column="11" lean-forward="true" selection-start-line="8" selection-start-column="11" selection-end-line="8" selection-end-column="11" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/members/snippets/brdcrbs_memlist.jinja2">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="19">
+          <caret line="1" column="27" selection-start-line="1" selection-start-column="27" selection-end-line="1" selection-end-column="27" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/group_add.jinja2">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="76">
+          <caret line="4" lean-forward="true" selection-start-line="4" selection-end-line="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/snippets/group_item.jinja2">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="532">
+          <caret line="28" column="4" selection-start-line="28" selection-start-column="4" selection-end-line="28" selection-end-column="4" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/models/meta.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
           <folding>
-            <element signature="e#0#73#0" expanded="true" />
-            <marker date="1541999885416" expanded="true" signature="582:767" ph="..." />
-            <marker date="1541999885416" expanded="true" signature="817:822" ph="..." />
-            <marker date="1541999885416" expanded="true" signature="2230:3005" ph="..." />
+            <element signature="e#0#55#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/views/collaborators.py">
+    <entry file="file://$PROJECT_DIR$/formshare/models/formshare.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="627">
+          <caret line="48" column="16" selection-start-line="48" selection-start-column="4" selection-end-line="48" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets/assistant_item.jinja2">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="665">
+          <caret line="35" column="372" lean-forward="true" selection-start-line="35" selection-start-column="12" selection-end-line="35" selection-end-column="372" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/group_list.jinja2">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="589">
+          <caret line="34" column="45" lean-forward="true" selection-start-line="34" selection-start-column="45" selection-end-line="34" selection-end-column="45" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/assistant_list.jinja2">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="998">
-          <caret line="94" column="72" selection-start-line="94" selection-start-column="72" selection-end-line="94" selection-end-column="72" />
-          <folding>
-            <element signature="e#0#47#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/processes/db/collaborator.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="228">
-          <caret line="12" column="29" selection-start-line="12" selection-start-column="4" selection-end-line="12" selection-end-column="29" />
-          <folding>
-            <element signature="e#0#63#0" expanded="true" />
-            <marker date="1541965819634" expanded="true" signature="377:378" ph="..." />
-            <marker date="1541965819634" expanded="true" signature="761:762" ph="..." />
-            <marker date="1541965819634" expanded="true" signature="1815:1817" ph="..." />
-          </folding>
+          <caret line="166" column="15" lean-forward="true" selection-start-line="160" selection-start-column="12" selection-end-line="166" selection-end-column="15" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/formshare/views/assistants.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="385">
-          <caret line="177" column="21" selection-start-line="177" selection-start-column="6" selection-end-line="177" selection-end-column="21" />
-          <folding>
-            <element signature="e#0#47#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="371">
+          <caret line="201" column="6" selection-start-line="201" selection-start-column="6" selection-end-line="201" selection-end-column="6" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/plugins/helpers.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="703">
+          <caret line="70" column="16" selection-start-line="70" selection-start-column="4" selection-end-line="70" selection-end-column="16" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/collaborators/collaborator_list.jinja2">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="515">
+          <caret line="29" column="45" lean-forward="true" selection-start-line="29" selection-start-column="12" selection-end-line="29" selection-end-column="45" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/collaborators/snippets/collaborator_item.jinja2">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="437">
+          <caret line="23" column="235" lean-forward="true" selection-start-line="23" selection-start-column="225" selection-end-line="23" selection-end-column="235" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/members/member_list.jinja2">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="908">
+          <caret line="132" column="66" selection-start-line="132" selection-start-column="56" selection-end-line="132" selection-end-column="66" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/formshare/config/routes.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="637">
-          <caret line="93" column="35" selection-start-line="93" selection-start-column="35" selection-end-line="93" selection-end-column="35" />
+        <state relative-caret-position="675">
+          <caret line="119" column="40" selection-start-line="119" selection-start-column="40" selection-end-line="119" selection-end-column="40" />
           <folding>
             <element signature="e#0#41#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/assistant_list.jinja2">
+    <entry file="file://$PROJECT_DIR$/formshare/views/assistant_groups.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="798">
-          <caret line="78" column="70" lean-forward="true" selection-start-line="78" selection-start-column="70" selection-end-line="78" selection-end-column="70" />
+        <state relative-caret-position="295">
+          <caret line="257" column="43" lean-forward="true" selection-start-line="257" selection-start-column="43" selection-end-line="257" selection-end-column="43" />
           <folding>
-            <element signature="e#1267#1291#0#HTML" expanded="true" />
+            <element signature="e#0#47#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/snippets/project_item.jinja2">
+    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistant_groups/members/snippets/member_item.jinja2">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="399">
-          <caret line="21" column="196" lean-forward="true" selection-start-line="21" selection-start-column="196" selection-end-line="21" selection-end-column="220" />
+        <state relative-caret-position="342">
+          <caret line="18" column="164" selection-start-line="18" selection-start-column="164" selection-end-line="18" selection-end-column="164" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/project_list.jinja2">
+    <entry file="file://$PROJECT_DIR$/formshare/processes/db/assistant.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1178">
+          <caret line="62" column="23" lean-forward="true" selection-start-line="62" selection-start-column="23" selection-end-line="62" selection-end-column="23" />
+          <folding>
+            <element signature="e#0#95#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/processes/db/assistant_group.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="808">
+          <caret line="127" column="8" selection-start-line="127" selection-start-column="8" selection-end-line="127" selection-end-column="8" />
+          <folding>
+            <element signature="e#0#98#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1194">
-          <caret line="69" column="12" lean-forward="true" selection-start-line="69" selection-start-column="12" selection-end-line="69" selection-end-column="12" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/assistants/snippets/assistant_item.jinja2">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="684">
-          <caret line="36" column="206" selection-start-line="36" selection-start-column="206" selection-end-line="36" selection-end-column="206" />
+          <caret line="112" column="21" selection-start-line="112" selection-start-column="21" selection-end-line="112" selection-end-column="21" />
         </state>
       </provider>
     </entry>

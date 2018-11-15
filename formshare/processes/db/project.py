@@ -89,10 +89,6 @@ def get_user_projects(request, user, logged_user, private=False):
                     if project["project_public"] == 1:
                         project['collaborate'] = False
                         project['access_type'] = 4
-                        # collaborative_project['user_id'] = user
-                        # collaborative_project['project_id'] = project['project_id']
-                        #
-                        # collaborative_project['project_cdate'] = project['project_cdate']
                         projects.append(project)
     else:
         res = request.dbsession.query(Project, Userproject).filter(Project.project_id == Userproject.project_id).filter(

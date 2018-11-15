@@ -1,0 +1,23 @@
+{#<div class="row">#}
+{#    <div class="col-md-1">#}
+<span class="label">{{ member_count }}</span>
+{#    </div>#}
+{#</div>#}
+<div class="row">
+    <div class="col-md-4">
+        <div class="text-center">
+            {{ member.coll_name }}
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="text-center">
+            {{ request.h.readble_date(member.join_date) }}
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="text-center">
+            <a urn="{{ request.route_url('remove_member',userid=userid,projcode=projectDetails.project_code,groupid=groupData.group_id,projectid=member.enum_project,memberid=member.coll_id) }}" class="btn btn-white btn-sm remove_assistant action-buttons"><i class="fas fa-ban text-danger"></i> {{ _('Remove') }} </a>
+        </div>
+    </div>
+</div>
+<hr>

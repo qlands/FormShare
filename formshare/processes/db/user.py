@@ -12,10 +12,10 @@ log = logging.getLogger(__name__)
 
 
 def get_user_stats(request, user):
-    res = {}
-    res["num_projects"] = request.dbsession.query(Userproject).filter(Userproject.user_id == user).count()
-    res["num_forms"] = request.dbsession.query(Odkform).filter(Odkform.project_id == Userproject.project_id).filter(
-        Userproject.user_id == user).count()
+    res = {'num_projects': request.dbsession.query(Userproject).filter(Userproject.user_id == user).count(),
+           'num_forms': request.dbsession.query(Odkform).filter(Odkform.project_id == Userproject.project_id).filter(
+               Userproject.user_id == user).count()}
+
     last_project = request.dbsession.query(Project.project_cdate).filter(
         Project.project_id == Userproject.project_id).filter(Userproject.user_id == user).order_by(
         Project.project_cdate.desc()).first()
@@ -58,15 +58,6 @@ def get_user_stats(request, user):
                 found = True
         if not found and searched:
             total_collaborators.append(c1)
-
-    #
-    # for c1 in collaborators:
-    #     found = False
-    #     for c2 in my_collaborators:
-    #         if c1["user_id"] == c2["user_id"]:
-    #             found = True
-    #     if not found:
-    #         total_collaborators.append(c1)
 
     res["collaborators"] = total_collaborators
     return res

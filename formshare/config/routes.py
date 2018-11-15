@@ -7,8 +7,10 @@ from ..views.projects import AddProjectView, ProjectListView, ProjectDetailsView
     EditProjectView, DeleteProjectView
 from ..views.profile import UserProfileView, EditProfileView
 from ..views.collaborators import CollaboratorsListView, RemoveCollaborator
-from ..views.assistants import AssistantsListView, AddAssistantsView, EditAssistantsView, DeleteAssistant
+from ..views.assistants import AssistantsListView, AddAssistantsView, EditAssistantsView, DeleteAssistant, \
+    ChangeAssistantPassword
 from ..views.api import APIUserSearchSelect2
+from ..views.assistant_groups import GroupListView, AddGroupView, EditGroupView, DeleteGroup, GroupMembersView, RemoveMember
 
 route_list = []
 
@@ -94,6 +96,28 @@ def load_routes(config):
         add_route('assistant_delete', '/user/{userid}/project/{projcode}/assistant/{assistid}/delete', DeleteAssistant,
                   None))
 
+    routes.append(add_route('assistant_change_pass', '/user/{userid}/project/{projcode}/assistant/{assistid}/change',
+                            ChangeAssistantPassword, None))
+
+    # Assistant groups
+    routes.append(add_route('groups', '/user/{userid}/project/{projcode}/groups', GroupListView,
+                            'dashboard/projects/assistant_groups/group_list.jinja2'))
+
+    routes.append(add_route('group_add', '/user/{userid}/project/{projcode}/groups/add', AddGroupView,
+                            'dashboard/projects/assistant_groups/group_add.jinja2'))
+
+    routes.append(add_route('group_edit', '/user/{userid}/project/{projcode}/group/{groupid}/edit', EditGroupView,
+                            'dashboard/projects/assistant_groups/group_edit.jinja2'))
+
+    routes.append(add_route('group_delete', '/user/{userid}/project/{projcode}/group/{groupid}/delete', DeleteGroup,
+                            None))
+
+    routes.append(add_route('group_members', '/user/{userid}/project/{projcode}/group/{groupid}/members', GroupMembersView,
+                            'dashboard/projects/assistant_groups/members/member_list.jinja2'))
+
+    routes.append(add_route('remove_member',
+                            '/user/{userid}/project/{projcode}/group/{groupid}/member/{memberid}/of/{projectid}/remove',
+                            RemoveMember, None))
 
     # routes.append(addRoute('form_details', '/user/{userid}/project/{projid}/form/{formid}', formDetails_view,
     #                        'dashboard/projects/forms/form_details.jinja2'))

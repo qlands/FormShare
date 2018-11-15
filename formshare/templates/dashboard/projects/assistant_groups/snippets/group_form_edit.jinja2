@@ -1,0 +1,16 @@
+{% extends 'dashboard/projects/assistant_groups/snippets/group_form.jinja2' %}
+
+{% block group_form_controls_extra %}
+    <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Active') }}</label>
+        <div class="col-sm-10"><input type="checkbox" name="group_active" class="js-switch" {% if groupData|length > 0 %} {% if groupData.group_active == 1 %}checked{% endif %}{% else %}checked{% endif %} /></div>
+    </div>
+    <div class="hr-line-dashed"></div>
+{% endblock group_form_controls_extra %}
+
+{% block assistant_form_actions %}
+    <div class="form-group row">
+        <div class="col-sm-4 col-sm-offset-2">
+            <button class="btn btn-primary btn-sm" type="submit">{{ _('Modify group') }}</button>
+        </div>
+    </div>
+{% endblock assistant_form_actions %}

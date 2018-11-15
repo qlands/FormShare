@@ -1,6 +1,6 @@
 from formshare.views.classes import PrivateView
 from formshare.processes.db import get_project_assistants, get_project_id_from_name, add_assistant, \
-    get_assistant_data, modify_assistant, delete_assistant
+    get_assistant_data, modify_assistant, delete_assistant, change_assistant_password
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 
 
@@ -32,28 +32,9 @@ class AssistantsListView(PrivateView):
         if project_details["access_type"] > 2:
             raise HTTPNotFound
 
-        # if self.request.method == 'POST':
-        #     collaborator_details = self.get_post_dict()
-        #     if "add_collaborator" in collaborator_details.keys():
-        #         if "collaborator" in collaborator_details.keys():
-        #             added, message = add_collaborator_to_project(self.request, project_id,
-        #                                                          collaborator_details['collaborator'])
-        #             if added:
-        #                 self.request.session.flash(self._('The collaborator was added to this project'))
-        #                 self.returnRawViewResult = True
-        #                 return HTTPFound(self.request.route_url('collaborators', userid=user_id, projcode=project_code))
-        #             else:
-        #                 self.errors.append(message)
-        #     if "change_role" in collaborator_details.keys():
-        #         changed, message = set_collaborator_role(self.request, project_id,
-        #                                                  collaborator_details['collaborator_id'],
-        #                                                  collaborator_details['role_collaborator'])
-        #         if changed:
-        #             self.request.session.flash(self._('The role was changed'))
-        #             self.returnRawViewResult = True
-        #             return HTTPFound(self.request.route_url('collaborators', userid=user_id, projcode=project_code))
-        #         else:
-        #             self.errors.append(message)
+        error = self.request.params.get('error')
+        if error is not None:
+            self.errors.append(error)
 
         assistants = get_project_assistants(self.request, project_id)
         return {'assistants': assistants, 'projectDetails': project_details, 'userid': user_id}
@@ -213,6 +194,58 @@ class DeleteAssistant(PrivateView):
             else:
                 self.request.session.flash(self._('Unable to delete the assistant: ') + message)
                 return HTTPFound(next_page)
+
+        else:
+            raise HTTPNotFound
+
+
+class ChangeAssistantPassword(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] > 2:
+            raise HTTPNotFound
+
+        if self.request.method == 'POST':
+            self.returnRawViewResult = True
+            assistant_data = self.get_post_dict()
+            assistant_id = self.request.matchdict['assistid']
+            if assistant_data['coll_password'] != '':
+                if assistant_data['coll_password'] == assistant_data['coll_password2']:
+                    changed, message = change_assistant_password(self.request, project_id, assistant_id,
+                                                                 assistant_data['coll_password'])
+                    if changed:
+                        self.request.session.flash(self._('The password was changed successfully'))
+                        return HTTPFound(self.request.route_url('assistants', userid=user_id, projcode=project_code))
+                    else:
+                        return HTTPFound(self.request.route_url('assistants', userid=user_id, projcode=project_code,
+                                                                _query={'error': self._(
+                                                                    'Unable to the password: ') + message}))
+                else:
+                    return HTTPFound(self.request.route_url('assistants', userid=user_id, projcode=project_code,
+                                                            _query={'error': self._(
+                                                                "The password and its confirmation are not the same")}))
+            else:
+                return HTTPFound(self.request.route_url('assistants', userid=user_id, projcode=project_code,
+                                                        _query={'error': self._("The password cannot be empty")}))
 
         else:
             raise HTTPNotFound

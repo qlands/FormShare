@@ -1,5 +1,5 @@
 from formshare.models import Project, Userproject, map_to_schema, map_from_schema,\
-    Submission, Odkform, Collaborator
+    Submission, Odkform, Collaborator, ProjectFile
 import logging
 import datetime
 import sys
@@ -8,7 +8,7 @@ from sqlalchemy.exc import IntegrityError
 
 __all__ = [
     'get_project_id_from_name', 'get_user_projects', 'get_active_project', 'add_project', 'modify_project',
-    'delete_project', 'is_collaborator']
+    'delete_project', 'is_collaborator', 'add_file_to_project', 'get_project_files', 'remove_file_from_project']
 
 log = logging.getLogger(__name__)
 
@@ -148,7 +148,8 @@ def add_project(request, user, project_data):
                 return False, request.translate("Error allocating access")
             except RuntimeError:
                 log.error("Error {} while allocating access for user {} in project {}".format(sys.exc_info()[0], user,
-                                                                                             mapped_data["project_id"]))
+                                                                                              mapped_data[
+                                                                                                  "project_id"]))
                 return False, sys.exc_info()[0]
             return True, project_data['project_id']
         except IntegrityError:
@@ -198,3 +199,38 @@ def delete_project(request, user, project):
         log.error("Error {} while deleting project {}".format(sys.exc_info()[0], project))
         return False, sys.exc_info()[0]
     return True, ""
+
+
+def add_file_to_project(request, project, file_name):
+    res = request.dbsession.query(ProjectFile).filter(ProjectFile.project_id == project).filter(
+        ProjectFile.file_name == file_name).first()
+    if res is None:
+        new_file_id = str(uuid.uuid4())
+        new_file = ProjectFile(file_id=new_file_id, project_id=project, file_name=file_name,
+                               file_udate=datetime.datetime.now())
+        try:
+            request.dbsession.add(new_file)
+            request.dbsession.flush()
+
+        except RuntimeError:
+            log.error("Error {} while adding file {} in project {}".format(sys.exc_info()[0], file_name, project))
+            return False, sys.exc_info()[0]
+        return True, new_file_id
+    else:
+        return False, request.translate("The file {} already exist".format(file_name))
+
+
+def get_project_files(request, project):
+    res = request.dbsession.query(ProjectFile).filter(ProjectFile.project_id == project).all()
+    return map_from_schema(res)
+
+
+def remove_file_from_project(request, project, file_name):
+    try:
+        request.dbsession.query(ProjectFile).filter(ProjectFile.project_id == project).filter(
+            ProjectFile.file_name == file_name).delete()
+        request.dbsession.flush()
+        return True, ""
+    except RuntimeError:
+        log.error("Error {} while removing file {} in project {}".format(sys.exc_info()[0], file_name, project))
+        return False, sys.exc_info()[0]

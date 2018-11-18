@@ -1,4 +1,5 @@
 {% extends 'dashboard/index.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
 
 
 {% block titlesection %}{{ _("Project") }} {% endblock titlesection %}
@@ -16,6 +17,8 @@
 
     {% jsresource request,'formshare','markdown' %}
     {% jsresource request,'formshare','leaflet' %}
+    {% jsresource request,'formshare','taphold' %}
+
 
 {% endblock topScripts %}
 
@@ -68,6 +71,16 @@
 
     <script>
         $(document).ready(function() {
+            $('.custom-file-input').on('change', function() {
+                let fileName = $(this).val().split('\\').pop();
+                $(this).next('.custom-file-label').addClass("selected").html(fileName);
+            });
+
+            $('#add_file').click(function () {
+                $("#upload").val("");
+                $('.custom-file-input').next('.custom-file-label').addClass("selected").html("{{ _('Choose file...') }}");
+            });
+
             $('#delete_project').click(function () {
                 swal({
                         title: "{{ _('Are you sure?') }}",
@@ -97,6 +110,100 @@
                         }
                     });
             });
+            {% if projectData.access_type != 4 %}
+                $(".assistant-item").on("taphold", function()
+                {
+                    var action_url = $( this ).attr('urn');
+                    swal({
+                            title: "{{ _('Are you sure?') }}",
+                            type: "warning",
+                            showCancelButton: true,
+                            confirmButtonColor: "#DD6B55",
+                            confirmButtonText: "{{ _('Yes, remove it!') }}",
+                            cancelButtonText: "{{ _('Oops!, cancel!') }}",
+                            closeOnConfirm: true,
+                            closeOnCancel: true },
+                        function (isConfirm) {
+                            if (isConfirm) {
+                                var form = document.createElement('form');
+                                form.setAttribute('method', 'post');
+                                form.setAttribute('action', action_url);
+                                form.style.display = 'hidden';
+
+                                var i = document.createElement("input"); //input element, text
+                                i.setAttribute('type',"text");
+                                i.setAttribute('name',"csrf_token");
+                                i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                                form.appendChild(i);
+
+                                document.body.appendChild(form);
+                                form.submit();
+                            }
+                        });
+                });
+                $(".group-item").on("taphold", function()
+                {
+                    var action_url = $( this ).attr('urn');
+                    swal({
+                            title: "{{ _('Are you sure?') }}",
+                            type: "warning",
+                            showCancelButton: true,
+                            confirmButtonColor: "#DD6B55",
+                            confirmButtonText: "{{ _('Yes, remove it!') }}",
+                            cancelButtonText: "{{ _('Oops!, cancel!') }}",
+                            closeOnConfirm: true,
+                            closeOnCancel: true },
+                        function (isConfirm) {
+                            if (isConfirm) {
+                                var form = document.createElement('form');
+                                form.setAttribute('method', 'post');
+                                form.setAttribute('action', action_url);
+                                form.style.display = 'hidden';
+
+                                var i = document.createElement("input"); //input element, text
+                                i.setAttribute('type',"text");
+                                i.setAttribute('name',"csrf_token");
+                                i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                                form.appendChild(i);
+
+                                document.body.appendChild(form);
+                                form.submit();
+                            }
+                        });
+                });
+                $(".file-item").on("taphold", function()
+                {
+                    var action_url = $( this ).attr('urn');
+                    swal({
+                            title: "{{ _('Are you sure?') }}",
+                            type: "warning",
+                            showCancelButton: true,
+                            confirmButtonColor: "#DD6B55",
+                            confirmButtonText: "{{ _('Yes, remove it!') }}",
+                            cancelButtonText: "{{ _('Oops!, cancel!') }}",
+                            closeOnConfirm: true,
+                            closeOnCancel: true },
+                        function (isConfirm) {
+                            if (isConfirm) {
+                                var form = document.createElement('form');
+                                form.setAttribute('method', 'post');
+                                form.setAttribute('action', action_url);
+                                form.style.display = 'hidden';
+
+                                var i = document.createElement("input"); //input element, text
+                                i.setAttribute('type',"text");
+                                i.setAttribute('name',"csrf_token");
+                                i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                                form.appendChild(i);
+
+                                document.body.appendChild(form);
+                                form.submit();
+                            }
+                        });
+                });
+
+            {% endif %}
+
         });
     </script>
 

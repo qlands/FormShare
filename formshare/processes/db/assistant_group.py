@@ -24,7 +24,8 @@ def get_members_count(request, project, group):
 
 
 def get_project_groups(request, project):
-    res = request.dbsession.query(Collgroup).filter(Collgroup.project_id == project).all()
+    res = request.dbsession.query(Collgroup).filter(Collgroup.project_id == project).order_by(
+        Collgroup.group_cdate.desc()).all()
     mapped_data = map_from_schema(res)
     for group in mapped_data:
         group["members"] = get_members_count(request, project, group["group_id"])

@@ -92,6 +92,17 @@ class Collaborator(Base):
     project = relationship('Project')
 
 
+class ProjectFile(Base):
+    __tablename__ = 'projectfile'
+
+    file_id = Column(Unicode(64), primary_key=True, nullable=False)
+    project_id = Column(ForeignKey('project.project_id', ondelete='CASCADE'), nullable=False)
+    file_name = Column(Unicode(120))
+    file_udate = Column(DateTime)
+
+    project = relationship('Project')
+
+
 class Collgroup(Base):
     __tablename__ = 'collgroup'
 

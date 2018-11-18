@@ -36,7 +36,7 @@ class AssistantsListView(PrivateView):
         if error is not None:
             self.errors.append(error)
 
-        assistants = get_project_assistants(self.request, project_id)
+        assistants, more = get_project_assistants(self.request, project_id)
         return {'assistants': assistants, 'projectDetails': project_details, 'userid': user_id}
 
 

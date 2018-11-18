@@ -7,7 +7,8 @@ import zope.sqlalchemy
 # Base.metadata prior to any initialization routines
 
 from .formshare import Base, Collaboratorlog, User, Userlog, Project, Collaborator, Collgroup, Odkform,\
-    Collingroup, Formacces, Formgrpacces, Jsonlog, Septable, Submission, Jsonhistory, Sepsection, Sepitem, Userproject
+    Collingroup, Formacces, Formgrpacces, Jsonlog, Septable, Submission, Jsonhistory, Sepsection, Sepitem, \
+    Userproject, ProjectFile
 
 from .schema import *
 

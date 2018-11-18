@@ -43,7 +43,9 @@ def create_resources(apppath, config):
     r.add_css_resource('formshare', 'leaflet', 'js/plugins/leaflet/leaflet.css', None)
     r.add_js_resource('formshare', 'leaflet', 'js/plugins/leaflet/leaflet.js', 'element_sensors')
 
-    # ------------------------------Project details --------------------------------------
+    r.add_js_resource('formshare', 'taphold', 'js/plugins/taphold/taphold.js', None)
+
+    # ------------------------------Collaborators, assistants and groups --------------------------------------
     r.add_css_resource('formshare', 'select2', 'css/plugins/select2/select2.min.css', 'bootstrap')
     r.add_js_resource('formshare', 'select2', 'js/plugins/select2/select2.full.min.js', None)
 

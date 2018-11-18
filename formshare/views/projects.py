@@ -1,6 +1,7 @@
 from formshare.views.classes import ProjectsView
 from formshare.processes.db import add_project, modify_project, delete_project, is_collaborator, \
-    get_project_id_from_name, get_project_collaborators
+    get_project_id_from_name, get_project_collaborators, get_project_assistants, get_project_groups, \
+    add_file_to_project, get_project_files, remove_file_from_project
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from formshare.config.elasticfeeds import get_manager
 from elasticfeeds.activity import Actor, Object, Activity
@@ -60,8 +61,11 @@ class ProjectDetailsView(ProjectsView):
                 raise HTTPNotFound
         else:
             raise HTTPNotFound
+        assistants, more = get_project_assistants(self.request, project_id, 8)
         return {'projectData': project_data, 'userid': user_id,
-                'collaborators': get_project_collaborators(self.request, project_id)}
+                'collaborators': get_project_collaborators(self.request, project_id),
+                'assistants': assistants, 'more': more,
+                'groups': get_project_groups(self.request, project_id), 'files': get_project_files(self.request, project_id)}
 
 
 class AddProjectView(ProjectsView):
@@ -125,6 +129,7 @@ class AddProjectView(ProjectsView):
 class EditProjectView(ProjectsView):
     def __init__(self, request):
         ProjectsView.__init__(self, request)
+        self.privateOnly = True
 
     def process_view(self):
         user_id = self.request.matchdict['userid']
@@ -215,6 +220,7 @@ class DeleteProjectView(ProjectsView):
     def __init__(self, request):
         ProjectsView.__init__(self, request)
         self.checkCrossPost = False
+        self.privateOnly = True
 
     def process_view(self):
         user_id = self.request.matchdict['userid']
@@ -257,5 +263,95 @@ class DeleteProjectView(ProjectsView):
             else:
                 self.request.session.flash(self._('Unable to delete the project: ') + message)
                 return HTTPFound(location=fail_page)
+        else:
+            raise HTTPNotFound
+
+
+class AddFileToProject(ProjectsView):
+    def __init__(self, request):
+        ProjectsView.__init__(self, request)
+        self.checkCrossPost = False
+        self.privateOnly = True
+
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] == 4:
+            raise HTTPNotFound  # Don't edit a public or a project that I am just a member
+
+        if self.request.method == 'POST':
+            self.returnRawViewResult = True
+            try:
+                input_file = self.request.POST['upload'].file
+            except AttributeError:
+                input_file = None
+            next_page = self.request.route_url('project_details', userid=user_id, projcode=project_code)
+            if input_file is not None:
+                file_name = self.request.POST['upload'].filename
+                added, message = add_file_to_project(self.request, project_id, file_name)
+                if added:
+                    store_file(self.request, project_id, file_name, self.request.POST['upload'].file)
+                    self.request.session.flash(self._('The files was added successfully'))
+                else:
+                    next_page = self.request.route_url('project_details', userid=user_id, projcode=project_code,
+                                                       _query={'error': message})
+                    return HTTPFound(location=next_page)
+            return HTTPFound(location=next_page)
+        else:
+            raise HTTPNotFound
+
+
+class RemoveFileFromProject(ProjectsView):
+    def __init__(self, request):
+        ProjectsView.__init__(self, request)
+        self.checkCrossPost = False
+        self.privateOnly = True
+
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        file_name = self.request.matchdict['filename']
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] == 4:
+            raise HTTPNotFound  # Don't edit a public or a project that I am just a member
+
+        if self.request.method == 'POST':
+            self.returnRawViewResult = True
+
+            next_page = self.request.route_url('project_details', userid=user_id, projcode=project_code)
+            removed, message = remove_file_from_project(self.request, project_id, file_name)
+            if removed:
+                delete_stream(self.request, project_id, file_name)
+                self.request.session.flash(self._('The files was removed successfully'))
+            else:
+                next_page = self.request.route_url('project_details', userid=user_id, projcode=project_code,
+                                                   _query={'error': message})
+                return HTTPFound(location=next_page)
+            return HTTPFound(location=next_page)
         else:
             raise HTTPNotFound

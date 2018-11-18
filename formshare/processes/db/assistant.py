@@ -43,10 +43,25 @@ def get_all_assistants(request, project, user):
     return assistants
 
 
-def get_project_assistants(request, project):
-    res = request.dbsession.query(Collaborator).filter(Collaborator.project_id == project).all()
+def get_project_assistants(request, project, return_max=0):
+    res = request.dbsession.query(Collaborator).filter(Collaborator.project_id == project).order_by(
+        Collaborator.coll_cdate.desc()).all()
     mapped_data = map_from_schema(res)
-    return mapped_data
+    if return_max <= 0:
+        return mapped_data, 0
+    else:
+        more = len(mapped_data) - return_max
+        if more < 0:
+            more = 0
+        result = []
+        count = 1
+        for item in mapped_data:
+            if count <= return_max:
+                result.append(item)
+                count = count + 1
+            else:
+                break
+        return result, more
 
 
 def get_assistant_data(request, project, assistant):

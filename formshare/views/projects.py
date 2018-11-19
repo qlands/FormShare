@@ -1,7 +1,7 @@
 from formshare.views.classes import ProjectsView
 from formshare.processes.db import add_project, modify_project, delete_project, is_collaborator, \
     get_project_id_from_name, get_project_collaborators, get_project_assistants, get_project_groups, \
-    add_file_to_project, get_project_files, remove_file_from_project
+    add_file_to_project, get_project_files, remove_file_from_project, get_user_details
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from formshare.config.elasticfeeds import get_manager
 from elasticfeeds.activity import Actor, Object, Activity
@@ -61,11 +61,13 @@ class ProjectDetailsView(ProjectsView):
                 raise HTTPNotFound
         else:
             raise HTTPNotFound
-        assistants, more = get_project_assistants(self.request, project_id, 8)
-        return {'projectData': project_data, 'userid': user_id,
-                'collaborators': get_project_collaborators(self.request, project_id),
-                'assistants': assistants, 'more': more,
-                'groups': get_project_groups(self.request, project_id), 'files': get_project_files(self.request, project_id)}
+        assistants, more_assistants = get_project_assistants(self.request, project_id, 8)
+        collaborators, more_collaborators = get_project_collaborators(self.request, project_id, self.user.login, 4)
+        user_details = get_user_details(self.request, user_id)
+        return {'projectData': project_data, 'userid': user_id, 'collaborators': collaborators,
+                'moreCollaborators': more_collaborators, 'assistants': assistants, 'moreAssistants': more_assistants,
+                'groups': get_project_groups(self.request, project_id),
+                'files': get_project_files(self.request, project_id), 'userDetails': user_details}
 
 
 class AddProjectView(ProjectsView):

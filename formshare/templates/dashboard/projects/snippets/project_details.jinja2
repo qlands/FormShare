@@ -85,7 +85,7 @@
                                     <li><a class="{% if assistant.coll_active == 0 %}text-danger{% endif %} assistant-item" {% if projectData.access_type != 4 %} urn="{{ request.route_url('assistant_delete',userid=userid,projcode=projectData.project_code,assistid=assistant.coll_id,_query={'next': request.url}) }}" href="{{ request.route_url('assistant_edit',userid=userid,projcode=projectData.project_code,assistid=assistant.coll_id,_query={'next': request.url}) }}" {% endif %}> {{ assistant.coll_name }}</a></li>
                                 {% endfor %}
                                 {% if projectData.access_type != 4 %}
-                                    {% if more > 0 %}
+                                    {% if moreAssistants > 0 %}
                                         <li><a class="text-success" href="{{ request.route_url('assistants',userid=userid,projcode=projectData.project_code) }}"> {{ _('And') }} {{ more }} {{ _('more') }}</a></li>
                                     {% endif %}
                                 {% endif %}
@@ -174,7 +174,7 @@
                 </div>
             </div>
             <div class="text-center m-t-md" style="margin-bottom: 20px">
-                {% if projectData.access_type != 4 %}<a href="{{ request.route_url('project_edit',userid=projectData.owner,projcode=projectData.project_code,_query={'next':request.url}) }}" class="btn btn-xs btn-warning">Edit project</a>{% endif %} {% if projectData.access_type == 1 or projectData.access_type == 2 %} <a id="delete_project" style="color: white" class="btn btn-xs btn-danger">Remove project</a> {% endif %}
+                {% if projectData.access_type != 4 %}<a href="{{ request.route_url('project_edit',userid=projectData.owner,projcode=projectData.project_code,_query={'next':request.url}) }}" class="btn btn-xs btn-warning">Edit project</a>{% endif %} {% if projectData.access_type == 1 %} <a id="delete_project" style="color: white" class="btn btn-xs btn-danger">Remove project</a> {% endif %}
             </div>
         </div>
     </div>
@@ -193,16 +193,16 @@
                     <div class="row">
                         <div class="col-lg-6">
                             <dl class="row mb-0">
-                                <div class="col-sm-4 text-sm-right"><dt>Created by:</dt> </div>
-                                <div class="col-sm-8 text-sm-left"><dd class="mb-1">Alex Smith</dd> </div>
+                                <div class="col-sm-4 text-sm-right"><dt>{{ _('Created by') }}:</dt> </div>
+                                <div class="col-sm-8 text-sm-left"><dd class="mb-1">{{ userDetails.user_name }}</dd> </div>
                             </dl>
                             <dl class="row mb-0">
                                 <div class="col-sm-4 text-sm-right"><dt>Forms:</dt> </div>
                                 <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  162</dd></div>
                             </dl>
                             <dl class="row mb-0">
-                                <div class="col-sm-4 text-sm-right"><dt>Created:</dt> </div>
-                                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  10.07.2014 23:36:57</dd></div>
+                                <div class="col-sm-4 text-sm-right"><dt>{{ _('Created') }}:</dt> </div>
+                                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date(projectData.project_cdate) }}</dd></div>
                             </dl>
                         </div>
                         <div class="col-lg-6" id="cluster_info">
@@ -231,6 +231,9 @@
                                         {% for collaborator in collaborators %}
                                             <a href="{{ request.route_url('dashboard',userid=collaborator.user_id) }}"><img title="{{ collaborator.user_name }}" class="rounded-circle" src="{{ request.h.get_gravatar_url(collaborator.user_email) }}"></a>
                                         {% endfor %}
+                                        {% if moreCollaborators > 0 %}
+                                            <a href="{{ request.route_url('collaborators',userid=userid,projcode=projectData.project_code) }}"><div class="rounded-circle" title="{{ _('Plus') }} {{ moreCollaborators }} {{ request.h.pluralize(request, _('other'), moreCollaborators) }}" style="background-color: #1ab394; width: 32px; height: 32px; display: inline-block; vertical-align: middle" ><span style="font-size: 20px; margin-left: 3px; color: white">+{{ moreCollaborators }}</span></div></a>
+                                        {% endif %}
                                     </dd>
                                 </div>
                             </dl>

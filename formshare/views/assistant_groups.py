@@ -32,7 +32,7 @@ class GroupListView(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] > 2:
+        if project_details["access_type"] == 4:
             raise HTTPNotFound
 
         groups = get_project_groups(self.request, project_id)
@@ -64,7 +64,7 @@ class AddGroupView(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] > 2:
+        if project_details["access_type"] == 4:
             raise HTTPNotFound
 
         if self.request.method == 'POST':
@@ -113,7 +113,7 @@ class EditGroupView(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] > 2:
+        if project_details["access_type"] == 4:
             raise HTTPNotFound
 
         if self.request.method == 'POST':
@@ -164,7 +164,7 @@ class DeleteGroup(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] > 2:
+        if project_details["access_type"] == 4:
             raise HTTPNotFound
 
         if self.request.method == 'POST':
@@ -211,7 +211,7 @@ class GroupMembersView(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] > 2:
+        if project_details["access_type"] == 4:
             raise HTTPNotFound
 
         members = get_members(self.request, project_id, group_id)
@@ -231,15 +231,24 @@ class GroupMembersView(PrivateView):
 
             if "add_assistant" in group_data.keys():
                 self.returnRawViewResult = True
-                if group_data['coll_id'] != "":
-                    parts = group_data['coll_id'].split("|")
-                    edited, message = add_assistant_to_group(self.request, project_id, group_id, parts[0], parts[1])
-                    if edited:
-                        self.request.session.flash(self._('The assistant was added successfully'))
-                        self.returnRawViewResult = True
-                        return HTTPFound(next_page)
+                if "coll_id" in group_data.keys():
+                    if group_data['coll_id'] != "":
+                        parts = group_data['coll_id'].split("|")
+                        edited, message = add_assistant_to_group(self.request, project_id, group_id, parts[0], parts[1])
+                        if edited:
+                            self.request.session.flash(self._('The assistant was added successfully'))
+                            self.returnRawViewResult = True
+                            return HTTPFound(next_page)
+                        else:
+                            params = {'error': message}
+                            url_parts = list(urlparse.urlparse(next_page))
+                            query = dict(urlparse.parse_qsl(url_parts[4]))
+                            query.update(params)
+
+                            url_parts[4] = urlencode(query)
+                            return HTTPFound(urlparse.urlunparse(url_parts))
                     else:
-                        params = {'error': message}
+                        params = {'error': self._('You need to specify an assistant')}
                         url_parts = list(urlparse.urlparse(next_page))
                         query = dict(urlparse.parse_qsl(url_parts[4]))
                         query.update(params)
@@ -247,8 +256,13 @@ class GroupMembersView(PrivateView):
                         url_parts[4] = urlencode(query)
                         return HTTPFound(urlparse.urlunparse(url_parts))
                 else:
-                    next_page = next_page + "&error=" + "You need to specify an assistant"
-                    return HTTPFound(next_page)
+                    params = {'error': self._('You need to specify an assistant')}
+                    url_parts = list(urlparse.urlparse(next_page))
+                    query = dict(urlparse.parse_qsl(url_parts[4]))
+                    query.update(params)
+
+                    url_parts[4] = urlencode(query)
+                    return HTTPFound(urlparse.urlunparse(url_parts))
         return {'groupData': group_data, 'members': members, 'assistants': assistants,
                 'projectDetails': project_details, 'userid': user_id}
 
@@ -275,7 +289,7 @@ class RemoveMember(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] > 2:
+        if project_details["access_type"] == 4:
             raise HTTPNotFound
 
         if self.request.method == 'POST':

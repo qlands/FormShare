@@ -55,7 +55,7 @@ class CollaboratorsListView(PrivateView):
                 else:
                     self.errors.append(message)
 
-        collaborators = get_project_collaborators(self.request, project_id)
+        collaborators, more = get_project_collaborators(self.request, project_id)
         return {'collaborators': collaborators, 'projectDetails': project_details, 'userid': user_id}
 
 

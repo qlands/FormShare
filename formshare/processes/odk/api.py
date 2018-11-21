@@ -26,6 +26,13 @@ from zope.sqlalchemy import mark_changed
 import logging
 log = logging.getLogger(__name__)
 
+__all__ = ['generate_form_list', 'generate_manifest', 'get_odk_path', 'get_form_directory', 'get_form_list',
+           'get_manifest', 'get_xml_form', 'get_media_file', 'get_submission_file', 'build_odata_service',
+           'build_database', 'create_repository', 'move_media_files', 'convert_xml_to_json', 'store_submission',
+           'get_html_from_diff', 'generate_diff', 'store_new_version', 'restore_from_revision', 'push_revision',
+           'get_tables_from_form', 'get_fields_from_table', 'get_table_desc', 'is_field_key', 'get_request_data',
+           'update_data']
+
 
 class FileIterator(object):
     chunk_size = 4096
@@ -79,10 +86,22 @@ def generate_manifest(media_file_array):
     return etree.tostring(root, encoding='utf-8')
 
 
+def get_odk_path(request):
+    repository_path = request.registry.settings['repository.path']
+    if not os.path.exists(repository_path):
+        os.makedirs(repository_path)
+    return os.path.join(repository_path, *["odk"])
+
+
+def get_form_directory(request, project, form):
+    form_data = request.dbsession.query(Form).filter(Form.project_id == project).filter(Form.form_id == form).one()
+    return form_data.form_directory
+
+
 def get_form_list(request, user, project_code, assistant):
     prj_list = []
     project_id = get_project_id_from_name(request, user, project_code)
-    odk_dir = request.registry.settings['odk.repository']
+    odk_dir = get_odk_path(request)
     forms = get_assistant_forms(request, project_id, assistant)
     for form in forms:
         path = os.path.join(odk_dir, *["forms", form["form_directory"], '*.json'])
@@ -99,7 +118,7 @@ def get_form_list(request, user, project_code, assistant):
 
 
 def get_manifest(request, user, project, form, form_directory):
-    odk_dir = request.registry.settings['odk.repository']
+    odk_dir = get_odk_path(request)
     path = os.path.join(odk_dir, *["forms", form_directory, 'media', '*.*'])
     files = glob.glob(path)
     if files:
@@ -131,7 +150,7 @@ def get_xml_form(request, project, form):
 
 
 def get_media_file(request, form_directory, file_id):
-    odk_dir = request.registry.settings['odk.repository']
+    odk_dir = get_odk_path(request)
     path = os.path.join(odk_dir, *["forms", form_directory, 'media', file_id])
     if os.path.isfile(path):
         content_type, content_enc = mimetypes.guess_type(path)
@@ -148,7 +167,7 @@ def get_media_file(request, form_directory, file_id):
 
 
 def get_submission_file(project, form, submission, request):
-    odk_dir = request.registry.settings['odk.repository']
+    odk_dir = get_odk_path(request)
     res = request.dbsession.query(Form).filter(Form.project_id == project).filter(Form.form_id == form).first()
     if res is not None:
         form_directory = res.form_directory
@@ -596,7 +615,7 @@ def convert_xml_to_json(odk_dir, xml_file, xform_directory, schema, xml_form_fil
 
 
 def store_submission(request, project, assistant):
-    odk_dir = request.registry.settings['odk.repository']
+    odk_dir = get_odk_path(request)
     unique_id = uuid4()
     path = os.path.join(odk_dir, *["submissions", str(unique_id)])
     os.makedirs(path)
@@ -674,9 +693,8 @@ def store_submission(request, project, assistant):
 
 
 def get_html_from_diff(request, project, form, submission, revision):
-    odk_dir = request.registry.settings['odk.repository']
-    form_data = request.dbsession.query(Form).filter(Form.project_id == project).filter(Form.form_id == form).one()
-    form_directory = form_data.form_directory
+    odk_dir = get_odk_path(request)
+    form_directory = get_form_directory(request, project, form)
 
     diff_file = os.path.join(odk_dir, *["forms", form_directory, "submissions", submission, "diffs", revision,
                                         revision + '.diff'])
@@ -707,9 +725,8 @@ def get_html_from_diff(request, project, form, submission, revision):
 
 
 def generate_diff(request, project, form, json_file_a, json_file_b):
-    odk_dir = request.registry.settings['odk.repository']
-    form_data = request.dbsession.query(Form).filter(Form.project_id == project).filter(Form.form_id == form).one()
-    form_directory = form_data.form_directory
+    odk_dir = get_odk_path(request)
+    form_directory = get_form_directory(request, project, form)
     file_a = os.path.join(odk_dir, *['forms', form_directory, 'submissions', json_file_a + '.json'])
     file_b = os.path.join(odk_dir, *['forms', form_directory, 'submissions', json_file_b + '.json'])
 
@@ -754,9 +771,8 @@ def generate_diff(request, project, form, json_file_a, json_file_b):
 
 
 def store_new_version(request, project, form, submission, assistant, sequence, new_file, notes):
-    odk_dir = request.registry.settings['odk.repository']
-    form_data = request.dbsession.query(Form).filter(Form.project_id == project).filter(Form.form_id == form).one()
-    form_directory = form_data.form_directory
+    odk_dir = get_odk_path(request)
+    form_directory = get_form_directory(request, project, form)
     diff_path = os.path.join(odk_dir, *['forms', form_directory, 'submissions', submission, 'diffs', sequence])
     try:
         os.makedirs(diff_path)
@@ -824,8 +840,7 @@ def store_new_version(request, project, form, submission, assistant, sequence, n
 
 def restore_from_revision(request, project, form, submission, sequence):
     dok_dir = request.registry.settings['odk.repository']
-    form_data = request.dbsession.query(Form).filter(Form.project_id == project).filter(Form.form_id == form).one()
-    form_directory = form_data.form_directory
+    form_directory = get_form_directory(request, project, form)
     current_file = os.path.join(dok_dir, *['forms', form_directory, 'submissions', submission + ".json"])
     backup_file = os.path.join(dok_dir, *['forms', form_directory, 'submissions', submission, 'diffs', sequence,
                                           submission + ".json"])
@@ -838,9 +853,9 @@ def restore_from_revision(request, project, form, submission, sequence):
 
 
 def push_revision(request, project, form, submission):
-    odk_dir = request.registry.settings['odk.repository']
+    odk_dir = get_odk_path(request)
     form_data = request.dbsession.query(Form).filter(Form.project_id == project).filter(Form.form_id == form).one()
-    form_directory = form_data.form_directory
+    form_directory = get_form_directory(request, project, form)
     schema = form_data.form_schema
     current_file = os.path.join(odk_dir, *['forms', form_directory, 'submissions', submission + ".json"])
 
@@ -879,9 +894,8 @@ def push_revision(request, project, form, submission):
 
 
 def get_tables_from_form(request, project, form):
-    odk_dir = request.registry.settings['odk.repository']
-    form_data = request.dbsession.query(Form).filter(Form.project_id == project).filter(Form.form_id == form).one()
-    form_directory = form_data.form_directory
+    odk_dir = get_odk_path(request)
+    form_directory = get_form_directory(request, project, form)
     create_file = os.path.join(odk_dir, *['forms', form_directory, 'repository', 'create.xml'])
     tree = etree.parse(create_file)
     root = tree.getroot()
@@ -902,9 +916,8 @@ def get_tables_from_form(request, project, form):
 
 
 def get_fields_from_table(request, project, form, table_name, current_fields):
-    odk_dir = request.registry.settings['odk.repository']
-    form_data = request.dbsession.query(Form).filter(Form.project_id == project).filter(Form.form_id == form).one()
-    form_directory = form_data.form_directory
+    odk_dir = get_odk_path(request)
+    form_directory = get_form_directory(request, project, form)
     create_file = os.path.join(odk_dir, *['forms', form_directory, 'repository', 'create.xml'])
     tree = etree.parse(create_file)
     root = tree.getroot()
@@ -932,9 +945,8 @@ def get_fields_from_table(request, project, form, table_name, current_fields):
 
 
 def get_table_desc(request, project, form, table_name):
-    odk_dir = request.registry.settings['odk.repository']
-    form_data = request.dbsession.query(Form).filter(Form.project_id == project).filter(Form.form_id == form).one()
-    form_directory = form_data.form_directory
+    odk_dir = get_odk_path(request)
+    form_directory = get_form_directory(request, project, form)
     create_file = os.path.join(odk_dir, *['forms', form_directory, 'repository', 'create.xml'])
     tree = etree.parse(create_file)
     root = tree.getroot()
@@ -949,9 +961,8 @@ def is_field_key(request, project, form, table_name, field_name):
         return True
     if table_name == "maintable" and field_name == "originid":
         return True
-    odk_dir = request.registry.settings['odk.repository']
-    form_data = request.dbsession.query(Form).filter(Form.project_id == project).filter(Form.form_id == form).one()
-    form_directory = form_data.form_directory
+    odk_dir = get_odk_path(request)
+    form_directory = get_form_directory(request, project, form)
     create_file = os.path.join(odk_dir, *['forms', form_directory, 'repository', 'create.xml'])
     tree = etree.parse(create_file)
     root = tree.getroot()

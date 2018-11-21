@@ -2,32 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="54165c7a-57d4-4d12-91c0-ae211a499fd8" name="Default" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/formshare/processes/db/form.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/formshare/processes/odk/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/formshare/processes/odk/api.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/formshare/processes/odk/form.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/formshare/processes/utilities.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/formshare/views/odk.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/config/routes.py" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/config/routes.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/models/formshare.py" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/models/formshare.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/processes/db/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/processes/db/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/processes/db/assistant.py" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/processes/db/assistant.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/templates/dashboard/index.jinja2" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/templates/dashboard/index.jinja2" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/templates/dashboard/projects/forms/form_details.jinja2" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/forms/form_details.jinja2" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/templates/dashboard/projects/forms/snippets/brdcrbs_frmdtls.jinja2" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/forms/snippets/brdcrbs_frmdtls.jinja2" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/templates/dashboard/projects/project_add.jinja2" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/project_add.jinja2" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/templates/dashboard/projects/project_details.jinja2" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/project_details.jinja2" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/templates/dashboard/projects/snippets/project_details.jinja2" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/snippets/project_details.jinja2" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/templates/dashboard/projects/snippets/project_form.jinja2" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/snippets/project_form.jinja2" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/templates/dashboard/projects/snippets/project_forms.jinja2" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/templates/dashboard/projects/snippets/project_forms.jinja2" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/views/assistant_groups.py" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/views/assistant_groups.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/views/form.py" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/views/form.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/formshare/views/projects.py" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/views/projects.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/requirements.txt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/formshare/processes/odk/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/processes/odk/__init__.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/formshare/processes/odk/api.py" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/processes/odk/api.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/formshare/processes/odk/form.py" beforeDir="false" afterPath="$PROJECT_DIR$/formshare/processes/odk/form.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -68,7 +45,7 @@
           <entry key="ini" value="520" />
           <entry key="jinja2" value="24459" />
           <entry key="md" value="1656" />
-          <entry key="py" value="45143" />
+          <entry key="py" value="45379" />
           <entry key="txt" value="122" />
         </counts>
       </usages-collector>
@@ -79,7 +56,7 @@
           <entry key="Jinja2" value="24459" />
           <entry key="Markdown" value="1656" />
           <entry key="PLAIN_TEXT" value="206" />
-          <entry key="Python" value="45143" />
+          <entry key="Python" value="45379" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
@@ -93,7 +70,7 @@
           <entry key="js" value="9" />
           <entry key="md" value="5" />
           <entry key="png" value="2" />
-          <entry key="py" value="784" />
+          <entry key="py" value="786" />
           <entry key="txt" value="36" />
           <entry key="yml" value="1" />
         </counts>
@@ -107,7 +84,7 @@
           <entry key="Jinja2" value="532" />
           <entry key="Markdown" value="5" />
           <entry key="PLAIN_TEXT" value="41" />
-          <entry key="Python" value="784" />
+          <entry key="Python" value="786" />
           <entry key="YAML" value="1" />
         </counts>
       </usages-collector>
@@ -115,11 +92,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/formshare/views/odk.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2432">
-              <caret line="128" column="34" lean-forward="true" selection-start-line="128" selection-start-column="34" selection-end-line="128" selection-end-column="34" />
+            <state relative-caret-position="114">
+              <caret line="6" selection-start-line="6" selection-end-line="6" />
               <folding>
                 <element signature="e#0#43#0" expanded="true" />
               </folding>
@@ -130,7 +107,7 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/formshare/views/classes.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="282">
+            <state relative-caret-position="-1448">
               <caret line="29" column="6" selection-start-line="29" selection-start-column="6" selection-end-line="29" selection-end-column="6" />
             </state>
           </provider>
@@ -139,8 +116,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/formshare/processes/odk/api.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2239">
-              <caret line="148" lean-forward="true" selection-start-line="148" selection-end-line="148" />
+            <state relative-caret-position="526">
+              <caret line="38" lean-forward="true" selection-start-line="38" selection-end-line="38" />
               <folding>
                 <element signature="e#0#22#0" expanded="true" />
               </folding>
@@ -148,23 +125,14 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/formshare/config/routes.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="475">
-              <caret line="61" column="69" lean-forward="true" selection-start-line="61" selection-start-column="69" selection-end-line="61" selection-end-column="69" />
+            <state relative-caret-position="-920">
+              <caret line="74" column="68" lean-forward="true" selection-start-line="74" selection-start-column="68" selection-end-line="74" selection-end-column="68" />
               <folding>
                 <element signature="e#0#41#0" expanded="true" />
               </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/requirements.txt">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="758">
-              <caret line="94" column="3" selection-start-line="94" selection-end-line="94" selection-end-column="15" />
             </state>
           </provider>
         </entry>
@@ -184,10 +152,31 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/formshare/processes/odk/form.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="182">
-              <caret line="120" column="32" selection-start-line="120" selection-start-column="27" selection-end-line="120" selection-end-column="32" />
+            <state relative-caret-position="266">
+              <caret line="14" selection-start-line="14" selection-end-line="14" selection-end-column="29" />
               <folding>
                 <element signature="e#0#11#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/formshare/views/form.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="38">
+              <caret line="2" column="65" selection-start-line="2" selection-start-column="65" selection-end-line="2" selection-end-column="65" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/formshare/processes/odk/__init__.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="38">
+              <caret line="2" lean-forward="true" selection-start-line="2" selection-end-line="2" />
+              <folding>
+                <element signature="e#0#19#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -217,15 +206,6 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/formshare/models/formshare.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="510">
-              <caret line="220" column="12" selection-start-line="220" selection-start-column="12" selection-end-line="220" selection-end-column="12" />
-            </state>
-          </provider>
-        </entry>
-      </file>
     </leaf>
   </component>
   <component name="FileTemplateManagerImpl">
@@ -237,8 +217,6 @@
   </component>
   <component name="FindInProjectRecents">
     <findStrings>
-      <find>dashboard/projects/snippets/project_item.jinja2</find>
-      <find>fstatic</find>
       <find>get_user_projects(</find>
       <find>user_projects</find>
       <find>map</find>
@@ -267,6 +245,8 @@
       <find>jsonString</find>
       <find>u&quot;</find>
       <find>R</find>
+      <find>odk_dir =</find>
+      <find>form_data.form_directory</find>
     </findStrings>
     <replaceStrings>
       <replace>hashlib.md5(</replace>
@@ -328,7 +308,6 @@
         <option value="$PROJECT_DIR$/formshare/templates/dashboard/snippets/navbar.jinja2" />
         <option value="$PROJECT_DIR$/formshare/views/assistants.py" />
         <option value="$PROJECT_DIR$/development.ini" />
-        <option value="$PROJECT_DIR$/formshare/processes/odk/__init__.py" />
         <option value="$PROJECT_DIR$/formshare/templates/dashboard/index.jinja2" />
         <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/snippets/project_forms.jinja2" />
         <option value="$PROJECT_DIR$/formshare/processes/utilities.py" />
@@ -341,19 +320,20 @@
         <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/project_details.jinja2" />
         <option value="$PROJECT_DIR$/formshare/views/projects.py" />
         <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2" />
-        <option value="$PROJECT_DIR$/formshare/views/form.py" />
         <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/forms/form_details.jinja2" />
         <option value="$PROJECT_DIR$/formshare/templates/dashboard/projects/snippets/project_details.jinja2" />
         <option value="$PROJECT_DIR$/formshare/models/formshare.py" />
         <option value="$PROJECT_DIR$/formshare/processes/db/odk.py" />
         <option value="$PROJECT_DIR$/setup.py" />
         <option value="$PROJECT_DIR$/requirements.txt" />
-        <option value="$PROJECT_DIR$/formshare/processes/odk/form.py" />
         <option value="$PROJECT_DIR$/formshare/processes/db/form.py" />
         <option value="$PROJECT_DIR$/formshare/processes/db/assistant.py" />
-        <option value="$PROJECT_DIR$/formshare/processes/odk/api.py" />
-        <option value="$PROJECT_DIR$/formshare/views/odk.py" />
         <option value="$PROJECT_DIR$/formshare/config/routes.py" />
+        <option value="$PROJECT_DIR$/formshare/processes/odk/form.py" />
+        <option value="$PROJECT_DIR$/formshare/views/form.py" />
+        <option value="$PROJECT_DIR$/formshare/processes/odk/__init__.py" />
+        <option value="$PROJECT_DIR$/formshare/views/odk.py" />
+        <option value="$PROJECT_DIR$/formshare/processes/odk/api.py" />
       </list>
     </option>
   </component>
@@ -422,43 +402,13 @@
             <path>
               <item name="FormShare" type="b2602c69:ProjectViewProjectNode" />
               <item name="FormShare" type="462c0819:PsiDirectoryNode" />
-              <item name="alembic" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="FormShare" type="b2602c69:ProjectViewProjectNode" />
-              <item name="FormShare" type="462c0819:PsiDirectoryNode" />
-              <item name="alembic" type="462c0819:PsiDirectoryNode" />
-              <item name="versions" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="FormShare" type="b2602c69:ProjectViewProjectNode" />
-              <item name="FormShare" type="462c0819:PsiDirectoryNode" />
               <item name="formshare" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="FormShare" type="b2602c69:ProjectViewProjectNode" />
-              <item name="FormShare" type="462c0819:PsiDirectoryNode" />
-              <item name="formshare" type="462c0819:PsiDirectoryNode" />
-              <item name="config" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="FormShare" type="b2602c69:ProjectViewProjectNode" />
-              <item name="FormShare" type="462c0819:PsiDirectoryNode" />
-              <item name="formshare" type="462c0819:PsiDirectoryNode" />
-              <item name="models" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="FormShare" type="b2602c69:ProjectViewProjectNode" />
               <item name="FormShare" type="462c0819:PsiDirectoryNode" />
               <item name="formshare" type="462c0819:PsiDirectoryNode" />
               <item name="processes" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="FormShare" type="b2602c69:ProjectViewProjectNode" />
-              <item name="FormShare" type="462c0819:PsiDirectoryNode" />
-              <item name="formshare" type="462c0819:PsiDirectoryNode" />
-              <item name="processes" type="462c0819:PsiDirectoryNode" />
-              <item name="db" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="FormShare" type="b2602c69:ProjectViewProjectNode" />
@@ -660,13 +610,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/processes/odk/__init__.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="19">
-          <caret line="1" lean-forward="true" selection-start-line="1" selection-end-line="1" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/formshare/processes/storage/local_storage.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="361">
@@ -824,16 +767,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/views/form.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1064">
-          <caret line="60" column="27" selection-start-line="60" selection-start-column="27" selection-end-line="60" selection-end-column="27" />
-          <folding>
-            <element signature="e#0#32#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/formshare/templates/dashboard/projects/project_details.jinja2">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="4883">
@@ -961,16 +894,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/processes/odk/form.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="182">
-          <caret line="120" column="32" selection-start-line="120" selection-start-column="27" selection-end-line="120" selection-end-column="32" />
-          <folding>
-            <element signature="e#0#11#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/formshare/processes/db/form.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1265">
@@ -981,39 +904,66 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/config/routes.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-920">
+          <caret line="74" column="68" lean-forward="true" selection-start-line="74" selection-start-column="68" selection-end-line="74" selection-end-column="68" />
+          <folding>
+            <element signature="e#0#41#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/processes/odk/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="38">
+          <caret line="2" lean-forward="true" selection-start-line="2" selection-end-line="2" />
+          <folding>
+            <element signature="e#0#19#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/formshare/views/form.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="38">
+          <caret line="2" column="65" selection-start-line="2" selection-start-column="65" selection-end-line="2" selection-end-column="65" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/formshare/views/classes.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="282">
+        <state relative-caret-position="-1448">
           <caret line="29" column="6" selection-start-line="29" selection-start-column="6" selection-end-line="29" selection-end-column="6" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/formshare/processes/odk/api.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2239">
-          <caret line="148" lean-forward="true" selection-start-line="148" selection-end-line="148" />
+        <state relative-caret-position="526">
+          <caret line="38" lean-forward="true" selection-start-line="38" selection-end-line="38" />
           <folding>
             <element signature="e#0#22#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/views/odk.py">
+    <entry file="file://$PROJECT_DIR$/formshare/processes/odk/form.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2432">
-          <caret line="128" column="34" lean-forward="true" selection-start-line="128" selection-start-column="34" selection-end-line="128" selection-end-column="34" />
+        <state relative-caret-position="266">
+          <caret line="14" selection-start-line="14" selection-end-line="14" selection-end-column="29" />
           <folding>
-            <element signature="e#0#43#0" expanded="true" />
+            <element signature="e#0#11#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/formshare/config/routes.py">
+    <entry file="file://$PROJECT_DIR$/formshare/views/odk.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="475">
-          <caret line="61" column="69" lean-forward="true" selection-start-line="61" selection-start-column="69" selection-end-line="61" selection-end-column="69" />
+        <state relative-caret-position="114">
+          <caret line="6" selection-start-line="6" selection-end-line="6" />
           <folding>
-            <element signature="e#0#41#0" expanded="true" />
+            <element signature="e#0#43#0" expanded="true" />
           </folding>
         </state>
       </provider>

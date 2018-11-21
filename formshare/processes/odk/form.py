@@ -12,16 +12,9 @@ import logging
 import sys
 from sqlalchemy.exc import IntegrityError
 
-__all__ = ['upload_odk_form', 'get_odk_path']
+__all__ = ['upload_odk_form']
 
 log = logging.getLogger(__name__)
-
-
-def get_odk_path(request):
-    repository_path = request.registry.settings['repository.path']
-    if not os.path.exists(repository_path):
-        os.makedirs(repository_path)
-    return os.path.join(repository_path, *["odk"])
 
 
 def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
@@ -40,10 +33,7 @@ def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
     with open(file_name, 'wb') as permanent_file:
         shutil.copyfileobj(input_file, permanent_file)
 
-    # permanent_file = open(file_name, 'w')
-    # shutil.copyfileobj(input_file.file, permanent_file)
     input_file.close()
-    # permanent_file.close()
 
     parts = os.path.splitext(input_file_name)
 

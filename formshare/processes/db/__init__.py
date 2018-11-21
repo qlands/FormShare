@@ -3,3 +3,5 @@ from .project import *
 from .collaborator import *
 from .assistant import *
 from .assistant_group import *
+from .form import *
+

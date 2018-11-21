@@ -8,6 +8,11 @@ from elasticfeeds.activity import Actor, Object, Activity
 import validators
 from formshare.processes.storage import store_file, get_stream, response_stream, delete_stream, delete_bucket
 from pyramid.response import Response
+import json
+import qrcode
+import zlib
+import base64
+import io
 
 
 class ProjectStoredFileView(ProjectsView):
@@ -86,30 +91,30 @@ class AddProjectView(ProjectsView):
             if project_details['project_abstract'] == "":
                 project_details['project_abstract'] = None
 
-            project_image = project_details['project_image']
-            if project_image == "":
-                project_image = None
-                project_details['project_image'] = None
-            try:
-                input_file = self.request.POST['filetoupload'].file
-            except AttributeError:
-                input_file = None
-            project_details.pop('filetoupload')
-
-            image_valid = True
-            if input_file is None:
-                if project_image is not None:
-                    if not validators.url(project_image):
-                        self.errors.append(self._("The image URL is invalid"))
-                        image_valid = False
-            if image_valid:
-                next_page = self.request.params.get('next') or self.request.route_url('dashboard',
-                                                                                      userid=self.user.login)
+            if project_details['project_code'] != "":
+                next_page = self.request.params.get('next') or self.request.route_url('dashboard', userid=self.user.login)
                 added, message = add_project(self.request, self.user.login, project_details)
                 if added:
-                    # Store the image
-                    if input_file is not None:
-                        store_file(self.request, message, project_image, self.request.POST['filetoupload'].file)
+                    # Generate the QR image
+                    url = self.request.route_url('project_details', userid=self.user.login,
+                                                 projcode=project_details['project_code'])
+                    odk_settings = {'admin': {"change_server": True, "change_form_metadata": False},
+                                    'general': {"change_server": True, "navigation": "buttons",
+                                                'server_url': url}}
+                    qr_json = json.dumps(odk_settings).encode()
+                    zip_json = zlib.compress(qr_json)
+                    serialization = base64.encodebytes(zip_json)
+                    serialization = serialization.decode()
+                    serialization = serialization.replace("\n", "")
+                    img = qrcode.make(serialization)
+                    img_bytes = io.BytesIO()
+                    img.save(img_bytes, "PNG")
+                    img_bytes.seek(0)
+                    store_file(self.request, message, project_details['project_code']+'.png', img_bytes)
+                    modify_project(self.request, self.user.login, message,
+                                   {'project_code': project_details['project_code'],
+                                    'project_image': project_details['project_code'] + '.png'})
+
                     # Store the notifications
                     feed_manager = get_manager(self.request)
                     # Notify tha the user added a project
@@ -123,8 +128,10 @@ class AddProjectView(ProjectsView):
                     return HTTPFound(location=next_page)
                 else:
                     self.errors.append(message)
+            else:
+                self.errors.append(self._('The project code cannot be empty'))
         else:
-            project_details = {'project_image': None, 'project_public': 1}
+            project_details = {'project_public': 1}
         return {'projectDetails': project_details}
 
 
@@ -168,39 +175,9 @@ class EditProjectView(ProjectsView):
 
             #  TODO: If the project becomes private then we need to unwatched it from consumers
 
-            project_image = project_details['project_image']
-            if project_image == "":
-                project_image = None
-                project_details['project_image'] = None
-            try:
-                input_file = self.request.POST['filetoupload'].file
-            except AttributeError:
-                input_file = None
-            project_details.pop('filetoupload')
-
             next_page = self.request.params.get('next') or self.request.url
             modified, message = modify_project(self.request, user_id, project_id, project_details)
             if modified:
-                # Modify the storage
-                if input_file is None:
-                    if project_image is not None:
-                        if project_image != current_image_file:
-                            if not validators.url(project_image):
-                                self.errors.append(self._("The image URL is invalid"))
-                            else:
-                                if current_image_file is not None:
-                                    if not validators.url(current_image_file):
-                                        delete_stream(self.request, project_id, current_image_file)
-                    else:
-                        if project_image != current_image_file:
-                            if not validators.url(current_image_file):
-                                delete_stream(self.request, project_id, current_image_file)
-                else:
-                    if current_image_file is not None:
-                        if not validators.url(current_image_file):
-                            delete_stream(self.request, project_id, current_image_file)
-                    store_file(self.request, project_id, project_image, self.request.POST['filetoupload'].file)
-
                 # Store the notifications
                 feed_manager = get_manager(self.request)
                 # Notify tha the user edited the project

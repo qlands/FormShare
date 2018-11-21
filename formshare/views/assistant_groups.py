@@ -3,8 +3,7 @@ from formshare.processes.db import get_project_id_from_name, get_project_groups,
     modify_group, delete_group, get_members, add_assistant_to_group, remove_assistant_from_group
 from formshare.processes.db import get_all_assistants
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
-import urllib.parse as urlparse
-from urllib.parse import urlencode
+from formshare.processes.utilities import add_params_to_url
 
 
 class GroupListView(PrivateView):
@@ -241,28 +240,13 @@ class GroupMembersView(PrivateView):
                             return HTTPFound(next_page)
                         else:
                             params = {'error': message}
-                            url_parts = list(urlparse.urlparse(next_page))
-                            query = dict(urlparse.parse_qsl(url_parts[4]))
-                            query.update(params)
-
-                            url_parts[4] = urlencode(query)
-                            return HTTPFound(urlparse.urlunparse(url_parts))
+                            return HTTPFound(add_params_to_url(next_page, params))
                     else:
                         params = {'error': self._('You need to specify an assistant')}
-                        url_parts = list(urlparse.urlparse(next_page))
-                        query = dict(urlparse.parse_qsl(url_parts[4]))
-                        query.update(params)
-
-                        url_parts[4] = urlencode(query)
-                        return HTTPFound(urlparse.urlunparse(url_parts))
+                        return HTTPFound(add_params_to_url(next_page, params))
                 else:
                     params = {'error': self._('You need to specify an assistant')}
-                    url_parts = list(urlparse.urlparse(next_page))
-                    query = dict(urlparse.parse_qsl(url_parts[4]))
-                    query.update(params)
-
-                    url_parts[4] = urlencode(query)
-                    return HTTPFound(urlparse.urlunparse(url_parts))
+                    return HTTPFound(add_params_to_url(next_page, params))
         return {'groupData': group_data, 'members': members, 'assistants': assistants,
                 'projectDetails': project_details, 'userid': user_id}
 

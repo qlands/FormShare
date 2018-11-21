@@ -128,7 +128,9 @@ class Odkform(Base):
     form_id = Column(Unicode(120), primary_key=True, nullable=False)
     form_name = Column(Unicode(120))
     form_cdate = Column(DateTime)
+    form_pubby = Column(ForeignKey('fsuser.user_id', ondelete='CASCADE'), nullable=False)
     form_directory = Column(Unicode(120))
+    form_target = Column(INTEGER)
     form_schema = Column(Unicode(13))
     form_accsub = Column(INTEGER)
     form_testing = Column(INTEGER, server_default=text("'0'"))
@@ -149,6 +151,7 @@ class Odkform(Base):
 
     parent = relationship('Odkform', remote_side=[project_id, form_id])
     project = relationship('Project')
+    fsuser = relationship('User')
 
 
 class Userproject(Base):
@@ -217,6 +220,7 @@ class Formgrpacces(Base):
     group_id = Column(Unicode(12), primary_key=True, nullable=False)
     form_project = Column(Unicode(64), primary_key=True, nullable=False)
     form_id = Column(Unicode(120), primary_key=True, nullable=False)
+    group_privileges = Column(INTEGER)
     access_date = Column(DateTime)
 
     odkform = relationship('Odkform')

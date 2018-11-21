@@ -39,7 +39,10 @@ requires = [
     'pairtree',
     'simplejson',
     'ofs',
-    'paginate'
+    'paginate',
+    'Pillow',
+    'qrcode',
+    'bs4'
 ]
 
 postgresql_requires = ['psycopg2']

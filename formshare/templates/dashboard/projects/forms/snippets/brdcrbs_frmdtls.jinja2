@@ -1,17 +1,17 @@
 <div class="col-sm-12">
-    <h2>Forms</h2>
+    <h2>{{ _('Forms') }}</h2>
     <ol class="breadcrumb">
         <li class="breadcrumb-item">
-            <a href="{{ request.route_url("dashboard") }}">Dashboard</a>
+            <a href="{{ request.route_url("dashboard",userid=activeUser.login) }}">{{ _('Dashboard') }}</a>
         </li>
         <li class="breadcrumb-item">
-            <a href="{{ request.route_url("projects",userid=activeUser.id) }}">Projects</a>
+            <a href="{{ request.route_url("projects",userid=activeUser.id) }}">{{ _('Projects') }}</a>
         </li>
         <li class="breadcrumb-item">
-            <a href="{{ request.route_url("project_details",userid=activeUser.id,projid=projectID) }}">Project XXX</a>
+            <a href="{{ request.route_url("project_details",userid=projectDetails.owner, projcode=projectDetails.project_code) }}">{{ projectDetails.project_name }}</a>
         </li>
         <li class="breadcrumb-item active">
-            <strong>Form XXX</strong>
+            <strong>{{ formDetails.form_name }}</strong>
         </li>
     </ol>
 </div>

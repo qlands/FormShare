@@ -18,6 +18,7 @@
     {% jsresource request,'formshare','markdown' %}
     {% jsresource request,'formshare','leaflet' %}
     {% jsresource request,'formshare','taphold' %}
+    {% jsresource request,'formshare','clipboard' %}
 
 
 {% endblock topScripts %}
@@ -71,13 +72,15 @@
 
     <script>
         $(document).ready(function() {
+            new ClipboardJS('.clipboard');
+
             $('.custom-file-input').on('change', function() {
                 let fileName = $(this).val().split('\\').pop();
                 $(this).next('.custom-file-label').addClass("selected").html(fileName);
             });
 
-            $('#add_file').click(function () {
-                $("#upload").val("");
+            $('#add_form').click(function () {
+                $("#xlsx").val("");
                 $('.custom-file-input').next('.custom-file-label').addClass("selected").html("{{ _('Choose file...') }}");
             });
 
@@ -248,7 +251,11 @@
                 var val = $("#abstract_hidden").val();
                 document.getElementById('project_abstract').innerHTML = markdown.toHTML(val);
 
-                $('.scroll_content').slimscroll();
+                {% if projectData.project_abstract|length < 170 %}
+                    $('.scroll_content').slimscroll({'height': '60px'});
+                {% else %}
+                    $('.scroll_content').slimscroll();
+                {% endif %}
             });
 
         {% endif %}
@@ -256,346 +263,3 @@
     </script>
 
 {% endblock scripts %}
-
-{#{% extends 'dashboard/page.jinja2' %}#}
-{##}
-{#{% block titlesection %}{{ _("Project XXX") }}{% endblock titlesection %}#}
-{##}
-{#{% block css %}#}
-{#    {{ super() }}#}
-{#    {% cssresource request,'formshare','leaflet' %}#}
-{#{% endblock css %}#}
-{##}
-{#{% block topScripts %}#}
-{#    {{ super() }}#}
-{#    {% jsresource request,'formshare','leaflet' %}#}
-{#{% endblock topScripts %}#}
-{##}
-{#{% block breadcrumbs %}#}
-{#    {% include 'dashboard/projects/snippets/brdcrbs_prjdtls.jinja2' %}#}
-{#{% endblock breadcrumbs %}#}
-{##}
-{#{% block mainsection %}#}
-{#    <div class="row">#}
-{#        <div class="col-lg-3">#}
-{#            <div class="wrapper wrapper-content project-manager">#}
-{#                <div class="ibox">#}
-{#                    <div class="ibox-title">#}
-{#                        <h5>Project description</h5>#}
-{#                        <div class="ibox-tools">#}
-{#                            <a style="margin-right: 10px">#}
-{#                                <i class="fa fa-pencil text-warning" title="Edit"></i>#}
-{#                            </a>#}
-{#                            <a class="collapse-link" style="margin-right: 10px">#}
-{#                                <i class="fa fa-chevron-up"></i>#}
-{#                            </a>#}
-{#                            <a class="fullscreen-link">#}
-{#                                <i class="fa fa-expand"></i>#}
-{#                            </a>#}
-{#                        </div>#}
-{#                    </div>#}
-{#                    <div class="ibox-content">#}
-{#                        <img src="img/zender_logo.png" class="img-fluid">#}
-{#                        <p class="small">#}
-{#                            There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look#}
-{#                            even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing#}
-{#                        </p>#}
-{#                        <p class="small font-bold">#}
-{#                            <span><i class="fa fa-circle text-info"></i> Active</span>#}
-{#                        </p>#}
-{#                    </div>#}
-{#                </div>#}
-{#                {% include 'dashboard/projects/snippets/project_map.jinja2' %}#}
-{#                <div class="ibox">#}
-{#                    <div class="ibox-title">#}
-{#                        <h5>Collaborators</h5>#}
-{#                        <div class="ibox-tools">#}
-{#                            <a style="margin-right: 10px">#}
-{#                                <i class="fa fa-plus-square text-success" title="Add new collaborator"></i>#}
-{#                            </a>#}
-{#                            <a class="collapse-link">#}
-{#                                <i class="fa fa-chevron-up" style="margin-right: 10px"></i>#}
-{#                            </a>#}
-{#                            <a class="fullscreen-link">#}
-{#                                <i class="fa fa-expand"></i>#}
-{#                            </a>#}
-{#                        </div>#}
-{#                    </div>#}
-{#                    <div class="ibox-content">#}
-{#                        <div class="row">#}
-{#                            <div class="col-md-12">#}
-{#                                <ul class="tag-list" style="padding: 0">#}
-{#                                    <li><a class="text-danger" href=""> Carlos Quiros</a></li>#}
-{#                                    <li><a href=""> Eduardo Quiros</a></li>#}
-{#                                    <li><a href=""> Katie Tavenner</a></li>#}
-{#                                    <li><a href=""> Flor Campos</a></li>#}
-{#                                    <li><a href=""> Elizabeth Tavenner</a></li>#}
-{#                                    <li><a href=""> Erick Lopez</a></li>#}
-{#                                    <li><a href=""> Macho Ramirez</a></li>#}
-{#                                    <li><a href=""> Begni Calderon</a></li>#}
-{#                                </ul>#}
-{#                            </div>#}
-{#                        </div>#}
-{#                        <small>Collaborators in <span class="text-danger">red</span> are inactive</small>#}
-{#                    </div>#}
-{#                </div>#}
-{#                <div class="ibox">#}
-{#                    <div class="ibox-title">#}
-{#                        <h5>Collaborator groups</h5>#}
-{#                        <div class="ibox-tools">#}
-{#                            <a style="margin-right: 10px">#}
-{#                                <i class="fa fa-plus-square text-success" title="Add new group"></i>#}
-{#                            </a>#}
-{#                            <a class="collapse-link">#}
-{#                                <i class="fa fa-chevron-up" style="margin-right: 10px"></i>#}
-{#                            </a>#}
-{#                            <a class="fullscreen-link">#}
-{#                                <i class="fa fa-expand"></i>#}
-{#                            </a>#}
-{#                        </div>#}
-{#                    </div>#}
-{#                    <div class="ibox-content">#}
-{#                        <div class="row">#}
-{#                            <div class="col-md-12">#}
-{#                                <ul class="tag-list" style="padding: 0">#}
-{#                                    <li><a href=""> Zender</a></li>#}
-{#                                    <li><a href=""> Lorem ipsum</a></li>#}
-{#                                    <li><a href=""> Passages</a></li>#}
-{#                                    <li><a href=""> Variations</a></li>#}
-{#                                    <li><a href=""> Zender</a></li>#}
-{#                                    <li><a href=""> Lorem ipsum</a></li>#}
-{#                                    <li><a href=""> Passages</a></li>#}
-{#                                    <li><a href=""> Variations</a></li>#}
-{#                                </ul>#}
-{#                            </div>#}
-{#                        </div>#}
-{#                    </div>#}
-{#                </div>#}
-{#                <div class="ibox">#}
-{#                    <div class="ibox-title">#}
-{#                        <h5>Project files</h5>#}
-{#                        <div class="ibox-tools">#}
-{#                            <a style="margin-right: 10px">#}
-{#                                <i class="fa fa-plus-square text-success" title="Add new file"></i>#}
-{#                            </a>#}
-{#                            <a class="collapse-link" style="margin-right: 10px">#}
-{#                                <i class="fa fa-chevron-up"></i>#}
-{#                            </a>#}
-{#                            <a class="fullscreen-link">#}
-{#                                <i class="fa fa-expand"></i>#}
-{#                            </a>#}
-{#                        </div>#}
-{#                    </div>#}
-{#                    <div class="ibox-content">#}
-{#                        <div class="row">#}
-{#                            <div class="col-md-12">#}
-{#                                <small>Click/Tab and hold to remove files</small>#}
-{#                                <ul class="tag-list" style="padding: 0">#}
-{#                                    <li><a href=""><i class="fa fa-file-pdf-o"></i> Proposal.pdf</a></li>#}
-{#                                    <li><a href=""><i class="fa fa-file-excel-o"></i> Report.xls</a></li>#}
-{#                                </ul>#}
-{#                            </div>#}
-{#                        </div>#}
-{#                    </div>#}
-{#                </div>#}
-{#                <div class="text-center m-t-md">#}
-{#                    <a href="#" class="btn btn-xs btn-warning">Edit project</a> <a href="#" class="btn btn-xs btn-danger">Remove project</a>#}
-{#                </div>#}
-{#            </div>#}
-{#        </div>#}
-{#        <div class="col-lg-9">#}
-{#            <div class="wrapper wrapper-content animated fadeInUp">#}
-{#                <div class="ibox">#}
-{#                    <div class="ibox-content">#}
-{#                        <div class="row">#}
-{#                            <div class="col-lg-12">#}
-{#                                <div class="m-b-md">#}
-{#                                    <h2>Project details</h2>#}
-{#                                </div>#}
-{##}
-{#                            </div>#}
-{#                        </div>#}
-{#                        <div class="row">#}
-{#                            <div class="col-lg-6">#}
-{#                                <dl class="row mb-0">#}
-{#                                    <div class="col-sm-4 text-sm-right"><dt>Created by:</dt> </div>#}
-{#                                    <div class="col-sm-8 text-sm-left"><dd class="mb-1">Alex Smith</dd> </div>#}
-{#                                </dl>#}
-{#                                <dl class="row mb-0">#}
-{#                                    <div class="col-sm-4 text-sm-right"><dt>Forms:</dt> </div>#}
-{#                                    <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  162</dd></div>#}
-{#                                </dl>#}
-{#                                <dl class="row mb-0">#}
-{#                                    <div class="col-sm-4 text-sm-right"><dt>Created:</dt> </div>#}
-{#                                    <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  10.07.2014 23:36:57</dd></div>#}
-{#                                </dl>#}
-{#                            </div>#}
-{#                            <div class="col-lg-6" id="cluster_info">#}
-{#                                <dl class="row mb-0">#}
-{#                                    <div class="col-sm-4 text-sm-right">#}
-{#                                        <dt>Last Updated:</dt>#}
-{#                                    </div>#}
-{#                                    <div class="col-sm-8 text-sm-left">#}
-{#                                        <dd class="mb-1">16.08.2014 12:15:57</dd>#}
-{#                                    </div>#}
-{#                                </dl>#}
-{#                                <dl class="row mb-0">#}
-{#                                    <div class="col-sm-4 text-sm-right">#}
-{#                                        <dt>Last Submission:</dt>#}
-{#                                    </div>#}
-{#                                    <div class="col-sm-8 text-sm-left">#}
-{#                                        <dd class="mb-1">16.08.2014 12:15:57</dd>#}
-{#                                    </div>#}
-{#                                </dl>#}
-{#                                <dl class="row mb-0">#}
-{#                                    <div class="col-sm-4 text-sm-right">#}
-{#                                        <dt>Members:</dt>#}
-{#                                    </div>#}
-{#                                    <div class="col-sm-8 text-sm-left">#}
-{#                                        <dd class="project-people mb-1">#}
-{#                                            <a href=""><img alt="image" class="rounded-circle" src="img/a3.jpg"></a>#}
-{#                                            <a href=""><img alt="image" class="rounded-circle" src="img/a1.jpg"></a>#}
-{#                                            <a href=""><img alt="image" class="rounded-circle" src="img/a2.jpg"></a>#}
-{#                                            <a href=""><img alt="image" class="rounded-circle" src="img/a4.jpg"></a>#}
-{#                                            <a href=""><img alt="image" class="rounded-circle" src="img/a5.jpg"></a>#}
-{#                                        </dd>#}
-{#                                    </div>#}
-{#                                </dl>#}
-{#                            </div>#}
-{#                        </div>#}
-{#                        <div class="row m-t-sm">#}
-{#                            <div class="col-lg-12">#}
-{#                                {% include 'dashboard/projects/snippets/project_forms.jinja2' %}#}
-{#                                <div class="ibox">#}
-{#                                    <div class="ibox-title">#}
-{#                                        <h5>Activity</h5>#}
-{#                                        <div class="ibox-tools">#}
-{#                                            <a class="collapse-link" style="margin-right: 10px">#}
-{#                                                <i class="fa fa-chevron-up"></i>#}
-{#                                            </a>#}
-{#                                            <a class="fullscreen-link">#}
-{#                                                <i class="fa fa-expand"></i>#}
-{#                                            </a>#}
-{#                                        </div>#}
-{#                                    </div>#}
-{#                                    <div class="ibox-content">#}
-{#                                        <div class="activity-stream">#}
-{#                                            <div class="stream">#}
-{#                                                <div class="stream-badge">#}
-{#                                                    <i class="fa fa-pencil"></i>#}
-{#                                                </div>#}
-{#                                                <div class="stream-panel">#}
-{#                                                    <div class="stream-info">#}
-{#                                                        <a href="#">#}
-{#                                                            <img src="img/a5.jpg" />#}
-{#                                                            <span>Karen Miggel</span>#}
-{#                                                            <span class="date">Today at 01:32:40 am</span>#}
-{#                                                        </a>#}
-{#                                                    </div>#}
-{#                                                    Add new note to the <a href="#">Martex</a>  project.#}
-{#                                                </div>#}
-{#                                            </div>#}
-{##}
-{#                                            <div class="stream">#}
-{#                                                <div class="stream-badge">#}
-{#                                                    <i class="fa fa-commenting-o"></i>#}
-{#                                                </div>#}
-{#                                                <div class="stream-panel">#}
-{#                                                    <div class="stream-info">#}
-{#                                                        <a href="#">#}
-{#                                                            <img src="img/a4.jpg" />#}
-{#                                                            <span>John Mikkens</span>#}
-{#                                                            <span class="date">Yesterday at 10:00:20 am</span>#}
-{#                                                        </a>#}
-{#                                                    </div>#}
-{#                                                    Commented on <a href="#">Ariana</a> profile.#}
-{#                                                </div>#}
-{#                                            </div>#}
-{#                                            <div class="stream">#}
-{#                                                <div class="stream-badge">#}
-{#                                                    <i class="fa fa-circle"></i>#}
-{#                                                </div>#}
-{#                                                <div class="stream-panel">#}
-{#                                                    <div class="stream-info">#}
-{#                                                        <a href="#">#}
-{#                                                            <img src="img/a2.jpg" />#}
-{#                                                            <img src="img/a3.jpg" />#}
-{#                                                            <img src="img/a4.jpg" />#}
-{#                                                            <span>Mike Johnson, Monica Smith and Karen Dortmund</span>#}
-{#                                                            <span class="date">Yesterday at 02:13:20 am</span>#}
-{#                                                        </a>#}
-{#                                                    </div>#}
-{#                                                    Changed status of third stage in the <a href="#">Vertex</a> project.#}
-{#                                                </div>#}
-{#                                            </div>#}
-{#                                            <div class="stream">#}
-{#                                                <div class="stream-badge">#}
-{#                                                    <i class="fa fa-circle"></i>#}
-{#                                                </div>#}
-{#                                                <div class="stream-panel">#}
-{#                                                    <div class="stream-info">#}
-{#                                                        <a href="#">#}
-{#                                                            <img src="img/a6.jpg" />#}
-{#                                                            <span>Jessica Smith</span>#}
-{#                                                            <span class="date">Yesterday at 08:14:41 am</span>#}
-{#                                                        </a>#}
-{#                                                    </div>#}
-{#                                                    Add new files to own file sharing place.#}
-{#                                                </div>#}
-{#                                            </div>#}
-{#                                            <div class="stream">#}
-{#                                                <div class="stream-badge">#}
-{#                                                    <i class="fa fa-send bg-primary"></i>#}
-{#                                                </div>#}
-{#                                                <div class="stream-panel">#}
-{#                                                    <div class="stream-info">#}
-{#                                                        <a href="#">#}
-{#                                                            <img src="img/a7.jpg" />#}
-{#                                                            <img src="img/a1.jpg" />#}
-{#                                                            <span>Martha Farter and Mike Rodgers</span>#}
-{#                                                            <span class="date">Yesterday at 04:18:13 am</span>#}
-{#                                                        </a>#}
-{#                                                    </div>#}
-{#                                                    Sent email to all users participating in new project.#}
-{#                                                </div>#}
-{#                                            </div>#}
-{#                                            <div class="stream">#}
-{#                                                <div class="stream-badge">#}
-{#                                                    <i class="fa fa-tag bg-warning"></i>#}
-{#                                                </div>#}
-{#                                                <div class="stream-panel">#}
-{#                                                    <div class="stream-info">#}
-{#                                                        <a href="#">#}
-{#                                                            <img src="img/a7.jpg" />#}
-{#                                                            <span>Mark Mickens</span>#}
-{#                                                            <span class="date">Yesterday at 06:00:30 am</span>#}
-{#                                                        </a>#}
-{#                                                    </div>#}
-{#                                                    Has been taged in the latest comments about the new project.#}
-{#                                                </div>#}
-{#                                            </div>#}
-{##}
-{#                                        </div>#}
-{#                                    </div>#}
-{#                                </div>#}
-{#                            </div>#}
-{#                        </div>#}
-{#                    </div>#}
-{#                </div>#}
-{#            </div>#}
-{#        </div>#}
-{#    </div>#}
-{#{% endblock mainsection %}#}
-{##}
-{#{% block scripts %}#}
-{#    {{ super() }}#}
-{#    <script>#}
-{#        var mymap = L.map('projmap').setView([51.505, -0.09], 13);#}
-{#        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {#}
-{#            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',#}
-{#            maxZoom: 18,#}
-{#            id: 'mapbox.streets',#}
-{#            accessToken: 'pk.eyJ1IjoicWxhbmRzIiwiYSI6ImNqZHB1ZDh4YzEwZHEyeG1rcjc0NmFsNzIifQ.i3YebmNDByns1c1ixZE0bA'#}
-{#        }).addTo(mymap);#}
-{#    </script>#}
-{#{% endblock scripts %}#}

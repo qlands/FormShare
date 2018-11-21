@@ -1,6 +1,6 @@
 {% extends 'dashboard/page.jinja2' %}
 
-{% block titlesection %}{{ _("Project XXX") }}{% endblock titlesection %}
+{% block titlesection %}{{ formDetails.form_name }}{% endblock titlesection %}
 
 {% block breadcrumbs %}
     {% include 'dashboard/projects/forms/snippets/brdcrbs_frmdtls.jinja2' %}
@@ -12,11 +12,13 @@
             <div class="wrapper wrapper-content project-manager">
                 <div class="ibox">
                     <div class="ibox-title">
-                        <h5>Form description</h5>
+                        <h5>{{ formDetails.form_name }}</h5>
                         <div class="ibox-tools">
-                            <a style="margin-right: 10px">
-                                <i class="fa fa-pencil text-warning" title="Edit"></i>
-                            </a>
+                            {% if projectDetails.access_type != 4 %}
+                                <a href="" style="margin-right: 10px">
+                                    <i class="fa fa-pencil text-warning" title="{{ _('Edit') }}"></i>
+                                </a>
+                            {% endif %}
                             <a class="collapse-link" style="margin-right: 10px">
                                 <i class="fa fa-chevron-up"></i>
                             </a>
@@ -26,18 +28,27 @@
                         </div>
                     </div>
                     <div class="ibox-content">
-                        <img src="{{request.url_for_static('static/qr.png')}}" class="img-fluid">
-                        <p class="small">
-                            There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don't look
-                            even slightly believable. If you are going to use a passage of Lorem Ipsum, you need to be sure there isn't anything embarrassing
+                        {% if formDetails.form_target > 0 %}
+                            70 of {{ formDetails.form_target }} submissions
+                            <div class="progress">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated {% if formDetails.form_schema == None %}progress-bar-warning{% else %}progress-bar-success{% endif %}" style="width: 25%" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        {% endif %}
+                        <p style="margin-top: 10px" class="small font-bold">
+                            {% if formDetails.form_schema != None %}<span class="badge badge-primary">With repository</span>{% else %}<span class="badge badge-warning" title="{{ _('Data is not stored in a database') }}">{{ _('In testing') }}</span>{% endif %} {% if formDetails.form_accsub == 1 %}<span class="label label-primary" title="{{ _('Accept submissions') }}">{{ _('Active') }}</span>{% else %}<span class="label label-warning" title="{{ _('Does\'t accept submissions') }}">{{ _('Inactive') }}</span>{% endif %}
                         </p>
-                        <p class="small font-bold">
-                            <span class="badge badge-primary">With repository</span> <span class="label label-warning">Inactive</span>
-                        </p>
-                        <div class="actions">
-                            <a href=""  class="btn btn-xs btn-white"><i class="fa fa-thumbs-up"></i> Like </a>
-                            <a href=""  class="btn btn-xs btn-white"><i class="fa fa-heart"></i> Love</a>
-                        </div>
+                        {% if projectDetails.access_type != 4 %}
+                            <div class="actions">
+                                {% if formDetails.form_schema == None %}
+                                    <a href="" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-database"></i> {{ _('Create repository') }} </a>
+                                {% else %}
+                                    <a href="" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-code-branch"></i> {{ _('Upload new version') }} </a>
+                                {% endif %}
+                                {% if projectDetails.access_type == 1 or formDetails.pubby.user_id == activeUser.id %}
+                                    <a href="" class="btn btn-xs btn-white"><i style="color: red" class="far fa-trash-alt"></i> {{ _('Delete') }}</a>
+                                {% endif %}
+                            </div>
+                        {% endif %}
                     </div>
                 </div>
                 <div class="ibox">
@@ -57,10 +68,16 @@
                             <div class="col-md-12">
                                 <small>Click/Tab and hold to copy</small>
                                 <ul class="tag-list" style="padding: 0">
-                                    <li><a href=""><i class="fa fa-rss"></i> OData endpoint</a></li>
-                                    <li><a href=""><i class="fa fa-download"></i> Download data in XLS form</a></li>
-                                    <li><a href=""><i class="fa fa-pencil"></i> Clean data</a></li>
-                                    <li><a href=""><i class="fa fa-bug"></i> Clean error logs</a></li>
+                                    {% if formDetails.form_schema != None %}
+                                        <li><a href=""><i class="fa fa-rss"></i> OData endpoint</a></li>
+                                        <li><a href=""><i class="fa fa-download"></i> Download data in XLS form</a></li>
+                                        <li><a href=""><i class="fa fa-images"></i> Download images</a></li>
+                                        <li><a href=""><i class="fa fa-pencil"></i> Clean data</a></li>
+                                        <li><a href=""><i class="fa fa-bug"></i> Clean error logs</a></li>
+                                    {% else %}
+                                        <li><a href=""><i class="fa fa-download"></i> Download testing data in CSV form</a></li>
+                                        <li><a href=""><i class="fa fa-images"></i> Download images</a></li>
+                                    {% endif %}
                                 </ul>
                             </div>
                         </div>
@@ -162,7 +179,7 @@
                 </div>
 
                 <div class="text-center m-t-md">
-                    <a href="#" class="btn btn-xs btn-warning">Edit form</a> <a href="#" class="btn btn-xs btn-danger">Remove form</a>
+                    <a href="#" class="btn btn-xs btn-warning">Edit form</a>
                 </div>
             </div>
         </div>
@@ -181,23 +198,23 @@
                         <div class="row">
                             <div class="col-lg-6">
                                 <dl class="row mb-0">
-                                    <div class="col-sm-4 text-sm-right"><dt>Created by:</dt> </div>
-                                    <div class="col-sm-8 text-sm-left"><dd class="mb-1">Alex Smith</dd> </div>
+                                    <div class="col-sm-4 text-sm-right"><dt>{{ _('Created by') }}:</dt> </div>
+                                    <div class="col-sm-8 text-sm-left"><dd class="mb-1">{{ formDetails.pubby.user_name }}</dd> </div>
                                 </dl>
                                 <dl class="row mb-0">
-                                    <div class="col-sm-4 text-sm-right"><dt>Created:</dt> </div>
-                                    <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  10.07.2014 23:36:57</dd></div>
+                                    <div class="col-sm-4 text-sm-right"><dt>{{ _('Created') }}:</dt> </div>
+                                    <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date(formDetails.form_cdate) }}</dd></div>
                                 </dl>
                                 <dl class="row mb-0">
-                                    <div class="col-sm-4 text-sm-right"><dt>Last updated:</dt> </div>
-                                    <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  10.07.2014 23:36:57</dd></div>
+                                    <div class="col-sm-4 text-sm-right"><dt>{{ _('Last updated') }}:</dt> </div>
+                                    <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date(formDetails.form_cdate) }}</dd></div>
                                 </dl>
                                 <dl class="row mb-0">
-                                    <div class="col-sm-4 text-sm-right"><dt>Collaborators:</dt> </div>
+                                    <div class="col-sm-4 text-sm-right"><dt>{{ _('Assistants') }}:</dt> </div>
                                     <div class="col-sm-8 text-sm-left"> <dd class="mb-1"> 3 <a>[Manage]</a></dd></div>
                                 </dl>
                                 <dl class="row mb-0">
-                                    <div class="col-sm-4 text-sm-right"><dt>Collaborator groups:</dt> </div>
+                                    <div class="col-sm-4 text-sm-right"><dt>{{ _('Assistant groups') }}:</dt> </div>
                                     <div class="col-sm-8 text-sm-left"> <dd class="mb-1"> 1 <a>[Manage]</a></dd></div>
                                 </dl>
                             </div>

@@ -10,7 +10,10 @@ from ..views.collaborators import CollaboratorsListView, RemoveCollaborator
 from ..views.assistants import AssistantsListView, AddAssistantsView, EditAssistantsView, DeleteAssistant, \
     ChangeAssistantPassword
 from ..views.api import APIUserSearchSelect2
-from ..views.assistant_groups import GroupListView, AddGroupView, EditGroupView, DeleteGroup, GroupMembersView, RemoveMember
+from ..views.assistant_groups import GroupListView, AddGroupView, EditGroupView, DeleteGroup, GroupMembersView, \
+    RemoveMember
+from ..views.form import FormDetailsView, AddNewForm
+from ..views.odk import ODKFormList, ODKManifest, ODKMediaFile, ODKPushData, ODKSubmission, ODKXMLForm
 
 route_list = []
 
@@ -40,12 +43,12 @@ def load_routes(config):
     Call connected to plugins to add any routes before FormShare
     :param config: Pyramid config
     """
+    routes = []
     for plugin in p.PluginImplementations(p.IRoutes):
         routes = plugin.before_mapping(config)
         append_to_routes(routes)
 
     # FormShare routes
-    routes = []
     routes.append(add_route('home', '/', HomeView, 'landing/index.jinja2'))
     routes.append(add_route('login', '/login', LoginView, 'generic/login.jinja2'))
     routes.append(add_route('collaboratorslogin', '/collaborators/{userid}/{pname}/login', CollaboratorsLoginView,
@@ -117,20 +120,32 @@ def load_routes(config):
     routes.append(add_route('group_delete', '/user/{userid}/project/{projcode}/group/{groupid}/delete', DeleteGroup,
                             None))
 
-    routes.append(add_route('group_members', '/user/{userid}/project/{projcode}/group/{groupid}/members', GroupMembersView,
-                            'dashboard/projects/assistant_groups/members/member_list.jinja2'))
+    routes.append(
+        add_route('group_members', '/user/{userid}/project/{projcode}/group/{groupid}/members', GroupMembersView,
+                  'dashboard/projects/assistant_groups/members/member_list.jinja2'))
 
     routes.append(add_route('remove_member',
                             '/user/{userid}/project/{projcode}/group/{groupid}/member/{memberid}/of/{projectid}/remove',
                             RemoveMember, None))
 
-    # routes.append(addRoute('form_details', '/user/{userid}/project/{projid}/form/{formid}', formDetails_view,
-    #                        'dashboard/projects/forms/form_details.jinja2'))
+    # Forms
+    routes.append(add_route('form_add', '/user/{userid}/project/{projcode}/forms/add', AddNewForm, None))
+
+    routes.append(add_route('form_details', '/user/{userid}/project/{projcode}/form/{formid}', FormDetailsView,
+                            'dashboard/projects/forms/form_details.jinja2'))
 
     # API
     routes.append(add_route('api_select2_users', '/api/select2_user', APIUserSearchSelect2, 'json'))
-
     append_to_routes(routes)
+
+    # ODK Forms
+    routes.append(add_route('odkformlist', '/user/{userid}/project/{projcode}/formList', ODKFormList, None))
+    routes.append(add_route('odksubmission', '/user/{userid}/project/{projcode}/submission', ODKSubmission, None))
+    routes.append(add_route('odkpush', '/user/{userid}/project/{projcode}/push', ODKPushData, None))
+    routes.append(add_route('odkxmlform', '/user/{userid}/project/{projcode}/{formid}/xmlform', ODKXMLForm, None))
+    routes.append(add_route('odkmanifest', '/user/{userid}/project/{projcode}/{formid}/manifest', ODKManifest, None))
+    routes.append(add_route('odkmediafile', '/user/{userid}/project/{projcode}/{formid}/manifest/mediafile/{fileid}',
+                            ODKMediaFile, None))
 
     # Add the not found route
     config.add_notfound_view(NotFoundView, renderer='generic/404.jinja2')

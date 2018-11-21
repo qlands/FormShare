@@ -1,5 +1,5 @@
 {% extends 'dashboard/page.jinja2' %}
-
+{% import 'dashboard/macros/form.jinja2' as form %}
 
 {% block titlesection %}{{ _("Dashboard") }}{% endblock titlesection %}
 
@@ -61,6 +61,8 @@
                 <h3>{{ _('Account summary') }}</h3>
             </div>
             {% include 'dashboard/snippets/account_summary.jinja2' %}
+            {% set action_url = request.route_url('form_add',userid=activeProject.owner,projcode=activeProject.project_code) %}
+            {% include 'dashboard/projects/forms/snippets/upload_form.jinja2' %}
         {% else %}
             <div class="middle-box text-center animated fadeInDown">
                 <h1><i class="fas fa-folder-plus"></i></h1>
@@ -98,44 +100,56 @@
         {% endif %}
     {% else %}
         <script>
-            var mymap = L.map('projmap').setView([51.505, -0.09], 13);
-            L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
-                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-                maxZoom: 18,
-                id: 'mapbox.streets',
-                accessToken: 'pk.eyJ1IjoicWxhbmRzIiwiYSI6ImNqZHB1ZDh4YzEwZHEyeG1rcjc0NmFsNzIifQ.i3YebmNDByns1c1ixZE0bA'
-            }).addTo(mymap);
+            $(document).ready(function() {
+                var mymap = L.map('projmap').setView([51.505, -0.09], 13);
+                L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+                    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                    maxZoom: 18,
+                    id: 'mapbox.streets',
+                    accessToken: 'pk.eyJ1IjoicWxhbmRzIiwiYSI6ImNqZHB1ZDh4YzEwZHEyeG1rcjc0NmFsNzIifQ.i3YebmNDByns1c1ixZE0bA'
+                }).addTo(mymap);
 
-            var element = document.getElementById('mapbox');
-            var full_screen = false;
-            var normal_height = $("#projmap").height();
-            new ResizeSensor(element, function() {
-                var window_width = $(window).width();
-                var element_width =  element.clientWidth;
-                if ((element_width / window_width) >= 0.80)
-                {
-                    $("#projmap").height($(window).height()-80);
-                    mymap.invalidateSize();
-                    //console.log('Changed to ' + element.clientWidth);
-                    full_screen = true;
-                }
-                else
-                {
-                    if (full_screen)
+                var element = document.getElementById('mapbox');
+                var full_screen = false;
+                var normal_height = $("#projmap").height();
+                new ResizeSensor(element, function() {
+                    var window_width = $(window).width();
+                    var element_width =  element.clientWidth;
+                    if ((element_width / window_width) >= 0.80)
                     {
-                        $("#projmap").height(normal_height);
+                        $("#projmap").height($(window).height()-80);
                         mymap.invalidateSize();
-                        //console.log('Back to ' + normal_height);
                         //console.log('Changed to ' + element.clientWidth);
-                        full_screen = false;
+                        full_screen = true;
                     }
-                }
+                    else
+                    {
+                        if (full_screen)
+                        {
+                            $("#projmap").height(normal_height);
+                            mymap.invalidateSize();
+                            //console.log('Back to ' + normal_height);
+                            //console.log('Changed to ' + element.clientWidth);
+                            full_screen = false;
+                        }
+                    }
+                });
+
+                $('.scroll_content').slimscroll({
+                    height: '300px'
+                });
+
+                $('.custom-file-input').on('change', function() {
+                    let fileName = $(this).val().split('\\').pop();
+                    $(this).next('.custom-file-label').addClass("selected").html(fileName);
+                });
+
+                $('#add_form').click(function () {
+                    $("#xlsx").val("");
+                    $('.custom-file-input').next('.custom-file-label').addClass("selected").html("{{ _('Choose file...') }}");
+                });
+
             });
-
-            $('.scroll_content').slimscroll({
-                height: '300px'
-            })
-
         </script>
     {% endif %}
 {% endblock scripts %}

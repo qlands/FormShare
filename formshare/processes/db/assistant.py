@@ -4,9 +4,11 @@ import sys
 import datetime
 from sqlalchemy.exc import IntegrityError
 from formshare.config.encdecdata import encode_data
+from formshare.config.encdecdata import decode_data
 
 __all__ = ['get_project_assistants', 'delete_assistant', 'add_assistant', 'get_assistant_data',
-           'modify_assistant', 'change_assistant_password', 'get_all_assistants']
+           'modify_assistant', 'change_assistant_password', 'get_all_assistants', 'is_assistant_active',
+           'get_assistant_password']
 
 log = logging.getLogger(__name__)
 
@@ -135,3 +137,22 @@ def change_assistant_password(request, project, assistant, password):
         log.error(
             "Error {} while adding assistant {} in project {}".format(sys.exc_info()[0], assistant, project))
         return False, sys.exc_info()[0]
+
+
+def is_assistant_active(request, project, assistant):
+    enum = request.dbsession.query(Collaborator).filter(Collaborator.project_id == project).filter(
+        Collaborator.coll_id == assistant).first()
+    if enum is not None:
+        if enum.enum_active == 1:
+            return True
+        else:
+            return False
+    else:
+        return False
+
+
+def get_assistant_password(request, project, assistant):
+    enum = request.dbsession.query(Collaborator).filter(Collaborator.project_id == project).filter(
+        Collaborator.coll_id == assistant).first()
+    decrypted = decode_data(request, enum.coll_password.encode())
+    return decrypted

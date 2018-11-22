@@ -5,14 +5,14 @@ import io
 import json
 import mimetypes
 import shutil
-from formshare.models import Odkform as Form
-from formshare.models import Submission, Jsonlog, Jsonhistory
 from hashlib import md5
 from pyramid.httpexceptions import HTTPNotFound
 from uuid import uuid4
 from subprocess import Popen, PIPE, check_call, CalledProcessError
 from pyramid.response import FileResponse
-from formshare.processes.db import assistant_has_form, get_assistant_forms, get_project_id_from_name
+from formshare.processes.db import assistant_has_form, get_assistant_forms, get_project_id_from_name, add_new_form, \
+    form_exists, get_form_directory, get_form_xml_file, get_form_xls_file, update_form, get_form_data, \
+    get_form_schema, get_submission_data, add_submission, add_json_log, update_json_status, add_json_history
 import uuid
 import datetime
 import re
@@ -20,18 +20,130 @@ import sys
 from bs4 import BeautifulSoup
 from sqlalchemy import exc
 from decimal import Decimal
-from sqlalchemy.exc import IntegrityError
 from zope.sqlalchemy import mark_changed
+from pyxform import xls2xform
 
 import logging
 log = logging.getLogger(__name__)
 
-__all__ = ['generate_form_list', 'generate_manifest', 'get_odk_path', 'get_form_directory', 'get_form_list',
+__all__ = ['generate_form_list', 'generate_manifest', 'get_odk_path', 'get_form_list',
            'get_manifest', 'get_xml_form', 'get_media_file', 'get_submission_file', 'build_odata_service',
            'build_database', 'create_repository', 'move_media_files', 'convert_xml_to_json', 'store_submission',
            'get_html_from_diff', 'generate_diff', 'store_new_version', 'restore_from_revision', 'push_revision',
            'get_tables_from_form', 'get_fields_from_table', 'get_table_desc', 'is_field_key', 'get_request_data',
-           'update_data']
+           'update_data', 'upload_odk_form']
+
+
+def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
+    uid = str(uuid.uuid4())
+    form_directory = uid[-12:]
+    paths = ['tmp', uid]
+    os.makedirs(os.path.join(odk_dir, *paths))
+
+    input_file = request.POST['xlsx'].file
+    input_file_name = request.POST['xlsx'].filename
+
+    paths = ['tmp', uid, input_file_name]
+    file_name = os.path.join(odk_dir, *paths)
+
+    input_file.seek(0)
+    with open(file_name, 'wb') as permanent_file:
+        shutil.copyfileobj(input_file, permanent_file)
+
+    input_file.close()
+
+    parts = os.path.splitext(input_file_name)
+
+    paths = ['tmp', uid, parts[0]+'.xml']
+    xml_file = os.path.join(odk_dir, *paths)
+
+    try:
+        xls2xform.xls2xform_convert(file_name, xml_file)
+
+        # Check if the conversion created itemsets.csv
+        output_dir = os.path.split(xml_file)[0]
+        itemsets_csv = os.path.join(output_dir, "itemsets.csv")
+        if not os.path.isfile(itemsets_csv):
+            itemsets_csv = ""
+
+        tree = etree.parse(xml_file)
+        root = tree.getroot()
+        nsmap = root.nsmap[None]
+        h_nsmap = root.nsmap['h']
+        eid = root.findall(".//{" + nsmap + "}" + parts[0])
+        if eid:
+            form_id = eid[0].get("id")
+            form_title = root.findall(".//{" + h_nsmap + "}title")
+            if form_exists(request, project_id, form_id):
+                paths = ['forms', form_directory, 'media']
+                if not os.path.exists(os.path.join(odk_dir, *paths)):
+                    os.makedirs(os.path.join(odk_dir, *paths))
+
+                    paths = ['forms', form_directory, 'submissions']
+                    os.makedirs(os.path.join(odk_dir, *paths))
+
+                    paths = ['forms', form_directory, 'submissions', 'logs']
+                    os.makedirs(os.path.join(odk_dir, *paths))
+
+                    paths = ['forms', form_directory, 'submissions', 'maps']
+                    os.makedirs(os.path.join(odk_dir, *paths))
+
+                    paths = ['forms', form_directory, 'repository']
+                    os.makedirs(os.path.join(odk_dir, *paths))
+                    paths = ['forms', form_directory, 'repository', 'temp']
+                    os.makedirs(os.path.join(odk_dir, *paths))
+
+                xls_file_fame = os.path.basename(file_name)
+                xml_file_name = os.path.basename(xml_file)
+                paths = ['forms', form_directory, xls_file_fame]
+                final_xls = os.path.join(odk_dir, *paths)
+                paths = ['forms', form_directory, xml_file_name]
+                final_xml = os.path.join(odk_dir, *paths)
+                shutil.copyfile(file_name, final_xls)
+                shutil.copyfile(xml_file, final_xml)
+
+                form_data['project_id'] = project_id
+                form_data['form_id'] = form_id
+                form_data['form_name'] = form_title[0].text
+                form_data['form_cdate'] = datetime.datetime.now()
+                form_data['form_directory'] = form_directory
+                form_data['form_accsub'] = 1
+                form_data['form_testing'] = 1
+                form_data['form_xlsfile'] = final_xls
+                form_data['form_xmlfile'] = final_xml
+                form_data['form_pubby'] = user_id
+
+                added, message = add_new_form(request, form_data)
+                if not added:
+                    return added, message
+
+                # If we have itemsets.csv add it to the media path
+                if itemsets_csv != "":
+                    paths = ['forms', form_directory, 'media', 'itemsets.csv']
+                    itemset_file = os.path.join(odk_dir, *paths)
+                    shutil.copyfile(itemsets_csv, itemset_file)
+
+                paths = ['forms', form_directory, parts[0]+".json"]
+                json_file = os.path.join(odk_dir, *paths)
+
+                metadata = {"formID": form_id, "name": form_title[0].text, "majorMinorVersion": "",
+                            "version": datetime.datetime.now().strftime("%Y%m%d"),
+                            "hash": 'md5:' + md5(open(final_xml, 'rb').read()).hexdigest(),
+                            "descriptionText": form_title[0].text}
+
+                with open(json_file, "w",) as outfile:
+                    json_string = json.dumps(metadata, indent=4, ensure_ascii=False)
+                    outfile.write(json_string)
+                return True, form_id
+            else:
+                return False, request.translate("Form already exists in this project")
+        else:
+            return False, request.translate(
+                "Cannot find XForm ID. Please send this form to support_formshare@qlands.com")
+
+    except RuntimeError:
+        log.error("Error {} while adding form {} in project {}".format(sys.exc_info()[0], input_file_name, project_id))
+        return False, sys.exc_info()[0]
 
 
 class FileIterator(object):
@@ -93,11 +205,6 @@ def get_odk_path(request):
     return os.path.join(repository_path, *["odk"])
 
 
-def get_form_directory(request, project, form):
-    form_data = request.dbsession.query(Form).filter(Form.project_id == project).filter(Form.form_id == form).one()
-    return form_data.form_directory
-
-
 def get_form_list(request, user, project_code, assistant):
     prj_list = []
     project_id = get_project_id_from_name(request, user, project_code)
@@ -134,12 +241,12 @@ def get_manifest(request, user, project, form, form_directory):
 
 
 def get_xml_form(request, project, form):
-    res = request.dbsession.query(Form).filter(Form.project_id == project).filter(Form.form_id == form).first()
-    if res is not None:
-        content_type, content_enc = mimetypes.guess_type(res.form_xmlfile)
-        file_name = os.path.basename(res.form_xmlfile)
+    xml_file = get_form_xml_file(request, project, form)
+    if xml_file is not None:
+        content_type, content_enc = mimetypes.guess_type(xml_file)
+        file_name = os.path.basename(xml_file)
         response = FileResponse(
-            res.form_xmlfile,
+            xml_file,
             request=request,
             content_type=content_type
         )
@@ -166,11 +273,10 @@ def get_media_file(request, form_directory, file_id):
         raise HTTPNotFound()
 
 
-def get_submission_file(project, form, submission, request):
+def get_submission_file(request, project, form, submission):
     odk_dir = get_odk_path(request)
-    res = request.dbsession.query(Form).filter(Form.project_id == project).filter(Form.form_id == form).first()
-    if res is not None:
-        form_directory = res.form_directory
+    form_directory = get_form_directory(request, project, form)
+    if form_directory is not None:
         path = os.path.join(odk_dir, *["forms", form_directory, 'submissions', submission + ".json"])
         if os.path.isfile(path):
             content_type, content_enc = mimetypes.guess_type(path)
@@ -331,9 +437,8 @@ def create_repository(request, project, form, odk_dir, xform_directory, primary_
                       default_language=None, other_languages=None, yes_no_strings=None):
     odk_to_mysql = os.path.join(request.registry.settings['odktools.path'], *["ODKToMySQL", "odktomysql"])
 
-    odk_form = request.dbsession.query(Form).filter(Form.project_id == project).filter(Form.form_id == form).first()
-    if odk_form is not None:
-        xlsx_file = odk_form.form_xlsfile
+    xlsx_file = get_form_xls_file(request, project, form)
+    if xlsx_file is not None:
         args = [odk_to_mysql, "-x " + xlsx_file, "-t maintable", "-v " + primary_key,
                 "-c " + os.path.join(odk_dir, *["forms", xform_directory, "repository", "create.sql"]),
                 "-C " + os.path.join(odk_dir, *["forms", xform_directory, "repository", "create.xml"]),
@@ -399,8 +504,8 @@ def create_repository(request, project, form, odk_dir, xform_directory, primary_
             if not error:
                 odata_error_code, odata_error_message = build_odata_service(request, schema)
                 if odata_error_code == 0:
-                    request.dbsession.query(Form).filter(Form.project_id == project).filter(
-                        Form.form_id == form).update({'form_schema': schema, 'form_pkey': primary_key})
+                    form_data = {'form_schema': schema, 'form_pkey': primary_key}
+                    update_form(request, project, form, form_data)
 
                     # Remove any test submissions if any. In try because nothing happens if they
                     # don't get removed... just junk files
@@ -481,9 +586,7 @@ def convert_xml_to_json(odk_dir, xml_file, xform_directory, schema, xml_form_fil
                     # Get the MD5Sum of the JSON file and looks for it in the submissions
                     # This will get an exact match that will not move into the database
                     md5sum = md5(open(json_file, 'rb').read()).hexdigest()
-                    sameas = request.dbsession.query(Submission).filter(Submission.project_id == project).filter(
-                        Submission.form_id == form).filter(Submission.md5sum == md5sum).order_by(
-                        Submission.submission_dtime.asc()).first()
+                    sameas = get_submission_data(request, project, form, md5sum)
                     if sameas is None:
                         # Third we try to move the JSON data into the database
                         mysql_user = request.registry.settings['mysql.user']
@@ -516,39 +619,16 @@ def convert_xml_to_json(odk_dir, xml_file, xform_directory, schema, xml_form_fil
                         stdout, stderr = p.communicate()
                         # An error 2 is an SQL error that goes to the logs
                         if p.returncode == 0 or p.returncode == 2:
-                            new_submission = Submission(submission_id=submission_id,
-                                                        submission_dtime=datetime.datetime.now(),
-                                                        submission_status=p.returncode, project_id=project,
-                                                        form_id=form, enum_project=project, coll_id=assistant,
-                                                        md5sum=md5sum)
-                            try:
-                                request.dbsession.add(new_submission)
-                                request.dbsession.flush()
-                            except IntegrityError as e:
-                                request.dbsession.rollback()
-                                log.debug(str(e))
-                                return 1, str(e)
-                            except RuntimeError:
-                                request.dbsession.rollback()
-                                log.debug(sys.exc_info()[0])
-                                return 1, sys.exc_info()[0]
+                            added, message = add_submission(request, project, form, assistant, submission_id, md5sum,
+                                                            p.returncode)
+                            if not added:
+                                return 1, message
 
                             if p.returncode == 2:
-                                new_json_log = Jsonlog(project_id=project, form_id=form, log_id=submission_id,
-                                                       json_file=json_file, log_file=log_file, status=1,
-                                                       enum_project=project, coll_id=assistant,
-                                                       log_dtime=datetime.datetime.now())
-                                try:
-                                    request.dbsession.add(new_json_log)
-                                    request.dbsession.flush()
-                                except IntegrityError as e:
-                                    request.dbsession.rollback()
-                                    log.debug(str(e))
-                                    return 1, str(e)
-                                except RuntimeError:
-                                    request.dbsession.rollback()
-                                    log.debug(sys.exc_info()[0])
-                                    return 1, sys.exc_info()[0]
+                                added, message = add_json_log(request, project, form, submission_id, json_file,
+                                                              log_file, 1, assistant)
+                                if not added:
+                                    return 1, message
 
                             return 0, ""
                         else:
@@ -563,21 +643,10 @@ def convert_xml_to_json(odk_dir, xml_file, xform_directory, schema, xml_form_fil
                         # This will fix the issue when the media files are so big
                         # that multiple posts are done by ODK Collect for the same
                         # submission
-                        new_submission = Submission(submission_id=submission_id,
-                                                    submission_dtime=datetime.datetime.now(), submission_status=0,
-                                                    project_id=project, form_id=form, enum_project=project,
-                                                    coll_id=assistant, md5sum=md5sum, sameas=sameas.submission_id)
-                        try:
-                            request.dbsession.add(new_submission)
-                            request.dbsession.flush()
-                        except IntegrityError as e:
-                            request.dbsession.rollback()
-                            log.debug(str(e))
-                            return 1, str(e)
-                        except RuntimeError:
-                            request.dbsession.rollback()
-                            log.debug(sys.exc_info()[0])
-                            return 1, sys.exc_info()[0]
+
+                        added, message = add_submission(request, project, form, assistant, submission_id, md5sum, 0)
+                        if not added:
+                            return 1, message
 
                         move_media_files(odk_dir, xform_directory, submission_id, sameas.submission_id)
                         return 0, ""
@@ -643,17 +712,16 @@ def store_submission(request, project, assistant):
         root = tree.getroot()
         xform_id = root.get("id")
         if xform_id is not None:
-            form_data = request.dbsession.query(Form).filter(Form.project_id == project).filter(
-                Form.form_id == xform_id).first()
+            form_data = get_form_data(request, project, xform_id)
             if form_data is not None:
                 if assistant_has_form(request, project, assistant, xform_id):
                     media_path = os.path.join(odk_dir,
-                                              *['forms', form_data.form_directory, "submissions", str(unique_id),
+                                              *['forms', form_data['form_directory'], "submissions", str(unique_id),
                                                 'diffs'])
                     os.makedirs(media_path)
                     media_path = os.path.join(odk_dir,
-                                              *['forms', form_data.form_directory, "submissions", str(unique_id)])
-                    target_path = os.path.join(odk_dir, *['forms', form_data.form_directory, "submissions"])
+                                              *['forms', form_data['form_directory'], "submissions", str(unique_id)])
+                    target_path = os.path.join(odk_dir, *['forms', form_data['form_directory'], "submissions"])
                     path = os.path.join(path, *['*.*'])
                     files = glob.glob(path)
                     xml_file = ""
@@ -666,9 +734,9 @@ def store_submission(request, project, assistant):
                             target_file = os.path.join(media_path, base_file)
                         shutil.move(file, target_file)
                     if xml_file != "":
-                        res_code, message = convert_xml_to_json(odk_dir, xml_file, form_data.form_directory,
-                                                                form_data.form_schema, form_data.form_xmlfile, project,
-                                                                xform_id, assistant, request)
+                        res_code, message = convert_xml_to_json(odk_dir, xml_file, form_data['form_directory'],
+                                                                form_data['form_schema'], form_data['form_xmlfile'],
+                                                                project, xform_id, assistant, request)
                         if res_code == 0:
                             return True, 201
                         else:
@@ -797,23 +865,11 @@ def store_new_version(request, project, form, submission, assistant, sequence, n
                 nada, stderr = p.communicate()
                 final.close()
                 if p.returncode == 1:
-                    request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
-                        Jsonlog.form_id == form, Jsonlog.log_id == submission).update({'status': 3})
+                    update_json_status(request, project, form, submission, 3)
 
-                    new_record = Jsonhistory(project_id=project, form_id=form, log_id=submission, log_sequence=sequence,
-                                             log_dtime=datetime.datetime.now(), log_action=3, enum_project=project,
-                                             coll_id=assistant, log_commit=sequence, log_notes=notes)
-                    try:
-                        request.dbsession.add(new_record)
-                        request.dbsession.flush()
-                    except IntegrityError as e:
-                        request.dbsession.rollback()
-                        log.debug(str(e))
-                        return 1, str(e)
-                    except RuntimeError:
-                        request.dbsession.rollback()
-                        log.debug(sys.exc_info()[0])
-                        return 1, sys.exc_info()[0]
+                    added, message = add_json_history(request, project, form, submission, sequence, 3, assistant, notes)
+                    if not added:
+                        return 1, message
 
                     return 0, ""
                 else:
@@ -854,9 +910,8 @@ def restore_from_revision(request, project, form, submission, sequence):
 
 def push_revision(request, project, form, submission):
     odk_dir = get_odk_path(request)
-    form_data = request.dbsession.query(Form).filter(Form.project_id == project).filter(Form.form_id == form).one()
     form_directory = get_form_directory(request, project, form)
-    schema = form_data.form_schema
+    schema = get_form_schema(request, project, form)
     current_file = os.path.join(odk_dir, *['forms', form_directory, 'submissions', submission + ".json"])
 
     # Third we try to move the JSON data into the database
@@ -982,8 +1037,7 @@ def is_field_key(request, project, form, table_name, field_name):
 
 def get_request_data(request, project, form, table_name, draw, fields, start, length, order_index, order_direction,
                      search_value):
-    form_data = request.dbsession.query(Form).filter(Form.project_id == project).filter(Form.form_id == form).one()
-    schema = form_data.form_schema
+    schema = get_form_schema(request, project, form)
     sql_fields = ','.join(fields)
     table_order = fields[order_index]
 
@@ -1037,8 +1091,7 @@ def get_request_data(request, project, form, table_name, draw, fields, start, le
 
 
 def update_data(request, project, form, table_name, row_uuid, field, value):
-    form_data = request.dbsession.query(Form).filter(Form.project_id == project).filter(Form.form_id == form).one()
-    schema = form_data.form_schema
+    schema = get_form_schema(request, project, form)
     sql = "UPDATE " + schema + "." + table_name + " SET " + field + " = '" + value + "'"
     sql = sql + " WHERE rowuuid = '" + row_uuid + "'"
     try:

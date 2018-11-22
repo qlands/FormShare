@@ -1,8 +1,11 @@
-from formshare.models import map_from_schema, Odkform, User, Formacces, Collingroup, Formgrpacces
+from formshare.models import map_from_schema, Odkform, User, Formacces, Collingroup, Formgrpacces, map_to_schema
 import logging
+from sqlalchemy.exc import IntegrityError
+import sys
 
 
-__all__ = ['get_form_details', 'assistant_has_form', 'get_assistant_forms', 'get_form_directory']
+__all__ = ['get_form_details', 'assistant_has_form', 'get_assistant_forms', 'get_form_directory', 'add_new_form',
+           'form_exists', 'get_form_xml_file', 'get_form_xls_file', 'update_form', 'get_form_data', 'get_form_schema']
 
 log = logging.getLogger(__name__)
 
@@ -12,11 +15,21 @@ def get_creator_data(request, user):
     return map_from_schema(res)
 
 
-def get_form_details(request, project, form):
+def get_form_data(request, project, form):
     res = request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(Odkform.form_id == form).first()
-    result = map_from_schema(res)
-    result['pubby'] = get_creator_data(request, result['form_pubby'])
-    return result
+    if res is not None:
+        return map_from_schema(res)
+    else:
+        return None
+
+
+def get_form_details(request, project, form):
+    result = get_form_data(request, project, form)
+    if result is not None:
+        result['pubby'] = get_creator_data(request, result['form_pubby'])
+        return result
+    else:
+        return None
 
 
 def get_assistant_forms(request, project, assistant):
@@ -69,5 +82,71 @@ def assistant_has_form(request, project, form, assistant):
 def get_form_directory(request, project, form):
     form_data = request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(
         Odkform.form_id == form).one()
-    form_directory = form_data.form_directory
-    return form_directory
+    if form_data is not None:
+        return form_data.form_directory
+    else:
+        return None
+
+
+def get_form_xml_file(request, project, form):
+    form_data = request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(
+        Odkform.form_id == form).one()
+    if form_data is not None:
+        return form_data.form_xmlfile
+    else:
+        return None
+
+
+def get_form_xls_file(request, project, form):
+    form_data = request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(
+        Odkform.form_id == form).one()
+    if form_data is not None:
+        return form_data.form_xlsfile
+    else:
+        return None
+
+
+def get_form_schema(request, project, form):
+    form_data = request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(
+        Odkform.form_id == form).one()
+    if form_data is not None:
+        return form_data.form_schema
+    else:
+        return None
+
+
+def add_new_form(request, form_data):
+    mapped_data = map_to_schema(Odkform, form_data)
+    new_form = Odkform(**mapped_data)
+    try:
+        request.dbsession.add(new_form)
+        request.dbsession.flush()
+    except IntegrityError as e:
+        request.dbsession.rollback()
+        return False, str(e)
+    except RuntimeError:
+        request.dbsession.rollback()
+        return False, sys.exc_info()[0]
+
+
+def form_exists(request, project, form):
+    res = request.dbsession.query(Odkform).filter(Odkform.form_id == form).filter(Odkform.project_id == project).first()
+    if res is None:
+        return False
+    else:
+        return True
+
+
+def update_form(request, project, form, form_data):
+    mapped_data = map_to_schema(Odkform, form_data)
+    try:
+        request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(Odkform.form_id == form).update(
+            mapped_data)
+        request.dbsession.flush()
+        return True, ""
+    except IntegrityError as e:
+        request.dbsession.rollback()
+        return False, str(e)
+    except RuntimeError:
+        request.dbsession.rollback()
+        return False, sys.exc_info()[0]

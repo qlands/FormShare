@@ -1,4 +1,5 @@
 {% extends 'dashboard/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
 
 {% block titlesection %}{{ formDetails.form_name }}{% endblock titlesection %}
 
@@ -15,7 +16,7 @@
                         <h5>{{ formDetails.form_name }}</h5>
                         <div class="ibox-tools">
                             {% if projectDetails.access_type != 4 %}
-                                <a href="" style="margin-right: 10px">
+                                <a href="{{ request.route_url('form_edit',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" style="margin-right: 10px">
                                     <i class="fa fa-pencil text-warning" title="{{ _('Edit') }}"></i>
                                 </a>
                             {% endif %}
@@ -35,7 +36,7 @@
                             </div>
                         {% endif %}
                         <p style="margin-top: 10px" class="small font-bold">
-                            {% if formDetails.form_schema != None %}<span class="badge badge-primary">With repository</span>{% else %}<span class="badge badge-warning" title="{{ _('Data is not stored in a database') }}">{{ _('In testing') }}</span>{% endif %} {% if formDetails.form_accsub == 1 %}<span class="label label-primary" title="{{ _('Accept submissions') }}">{{ _('Active') }}</span>{% else %}<span class="label label-warning" title="{{ _('Does\'t accept submissions') }}">{{ _('Inactive') }}</span>{% endif %}
+                            {% if formDetails.form_schema != None %}<span class="badge badge-primary">With repository</span>{% else %}<span class="badge badge-warning" title="{{ _('Data is not stored in a database') }}">{{ _('In testing') }}</span>{% endif %} {% if formDetails.form_accsub == 1 %}<span class="label label-primary" title="{{ _('Accept submissions') }}">{{ _('Active') }}</span>{% else %}<span class="label label-danger" title="{{ _('Does\'t accept submissions') }}">{{ _('Inactive') }}</span>{% endif %}
                         </p>
                         {% if projectDetails.access_type != 4 %}
                             <div class="actions">
@@ -45,7 +46,7 @@
                                     <a href="" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-code-branch"></i> {{ _('Upload new version') }} </a>
                                 {% endif %}
                                 {% if projectDetails.access_type == 1 or formDetails.pubby.user_id == activeUser.id %}
-                                    <a href="" class="btn btn-xs btn-white"><i style="color: red" class="far fa-trash-alt"></i> {{ _('Delete') }}</a>
+                                    <a urn="{{ request.route_url('delete_form', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" class="btn btn-xs btn-white remove_form"><i style="color: red" class="far fa-trash-alt"></i> {{ _('Delete') }}</a>
                                 {% endif %}
                             </div>
                         {% endif %}
@@ -87,7 +88,7 @@
                     <div class="ibox-title">
                         <h5>Form files</h5>
                         <div class="ibox-tools">
-                            <a style="margin-right: 10px">
+                            <a id="add_file" data-toggle="modal" data-target="#upload_file" style="margin-right: 10px">
                                 <i class="fa fa-plus-square text-success" title="Add new file"></i>
                             </a>
                             <a class="collapse-link" style="margin-right: 10px">
@@ -441,4 +442,94 @@
             </div>
         </div>
     </div>
+
+    {% include 'dashboard/projects/forms/snippets/upload_file.jinja2' %}
 {% endblock mainsection %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function() {
+            $('.remove_form').click(function () {
+                var action_url = $( this ).attr('urn');
+                swal({
+                        title: "{{ _('Are you sure?') }}",
+                        text: "{{ _('All the data in this form will be deleted!') }}",
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#DD6B55",
+                        confirmButtonText: "{{ _('Yes, delete this form!') }}",
+                        cancelButtonText: "{{ _('Oops!, cancel!') }}",
+                        closeOnConfirm: true,
+                        closeOnCancel: true },
+                    function (isConfirm) {
+                        if (isConfirm) {
+                            var form = document.createElement('form');
+                            form.setAttribute('method', 'post');
+                            form.setAttribute('action', action_url);
+                            form.style.display = 'hidden';
+
+                            var i = document.createElement("input"); //input element, text
+                            i.setAttribute('type',"text");
+                            i.setAttribute('name',"csrf_token");
+                            i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                            form.appendChild(i);
+
+                            document.body.appendChild(form);
+                            form.submit();
+                        }
+                    });
+            });
+
+            $( "#add_file" ).click(function() {
+                $( "#clear_button").click();
+            });
+
+            $( "#uploadbutton" ).click(function() {
+                $( "#filetoupload" ).click();
+                $("#file_label").text('{{ _('File(s)') }}')
+                $("#file_info").hide();
+            });
+
+            jQuery("#filetoupload").change(function () {
+                var fileInput = document.getElementById('filetoupload');
+                var fileNames = [];
+                for (var i = 0; i < fileInput.files.length; i++) {
+                    fileNames.push(fileInput.files[i].name);
+                }
+                //var filename = fileInput.files[0].name;
+                var file_object = $("#form_file");
+                file_object.val(fileNames.join(' , '));
+                file_object.show();
+                $("#clear_section").show();
+                $("#uploadbutton").hide();
+                $("#linkbutton").hide();
+            });
+            $( "#clear_button" ).click(function() {
+                $("#filetoupload").val("");
+                var file_object = $("#form_file");
+                file_object.val("");
+                file_object.hide();
+                $("#clear_section").hide();
+                $("#uploadbutton").show();
+                $("#linkbutton").show();
+                $("#file_label").text('{{ _('Type') }}');
+                $("#file_info").hide();
+                $("#file_name").val("");
+            });
+            $( "#linkbutton" ).click(function() {
+                var file_object = $("#form_file");
+                file_object.attr("placeholder", "http://example.com/files/my_file.csv").blur();
+                file_object.show();
+                $("#clear_section").show();
+                $("#uploadbutton").hide();
+                $("#linkbutton").hide();
+                $("#file_label").text('{{ _('Link') }}');
+                $("#file_info").show();
+            });
+
+        });
+    </script>
+
+
+{% endblock scripts %}

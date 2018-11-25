@@ -37,17 +37,23 @@
     {% if viewingSelfAccount %}
         {{ super() }}
     {% else %}
+        {{ form.display_errors(errors) }}
         {% if not projectData.user_collaborates  %}
             {% include 'dashboard/profile/snippets/profile_head.jinja2' %}
         {% endif %}
         {% include 'dashboard/projects/snippets/project_details.jinja2' %}
+        {% set action_url = request.route_url('form_add',userid=activeProject.owner,projcode=activeProject.project_code) %}
+        {% include 'dashboard/projects/forms/snippets/upload_form.jinja2' %}
     {% endif %}
 
 {% endblock maincontent %}
 
 {% block mainsection %}
     {% if viewingSelfAccount %}
+        {{ form.display_errors(errors) }}
         {% include 'dashboard/projects/snippets/project_details.jinja2' %}
+        {% set action_url = request.route_url('form_add',userid=activeProject.owner,projcode=activeProject.project_code) %}
+        {% include 'dashboard/projects/forms/snippets/upload_form.jinja2' %}
     {% else %}
         {{ super() }}
     {% endif %}

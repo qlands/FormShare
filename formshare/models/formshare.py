@@ -154,6 +154,22 @@ class Odkform(Base):
     fsuser = relationship('User')
 
 
+class MediaFile(Base):
+    __tablename__ = 'mediafile'
+    __table_args__ = (
+        ForeignKeyConstraint(['project_id', 'form_id'], ['odkform.project_id', 'odkform.form_id'], ondelete='CASCADE'),
+    )
+
+    file_id = Column(Unicode(64), primary_key=True, nullable=False)
+    project_id = Column(Unicode(64), nullable=False)
+    form_id = Column(Unicode(120), nullable=False)
+    file_name = Column(Unicode(120))
+    file_url = Column(UnicodeText)
+    file_udate = Column(DateTime)
+
+    project = relationship('Odkform')
+
+
 class Userproject(Base):
     __tablename__ = 'userproject'
 

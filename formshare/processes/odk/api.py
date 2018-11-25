@@ -22,6 +22,8 @@ from sqlalchemy import exc
 from decimal import Decimal
 from zope.sqlalchemy import mark_changed
 from pyxform import xls2xform
+from openpyxl import load_workbook
+from pyxform.errors import PyXFormError
 
 import logging
 log = logging.getLogger(__name__)
@@ -31,7 +33,39 @@ __all__ = ['generate_form_list', 'generate_manifest', 'get_odk_path', 'get_form_
            'build_database', 'create_repository', 'move_media_files', 'convert_xml_to_json', 'store_submission',
            'get_html_from_diff', 'generate_diff', 'store_new_version', 'restore_from_revision', 'push_revision',
            'get_tables_from_form', 'get_fields_from_table', 'get_table_desc', 'is_field_key', 'get_request_data',
-           'update_data', 'upload_odk_form']
+           'update_data', 'upload_odk_form', 'update_form_title']
+
+
+def update_form_title(request, project, form, title):
+    xml_file = get_form_xml_file(request, project, form)
+    xlsx_file = get_form_xls_file(request, project, form)
+    tree = etree.parse(xml_file)
+    root = tree.getroot()
+    h_nsmap = root.nsmap['h']
+    form_title = root.findall(".//{" + h_nsmap + "}title")
+    if form_title:
+        form_title[0].text = title
+    tree.write(xml_file, pretty_print=True, xml_declaration=True, encoding="utf-8")
+
+    form_directory = get_form_directory(request, project, form)
+    md5(open(xml_file, 'rb').read()).hexdigest()
+    odk_dir = get_odk_path(request)
+    json_file = os.path.join(odk_dir, *["forms", form_directory, form.lower() + ".json"])
+    with open(json_file, 'r') as f:
+        json_metadata = json.load(f)
+        json_metadata["name"] = title
+        json_metadata['hash'] = 'md5:' + md5(open(xml_file, 'rb').read()).hexdigest()
+        json_metadata["descriptionText"] = title
+    with open(json_file, "w", ) as outfile:
+        json_string = json.dumps(json_metadata, indent=4, ensure_ascii=False)
+        outfile.write(json_string)
+
+    wb = load_workbook(xlsx_file)
+    sheet = wb['settings']
+    for y in range(sheet.min_column, sheet.max_column+1):
+        if sheet.cell(row=1, column=y).value == "form_title":
+            sheet.cell(row=2, column=y, value=title)
+    wb.save(xlsx_file)
 
 
 def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
@@ -74,7 +108,7 @@ def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
         if eid:
             form_id = eid[0].get("id")
             form_title = root.findall(".//{" + h_nsmap + "}title")
-            if form_exists(request, project_id, form_id):
+            if not form_exists(request, project_id, form_id):
                 paths = ['forms', form_directory, 'media']
                 if not os.path.exists(os.path.join(odk_dir, *paths)):
                     os.makedirs(os.path.join(odk_dir, *paths))
@@ -136,11 +170,13 @@ def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
                     outfile.write(json_string)
                 return True, form_id
             else:
-                return False, request.translate("Form already exists in this project")
+                return False, request.translate("The form already exists in this project")
         else:
             return False, request.translate(
                 "Cannot find XForm ID. Please send this form to support_formshare@qlands.com")
-
+    except PyXFormError as e:
+        log.error("Error {} while adding form {} in project {}".format(str(e), input_file_name, project_id))
+        return False, str(e)
     except RuntimeError:
         log.error("Error {} while adding form {} in project {}".format(sys.exc_info()[0], input_file_name, project_id))
         return False, sys.exc_info()[0]

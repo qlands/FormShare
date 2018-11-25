@@ -1,0 +1,29 @@
+<form class="m-t" role="form" method="post" action="{{ request.url }}">
+    {{ form.secure_form(request) }}
+    <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Name') }}</label>
+        <div class="col-sm-10">
+            <input type="text" class="form-control" name="form_name" value="{{ formData.form_name }}">
+        </div>
+    </div>
+    <div class="hr-line-dashed"></div>
+    <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Target number of submissions') }}</label>
+        <div class="col-sm-10">
+            <input type="number" name="form_target" class="form-control" value="{{ formData.form_target }}"><span class="form-text m-b-none">{{ _('Leave blank or indicate 0 if there is no target ') }}</span>
+        </div>
+    </div>
+    <div class="hr-line-dashed"></div>
+    <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Active') }}</label>
+        <div class="col-sm-10"><input type="checkbox" name="form_accsub" class="js-switch" {% if formData|length > 0 %} {% if formData.form_accsub == 1 %}checked{% endif %}{% else %}checked{% endif %} /><span class="form-text m-b-none">{% block share_assistant_comment %}{{ _('An active form accepts submissions') }}{% endblock share_assistant_comment %}</span></div>
+    </div>
+    <div class="hr-line-dashed"></div>
+    {% block edit_form_controls_extra %}
+
+    {% endblock edit_form_controls_extra %}
+    {% block edit_form_actions %}
+        <div class="form-group row">
+            <div class="col-sm-4 col-sm-offset-2">
+                <button class="btn btn-primary btn-sm" type="submit">{{ _('Save') }}</button>
+            </div>
+        </div>
+    {% endblock edit_form_actions %}
+</form>

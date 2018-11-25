@@ -66,8 +66,16 @@ class ProjectDetailsView(ProjectsView):
                 raise HTTPNotFound
         else:
             raise HTTPNotFound
+
+        error = self.request.params.get('error')
+        if error is not None:
+            self.errors.append(error)
+
         assistants, more_assistants = get_project_assistants(self.request, project_id, 8)
-        collaborators, more_collaborators = get_project_collaborators(self.request, project_id, self.user.login, 4)
+        if self.user is not None:
+            collaborators, more_collaborators = get_project_collaborators(self.request, project_id, self.user.login, 4)
+        else:
+            collaborators, more_collaborators = get_project_collaborators(self.request, project_id, None, 4)
         user_details = get_user_details(self.request, user_id)
         return {'projectData': project_data, 'userid': user_id, 'collaborators': collaborators,
                 'moreCollaborators': more_collaborators, 'assistants': assistants, 'moreAssistants': more_assistants,

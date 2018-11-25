@@ -12,7 +12,7 @@ from ..views.assistants import AssistantsListView, AddAssistantsView, EditAssist
 from ..views.api import APIUserSearchSelect2
 from ..views.assistant_groups import GroupListView, AddGroupView, EditGroupView, DeleteGroup, GroupMembersView, \
     RemoveMember
-from ..views.form import FormDetailsView, AddNewForm
+from ..views.form import FormDetails, AddNewForm, EditForm, DeleteForm, AddFileToForm
 from ..views.odk import ODKFormList, ODKManifest, ODKMediaFile, ODKPushData, ODKSubmission, ODKXMLForm
 
 route_list = []
@@ -131,8 +131,17 @@ def load_routes(config):
     # Forms
     routes.append(add_route('form_add', '/user/{userid}/project/{projcode}/forms/add', AddNewForm, None))
 
-    routes.append(add_route('form_details', '/user/{userid}/project/{projcode}/form/{formid}', FormDetailsView,
+    routes.append(add_route('form_details', '/user/{userid}/project/{projcode}/form/{formid}', FormDetails,
                             'dashboard/projects/forms/form_details.jinja2'))
+
+    routes.append(add_route('form_edit', '/user/{userid}/project/{projcode}/form/{formid}/edit', EditForm,
+                            'dashboard/projects/forms/form_edit.jinja2'))
+
+    routes.append(add_route('delete_form', '/user/{userid}/project/{projcode}/form/{formid}/delete', DeleteForm,
+                            None))
+
+    routes.append(
+        add_route('form_upload', '/user/{userid}/project/{projcode}/form/{formid}/upload', AddFileToForm, None))
 
     # API
     routes.append(add_route('api_select2_users', '/api/select2_user', APIUserSearchSelect2, 'json'))

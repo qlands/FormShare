@@ -1,11 +1,14 @@
-from formshare.models import map_from_schema, Odkform, User, Formacces, Collingroup, Formgrpacces, map_to_schema
+from formshare.models import map_from_schema, Odkform, User, Formacces, Collingroup, Formgrpacces, map_to_schema, \
+    MediaFile
 import logging
 from sqlalchemy.exc import IntegrityError
-import sys
+import uuid
+import datetime
 
 
 __all__ = ['get_form_details', 'assistant_has_form', 'get_assistant_forms', 'get_form_directory', 'add_new_form',
-           'form_exists', 'get_form_xml_file', 'get_form_xls_file', 'update_form', 'get_form_data', 'get_form_schema']
+           'form_exists', 'get_form_xml_file', 'get_form_xls_file', 'update_form', 'get_form_data', 'get_form_schema',
+           'delete_form', 'add_file_to_form']
 
 log = logging.getLogger(__name__)
 
@@ -121,12 +124,14 @@ def add_new_form(request, form_data):
     try:
         request.dbsession.add(new_form)
         request.dbsession.flush()
+        return True, ""
     except IntegrityError as e:
         request.dbsession.rollback()
         return False, str(e)
-    except RuntimeError:
+    except Exception as e:
         request.dbsession.rollback()
-        return False, sys.exc_info()[0]
+        log.error("Error {} while adding a new form".format(str(e)))
+        return False, str(e)
 
 
 def form_exists(request, project, form):
@@ -147,6 +152,40 @@ def update_form(request, project, form, form_data):
     except IntegrityError as e:
         request.dbsession.rollback()
         return False, str(e)
-    except RuntimeError:
+    except Exception as e:
         request.dbsession.rollback()
-        return False, sys.exc_info()[0]
+        log.error("Error {} while updating form {} in project {}".format(str(e), project, form))
+        return False, str(e)
+
+
+def delete_form(request, project, form):
+    try:
+        request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(Odkform.form_id == form).delete()
+        request.dbsession.flush()
+        return True, ""
+    except IntegrityError as e:
+        request.dbsession.rollback()
+        return False, str(e)
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error("Error {} while updating form {} in project {}".format(str(e), project, form))
+        return False, str(e)
+
+
+def add_file_to_form(request, project, form, file_name, file_url=None):
+    res = request.dbsession.query(MediaFile).filter(MediaFile.project_id == project).filter(
+        MediaFile.form_id == form).filter(MediaFile.file_name == file_name).first()
+    if res is None:
+        new_file_id = str(uuid.uuid4())
+        new_file = MediaFile(file_id=new_file_id, project_id=project, form_id=form, file_name=file_name,
+                             file_udate=datetime.datetime.now(), file_url=file_url)
+        try:
+            request.dbsession.add(new_file)
+            request.dbsession.flush()
+
+        except Exception as e:
+            log.error("Error {} while adding file {} in form {} of project {} ".format(str(e), file_name, form, project))
+            return False, str(e)
+        return True, new_file_id
+    else:
+        return False, request.translate("The file {} already exist".format(file_name))

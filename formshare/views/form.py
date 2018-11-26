@@ -1,13 +1,15 @@
 from .classes import PrivateView
-from formshare.processes.db import get_project_id_from_name, get_form_details, get_form_data, update_form, delete_form, \
-    add_file_to_form
-from formshare.processes.odk import upload_odk_form, get_odk_path, update_form_title
-from formshare.processes.storage import store_file
+from formshare.processes.db import get_project_id_from_name, get_form_details, get_form_data, update_form, delete_form,\
+    add_file_to_form, get_form_files, remove_file_from_form
+from formshare.processes.odk import upload_odk_form, get_odk_path, update_form_title, retrieve_form_file
+from formshare.processes.storage import store_file, delete_stream, get_stream, response_stream
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from formshare.processes.utilities import add_params_to_url
 import validators
 from cgi import FieldStorage
-import pprint
+from hashlib import md5
+import logging
+log = logging.getLogger(__name__)
 
 
 class FormDetails(PrivateView):
@@ -28,9 +30,15 @@ class FormDetails(PrivateView):
         else:
             raise HTTPNotFound
 
-        form_data = get_form_details(self.request, project_id, form_id)
+        error = self.request.params.get('error')
+        if error is not None:
+            self.errors.append(error)
 
-        return {'projectDetails': project_details, 'formid': form_id, 'formDetails': form_data, 'userid': user_id}
+        form_data = get_form_details(self.request, project_id, form_id)
+        form_files = get_form_files(self.request, project_id, form_id)
+
+        return {'projectDetails': project_details, 'formid': form_id, 'formDetails': form_data, 'userid': user_id,
+                'formFiles': form_files}
 
 
 class AddNewForm(PrivateView):
@@ -249,11 +257,20 @@ class AddFileToForm(PrivateView):
             else:
                 error = False
                 message = ""
+                if "overwrite" in form_data.keys():
+                    overwrite = True
+                else:
+                    overwrite = False
                 for file in files:
                     file_name = file.filename
-                    added, message = add_file_to_form(self.request, project_id, form_id, file_name)
+                    md5sum = md5(file.file.read()).hexdigest()
+                    added, message = add_file_to_form(self.request, project_id, form_id, file_name, None, overwrite,
+                                                      md5sum)
                     if added:
-                        store_file(self.request, project_id, file_name, file.file)
+                        file.file.seek(0)
+                        bucket_id = project_id + form_id
+                        bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
+                        store_file(self.request, bucket_id, file_name, file.file)
                     else:
                         error = True
                         break
@@ -268,5 +285,76 @@ class AddFileToForm(PrivateView):
                                                        formid=form_id, _query={'error': message})
                     return HTTPFound(location=next_page)
 
+        else:
+            raise HTTPNotFound
+
+
+class RemoveFileFromForm(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.checkCrossPost = False
+        self.privateOnly = True
+
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+        form_id = self.request.matchdict['formid']
+        file_name = self.request.matchdict['filename']
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] == 4:
+            raise HTTPNotFound  # Don't edit a public or a project that I am just a member
+
+        if self.request.method == 'POST':
+            self.returnRawViewResult = True
+
+            next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code, formid=form_id)
+            removed, message = remove_file_from_form(self.request, project_id, form_id, file_name)
+            if removed:
+                bucket_id = project_id + form_id
+                bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
+                delete_stream(self.request, bucket_id, file_name)
+                self.request.session.flash(self._('The files was removed successfully'))
+            else:
+                next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
+                                                   formid=form_id, _query={'error': message})
+                return HTTPFound(location=next_page)
+            return HTTPFound(location=next_page)
+        else:
+            raise HTTPNotFound
+
+
+class FormStoredFile(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+        form_id = self.request.matchdict['formid']
+        file_name = self.request.matchdict['filename']
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+            if project_found:
+                self.returnRawViewResult = True
+                return retrieve_form_file(self.request, project_id, form_id, file_name)
+            else:
+                raise HTTPNotFound
         else:
             raise HTTPNotFound

@@ -12,7 +12,8 @@ from subprocess import Popen, PIPE, check_call, CalledProcessError
 from pyramid.response import FileResponse
 from formshare.processes.db import assistant_has_form, get_assistant_forms, get_project_id_from_name, add_new_form, \
     form_exists, get_form_directory, get_form_xml_file, get_form_xls_file, update_form, get_form_data, \
-    get_form_schema, get_submission_data, add_submission, add_json_log, update_json_status, add_json_history
+    get_form_schema, get_submission_data, add_submission, add_json_log, update_json_status, add_json_history, \
+    form_file_exists, get_url_from_file, set_file_with_error, update_file_info
 import uuid
 import datetime
 import re
@@ -24,6 +25,10 @@ from zope.sqlalchemy import mark_changed
 from pyxform import xls2xform
 from openpyxl import load_workbook
 from pyxform.errors import PyXFormError
+from formshare.processes.storage import get_stream, response_stream, store_file
+from pyramid.response import Response
+from urllib.request import urlretrieve
+from pyramid.httpexceptions import HTTPFound
 
 import logging
 log = logging.getLogger(__name__)
@@ -33,7 +38,65 @@ __all__ = ['generate_form_list', 'generate_manifest', 'get_odk_path', 'get_form_
            'build_database', 'create_repository', 'move_media_files', 'convert_xml_to_json', 'store_submission',
            'get_html_from_diff', 'generate_diff', 'store_new_version', 'restore_from_revision', 'push_revision',
            'get_tables_from_form', 'get_fields_from_table', 'get_table_desc', 'is_field_key', 'get_request_data',
-           'update_data', 'upload_odk_form', 'update_form_title']
+           'update_data', 'upload_odk_form', 'update_form_title', 'retrieve_form_file']
+
+
+def retrieve_form_file(request, project, form, file_name):
+    if form_file_exists(request, project, form, file_name):
+        file_url, last_download = get_url_from_file(request, project, form, file_name)
+        if file_url is None:
+            bucket_id = project + form
+            bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
+            stream = get_stream(request, bucket_id, file_name)
+            if stream is not None:
+                response = Response()
+                return response_stream(stream, file_name, response)
+            else:
+                raise HTTPNotFound
+        else:
+            download = False
+            if last_download is not None:
+                lapsed = datetime.datetime.now() - last_download
+                minutes_lapsed = divmod(lapsed.days * 86400 + lapsed.seconds, 60)
+                minutes_lapsed = minutes_lapsed[0]
+                if minutes_lapsed > 5:
+                    download = True
+            else:
+                download = True
+            if download:
+                repository_path = request.registry.settings['repository.path']
+                downloads_path = os.path.join(repository_path, *["downloads"])
+                if not os.path.exists(downloads_path):
+                    os.makedirs(downloads_path)
+                target_file = os.path.join(downloads_path, *[str(uuid.uuid4()) + ".tmp"])
+                try:
+                    log.info("Retrieving file {}".format(file_url))
+                    urlretrieve(file_url, target_file)
+                except Exception as e:
+                    set_file_with_error(request, project, form, file_name)
+                    log.error(
+                        "Error {} while downloading {} from form {}".format(str(e), file_name, form))
+                    return HTTPFound(file_url)
+                bucket_id = project + form
+                bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
+                file = open(target_file, 'rb')
+                store_file(request, bucket_id, file_name, file)
+                file.close()
+                file = open(target_file, 'rb')
+                md5sum = md5(file.read()).hexdigest()
+                file.close()
+                update_file_info(request, project, form, file_name, md5sum)
+
+            bucket_id = project + form
+            bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
+            stream = get_stream(request, bucket_id, file_name)
+            if stream is not None:
+                response = Response()
+                return response_stream(stream, file_name, response)
+            else:
+                raise HTTPNotFound
+    else:
+        raise HTTPNotFound
 
 
 def update_form_title(request, project, form, title):

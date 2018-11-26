@@ -4,11 +4,13 @@ import logging
 from sqlalchemy.exc import IntegrityError
 import uuid
 import datetime
+import mimetypes
 
 
 __all__ = ['get_form_details', 'assistant_has_form', 'get_assistant_forms', 'get_form_directory', 'add_new_form',
            'form_exists', 'get_form_xml_file', 'get_form_xls_file', 'update_form', 'get_form_data', 'get_form_schema',
-           'delete_form', 'add_file_to_form']
+           'delete_form', 'add_file_to_form', 'get_form_files', 'remove_file_from_form', 'get_url_from_file',
+           'form_file_exists', 'update_file_info', 'set_file_with_error']
 
 log = logging.getLogger(__name__)
 
@@ -118,6 +120,12 @@ def get_form_schema(request, project, form):
         return None
 
 
+def get_form_files(request, project, form):
+    files = request.dbsession.query(MediaFile).filter(MediaFile.project_id == project).filter(
+        MediaFile.form_id == form).all()
+    return map_from_schema(files)
+
+
 def add_new_form(request, form_data):
     mapped_data = map_to_schema(Odkform, form_data)
     new_form = Odkform(**mapped_data)
@@ -172,13 +180,17 @@ def delete_form(request, project, form):
         return False, str(e)
 
 
-def add_file_to_form(request, project, form, file_name, file_url=None):
+def add_file_to_form(request, project, form, file_name, file_url=None, overwrite=False, md5sum=None):
     res = request.dbsession.query(MediaFile).filter(MediaFile.project_id == project).filter(
         MediaFile.form_id == form).filter(MediaFile.file_name == file_name).first()
     if res is None:
         new_file_id = str(uuid.uuid4())
+        content_type, content_enc = mimetypes.guess_type(file_name)
+        if content_type is None:
+            content_type = 'application/binary'
         new_file = MediaFile(file_id=new_file_id, project_id=project, form_id=form, file_name=file_name,
-                             file_udate=datetime.datetime.now(), file_url=file_url)
+                             file_udate=datetime.datetime.now(), file_url=file_url, file_md5=md5sum,
+                             file_mimetype=content_type)
         try:
             request.dbsession.add(new_file)
             request.dbsession.flush()
@@ -188,4 +200,74 @@ def add_file_to_form(request, project, form, file_name, file_url=None):
             return False, str(e)
         return True, new_file_id
     else:
-        return False, request.translate("The file {} already exist".format(file_name))
+        if not overwrite:
+            return False, request.translate("The file {} already exist".format(file_name))
+        else:
+            try:
+                request.dbsession.query(MediaFile).filter(MediaFile.project_id == project).filter(
+                    MediaFile.form_id == form).filter(MediaFile.file_name == file_name).update({'file_md5': md5sum})
+                request.dbsession.flush()
+            except Exception as e:
+                log.error(
+                    "Error {} while adding file {} in form {} of project {} ".format(str(e), file_name, form, project))
+                return False, str(e)
+            return True, ""
+
+
+def remove_file_from_form(request, project, form, file_name):
+    try:
+        request.dbsession.query(MediaFile).filter(MediaFile.project_id == project).filter(
+            MediaFile.form_id == form).filter(MediaFile.file_name == file_name).delete()
+        request.dbsession.flush()
+    except Exception as e:
+        log.error(
+            "Error {} while deleting file {} in form {} of project {} ".format(str(e), file_name, form, project))
+        return False, str(e)
+    return True, ""
+
+
+def form_file_exists(request, project, form, file_name):
+    res = request.dbsession.query(MediaFile).filter(MediaFile.project_id == project).filter(
+        MediaFile.form_id == form).filter(MediaFile.file_name == file_name).first()
+    if res is not None:
+        return True
+    else:
+        return False
+
+
+def get_url_from_file(request, project, form, file_name):
+    res = request.dbsession.query(MediaFile).filter(MediaFile.project_id == project).filter(
+        MediaFile.form_id == form).filter(MediaFile.file_name == file_name).first()
+    if res is not None:
+        return res.file_url, res.file_lstdwnld
+    else:
+        return None, None
+
+
+def update_file_info(request, project, form, file_name, md5sum, download_datetime=datetime.datetime.now()):
+    try:
+        request.dbsession.query(MediaFile).filter(MediaFile.project_id == project).filter(
+            MediaFile.form_id == form).filter(MediaFile.file_name == file_name).update(
+            {'file_lstdwnld': download_datetime, 'file_dwnlderror': 0, 'file_md5': md5sum})
+        request.dbsession.flush()
+    except Exception as e:
+        log.error("Error {} while updating datetime in file {} in form {} of project {} ".format(str(e),
+                                                                                                 file_name, form,
+                                                                                                 project))
+        return False, str(e)
+    return True, ""
+
+
+def set_file_with_error(request, project, form, file_name):
+    try:
+        request.dbsession.query(MediaFile).filter(MediaFile.project_id == project).filter(
+            MediaFile.form_id == form).filter(MediaFile.file_name == file_name).update(
+            {'file_dwnlderror': 1})
+        request.dbsession.flush()
+    except Exception as e:
+        log.error(
+            "Error {} while updating error in file {} in form {} of project {} ".format(str(e), file_name, form,
+                                                                                        project))
+        return False, str(e)
+    return True, ""
+

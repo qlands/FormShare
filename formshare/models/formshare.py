@@ -166,6 +166,10 @@ class MediaFile(Base):
     file_name = Column(Unicode(120))
     file_url = Column(UnicodeText)
     file_udate = Column(DateTime)
+    file_md5 = Column(Unicode(64))
+    file_lstdwnld = Column(DateTime)
+    file_mimetype = Column(Unicode(64))
+    file_dwnlderror = Column(INTEGER, server_default=text("'0'"))
 
     project = relationship('Odkform')
 

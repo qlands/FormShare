@@ -142,6 +142,27 @@ def is_valid_url(url):
     """
     return validators.url(url)
 
+@core_helper
+def get_icon_from_mime_type(mime_type):
+    """
+    Returns the proper font-awesome file icon based on mimetype
+    :param mime_type: Mime type
+    :return: FontAwesome icon as string
+    """
+    icon = "far fa-file"
+    if mime_type.find("image") > 0:
+        icon = "far fa-file-image"
+    if mime_type.find("video") > 0:
+        icon = "far fa-file-video"
+    if mime_type.find("audio") > 0:
+        icon = "far fa-file-audio"
+    if mime_type == "text/csv":
+        icon = "fas fa-file-csv"
+    if mime_type == "application/zip":
+        icon = "far fa-file-archive"
+
+    return icon
+
 
 def load_plugin_helpers():
     """

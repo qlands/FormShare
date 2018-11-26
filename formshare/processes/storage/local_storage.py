@@ -82,6 +82,8 @@ def stream_exists(request, bucket_id, file_name):
 
 def response_stream(stream, file_name, response):
     content_type, content_enc = mimetypes.guess_type(file_name)
+    if content_type is None:
+        content_type = 'application/binary'
     response.headers['Content-Type'] = content_type
     response.content_disposition = 'attachment; filename="' + file_name + '"'
     stream.seek(0, 2)

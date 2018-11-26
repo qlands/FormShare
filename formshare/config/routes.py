@@ -12,7 +12,8 @@ from ..views.assistants import AssistantsListView, AddAssistantsView, EditAssist
 from ..views.api import APIUserSearchSelect2
 from ..views.assistant_groups import GroupListView, AddGroupView, EditGroupView, DeleteGroup, GroupMembersView, \
     RemoveMember
-from ..views.form import FormDetails, AddNewForm, EditForm, DeleteForm, AddFileToForm
+from ..views.form import FormDetails, AddNewForm, EditForm, DeleteForm, AddFileToForm, RemoveFileFromForm, \
+    FormStoredFile
 from ..views.odk import ODKFormList, ODKManifest, ODKMediaFile, ODKPushData, ODKSubmission, ODKXMLForm
 
 route_list = []
@@ -142,6 +143,14 @@ def load_routes(config):
 
     routes.append(
         add_route('form_upload', '/user/{userid}/project/{projcode}/form/{formid}/upload', AddFileToForm, None))
+
+    routes.append(
+        add_route('form_remove_file', '/user/{userid}/project/{projcode}/form/{formid}/uploads/{filename}/remove',
+                  RemoveFileFromForm, None))
+
+    routes.append(
+        add_route('form_stored_file', '/user/{userid}/project/{projcode}/form/{formid}/uploads/{filename}/retrieve',
+                  FormStoredFile, None))
 
     # API
     routes.append(add_route('api_select2_users', '/api/select2_user', APIUserSearchSelect2, 'json'))

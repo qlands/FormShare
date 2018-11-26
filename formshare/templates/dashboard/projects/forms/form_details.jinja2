@@ -3,11 +3,23 @@
 
 {% block titlesection %}{{ formDetails.form_name }}{% endblock titlesection %}
 
+{% block css %}
+    {{ super() }}
+    {% cssresource request,'formshare','switchery' %}
+{% endblock css %}
+
+{% block topScripts %}
+    {{ super() }}
+    {% jsresource request,'formshare','switchery' %}
+    {% jsresource request,'formshare','taphold' %}
+{% endblock topScripts %}
+
 {% block breadcrumbs %}
     {% include 'dashboard/projects/forms/snippets/brdcrbs_frmdtls.jinja2' %}
 {% endblock breadcrumbs %}
 
 {% block mainsection %}
+    {{ form.display_errors(errors) }}
     <div class="row">
         <div class="col-lg-3">
             <div class="wrapper wrapper-content project-manager">
@@ -104,8 +116,13 @@
                             <div class="col-md-12">
                                 <small>Click/Tab and hold to remove</small>
                                 <ul class="tag-list" style="padding: 0">
-                                    <li><a href=""><i class="fa fa-file-pdf-o"></i> Proposal.pdf</a></li>
-                                    <li><a href=""><i class="fa fa-file-excel-o"></i> Report.xls</a></li>
+                                    {% for file in formFiles %}
+                                        {% if file.file_url == None %}
+                                            <li><a class="file-item" href="{{ request.route_url('form_stored_file', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, filename=file.file_name) }}" urn="{{ request.route_url('form_remove_file', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, filename=file.file_name) }}"><i class="{{ request.h.get_icon_from_mime_type(file.file_mimetype) }}"></i> {{ file.file_name }}</a></li>
+                                        {% else %}
+                                            <li><a title="{{ file.file_url }}" class="file-item {% if file.file_dwnlderror == 0 %}text-success{% else %}text-danger{% endif %}" href="{{ request.route_url('form_stored_file', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, filename=file.file_name) }}" urn="{{ request.route_url('form_remove_file', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, filename=file.file_name) }}"><i class="fas fa-link"></i> {{ file.file_name }} ({{ _('Linkded') }}) {% if file.file_dwnlderror == 1 %}({{ _('With error') }}){% endif %}</a></li>
+                                        {% endif %}
+                                    {% endfor %}
                                 </ul>
                             </div>
                         </div>
@@ -449,7 +466,18 @@
 {% block scripts %}
     {{ super() }}
     <script>
+
+        function setSwitchery(switchElement, checkedBool) {
+            if((checkedBool && !switchElement.isChecked()) || (!checkedBool && switchElement.isChecked())) {
+                switchElement.setPosition(true);
+                switchElement.handleOnchange(true);
+            }
+        };
+
         $(document).ready(function() {
+            var elem = document.querySelector('.js-switch');
+            var overwrite_switch = new Switchery(elem, { color: '#1AB394' });
+
             $('.remove_form').click(function () {
                 var action_url = $( this ).attr('urn');
                 swal({
@@ -504,6 +532,7 @@
                 $("#clear_section").show();
                 $("#uploadbutton").hide();
                 $("#linkbutton").hide();
+                $("#overwrite_section").show();
             });
             $( "#clear_button" ).click(function() {
                 $("#filetoupload").val("");
@@ -515,6 +544,10 @@
                 $("#linkbutton").show();
                 $("#file_label").text('{{ _('Type') }}');
                 $("#file_info").hide();
+                $("#overwrite_section").hide();
+
+                setSwitchery(overwrite_switch, false);
+
                 $("#file_name").val("");
             });
             $( "#linkbutton" ).click(function() {
@@ -526,7 +559,39 @@
                 $("#linkbutton").hide();
                 $("#file_label").text('{{ _('Link') }}');
                 $("#file_info").show();
+                $("#overwrite_section").hide();
             });
+
+            $(".file-item").on("taphold", function()
+                {
+                    var action_url = $( this ).attr('urn');
+                    swal({
+                            title: "{{ _('Are you sure?') }}",
+                            type: "warning",
+                            showCancelButton: true,
+                            confirmButtonColor: "#DD6B55",
+                            confirmButtonText: "{{ _('Yes, remove it!') }}",
+                            cancelButtonText: "{{ _('Oops!, cancel!') }}",
+                            closeOnConfirm: true,
+                            closeOnCancel: true },
+                        function (isConfirm) {
+                            if (isConfirm) {
+                                var form = document.createElement('form');
+                                form.setAttribute('method', 'post');
+                                form.setAttribute('action', action_url);
+                                form.style.display = 'hidden';
+
+                                var i = document.createElement("input"); //input element, text
+                                i.setAttribute('type',"text");
+                                i.setAttribute('name',"csrf_token");
+                                i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                                form.appendChild(i);
+
+                                document.body.appendChild(form);
+                                form.submit();
+                            }
+                        });
+                });
 
         });
     </script>

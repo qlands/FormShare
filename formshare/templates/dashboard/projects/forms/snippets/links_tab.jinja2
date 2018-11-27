@@ -1,0 +1,32 @@
+<div class="ibox">
+    <div class="ibox-title">
+        <h5>Form links</h5>
+        <div class="ibox-tools">
+            <a class="collapse-link">
+                <i class="fa fa-chevron-up" style="margin-right: 10px"></i>
+            </a>
+            <a class="fullscreen-link">
+                <i class="fa fa-expand"></i>
+            </a>
+        </div>
+    </div>
+    <div class="ibox-content">
+        <div class="row">
+            <div class="col-md-12">
+                <small>Click/Tab and hold to copy</small>
+                <ul class="tag-list" style="padding: 0">
+                    {% if formDetails.form_schema != None %}
+                        <li><a href=""><i class="fa fa-rss"></i> OData endpoint</a></li>
+                        <li><a href=""><i class="fa fa-download"></i> Download data in XLS form</a></li>
+                        <li><a href=""><i class="fa fa-images"></i> Download images</a></li>
+                        <li><a href=""><i class="fa fa-pencil"></i> Clean data</a></li>
+                        <li><a href=""><i class="fa fa-bug"></i> Clean error logs</a></li>
+                    {% else %}
+                        <li><a href=""><i class="fa fa-download"></i> Download testing data in CSV form</a></li>
+                        <li><a href=""><i class="fa fa-images"></i> Download images</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

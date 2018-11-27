@@ -16,7 +16,7 @@ log = logging.getLogger(__name__)
 def get_all_assistants(request, project, user):
     res = request.dbsession.query(Project, Collaborator).filter(Project.project_id == Collaborator.project_id).filter(
         Project.project_id == Userproject.project_id).filter(Userproject.user_id == user).filter(
-        Collaborator.coll_prjshare == 1).filter(Project.project_id == project).all()
+        Project.project_id == project).all()
     project_assistants = map_from_schema(res)
 
     res = request.dbsession.query(Project, Collaborator).filter(Project.project_id == Collaborator.project_id).filter(

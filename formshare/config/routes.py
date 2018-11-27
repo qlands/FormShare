@@ -13,7 +13,7 @@ from ..views.api import APIUserSearchSelect2
 from ..views.assistant_groups import GroupListView, AddGroupView, EditGroupView, DeleteGroup, GroupMembersView, \
     RemoveMember
 from ..views.form import FormDetails, AddNewForm, EditForm, DeleteForm, AddFileToForm, RemoveFileFromForm, \
-    FormStoredFile
+    FormStoredFile, AddAssistant, EditAssistant, RemoveAssistant, AddGroupToForm, EditFormGroup, RemoveGroupForm
 from ..views.odk import ODKFormList, ODKManifest, ODKMediaFile, ODKPushData, ODKSubmission, ODKXMLForm
 
 route_list = []
@@ -140,7 +140,7 @@ def load_routes(config):
 
     routes.append(add_route('delete_form', '/user/{userid}/project/{projcode}/form/{formid}/delete', DeleteForm,
                             None))
-
+    # Form files
     routes.append(
         add_route('form_upload', '/user/{userid}/project/{projcode}/form/{formid}/upload', AddFileToForm, None))
 
@@ -151,6 +151,36 @@ def load_routes(config):
     routes.append(
         add_route('form_stored_file', '/user/{userid}/project/{projcode}/form/{formid}/uploads/{filename}/retrieve',
                   FormStoredFile, None))
+
+    # Form assistants
+    routes.append(
+        add_route('form_add_assistant', '/user/{userid}/project/{projcode}/form/{formid}/assistants/add',
+                  AddAssistant, None))
+
+    routes.append(add_route('form_edit_assistant',
+                            '/user/{userid}/project/{projcode}/form/{formid}/assistant/{projectid}/{assistantid}/edit',
+                            EditAssistant, None))
+
+    routes.append(
+        add_route(
+            'form_remove_assistant',
+            '/user/{userid}/project/{projcode}/form/{formid}/assistant/{projectid}/{assistantid}/remove',
+            RemoveAssistant, None))
+
+    # Form groups
+    routes.append(
+        add_route('form_add_group', '/user/{userid}/project/{projcode}/form/{formid}/groups/add',
+                  AddGroupToForm, None))
+
+    routes.append(add_route('form_edit_group',
+                            '/user/{userid}/project/{projcode}/form/{formid}/group/{groupid}/edit',
+                            EditFormGroup, None))
+
+    routes.append(
+        add_route(
+            'form_remove_group',
+            '/user/{userid}/project/{projcode}/form/{formid}/group/{groupid}/remove',
+            RemoveGroupForm, None))
 
     # API
     routes.append(add_route('api_select2_users', '/api/select2_user', APIUserSearchSelect2, 'json'))

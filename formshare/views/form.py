@@ -1,8 +1,10 @@
 from .classes import PrivateView
 from formshare.processes.db import get_project_id_from_name, get_form_details, get_form_data, update_form, delete_form,\
-    add_file_to_form, get_form_files, remove_file_from_form
+    add_file_to_form, get_form_files, remove_file_from_form, get_all_assistants, add_assistant_to_form, \
+    get_form_assistants, update_assistant_privileges, remove_assistant_from_form, get_project_groups, add_group_to_form, \
+    get_form_groups, update_group_privileges, remove_group_from_form
 from formshare.processes.odk import upload_odk_form, get_odk_path, update_form_title, retrieve_form_file
-from formshare.processes.storage import store_file, delete_stream, get_stream, response_stream
+from formshare.processes.storage import store_file, delete_stream
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from formshare.processes.utilities import add_params_to_url
 import validators
@@ -36,9 +38,16 @@ class FormDetails(PrivateView):
 
         form_data = get_form_details(self.request, project_id, form_id)
         form_files = get_form_files(self.request, project_id, form_id)
-
+        assistants = get_all_assistants(self.request, project_id, self.user.login)
+        form_assistants = get_form_assistants(self.request, project_id, form_id)
+        groups = get_project_groups(self.request, project_id)
+        form_groups = get_form_groups(self.request, project_id, form_id)
+        print("***********************44")
+        print(form_groups)
+        print("***********************44")
         return {'projectDetails': project_details, 'formid': form_id, 'formDetails': form_data, 'userid': user_id,
-                'formFiles': form_files}
+                'formFiles': form_files, 'assistants': assistants, 'formassistants': form_assistants, 'groups': groups,
+                'formgroups': form_groups}
 
 
 class AddNewForm(PrivateView):
@@ -356,5 +365,301 @@ class FormStoredFile(PrivateView):
                 return retrieve_form_file(self.request, project_id, form_id, file_name)
             else:
                 raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+
+class AddAssistant(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+        self.returnRawViewResult = True
+
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+        form_id = self.request.matchdict['formid']
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] == 4:
+            raise HTTPNotFound
+
+        if self.request.method == 'POST':
+            assistant_data = self.get_post_dict()
+            if assistant_data['coll_id'] != "":
+                parts = assistant_data['coll_id'].split("|")
+                privilege = assistant_data["privilege"]
+                if len(parts) == 2:
+                    added, message = add_assistant_to_form(self.request, project_id, form_id, parts[0], parts[1],
+                                                           privilege)
+                    if added:
+                        self.request.session.flash(self._("The assistant was added successfully"))
+                        next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
+                                                           formid=form_id)
+                        return HTTPFound(location=next_page)
+                    else:
+                        next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
+                                                           formid=form_id,
+                                                           _query={'error': message})
+                        return HTTPFound(location=next_page)
+
+                else:
+                    next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
+                                                       formid=form_id,
+                                                       _query={'error': "Error in submitted assistant"})
+                    return HTTPFound(location=next_page)
+            else:
+                next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
+                                                   formid=form_id, _query={'error': "The assistant cannot be empty"})
+                return HTTPFound(location=next_page)
+
+        else:
+            raise HTTPNotFound
+
+
+class EditAssistant(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+        self.returnRawViewResult = True
+
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+        form_id = self.request.matchdict['formid']
+        assistant_project_id = self.request.matchdict['projectid']
+        assistant_id = self.request.matchdict['assistantid']
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] == 4:
+            raise HTTPNotFound
+
+        if self.request.method == 'POST':
+            assistant_data = self.get_post_dict()
+            privilege = assistant_data["privilege"]
+            updated, message = update_assistant_privileges(self.request, project_id, form_id, assistant_project_id,
+                                                           assistant_id, privilege)
+            if updated:
+                self.request.session.flash(self._("The role was changed successfully"))
+                next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
+                                                   formid=form_id)
+                return HTTPFound(location=next_page)
+            else:
+                next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
+                                                   formid=form_id,
+                                                   _query={'error': message})
+                return HTTPFound(location=next_page)
+        else:
+            raise HTTPNotFound
+
+
+class RemoveAssistant(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+        self.returnRawViewResult = True
+
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+        form_id = self.request.matchdict['formid']
+        assistant_project_id = self.request.matchdict['projectid']
+        assistant_id = self.request.matchdict['assistantid']
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] == 4:
+            raise HTTPNotFound
+
+        if self.request.method == 'POST':
+            removed, message = remove_assistant_from_form(self.request, project_id, form_id, assistant_project_id,
+                                                          assistant_id)
+            if removed:
+                self.request.session.flash(self._("The assistant was removed successfully"))
+                next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
+                                                   formid=form_id)
+                return HTTPFound(location=next_page)
+            else:
+                next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
+                                                   formid=form_id,
+                                                   _query={'error': message})
+                return HTTPFound(location=next_page)
+        else:
+            raise HTTPNotFound
+
+
+class AddGroupToForm(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+        self.returnRawViewResult = True
+
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+        form_id = self.request.matchdict['formid']
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] == 4:
+            raise HTTPNotFound
+
+        if self.request.method == 'POST':
+            assistant_data = self.get_post_dict()
+            if assistant_data['group_id'] != "":
+                privilege = assistant_data["group_privilege"]
+                added, message = add_group_to_form(self.request, project_id, form_id, assistant_data['group_id'],
+                                                   privilege)
+                if added:
+                    self.request.session.flash(self._("The group was added successfully"))
+                    next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
+                                                       formid=form_id)
+                    return HTTPFound(location=next_page)
+                else:
+                    next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
+                                                       formid=form_id,
+                                                       _query={'error': message})
+                    return HTTPFound(location=next_page)
+            else:
+                next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
+                                                   formid=form_id, _query={'error': "The group cannot be empty"})
+                return HTTPFound(location=next_page)
+
+        else:
+            raise HTTPNotFound
+
+
+class EditFormGroup(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+        self.returnRawViewResult = True
+
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+        form_id = self.request.matchdict['formid']
+        group_id = self.request.matchdict['groupid']
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] == 4:
+            raise HTTPNotFound
+
+        if self.request.method == 'POST':
+            assistant_data = self.get_post_dict()
+            privilege = assistant_data["privilege"]
+            updated, message = update_group_privileges(self.request, project_id, form_id, group_id, privilege)
+            if updated:
+                self.request.session.flash(self._("The role was changed successfully"))
+                next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
+                                                   formid=form_id)
+                return HTTPFound(location=next_page)
+            else:
+                next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
+                                                   formid=form_id,
+                                                   _query={'error': message})
+                return HTTPFound(location=next_page)
+        else:
+            raise HTTPNotFound
+
+
+class RemoveGroupForm(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+        self.returnRawViewResult = True
+
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+        form_id = self.request.matchdict['formid']
+        group_id = self.request.matchdict['groupid']
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] == 4:
+            raise HTTPNotFound
+
+        if self.request.method == 'POST':
+            removed, message = remove_group_from_form(self.request, project_id, form_id, group_id)
+            if removed:
+                self.request.session.flash(self._("The group was removed successfully"))
+                next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
+                                                   formid=form_id)
+                return HTTPFound(location=next_page)
+            else:
+                next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
+                                                   formid=form_id,
+                                                   _query={'error': message})
+                return HTTPFound(location=next_page)
         else:
             raise HTTPNotFound

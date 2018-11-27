@@ -1,0 +1,42 @@
+<div class="ibox">
+    <div class="ibox-title">
+        <h5>{{ _('Assigned assistant groups') }}</h5>
+        <div class="ibox-tools">
+            <a style="margin-right: 10px" data-toggle="modal" data-target="#add_group">
+                <i class="fa fa-plus-square text-success" title="{{ _('Assign new') }}"></i>
+            </a>
+            <a class="collapse-link">
+                <i class="fa fa-chevron-up" style="margin-right: 10px"></i>
+            </a>
+            <a class="fullscreen-link">
+                <i class="fa fa-expand"></i>
+            </a>
+        </div>
+    </div>
+    <div class="ibox-content">
+        <div class="row">
+            <div class="col-md-12">
+                {% if formgroups|length > 0 %}
+                    <small>{{ _('Click/Tab and hold to remove') }}</small>
+                {% else %}
+                    <small>{{ _("You don't have groups. Add one by clicking the + button") }}</small>
+                {% endif %}
+                <ul class="tag-list" style="padding: 0">
+                    {% for group in formgroups %}
+                        {% set group_role = _('Undefined') %}
+                        {% if group.group_privileges == 1 %}
+                            {% set group_role = _('Submmit') %}
+                        {% endif %}
+                        {% if group.group_privileges == 2 %}
+                            {% set group_role = _('Clean') %}
+                        {% endif %}
+                        {% if group.group_privileges == 3 %}
+                            {% set group_role = _('Submmit & clean') %}
+                        {% endif %}
+                        <li><a title="{{ group_role }}" id="btn_edit_assistant" urn="{{ request.route_url('form_edit_group',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id,groupid=group.group_id) }}" data-toggle="modal" data-target="#edit_group" data-group-remove-url="{{ request.route_url('form_remove_group',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id,groupid=group.group_id) }}" data-group-role="{{ group.group_privileges }}" data-group-name="{{ group.group_desc }}" class="group-item"> {{ group.group_desc }}</a></li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

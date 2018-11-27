@@ -1,0 +1,41 @@
+<div class="ibox">
+    <div class="ibox-title">
+        <h5>{{ formDetails.form_name }}</h5>
+        <div class="ibox-tools">
+            {% if projectDetails.access_type != 4 %}
+                <a href="{{ request.route_url('form_edit',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" style="margin-right: 10px">
+                    <i class="fa fa-pencil text-warning" title="{{ _('Edit') }}"></i>
+                </a>
+            {% endif %}
+            <a class="collapse-link" style="margin-right: 10px">
+                <i class="fa fa-chevron-up"></i>
+            </a>
+            <a class="fullscreen-link">
+                <i class="fa fa-expand"></i>
+            </a>
+        </div>
+    </div>
+    <div class="ibox-content">
+        {% if formDetails.form_target > 0 %}
+            70 of {{ formDetails.form_target }} submissions
+            <div class="progress">
+                <div class="progress-bar progress-bar-striped progress-bar-animated {% if formDetails.form_schema == None %}progress-bar-warning{% else %}progress-bar-success{% endif %}" style="width: 25%" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>
+        {% endif %}
+        <p style="margin-top: 10px" class="small font-bold">
+            {% if formDetails.form_schema != None %}<span class="badge badge-primary">With repository</span>{% else %}<span class="badge badge-warning" title="{{ _('Data is not stored in a database') }}">{{ _('In testing') }}</span>{% endif %} {% if formDetails.form_accsub == 1 %}<span class="label label-primary" title="{{ _('Accept submissions') }}">{{ _('Active') }}</span>{% else %}<span class="label label-danger" title="{{ _('Does\'t accept submissions') }}">{{ _('Inactive') }}</span>{% endif %}
+        </p>
+        {% if projectDetails.access_type != 4 %}
+            <div class="actions">
+                {% if formDetails.form_schema == None %}
+                    <a href="" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-database"></i> {{ _('Create repository') }} </a>
+                {% else %}
+                    <a href="" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-code-branch"></i> {{ _('Upload new version') }} </a>
+                {% endif %}
+                {% if projectDetails.access_type == 1 or formDetails.pubby.user_id == activeUser.id %}
+                    <a urn="{{ request.route_url('delete_form', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" class="btn btn-xs btn-white remove_form"><i style="color: red" class="far fa-trash-alt"></i> {{ _('Delete') }}</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    </div>
+</div>

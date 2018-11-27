@@ -1,0 +1,35 @@
+<div class="modal inmodal" id="add_group" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content animated fadeIn">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title">{{ _('Adding group') }}</h4>
+            </div>
+            <form id="group_form" role="form" method="post" action="{{ request.route_url('form_add_group',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}">
+                {{ form.secure_form(request) }}
+                <div class="form-group">
+                    <label class="col-sm-2 col-form-label">{{ _('Group') }}</label>
+                    <div class="col-sm-10">
+                        <select name="group_id" style="width: 100%; !important;" class="group-list form-control">
+                            {% for group in groups %}
+                                <option value="{{ group.group_id }}">{{ group.group_desc }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-2 col-form-label">{{ _('Privileges') }}</label>
+                    <div class="col-sm-10">
+                        <label><input type="radio" checked value="1" name="group_privilege"> {{ _('Can submmit') }}</label><br/>
+                        <label><input type="radio" value="2"  name="group_privilege"> {{ _('Can clean') }}</label><br/>
+                        <label><input type="radio" value="3"  name="group_privilege"> {{ _('Both') }}</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ _('Add group') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

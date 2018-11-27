@@ -1,0 +1,34 @@
+<div class="ibox">
+    <div class="ibox-title">
+        <h5>{{ _('Form files') }}</h5>
+        <div class="ibox-tools">
+            <a id="add_file" data-toggle="modal" data-target="#upload_file" style="margin-right: 10px">
+                <i class="fa fa-plus-square text-success" title="{{ _('Add new file') }}"></i>
+            </a>
+            <a class="collapse-link" style="margin-right: 10px">
+                <i class="fa fa-chevron-up"></i>
+            </a>
+            <a class="fullscreen-link">
+                <i class="fa fa-expand"></i>
+            </a>
+        </div>
+    </div>
+    <div class="ibox-content">
+        <div class="row">
+            <div class="col-md-12">
+                {% if formFiles|length > 0 %}
+                    <small>{{ _('Click/Tab and hold to remove') }}</small>
+                {% endif %}
+                <ul class="tag-list" style="padding: 0">
+                    {% for file in formFiles %}
+                        {% if file.file_url == None %}
+                            <li><a class="file-item" href="{{ request.route_url('form_stored_file', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, filename=file.file_name) }}" urn="{{ request.route_url('form_remove_file', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, filename=file.file_name) }}"><i class="{{ request.h.get_icon_from_mime_type(file.file_mimetype) }}"></i> {{ file.file_name }}</a></li>
+                        {% else %}
+                            <li><a title="{{ file.file_url }}" class="file-item {% if file.file_dwnlderror == 0 %} {% if file.file_lstdwnld != None %}text-success{% else %}text-warning{% endif %}{% else %}text-danger{% endif %}" href="{{ request.route_url('form_stored_file', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, filename=file.file_name) }}" urn="{{ request.route_url('form_remove_file', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, filename=file.file_name) }}"><i class="fas fa-link"></i> {{ file.file_name }} ({{ _('Linkded') }}) {% if file.file_dwnlderror == 1 %}({{ _('With error') }}){% endif %} {% if file.file_lstdwnld == None %}({{ _('Click to download') }}){% endif %}</a></li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

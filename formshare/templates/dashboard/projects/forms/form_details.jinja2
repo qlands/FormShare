@@ -6,12 +6,14 @@
 {% block css %}
     {{ super() }}
     {% cssresource request,'formshare','switchery' %}
+    {% cssresource request,'formshare','select2' %}
 {% endblock css %}
 
 {% block topScripts %}
     {{ super() }}
     {% jsresource request,'formshare','switchery' %}
     {% jsresource request,'formshare','taphold' %}
+    {% jsresource request,'formshare','select2' %}
 {% endblock topScripts %}
 
 {% block breadcrumbs %}
@@ -23,186 +25,18 @@
     <div class="row">
         <div class="col-lg-3">
             <div class="wrapper wrapper-content project-manager">
-                <div class="ibox">
-                    <div class="ibox-title">
-                        <h5>{{ formDetails.form_name }}</h5>
-                        <div class="ibox-tools">
-                            {% if projectDetails.access_type != 4 %}
-                                <a href="{{ request.route_url('form_edit',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" style="margin-right: 10px">
-                                    <i class="fa fa-pencil text-warning" title="{{ _('Edit') }}"></i>
-                                </a>
-                            {% endif %}
-                            <a class="collapse-link" style="margin-right: 10px">
-                                <i class="fa fa-chevron-up"></i>
-                            </a>
-                            <a class="fullscreen-link">
-                                <i class="fa fa-expand"></i>
-                            </a>
-                        </div>
-                    </div>
-                    <div class="ibox-content">
-                        {% if formDetails.form_target > 0 %}
-                            70 of {{ formDetails.form_target }} submissions
-                            <div class="progress">
-                                <div class="progress-bar progress-bar-striped progress-bar-animated {% if formDetails.form_schema == None %}progress-bar-warning{% else %}progress-bar-success{% endif %}" style="width: 25%" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                        {% endif %}
-                        <p style="margin-top: 10px" class="small font-bold">
-                            {% if formDetails.form_schema != None %}<span class="badge badge-primary">With repository</span>{% else %}<span class="badge badge-warning" title="{{ _('Data is not stored in a database') }}">{{ _('In testing') }}</span>{% endif %} {% if formDetails.form_accsub == 1 %}<span class="label label-primary" title="{{ _('Accept submissions') }}">{{ _('Active') }}</span>{% else %}<span class="label label-danger" title="{{ _('Does\'t accept submissions') }}">{{ _('Inactive') }}</span>{% endif %}
-                        </p>
-                        {% if projectDetails.access_type != 4 %}
-                            <div class="actions">
-                                {% if formDetails.form_schema == None %}
-                                    <a href="" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-database"></i> {{ _('Create repository') }} </a>
-                                {% else %}
-                                    <a href="" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-code-branch"></i> {{ _('Upload new version') }} </a>
-                                {% endif %}
-                                {% if projectDetails.access_type == 1 or formDetails.pubby.user_id == activeUser.id %}
-                                    <a urn="{{ request.route_url('delete_form', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" class="btn btn-xs btn-white remove_form"><i style="color: red" class="far fa-trash-alt"></i> {{ _('Delete') }}</a>
-                                {% endif %}
-                            </div>
-                        {% endif %}
-                    </div>
-                </div>
-                <div class="ibox">
-                    <div class="ibox-title">
-                        <h5>Form links</h5>
-                        <div class="ibox-tools">
-                            <a class="collapse-link">
-                                <i class="fa fa-chevron-up" style="margin-right: 10px"></i>
-                            </a>
-                            <a class="fullscreen-link">
-                                <i class="fa fa-expand"></i>
-                            </a>
-                        </div>
-                    </div>
-                    <div class="ibox-content">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <small>Click/Tab and hold to copy</small>
-                                <ul class="tag-list" style="padding: 0">
-                                    {% if formDetails.form_schema != None %}
-                                        <li><a href=""><i class="fa fa-rss"></i> OData endpoint</a></li>
-                                        <li><a href=""><i class="fa fa-download"></i> Download data in XLS form</a></li>
-                                        <li><a href=""><i class="fa fa-images"></i> Download images</a></li>
-                                        <li><a href=""><i class="fa fa-pencil"></i> Clean data</a></li>
-                                        <li><a href=""><i class="fa fa-bug"></i> Clean error logs</a></li>
-                                    {% else %}
-                                        <li><a href=""><i class="fa fa-download"></i> Download testing data in CSV form</a></li>
-                                        <li><a href=""><i class="fa fa-images"></i> Download images</a></li>
-                                    {% endif %}
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="ibox">
-                    <div class="ibox-title">
-                        <h5>Form files</h5>
-                        <div class="ibox-tools">
-                            <a id="add_file" data-toggle="modal" data-target="#upload_file" style="margin-right: 10px">
-                                <i class="fa fa-plus-square text-success" title="Add new file"></i>
-                            </a>
-                            <a class="collapse-link" style="margin-right: 10px">
-                                <i class="fa fa-chevron-up"></i>
-                            </a>
-                            <a class="fullscreen-link">
-                                <i class="fa fa-expand"></i>
-                            </a>
-                        </div>
-                    </div>
-                    <div class="ibox-content">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <small>Click/Tab and hold to remove</small>
-                                <ul class="tag-list" style="padding: 0">
-                                    {% for file in formFiles %}
-                                        {% if file.file_url == None %}
-                                            <li><a class="file-item" href="{{ request.route_url('form_stored_file', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, filename=file.file_name) }}" urn="{{ request.route_url('form_remove_file', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, filename=file.file_name) }}"><i class="{{ request.h.get_icon_from_mime_type(file.file_mimetype) }}"></i> {{ file.file_name }}</a></li>
-                                        {% else %}
-                                            <li><a title="{{ file.file_url }}" class="file-item {% if file.file_dwnlderror == 0 %}text-success{% else %}text-danger{% endif %}" href="{{ request.route_url('form_stored_file', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, filename=file.file_name) }}" urn="{{ request.route_url('form_remove_file', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, filename=file.file_name) }}"><i class="fas fa-link"></i> {{ file.file_name }} ({{ _('Linkded') }}) {% if file.file_dwnlderror == 1 %}({{ _('With error') }}){% endif %}</a></li>
-                                        {% endif %}
-                                    {% endfor %}
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="ibox">
-                    <div class="ibox-title">
-                        <h5>Assigned collaborator groups</h5>
-                        <div class="ibox-tools">
-                            <a style="margin-right: 10px">
-                                <i class="fa fa-plus-square text-success" title="Assign new"></i>
-                            </a>
-                            <a class="collapse-link">
-                                <i class="fa fa-chevron-up" style="margin-right: 10px"></i>
-                            </a>
-                            <a class="fullscreen-link">
-                                <i class="fa fa-expand"></i>
-                            </a>
-                        </div>
-                    </div>
-                    <div class="ibox-content">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <small>Click/Tab and hold to remove</small>
-                                <ul class="tag-list" style="padding: 0">
-                                    <li><a href=""> Carlos Quiros</a></li>
-                                    <li><a href=""> Eduardo Quiros</a></li>
-                                    <li><a href=""> Katie Tavenner</a></li>
-                                    <li><a href=""> Flor Campos</a></li>
-                                    <li><a href=""> Elizabeth Tavenner</a></li>
-                                    <li><a href=""> Erick Lopez</a></li>
-                                    <li><a href=""> Macho Ramirez</a></li>
-                                    <li><a href=""> Begni Calderon</a></li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="ibox">
-                    <div class="ibox-title">
-                        <h5>Assigned collaborators</h5>
-                        <div class="ibox-tools">
-                            <a style="margin-right: 10px">
-                                <i class="fa fa-plus-square text-success" title="Assign new"></i>
-                            </a>
-                            <a class="collapse-link">
-                                <i class="fa fa-chevron-up" style="margin-right: 10px"></i>
-                            </a>
-                            <a class="fullscreen-link">
-                                <i class="fa fa-expand"></i>
-                            </a>
-                        </div>
-                    </div>
-                    <div class="ibox-content">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <small>Click/Tab and hold to remove</small>
-                                <ul class="tag-list" style="padding: 0">
-                                    <li><a href=""> Carlos Quiros</a></li>
-                                    <li><a href=""> Eduardo Quiros</a></li>
-                                    <li><a href=""> Katie Tavenner</a></li>
-                                    <li><a href=""> Flor Campos</a></li>
-                                    <li><a class="text-danger" href=""> Elizabeth Tavenner</a></li>
-                                    <li><a href=""> Erick Lopez</a></li>
-                                    <li><a href=""> Macho Ramirez</a></li>
-                                    <li><a href=""> Begni Calderon</a></li>
-                                </ul>
-                            </div>
-                        </div>
-                        <small>Collaborators in <span class="text-danger">red</span> are inactive</small>
-                    </div>
-                </div>
-
+                {% include 'dashboard/projects/forms/snippets/info_tab.jinja2' %}
+                {% include 'dashboard/projects/forms/snippets/links_tab.jinja2' %}
+                {% include 'dashboard/projects/forms/snippets/files_tab.jinja2' %}
+                {% include 'dashboard/projects/forms/snippets/assistants_tab.jinja2' %}
+                {% include 'dashboard/projects/forms/snippets/groups_tab.jinja2' %}
                 <div class="text-center m-t-md">
                     <a href="#" class="btn btn-xs btn-warning">Edit form</a>
                 </div>
             </div>
         </div>
         <div class="col-lg-9">
-            <div class="wrapper wrapper-content animated fadeInUp">
+            <div class="wrapper wrapper-content">
                 <div class="ibox">
                     <div class="ibox-content">
                         <div class="row">
@@ -213,64 +47,7 @@
 
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="col-lg-6">
-                                <dl class="row mb-0">
-                                    <div class="col-sm-4 text-sm-right"><dt>{{ _('Created by') }}:</dt> </div>
-                                    <div class="col-sm-8 text-sm-left"><dd class="mb-1">{{ formDetails.pubby.user_name }}</dd> </div>
-                                </dl>
-                                <dl class="row mb-0">
-                                    <div class="col-sm-4 text-sm-right"><dt>{{ _('Created') }}:</dt> </div>
-                                    <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date(formDetails.form_cdate) }}</dd></div>
-                                </dl>
-                                <dl class="row mb-0">
-                                    <div class="col-sm-4 text-sm-right"><dt>{{ _('Last updated') }}:</dt> </div>
-                                    <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date(formDetails.form_cdate) }}</dd></div>
-                                </dl>
-                                <dl class="row mb-0">
-                                    <div class="col-sm-4 text-sm-right"><dt>{{ _('Assistants') }}:</dt> </div>
-                                    <div class="col-sm-8 text-sm-left"> <dd class="mb-1"> 3 <a>[Manage]</a></dd></div>
-                                </dl>
-                                <dl class="row mb-0">
-                                    <div class="col-sm-4 text-sm-right"><dt>{{ _('Assistant groups') }}:</dt> </div>
-                                    <div class="col-sm-8 text-sm-left"> <dd class="mb-1"> 1 <a>[Manage]</a></dd></div>
-                                </dl>
-                            </div>
-                            <div class="col-lg-6" id="cluster_info">
-                                <dl class="row mb-0">
-                                    <div class="col-sm-4 text-sm-right">
-                                        <dt>Last Submission:</dt>
-                                    </div>
-                                    <div class="col-sm-8 text-sm-left">
-                                        <dd class="mb-1">16.08.2014 12:15:57</dd>
-                                    </div>
-                                </dl>
-                                <dl class="row mb-0">
-                                    <div class="col-sm-4 text-sm-right">
-                                        <dt>Number of submissions:</dt>
-                                    </div>
-                                    <div class="col-sm-8 text-sm-left">
-                                        <dd class="mb-1">10</dd>
-                                    </div>
-                                </dl>
-                                <dl class="row mb-0">
-                                    <div class="col-sm-4 text-sm-right">
-                                        <dt>In database:</dt>
-                                    </div>
-                                    <div class="col-sm-8 text-sm-left">
-                                        <dd class="mb-1">7 <a>[Clean data]</a></dd>
-                                    </div>
-                                </dl>
-                                <dl class="row mb-0">
-                                    <div class="col-sm-4 text-sm-right">
-                                        <dt>In error log:</dt>
-                                    </div>
-                                    <div class="col-sm-8 text-sm-left">
-                                        <dd class="mb-1">3 <a>[Manage errors]</a></dd>
-                                    </div>
-                                </dl>
-                            </div>
-                        </div>
+                        {% include 'dashboard/projects/forms/snippets/form_details.jinja2' %}
                         <div class="row m-t-sm">
                             <div class="col-lg-12">
                                 <div class="ibox">
@@ -340,118 +117,7 @@
                                         </div>
                                     </div>
                                 </div>
-                                <div class="ibox collapsed">
-                                    <div class="ibox-title">
-                                        <h5>Activity</h5>
-                                        <div class="ibox-tools">
-                                            <a class="collapse-link" style="margin-right: 10px">
-                                                <i class="fa fa-chevron-up"></i>
-                                            </a>
-                                            <a class="fullscreen-link">
-                                                <i class="fa fa-expand"></i>
-                                            </a>
-                                        </div>
-                                    </div>
-                                    <div class="ibox-content">
-                                        <div class="activity-stream">
-                                            <div class="stream">
-                                                <div class="stream-badge">
-                                                    <i class="fa fa-pencil"></i>
-                                                </div>
-                                                <div class="stream-panel">
-                                                    <div class="stream-info">
-                                                        <a href="#">
-                                                            <img src="img/a5.jpg" />
-                                                            <span>Karen Miggel</span>
-                                                            <span class="date">Today at 01:32:40 am</span>
-                                                        </a>
-                                                    </div>
-                                                    Add new note to the <a href="#">Martex</a>  project.
-                                                </div>
-                                            </div>
-
-                                            <div class="stream">
-                                                <div class="stream-badge">
-                                                    <i class="fa fa-commenting-o"></i>
-                                                </div>
-                                                <div class="stream-panel">
-                                                    <div class="stream-info">
-                                                        <a href="#">
-                                                            <img src="img/a4.jpg" />
-                                                            <span>John Mikkens</span>
-                                                            <span class="date">Yesterday at 10:00:20 am</span>
-                                                        </a>
-                                                    </div>
-                                                    Commented on <a href="#">Ariana</a> profile.
-                                                </div>
-                                            </div>
-                                            <div class="stream">
-                                                <div class="stream-badge">
-                                                    <i class="fa fa-circle"></i>
-                                                </div>
-                                                <div class="stream-panel">
-                                                    <div class="stream-info">
-                                                        <a href="#">
-                                                            <img src="img/a2.jpg" />
-                                                            <img src="img/a3.jpg" />
-                                                            <img src="img/a4.jpg" />
-                                                            <span>Mike Johnson, Monica Smith and Karen Dortmund</span>
-                                                            <span class="date">Yesterday at 02:13:20 am</span>
-                                                        </a>
-                                                    </div>
-                                                    Changed status of third stage in the <a href="#">Vertex</a> project.
-                                                </div>
-                                            </div>
-                                            <div class="stream">
-                                                <div class="stream-badge">
-                                                    <i class="fa fa-circle"></i>
-                                                </div>
-                                                <div class="stream-panel">
-                                                    <div class="stream-info">
-                                                        <a href="#">
-                                                            <img src="img/a6.jpg" />
-                                                            <span>Jessica Smith</span>
-                                                            <span class="date">Yesterday at 08:14:41 am</span>
-                                                        </a>
-                                                    </div>
-                                                    Add new files to own file sharing place.
-                                                </div>
-                                            </div>
-                                            <div class="stream">
-                                                <div class="stream-badge">
-                                                    <i class="fa fa-send bg-primary"></i>
-                                                </div>
-                                                <div class="stream-panel">
-                                                    <div class="stream-info">
-                                                        <a href="#">
-                                                            <img src="img/a7.jpg" />
-                                                            <img src="img/a1.jpg" />
-                                                            <span>Martha Farter and Mike Rodgers</span>
-                                                            <span class="date">Yesterday at 04:18:13 am</span>
-                                                        </a>
-                                                    </div>
-                                                    Sent email to all users participating in new project.
-                                                </div>
-                                            </div>
-                                            <div class="stream">
-                                                <div class="stream-badge">
-                                                    <i class="fa fa-tag bg-warning"></i>
-                                                </div>
-                                                <div class="stream-panel">
-                                                    <div class="stream-info">
-                                                        <a href="#">
-                                                            <img src="img/a7.jpg" />
-                                                            <span>Mark Mickens</span>
-                                                            <span class="date">Yesterday at 06:00:30 am</span>
-                                                        </a>
-                                                    </div>
-                                                    Has been taged in the latest comments about the new project.
-                                                </div>
-                                            </div>
-
-                                        </div>
-                                    </div>
-                                </div>
+                                {% include 'dashboard/projects/forms/snippets/form_activity.jinja2' %}
                             </div>
                         </div>
                     </div>
@@ -461,6 +127,10 @@
     </div>
 
     {% include 'dashboard/projects/forms/snippets/upload_file.jinja2' %}
+    {% include 'dashboard/projects/forms/snippets/add_assistant.jinja2' %}
+    {% include 'dashboard/projects/forms/snippets/edit_assistant.jinja2' %}
+    {% include 'dashboard/projects/forms/snippets/add_group.jinja2' %}
+    {% include 'dashboard/projects/forms/snippets/edit_group.jinja2' %}
 {% endblock mainsection %}
 
 {% block scripts %}
@@ -472,9 +142,18 @@
                 switchElement.setPosition(true);
                 switchElement.handleOnchange(true);
             }
-        };
+        }
 
         $(document).ready(function() {
+
+            $(".collaborator-list").select2({
+                dropdownParent: $('#member_form')
+            });
+
+            $(".group-list").select2({
+                dropdownParent: $('#group_form')
+            });
+
             var elem = document.querySelector('.js-switch');
             var overwrite_switch = new Switchery(elem, { color: '#1AB394' });
 
@@ -592,6 +271,111 @@
                             }
                         });
                 });
+
+            var assistant_item = $(".assistant-item");
+
+            assistant_item.click(function() {
+                var assistant_name = $( this ).attr('data-assistant-name');
+                var assistant_role = $( this ).attr('data-assistant-role');
+                var action_url = $( this ).attr('urn');
+                $("#edit_assistant_form").prop('action',action_url)
+                $("#rolewho").text("{{ _('Changing the role of') }} " + assistant_name);
+
+                var role_submmit = $( "#role_submmit" );
+                var role_clean = $( "#role_clean" );
+                var role_both = $( "#role_both" );
+                if (assistant_role === "1")
+                    role_submmit.prop( "checked", true );
+                if (assistant_role === "2")
+                    role_clean.prop( "checked", true );
+                if (assistant_role === "3")
+                    role_both.prop( "checked", true );
+
+            });
+
+            assistant_item.on("taphold", function()
+                {
+                    var action_url = $( this ).attr('data-assistant-remove-url');
+                    swal({
+                            title: "{{ _('Are you sure?') }}",
+                            type: "warning",
+                            showCancelButton: true,
+                            confirmButtonColor: "#DD6B55",
+                            confirmButtonText: "{{ _('Yes, remove it!') }}",
+                            cancelButtonText: "{{ _('Oops!, cancel!') }}",
+                            closeOnConfirm: true,
+                            closeOnCancel: true },
+                        function (isConfirm) {
+                            if (isConfirm) {
+                                var form = document.createElement('form');
+                                form.setAttribute('method', 'post');
+                                form.setAttribute('action', action_url);
+                                form.style.display = 'hidden';
+
+                                var i = document.createElement("input"); //input element, text
+                                i.setAttribute('type',"text");
+                                i.setAttribute('name',"csrf_token");
+                                i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                                form.appendChild(i);
+
+                                document.body.appendChild(form);
+                                form.submit();
+                            }
+                        });
+                });
+
+            var group_item = $(".group-item");
+
+            group_item.click(function() {
+                var group_name = $( this ).attr('data-group-name');
+                var group_role = $( this ).attr('data-group-role');
+                var action_url = $( this ).attr('urn');
+                $("#edit_group_form").prop('action',action_url)
+                $("#grprolewho").text("{{ _('Changing the role of') }} " + group_name);
+
+                var role_submmit = $( "#grp_role_submmit" );
+                var role_clean = $( "#grp_role_clean" );
+                var role_both = $( "#grp_role_both" );
+                if (group_role === "1")
+                    role_submmit.prop( "checked", true );
+                if (group_role === "2")
+                    role_clean.prop( "checked", true );
+                if (group_role === "3")
+                    role_both.prop( "checked", true );
+
+            });
+
+            group_item.on("taphold", function()
+                {
+                    var action_url = $( this ).attr('data-group-remove-url');
+                    swal({
+                            title: "{{ _('Are you sure?') }}",
+                            type: "warning",
+                            showCancelButton: true,
+                            confirmButtonColor: "#DD6B55",
+                            confirmButtonText: "{{ _('Yes, remove it!') }}",
+                            cancelButtonText: "{{ _('Oops!, cancel!') }}",
+                            closeOnConfirm: true,
+                            closeOnCancel: true },
+                        function (isConfirm) {
+                            if (isConfirm) {
+                                var form = document.createElement('form');
+                                form.setAttribute('method', 'post');
+                                form.setAttribute('action', action_url);
+                                form.style.display = 'hidden';
+
+                                var i = document.createElement("input"); //input element, text
+                                i.setAttribute('type',"text");
+                                i.setAttribute('name',"csrf_token");
+                                i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                                form.appendChild(i);
+
+                                document.body.appendChild(form);
+                                form.submit();
+                            }
+                        });
+                });
+
 
         });
     </script>

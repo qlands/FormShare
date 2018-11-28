@@ -5,6 +5,9 @@ from sqlalchemy.exc import IntegrityError
 import uuid
 import datetime
 import mimetypes
+from lxml import etree
+from formshare.processes.db.assistant import get_project_from_assistant
+from sqlalchemy import or_
 
 
 __all__ = ['get_form_details', 'assistant_has_form', 'get_assistant_forms', 'get_form_directory', 'add_new_form',
@@ -12,7 +15,7 @@ __all__ = ['get_form_details', 'assistant_has_form', 'get_assistant_forms', 'get
            'delete_form', 'add_file_to_form', 'get_form_files', 'remove_file_from_form', 'get_url_from_file',
            'form_file_exists', 'update_file_info', 'set_file_with_error', 'add_assistant_to_form',
            'get_form_assistants', 'update_assistant_privileges', 'remove_assistant_from_form', 'add_group_to_form',
-           'get_form_groups', 'update_group_privileges', 'remove_group_from_form']
+           'get_form_groups', 'update_group_privileges', 'remove_group_from_form', 'get_project_forms']
 
 log = logging.getLogger(__name__)
 
@@ -39,27 +42,71 @@ def get_form_details(request, project, form):
         return None
 
 
-def get_assistant_forms(request, project, assistant):
-    forms = []
+def get_project_forms(request, project):
+    # Get all just parent forms in descending order
+    res = request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(
+        Odkform.form_incversion == 0).order_by(Odkform.form_cdate.desc()).all()
+    parent_forms = map_from_schema(res)
+    # We nest the forms in an element tree so child belong to parents
+    root = etree.Element("root")
+    for form in parent_forms:
+        e_form = etree.Element(form['form_id'])
+        e_form.set("haschildren", "False")
+        root.append(e_form)
 
+    # Get all children forms in ascending order
+    res = request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(
+        Odkform.form_incversion == 1).order_by(Odkform.form_cdate.asc()).all()
+    child_forms = map_from_schema(res)
+    for form in child_forms:
+        form_id = root.findall(".//" + form['parent_form'])
+        if form_id:
+            form_id[0].set("haschildren", "True")
+            form_id[0].append(etree.Element(form['form_id']))
+
+    # Get all the form ids in order
+    form_order = []
+    for tag in root.iter():
+        if tag.tag != "root":
+            form_order.append({'id': tag.tag, 'haschildren': tag.get("haschildren")})
+
+    # Get all the forms in order
+    all_forms = parent_forms + child_forms
+    forms = []
+    for form in form_order:
+        for a_form in all_forms:
+            if form['id'] == a_form['form_id']:
+                a_form['haschildren'] = form['haschildren']
+                forms.append(a_form)
+                break
+
+    for form in forms:
+        form['pubby'] = get_creator_data(request, form['form_pubby'])
+
+    return forms
+
+
+def get_assistant_forms(request, requested_project, assistant_project, assistant):
+    forms = []
     # Get all the forms that the user can submit data to and are active
     anum_forms = request.dbsession.query(Odkform).filter(Odkform.project_id == Formacces.form_project).filter(
-        Odkform.form_id == Formacces.form_id).filter(Formacces.project_id == project).filter(
-        Formacces.coll_id == assistant).filter(Formacces.form_project == project).filter(
-        Formacces.coll_privileges == 1).filter(Odkform.form_accsub == 1).all()
+        Odkform.form_id == Formacces.form_id).filter(Formacces.project_id == assistant_project).filter(
+        Formacces.coll_id == assistant).filter(Formacces.form_project == requested_project).filter(
+        or_(Formacces.coll_privileges == 1, Formacces.coll_privileges == 3)).filter(Odkform.form_accsub == 1).all()
 
     for aForm in anum_forms:
         forms.append(
-            {'project_id': aForm.form_project, 'form_id': aForm.form_id, 'form_directory': aForm.form_directory})
+            {'project_id': aForm.project_id, 'form_id': aForm.form_id, 'form_directory': aForm.form_directory})
 
     # Select the groups that user belongs to
-    groups = request.dbsession.query(Collingroup).filter(Collingroup.project_id == project).filter(
-        Collingroup.enum_project == project).filter(Collingroup.coll_id == assistant).all()
+    groups = request.dbsession.query(Collingroup).filter(Collingroup.project_id == requested_project).filter(
+        Collingroup.enum_project == assistant_project).filter(Collingroup.coll_id == assistant).all()
 
     for group in groups:
         anum_forms = request.dbsession.query(Odkform).filter(Odkform.project_id == Formgrpacces.form_project).filter(
             Odkform.form_id == Formgrpacces.form_id).filter(Formgrpacces.project_id == group.project_id).filter(
-            Formgrpacces.group_id == group.group_id).filter(Formgrpacces.group_privileges == 1).filter(
+            Formgrpacces.group_id == group.group_id).filter(
+            or_(Formgrpacces.group_privileges == 1, Formgrpacces.group_privileges == 3)).filter(
             Odkform.form_accsub == 1).all()
 
         # Append only new forms accessible by the groups of the assistant
@@ -76,8 +123,9 @@ def get_assistant_forms(request, project, assistant):
     return forms
 
 
-def assistant_has_form(request, project, form, assistant):
-    forms = get_assistant_forms(request, project, assistant)
+def assistant_has_form(request, user, project, form, assistant):
+    assistant_project = get_project_from_assistant(request, user, project, assistant)
+    forms = get_assistant_forms(request, project, assistant_project, assistant)
     found = False
     for cform in forms:
         if cform["project_id"] == project and cform["form_id"] == form:

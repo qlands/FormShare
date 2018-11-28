@@ -184,7 +184,6 @@ def load_routes(config):
 
     # API
     routes.append(add_route('api_select2_users', '/api/select2_user', APIUserSearchSelect2, 'json'))
-    append_to_routes(routes)
 
     # ODK Forms
     routes.append(add_route('odkformlist', '/user/{userid}/project/{projcode}/formList', ODKFormList, None))
@@ -194,6 +193,10 @@ def load_routes(config):
     routes.append(add_route('odkmanifest', '/user/{userid}/project/{projcode}/{formid}/manifest', ODKManifest, None))
     routes.append(add_route('odkmediafile', '/user/{userid}/project/{projcode}/{formid}/manifest/mediafile/{fileid}',
                             ODKMediaFile, None))
+
+    append_to_routes(routes)
+
+
 
     # Add the not found route
     config.add_notfound_view(NotFoundView, renderer='generic/404.jinja2')

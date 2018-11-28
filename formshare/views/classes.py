@@ -52,14 +52,14 @@ class ODKView(object):
         ha1 = ""
         ha2 = ""
         if self.authHeader["qop"] == 'auth':
-            ha1 = hashlib.md5((self.user + ":" + self.realm + ":" + correct_password).encode())
+            ha1 = hashlib.md5((self.user + ":" + self.realm + ":" + correct_password.decode()).encode())
             ha2 = hashlib.md5((self.request.method + ":" + self.authHeader["uri"]).encode())
         if self.authHeader["qop"] == 'auth-int':
-            ha1 = hashlib.md5((self.user + ":" + self.realm + ":" + correct_password).encode())
+            ha1 = hashlib.md5((self.user + ":" + self.realm + ":" + correct_password.decode()).encode())
             md5_body = hashlib.md5(self.request.body).hexdigest()
             ha2 = hashlib.md5((self.request.method + ":" + self.authHeader["uri"] + ":" + md5_body).encode())
         if ha1 == "":
-            ha1 = hashlib.md5((self.user + ":" + self.realm + ":" + correct_password).encode())
+            ha1 = hashlib.md5((self.user + ":" + self.realm + ":" + correct_password.decode()).encode())
             ha2 = hashlib.md5(self.request.method + ":" + self.authHeader["uri"])
 
         auth_line = ":".join(

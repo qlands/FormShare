@@ -13,7 +13,8 @@ from pyramid.response import FileResponse
 from formshare.processes.db import assistant_has_form, get_assistant_forms, get_project_id_from_name, add_new_form, \
     form_exists, get_form_directory, get_form_xml_file, get_form_xls_file, update_form, get_form_data, \
     get_form_schema, get_submission_data, add_submission, add_json_log, update_json_status, add_json_history, \
-    form_file_exists, get_url_from_file, set_file_with_error, update_file_info
+    form_file_exists, get_url_from_file, set_file_with_error, update_file_info, get_project_from_assistant, \
+    get_form_files
 import uuid
 import datetime
 import re
@@ -38,7 +39,47 @@ __all__ = ['generate_form_list', 'generate_manifest', 'get_odk_path', 'get_form_
            'build_database', 'create_repository', 'move_media_files', 'convert_xml_to_json', 'store_submission',
            'get_html_from_diff', 'generate_diff', 'store_new_version', 'restore_from_revision', 'push_revision',
            'get_tables_from_form', 'get_fields_from_table', 'get_table_desc', 'is_field_key', 'get_request_data',
-           'update_data', 'upload_odk_form', 'update_form_title', 'retrieve_form_file']
+           'update_data', 'upload_odk_form', 'update_form_title', 'retrieve_form_file', 'cache_external_file']
+
+
+def cache_external_file(request, project, form, file_name):
+    if form_file_exists(request, project, form, file_name):
+        file_url, last_download = get_url_from_file(request, project, form, file_name)
+        if file_url is not None:
+            download = False
+            if last_download is not None:
+                lapsed = datetime.datetime.now() - last_download
+                minutes_lapsed = divmod(lapsed.days * 86400 + lapsed.seconds, 60)
+                minutes_lapsed = minutes_lapsed[0]
+                if minutes_lapsed > 5:
+                    download = True
+            else:
+                download = True
+            if download:
+                repository_path = request.registry.settings['repository.path']
+                downloads_path = os.path.join(repository_path, *["downloads"])
+                if not os.path.exists(downloads_path):
+                    os.makedirs(downloads_path)
+                target_file = os.path.join(downloads_path, *[str(uuid.uuid4()) + ".tmp"])
+                try:
+                    log.info("Retrieving file {}".format(file_url))
+                    urlretrieve(file_url, target_file)
+                except Exception as e:
+                    set_file_with_error(request, project, form, file_name)
+                    log.error(
+                        "Error {} while downloading external file {} for form {}".format(str(e), file_name, form))
+                    raise HTTPNotFound
+                bucket_id = project + form
+                bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
+                file = open(target_file, 'rb')
+                store_file(request, bucket_id, file_name, file)
+                file.close()
+                file = open(target_file, 'rb')
+                md5sum = md5(file.read()).hexdigest()
+                file.close()
+                update_file_info(request, project, form, file_name, md5sum)
+    else:
+        raise HTTPNotFound
 
 
 def retrieve_form_file(request, project, form, file_name):
@@ -75,7 +116,7 @@ def retrieve_form_file(request, project, form, file_name):
                 except Exception as e:
                     set_file_with_error(request, project, form, file_name)
                     log.error(
-                        "Error {} while downloading {} from form {}".format(str(e), file_name, form))
+                        "Error {} while downloading external file {} for form {}".format(str(e), file_name, form))
                     return HTTPFound(file_url)
                 bucket_id = project + form
                 bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
@@ -305,10 +346,11 @@ def get_odk_path(request):
 
 
 def get_form_list(request, user, project_code, assistant):
-    prj_list = []
     project_id = get_project_id_from_name(request, user, project_code)
+    assistant_project = get_project_from_assistant(request, user, project_id, assistant)
+    prj_list = []
     odk_dir = get_odk_path(request)
-    forms = get_assistant_forms(request, project_id, assistant)
+    forms = get_assistant_forms(request, project_id, assistant_project, assistant)
     for form in forms:
         path = os.path.join(odk_dir, *["forms", form["form_directory"], '*.json'])
         files = glob.glob(path)
@@ -323,15 +365,18 @@ def get_form_list(request, user, project_code, assistant):
     return generate_form_list(prj_list)
 
 
-def get_manifest(request, user, project, form, form_directory):
-    odk_dir = get_odk_path(request)
-    path = os.path.join(odk_dir, *["forms", form_directory, 'media', '*.*'])
-    files = glob.glob(path)
-    if files:
+def get_manifest(request, user, project, project_id, form):
+    form_files = get_form_files(request, project_id, form)
+    for file in form_files:
+        if file['file_url'] is not None:
+            cache_external_file(request, project_id, form, file['file_name'])
+
+    form_files = get_form_files(request, project_id, form)
+    if form_files:
         file_array = []
-        for file in files:
-            file_name = os.path.basename(file)
-            file_array.append({'filename': file_name, 'hash': 'md5:' + md5(open(file, 'rb').read()).hexdigest(),
+        for file in form_files:
+            file_name = file['file_name']
+            file_array.append({'filename': file_name, 'hash': 'md5:' + file['file_md5'],
                                'downloadUrl': request.route_url('odkmediafile', userid=user, projcode=project,
                                                                 formid=form, fileid=file_name)})
         return generate_manifest(file_array)
@@ -355,21 +400,8 @@ def get_xml_form(request, project, form):
         raise HTTPNotFound()
 
 
-def get_media_file(request, form_directory, file_id):
-    odk_dir = get_odk_path(request)
-    path = os.path.join(odk_dir, *["forms", form_directory, 'media', file_id])
-    if os.path.isfile(path):
-        content_type, content_enc = mimetypes.guess_type(path)
-        file_name = os.path.basename(path)
-        response = FileResponse(
-            path,
-            request=request,
-            content_type=content_type
-        )
-        response.content_disposition = 'attachment; filename="' + file_name + '"'
-        return response
-    else:
-        raise HTTPNotFound()
+def get_media_file(request, project_id, form_id, file_id):
+    return retrieve_form_file(request, project_id, form_id, file_id)
 
 
 def get_submission_file(request, project, form, submission):
@@ -782,7 +814,7 @@ def convert_xml_to_json(odk_dir, xml_file, xform_directory, schema, xml_form_fil
         return 1, ""
 
 
-def store_submission(request, project, assistant):
+def store_submission(request, user, project, assistant):
     odk_dir = get_odk_path(request)
     unique_id = uuid4()
     path = os.path.join(odk_dir, *["submissions", str(unique_id)])
@@ -813,7 +845,7 @@ def store_submission(request, project, assistant):
         if xform_id is not None:
             form_data = get_form_data(request, project, xform_id)
             if form_data is not None:
-                if assistant_has_form(request, project, assistant, xform_id):
+                if assistant_has_form(request, user, project, xform_id, assistant):
                     media_path = os.path.join(odk_dir,
                                               *['forms', form_data['form_directory'], "submissions", str(unique_id),
                                                 'diffs'])
@@ -846,16 +878,16 @@ def store_submission(request, project, assistant):
                     else:
                         return False, 404
                 else:
-                    log.debug('Enumerator %s cannot submit data to %s', assistant, xform_id)
+                    log.error('Enumerator %s cannot submit data to %s', assistant, xform_id)
                     return False, 404
             else:
-                log.debug('Submission for ID %s does not exist in the database', xform_id)
+                log.error('Submission for ID %s does not exist in the database', xform_id)
                 return False, 404
         else:
-            log.debug('Submission does not have and ID')
+            log.error('Submission does not have and ID')
             return False, 404
     else:
-        log.debug('Submission does not have an XML file')
+        log.error('Submission does not have an XML file')
         return False, 500
 
 

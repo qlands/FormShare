@@ -7,13 +7,13 @@
             <div class="col-md-12">
                 <span class="float-right">{{ _('Uploaded on') }} {{ request.h.readble_date(form.form_cdate) }}</span>
                 <strong><a href="{{ request.route_url('form_details',userid=userid,projcode=projectData.project_code,formid=form.form_id) }}">{{ form.form_name }}</a></strong> {% if form.form_schema != None %} <span class="badge badge-primary">{{ _('With repository') }}</span>{% else %}<span class="badge badge-warning" title="{{ _('Data is not stored in a database') }}">{{ _('In testing') }}</span>{% endif %} {% if form.form_accsub ==0 %}<span class="label label-warning">{{ _('Inactive') }}</span>{% else %}<span class="label label-primary">{{ _('Active') }}</span>{% endif %}<br>
-                <span class="text-muted">Last submussion: Yesterday 1:21 pm - 11.06.2014 by <a class="text-info">Eduardo</a></span>
+                <span class="text-muted">{{ _('Last submission') }}: {{ request.h.readble_date_with_time(form.last) }} {{ _('by') }} <a class="text-info">{{ form.bydetails.coll_name }}</a></span>
                 {% if form.form_target > 0 %}
                     <div class="progress">
-                        <div class="progress-bar progress-bar-striped progress-bar-animated progress-bar-warning" style="width: 75%" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
+                        <div class="progress-bar progress-bar-striped progress-bar-animated progress-bar-warning" style="width: {{ form.submissions*100/form.form_target }}%" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
                     </div>
                 {% endif %}
-                70 {% if form.form_target > 0 %}of {{ form.form_target }} {% endif %} submissions: <strong><a class="text-success">70 in database</a>. <a class="text-danger">5 in error logs</a></strong>
+                {{ form.submissions }} {% if form.form_target > 0 %}of {{ form.form_target }} {% endif %} submissions {% if form.form_schema != None %}: <strong><a class="text-success">70 in database</a>. <a class="text-danger">5 in error logs</a></strong>{% endif %}
                 <div class="actions">
                     {% if form.form_schema == None %}
                         <a href="" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-database"></i> {{ _('Create repository') }} </a>

@@ -1,7 +1,8 @@
 from formshare.views.classes import ProjectsView
 from formshare.processes.db import add_project, modify_project, delete_project, is_collaborator, \
     get_project_id_from_name, get_project_collaborators, get_project_assistants, get_project_groups, \
-    add_file_to_project, get_project_files, remove_file_from_project, get_user_details, get_project_forms
+    add_file_to_project, get_project_files, remove_file_from_project, get_user_details, get_project_forms, \
+    get_by_details
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from formshare.config.elasticfeeds import get_manager
 from elasticfeeds.activity import Actor, Object, Activity
@@ -12,6 +13,7 @@ import qrcode
 import zlib
 import base64
 import io
+from formshare.processes.elasticsearch.repository_index import get_dataset_index_manager
 
 
 class ProjectStoredFileView(ProjectsView):
@@ -76,20 +78,23 @@ class ProjectDetailsView(ProjectsView):
         else:
             collaborators, more_collaborators = get_project_collaborators(self.request, project_id, None, 4)
         user_details = get_user_details(self.request, user_id)
-        forms = get_project_forms(self.request, project_id)
+        forms = get_project_forms(self.request, user_id, project_id)
         active_forms = 0
         inactive_forms = 0
         for form in forms:
             if form['form_accsub'] == 1:
                 active_forms = active_forms + 1
             else:
-                inactive_forms = inactive_forms + 1;
-
+                inactive_forms = inactive_forms + 1
+        dataset_index = get_dataset_index_manager(self.request)
+        submissions, last, by, in_form = dataset_index.get_dataset_stats_for_project(project_id)
+        bydetails = get_by_details(self.request, user_id, project_id, by)
         return {'projectData': project_data, 'userid': user_id, 'collaborators': collaborators,
                 'moreCollaborators': more_collaborators, 'assistants': assistants, 'moreAssistants': more_assistants,
                 'groups': get_project_groups(self.request, project_id),
                 'files': get_project_files(self.request, project_id), 'userDetails': user_details,
-                'forms': forms, 'activeforms': active_forms, 'inactiveforms': inactive_forms}
+                'forms': forms, 'activeforms': active_forms, 'inactiveforms': inactive_forms,
+                'submissions': submissions, 'last': last, 'by': by, 'bydetails': bydetails, 'infom': in_form}
 
 
 class AddProjectView(ProjectsView):

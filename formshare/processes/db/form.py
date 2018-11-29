@@ -1,13 +1,16 @@
 from formshare.models import map_from_schema, Odkform, User, Collingroup, Formgrpacces, map_to_schema, \
-    MediaFile, Formacces, Collaborator, Collgroup
+    MediaFile, Formacces, Collaborator, Collgroup, Submission, Jsonlog
 import logging
 from sqlalchemy.exc import IntegrityError
 import uuid
 import datetime
 import mimetypes
 from lxml import etree
-from formshare.processes.db.assistant import get_project_from_assistant
+from formshare.processes.db.assistant import get_project_from_assistant, get_assistant_data
 from sqlalchemy import or_
+import os
+import json
+from formshare.processes.elasticsearch.repository_index import get_dataset_index_manager
 
 
 __all__ = ['get_form_details', 'assistant_has_form', 'get_assistant_forms', 'get_form_directory', 'add_new_form',
@@ -15,9 +18,71 @@ __all__ = ['get_form_details', 'assistant_has_form', 'get_assistant_forms', 'get
            'delete_form', 'add_file_to_form', 'get_form_files', 'remove_file_from_form', 'get_url_from_file',
            'form_file_exists', 'update_file_info', 'set_file_with_error', 'add_assistant_to_form',
            'get_form_assistants', 'update_assistant_privileges', 'remove_assistant_from_form', 'add_group_to_form',
-           'get_form_groups', 'update_group_privileges', 'remove_group_from_form', 'get_project_forms']
+           'get_form_groups', 'update_group_privileges', 'remove_group_from_form', 'get_project_forms',
+           'get_number_of_submissions_in_database', 'get_by_details']
 
 log = logging.getLogger(__name__)
+
+
+def _get_odk_path(request):
+    repository_path = request.registry.settings['repository.path']
+    if not os.path.exists(repository_path):
+        os.makedirs(repository_path)
+    return os.path.join(repository_path, *["odk"])
+
+
+def modification_date(filename):
+    t = os.path.getmtime(filename)
+    return datetime.datetime.fromtimestamp(t)
+
+
+def get_submission_by(filename):
+    with open(filename, 'r') as f:
+        json_metadata = json.load(f)
+        try:
+            submission_by = json_metadata["_submitted_by"]
+        except KeyError:
+            return None
+    return submission_by
+
+
+def get_number_of_submissions(request, project, form):
+    dataset_index = get_dataset_index_manager(request)
+    return dataset_index.get_dataset_stats_for_form(project, form)
+    # form_directory = get_form_directory(request, project, form)
+    # odk_dir = _get_odk_path(request)
+    # submission_directory = os.path.join(odk_dir, *["forms", form_directory, "submissions", '*.json'])
+    #
+    # files = glob.glob(submission_directory)
+    # if files:
+    #     files.sort(key=os.path.getmtime, reverse=True)
+    #     return len(files), modification_date(files[0]), get_submission_by(files[0])
+    # else:
+    #     return 0, None, None
+
+
+def get_number_of_submissions_in_database(request, project, form):
+    total = request.dbsession.query(Submission).filter(Submission.project_id == project).filter(
+        Submission.form_id == form).filter(Submission.sameas.is_(None)).count()
+    in_db = request.dbsession.query(Submission).filter(Submission.project_id == project).filter(
+        Submission.form_id == form).filter(Submission.submission_status == 0).filter(
+        Submission.sameas.is_(None)).count()
+    fixed = request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
+        Jsonlog.form_id == form).filter(Jsonlog.status == 0).count()
+    in_db_from_logs = request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
+        Jsonlog.form_id == form).count()
+    in_error = request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
+        Jsonlog.form_id == form).filter(Jsonlog.status != 0, Jsonlog.status != 4).count()
+
+    res = request.dbsession.query(Submission).filter(Submission.project_id == project).filter(
+        Submission.form_id == form).filter(Submission.sameas.is_(None)).order_by(
+        Submission.submission_dtime.desc()).first()
+    if res is not None:
+        last = res.submission_dtime
+    else:
+        last = None
+
+    return total, last, in_db+fixed, in_db_from_logs, in_error
 
 
 def get_creator_data(request, user):
@@ -33,16 +98,38 @@ def get_form_data(request, project, form):
         return None
 
 
-def get_form_details(request, project, form):
+def get_form_details(request, user, project, form):
     result = get_form_data(request, project, form)
     if result is not None:
         result['pubby'] = get_creator_data(request, result['form_pubby'])
+        if result['form_schema'] is None:
+            submissions, last, by = get_number_of_submissions(request, project, result['form_id'])
+            result["submissions"] = submissions
+            result["last"] = last
+            result["by"] = by
+            result["bydetails"] = get_by_details(request, user, project, by)
+            result["indb"] = 0
+            result["inlogs"] = 0
+            result["inerror"] = 0
+        else:
+            submissions, last, in_database, in_logs, in_error = get_number_of_submissions_in_database(request, project,
+                                                                                                      result['form_id'])
+            result["submissions"] = submissions
+            result["last"] = last
+            result["indb"] = in_database
+            result["inlogs"] = in_logs
+            result["inerror"] = in_error
         return result
     else:
         return None
 
 
-def get_project_forms(request, project):
+def get_by_details(request, user, project, assistant):
+    project_assistant = get_project_from_assistant(request, user, project, assistant)
+    return get_assistant_data(request, project_assistant, assistant)
+
+
+def get_project_forms(request, user, project):
     # Get all just parent forms in descending order
     res = request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(
         Odkform.form_incversion == 0).order_by(Odkform.form_cdate.desc()).all()
@@ -82,6 +169,22 @@ def get_project_forms(request, project):
 
     for form in forms:
         form['pubby'] = get_creator_data(request, form['form_pubby'])
+        if form['form_schema'] is None:
+            submissions, last, by = get_number_of_submissions(request, project, form['form_id'])
+            form["submissions"] = submissions
+            form["last"] = last
+            form["by"] = by
+            form["bydetails"] = get_by_details(request, user, project, by)
+            form["indb"] = 0
+            form["inlogs"] = 0
+        else:
+            submissions, last, in_database, in_logs, in_error = get_number_of_submissions_in_database(request, project,
+                                                                                                      form['form_id'])
+            form["submissions"] = submissions
+            form["last"] = last
+            form["indb"] = in_database
+            form["inlogs"] = in_logs
+            form["inerror"] = in_error
 
     return forms
 

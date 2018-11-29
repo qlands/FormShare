@@ -24,18 +24,26 @@
     <div class="col-lg-6" id="cluster_info">
         <dl class="row mb-0">
             <div class="col-sm-4 text-sm-right">
-                <dt>Last Submission:</dt>
+                <dt>{{ _('Last Submission') }}:</dt>
             </div>
             <div class="col-sm-8 text-sm-left">
-                <dd class="mb-1">16.08.2014 12:15:57</dd>
+                <dd class="mb-1">{{ request.h.readble_date_with_time(formDetails.last) }}</dd>
             </div>
         </dl>
         <dl class="row mb-0">
             <div class="col-sm-4 text-sm-right">
-                <dt>Submissions:</dt>
+                <dt>{{ _('By') }}:</dt>
             </div>
             <div class="col-sm-8 text-sm-left">
-                <dd class="mb-1">10</dd>
+                <dd class="mb-1"><a class="text-info">{{ formDetails.bydetails.coll_name }}</a></dd>
+            </div>
+        </dl>
+        <dl class="row mb-0">
+            <div class="col-sm-4 text-sm-right">
+                <dt>{{ _('Submissions') }}:</dt>
+            </div>
+            <div class="col-sm-8 text-sm-left">
+                <dd class="mb-1">{{ formDetails.submissions }}</dd>
             </div>
         </dl>
         {% if formDetails.form_schema != None %}
@@ -44,7 +52,7 @@
                     <dt>In database:</dt>
                 </div>
                 <div class="col-sm-8 text-sm-left">
-                    <dd class="mb-1">7 <a>[Clean data]</a></dd>
+                    <dd class="mb-1">{{ formDetails.indb }} {% if formDetails.indb > 0 %}<a>[Clean data]</a>{% endif %}</dd>
                 </div>
             </dl>
             <dl class="row mb-0">
@@ -52,7 +60,7 @@
                     <dt>In error log:</dt>
                 </div>
                 <div class="col-sm-8 text-sm-left">
-                    <dd class="mb-1">3 <a>[Manage errors]</a></dd>
+                    <dd class="mb-1">{{ formDetails.inerror }} {% if formDetails.inerror > 0 %}<a>[Manage errors]</a>{% endif %}</dd>
                 </div>
             </dl>
         {% endif %}

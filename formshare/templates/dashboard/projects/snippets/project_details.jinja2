@@ -176,13 +176,13 @@
         </div>
     </div>
     <div class="col-lg-9">
-        <div class="wrapper wrapper-content animated fadeInUp">
+        <div class="wrapper wrapper-content">
             <div class="ibox">
                 <div class="ibox-content">
                     <div class="row">
                         <div class="col-lg-12">
                             <div class="m-b-md">
-                                <h2>Project details</h2>
+                                <h2>{{ _('Project details') }}</h2>
                             </div>
 
                         </div>
@@ -194,8 +194,12 @@
                                 <div class="col-sm-8 text-sm-left"><dd class="mb-1">{{ userDetails.user_name }}</dd> </div>
                             </dl>
                             <dl class="row mb-0">
-                                <div class="col-sm-4 text-sm-right"><dt>Forms:</dt> </div>
+                                <div class="col-sm-4 text-sm-right"><dt>{{ _('Forms') }}:</dt> </div>
                                 <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ forms|length }}</dd></div>
+                            </dl>
+                            <dl class="row mb-0">
+                                <div class="col-sm-4 text-sm-right"><dt>{{ _('Total submissions') }}:</dt> </div>
+                                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ submissions}}</dd></div>
                             </dl>
                             <dl class="row mb-0">
                                 <div class="col-sm-4 text-sm-right"><dt>{{ _('Created') }}:</dt> </div>
@@ -205,18 +209,22 @@
                         <div class="col-lg-6" id="cluster_info">
                             <dl class="row mb-0">
                                 <div class="col-sm-4 text-sm-right">
-                                    <dt>Last Updated:</dt>
+                                    <dt>{{ _('Last Updated') }}:</dt>
                                 </div>
                                 <div class="col-sm-8 text-sm-left">
-                                    <dd class="mb-1">16.08.2014 12:15:57</dd>
+                                    <dd class="mb-1">{{ request.h.readble_date(projectData.project_cdate) }}</dd>
                                 </div>
                             </dl>
                             <dl class="row mb-0">
                                 <div class="col-sm-4 text-sm-right">
-                                    <dt>Last Submission:</dt>
+                                    <dt>{{ _('Last Submission') }}:</dt>
                                 </div>
                                 <div class="col-sm-8 text-sm-left">
-                                    <dd class="mb-1">16.08.2014 12:15:57</dd>
+                                    {% if submissions > 0 %}
+                                        <dd class="mb-1">{{ request.h.readble_date_with_time(last) }} {{ _('by') }} <a class="text-info">{{ bydetails.coll_name }}</a></dd>
+                                    {% else %}
+                                        <dd class="mb-1"></dd>
+                                    {% endif %}
                                 </div>
                             </dl>
                             <dl class="row mb-0">

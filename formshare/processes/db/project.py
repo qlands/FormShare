@@ -5,6 +5,9 @@ import datetime
 import sys
 import uuid
 from sqlalchemy.exc import IntegrityError
+from formshare.processes.elasticsearch.repository_index import get_dataset_index_manager2
+from formshare.processes.db.form import get_by_details, get_form_data
+import dateutil.parser
 
 __all__ = [
     'get_project_id_from_name', 'get_user_projects', 'get_active_project', 'add_project', 'modify_project',
@@ -94,9 +97,19 @@ def get_user_projects(request, user, logged_user, private=False):
         res = request.dbsession.query(Project, Userproject).filter(Project.project_id == Userproject.project_id).filter(
             Userproject.user_id == user).filter(Project.project_public == 1).all()
         projects = map_from_schema(res)
+
     for project in projects:
-        project['last_submission'] = get_last_submission(request, project['project_id'])
-        project['total_submissions'] = get_project_submissions(request, project['project_id'])
+        dataset_index = get_dataset_index_manager2(request, project['project_code'], user)
+        submissions, last, by, form = dataset_index.get_dataset_stats_for_project(project['project_id'])
+        if last is not None:
+            project['last_submission'] = dateutil.parser.parse(last)
+        else:
+            project['last_submission'] = None
+        project['total_submissions'] = submissions
+        project['last_submission_by'] = by
+        project['last_submission_by_details'] = get_by_details(request, user, project['project_id'], by)
+        project['last_submission_form'] = form
+        project['last_submission_form_details'] = get_form_data(request, project['project_id'], form)
         project['total_forms'] = get_forms_number(request, project['project_id'])
         if private:
             if project['access_type'] == 1:

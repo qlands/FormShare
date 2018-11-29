@@ -135,27 +135,27 @@ class UserIndexManager(object):
         """
 
         try:
-            self.host = settings['elasticsearch.host']
+            self.host = settings['elasticsearch.user.host']
         except KeyError:
             self.host = "localhost"
 
         try:
-            self.port = int(settings['elasticsearch.port'])
+            self.port = int(settings['elasticsearch.user.port'])
         except KeyError:
             self.port = 9200
 
         try:
-            self.index_name = settings['elasticsearch.feed_index']
+            self.index_name = settings['elasticsearch.user.index_name']
         except KeyError:
             self.index_name = 'formshare_users'
 
         try:
-            self.url_prefix = settings['elasticsearch.url_prefix']
+            self.url_prefix = settings['elasticsearch.user.url_prefix']
         except KeyError:
             self.url_prefix = None
 
         try:
-            use_ssl = settings['elasticsearch.use_ssl']
+            use_ssl = settings['elasticsearch.user.use_ssl']
             if use_ssl == 'True':
                 self.use_ssl = True
             else:
@@ -164,12 +164,12 @@ class UserIndexManager(object):
             self.use_ssl = False
 
         try:
-            number_of_shards = int(settings['elasticsearch.number_of_shards_in_user_index'])
+            number_of_shards = int(settings['elasticsearch.user.number_of_shards'])
         except KeyError:
             number_of_shards = 5
 
         try:
-            number_of_replicas = int(settings['elasticsearch.number_of_replicas_in_user_index'])
+            number_of_replicas = int(settings['elasticsearch.user.number_of_replicas'])
         except KeyError:
             number_of_replicas = 1
 

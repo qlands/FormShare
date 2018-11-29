@@ -36,7 +36,7 @@ class FormDetails(PrivateView):
         if error is not None:
             self.errors.append(error)
 
-        form_data = get_form_details(self.request, project_id, form_id)
+        form_data = get_form_details(self.request, user_id, project_id, form_id)
         form_files = get_form_files(self.request, project_id, form_id)
         assistants = get_all_assistants(self.request, project_id, self.user.login)
         form_assistants = get_form_assistants(self.request, project_id, form_id)

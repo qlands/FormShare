@@ -79,6 +79,17 @@ def readble_date(date):
 
 
 @core_helper
+def readble_date_with_time(date):
+    """
+    Returns a readable date"
+    :param date: Datetime
+    :return: A readable date
+    """
+    ar = arrow.get(date)
+    return ar.format('dddd Do of MMMM, YYYY. HH:mm:ss')
+
+
+@core_helper
 def pluralize(request, noun, size):
     """
     The function calls connected plugins to expand the pluralize capabilities of FormShare

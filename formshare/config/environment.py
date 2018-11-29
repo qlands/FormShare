@@ -56,32 +56,7 @@ def load_environment(settings, config, apppath):
     configure_manager(settings)
 
     # Load the user index manager
-    temp = configure_user_index_manager(settings)
-    # temp.add_user('ktavenner',
-    #               {'user_name': 'Katie tavenner', 'user_email': 'tavenka05@gmail.com', 'user_id': 'ktavenner'})
-    # temp.add_user('ktavenner1',
-    #               {'user_name': 'Katie tavenner', 'user_email': 'tavenka05@gmail.com', 'user_id': 'ktavenner1'})
-    # temp.add_user('ktavenner2',
-    #               {'user_name': 'Katie tavenner', 'user_email': 'tavenka05@gmail.com', 'user_id': 'ktavenner2'})
-    # temp.add_user('ktavenner3',
-    #               {'user_name': 'Katie tavenner', 'user_email': 'tavenka05@gmail.com', 'user_id': 'ktavenner3'})
-    # temp.add_user('ktavenner4',
-    #               {'user_name': 'Katie tavenner', 'user_email': 'tavenka05@gmail.com', 'user_id': 'ktavenner4'})
-    # temp.add_user('ktavenner5',
-    #               {'user_name': 'Katie tavenner', 'user_email': 'tavenka05@gmail.com', 'user_id': 'ktavenner5'})
-    # temp.add_user('ktavenner6',
-    #               {'user_name': 'Katie tavenner', 'user_email': 'tavenka05@gmail.com', 'user_id': 'ktavenner6'})
-    # temp.add_user('ktavenner7',
-    #               {'user_name': 'Katie tavenner', 'user_email': 'tavenka05@gmail.com', 'user_id': 'ktavenner7'})
-    # temp.add_user('ktavenner8',
-    #               {'user_name': 'Katie tavenner', 'user_email': 'tavenka05@gmail.com', 'user_id': 'ktavenner9'})
-    # temp.add_user('ktavenner9',
-    #               {'user_name': 'Katie tavenner', 'user_email': 'tavenka05@gmail.com', 'user_id': 'ktavenner9'})
-    # temp.add_user('ktavenner10',
-    #               {'user_name': 'Katie tavenner', 'user_email': 'tavenka05@gmail.com', 'user_id': 'ktavenne10'})
-    # temp.add_user('ktavenner11',
-    #               {'user_name': 'Katie tavenner', 'user_email': 'tavenka05@gmail.com', 'user_id': 'ktavenne11'})
-
+    configure_user_index_manager(settings)
 
     # Add the session factory to the config
     config.set_session_factory(my_session_factory)

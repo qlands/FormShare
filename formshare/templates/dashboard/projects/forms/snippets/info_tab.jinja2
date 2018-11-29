@@ -17,9 +17,9 @@
     </div>
     <div class="ibox-content">
         {% if formDetails.form_target > 0 %}
-            70 of {{ formDetails.form_target }} submissions
+            {{ formDetails.submissions }} of {{ formDetails.form_target }} submissions
             <div class="progress">
-                <div class="progress-bar progress-bar-striped progress-bar-animated {% if formDetails.form_schema == None %}progress-bar-warning{% else %}progress-bar-success{% endif %}" style="width: 25%" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
+                <div class="progress-bar progress-bar-striped progress-bar-animated {% if formDetails.form_schema == None %}progress-bar-warning{% else %}progress-bar-success{% endif %}" style="width: {{ formDetails.submissions*100/formDetails.form_target }}%" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
             </div>
         {% endif %}
         <p style="margin-top: 10px" class="small font-bold">

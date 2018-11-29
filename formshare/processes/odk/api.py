@@ -30,16 +30,25 @@ from formshare.processes.storage import get_stream, response_stream, store_file
 from pyramid.response import Response
 from urllib.request import urlretrieve
 from pyramid.httpexceptions import HTTPFound
+from formshare.processes.elasticsearch.repository_index import get_dataset_index_manager
 
 import logging
 log = logging.getLogger(__name__)
 
-__all__ = ['generate_form_list', 'generate_manifest', 'get_odk_path', 'get_form_list',
+__all__ = ['generate_form_list', 'generate_manifest', 'get_form_list',
            'get_manifest', 'get_xml_form', 'get_media_file', 'get_submission_file', 'build_odata_service',
            'build_database', 'create_repository', 'move_media_files', 'convert_xml_to_json', 'store_submission',
            'get_html_from_diff', 'generate_diff', 'store_new_version', 'restore_from_revision', 'push_revision',
            'get_tables_from_form', 'get_fields_from_table', 'get_table_desc', 'is_field_key', 'get_request_data',
-           'update_data', 'upload_odk_form', 'update_form_title', 'retrieve_form_file', 'cache_external_file']
+           'update_data', 'upload_odk_form', 'update_form_title', 'retrieve_form_file', 'cache_external_file',
+           'get_odk_path']
+
+
+def get_odk_path(request):
+    repository_path = request.registry.settings['repository.path']
+    if not os.path.exists(repository_path):
+        os.makedirs(repository_path)
+    return os.path.join(repository_path, *["odk"])
 
 
 def cache_external_file(request, project, form, file_name):
@@ -336,13 +345,6 @@ def generate_manifest(media_file_array):
             xform_tag.append(atag)
         root.append(xform_tag)
     return etree.tostring(root, encoding='utf-8')
-
-
-def get_odk_path(request):
-    repository_path = request.registry.settings['repository.path']
-    if not os.path.exists(repository_path):
-        os.makedirs(repository_path)
-    return os.path.join(repository_path, *["odk"])
 
 
 def get_form_list(request, user, project_code, assistant):
@@ -685,7 +687,8 @@ def move_media_files(odk_dir, xform_directory, src_submission, trg_submission):
                     e))
 
 
-def convert_xml_to_json(odk_dir, xml_file, xform_directory, schema, xml_form_file, project, form, assistant, request):
+def convert_xml_to_json(odk_dir, xml_file, xform_directory, schema, xml_form_file, user, project, form, assistant,
+                        request):
     xml_to_json = os.path.join(request.registry.settings['odktools.path'], *["XMLtoJSON", "xmltojson"])
     temp_json_file = xml_file.replace(".xml", ".tmp.json")
     json_file = xml_file.replace(".xml", ".json")
@@ -793,6 +796,21 @@ def convert_xml_to_json(odk_dir, xml_file, xform_directory, schema, xml_form_fil
             # file are so big that separation is required
             try:
                 shutil.move(temp_json_file, json_file)
+
+                with open(json_file, 'r') as f:
+                    submission_data = json.load(f)
+                    submission_data["_submitted_by"] = assistant
+                    submission_data["_submitted_date"] = datetime.datetime.now().isoformat()
+                    submission_data["_user_id"] = user
+                    submission_data["_project_id"] = project
+
+                dataset_index = get_dataset_index_manager(request)
+                dataset_index.add_dataset(submission_id, submission_data)
+
+                with open(json_file, "w", ) as outfile:
+                    json_string = json.dumps(submission_data, indent=4, ensure_ascii=False)
+                    outfile.write(json_string)
+
                 submissions_path = os.path.join(odk_dir, *['forms', xform_directory, "submissions", '*.json'])
                 files = glob.glob(submissions_path)
                 md5sum = md5(open(json_file, 'rb').read()).hexdigest()
@@ -867,7 +885,7 @@ def store_submission(request, user, project, assistant):
                     if xml_file != "":
                         res_code, message = convert_xml_to_json(odk_dir, xml_file, form_data['form_directory'],
                                                                 form_data['form_schema'], form_data['form_xmlfile'],
-                                                                project, xform_id, assistant, request)
+                                                                user, project, xform_id, assistant, request)
                         if res_code == 0:
                             return True, 201
                         else:

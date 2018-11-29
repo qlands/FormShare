@@ -13,7 +13,8 @@ import qrcode
 import zlib
 import base64
 import io
-from formshare.processes.elasticsearch.repository_index import get_dataset_index_manager
+from formshare.processes.elasticsearch.repository_index import get_dataset_stats_for_project, \
+    delete_dataset_index_by_project
 
 
 class ProjectStoredFileView(ProjectsView):
@@ -86,8 +87,7 @@ class ProjectDetailsView(ProjectsView):
                 active_forms = active_forms + 1
             else:
                 inactive_forms = inactive_forms + 1
-        dataset_index = get_dataset_index_manager(self.request)
-        submissions, last, by, in_form = dataset_index.get_dataset_stats_for_project(project_id)
+        submissions, last, by, in_form = get_dataset_stats_for_project(self.request, user_id, project_code)
         bydetails = get_by_details(self.request, user_id, project_id, by)
         return {'projectData': project_data, 'userid': user_id, 'collaborators': collaborators,
                 'moreCollaborators': more_collaborators, 'assistants': assistants, 'moreAssistants': more_assistants,
@@ -258,7 +258,8 @@ class DeleteProjectView(ProjectsView):
                 feed_object = Object(project_id, 'project')
                 activity = Activity('delete', actor, feed_object)
                 feed_manager.add_activity_feed(activity)
-
+                # Deletes the project from the dataset index
+                delete_dataset_index_by_project(self.request, user_id, project_code)
                 self.request.session.flash(self._('The project was deleted successfully'))
                 return HTTPFound(location=success_page)
             else:

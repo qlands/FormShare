@@ -1,5 +1,5 @@
 from formshare.models import map_from_schema, Odkform, User, Collingroup, Formgrpacces, map_to_schema, \
-    MediaFile, Formacces, Collaborator, Collgroup, Submission, Jsonlog
+    MediaFile, Formacces, Collaborator, Collgroup, Submission, Jsonlog, Project, Userproject
 import logging
 from sqlalchemy.exc import IntegrityError
 import uuid
@@ -10,7 +10,7 @@ from formshare.processes.db.assistant import get_project_from_assistant, get_ass
 from sqlalchemy import or_
 import os
 import json
-from formshare.processes.elasticsearch.repository_index import get_dataset_index_manager
+from formshare.processes.elasticsearch.repository_index import get_dataset_stats_for_form
 
 
 __all__ = ['get_form_details', 'assistant_has_form', 'get_assistant_forms', 'get_form_directory', 'add_new_form',
@@ -19,9 +19,18 @@ __all__ = ['get_form_details', 'assistant_has_form', 'get_assistant_forms', 'get
            'form_file_exists', 'update_file_info', 'set_file_with_error', 'add_assistant_to_form',
            'get_form_assistants', 'update_assistant_privileges', 'remove_assistant_from_form', 'add_group_to_form',
            'get_form_groups', 'update_group_privileges', 'remove_group_from_form', 'get_project_forms',
-           'get_number_of_submissions_in_database', 'get_by_details']
+           'get_number_of_submissions_in_database', 'get_by_details', 'get_form_geopoint', 'get_primary_key']
 
 log = logging.getLogger(__name__)
+
+
+def get_project_code_from_id(request, user, project_id):
+    res = request.dbsession.query(Project).filter(Project.project_id == Userproject.project_id).filter(
+        Userproject.user_id == user).filter(Project.project_id == project_id).filter(
+        Userproject.access_type == 1).first()
+    if res is not None:
+        return res.project_code
+    return None
 
 
 def _get_odk_path(request):
@@ -46,9 +55,8 @@ def get_submission_by(filename):
     return submission_by
 
 
-def get_number_of_submissions(request, project, form):
-    dataset_index = get_dataset_index_manager(request)
-    return dataset_index.get_dataset_stats_for_form(project, form)
+def get_number_of_submissions(request, user, project, form):
+    return get_dataset_stats_for_form(request, user, project, form)
     # form_directory = get_form_directory(request, project, form)
     # odk_dir = _get_odk_path(request)
     # submission_directory = os.path.join(odk_dir, *["forms", form_directory, "submissions", '*.json'])
@@ -103,7 +111,8 @@ def get_form_details(request, user, project, form):
     if result is not None:
         result['pubby'] = get_creator_data(request, result['form_pubby'])
         if result['form_schema'] is None:
-            submissions, last, by = get_number_of_submissions(request, project, result['form_id'])
+            project_code = get_project_code_from_id(request, user, project)
+            submissions, last, by = get_number_of_submissions(request, user, project_code, result['form_id'])
             result["submissions"] = submissions
             result["last"] = last
             result["by"] = by
@@ -170,7 +179,8 @@ def get_project_forms(request, user, project):
     for form in forms:
         form['pubby'] = get_creator_data(request, form['form_pubby'])
         if form['form_schema'] is None:
-            submissions, last, by = get_number_of_submissions(request, project, form['form_id'])
+            project_code = get_project_code_from_id(request, user, project)
+            submissions, last, by = get_number_of_submissions(request, user, project_code, form['form_id'])
             form["submissions"] = submissions
             form["last"] = last
             form["by"] = by
@@ -237,6 +247,13 @@ def assistant_has_form(request, user, project, form, assistant):
     return found
 
 
+def get_form_geopoint(request, project, form,):
+    res = request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(Odkform.form_id == form).first()
+    if res is not None:
+        return res.form_geopoint
+    return None
+
+
 def get_form_directory(request, project, form):
     form_data = request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(
         Odkform.form_id == form).one()
@@ -269,6 +286,15 @@ def get_form_schema(request, project, form):
         Odkform.form_id == form).one()
     if form_data is not None:
         return form_data.form_schema
+    else:
+        return None
+
+
+def get_primary_key(request, project, form):
+    form_data = request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(
+        Odkform.form_id == form).one()
+    if form_data is not None:
+        return form_data.form_pkey
     else:
         return None
 

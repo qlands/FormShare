@@ -1,6 +1,6 @@
 <div class="ibox">
     <div class="ibox-title">
-        <h5>Form links</h5>
+        <h5>{{ _('Form links') }}</h5>
         <div class="ibox-tools">
             <a class="collapse-link">
                 <i class="fa fa-chevron-up" style="margin-right: 10px"></i>
@@ -13,8 +13,9 @@
     <div class="ibox-content">
         <div class="row">
             <div class="col-md-12">
-                <small>Click/Tab and hold to copy</small>
+                <small>{{ _('Click/Tab and hold to copy') }}</small>
                 <ul class="tag-list" style="padding: 0">
+                    <li><a href="{{ request.route_url('form_download_xlsx',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fa far fa-file-excel"></i> {{ _('Download ODK XLSX form') }}</a></li>
                     {% if formDetails.form_schema != None %}
                         <li><a href=""><i class="fa fa-rss"></i> OData endpoint</a></li>
                         <li><a href=""><i class="fa fa-download"></i> Download data in XLS form</a></li>
@@ -22,8 +23,8 @@
                         <li><a href=""><i class="fa fa-pencil"></i> Clean data</a></li>
                         <li><a href=""><i class="fa fa-bug"></i> Clean error logs</a></li>
                     {% else %}
-                        <li><a href=""><i class="fa fa-download"></i> Download testing data in CSV form</a></li>
-                        <li><a href=""><i class="fa fa-images"></i> Download images</a></li>
+                        <li><a href="{{ request.route_url('form_download_csv',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fa fa-download"></i> {{ _('Download data in CSV format') }}</a></li>
+                        <li><a href="{{ request.route_url('form_download_media',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fa fa-images"></i> {{ _('Download submitted media') }}</a></li>
                     {% endif %}
                 </ul>
             </div>

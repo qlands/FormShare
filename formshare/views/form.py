@@ -2,15 +2,21 @@ from .classes import PrivateView
 from formshare.processes.db import get_project_id_from_name, get_form_details, get_form_data, update_form, delete_form,\
     add_file_to_form, get_form_files, remove_file_from_form, get_all_assistants, add_assistant_to_form, \
     get_form_assistants, update_assistant_privileges, remove_assistant_from_form, get_project_groups, \
-    add_group_to_form, get_form_groups, update_group_privileges, remove_group_from_form
-from formshare.processes.odk import upload_odk_form, get_odk_path, update_form_title, retrieve_form_file
+    add_group_to_form, get_form_groups, update_group_privileges, remove_group_from_form, get_form_xls_file
 from formshare.processes.storage import store_file, delete_stream
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from formshare.processes.utilities import add_params_to_url
 import validators
+import os
 from cgi import FieldStorage
 from hashlib import md5
 import logging
+from formshare.processes.elasticsearch.repository_index import delete_dataset_index
+from pyramid.response import FileResponse
+from formshare.processes.submission.api import get_submission_media_files, json_to_csv, get_gps_points_from_form
+from formshare.processes.odk.api import get_odk_path, upload_odk_form, update_form_title, retrieve_form_file
+
+
 log = logging.getLogger(__name__)
 
 
@@ -200,6 +206,7 @@ class DeleteForm(PrivateView):
                                                                                       projcode=project_code)
                 deleted, message = delete_form(self.request, project_id, form_id)
                 if deleted:
+                    delete_dataset_index(self.request, user_id, project_code, form_id)
                     self.request.session.flash(self._('The form was deleted successfully'))
                     self.returnRawViewResult = True
                     return HTTPFound(next_page)
@@ -660,3 +667,128 @@ class RemoveGroupForm(PrivateView):
                 return HTTPFound(location=next_page)
         else:
             raise HTTPNotFound
+
+
+class DownloadCSVData(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+        self.returnRawViewResult = True
+
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+        form_id = self.request.matchdict['formid']
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        created, file = json_to_csv(self.request, project_id, form_id)
+        if created:
+            response = FileResponse(file, request=self.request, content_type='application/csv')
+            response.content_disposition = 'attachment; filename="' + form_id + '.csv"'
+            return response
+        else:
+            next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
+                                               formid=form_id)
+            return HTTPFound(location=next_page)
+
+
+class DownloadXLSX(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+        self.returnRawViewResult = True
+
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+        form_id = self.request.matchdict['formid']
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        xlsx_file = get_form_xls_file(self.request, project_id, form_id)
+        response = FileResponse(xlsx_file, request=self.request, content_type='application/csv')
+        response.content_disposition = 'attachment; filename="' + os.path.basename(xlsx_file) + '"'
+        return response
+
+
+class DownloadSubmissionFiles(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+        self.returnRawViewResult = True
+
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+        form_id = self.request.matchdict['formid']
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        created, file = get_submission_media_files(self.request, project_id, form_id)
+        if created:
+            response = FileResponse(file, request=self.request, content_type='application/zip')
+            response.content_disposition = 'attachment; filename="' + form_id + '.zip"'
+            return response
+        else:
+            next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
+                                               formid=form_id)
+            return HTTPFound(location=next_page)
+
+
+class DownloadGPSPoints(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+        self.returnRawViewResult = True
+
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+        form_id = self.request.matchdict['formid']
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        created, data = get_gps_points_from_form(self.request, user_id, project_code, form_id)
+        if created:
+            return data
+        else:
+            next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
+                                               formid=form_id)
+            return HTTPFound(location=next_page)

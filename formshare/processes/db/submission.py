@@ -4,6 +4,7 @@ import datetime
 from sqlalchemy.exc import IntegrityError
 import sys
 
+
 __all__ = ['get_submission_data', 'add_submission']
 
 log = logging.getLogger(__name__)
@@ -34,3 +35,6 @@ def add_submission(request, project, form, assistant, submission, md5sum, status
         request.dbsession.rollback()
         log.error(sys.exc_info()[0])
         return False, sys.exc_info()[0]
+
+
+

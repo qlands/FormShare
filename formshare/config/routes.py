@@ -13,7 +13,8 @@ from ..views.api import APIUserSearchSelect2
 from ..views.assistant_groups import GroupListView, AddGroupView, EditGroupView, DeleteGroup, GroupMembersView, \
     RemoveMember
 from ..views.form import FormDetails, AddNewForm, EditForm, DeleteForm, AddFileToForm, RemoveFileFromForm, \
-    FormStoredFile, AddAssistant, EditAssistant, RemoveAssistant, AddGroupToForm, EditFormGroup, RemoveGroupForm
+    FormStoredFile, AddAssistant, EditAssistant, RemoveAssistant, AddGroupToForm, EditFormGroup, RemoveGroupForm, \
+    DownloadCSVData, DownloadXLSX, DownloadSubmissionFiles, DownloadGPSPoints
 from ..views.odk import ODKFormList, ODKManifest, ODKMediaFile, ODKPushData, ODKSubmission, ODKXMLForm
 
 route_list = []
@@ -181,6 +182,31 @@ def load_routes(config):
             'form_remove_group',
             '/user/{userid}/project/{projcode}/form/{formid}/group/{groupid}/remove',
             RemoveGroupForm, None))
+
+    # Form actions
+    routes.append(
+        add_route(
+            'form_download_csv',
+            '/user/{userid}/project/{projcode}/form/{formid}/download/csv',
+            DownloadCSVData, None))
+
+    routes.append(
+        add_route(
+            'form_download_xlsx',
+            '/user/{userid}/project/{projcode}/form/{formid}/download/odk',
+            DownloadXLSX, None))
+
+    routes.append(
+        add_route(
+            'form_download_media',
+            '/user/{userid}/project/{projcode}/form/{formid}/download/media',
+            DownloadSubmissionFiles, None))
+
+    routes.append(
+        add_route(
+            'form_download_gpspoints',
+            '/user/{userid}/project/{projcode}/form/{formid}/download/gpspoints',
+            DownloadGPSPoints, 'json'))
 
     # API
     routes.append(add_route('api_select2_users', '/api/select2_user', APIUserSearchSelect2, 'json'))

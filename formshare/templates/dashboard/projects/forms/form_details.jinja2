@@ -7,6 +7,9 @@
     {{ super() }}
     {% cssresource request,'formshare','switchery' %}
     {% cssresource request,'formshare','select2' %}
+    {% if formDetails.form_geopoint != None %}
+        {% cssresource request,'formshare','leaflet' %}
+    {% endif %}
 {% endblock css %}
 
 {% block topScripts %}
@@ -14,6 +17,9 @@
     {% jsresource request,'formshare','switchery' %}
     {% jsresource request,'formshare','taphold' %}
     {% jsresource request,'formshare','select2' %}
+    {% if formDetails.form_geopoint != None %}
+        {% jsresource request,'formshare','leaflet' %}
+    {% endif %}
 {% endblock topScripts %}
 
 {% block breadcrumbs %}
@@ -50,73 +56,9 @@
                         {% include 'dashboard/projects/forms/snippets/form_details.jinja2' %}
                         <div class="row m-t-sm">
                             <div class="col-lg-12">
-                                <div class="ibox">
-                                    <div class="ibox-title">
-                                        <h5>Map</h5>
-                                        <div class="ibox-tools">
-                                            <a class="collapse-link" style="margin-right: 10px">
-                                                <i class="fa fa-chevron-up"></i>
-                                            </a>
-                                            <a class="fullscreen-link">
-                                                <i class="fa fa-expand"></i>
-                                            </a>
-                                        </div>
-                                    </div>
-                                    <div class="ibox-content">
-
-
-                                    </div>
-                                </div>
-                                <div class="ibox">
-                                    <div class="ibox-title">
-                                        <h5>Analysis</h5>
-                                        <div class="ibox-tools">
-                                            <a class="collapse-link" style="margin-right: 10px">
-                                                <i class="fa fa-chevron-up"></i>
-                                            </a>
-                                            <a class="fullscreen-link">
-                                                <i class="fa fa-expand"></i>
-                                            </a>
-                                        </div>
-                                    </div>
-                                    <div class="ibox-content">
-                                        <div class="row">
-                                            <div class="col-md-10">
-
-                                            </div>
-                                            <div class="col-md-2">
-                                                <div class="btn-group btn-block">
-                                                    <button data-toggle="dropdown" style="margin-bottom: 10px" class="btn btn-block btn-primary dropdown-toggle">Add</button>
-                                                    <ul class="dropdown-menu">
-                                                        <li><a class="dropdown-item" href="#">Action</a></li>
-                                                        <li><a class="dropdown-item" href="#" class="font-bold">Another action</a></li>
-                                                        <li><a class="dropdown-item" href="#">Something else here</a></li>
-                                                        <li class="dropdown-divider"></li>
-                                                        <li><a class="dropdown-item"  href="#">Separated link</a></li>
-                                                    </ul>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="ibox">
-                                            <div class="ibox-title">
-                                                <h5>Analysis 1</h5>
-                                                <div class="ibox-tools">
-                                                    <a class="collapse-link" style="margin-right: 10px">
-                                                        <i class="fa fa-chevron-up"></i>
-                                                    </a>
-                                                    <a class="fullscreen-link">
-                                                        <i class="fa fa-expand"></i>
-                                                    </a>
-                                                </div>
-                                            </div>
-                                            <div class="ibox-content">
-                                                <div class="scroll_content">
-
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                {% if formDetails.form_geopoint != None %}
+                                    {% include 'dashboard/projects/forms/snippets/form_map.jinja2' %}
+                                {% endif %}
                                 {% include 'dashboard/projects/forms/snippets/form_activity.jinja2' %}
                             </div>
                         </div>
@@ -143,8 +85,43 @@
                 switchElement.handleOnchange(true);
             }
         }
+        {% if formDetails.form_geopoint != None %}
+            $(document).ready(function() {
 
-        $(document).ready(function() {
+            var mymap = L.map('projmap').setView([51.505, -0.09], 13);
+            L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                maxZoom: 18,
+                id: 'mapbox.streets',
+                accessToken: 'pk.eyJ1IjoicWxhbmRzIiwiYSI6ImNqZHB1ZDh4YzEwZHEyeG1rcjc0NmFsNzIifQ.i3YebmNDByns1c1ixZE0bA'
+            }).addTo(mymap);
+
+            var element = document.getElementById('mapbox');
+            var full_screen = false;
+            var normal_height = $("#projmap").height();
+            new ResizeSensor(element, function() {
+                var window_width = $(window).width();
+                var element_width =  element.clientWidth;
+                if ((element_width / window_width) >= 0.80)
+                {
+                    $("#projmap").height($(window).height()-80);
+                    mymap.invalidateSize();
+                    //console.log('Changed to ' + element.clientWidth);
+                    full_screen = true;
+                }
+                else
+                {
+                    if (full_screen)
+                    {
+                        $("#projmap").height(normal_height);
+                        mymap.invalidateSize();
+                        //console.log('Back to ' + normal_height);
+                        //console.log('Changed to ' + element.clientWidth);
+                        full_screen = false;
+                    }
+                }
+            });
+        {% endif %}
 
             $(".collaborator-list").select2({
                 dropdownParent: $('#member_form')

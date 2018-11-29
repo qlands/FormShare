@@ -14,7 +14,7 @@ from formshare.processes.db import assistant_has_form, get_assistant_forms, get_
     form_exists, get_form_directory, get_form_xml_file, get_form_xls_file, update_form, get_form_data, \
     get_form_schema, get_submission_data, add_submission, add_json_log, update_json_status, add_json_history, \
     form_file_exists, get_url_from_file, set_file_with_error, update_file_info, get_project_from_assistant, \
-    get_form_files
+    get_form_files, get_project_code_from_id, get_form_geopoint
 import uuid
 import datetime
 import re
@@ -30,7 +30,7 @@ from formshare.processes.storage import get_stream, response_stream, store_file
 from pyramid.response import Response
 from urllib.request import urlretrieve
 from pyramid.httpexceptions import HTTPFound
-from formshare.processes.elasticsearch.repository_index import get_dataset_index_manager
+from formshare.processes.elasticsearch.repository_index import create_dataset_index, add_dataset
 
 import logging
 log = logging.getLogger(__name__)
@@ -181,6 +181,40 @@ def update_form_title(request, project, form, title):
     wb.save(xlsx_file)
 
 
+def get_geopoint_variable_from_xlsx(xlsx_file):
+    wb = load_workbook(xlsx_file)
+    sheet = wb['survey']
+    type_column = -1
+    name_column = -1
+    groups = []
+    repeats = []
+    for y in range(sheet.min_column, sheet.max_column+1):
+        if sheet.cell(row=1, column=y).value == "type":
+            type_column = y
+        if sheet.cell(row=1, column=y).value == "name":
+            name_column = y
+    for x in range(2, sheet.max_row+1):
+        variable_type = sheet.cell(x, type_column).value
+        if variable_type is not None:
+            variable_name = sheet.cell(x, name_column).value
+            variable_type = variable_type.lower().strip()
+            if variable_type == 'begin repeat':
+                repeats.append(variable_name)
+            if variable_type == 'end repeat':
+                del repeats[-1]
+            if variable_type == 'begin group':
+                groups.append(variable_name)
+            if variable_type == 'end group':
+                del groups[-1]
+            if variable_type == 'geopoint':
+                if len(repeats) == 0:
+                    if len(groups) > 0:
+                        return "/".join(groups) + '/' + variable_name
+                    else:
+                        return variable_name
+    return None
+
+
 def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
     uid = str(uuid.uuid4())
     form_directory = uid[-12:]
@@ -220,70 +254,75 @@ def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
         eid = root.findall(".//{" + nsmap + "}" + parts[0])
         if eid:
             form_id = eid[0].get("id")
-            form_title = root.findall(".//{" + h_nsmap + "}title")
-            if not form_exists(request, project_id, form_id):
-                paths = ['forms', form_directory, 'media']
-                if not os.path.exists(os.path.join(odk_dir, *paths)):
-                    os.makedirs(os.path.join(odk_dir, *paths))
+            if re.match(r'^[A-Za-z0-9_]+$', form_id):
+                form_title = root.findall(".//{" + h_nsmap + "}title")
+                if not form_exists(request, project_id, form_id):
+                    paths = ['forms', form_directory, 'media']
+                    if not os.path.exists(os.path.join(odk_dir, *paths)):
+                        os.makedirs(os.path.join(odk_dir, *paths))
 
-                    paths = ['forms', form_directory, 'submissions']
-                    os.makedirs(os.path.join(odk_dir, *paths))
+                        paths = ['forms', form_directory, 'submissions']
+                        os.makedirs(os.path.join(odk_dir, *paths))
 
-                    paths = ['forms', form_directory, 'submissions', 'logs']
-                    os.makedirs(os.path.join(odk_dir, *paths))
+                        paths = ['forms', form_directory, 'submissions', 'logs']
+                        os.makedirs(os.path.join(odk_dir, *paths))
 
-                    paths = ['forms', form_directory, 'submissions', 'maps']
-                    os.makedirs(os.path.join(odk_dir, *paths))
+                        paths = ['forms', form_directory, 'submissions', 'maps']
+                        os.makedirs(os.path.join(odk_dir, *paths))
 
-                    paths = ['forms', form_directory, 'repository']
-                    os.makedirs(os.path.join(odk_dir, *paths))
-                    paths = ['forms', form_directory, 'repository', 'temp']
-                    os.makedirs(os.path.join(odk_dir, *paths))
+                        paths = ['forms', form_directory, 'repository']
+                        os.makedirs(os.path.join(odk_dir, *paths))
+                        paths = ['forms', form_directory, 'repository', 'temp']
+                        os.makedirs(os.path.join(odk_dir, *paths))
 
-                xls_file_fame = os.path.basename(file_name)
-                xml_file_name = os.path.basename(xml_file)
-                paths = ['forms', form_directory, xls_file_fame]
-                final_xls = os.path.join(odk_dir, *paths)
-                paths = ['forms', form_directory, xml_file_name]
-                final_xml = os.path.join(odk_dir, *paths)
-                shutil.copyfile(file_name, final_xls)
-                shutil.copyfile(xml_file, final_xml)
+                    xls_file_fame = os.path.basename(file_name)
+                    xml_file_name = os.path.basename(xml_file)
+                    paths = ['forms', form_directory, xls_file_fame]
+                    final_xls = os.path.join(odk_dir, *paths)
+                    paths = ['forms', form_directory, xml_file_name]
+                    final_xml = os.path.join(odk_dir, *paths)
+                    shutil.copyfile(file_name, final_xls)
+                    shutil.copyfile(xml_file, final_xml)
+                    geopoint = get_geopoint_variable_from_xlsx(final_xls)
+                    form_data['project_id'] = project_id
+                    form_data['form_id'] = form_id
+                    form_data['form_name'] = form_title[0].text
+                    form_data['form_cdate'] = datetime.datetime.now()
+                    form_data['form_directory'] = form_directory
+                    form_data['form_accsub'] = 1
+                    form_data['form_testing'] = 1
+                    form_data['form_xlsfile'] = final_xls
+                    form_data['form_xmlfile'] = final_xml
+                    form_data['form_pubby'] = user_id
+                    form_data['form_geopoint'] = geopoint
 
-                form_data['project_id'] = project_id
-                form_data['form_id'] = form_id
-                form_data['form_name'] = form_title[0].text
-                form_data['form_cdate'] = datetime.datetime.now()
-                form_data['form_directory'] = form_directory
-                form_data['form_accsub'] = 1
-                form_data['form_testing'] = 1
-                form_data['form_xlsfile'] = final_xls
-                form_data['form_xmlfile'] = final_xml
-                form_data['form_pubby'] = user_id
+                    added, message = add_new_form(request, form_data)
+                    if not added:
+                        return added, message
 
-                added, message = add_new_form(request, form_data)
-                if not added:
-                    return added, message
+                    # If we have itemsets.csv add it to the media path
+                    if itemsets_csv != "":
+                        paths = ['forms', form_directory, 'media', 'itemsets.csv']
+                        itemset_file = os.path.join(odk_dir, *paths)
+                        shutil.copyfile(itemsets_csv, itemset_file)
 
-                # If we have itemsets.csv add it to the media path
-                if itemsets_csv != "":
-                    paths = ['forms', form_directory, 'media', 'itemsets.csv']
-                    itemset_file = os.path.join(odk_dir, *paths)
-                    shutil.copyfile(itemsets_csv, itemset_file)
+                    paths = ['forms', form_directory, parts[0]+".json"]
+                    json_file = os.path.join(odk_dir, *paths)
 
-                paths = ['forms', form_directory, parts[0]+".json"]
-                json_file = os.path.join(odk_dir, *paths)
+                    metadata = {"formID": form_id, "name": form_title[0].text, "majorMinorVersion": "",
+                                "version": datetime.datetime.now().strftime("%Y%m%d"),
+                                "hash": 'md5:' + md5(open(final_xml, 'rb').read()).hexdigest(),
+                                "descriptionText": form_title[0].text}
 
-                metadata = {"formID": form_id, "name": form_title[0].text, "majorMinorVersion": "",
-                            "version": datetime.datetime.now().strftime("%Y%m%d"),
-                            "hash": 'md5:' + md5(open(final_xml, 'rb').read()).hexdigest(),
-                            "descriptionText": form_title[0].text}
-
-                with open(json_file, "w",) as outfile:
-                    json_string = json.dumps(metadata, indent=4, ensure_ascii=False)
-                    outfile.write(json_string)
-                return True, form_id
+                    with open(json_file, "w",) as outfile:
+                        json_string = json.dumps(metadata, indent=4, ensure_ascii=False)
+                        outfile.write(json_string)
+                    return True, form_id
+                else:
+                    return False, request.translate("The form already exists in this project")
             else:
-                return False, request.translate("The form already exists in this project")
+                return False, request.translate(
+                    "The form ID has especial characters. FormShare only allows letters, numbers and underscores(_)")
         else:
             return False, request.translate(
                 "Cannot find XForm ID. Please send this form to support_formshare@qlands.com")
@@ -796,16 +835,24 @@ def convert_xml_to_json(odk_dir, xml_file, xform_directory, schema, xml_form_fil
             # file are so big that separation is required
             try:
                 shutil.move(temp_json_file, json_file)
-
+                project_code = get_project_code_from_id(request, user, project)
                 with open(json_file, 'r') as f:
                     submission_data = json.load(f)
                     submission_data["_submitted_by"] = assistant
                     submission_data["_submitted_date"] = datetime.datetime.now().isoformat()
                     submission_data["_user_id"] = user
-                    submission_data["_project_id"] = project
+                    submission_data["_submission_id"] = submission_id
+                    submission_data["_project_code"] = project_code
+                    geopoint_variable = get_form_geopoint(request, project, form)
+                    if geopoint_variable is not None:
+                        try:
+                            submission_data["_geopoint"] = submission_data[geopoint_variable]
+                        except KeyError:
+                            pass
 
-                dataset_index = get_dataset_index_manager(request)
-                dataset_index.add_dataset(submission_id, submission_data)
+                # Adds the dataset to the index
+                create_dataset_index(request, user, project_code, form)
+                add_dataset(request, user, project_code, form, submission_id, submission_data)
 
                 with open(json_file, "w", ) as outfile:
                     json_string = json.dumps(submission_data, indent=4, ensure_ascii=False)

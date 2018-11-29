@@ -1,5 +1,7 @@
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import RequestError
+from elasticsearch.exceptions import NotFoundError
+
 
 def _get_dataset_index_definition(number_of_shards, number_of_replicas):
     """
@@ -39,8 +41,11 @@ def _get_dataset_index_definition(number_of_shards, number_of_replicas):
                     "_user_id": {
                         "type": "keyword"
                     },
-                    "_project_id": {
+                    "_project_code": {
                         "type": "keyword"
+                    },
+                    "_geopoint": {
+                        "type": "text"
                     }
                 }
             }
@@ -49,30 +54,11 @@ def _get_dataset_index_definition(number_of_shards, number_of_replicas):
     return _json
 
 
-def get_search_dict_by_form(project_id, form_id):
-    """
-    Constructs a ES search that will be used to search for the datasets related to a form in a project
-    :param project_id: The project to search for its datasets
-    :param form_id: The form to search for its datasets
-    :return: A dict that will be passes to ES
-    """
+def get_search_dict_by_form():
     _dict = {
         "size": 1,
         "query": {
-            "bool": {
-                "must": [
-                    {
-                        "term": {
-                            "_project_id": project_id
-                        }
-                    },
-                    {
-                        "term": {
-                            "_xform_id_string": form_id
-                        }
-                    }
-                ]
-            }
+            "match_all": {}
         },
         "sort": [
             {
@@ -85,10 +71,32 @@ def get_search_dict_by_form(project_id, form_id):
     return _dict
 
 
-def get_search_dict_by_project(project_id):
+def get_datasets_dict(query_from=None, query_size=None):
+    _dict = {
+        "query": {
+            "match_all": {}
+        },
+        "sort": [
+            {
+                "_submitted_date": {
+                    "order": "desc"
+                }
+            }
+        ]
+    }
+    if query_size is not None:
+        _dict["size"] = query_size
+    else:
+        _dict["size"] = 10000  # Bring 10,000 records in no size is specified
+    if query_from is not None:
+        _dict["from"] = query_from
+    return _dict
+
+
+def get_search_dict_by_project(project):
     """
     Constructs a ES search that will be used to search for the datasets related to a form in a project
-    :param project_id: The project to search for its datasets
+    :param project: The project to search for its datasets
     :return: A dict that will be passes to ES
     """
     _dict = {
@@ -97,7 +105,7 @@ def get_search_dict_by_project(project_id):
             "bool": {
                 "must": {
                     "term": {
-                        "_project_id": project_id
+                        "_project_code": project
                     }
                 }
             }
@@ -113,153 +121,176 @@ def get_search_dict_by_project(project_id):
     return _dict
 
 
-def get_dataset_index_manager(request):
-    project_code = request.matchdict['projcode']
-    user_id = request.matchdict['userid']
-    return DatasetIndexManager(request.registry.settings, user_id, project_code)
-
-
-def get_dataset_index_manager2(request, project_code, user_id):
-    return DatasetIndexManager(request.registry.settings, user_id, project_code)
-
-
-class DatasetIndexManager(object):
+def create_connection(request):
     """
-    The Manager class handles all activity feed operations.
+    Creates a connection to ElasticSearch and pings it.
+    :return: A tested (pinged) connection to ElasticSearch
     """
-    def create_connection(self):
-        """
-        Creates a connection to ElasticSearch and pings it.
-        :return: A tested (pinged) connection to ElasticSearch
-        """
-        if not isinstance(self.port, int):
-            raise ValueError('Port must be an integer')
-        if not isinstance(self.host, str):
-            raise ValueError('Host must be string')
-        if self.url_prefix is not None:
-            if not isinstance(self.url_prefix, str):
-                raise ValueError('URL prefix must be string')
-        if not isinstance(self.use_ssl, bool):
-            raise ValueError('Use SSL must be boolean')
-        cnt_params = {'host': self.host, 'port': self.port}
-        if self.url_prefix is not None:
-            cnt_params["url_prefix"] = self.url_prefix
-        if self.use_ssl:
-            cnt_params["use_ssl"] = self.use_ssl
-        connection = Elasticsearch([cnt_params], max_retries=1)
-        if connection.ping():
-            return connection
+    try:
+        host = request.registry.settings['elasticsearch.repository.host']
+    except KeyError:
+        host = "localhost"
+
+    try:
+        port = int(request.registry.settings['elasticsearch.repository.port'])
+    except KeyError:
+        port = 9200
+
+    try:
+        url_prefix = request.registry.settings['elasticsearch.repository.url_prefix']
+    except KeyError:
+        url_prefix = None
+
+    try:
+        use_ssl = request.registry.settings['elasticsearch.repository.use_ssl']
+        if use_ssl == 'True':
+            use_ssl = True
         else:
-            return None
+            use_ssl = False
+    except KeyError:
+        use_ssl = False
 
-    def __init__(self, settings, user_id, project_code):
-        """
-        The constructor of the dataset index manager. It creates the index if it doesn't exist. See
-        https://www.elastic.co/guide/en/elasticsearch/reference/current/_basic_concepts.html#getting-started-shards-and-replicas
-        for more information about shards and replicas
-        :param settings: Pyramid settings.
-        """
-        self.user_id = user_id
-        self.project_code = project_code
+    cnt_params = {'host': host, 'port': port}
+    if url_prefix is not None:
+        cnt_params["url_prefix"] = url_prefix
+    if use_ssl:
+        cnt_params["use_ssl"] = use_ssl
+    connection = Elasticsearch([cnt_params], max_retries=1)
+    if connection.ping():
+        return connection
+    else:
+        return None
 
+
+def get_index_name(user, project, form):
+    return user.lower() + "_" + project.lower() + "_" + form.lower()
+
+
+def create_dataset_index(request, user, project, form):
+    try:
+        number_of_shards = int(request.registry.settings['elasticsearch.repository.number_of_shards'])
+    except KeyError:
+        number_of_shards = 5
+
+    try:
+        number_of_replicas = int(request.registry.settings['elasticsearch.repository.number_of_replicas'])
+    except KeyError:
+        number_of_replicas = 1
+
+    connection = create_connection(request)
+    if connection is not None:
         try:
-            self.host = settings['elasticsearch.repository.host']
-        except KeyError:
-            self.host = "localhost"
-
-        try:
-            self.port = int(settings['elasticsearch.repository.port'])
-        except KeyError:
-            self.port = 9200
-
-        try:
-            self.url_prefix = settings['elasticsearch.repository.url_prefix']
-        except KeyError:
-            self.url_prefix = None
-
-        try:
-            use_ssl = settings['elasticsearch.repository.use_ssl']
-            if use_ssl == 'True':
-                self.use_ssl = True
-            else:
-                self.use_ssl = False
-        except KeyError:
-            self.use_ssl = False
-
-        try:
-            number_of_shards = int(settings['elasticsearch.repository.number_of_shards'])
-        except KeyError:
-            number_of_shards = 5
-
-        try:
-            number_of_replicas = int(settings['elasticsearch.repository.number_of_replicas'])
-        except KeyError:
-            number_of_replicas = 1
-
-        connection = self.create_connection()
-        if connection is not None:
-            try:
-                connection.indices.create(self.user_id + "_" + self.project_code,
-                                          body=_get_dataset_index_definition(number_of_shards, number_of_replicas))
-            except RequestError as e:
-                if e.status_code == 400:
-                    if e.error.find('already_exists') >= 0:
-                        pass
-                    else:
-                        raise e
+            index_name = get_index_name(user, project, form)
+            connection.indices.create(index_name,
+                                      body=_get_dataset_index_definition(number_of_shards, number_of_replicas))
+        except RequestError as e:
+            if e.status_code == 400:
+                if e.error.find('already_exists') >= 0:
+                    pass
                 else:
                     raise e
+            else:
+                raise e
+    else:
+        raise RequestError("Cannot connect to ElasticSearch")
 
-        else:
-            raise RequestError("Cannot connect to ElasticSearch")
 
-    def add_dataset(self, dataset_id, data_dict):
-        """
-        Adds a use to the index
-        :param dataset_id: The dataset to add into the index
-        :param data_dict: The data related to the dataset as dict
-        :return: The unique ID give to the link
-        """
+def delete_dataset_index(request, user, project, form):
+    connection = create_connection(request)
+    if connection is not None:
+        try:
+            index_name = get_index_name(user, project, form)
+            connection.indices.delete(index_name, ignore=[400, 404])
+        except RequestError as e:
+            if e.status_code == 400:
+                if e.error.find('already_exists') >= 0:
+                    pass
+                else:
+                    raise e
+            else:
+                raise e
+    else:
+        raise RequestError("Cannot connect to ElasticSearch")
 
-        connection = self.create_connection()
-        if connection is not None:
-            connection.index(index=self.user_id + "_" + self.project_code, doc_type='dataset', id=dataset_id,
-                             body=data_dict)
-        else:
-            raise RequestError("Cannot connect to ElasticSearch")
 
-    def get_dataset_stats_for_form(self, project_id, form_id):
-        """
-        Returns the number of datasets and the last dataset datetime and by from a form or project
-        :return: Dict array
-        """
-        connection = self.create_connection()
-        if connection is not None:
-            es_result = connection.search(index=self.user_id + "_" + self.project_code,
-                                          body=get_search_dict_by_form(project_id, form_id))
+def delete_dataset_index_by_project(request, user, project):
+    connection = create_connection(request)
+    if connection is not None:
+        try:
+            index_name = user.lower() + "_" + project.lower() + "_*"
+            connection.indices.delete(index_name, ignore=[400, 404])
+        except RequestError as e:
+            if e.status_code == 400:
+                if e.error.find('already_exists') >= 0:
+                    pass
+                else:
+                    raise e
+            else:
+                raise e
+    else:
+        raise RequestError("Cannot connect to ElasticSearch")
+
+
+def add_dataset(request, user, project, form, dataset_id, data_dict):
+    index_name = get_index_name(user, project, form)
+    connection = create_connection(request)
+    if connection is not None:
+        connection.index(index=index_name, doc_type='dataset', id=dataset_id, body=data_dict)
+    else:
+        raise RequestError("Cannot connect to ElasticSearch")
+
+
+def get_dataset_stats_for_form(request, user, project, form):
+    index_name = get_index_name(user, project, form)
+    connection = create_connection(request)
+    if connection is not None:
+        try:
+            es_result = connection.search(index=index_name, body=get_search_dict_by_form())
             if es_result['hits']['total'] > 0:
                 for hit in es_result['hits']['hits']:
                     return es_result['hits']['total'], hit['_source']['_submitted_date'], hit['_source'][
                         '_submitted_by']
             else:
                 return 0, None, None
-        else:
-            raise RequestError("Cannot connect to ElasticSearch")
+        except NotFoundError:
+            return 0, None, None
+    else:
+        raise RequestError("Cannot connect to ElasticSearch")
 
-    def get_dataset_stats_for_project(self, project_id):
-        """
-        Returns the number of datasets and the last dataset datetime and by from a form or project
-        :return: Dict array
-        """
-        connection = self.create_connection()
-        if connection is not None:
-            es_result = connection.search(index=self.user_id + "_" + self.project_code,
-                                          body=get_search_dict_by_project(project_id))
+
+def get_datasets_from_form(request, user, project, form, query_from=None, query_size=None):
+    index_name = get_index_name(user, project, form)
+    connection = create_connection(request)
+    if connection is not None:
+        try:
+            es_result = connection.search(index=index_name, body=get_datasets_dict(query_from, query_size))
+            result = []
+            if es_result['hits']['total'] > 0:
+                for hit in es_result['hits']['hits']:
+                    result.append(hit['_source'])
+                return len(result), result
+            else:
+                return 0, []
+        except NotFoundError:
+            return 0, []
+    else:
+        raise RequestError("Cannot connect to ElasticSearch")
+
+
+def get_dataset_stats_for_project(request, user, project):
+    index_name = user.lower() + "_" + project.lower() + "_*"
+    connection = create_connection(request)
+    if connection is not None:
+        try:
+            es_result = connection.search(index=index_name,
+                                          body=get_search_dict_by_project(project))
             if es_result['hits']['total'] > 0:
                 for hit in es_result['hits']['hits']:
                     return es_result['hits']['total'], hit['_source']['_submitted_date'], hit['_source'][
                         '_submitted_by'], hit['_source']['_xform_id_string']
             else:
                 return 0, None, None, None
-        else:
-            raise RequestError("Cannot connect to ElasticSearch")
+        except NotFoundError:
+            return 0, None, None, None
+    else:
+        raise RequestError("Cannot connect to ElasticSearch")

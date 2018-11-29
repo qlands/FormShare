@@ -5,13 +5,14 @@ import datetime
 import sys
 import uuid
 from sqlalchemy.exc import IntegrityError
-from formshare.processes.elasticsearch.repository_index import get_dataset_index_manager2
+from formshare.processes.elasticsearch.repository_index import get_dataset_stats_for_project
 from formshare.processes.db.form import get_by_details, get_form_data
 import dateutil.parser
 
 __all__ = [
     'get_project_id_from_name', 'get_user_projects', 'get_active_project', 'add_project', 'modify_project',
-    'delete_project', 'is_collaborator', 'add_file_to_project', 'get_project_files', 'remove_file_from_project']
+    'delete_project', 'is_collaborator', 'add_file_to_project', 'get_project_files', 'remove_file_from_project',
+    'get_project_code_from_id']
 
 log = logging.getLogger(__name__)
 
@@ -22,6 +23,15 @@ def get_project_id_from_name(request, user, project_code):
         Userproject.access_type == 1).first()
     if res is not None:
         return res.project_id
+    return None
+
+
+def get_project_code_from_id(request, user, project_id):
+    res = request.dbsession.query(Project).filter(Project.project_id == Userproject.project_id).filter(
+        Userproject.user_id == user).filter(Project.project_id == project_id).filter(
+        Userproject.access_type == 1).first()
+    if res is not None:
+        return res.project_code
     return None
 
 
@@ -99,8 +109,7 @@ def get_user_projects(request, user, logged_user, private=False):
         projects = map_from_schema(res)
 
     for project in projects:
-        dataset_index = get_dataset_index_manager2(request, project['project_code'], user)
-        submissions, last, by, form = dataset_index.get_dataset_stats_for_project(project['project_id'])
+        submissions, last, by, form = get_dataset_stats_for_project(request, user, project['project_code'])
         if last is not None:
             project['last_submission'] = dateutil.parser.parse(last)
         else:

@@ -146,6 +146,7 @@ class Odkform(Base):
     form_xlsfile = Column(UnicodeText)
     form_xmlfile = Column(UnicodeText)
     form_public = Column(INTEGER)
+    form_geopoint = Column(UnicodeText)
     extras = Column(UnicodeText)
     tags = Column(UnicodeText)
 

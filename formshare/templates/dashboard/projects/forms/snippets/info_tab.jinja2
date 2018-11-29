@@ -23,7 +23,7 @@
             </div>
         {% endif %}
         <p style="margin-top: 10px" class="small font-bold">
-            {% if formDetails.form_schema != None %}<span class="badge badge-primary">With repository</span>{% else %}<span class="badge badge-warning" title="{{ _('Data is not stored in a database') }}">{{ _('In testing') }}</span>{% endif %} {% if formDetails.form_accsub == 1 %}<span class="label label-primary" title="{{ _('Accept submissions') }}">{{ _('Active') }}</span>{% else %}<span class="label label-danger" title="{{ _('Does\'t accept submissions') }}">{{ _('Inactive') }}</span>{% endif %}
+            {% if formDetails.form_schema != None %}<span class="badge badge-primary">With repository</span>{% else %}<span class="badge badge-warning" title="{{ _('Data is not stored in a database') }}">{{ _('In testing') }}</span>{% endif %} {% if formDetails.form_accsub == 1 %}<span class="label label-primary" title="{{ _('Accept submissions') }}">{{ _('Active') }}</span>{% else %}<span class="label label-danger" title="{{ _('Does\'t accept submissions') }}">{{ _('Inactive') }}</span>{% endif %} {% if formDetails.form_geopoint != None %}<span class="label label-default">{{ _('Georeferenced') }}</span>{% endif %}
         </p>
         {% if projectDetails.access_type != 4 %}
             <div class="actions">

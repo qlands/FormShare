@@ -1,6 +1,6 @@
 <div style="border-bottom: 0px;" class="feed-element">
     <a href="{{ request.route_url('form_details',userid=userid,projcode=projectData.project_code,formid=form.form_id) }}" class="float-left">
-        <img alt="image" class="rounded-circle" src="{{request.url_for_static('ODK.png')}}">
+        <div class="rounded-circle" style="margin-right: 10px; background-color: {{ form._xid_color }}; width: 38px; height: 38px; display: inline-block; vertical-align: middle" ><span style="color: white; position: relative; float: left; top: 50%; left: 50%; transform: translate(-50%, -50%);">ODK</span></div>
     </a>
     <div class="media-body ">
         <div class="row">
@@ -28,6 +28,7 @@
         </div>
     </div>
 </div>
+
 {% if form.haschildren == "False" %}
 <hr class="hr-line-solid">
 {% endif %}

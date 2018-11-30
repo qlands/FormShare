@@ -16,7 +16,7 @@
         </div>
     {% endblock profile_user_section %}
     {% block profile_project_section %}
-        <div class="col-lg-5">
+        <div class="col-lg-9">
             {% include 'dashboard/projects/snippets/project_tab.jinja2' %}
             {% block profile_project_section_extra %}
 
@@ -24,11 +24,11 @@
         </div>
     {% endblock profile_project_section %}
     {% block profile_activity_section %}
-        <div class="col-lg-4 m-b-lg">
-            {% include 'dashboard/profile/snippets/timeline_tab.jinja2' %}
-            {% block profile_activity_section_extra %}
-
-            {% endblock profile_activity_section_extra %}
-        </div>
+{#        <div class="col-lg-4 m-b-lg">#}
+{#            {% include 'dashboard/profile/snippets/timeline_tab.jinja2' %}#}
+{#            {% block profile_activity_section_extra %}#}
+{##}
+{#            {% endblock profile_activity_section_extra %}#}
+{#        </div>#}
     {% endblock profile_activity_section %}
 </div>

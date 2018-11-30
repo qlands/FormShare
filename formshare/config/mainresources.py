@@ -45,6 +45,11 @@ def create_resources(apppath, config):
 
     r.add_js_resource('formshare', 'taphold', 'js/plugins/taphold/taphold.js', None)
 
+    r.add_css_resource('formshare', 'leaflet_beautify_marker_icon',
+                       'js/plugins/leaflet/plugins/leaflet-beautify-marker-icon.css', 'leaflet')
+    r.add_js_resource('formshare', 'leaflet_beautify_marker_icon',
+                      'js/plugins/leaflet/plugins/leaflet-beautify-marker-icon.js', 'leaflet')
+
     # ------------------------------Collaborators, assistants and groups --------------------------------------
     r.add_css_resource('formshare', 'select2', 'css/plugins/select2/select2.min.css', 'bootstrap')
     r.add_js_resource('formshare', 'select2', 'js/plugins/select2/select2.full.min.js', None)

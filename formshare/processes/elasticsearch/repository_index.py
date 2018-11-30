@@ -277,6 +277,25 @@ def get_datasets_from_form(request, user, project, form, query_from=None, query_
         raise RequestError("Cannot connect to ElasticSearch")
 
 
+def get_datasets_from_project(request, user, project, query_from=None, query_size=None):
+    index_name = user.lower() + "_" + project.lower() + "_*"
+    connection = create_connection(request)
+    if connection is not None:
+        try:
+            es_result = connection.search(index=index_name, body=get_datasets_dict(query_from, query_size))
+            result = []
+            if es_result['hits']['total'] > 0:
+                for hit in es_result['hits']['hits']:
+                    result.append(hit['_source'])
+                return len(result), result
+            else:
+                return 0, []
+        except NotFoundError:
+            return 0, []
+    else:
+        raise RequestError("Cannot connect to ElasticSearch")
+
+
 def get_dataset_stats_for_project(request, user, project):
     index_name = user.lower() + "_" + project.lower() + "_*"
     connection = create_connection(request)

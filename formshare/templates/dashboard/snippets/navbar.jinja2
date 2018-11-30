@@ -66,9 +66,9 @@
                             <li {% if activeMenu == 'groups' %}class="active" {% endif %}>
                                 <a href="{{ request.route_url('groups', userid=activeProject.owner,projcode=activeProject.project_code ) }}"><i style="margin-left: 10px" class="fas fa-users"></i> <span class="nav-label">{{ _('Assistant groups') }}</span></a>
                             </li>
-                            <li>
-                                <a href="#"><i style="margin-left: 10px" class="fab fa-wpforms"></i> <span class="nav-label">{{ _('Forms') }}</span></a>
-                            </li>
+{#                            <li>#}
+{#                                <a href="#"><i style="margin-left: 10px" class="fab fa-wpforms"></i> <span class="nav-label">{{ _('Forms') }}</span></a>#}
+{#                            </li>#}
                         {% endif %}
                     {% endif %}
                     {% block nav_links_extra %}

@@ -786,9 +786,4 @@ class DownloadGPSPoints(PrivateView):
             raise HTTPNotFound
 
         created, data = get_gps_points_from_form(self.request, user_id, project_code, form_id)
-        if created:
-            return data
-        else:
-            next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
-                                               formid=form_id)
-            return HTTPFound(location=next_page)
+        return data

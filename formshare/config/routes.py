@@ -4,7 +4,7 @@ from ..views.basic_views import NotFoundView, HomeView, log_out_view, LoginView,
     CollaboratorsLoginView
 from ..views.dashboard import UserDashBoardView
 from ..views.projects import AddProjectView, ProjectListView, ProjectDetailsView, ProjectStoredFileView, \
-    EditProjectView, DeleteProjectView, AddFileToProject, RemoveFileFromProject
+    EditProjectView, DeleteProjectView, AddFileToProject, RemoveFileFromProject, DownloadProjectGPSPoints
 from ..views.profile import UserProfileView, EditProfileView
 from ..views.collaborators import CollaboratorsListView, RemoveCollaborator
 from ..views.assistants import AssistantsListView, AddAssistantsView, EditAssistantsView, DeleteAssistant, \
@@ -83,6 +83,9 @@ def load_routes(config):
 
     routes.append(add_route('project_remove_file', '/user/{userid}/project/{projcode}/uploads/{filename}/remove',
                             RemoveFileFromProject, None))
+
+    routes.append(add_route('project_download_gpspoints', '/user/{userid}/project/{projcode}/download/gpspoints',
+                            DownloadProjectGPSPoints, 'json'))
 
     # Collaborators
 

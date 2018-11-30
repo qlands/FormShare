@@ -15,6 +15,7 @@ import base64
 import io
 from formshare.processes.elasticsearch.repository_index import get_dataset_stats_for_project, \
     delete_dataset_index_by_project
+from formshare.processes.submission.api import get_gps_points_from_project
 
 
 class ProjectStoredFileView(ProjectsView):
@@ -357,3 +358,28 @@ class RemoveFileFromProject(ProjectsView):
             return HTTPFound(location=next_page)
         else:
             raise HTTPNotFound
+
+
+class DownloadProjectGPSPoints(ProjectsView):
+    def __init__(self, request):
+        ProjectsView.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+        self.returnRawViewResult = True
+
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        created, data = get_gps_points_from_project(self.request, user_id, project_code)
+        return data

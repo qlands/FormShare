@@ -8,7 +8,7 @@
     {{ super() }}
 
     {% cssresource request,'formshare','bsmarkdown' %}
-    {% cssresource request,'formshare','leaflet' %}
+    {% cssresource request,'formshare','leaflet_beautify_marker_icon' %}
 
 {% endblock css %}
 
@@ -16,7 +16,7 @@
     {{ super() }}
 
     {% jsresource request,'formshare','markdown' %}
-    {% jsresource request,'formshare','leaflet' %}
+    {% jsresource request,'formshare','leaflet_beautify_marker_icon' %}
     {% jsresource request,'formshare','taphold' %}
     {% jsresource request,'formshare','clipboard' %}
 
@@ -223,7 +223,7 @@
             maxZoom: 18,
             id: 'mapbox.streets',
             accessToken: 'pk.eyJ1IjoicWxhbmRzIiwiYSI6ImNqZHB1ZDh4YzEwZHEyeG1rcjc0NmFsNzIifQ.i3YebmNDByns1c1ixZE0bA'
-         }).addTo(mymap);
+        }).addTo(mymap);
 
         var element = document.getElementById('mapbox');
         var full_screen = false;
@@ -249,7 +249,27 @@
                     full_screen = false;
                 }
             }
-         });
+        });
+
+        var options = {
+          iconShape: 'circle-dot',
+          borderWidth: 5,
+          borderColor: '#b3334f'
+        };
+
+        $.getJSON("{{ request.route_url('project_download_gpspoints',userid=userid,projcode=projectData.project_code) }}", function( data ) {
+            var markers = [];
+            data.points.forEach(function(entry)
+            {
+                var marker = L.marker([entry.lati, entry.long], {
+                    icon: L.BeautifyIcon.icon(entry.options),
+                    draggable: false
+                }).addTo(mymap);
+                markers.push(marker);
+            });
+            var group = new L.featureGroup(markers);
+            mymap.fitBounds(group.getBounds());
+        });
 
         {% if projectData.project_abstract != None %}
 

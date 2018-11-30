@@ -7,59 +7,35 @@ from subprocess import Popen, PIPE, check_call, CalledProcessError
 from formshare.processes.db import get_form_schema, get_form_directory, get_primary_key, get_project_id_from_name
 from formshare.processes.odk import get_odk_path
 import datetime
-from lxml import etree
-from formshare.processes.elasticsearch.repository_index import get_datasets_from_form
+from formshare.processes.elasticsearch.repository_index import get_datasets_from_form, get_datasets_from_project
+from formshare.processes.color_hash import ColorHash
 
 __all__ = ['get_submission_media_files', 'json_to_csv', 'get_gps_points_from_form']
 
 
-def get_gps_points_from_form(request, user, project, form):
-    project_id = get_project_id_from_name(request, user, project)
-    schema = get_form_schema(request, project_id, form)
-    form_directory = get_form_directory(request, project_id, form)
-    odk_dir = get_odk_path(request)
-    paths = ['forms', form_directory, "repository", "create.xml"]
-    if schema is not None:
-        create_xml = os.path.join(odk_dir, *paths)
-        data = []
-        if os.path.exists(create_xml):
-            tree = etree.parse(create_xml)
-            root = tree.getroot()
-            tables = root.find(".//tables")
-            field = tables.find(".//field[@odktype='geopoint']")
-            if field is not None:
-                table = field.getparent()
-                if table is not None:
-                    s_field = field.get("name")
-                    s_table = table.get("name")
-                    key_fields = []
-                    for tField in table.getchildren():
-                        if tField.get("key") == "true":
-                            key_fields.append(tField.get("name"))
+def get_gps_points_from_project(request, user, project, query_from=None, query_size=None):
+    total, datasets = get_datasets_from_project(request, user, project, query_from, query_size)
+    data = []
+    for dataset in datasets:
+        if '_geopoint' in dataset.keys():
+            parts = dataset['_geopoint'].split(" ")
+            if len(parts) >= 2:
+                color = ColorHash(dataset["_xform_id_string"])
+                data.append(
+                    {'key': dataset["_xform_id_string"], 'lati': parts[0], 'long': parts[1],
+                     'options': {'iconShape': 'circle-dot', 'borderWidth': 5, 'borderColor': color.hex}})
+    return True, {'points': data}
 
-                    sql = "SELECT concat(" + ",".join(
-                        key_fields) + ") as rowkey," + s_field + " FROM " + schema + "." + s_table
-                    points = request.dbsession.execute(sql).fetchall()
-                    for point in points:
-                        s_point = point[s_field]
-                        if s_point is not None:
-                            parts = s_point.split(" ")
-                            if len(parts) >= 2:
-                                data.append({'key': point["rowkey"], 'lati': parts[0], 'long': parts[1]})
-                    return True, {'points': data}
 
-            return False, {'points': data}
-        else:
-            return False, {'points': data}
-    else:
-        total, datasets = get_datasets_from_form(request, user, project, form)
-        data = []
-        for dataset in datasets:
-            if '_geopoint' in dataset.keys():
-                parts = dataset['_geopoint'].split(" ")
-                if len(parts) >= 2:
-                    data.append({'key': dataset["_submission_id"], 'lati': parts[0], 'long': parts[1]})
-        return True, {'points': data}
+def get_gps_points_from_form(request, user, project, form, query_from=None, query_size=None):
+    total, datasets = get_datasets_from_form(request, user, project, form, query_from, query_size)
+    data = []
+    for dataset in datasets:
+        if '_geopoint' in dataset.keys():
+            parts = dataset['_geopoint'].split(" ")
+            if len(parts) >= 2:
+                data.append({'key': dataset["_submission_id"], 'lati': parts[0], 'long': parts[1]})
+    return True, {'points': data}
 
 
 def get_submission_media_files(request, project, form):

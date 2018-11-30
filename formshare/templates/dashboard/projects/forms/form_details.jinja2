@@ -37,7 +37,9 @@
                 {% include 'dashboard/projects/forms/snippets/assistants_tab.jinja2' %}
                 {% include 'dashboard/projects/forms/snippets/groups_tab.jinja2' %}
                 <div class="text-center m-t-md">
-                    <a href="#" class="btn btn-xs btn-warning">Edit form</a>
+                    {% if projectDetails.access_type != 4 %}
+                        <a href="{{ request.route_url('form_edit',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" class="btn btn-xs btn-warning">Edit form</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -59,7 +61,7 @@
                                 {% if formDetails.form_geopoint != None %}
                                     {% include 'dashboard/projects/forms/snippets/form_map.jinja2' %}
                                 {% endif %}
-                                {% include 'dashboard/projects/forms/snippets/form_activity.jinja2' %}
+{#                                {% include 'dashboard/projects/forms/snippets/form_activity.jinja2' %}#}
                             </div>
                         </div>
                     </div>
@@ -85,43 +87,57 @@
                 switchElement.handleOnchange(true);
             }
         }
-        {% if formDetails.form_geopoint != None %}
-            $(document).ready(function() {
 
-            var mymap = L.map('projmap').setView([51.505, -0.09], 13);
-            L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
-                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-                maxZoom: 18,
-                id: 'mapbox.streets',
-                accessToken: 'pk.eyJ1IjoicWxhbmRzIiwiYSI6ImNqZHB1ZDh4YzEwZHEyeG1rcjc0NmFsNzIifQ.i3YebmNDByns1c1ixZE0bA'
-            }).addTo(mymap);
+        $(document).ready(function() {
+            {% if formDetails.form_geopoint != None %}
+                var mymap = L.map('projmap').setView([51.505, -0.09], 13);
+                L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+                    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                    maxZoom: 18,
+                    id: 'mapbox.streets',
+                    accessToken: 'pk.eyJ1IjoicWxhbmRzIiwiYSI6ImNqZHB1ZDh4YzEwZHEyeG1rcjc0NmFsNzIifQ.i3YebmNDByns1c1ixZE0bA'
+                }).addTo(mymap);
 
-            var element = document.getElementById('mapbox');
-            var full_screen = false;
-            var normal_height = $("#projmap").height();
-            new ResizeSensor(element, function() {
-                var window_width = $(window).width();
-                var element_width =  element.clientWidth;
-                if ((element_width / window_width) >= 0.80)
-                {
-                    $("#projmap").height($(window).height()-80);
-                    mymap.invalidateSize();
-                    //console.log('Changed to ' + element.clientWidth);
-                    full_screen = true;
-                }
-                else
-                {
-                    if (full_screen)
+                var element = document.getElementById('mapbox');
+                var full_screen = false;
+                var normal_height = $("#projmap").height();
+                new ResizeSensor(element, function() {
+                    var window_width = $(window).width();
+                    var element_width =  element.clientWidth;
+                    if ((element_width / window_width) >= 0.80)
                     {
-                        $("#projmap").height(normal_height);
+                        $("#projmap").height($(window).height()-80);
                         mymap.invalidateSize();
-                        //console.log('Back to ' + normal_height);
                         //console.log('Changed to ' + element.clientWidth);
-                        full_screen = false;
+                        full_screen = true;
                     }
-                }
-            });
-        {% endif %}
+                    else
+                    {
+                        if (full_screen)
+                        {
+                            $("#projmap").height(normal_height);
+                            mymap.invalidateSize();
+                            //console.log('Back to ' + normal_height);
+                            //console.log('Changed to ' + element.clientWidth);
+                            full_screen = false;
+                        }
+                    }
+                });
+
+                $.getJSON("{{ request.route_url('form_download_gpspoints',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}", function( data ) {
+                    var markers = [];
+                    data.points.forEach(function(entry)
+                    {
+                        var latlng = L.latLng({ lat: entry.lati, lng: entry.long });
+                        var marker = L.marker(latlng).addTo(mymap);
+                        //marker.bindPopup("<b>" + entry.key + "</b>");
+                        markers.push(marker);
+                    });
+                    var group = new L.featureGroup(markers);
+                    mymap.fitBounds(group.getBounds());
+                });
+
+            {% endif %}
 
             $(".collaborator-list").select2({
                 dropdownParent: $('#member_form')

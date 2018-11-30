@@ -11,6 +11,7 @@ from sqlalchemy import or_
 import os
 import json
 from formshare.processes.elasticsearch.repository_index import get_dataset_stats_for_form
+from formshare.processes.color_hash import ColorHash
 
 
 __all__ = ['get_form_details', 'assistant_has_form', 'get_assistant_forms', 'get_form_directory', 'add_new_form',
@@ -178,6 +179,8 @@ def get_project_forms(request, user, project):
 
     for form in forms:
         form['pubby'] = get_creator_data(request, form['form_pubby'])
+        color = ColorHash(form["form_id"])
+        form['_xid_color'] = color.hex
         if form['form_schema'] is None:
             project_code = get_project_code_from_id(request, user, project)
             submissions, last, by = get_number_of_submissions(request, user, project_code, form['form_id'])

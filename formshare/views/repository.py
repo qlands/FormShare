@@ -720,16 +720,17 @@ class GenerateRepository(PrivateView):
                     if len(languages) == 0 and stage == 2:
                         stage = 1
 
-                return {'form_data': form_data, 'stage': stage, 'error_summary': error_summary,
-                        'result_code': result_code, 'primary_key': primary_key, 'languages': languages,
+                return {'formData': form_data, 'stage': stage, 'error_summary': self.errors,
+                        'resCode': result_code, 'primaryKey': primary_key, 'languages': languages,
                         'yesvalue': yesvalue, 'novalue': novalue,
-                        'deflanguage': deflanguage, 'other_languages': other_languages,
-                        'yes_no_strings': yes_no_strings, 'default_language': default_language,
-                        'list_array': list_array, 'sep_tables': sep_tables, 'qvars': qvars,
-                        'projectName': project_code, 'has_tables_to_separate': has_tables_to_separate,
-                        'get': get}
+                        'deflanguage': deflanguage, 'otherLanguages': other_languages,
+                        'yesNoStrings': yes_no_strings, 'defaultLanguage': default_language,
+                        'listArray': list_array, 'sepTables': sep_tables, 'qvars': qvars,
+                        'userid': user_id, 'projcode': project_code, 'formid': form_id,
+                        'hasTablesToSeparate': has_tables_to_separate,'get': get}
             else:
-                return HTTPFound(location=self.request.route_url('exist'))
+                return HTTPFound(
+                    location=self.request.route_url('exist', userid=user_id, projcode=project_code, formid=form_id))
         else:
             raise HTTPNotFound()
 
@@ -868,7 +869,7 @@ class SeparateTable(PrivateView):
                     'form_id': form_id, 'table_name': table_name,
                     'get_group_count': self.get_group_count,
                     'final_close_question2': final_close_question2, 'qvars': qvars,
-                    'projectName': project_code, 'separationOK': separation_ok}
+                    'userid': user_id, 'projcode': project_code, 'formid': form_id, 'separationOK': separation_ok}
         else:
             raise HTTPNotFound()
 
@@ -958,7 +959,8 @@ class NewGroup(PrivateView):
                                                        group_desc)
                             qvars = {'formid': form_id}
                             if added:
-                                return HTTPFound(location=self.request.route_url('separatetable', pname=project_code,
+                                return HTTPFound(location=self.request.route_url('separatetable', userid=user_id,
+                                                                                 projcode=project_code, formid=form_id,
                                                                                  tablename=table_name, _query=qvars))
                             else:
                                 self.errors.append(message)
@@ -967,7 +969,8 @@ class NewGroup(PrivateView):
                 else:
                     self.errors.append(self._("The group name and description cannot be empty"))
             qvars = {'formid': form_id}
-            return {'table_name': table_name, 'projectName': project_code, 'qvars': qvars}
+            return {'table_name': table_name, 'userid': user_id, 'projcode': project_code, 'formid': form_id,
+                    'qvars': qvars}
         else:
             raise HTTPNotFound()
 
@@ -1006,14 +1009,16 @@ class EditGroup(PrivateView):
                                                           group_desc)
                         qvars = {'formid': form_id}
                         if updated:
-                            return HTTPFound(location=self.request.route_url('separatetable', pname=project_code,
-                                                                             tablename=table_name, _query=qvars))
+                            return HTTPFound(
+                                location=self.request.route_url('separatetable', userid=user_id, projcode=project_code,
+                                                                formid=form_id, tablename=table_name, _query=qvars))
                         else:
                             self.errors.append(message)
                     else:
                         self.errors.append(self._("The group description cannot be empty"))
                 qvars = {'formid': form_id}
-                return {'tableName': table_name, 'projectName': project_code, 'qvars': qvars, 'groupName': group_name}
+                return {'tableName': table_name, 'userid': user_id, 'projcode': project_code, 'formid': form_id,
+                        'qvars': qvars, 'groupName': group_name}
             else:
                 raise HTTPNotFound()
         else:
@@ -1051,8 +1056,9 @@ class DeleteGroup(PrivateView):
                         deleted, message = delete_group(self.request, project_id, form_id, table_name, group_id)
                         qvars = {'formid': form_id}
                         if deleted:
-                            return HTTPFound(location=self.request.route_url('separatetable', pname=project_code,
-                                                                             tablename=table_name, _query=qvars))
+                            return HTTPFound(
+                                location=self.request.route_url('separatetable', userid=user_id, projcode=project_code,
+                                                                formid=form_id, tablename=table_name, _query=qvars))
                     else:
                         raise HTTPNotFound()
                 else:
@@ -1061,3 +1067,11 @@ class DeleteGroup(PrivateView):
                 raise HTTPNotFound()
         else:
             raise HTTPNotFound()
+
+
+class RepositoryExist(PrivateView):
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+        form_id = self.request.matchdict['formid']
+        return {'userid': user_id, 'projcode': project_code, 'formid': form_id}

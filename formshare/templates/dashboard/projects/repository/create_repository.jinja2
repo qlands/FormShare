@@ -1,23 +1,16 @@
 {% extends 'dashboard/page.jinja2' %}
 {% import 'dashboard/macros/form.jinja2' as form %}
 
-{% block titlesection %}{{ formDetails.form_name }}{% endblock titlesection %}
+{% block titlesection %}{{ _('Creating repository for') }}{{ formid }}{% endblock titlesection %}
 
 {% block breadcrumbs %}
-    {% include 'dashboard/projects/forms/snippets/brdcrbs_frmdtls.jinja2' %}
+    {% include 'dashboard/projects/repository/snippets/brdcrbs_repository.jinja2' %}
 {% endblock breadcrumbs %}
 
 {% block mainsection %}
     {% if resCode > 1  and resCode != 14 and resCode != 15 %}
-        {% if error_summary|length > 0 %}
-            <div class="error-explanation alert alert-error">
-                <p>{{ _('The form contains invalid entries:') }}</p>
-                <ul>
-                    {% for key, error in error_summary.items() %}
-                        <li data-field-label="{{ key }}">{% if key %}{{ key }}: {% endif %}{{ error }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
+        {% if errors|length > 0 %}
+            {{ form.display_errors(errors) }}
         {% endif %}
     {% endif %}
     {% if resCode != 0  %}
@@ -168,9 +161,9 @@
                     Tables involved:
                     {% for table in sepTables %}
                         {% if table.separate == true %}
-                            <a style="color: red;" href="">{{ table.name }} (needs separation)</a>
+                            <a style="color: red;" href="{{ request.route_url('separatetable', userid=userid, projcode=projcode, formid=formid,tablename=table.name,_query=qvars) }}">{{ table.name }} (needs separation)</a>
                         {% else %}
-                            <a href="">{{ table.name }} (normalized)</a>
+                            <a href="{{ request.route_url('separatetable', userid=userid, projcode=projcode, formid=formid,tablename=table.name,_query=qvars) }}">{{ table.name }} (normalized)</a>
                         {% endif %}
                     {% endfor %}
                     <input id="primarykey" type="hidden" name="primarykey" value="{{ primaryKey }}">
@@ -220,7 +213,7 @@
                     <input id="yesNoStrings" type="hidden" name="yesNoStrings" value="{{ yesNoStrings }}">
                 {% endif %}
                 <div class="form-actions">
-                    <button class="btn btn-primary" onClick="this.disabled=true; this.innerText='Creating the repository. This might take few minutes. Do not close this window';" type="submit" name="start" {% if hasTablesToSeparate == true %}disabled{% endif %}>
+                    <button class="btn btn-primary"  type="submit" name="start" {% if hasTablesToSeparate == true %}disabled{% endif %}>
                         {{ _('Create repository') }}
                     </button>
                 </div>
@@ -237,4 +230,4 @@
         <h2 style="color: green">The repository has been created</h2>
         You can close this page
     {% endif %}
-{% block mainsection %}
+{% endblock mainsection %}

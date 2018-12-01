@@ -483,9 +483,9 @@ class ChangeDir:
 def build_odata_service(request, schema):
     instance_id = str(uuid.uuid4())
     instance_id = instance_id[-12:]
-    temp_dir = os.path.join(request.registry.settings['odk.repository'], *["tmp", instance_id])
+    temp_dir = os.path.join(get_odk_path(request), *["tmp", instance_id])
     os.makedirs(temp_dir)
-    yml_file = os.path.join(request.registry.settings['odk.repository'], *["tmp", instance_id, schema + ".yml"])
+    yml_file = os.path.join(get_odk_path(request), *["tmp", instance_id, schema + ".yml"])
     file = open(yml_file, "w")
     file.write("connector:\n")
     file.write("  mysql:\n")
@@ -503,30 +503,34 @@ def build_odata_service(request, schema):
     file.close()
     args = ["odata_generator", "-c", yml_file, schema, temp_dir]
 
-    p = Popen(args, stdout=PIPE, stderr=PIPE)
-    stdout, stderr = p.communicate()
-    if p.returncode == 0:
-        with ChangeDir(temp_dir):
-            args = ["mvn", "clean", "package"]
-            p = Popen(args, stdout=PIPE, stderr=PIPE)
-            stdout, stderr = p.communicate()
-            if p.returncode != 0:
-                log.debug("Error creating package with maven")
-                log.debug("In directory: " + os.getcwd())
-                log.debug("Error:" + stdout.decode() + " - " + stderr.decode() + " - " + " ".join(args))
-            else:
-                source_war_file = os.path.join(request.registry.settings['odk.repository'],
-                                               *["tmp", instance_id, "target", schema + ".war"])
-                target_war_file = os.path.join(request.registry.settings['tomcat.wardirectory'], schema + ".war")
-                try:
-                    shutil.copyfile(source_war_file, target_war_file)
-                except RuntimeError:
-                    log.debug("Unable to copy WAR file to final directory")
-    else:
-        log.debug("ODATA Generator Error: " + stdout.decode() + " - " + stderr.decode() + " - " + " ".join(args))
-
-    # Do not stop the process if OData does not build
-    return 0, ""
+    try:
+        p = Popen(args, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = p.communicate()
+        if p.returncode == 0:
+            with ChangeDir(temp_dir):
+                args = ["mvn", "clean", "package"]
+                p = Popen(args, stdout=PIPE, stderr=PIPE)
+                stdout, stderr = p.communicate()
+                if p.returncode != 0:
+                    log.error("Error creating package with maven")
+                    log.error("In directory: " + os.getcwd())
+                    log.error("Error:" + stdout.decode() + " - " + stderr.decode() + " - " + " ".join(args))
+                else:
+                    source_war_file = os.path.join(get_odk_path(request),
+                                                   *["tmp", instance_id, "target", schema + ".war"])
+                    target_war_file = os.path.join(request.registry.settings['tomcat.wardirectory'], schema + ".war")
+                    try:
+                        shutil.copyfile(source_war_file, target_war_file)
+                    except RuntimeError:
+                        log.error("Unable to copy WAR file to final directory")
+        else:
+            log.error("ODATA Generator Error: " + stdout.decode() + " - " + stderr.decode() + " - " + " ".join(args))
+    
+        # Do not stop the process if OData does not build
+        return 0, ""
+    except Exception as e:
+        log.error("Error generating ODK: " + str(e))
+        return 0, ""
 
 
 def build_database(cnf_file, create_file, insert_file, audit_file, schema):
@@ -541,7 +545,7 @@ def build_database(cnf_file, create_file, insert_file, audit_file, schema):
         error_message = error_message + "Error: \n"
         if e.stderr is not None:
             error_message = error_message + e.stderr.encode() + "\n"
-        log.debug(error_message)
+        log.error(error_message)
         error = True
 
     if not error:
@@ -554,7 +558,7 @@ def build_database(cnf_file, create_file, insert_file, audit_file, schema):
             error_message = error_message + "Error: \n"
             if e.stderr is not None:
                 error_message = error_message + e.stderr.encode() + "\n"
-            log.debug(error_message)
+            log.error(error_message)
             error = True
 
     if not error:
@@ -571,7 +575,7 @@ def build_database(cnf_file, create_file, insert_file, audit_file, schema):
                 error_message = error_message + error.encode() + "\n"
                 error_message = error_message + "Output: \n"
                 error_message = error_message + output.encode() + "\n"
-                log.debug(error_message)
+                log.error(error_message)
                 error = True
 
     if not error:
@@ -585,7 +589,7 @@ def build_database(cnf_file, create_file, insert_file, audit_file, schema):
                 error_message = error_message + error.encode() + "\n"
                 error_message = error_message + "Output: \n"
                 error_message = error_message + output.encode() + "\n"
-                log.debug(error_message)
+                log.error(error_message)
                 error = True
 
     if not error:
@@ -599,7 +603,7 @@ def build_database(cnf_file, create_file, insert_file, audit_file, schema):
                 error_message = error_message + error.encode() + "\n"
                 error_message = error_message + "Output: \n"
                 error_message = error_message + output.encode() + "\n"
-                log.debug(error_message)
+                log.error(error_message)
                 error = True
 
     return error, error_message
@@ -607,6 +611,7 @@ def build_database(cnf_file, create_file, insert_file, audit_file, schema):
 
 def create_repository(request, project, form, odk_dir, xform_directory, primary_key, separation_file=None,
                       default_language=None, other_languages=None, yes_no_strings=None):
+    print("*************************** create_repository ***********************")
     odk_to_mysql = os.path.join(request.registry.settings['odktools.path'], *["ODKToMySQL", "odktomysql"])
 
     xlsx_file = get_form_xls_file(request, project, form)
@@ -721,7 +726,7 @@ def move_media_files(odk_dir, xform_directory, src_submission, trg_submission):
         try:
             shutil.move(file, target_path)
         except RuntimeError as e:
-            log.debug(
+            log.error(
                 "moveMediaFiles. Error moving from " + src_submission + " to " + trg_submission + " . Message: " + str(
                     e))
 
@@ -753,7 +758,7 @@ def convert_xml_to_json(odk_dir, xml_file, xform_directory, schema, xml_form_fil
                     try:
                         os.remove(temp_json_file)
                     except RuntimeError as e:
-                        log.debug(
+                        log.error(
                             "XMLToJSON error. Temporary file " + temp_json_file + " might not exist! Error: " + str(e))
                         return 1, ""
                     # Get the MD5Sum of the JSON file and looks for it in the submissions
@@ -805,7 +810,7 @@ def convert_xml_to_json(odk_dir, xml_file, xform_directory, schema, xml_form_fil
 
                             return 0, ""
                         else:
-                            log.debug(
+                            log.error(
                                 "JSONToMySQL error. Inserting " + json_file + ". Error: " + stdout.decode() + "-" +
                                 stderr.decode() + ". Command line: " + " ".join(args))
                             return 2, ""
@@ -824,7 +829,7 @@ def convert_xml_to_json(odk_dir, xml_file, xform_directory, schema, xml_form_fil
                         move_media_files(odk_dir, xform_directory, submission_id, sameas.submission_id)
                         return 0, ""
                 else:
-                    log.debug(
+                    log.error(
                         "jQ error. Converting " + xml_file + "  to " + json_file + ". Error: " + "-" +
                         stderr.decode() + ". Command line: " + " ".join(args))
                     return 1, ""
@@ -871,10 +876,10 @@ def convert_xml_to_json(odk_dir, xml_file, xform_directory, schema, xml_form_fil
                             os.remove(aFile)
                 return 0, ""
             except Exception as e:
-                log.debug("XMLToJSON error. Temporary file " + temp_json_file + " might not exist! Error: " + str(e))
+                log.error("XMLToJSON error. Temporary file " + temp_json_file + " might not exist! Error: " + str(e))
                 return 1, ""
     else:
-        log.debug("XMLToJSON error. Converting " + xml_file + "  to " + json_file + ". Error: " + stdout.decode() +
+        log.error("XMLToJSON error. Converting " + xml_file + "  to " + json_file + ". Error: " + stdout.decode() +
                   "-" + stderr.decode() + ". Command line: " + " ".join(args))
         return 1, ""
 
@@ -901,7 +906,7 @@ def store_submission(request, user, project, assistant):
             # Now that we know the file has been fully saved to disk move it into place.
             os.rename(temp_file_path, file_path)
         except Exception as e:
-            log.debug("Submission " + str(unique_id) + " has POST error key: " + key + " Error: " + str(e) +
+            log.error("Submission " + str(unique_id) + " has POST error key: " + key + " Error: " + str(e) +
                       ". URL: " + request.url)
     if xml_file != "":
         tree = etree.parse(xml_file)
@@ -980,7 +985,7 @@ def get_html_from_diff(request, project, form, submission, revision):
         else:
             message = "Generating HTML " + html_file + ". Error: " + "-" + stderr.decode() + ". Command line: " \
                       + " ".join(args)
-            log.debug(message)
+            log.error(message)
             return 1, message
     else:
         soup = BeautifulSoup(open(html_file), "html.parser")
@@ -1022,13 +1027,13 @@ def generate_diff(request, project, form, json_file_a, json_file_b):
         else:
             message = "Generating HTML " + html_file + ". Error: " + "-" + stderr.decode() + ". Command line: " + \
                       " ".join(args)
-            log.debug(message)
+            log.error(message)
             return 1, message
     else:
         if p.returncode != 0:
             message = "DIFF Error. Comparing " + file_a + "  to " + file_b + ". Error: " + "-" + stderr.decode() + \
                       ". Command line: " + " ".join(args)
-            log.debug(message)
+            log.error(message)
             return 1, message
         else:
             return 1, "The files are the same"
@@ -1091,7 +1096,7 @@ def store_new_version(request, project, form, submission, assistant, sequence, n
 
 
 def restore_from_revision(request, project, form, submission, sequence):
-    dok_dir = request.registry.settings['odk.repository']
+    dok_dir = get_odk_path(request)
     form_directory = get_form_directory(request, project, form)
     current_file = os.path.join(dok_dir, *['forms', form_directory, 'submissions', submission + ".json"])
     backup_file = os.path.join(dok_dir, *['forms', form_directory, 'submissions', submission, 'diffs', sequence,
@@ -1139,7 +1144,7 @@ def push_revision(request, project, form, submission):
     if p.returncode == 0:
         return 0, ""
     else:
-        log.debug("JSONToMySQL error. Pushing " + current_file + ". Error: " + stdout.decode() + "-" +
+        log.error("JSONToMySQL error. Pushing " + current_file + ". Error: " + stdout.decode() + "-" +
                   stderr.decode() + ". Command line: " + " ".join(args))
         return 2, ""
 
@@ -1276,7 +1281,7 @@ def get_request_data(request, project, form, table_name, draw, fields, start, le
                                         a_record[field] = record[field][-12:]
                 except RuntimeError as e:
                     a_record[field] = "AJAX Data error. Report this error to support_for_cabi@qlands.com"
-                    log.debug("AJAX Error in field " + field + ". Error: " + str(e))
+                    log.error("AJAX Error in field " + field + ". Error: " + str(e))
             data.append(a_record)
 
     records = request.dbsession.execute(count_sql).fetchone()
@@ -1307,5 +1312,5 @@ def update_data(request, project, form, table_name, row_uuid, field, value):
         return {
             "fieldErrors": [{'name': field, 'status': 'Cannot update value. Check the valid values in lookup table'}]}
     except Exception as ex:
-        log.debug(str(ex))
+        log.error(str(ex))
         return {"fieldErrors": [{'name': field, 'status': 'Unknown error'}]}

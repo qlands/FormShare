@@ -16,6 +16,7 @@ from ..views.form import FormDetails, AddNewForm, EditForm, DeleteForm, AddFileT
     FormStoredFile, AddAssistant, EditAssistant, RemoveAssistant, AddGroupToForm, EditFormGroup, RemoveGroupForm, \
     DownloadCSVData, DownloadXLSX, DownloadSubmissionFiles, DownloadGPSPoints
 from ..views.odk import ODKFormList, ODKManifest, ODKMediaFile, ODKPushData, ODKSubmission, ODKXMLForm
+from ..views.repository import GenerateRepository, SeparateTable, NewGroup, EditGroup, DeleteGroup, RepositoryExist
 
 route_list = []
 
@@ -211,6 +212,32 @@ def load_routes(config):
             '/user/{userid}/project/{projcode}/form/{formid}/download/gpspoints',
             DownloadGPSPoints, 'json'))
 
+    # Repository
+
+    routes.append(
+        add_route('createrepository', '/user/{userid}/project/{projcode}/form/{formid}/repository/create',
+                  GenerateRepository, 'dashboard/projects/repository/create_repository.jinja2'))
+
+    routes.append(
+        add_route('repository_exists', '/user/{userid}/project/{projcode}/form/{formid}/repository/exists',
+                  RepositoryExist, 'dashboard/projects/repository/repository_exist.jinja2'))
+
+    routes.append(add_route('separatetable', '/user/{userid}/project/{projcode}/form/{formid}/separate/{tablename}',
+                            SeparateTable, 'dashboard/projects/repository/separate_table.jinja2'))
+
+    routes.append(
+        add_route('addgroup', '/user/{userid}/project/{projcode}/form/{formid}/separate/{tablename}/group/new',
+                  NewGroup, 'dashboard/projects/repository/create_group.jinja2'))
+
+    routes.append(add_route('editgroup',
+                            '/user/{userid}/project/{projcode}/form/{formid}/separate/{tablename}/group/{groupid}/edit',
+                            EditGroup, 'dashboard/projects/repository/edit_group.jinja2'))
+
+    routes.append(add_route('deletegroup',
+                            '/user/{userid}/project/{projcode}/form/{formid}/separate'
+                            '/{tablename}/group/{groupid}/delete',
+                            DeleteGroup, None))
+
     # API
     routes.append(add_route('api_select2_users', '/api/select2_user', APIUserSearchSelect2, 'json'))
 
@@ -224,8 +251,6 @@ def load_routes(config):
                             ODKMediaFile, None))
 
     append_to_routes(routes)
-
-
 
     # Add the not found route
     config.add_notfound_view(NotFoundView, renderer='generic/404.jinja2')

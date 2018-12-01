@@ -88,10 +88,12 @@ def get_number_of_submissions_in_database(request, project, form):
         Submission.submission_dtime.desc()).first()
     if res is not None:
         last = res.submission_dtime
+        by = res.coll_id
     else:
         last = None
+        by = None
 
-    return total, last, in_db+fixed, in_db_from_logs, in_error
+    return total, last, in_db+fixed, in_db_from_logs, in_error, by
 
 
 def get_creator_data(request, user):
@@ -122,10 +124,11 @@ def get_form_details(request, user, project, form):
             result["inlogs"] = 0
             result["inerror"] = 0
         else:
-            submissions, last, in_database, in_logs, in_error = get_number_of_submissions_in_database(request, project,
+            submissions, last, in_database, in_logs, in_error, by = get_number_of_submissions_in_database(request, project,
                                                                                                       result['form_id'])
             result["submissions"] = submissions
             result["last"] = last
+            result["bydetails"] = get_by_details(request, user, project, by)
             result["indb"] = in_database
             result["inlogs"] = in_logs
             result["inerror"] = in_error

@@ -1,0 +1,198 @@
+{% extends 'dashboard/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block titlesection %}{{ formDetails.form_name }}{% endblock titlesection %}
+
+{% block css %}
+    {{ super() }}
+    {% cssresource request,'formshare','nestable' %}
+{% endblock css %}
+
+{% block topScripts %}
+    {{ super() }}
+    {% jsresource request,'formshare','separation' %}
+{% endblock topScripts %}
+
+{% block breadcrumbs %}
+    {% include 'dashboard/projects/forms/snippets/brdcrbs_frmdtls.jinja2' %}
+{% endblock breadcrumbs %}
+
+{% block mainsection %}
+
+{% block mainsection %}
+    {% if error_summary|length > 0 %}
+        <div class="error-explanation alert alert-error">
+            <p>{{ _('The form contains invalid entries:') }}</p>
+            <ul>
+                {% for key, error in error_summary.items() %}
+                    <li data-field-label="{{ key }}">{% if key %}{{ key }}: {% endif %}{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+    <div class="row">
+        <div class="span12">
+            {% if separationOK == true %}
+                <button onclick="location.href='{{ request.route_url('createrepository', userid=userid, projcode=projcode, formid=formid,_query=qvars) }}';" type="button" class="btn btn-primary btn-xs pull-right clm-grpactions" style="margin-right: 71px">Go back</button>
+            {% else %}
+                <button onclick="location.href='{{ request.route_url('createrepository', userid=userid, projcode=projcode, formid=formid,_query=qvars) }}';" type="button" class="btn btn-danger btn-xs pull-right clm-grpactions" style="margin-right: 71px">Go back without fixing this table</button>
+            {% endif %}
+            <h4 style="line-height: 0px">Separating table: {{ tableName }} {% if separationOK == true %} - <span style="color: green">Well done! This table is ready. You can go back</span> {% endif %}</h4>
+        </div>
+    </div>
+    Note: The order of the items within a group or the order of the groups does not has an effect in the database.<br/>Note: Items in <b style="color: red">Red</b> cannot be moved.
+    <button onclick="location.href='{{ request.route_url('addgroup', userid=userid, projcode=projcode, formid=formid,tablename=tableName,_query=qvars) }}';" type="button" class="btn btn-primary btn-xs pull-right clm-grpactions" style="margin-right: 20px">Add new section</button>
+    <div class="row" style="margin-left: -25px">
+        <div class="span12">
+            <table>
+                <tr>
+                    <td>
+                        <div style="max-height: 400px; overflow-y: auto; min-height: 400px">
+                            <div class="dd" id="nestable">
+                                <ol class="dd-list" data-type="root">
+                                    {% for item in data %}
+                                        {% if item.closeGrp %}
+                                            </ol>
+                                        {% endif %}
+                                        {% if item.closeQst %}
+                                            </li>
+                                        {% endif %}
+                                        {% if item.createGRP %}
+                                            <li class="dd-item" data-id="GRP{{ item.section_id }}" data-type="group">
+                                            <div class="dd-handle">
+                                                {% set totalitems = getGroupCount(projectID,formID,tableName,item.section_id) %}
+                                                <i class="fa fa-object-group"></i><b> Section: </b>{{ item.section_name }} ({{ item.section_desc }}) - Total items: <span {% if totalitems >= 60 %}style="color: red"{% endif %}>{{ totalitems }}</span>
+                                            </div>
+                                            {% if item.hasQuestions %}
+                                                <ol class="dd-list">
+                                                <li class="dd-item dd-nochildren" data-display="{{ item.item_notdisplay }}" data-desc="{{ item.item_desc }}" data-id="QST{{ item.item_name }}" data-type="question">
+                                                    <div class="dd-handle">
+                                                        {% if item.item_desc == "" %}
+                                                            {% set itemdesc = "Without a description" %}
+                                                        {% else %}
+                                                            {% set itemdesc = item.item_desc %}
+                                                        {% endif %}
+                                                        {% if item.item_notdisplay == 1 %}<span style="color: red">{% endif %}[{{ item.item_name }}] {{ itemdesc|truncate(140, True) }}{% if item.item_notdisplay == 1 %}</span>{% endif %}
+                                                    </div>
+                                                </li>
+                                            {% endif %}
+                                        {% else %}
+                                            <li class="dd-item dd-nochildren" data-display="{{ item.item_notdisplay }}" data-desc="{{ item.item_desc }}" data-id="QST{{ item.item_name }}" data-type="question">
+                                                <div class="dd-handle">
+                                                    {% if item.item_desc == "" %}
+                                                        {% set itemdesc = "Without a description" %}
+                                                    {% else %}
+                                                        {% set itemdesc = item.item_desc %}
+                                                    {% endif %}
+                                                    {% if item.item_notdisplay == 1 %}<span style="color: red">{% endif %}[{{ item.item_name }}] {{ itemdesc|truncate(140, True) }}{% if item.item_notdisplay == 1 %}</span>{% endif %}
+                                                </div>
+                                            </li>
+                                        {% endif %}
+                                    {% endfor %}
+                                    {% if finalCloseQst %}
+                                        </ol>
+                                    {% endif %}
+                                    {% if data|length > 0 %}
+                                        </li>
+                                    {% endif %}
+                                </ol>
+                            </div>
+                        </div>
+                    </td>
+                    <td {% if data2|length > 0 %} style="vertical-align: top;" {% else %} style="min-width: 430px;" align="center" {% endif %}>
+                        {% if data2|length > 0 %}
+                            <div style="max-height: 400px; overflow-y: auto; margin-left: 20px; min-height: 400px">
+                                <div class="dd" id="nestable2">
+                                    <ol class="dd-list" data-type="root">
+                                        {% for item in data2 %}
+                                            {% if item.closeGrp %}
+                                                </ol>
+                                            {% endif %}
+                                            {% if item.closeQst %}
+                                                </li>
+                                            {% endif %}
+                                            {% if item.createGRP %}
+                                                <li class="dd-item" data-id="GRP{{ item.section_id }}" data-type="group">
+                                                <div class="dd-handle">
+                                                    <div class="dd-nodrag btn-group pull-right">
+                                                        <button data-toggle="dropdown" class="btn btn-default btn-xs dropdown-toggle clm-grpactions">Actions <span class="caret"></span></button>
+                                                        <ul class="dropdown-menu">
+                                                            <li><a style="color: black" href="{{ request.route_url('editgroup', userid=userid, projcode=projcode, formid=formid,tablename=tableName,groupid=item.section_id,_query=qvars) }}">Modify section</a></li>
+                                                            {% if item.grpCannotDelete == False %}
+                                                                <li><a style="color: black" onclick="ShowConfirmModal('{{ request.route_url('deletegroup', userid=userid, projcode=projcode, formid=formid,tablename=tableName,groupid=item.section_id,_query=qvars) }}');">Remove section</a></li>
+                                                            {% endif %}
+                                                        </ul>
+                                                    </div>
+                                                    {% set totalitems = getGroupCount(projectID,formID,tableName,item.section_id) %}
+                                                    <i class="fa fa-object-group"></i><b> Section: </b>{{ item.section_name }} ({{ item.section_desc }}) - Total items: <span {% if totalitems >= 60 %}style="color: red"{% endif %}>{{ totalitems }}</span>
+                                                </div>
+                                                {% if item.hasQuestions %}
+                                                    <ol class="dd-list">
+                                                    <li class="dd-item dd-nochildren" data-display="{{ item.item_notdisplay }}" data-desc="{{ item.item_desc }}" data-id="QST{{ item.item_name }}" data-type="question">
+                                                        <div class="dd-handle">
+                                                            {% if item.item_desc == "" %}
+                                                                {% set itemdesc = "Without a description" %}
+                                                            {% else %}
+                                                                {% set itemdesc = item.item_desc %}
+                                                            {% endif %}
+                                                            [{{ item.item_name }}] {{ itemdesc|truncate(140, True) }}
+                                                        </div>
+                                                    </li>
+                                                {% endif %}
+                                            {% else %}
+                                                <li class="dd-item dd-nochildren" data-display="{{ item.item_notdisplay }}" data-desc="{{ item.item_desc }}" data-id="QST{{ item.item_name }}" data-type="question">
+                                                    <div class="dd-handle">
+                                                        {% if item.item_desc == "" %}
+                                                            {% set itemdesc = "Without a description" %}
+                                                        {% else %}
+                                                            {% set itemdesc = item.item_desc %}
+                                                        {% endif %}
+                                                        [{{ item.item_name }}] {{ itemdesc|truncate(140, True) }}
+                                                    </div>
+                                                </li>
+                                            {% endif %}
+                                        {% endfor %}
+                                        {% if finalCloseQst2 %}
+                                            </ol>
+                                        {% endif %}
+                                        {% if data|length > 0 %}
+                                            </li>
+                                        {% endif %}
+                                    </ol>
+                                </div>
+                            </div>
+                        {% else %}
+                            You don't have any sections. <a href="{{ request.route_url('addgroup', userid=userid, projcode=projcode, formid=formid,tablename=tableName,_query=qvars) }}">Create a new one</a>
+                        {% endif %}
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <hr>
+    <form class="form-horizontal" role="form" method="post">
+        <input type="hidden" name="csrf_token" value="{{ request.session.get_csrf_token() }}">
+        <textarea id="nestable-output" name="neworder" class="form-control" style="display: none"></textarea>
+        <textarea id="nestable-output2" name="neworder2" class="form-control" style="display: none"></textarea>
+        <div class="row">
+            <div class="col-md-12">
+                <button class="btn btn-primary clm-actions" name="saveorder" type="submit" id="saveorder"><i class="fa fa-check"></i>&nbsp;Apply changes</button>
+                <button class="btn btn-default pull-right clm-actions" name="cancelorder" type="submit">Cancel changes</button>
+            </div>
+        </div>
+    </form>
+
+    <input type="hidden" id="urlforpost">
+    <input type="hidden" id="confirmcrftoken" value="{{ request.session.get_csrf_token() }}">
+    <div id="confirm" class="modal hide fade" style="margin-top: -79.5px; top: 50%; display: block;">
+        <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+            <h3>Please Confirm Action</h3>
+        </div>
+        <div class="modal-body">Are you sure you want to delete this section?</div>
+        <div class="modal-footer">
+            <button class="btn btn-default pull-left" data-dismiss="modal" aria-hidden="true">Cancel</button>
+            <button class="btn btn-primary" onclick="proceed();">Confirm</button>
+        </div>
+    </div>
+{% endblock mainsection %}

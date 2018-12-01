@@ -28,7 +28,7 @@
         {% if projectDetails.access_type != 4 %}
             <div class="actions">
                 {% if formDetails.form_schema == None %}
-                    <a href="" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-database"></i> {{ _('Create repository') }} </a>
+                    <a href="{{ request.route_url('createrepository',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-database"></i> {{ _('Create repository') }} </a>
                 {% else %}
                     <a href="" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-code-branch"></i> {{ _('Upload new version') }} </a>
                 {% endif %}

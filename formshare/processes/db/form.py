@@ -203,38 +203,35 @@ def get_project_forms(request, user, project):
 
 
 def get_assistant_forms(request, requested_project, assistant_project, assistant):
-    forms = []
     # Get all the forms that the user can submit data to and are active
-    anum_forms = request.dbsession.query(Odkform).filter(Odkform.project_id == Formacces.form_project).filter(
+    assistant_forms = request.dbsession.query(Odkform).filter(Odkform.project_id == Formacces.form_project).filter(
         Odkform.form_id == Formacces.form_id).filter(Formacces.project_id == assistant_project).filter(
         Formacces.coll_id == assistant).filter(Formacces.form_project == requested_project).filter(
         or_(Formacces.coll_privileges == 1, Formacces.coll_privileges == 3)).filter(Odkform.form_accsub == 1).all()
 
-    for aForm in anum_forms:
-        forms.append(
-            {'project_id': aForm.project_id, 'form_id': aForm.form_id, 'form_directory': aForm.form_directory})
+    forms = map_from_schema(assistant_forms)
 
     # Select the groups that user belongs to
     groups = request.dbsession.query(Collingroup).filter(Collingroup.project_id == requested_project).filter(
         Collingroup.enum_project == assistant_project).filter(Collingroup.coll_id == assistant).all()
 
     for group in groups:
-        anum_forms = request.dbsession.query(Odkform).filter(Odkform.project_id == Formgrpacces.form_project).filter(
+        res = request.dbsession.query(Odkform).filter(Odkform.project_id == Formgrpacces.form_project).filter(
             Odkform.form_id == Formgrpacces.form_id).filter(Formgrpacces.project_id == group.project_id).filter(
             Formgrpacces.group_id == group.group_id).filter(
             or_(Formgrpacces.group_privileges == 1, Formgrpacces.group_privileges == 3)).filter(
             Odkform.form_accsub == 1).all()
+        group_forms = map_from_schema(res)
 
         # Append only new forms accessible by the groups of the assistant
-        for aForm in anum_forms:
+        for aForm in group_forms:
             found = False
             for cform in forms:
-                if cform["project_id"] == aForm.project_id and cform["form_id"] == aForm.form_id:
+                if cform["project_id"] == aForm['project_id'] and cform["form_id"] == aForm['form_id']:
                     found = True
                     break
             if not found:
-                forms.append(
-                    {'project_id': aForm.project_id, 'form_id': aForm.form_id, 'form_directory': aForm.form_directory})
+                forms.append(aForm)
 
     return forms
 

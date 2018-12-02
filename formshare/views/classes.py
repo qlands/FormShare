@@ -11,7 +11,7 @@
 """
 
 from pyramid.security import authenticated_userid
-from ..config.auth import get_user_data, get_collaborator_data
+from ..config.auth import get_user_data, get_assistant_data
 from pyramid.httpexceptions import HTTPFound
 from pyramid.session import check_csrf_token
 from pyramid.httpexceptions import HTTPNotFound
@@ -22,7 +22,7 @@ from babel import Locale
 import uuid
 from ast import literal_eval
 from formshare.processes.db import get_project_id_from_name, user_exists, get_user_details, get_active_project, \
-    get_user_projects
+    get_user_projects, get_project_from_assistant
 import logging
 log = logging.getLogger(__name__)
 
@@ -115,7 +115,7 @@ class PublicView(object):
     def __init__(self, request):
         self.request = request
         self._ = self.request.translate
-        self.resultDict = {}
+        self.resultDict = {"errors": []}
         self.errors = []
         locale = Locale(request.locale_name)
         if locale.character_order == "left-to-right":
@@ -147,7 +147,7 @@ class PrivateView(object):
         self._ = self.request.translate
         self.errors = []
         self.userID = ''
-        self.classResult = {}
+        self.classResult = {"activeUser": None, "userProjects": [], 'activeProject': {}}
         self.viewResult = {}
         self.returnRawViewResult = False
         self.privateOnly = False
@@ -307,24 +307,28 @@ class ProjectsView(PrivateView):
             return self.viewResult
 
 
-class CollaboratorView(object):
+class AssistantView(object):
     def __init__(self, request):
         self.request = request
         self.projectID = ""
-        self.collaborator = None
+        self.userID = ""
+        self.projectCode = ""
+        self.assistant = None
         self._ = self.request.translate
         self.errors = []
-        self.resultDict = {}
+        self.resultDict = {"errors": []}
         locale = Locale(request.locale_name)
         if locale.character_order == "left-to-right":
             self.resultDict["rtl"] = False
         else:
             self.resultDict["rtl"] = True
+        self.returnRawViewResult = False
+        self.project_assistant = None
 
     def __call__(self):
-        project_name = self.request.matchdict['pname']
-        user_id = self.request.matchdict['userid']
-        self.projectID = get_project_id_from_name(self.request, user_id, project_name)
+        self.userID = self.request.matchdict['userid']
+        self.projectCode = self.request.matchdict['projcode']
+        self.projectID = get_project_id_from_name(self.request, self.userID, self.projectCode)
         if self.projectID is None:
             raise HTTPNotFound()
 
@@ -332,30 +336,35 @@ class CollaboratorView(object):
         if login_data is not None:
             login_data = literal_eval(login_data)
             if login_data["group"] == "collaborators":
-                self.collaborator = get_collaborator_data(self.projectID, login_data["login"], self.request)
-                if self.collaborator is None:
-                    return HTTPFound(location=self.request.route_url('login', _query={'next': self.request.url}))
+                self.project_assistant = get_project_from_assistant(self.request, self.userID, self.projectID,
+                                                                    login_data["login"])
+                self.assistant = get_assistant_data(self.project_assistant, login_data["login"], self.request)
+                if self.assistant is None:
+                    return HTTPFound(
+                        location=self.request.route_url('assistant_login', _query={'next': self.request.url}))
             else:
-                return HTTPFound(location=self.request.route_url('login', _query={'next': self.request.url}))
+                return HTTPFound(location=self.request.route_url('assistant_login', _query={'next': self.request.url}))
         else:
-            return HTTPFound(location=self.request.route_url('login', _query={'next': self.request.url}))
+            return HTTPFound(location=self.request.route_url('assistant_login', _query={'next': self.request.url}))
 
         if self.request.method == 'POST':
             safe = check_csrf_token(self.request, raises=False)
             if not safe:
                 raise HTTPNotFound()
 
-        self.resultDict["activeCollaborator"] = self.collaborator
+        self.resultDict["activeAssistant"] = self.assistant
+        self.resultDict["userid"] = self.userID
+        self.resultDict["projcode"] = self.projectCode
         self.resultDict["errors"] = self.errors
         process_dict = self.process_view()
-        if type(process_dict) == dict:
+        if not self.returnRawViewResult:
             self.resultDict.update(process_dict)
             return self.resultDict
         else:
             return process_dict
 
     def process_view(self):
-        return {'activeCollaborator': self.collaborator}
+        return {'activeAssistant': self.assistant}
 
     def get_post_dict(self):
         dct = variable_decode(self.request.POST)

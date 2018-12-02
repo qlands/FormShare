@@ -1,0 +1,17 @@
+{% extends 'assistant/page.jinja2' %}
+
+{% block titlesection %}{{ _("Assistant Forms") }}{% endblock titlesection %}
+
+{% block dashheader %}
+    {% block breadcrumbs %}
+        {% if viewingSelfAccount %}
+            <div class="row wrapper border-bottom white-bg page-heading">
+                {% include 'assistant/snippets/brdcrbs_home.jinja2' %}
+            </div>
+        {% endif %}
+    {% endblock breadcrumbs %}
+{% endblock dashheader %}
+
+{% block mainsection %}
+    The main content goes here
+{% endblock mainsection %}

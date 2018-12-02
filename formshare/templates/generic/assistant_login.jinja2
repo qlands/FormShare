@@ -1,0 +1,23 @@
+{% extends 'generic/login.jinja2' %}
+
+{% block titlesection %}{{ _('Assistant Sign in') }}{% endblock titlesection %}
+
+{% block logingheadmsg %}
+    <p>{{ _('Collaborators sign in') }}</p>
+{% endblock logingheadmsg %}
+
+{% block loginform %}
+    <form class="m-t" role="form" action="{{ request.route_url('assistant_login', userid=userid, projcode=projcode) }}">
+        <div class="form-group">
+            <input type="text" name="login" class="form-control" placeholder="Assistant ID" required="">
+        </div>
+        <div class="form-group">
+            <input type="password" name="passwd" class="form-control" placeholder="Password" required="">
+        </div>
+        <button type="submit" class="btn btn-primary block full-width m-b">Sign in</button>
+    </form>
+{% endblock loginform %}
+
+{% block login_tools %}
+
+{% endblock login_tools %}

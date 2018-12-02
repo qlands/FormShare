@@ -55,36 +55,41 @@ class User(object):
         self.gravatarURL = gravatar_url
 
 
-class Collaborator(object):
-    def __init__(self, collaborator_data, project):
+class Assistant(object):
+    def __init__(self, assistant_data, project):
         default = "identicon"
         size = 45
-        self.email = collaborator_data["coll_email"]
-        gravatar_url = "http://www.gravatar.com/avatar/" + hashlib.md5(
-            self.email.lower().encode('utf8')).hexdigest() + "?"
-        gravatar_url += urllib.parse.urlencode({'d': default, 's': str(size)})
-        self.userData = collaborator_data
-        self.login = collaborator_data["coll_id"]
+        self.email = assistant_data["coll_email"]
+        if self.email is not None:
+            if validators.email(self.email):
+                gravatar_url = "http://www.gravatar.com/avatar/" + hashlib.md5(
+                    self.email.lower().encode('utf8')).hexdigest() + "?"
+                gravatar_url += urllib.parse.urlencode({'d': default, 's': str(size)})
+                self.gravatarURL = gravatar_url
+            else:
+                self.gravatarURL = ""
+        else:
+            self.gravatarURL = ""
+
+        self.assistantData = assistant_data
+        self.login = assistant_data["coll_id"]
         self.projectID = project
-        self.fullName = collaborator_data["coll_name"]
-        self.gravatarURL = gravatar_url
-        self.about = ""
+        self.fullName = assistant_data["coll_name"]
 
     def check_password(self, password, request):
-        return check_collaborator_login(self.projectID, self.login, password, request)
+        return check_assistant_login(self.projectID, self.login, password, request)
 
     def get_gravatar_url(self, size):
-        default = "identicon"
-        gravatar_url = "http://www.gravatar.com/avatar/" + hashlib.md5(self.email.lower()).hexdigest() + "?"
-        gravatar_url += urllib.parse.urlencode({'d': default, 's': str(size)})
-        return gravatar_url
-
-    def update_gravatar_url(self):
-        default = "identicon"
-        size = 45
-        gravatar_url = "http://www.gravatar.com/avatar/" + hashlib.md5(self.email.lower()).hexdigest() + "?"
-        gravatar_url += urllib.parse.urlencode({'d': default, 's': str(size)})
-        self.gravatarURL = gravatar_url
+        if self.email is not None:
+            if validators.email(self.email):
+                default = "identicon"
+                gravatar_url = "http://www.gravatar.com/avatar/" + hashlib.md5(self.email.lower()).hexdigest() + "?"
+                gravatar_url += urllib.parse.urlencode({'d': default, 's': str(size)})
+                return gravatar_url
+            else:
+                return ""
+        else:
+            return ""
 
 
 def get_formshare_user_data(request, user, is_email):
@@ -122,13 +127,13 @@ def get_user_data(user, request):
         return None
 
 
-def get_collaborator_data(project, collaborator, request):
+def get_assistant_data(project, assistant, request):
     result = map_from_schema(
         request.dbsession.query(collaboratorModel).filter(collaboratorModel.project_id == project).filter(
-            collaboratorModel.coll_id == collaborator).first())
+            collaboratorModel.coll_id == assistant).filter(collaboratorModel.coll_active == 1).first())
     if result:
         result["coll_password"] = ""  # Remove the password form the result
-        return Collaborator(result, project)
+        return Assistant(result, project)
     return None
 
 
@@ -145,13 +150,13 @@ def check_login(user, password, request):
             return False
 
 
-def check_collaborator_login(project, collaborator, password, request):
+def check_assistant_login(project, assistant, password, request):
     result = request.dbsession.query(collaboratorModel).filter(collaboratorModel.project_id == project).filter(
-        collaboratorModel.coll_id == collaborator).filter(collaboratorModel.coll_active == 1).first()
+        collaboratorModel.coll_id == assistant).filter(collaboratorModel.coll_active == 1).first()
     if result is None:
         return False
     else:
-        cpass = decode_data(request, result.enum_password.encode())
+        cpass = decode_data(request, result.coll_password.encode())
         if cpass == bytearray(password.encode()):
             return True
         else:

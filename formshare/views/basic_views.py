@@ -1,6 +1,6 @@
 from pyramid.security import remember
 from pyramid.httpexceptions import HTTPFound
-from ..config.auth import get_user_data, get_collaborator_data
+from ..config.auth import get_user_data, get_assistant_data
 from .classes import PublicView
 from pyramid.security import authenticated_userid
 from pyramid.security import forget
@@ -8,7 +8,7 @@ from pyramid.session import check_csrf_token
 from pyramid.httpexceptions import HTTPNotFound
 from formencode.variabledecode import variable_decode
 import formshare.plugins as p
-from ..processes.db import register_user, get_project_id_from_name
+from ..processes.db import register_user, get_project_id_from_name, get_project_from_assistant
 from ast import literal_eval
 import datetime
 import uuid
@@ -73,31 +73,37 @@ class LoginView(PublicView):
         return {'next': next_page}
 
 
-class CollaboratorsLoginView(PublicView):
+class AssistantLoginView(PublicView):
     def process_view(self):
         # If we logged in then go to dashboard
-        project_name = self.request.matchdict['pname']
+        project_code = self.request.matchdict['projcode']
         user_id = self.request.matchdict['userid']
-        project_id = get_project_id_from_name(self.request, user_id, project_name)
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
         if project_id is None:
             raise HTTPNotFound()
-        next_page = self.request.params.get('next') or self.request.route_url('dashboard')
+        next_page = self.request.params.get('next') or self.request.route_url('assistant_forms', userid=user_id,
+                                                                              projcode=project_code)
         if self.request.method == 'GET':
             login_data = authenticated_userid(self.request)
             if login_data is not None:
                 login_data = literal_eval(login_data)
                 if login_data["group"] == "collaborator":
-                    current_collaborator = get_collaborator_data(project_id, login_data["login"], self.request)
+                    project_assistant = get_project_from_assistant(self.request, user_id, project_id,
+                                                                   login_data["login"])
+                    current_collaborator = get_assistant_data(project_assistant, login_data["login"], self.request)
                     if current_collaborator is not None:
-                        return HTTPFound(location=self.request.route_url('dashboard'))
+                        return HTTPFound(
+                            location=self.request.route_url('assistant_forms', userid=user_id, projcode=project_code))
         else:
+            print("************")
             safe = check_csrf_token(self.request, raises=False)
             if not safe:
                 raise HTTPNotFound()
             data = variable_decode(self.request.POST)
             login = data['login']
             passwd = data['passwd']
-            collaborator = get_collaborator_data(project_id, login, self.request)
+            project_assistant = get_project_from_assistant(self.request, user_id, project_id, login)
+            collaborator = get_assistant_data(project_assistant, login, self.request)
             login_data = {"login": login, "group": "collaborators"}
             if collaborator is not None:
                 if collaborator.check_password(passwd, self.request):
@@ -116,7 +122,7 @@ class CollaboratorsLoginView(PublicView):
                     self.errors.append(self._("Invalid credentials"))
             else:
                 self.errors.append(self._("The user account does not exists"))
-        return {'next': next_page}
+        return {'next': next_page, 'userid': user_id, 'projcode': project_code}
 
 
 def log_out_view(request):

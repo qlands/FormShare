@@ -1,7 +1,7 @@
 from ..plugins.utilities import add_route
 import formshare.plugins as p
 from ..views.basic_views import NotFoundView, HomeView, log_out_view, LoginView, RegisterView, \
-    CollaboratorsLoginView
+    AssistantLoginView
 from ..views.dashboard import UserDashBoardView
 from ..views.projects import AddProjectView, ProjectListView, ProjectDetailsView, ProjectStoredFileView, \
     EditProjectView, DeleteProjectView, AddFileToProject, RemoveFileFromProject, DownloadProjectGPSPoints
@@ -17,6 +17,7 @@ from ..views.form import FormDetails, AddNewForm, EditForm, DeleteForm, AddFileT
     DownloadCSVData, DownloadXLSX, DownloadSubmissionFiles, DownloadGPSPoints
 from ..views.odk import ODKFormList, ODKManifest, ODKMediaFile, ODKPushData, ODKSubmission, ODKXMLForm
 from ..views.repository import GenerateRepository, SeparateTable, NewGroup, EditGroup, DeleteGroup, RepositoryExist
+from ..views.assistant_views.forms import AssistantForms
 
 route_list = []
 
@@ -54,8 +55,6 @@ def load_routes(config):
     # FormShare routes
     routes.append(add_route('home', '/', HomeView, 'landing/index.jinja2'))
     routes.append(add_route('login', '/login', LoginView, 'generic/login.jinja2'))
-    routes.append(add_route('collaboratorslogin', '/collaborators/{userid}/{pname}/login', CollaboratorsLoginView,
-                            'generic/collablogin.jinja2'))
     routes.append(add_route('register', '/join', RegisterView, 'generic/register.jinja2'))
     routes.append(add_route('logout', '/logout', log_out_view, None))
 
@@ -237,6 +236,16 @@ def load_routes(config):
                             '/user/{userid}/project/{projcode}/form/{formid}/separate'
                             '/{tablename}/group/{groupid}/delete',
                             DeleteGroup, None))
+
+    # Assistant access
+
+    routes.append(
+        add_route('assistant_login', '/user/{userid}/project/{projcode}/assistant/login', AssistantLoginView,
+                  'generic/assistant_login.jinja2'))
+
+    routes.append(
+        add_route('assistant_forms', '/user/{userid}/project/{projcode}/assistant/forms', AssistantForms,
+                  'assistant/index.jinja2'))
 
     # API
     routes.append(add_route('api_select2_users', '/api/select2_user', APIUserSearchSelect2, 'json'))

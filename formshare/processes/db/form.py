@@ -20,7 +20,8 @@ __all__ = ['get_form_details', 'assistant_has_form', 'get_assistant_forms', 'get
            'form_file_exists', 'update_file_info', 'set_file_with_error', 'add_assistant_to_form',
            'get_form_assistants', 'update_assistant_privileges', 'remove_assistant_from_form', 'add_group_to_form',
            'get_form_groups', 'update_group_privileges', 'remove_group_from_form', 'get_project_forms',
-           'get_number_of_submissions_in_database', 'get_by_details', 'get_form_geopoint', 'get_primary_key']
+           'get_number_of_submissions_in_database', 'get_by_details', 'get_form_geopoint', 'get_primary_key',
+           'get_number_of_submissions_by_assistant']
 
 log = logging.getLogger(__name__)
 
@@ -89,11 +90,44 @@ def get_number_of_submissions_in_database(request, project, form):
     if res is not None:
         last = res.submission_dtime
         by = res.coll_id
+        return total, last, in_db + fixed, in_db_from_logs, in_error, by
+    else:
+        return 0, None, 0, 0, 0, None
+
+
+def get_number_of_submissions_by_assistant(request, project, form, assistant_project, assistant):
+    total = request.dbsession.query(Submission).filter(Submission.project_id == project).filter(
+        Submission.form_id == form).filter(Submission.sameas.is_(None)).filter(
+        Submission.enum_project == assistant_project).filter(Submission.coll_id == assistant).count()
+
+    in_db = request.dbsession.query(Submission).filter(Submission.project_id == project).filter(
+        Submission.form_id == form).filter(Submission.submission_status == 0).filter(
+        Submission.sameas.is_(None)).filter(Submission.enum_project == assistant_project).filter(
+        Submission.coll_id == assistant).count()
+
+    fixed = request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
+        Jsonlog.form_id == form).filter(Jsonlog.status == 0).filter(
+        Submission.enum_project == assistant_project).filter(Submission.coll_id == assistant).count()
+
+    in_db_from_logs = request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
+        Jsonlog.form_id == form).filter(Submission.enum_project == assistant_project).filter(
+        Submission.coll_id == assistant).count()
+
+    in_error = request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
+        Jsonlog.form_id == form).filter(Jsonlog.status != 0, Jsonlog.status != 4).filter(
+        Submission.enum_project == assistant_project).filter(Submission.coll_id == assistant).count()
+
+    res = request.dbsession.query(Submission).filter(Submission.project_id == project).filter(
+        Submission.form_id == form).filter(Submission.sameas.is_(None)).filter(
+        Submission.enum_project == assistant_project).filter(Submission.coll_id == assistant).order_by(
+        Submission.submission_dtime.desc()).first()
+
+    if res is not None:
+        last = res.submission_dtime
     else:
         last = None
-        by = None
 
-    return total, last, in_db+fixed, in_db_from_logs, in_error, by
+    return total, last, in_db+fixed, in_db_from_logs, in_error
 
 
 def get_creator_data(request, user):
@@ -124,8 +158,8 @@ def get_form_details(request, user, project, form):
             result["inlogs"] = 0
             result["inerror"] = 0
         else:
-            submissions, last, in_database, in_logs, in_error, by = get_number_of_submissions_in_database(request, project,
-                                                                                                      result['form_id'])
+            submissions, last, in_database, in_logs, in_error, \
+                by = get_number_of_submissions_in_database(request, project, result['form_id'])
             result["submissions"] = submissions
             result["last"] = last
             result["bydetails"] = get_by_details(request, user, project, by)
@@ -194,13 +228,14 @@ def get_project_forms(request, user, project):
             form["indb"] = 0
             form["inlogs"] = 0
         else:
-            submissions, last, in_database, in_logs, in_error = get_number_of_submissions_in_database(request, project,
-                                                                                                      form['form_id'])
+            submissions, last, in_database, in_logs, \
+                in_error, by = get_number_of_submissions_in_database(request, project, form['form_id'])
             form["submissions"] = submissions
             form["last"] = last
             form["indb"] = in_database
             form["inlogs"] = in_logs
             form["inerror"] = in_error
+            form["bydetails"] = get_by_details(request, user, project, by)
 
     return forms
 

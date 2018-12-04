@@ -9,24 +9,19 @@
 {% endblock topScripts %}
 
 {% block body_tag %}
-    <body {% block bodyattributes %}{% endblock bodyattributes %} class="{% if rtl %}rtls{% endif %} {% block bodyclass %} {% if activeUser == None %} top-navigation{% endif %} {% endblock bodyclass %}">
+    <body {% block bodyattributes %}{% endblock bodyattributes %} class="{% if rtl %}rtls{% endif %} {% block bodyclass %} top-navigation {% endblock bodyclass %}">
     {% block body %}
         {% block bodycontent %}
             <div id="wrapper">
-
                 {% block wrapper %}
-                    {% if activeUser != None %}
-                        <div id="page-wrapper" class="gray-bg dashbard-1">
-                    {% else %}
-                        <div id="page-wrapper" class="gray-bg">
-                    {% endif %}
+                    <div id="page-wrapper" class="gray-bg">
                         {% block pagewrapper %}
+                            <div class="container">
                             {% block pageheader %}
-                                {% include 'assistant/snippets/header.jinja2' %}
+
                             {% endblock pageheader %}
-                            {% block dashheader %}
-                                {% if activeUser != None %}
-                                    <div class="row wrapper border-bottom white-bg page-heading">
+                                {% block dashheader %}
+                                    <div style="margin-top: 5px" class="row wrapper border-bottom white-bg page-heading">
                                         {% block breadcrumbs %}
                                             {#
                                             Extend this section to have breadcrumbs
@@ -34,44 +29,25 @@
                                         #}
                                         {% endblock breadcrumbs %}
                                     </div>
-                                {% endif %}
-                            {% endblock dashheader %}
+                                {% endblock dashheader %}
                             {% block mainsection %}
-                                <div class="wrapper wrapper-content">
+                                <div style="padding: 0px; margin-top: 3px; margin-left: -15px; margin-right: -15px" class="wrapper wrapper-content">
                                     {% block maincontent %}
                                         {# Here goes the content of the page #}
                                     {% endblock maincontent %}
                                 </div>
                             {% endblock mainsection %}
                             {% block footer %}
-                                {% include 'dashboard/snippets/footer.jinja2' %}
+{#                                {% include 'dashboard/snippets/footer.jinja2' %}#}
                             {% endblock footer %}
+                            </div>
                         {% endblock pagewrapper %}
                     </div>
-                    {% block smallchat %}
-                        {# Uncomment this snippet to have the chat screen #}
-                        {#  {% include 'dashboard/snippets/chat.jinja2' %}#}
-                    {% endblock smallchat %}
-
                 {% endblock wrapper %}
-
             </div>
         {% endblock bodycontent %}
         {% block scripts %}
             {% jsresource request,'formshare','inspinia' %}
-            {% set messageData = request.session.pop_flash() %}
-            {% if messageData|length > 0 %}
-                <script>
-                    $(document).ready(function() {
-                        messageData = '{{ messageData[0] }}';
-                        swal({
-                            title: 'FormShare',
-                            text: messageData,
-                            type: "success"
-                        });
-                    });
-                </script>
-            {% endif %}
         {% endblock scripts %}
     {% endblock body %}
     </body>

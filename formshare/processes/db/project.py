@@ -12,7 +12,7 @@ import dateutil.parser
 __all__ = [
     'get_project_id_from_name', 'get_user_projects', 'get_active_project', 'add_project', 'modify_project',
     'delete_project', 'is_collaborator', 'add_file_to_project', 'get_project_files', 'remove_file_from_project',
-    'get_project_code_from_id']
+    'get_project_code_from_id', 'get_project_details']
 
 log = logging.getLogger(__name__)
 
@@ -256,3 +256,11 @@ def remove_file_from_project(request, project, file_name):
     except RuntimeError:
         log.error("Error {} while removing file {} in project {}".format(sys.exc_info()[0], file_name, project))
         return False, sys.exc_info()[0]
+
+
+def get_project_details(request, project):
+    res = request.dbsession.query(Project).filter(Project.project_id == project).first()
+    if res is not None:
+        return map_from_schema(res)
+    else:
+        return None

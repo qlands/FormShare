@@ -1,17 +1,44 @@
 {% extends 'assistant/page.jinja2' %}
 
-{% block titlesection %}{{ _("Assistant Forms") }}{% endblock titlesection %}
+{% block title %}
+    <title>{{ _('Assistant forms') }}</title>
+{% endblock title %}
 
-{% block dashheader %}
-    {% block breadcrumbs %}
-        {% if viewingSelfAccount %}
-            <div class="row wrapper border-bottom white-bg page-heading">
-                {% include 'assistant/snippets/brdcrbs_home.jinja2' %}
+{% block topScripts %}
+    {% jsresource request,'formshare','pace' %}
+{% endblock topScripts %}
+
+{% block pageheader %}
+    {% include 'assistant/snippets/header.jinja2' %}
+{% endblock pageheader %}
+
+{% block breadcrumbs %}
+    {% include 'assistant/snippets/brdcrbs_home.jinja2' %}
+{% endblock breadcrumbs %}
+
+{% block maincontent %}
+    <div class="ibox">
+        <div class="ibox-title">
+            <h5>{{ _('Forms you assists with in project ') }} "{{ projectDetails.project_name }}" </h5>
+            <div class="ibox-tools">
+                <a class="collapse-link" style="margin-right: 10px">
+                    <i class="fa fa-chevron-up"></i>
+                </a>
+                <a class="fullscreen-link">
+                    <i class="fa fa-expand"></i>
+                </a>
             </div>
-        {% endif %}
-    {% endblock breadcrumbs %}
-{% endblock dashheader %}
-
-{% block mainsection %}
-    The main content goes here
-{% endblock mainsection %}
+        </div>
+        <div class="ibox-content">
+            <div class="feed-activity-list">
+                {% for form in forms %}
+{#                    {% if form.form_incversion == 0 %}#}
+                        {% include 'assistant/snippets/project_form_odk_item.jinja2' %}
+{#                    {% else %}#}
+{#                        {% include 'dashboard/projects/snippets/project_subversion_item.jinja2' %}#}
+{#                    {% endif %}#}
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+{% endblock maincontent %}

@@ -341,11 +341,16 @@ class AssistantView(object):
                 self.assistant = get_assistant_data(self.project_assistant, login_data["login"], self.request)
                 if self.assistant is None:
                     return HTTPFound(
-                        location=self.request.route_url('assistant_login', _query={'next': self.request.url}))
+                        location=self.request.route_url('assistant_login', userid=self.userID,
+                                                        projcode=self.projectCode, _query={'next': self.request.url}))
             else:
-                return HTTPFound(location=self.request.route_url('assistant_login', _query={'next': self.request.url}))
+                return HTTPFound(
+                    location=self.request.route_url('assistant_login', userid=self.userID, projcode=self.projectCode,
+                                                    _query={'next': self.request.url}))
         else:
-            return HTTPFound(location=self.request.route_url('assistant_login', _query={'next': self.request.url}))
+            return HTTPFound(
+                location=self.request.route_url('assistant_login', userid=self.userID, projcode=self.projectCode,
+                                                _query={'next': self.request.url}))
 
         if self.request.method == 'POST':
             safe = check_csrf_token(self.request, raises=False)

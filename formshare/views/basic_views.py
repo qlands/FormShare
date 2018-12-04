@@ -95,7 +95,6 @@ class AssistantLoginView(PublicView):
                         return HTTPFound(
                             location=self.request.route_url('assistant_forms', userid=user_id, projcode=project_code))
         else:
-            print("************")
             safe = check_csrf_token(self.request, raises=False)
             if not safe:
                 raise HTTPNotFound()
@@ -128,6 +127,14 @@ class AssistantLoginView(PublicView):
 def log_out_view(request):
     headers = forget(request)
     loc = request.route_url('home')
+    raise HTTPFound(location=loc, headers=headers)
+
+
+def assistant_log_out_view(request):
+    headers = forget(request)
+    project_code = request.matchdict['projcode']
+    user_id = request.matchdict['userid']
+    loc = request.route_url('assistant_login', userid=user_id, projcode=project_code)
     raise HTTPFound(location=loc, headers=headers)
 
 

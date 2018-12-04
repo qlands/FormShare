@@ -1,63 +1,58 @@
 <div class="row border-bottom white-bg">
-    <nav class="navbar navbar-expand-lg navbar-static-top" role="navigation">
-        <a href="{{ request.route_url('home') }}" class="navbar-brand"><img alt="image" src="{{ request.url_for_static('formshare-small-black.png') }}"/> Form<b>Share</b></a>
-        {#            <form role="search" class="navbar-form-custom" style="display: block; !important;" action="#">#}
-        {#                <div class="form-group">#}
-        {#                    <input type="text" placeholder="Search FormShare" class="form-control" name="top-search" id="top-search">#}
-        {#                </div>#}
-        {#            </form>#}
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-label="Toggle navigation">
-            <i class="fa fa-reorder"></i>
-        </button>
 
-        <!--</div>-->
-        <div class="navbar-collapse collapse" id="navbar">
-            {#                <ul class="nav navbar-nav mr-auto">#}
-            {#                    <li class="dropdown">#}
-            {#                        <a aria-expanded="false" role="button" href="#" class="dropdown-toggle" data-toggle="dropdown"> Menu item</a>#}
-            {#                        <ul role="menu" class="dropdown-menu" style="right: -130px">#}
-            {#                            <li><a href="">Menu item</a></li>#}
-            {#                            <li><a href="">Menu item</a></li>#}
-            {#                            <li><a href="">Menu item</a></li>#}
-            {#                            <li><a href="">Menu item</a></li>#}
-            {#                        </ul>#}
-            {#                    </li>#}
-            {#                    <li class="dropdown">#}
-            {#                        <a aria-expanded="false" role="button" href="#" class="dropdown-toggle" data-toggle="dropdown"> Menu item</a>#}
-            {#                        <ul role="menu" class="dropdown-menu" class="dropdown-menu" style="right: -135px">#}
-            {#                            <li><a href="">Menu item</a></li>#}
-            {#                            <li><a href="">Menu item</a></li>#}
-            {#                            <li><a href="">Menu item</a></li>#}
-            {#                            <li><a href="">Menu item</a></li>#}
-            {#                        </ul>#}
-            {#                    </li>#}
-            {#                    <li class="dropdown">#}
-            {#                        <a aria-expanded="false" role="button" href="#" class="dropdown-toggle" data-toggle="dropdown"> Menu item</a>#}
-            {#                        <ul role="menu" class="dropdown-menu" class="dropdown-menu" style="right: -135px">#}
-            {#                            <li><a href="">Menu item</a></li>#}
-            {#                            <li><a href="">Menu item</a></li>#}
-            {#                            <li><a href="">Menu item</a></li>#}
-            {#                            <li><a href="">Menu item</a></li>#}
-            {#                        </ul>#}
-            {#                    </li>#}
-            {#                    <li class="dropdown">#}
-            {#                        <a aria-expanded="false" role="button" href="#" class="dropdown-toggle" data-toggle="dropdown"> Menu item</a>#}
-            {#                        <ul role="menu" class="dropdown-menu" class="dropdown-menu" style="right: -135px">#}
-            {#                            <li><a href="">Menu item</a></li>#}
-            {#                            <li><a href="">Menu item</a></li>#}
-            {#                            <li><a href="">Menu item</a></li>#}
-            {#                            <li><a href="">Menu item</a></li>#}
-            {#                        </ul>#}
-            {#                    </li>#}
-            {##}
-            {#                </ul>#}
-            <ul class="nav navbar-top-links navbar-right">
-                <li>
-                    <a href="{{ request.route_url('logout') }}">
-                        <i class="fas fa-sign-out-alt"></i> {{ _('Sign out') }}
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </nav>
+        <nav class="navbar navbar-expand-lg navbar-static-top" role="navigation">
+            <a href="{{ request.route_url('home') }}" class="navbar-brand"><img alt="image" src="{{ request.url_for_static('formshare-small-black.png') }}"/> Form<b>Share</b></a>
+
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-label="Toggle navigation">
+                <i class="fa fa-reorder"></i>
+            </button>
+
+
+            <div class="navbar-collapse collapse" id="navbar">
+                <ul class="nav navbar-nav mr-auto">
+                    <li class="dropdown">
+                        <a aria-expanded="false" role="button" href="#" class="dropdown-toggle" data-toggle="dropdown"> {{ _('My profile') }}</a>
+                        <ul role="menu" class="dropdown-menu" style="right: -130px">
+                            <li><a href="">{{ _('Edit my profile') }}</a></li>
+                            <li><a href="">{{ _('Change my password') }}</a></li>
+                        </ul>
+                    </li>
+{#                    <li class="dropdown">#}
+{#                        <a aria-expanded="false" role="button" href="#" class="dropdown-toggle" data-toggle="dropdown"> Menu item</a>#}
+{#                        <ul role="menu" class="dropdown-menu" class="dropdown-menu" style="right: -135px">#}
+{#                            <li><a href="">Menu item</a></li>#}
+{#                            <li><a href="">Menu item</a></li>#}
+{#                            <li><a href="">Menu item</a></li>#}
+{#                            <li><a href="">Menu item</a></li>#}
+{#                        </ul>#}
+{#                    </li>#}
+{#                    <li class="dropdown">#}
+{#                        <a aria-expanded="false" role="button" href="#" class="dropdown-toggle" data-toggle="dropdown"> Menu item</a>#}
+{#                        <ul role="menu" class="dropdown-menu" class="dropdown-menu" style="right: -135px">#}
+{#                            <li><a href="">Menu item</a></li>#}
+{#                            <li><a href="">Menu item</a></li>#}
+{#                            <li><a href="">Menu item</a></li>#}
+{#                            <li><a href="">Menu item</a></li>#}
+{#                        </ul>#}
+{#                    </li>#}
+{#                    <li class="dropdown">#}
+{#                        <a aria-expanded="false" role="button" href="#" class="dropdown-toggle" data-toggle="dropdown"> Menu item</a>#}
+{#                        <ul role="menu" class="dropdown-menu" class="dropdown-menu" style="right: -135px">#}
+{#                            <li><a href="">Menu item</a></li>#}
+{#                            <li><a href="">Menu item</a></li>#}
+{#                            <li><a href="">Menu item</a></li>#}
+{#                            <li><a href="">Menu item</a></li>#}
+{#                        </ul>#}
+{#                    </li>#}
+
+                </ul>
+                <ul class="nav navbar-top-links navbar-right">
+                    <li>
+                        <a href="{{ request.route_url('assistant_logout', userid=userid, projcode=projcode) }}">
+                            <i class="fas fa-sign-out-alt"></i> {{ _('Sign out') }}
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
 </div>

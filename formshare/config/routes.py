@@ -1,7 +1,7 @@
 from ..plugins.utilities import add_route
 import formshare.plugins as p
 from ..views.basic_views import NotFoundView, HomeView, log_out_view, LoginView, RegisterView, \
-    AssistantLoginView
+    AssistantLoginView, assistant_log_out_view
 from ..views.dashboard import UserDashBoardView
 from ..views.projects import AddProjectView, ProjectListView, ProjectDetailsView, ProjectStoredFileView, \
     EditProjectView, DeleteProjectView, AddFileToProject, RemoveFileFromProject, DownloadProjectGPSPoints
@@ -242,6 +242,10 @@ def load_routes(config):
     routes.append(
         add_route('assistant_login', '/user/{userid}/project/{projcode}/assistant/login', AssistantLoginView,
                   'generic/assistant_login.jinja2'))
+
+    routes.append(
+        add_route('assistant_logout', '/user/{userid}/project/{projcode}/assistant/logout', assistant_log_out_view,
+                  None))
 
     routes.append(
         add_route('assistant_forms', '/user/{userid}/project/{projcode}/assistant/forms', AssistantForms,

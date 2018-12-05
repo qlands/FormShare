@@ -357,6 +357,7 @@ class AssistantView(object):
             if not safe:
                 raise HTTPNotFound()
 
+        self.assistantID = self.assistant.login
         self.resultDict["activeAssistant"] = self.assistant
         self.resultDict["userid"] = self.userID
         self.resultDict["projcode"] = self.projectCode

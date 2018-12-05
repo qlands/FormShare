@@ -746,6 +746,24 @@ def convert_xml_to_json(odk_dir, xml_file, xform_directory, schema, xml_form_fil
     if p.returncode == 0:
         if schema is not None:
             if schema != "":
+                # Add the controlling fields to the JSON file
+                project_code = get_project_code_from_id(request, user, project)
+                with open(temp_json_file, 'r') as f:
+                    submission_data = json.load(f)
+                    submission_data["_submitted_by"] = assistant
+                    submission_data["_submitted_date"] = datetime.datetime.now().isoformat()
+                    submission_data["_user_id"] = user
+                    submission_data["_submission_id"] = submission_id
+                    submission_data["_project_code"] = project_code
+                    geopoint_variable = get_form_geopoint(request, project, form)
+                    if geopoint_variable is not None:
+                        if geopoint_variable in submission_data.keys():
+                            submission_data["_geopoint"] = submission_data[geopoint_variable]
+
+                with open(temp_json_file, "w", ) as outfile:
+                    json_string = json.dumps(submission_data, indent=4, ensure_ascii=False)
+                    outfile.write(json_string)
+
                 # Second we pass the temporal JSON to jQ to order its elements
                 # this will help later on if we want to compare between JSONs
                 args = ["jq", "-S", ".", temp_json_file]
@@ -757,10 +775,11 @@ def convert_xml_to_json(odk_dir, xml_file, xform_directory, schema, xml_form_fil
                 if p.returncode == 0:
                     try:
                         os.remove(temp_json_file)
-                    except RuntimeError as e:
+                    except Exception as e:
                         log.error(
                             "XMLToJSON error. Temporary file " + temp_json_file + " might not exist! Error: " + str(e))
                         return 1, ""
+
                     # Get the MD5Sum of the JSON file and looks for it in the submissions
                     # This will get an exact match that will not move into the database
                     md5sum = md5(open(json_file, 'rb').read()).hexdigest()
@@ -801,6 +820,10 @@ def convert_xml_to_json(odk_dir, xml_file, xform_directory, schema, xml_form_fil
                                                             p.returncode)
                             if not added:
                                 return 1, message
+                            else:
+                                # Add the JSON to the Elastic Search index
+                                create_dataset_index(request, user, project_code, form)
+                                add_dataset(request, user, project_code, form, submission_id, submission_data)
 
                             if p.returncode == 2:
                                 added, message = add_json_log(request, project, form, submission_id, json_file,
@@ -855,7 +878,7 @@ def convert_xml_to_json(odk_dir, xml_file, xform_directory, schema, xml_form_fil
                         except KeyError:
                             pass
 
-                # Adds the dataset to the index
+                # Adds the dataset to the Elastic Search index
                 create_dataset_index(request, user, project_code, form)
                 add_dataset(request, user, project_code, form, submission_id, submission_data)
 

@@ -19,7 +19,7 @@ def get_assistant_name(request, project, assistant):
     enum = request.dbsession.query(Collaborator).filter(Collaborator.project_id == project).filter(
         Collaborator.coll_id == assistant).first()
     if enum is not None:
-        return enum.enum_name
+        return enum.coll_name
     else:
         return ""
 
@@ -63,28 +63,29 @@ def get_error_description_from_file(log_file):
         return {"duplicated": False, "error": str(e)}
 
 
-def get_last_log_entry(request, project, form, submission_id):
-    last_entry = request.dbsession.query(Jsonhistory).filter(
+def get_last_log_entry(request, user, project, form, submission_id):
+    res = request.dbsession.query(Jsonhistory, Collaborator).filter(
         Jsonhistory.enum_project == Collaborator.project_id).filter(Jsonhistory.coll_id == Collaborator.coll_id).filter(
         Jsonhistory.project_id == project).filter(Jsonhistory.form_id == form).filter(
         Jsonhistory.log_id == submission_id).order_by(Jsonhistory.log_dtime.desc()).first()
 
-    if last_entry is not None:
-        notes = last_entry.log_notes
+    if res is not None:
+        last_entry = map_from_schema(res)
+        notes = last_entry['log_notes']
         if notes is not None:
             submissions = re.findall(r"[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89aAbB][a-f0-9]{3}-[a-f0-9]{12}", notes)
             if submissions:
                 for submission in submissions:
                     if submission != submission_id:
                         if notes.find('[' + submission + ']') == -1:
-                            project_code = request.matchdict['pname']
-                            url = request.route_url('comparesubmissions', projcode=project_code, formid=form,
-                                                    submissiona=submission_id, submissionb=submission)
+                            project_code = request.matchdict['projcode']
+                            url = request.route_url('comparesubmissions', userid=user, projcode=project_code,
+                                                    formid=form, submissiona=submission_id, submissionb=submission)
                             notes = notes.replace(submission, '[' + submission + '](' + url + ")")
 
-        return {'log_sequence': last_entry.log_sequence, 'log_dtime': last_entry.log_dtime,
-                'log_action': last_entry.log_action, 'log_commit': last_entry.log_commit,
-                'enum_id': last_entry.enum_id, 'enum_name': last_entry.enum_name,
+        return {'log_sequence': last_entry['log_sequence'], 'log_dtime': last_entry['log_dtime'],
+                'log_action': last_entry['log_action'], 'log_commit': last_entry['log_commit'],
+                'enum_id': last_entry['coll_id'], 'enum_name': last_entry['coll_name'],
                 'log_notes': notes}
     else:
         return None
@@ -100,7 +101,7 @@ def get_submission_details(request, project, form, submission):
     if res is not None:
         mapped_data = map_from_schema(res)
         return {'submission_dtime': mapped_data['submission_dtime'], 'submission_id': mapped_data['submission_id'],
-                'enum_name': mapped_data['enum_name'], 'submission_status': mapped_data['submission_status']}
+                'enum_name': mapped_data['coll_name'], 'submission_status': mapped_data['submission_status']}
     else:
         return None
 
@@ -115,12 +116,13 @@ def get_submission_error_details(request, project, form, submission):
     if res is not None:
         mapped_data = map_from_schema(res)
         return {'log_dtime': mapped_data['log_dtime'], 'json_file': mapped_data['json_file'],
-                'enum_name': mapped_data['enum_name'], 'status': mapped_data['status']}
+                'enum_name': mapped_data['coll_name'], 'status': mapped_data['status'],
+                'log_file': mapped_data['log_file']}
     else:
         return None
 
 
-def get_errors_by_assistant(request, project, form, assistant):
+def get_errors_by_assistant(request, user, project, form, assistant):
     result = []
 
     if assistant is None:
@@ -141,8 +143,8 @@ def get_errors_by_assistant(request, project, form, assistant):
     for error in json_errors:
         result.append({'log_id': error['log_id'], 'log_dtime': error['log_dtime'], 'json_file': error['json_file'],
                        'error': get_error_description_from_file(error['log_file']), 'status': error['status'],
-                       'lastentry': get_last_log_entry(request, project, form, error['log_id']),
-                       'enum_name': error.enum_name, 'log_short': error.log_id[-12:]})
+                       'lastentry': get_last_log_entry(request, user, project, form, error['log_id']),
+                       'enum_name': error['coll_name'], 'log_short': error['log_id'][-12:]})
     return result
 
 
@@ -223,7 +225,7 @@ def get_assistant_permissions_on_a_form(request, user, requested_project, assist
     # Get all the forms that the user can submit data to and are active
     assistant_access = request.dbsession.query(Formacces).filter(Formacces.project_id == assistant_project).filter(
         Formacces.coll_id == assistant).filter(Formacces.form_project == requested_project).filter(
-        Formacces.form_id == form).fisrt()
+        Formacces.form_id == form).first()
     if assistant_access is not None:
         if assistant_access.coll_privileges == 3:
             privileges = {'enum_cansubmit': 1, 'enum_canclean': 1}

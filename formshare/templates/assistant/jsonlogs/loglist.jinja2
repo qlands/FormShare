@@ -1,0 +1,154 @@
+{% extends 'assistant/page.jinja2' %}
+
+{% block title %}
+    <title>{{ _('Assistant forms') }}</title>
+{% endblock title %}
+
+{% block css %}
+    {{ super() }}
+    <style>
+        @media (max-width: 767px) {
+            .action-buttons {
+                margin-top: 10px;
+            }
+            .grid-header {
+                display: none;
+            }
+        }
+    </style>
+{% endblock css %}
+
+{% block topScripts %}
+    {{ super() }}
+    {% jsresource request,'formshare','clipboard' %}
+    {% jsresource request,'formshare','showdown' %}
+{% endblock topScripts %}
+
+{% block breadcrumbs %}
+    {% include 'assistant/jsonlogs/snippets/brdcrbs_loglist.jinja2' %}
+{% endblock breadcrumbs %}
+
+{% block maincontent %}
+    <div class="ibox">
+        <div class="ibox-title">
+            <h5>{{ _('Error logs ') }}</h5>
+            <div class="ibox-tools">
+                <a class="collapse-link" style="margin-right: 10px">
+                    <i class="fa fa-chevron-up"></i>
+                </a>
+                <a class="fullscreen-link">
+                    <i class="fa fa-expand"></i>
+                </a>
+            </div>
+        </div>
+        <div class="ibox-content">
+            <div class="clients-list">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="grid-header">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        {{ _('Submission') }}
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        {{ _('Error') }}
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        {{ _('Status') }}
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center">
+                                        {{ _('Actions') }}
+                                    </div>
+                                </div>
+                            </div>
+                            <hr class="hr-line-solid">
+                        </div>
+                        {% for error in errors %}
+                            {% set error_count = loop.index %}
+                            {% include 'assistant/jsonlogs/snippets/error_item.jinja2' %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal inmodal" id="see_notes" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content animated fadeIn">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                    <h4 class="modal-title">{{ _('Notes') }}</h4>
+                </div>
+                <div class="modal-body" id="modal-notes">
+                    The notes go here!
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Close') }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock maincontent %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function() {
+            new ClipboardJS('.clipboard');
+
+            $('.action-required').click(function () {
+                var action_url = $( this ).attr('urn');
+                var title = $( this ).attr('data-title');
+                var message = $( this ).attr('data-message');
+                swal({
+                        title: title,
+                        text: message,
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#DD6B55",
+                        confirmButtonText: "{{ _('Yes, go ahead!') }}",
+                        cancelButtonText: "{{ _('Oops, cancel!') }}",
+                        closeOnConfirm: true,
+                        closeOnCancel: true },
+                    function (isConfirm) {
+                        if (isConfirm) {
+                            var form = document.createElement('form');
+                            form.setAttribute('method', 'post');
+                            form.setAttribute('action', action_url);
+                            form.style.display = 'hidden';
+
+                            var i = document.createElement("input"); //input element, text
+                            i.setAttribute('type',"text");
+                            i.setAttribute('name',"csrf_token");
+                            i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                            form.appendChild(i);
+
+                            document.body.appendChild(form);
+                            form.submit();
+                        }
+                    });
+            });
+
+            $('.button-note').click(function () {
+                var id = $( this ).attr('data-error');
+                var message = $('#' + id).val();
+                var converter = new showdown.Converter();
+                var html = converter.makeHtml(message);
+                $('#modal-notes').html(html);
+            });
+
+        });
+        </script>
+{% endblock scripts %}
+
+
+

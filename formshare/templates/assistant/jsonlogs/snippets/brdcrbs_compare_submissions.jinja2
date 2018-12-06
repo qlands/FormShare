@@ -1,0 +1,14 @@
+<div class="col-sm-12">
+    <h2>{{ _('Compare submissions') }}</h2>
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ request.route_url("assistant_forms",userid=userid,projcode=projcode) }}">{{ _('My forms') }}</a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ request.route_url("errorlist",userid=userid,projcode=projcode,formid=formid) }}">{{ _('Errors in') }} "{{ formData.form_name }}"</a>
+        </li>
+        <li class="breadcrumb-item active">
+            <strong>{{ _('Compare submissios') }}</strong>
+        </li>
+    </ol>
+</div>

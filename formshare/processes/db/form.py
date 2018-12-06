@@ -74,11 +74,14 @@ def get_number_of_submissions(request, user, project, form):
 def get_number_of_submissions_in_database(request, project, form):
     total = request.dbsession.query(Submission).filter(Submission.project_id == project).filter(
         Submission.form_id == form).filter(Submission.sameas.is_(None)).count()
+
     in_db = request.dbsession.query(Submission).filter(Submission.project_id == project).filter(
         Submission.form_id == form).filter(Submission.submission_status == 0).filter(
         Submission.sameas.is_(None)).count()
+
     fixed = request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form).filter(Jsonlog.status == 0).count()
+
     in_db_from_logs = request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form).count()
     in_error = request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
@@ -107,15 +110,15 @@ def get_number_of_submissions_by_assistant(request, project, form, assistant_pro
 
     fixed = request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form).filter(Jsonlog.status == 0).filter(
-        Submission.enum_project == assistant_project).filter(Submission.coll_id == assistant).count()
+        Jsonlog.enum_project == assistant_project).filter(Jsonlog.coll_id == assistant).count()
 
     in_db_from_logs = request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
-        Jsonlog.form_id == form).filter(Submission.enum_project == assistant_project).filter(
-        Submission.coll_id == assistant).count()
+        Jsonlog.form_id == form).filter(Jsonlog.enum_project == assistant_project).filter(
+        Jsonlog.coll_id == assistant).count()
 
     in_error = request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form).filter(Jsonlog.status != 0, Jsonlog.status != 4).filter(
-        Submission.enum_project == assistant_project).filter(Submission.coll_id == assistant).count()
+        Jsonlog.enum_project == assistant_project).filter(Jsonlog.coll_id == assistant).count()
 
     res = request.dbsession.query(Submission).filter(Submission.project_id == project).filter(
         Submission.form_id == form).filter(Submission.sameas.is_(None)).filter(

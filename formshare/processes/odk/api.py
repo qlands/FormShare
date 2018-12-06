@@ -1132,7 +1132,7 @@ def restore_from_revision(request, project, form, submission, sequence):
         return 1, "Cannot restore from revision " + sequence
 
 
-def push_revision(request, project, form, submission):
+def push_revision(request, user, project, form, submission):
     odk_dir = get_odk_path(request)
     form_directory = get_form_directory(request, project, form)
     schema = get_form_schema(request, project, form)
@@ -1165,6 +1165,12 @@ def push_revision(request, project, form, submission):
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()
     if p.returncode == 0:
+        with open(current_file, 'r') as f:
+            submission_data = json.load(f)
+            # Add the JSON to the Elastic Search index
+            project_code = get_project_code_from_id(request, user, project)
+            create_dataset_index(request, user, project_code, form)
+            add_dataset(request, user, project_code, form, submission, submission_data)
         return 0, ""
     else:
         log.error("JSONToMySQL error. Pushing " + current_file + ". Error: " + stdout.decode() + "-" +
@@ -1263,6 +1269,10 @@ def get_request_data(request, project, form, table_name, draw, fields, start, le
                      search_value):
     schema = get_form_schema(request, project, form)
     sql_fields = ','.join(fields)
+    not_null_fields_array = []
+    for a_field in fields:
+        not_null_fields_array.append("IFNULL(" + a_field + ",'')")
+    not_null_fields = ','.join(not_null_fields_array)
     table_order = fields[order_index]
 
     if search_value == "":
@@ -1270,8 +1280,8 @@ def get_request_data(request, project, form, table_name, draw, fields, start, le
         where_clause = ''
     else:
         sql = "SELECT " + sql_fields + " FROM " + schema + "." + table_name
-        sql = sql + " WHERE LOWER(CONCAT(" + sql_fields + ")) like '%" + search_value.lower() + "%'"
-        where_clause = " WHERE LOWER(CONCAT(" + sql_fields + ")) like '%" + search_value.lower() + "%'"
+        sql = sql + " WHERE LOWER(CONCAT(" + not_null_fields + ")) like '%" + search_value.lower() + "%'"
+        where_clause = " WHERE LOWER(CONCAT(" + not_null_fields + ")) like '%" + search_value.lower() + "%'"
 
     sql = sql + " ORDER BY " + table_order + " " + order_direction
     sql = sql + " LIMIT " + str(start) + "," + str(length)

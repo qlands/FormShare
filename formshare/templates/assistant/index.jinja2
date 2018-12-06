@@ -4,14 +4,6 @@
     <title>{{ _('Assistant forms') }}</title>
 {% endblock title %}
 
-{% block topScripts %}
-    {% jsresource request,'formshare','pace' %}
-{% endblock topScripts %}
-
-{% block pageheader %}
-    {% include 'assistant/snippets/header.jinja2' %}
-{% endblock pageheader %}
-
 {% block breadcrumbs %}
     {% include 'assistant/snippets/brdcrbs_home.jinja2' %}
 {% endblock breadcrumbs %}

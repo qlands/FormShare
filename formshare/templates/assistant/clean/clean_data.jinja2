@@ -1,0 +1,202 @@
+{% extends 'assistant/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block title %}
+    <title>{{ _('Clean data') }}</title>
+{% endblock title %}
+
+{% block css %}
+    {{ super() }}
+    {% if table == None %}
+        {% cssresource request,'formshare','select2' %}
+    {% else %}
+        {% cssresource request,'formshare','datatableseditor' %}
+    {% endif %}
+    <style>
+        input { height: 30px !important; }
+    </style>
+{% endblock css %}
+
+{% block topScripts %}
+    {{ super() }}
+    {% if table == None %}
+        {% jsresource request,'formshare','select2' %}
+    {% else %}
+        {% jsresource request,'formshare','datatableseditor' %}
+    {% endif %}
+{% endblock topScripts %}
+
+{% block breadcrumbs %}
+    {% include 'assistant/clean/snippets/brdcrbs_clean.jinja2' %}
+{% endblock breadcrumbs %}
+
+{% block maincontent %}
+    <div class="ibox">
+        <div class="ibox-title">
+            <h5>{{ _('Clean ') }} "{{ formData.form_name }}"</h5>
+            <div class="ibox-tools">
+                <a class="collapse-link" style="margin-right: 10px">
+                    <i class="fa fa-chevron-up"></i>
+                </a>
+                <a class="fullscreen-link">
+                    <i class="fa fa-expand"></i>
+                </a>
+            </div>
+        </div>
+        <div class="ibox-content" id="ibox-content">
+            <div class="row">
+                <div class="col-md-6">
+                    <form class="dataset-form form-horizontal add-member-form" method='post' action="{{ request.url }}">
+                        <input type="hidden" name="csrf_token" value="{{ token }}">
+                        <div class="form-group">
+                            <label>{{ _('Table') }}</label>
+                            <select style="width: 100%" id="table" name="table" data-module="autocomplete" data-module-dropdown-class="lang-dropdown" data-module-container-class="lang-container">
+                                {% for table in tables %}
+                                    <option value="{{ table.name }}" {% if table.name == currtable %} selected {% endif %} >{{ table.desc }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div>
+                            <button type="submit" name="loadtable" class="btn btn-primary">Load table</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="col-md-6">
+                    {% if table != None %}
+                        <form class="dataset-form form-horizontal add-member-form" method='post' action="{{ request.url }}">
+                            <input type="hidden" name="csrf_token" value="{{ token }}">
+                            <div class="form-group">
+                                <label>{{ _('Fields') }}</label>
+                                <select id="fields" data-module="autocomplete" name="fields" multiple="multiple" style="width: 100%">
+                                    {% for field in fields %}
+                                        <option value="{{ field.name }}" {% if field.checked %} selected {% endif %} >{{ field.desc }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div>
+                                <button type="submit" name="loadfields" class="btn btn-primary">Load fields</button>
+                            </div>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+            {% if table != None %}
+                <hr>
+                <table id="example" class="display" cellspacing="0" width="100%">
+                    <thead>
+                    <tr>
+                        {% if checked == 0 %}
+                            {% for field in fields -%}
+                                <th title="{{ field.desc }}">{{ field.desc|truncate(30, True) }}</th>
+                            {% endfor -%}
+                        {% else %}
+                            {% for field in fields -%}
+                                {% if field.checked -%}
+                                    <th title="{{ field.desc }}">{{ field.desc|truncate(30, True) }}</th>
+                                {% endif -%}
+                            {% endfor %}
+                        {% endif %}
+                        <th>Unique Row ID</th>
+                    </tr>
+                    </thead>
+                    <tfoot>
+                    <tr>
+                        {% if checked == 0 %}
+                            {% for field in fields -%}
+                                <th title="{{ field.desc }}">{{ field.desc|truncate(30, True) }}</th>
+                            {% endfor -%}
+                        {% else %}
+                            {% for field in fields -%}
+                                {% if field.checked -%}
+                                    <th title="{{ field.desc }}">{{ field.desc|truncate(30, True) }}</th>
+                                {% endif -%}
+                            {% endfor -%}
+                        {% endif %}
+                        <th>Unique Row ID</th>
+                    </tr>
+                    </tfoot>
+                </table>
+            {% else %}
+                Please load a table
+            {% endif %}
+        </div>
+    </div>
+{% endblock maincontent %}
+
+
+{%- block scripts %}
+    {{ super() }}
+    <script>
+        $("#table").select2({
+                dropdownParent: $('#ibox-content')
+            });
+        $("#fields").select2(
+            {
+                dropdownParent: $('#ibox-content')
+            }
+        );
+        {% if table != None %}
+            //Construct the editor
+            editor = new $.fn.dataTable.Editor( {
+                ajax: {
+                    url: "{{ request.route_url('action',userid=userid,projcode=projcode,formid=formid,tablename=table) }}",
+                    data: function ( d ) {
+                        d.csrf_token = "{{ token }}";
+                        d.currfields = "{{ strFields }}"
+                    }
+                },
+                table: "#example",
+                fields: [
+                    {% if checked == 0 %}
+                        {% for field in fields -%}
+                            {label: "{{ field.name }}",name: "{{ field.name }}"},
+                        {% endfor -%}
+                    {% else %}
+                        {% for field in fields -%}
+                            {% if field.checked -%}
+                                {label: "{{ field.name }}",name: "{{ field.name }}"},
+                            {% endif -%}
+                        {% endfor -%}
+                    {% endif %}
+                    { label: "Unique Row ID",name:"rowuuid"}
+                ]
+            } );
+
+            // Activate an inline edit on click of a table cell
+            $('#example').on( 'click', 'tbody td:not()', function (e) {
+                editor.inline( this );
+            } );
+
+            //Construct the datatable
+            $('#example').DataTable( {
+                "processing": true,
+                "serverSide": true,
+                "scrollX": true,
+                "ajax": {
+                    'url':"{{ request.route_url('request',userid=userid,projcode=projcode,formid=formid,tablename=table) }}",
+                    'type':"POST",
+                    data: function ( d ) {
+                        d.csrf_token = "{{ token }}"
+                    }
+                },
+                "columns": [
+                    {% if checked == 0 %}
+                        {% for field in fields -%}
+                            { "data": "{{ field.name }}","name": "{{ field.name }}" },
+                        {% endfor -%}
+                    {% else %}
+                        {% for field in fields -%}
+                            {% if field.checked -%}
+                                { "data": "{{ field.name }}","name": "{{ field.name }}" },
+                            {% endif -%}
+                        {% endfor -%}
+                    {% endif %}
+                    { "data": "rowuuid" }
+                ],
+                "columnDefs": [
+                    {"className": "dt-center", "targets": "_all"}
+                ]
+            } );
+        {% endif %}
+    </script>
+{% endblock scripts -%}

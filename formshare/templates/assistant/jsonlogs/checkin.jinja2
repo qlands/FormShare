@@ -1,0 +1,68 @@
+{% extends 'assistant/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block title %}
+    <title>{{ _('Checkin new version') }}</title>
+{% endblock title %}
+
+{% block css %}
+    {{ super() }}
+    {% cssresource request,'formshare','simplemde' %}
+
+{% endblock css %}
+
+{% block topScripts %}
+    {{ super() }}
+    {% jsresource request,'formshare','simplemde' %}
+{% endblock topScripts %}
+
+{% block breadcrumbs %}
+    {% include 'assistant/jsonlogs/snippets/brdcrbs_checkin.jinja2' %}
+{% endblock breadcrumbs %}
+
+{% block maincontent %}
+    <div class="ibox">
+        <div class="ibox-title">
+            <h5>{{ _('Checkin new version') }}</h5>
+            <div class="ibox-tools">
+                <a class="collapse-link" style="margin-right: 10px">
+                    <i class="fa fa-chevron-up"></i>
+                </a>
+                <a class="fullscreen-link">
+                    <i class="fa fa-expand"></i>
+                </a>
+            </div>
+        </div>
+        <div class="ibox-content">
+            {{ form.display_errors(errors) }}
+            <form class="module-content dataset-form form-horizontal fileDownloadForm" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ request.session.get_csrf_token() }}">
+
+
+                <div class="control-group">
+                    <label class="control-label" for="json"> <span class="control-required" title="This field is required">*</span>  {{ _("JSON file") }} </label>
+                    <div class="controls">
+                        <input id="json" name="json" type="file" value="" accept="application/json" />
+                    </div>
+                </div>
+                <div class="control-group">
+                    <label class="control-label" for="notes"> <span class="control-required" title="This field is required">*</span>  {{ _("Notes") }} </label>
+                    <div class="controls">
+                        <textarea id="notes" name="notes" style="width: 567px; height: 167px;"></textarea>
+                    </div>
+                </div>
+                <div class="control-group" style="padding-left: 40px">
+                    <button class="btn btn-primary" name="publish" type="submit">{{ _('Check-in new version') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock maincontent %}
+
+
+{%- block scripts %}
+    {{ super() }}
+    <script>
+        var simplemde = new SimpleMDE({ element: $("#notes")[0] });
+    </script>
+{% endblock scripts -%}

@@ -5,6 +5,7 @@
 {% endblock css %}
 
 {% block topScripts %}
+    {% jsresource request,'formshare','pace' %}
     {% jsresource request,'formshare','sweetalert' %}
 {% endblock topScripts %}
 
@@ -18,7 +19,7 @@
                         {% block pagewrapper %}
                             <div class="container">
                             {% block pageheader %}
-
+                                {% include 'assistant/snippets/header.jinja2' %}
                             {% endblock pageheader %}
                                 {% block dashheader %}
                                     <div style="margin-top: 5px" class="row wrapper border-bottom white-bg page-heading">

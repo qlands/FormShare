@@ -19,6 +19,7 @@ decorator==4.3.0
 docutils==0.14
 -e git+https://github.com/qlands/elasticfeeds.git@f128339c02f73285fb0d96c636d3975d3b3f86d8#egg=elasticfeeds
 elasticsearch==6.3.1
+et-xmlfile==1.0.1
 FormEncode==1.3.1
 future==0.16.0
 gevent==1.3.6
@@ -28,6 +29,7 @@ hupper==1.3
 idna==2.7
 imagesize==1.1.0
 inflect==1.0.0
+jdcal==1.4
 Jinja2==2.10
 jinja2-time==0.2.0
 kombu==4.2.1
@@ -39,6 +41,7 @@ MarkupSafe==1.0
 mysql-connector-python==8.0.12
 nose==1.3.7
 ofs==0.4.3
+openpyxl==2.5.11
 packaging==18.0
 paginate==0.5.6
 Pairtree==0.8.1

@@ -8,7 +8,10 @@
     {% jsresource request,'formshare','pace' %}
 {% endblock topScripts %}
 
+{% block bodyclass %} {{ super() }} landing-page no-skin-config {% endblock bodyclass %}
+
 {% block pageheader %}
+    {% set in_landing = True %}
     {% include 'dashboard/snippets/header.jinja2' %}
 {% endblock pageheader %}
 

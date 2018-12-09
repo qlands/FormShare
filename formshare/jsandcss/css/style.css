@@ -8051,9 +8051,9 @@ body.landing-page {
   position: relative;
   overflow: visible;
 }
-.landing-page .carousel-inner {
-  overflow: visible;
-}
+/*.landing-page .carousel-inner {*/
+  /*overflow: visible;*/
+/*}*/
 .landing-page .carousel-caption {
   position: absolute;
   top: 100px;

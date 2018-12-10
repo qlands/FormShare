@@ -14,7 +14,7 @@
         </dl>
         <dl class="row mb-0">
             <div class="col-sm-4 text-sm-right"><dt>{{ _('Assistants') }}:</dt> </div>
-            <div class="col-sm-8 text-sm-left"> <dd class="mb-1"> {{ formassistants|length }} </dd></div>
+            <div class="col-sm-8 text-sm-left"> <dd class="mb-1"> {{ formassistants|length }} {% if formassistants|length == 0 %} (You need assistants to help you collect and clean data){% endif %}</dd></div>
         </dl>
         <dl class="row mb-0">
             <div class="col-sm-4 text-sm-right"><dt>{{ _('Assistant groups') }}:</dt> </div>
@@ -26,18 +26,26 @@
             <div class="col-sm-4 text-sm-right">
                 <dt>{{ _('Last Submission') }}:</dt>
             </div>
-            <div class="col-sm-8 text-sm-left">
-                <dd class="mb-1">{{ request.h.readble_date_with_time(formDetails.last) }}</dd>
-            </div>
+            {% if formDetails.submissions > 0 %}
+                <div class="col-sm-8 text-sm-left">
+                    <dd class="mb-1">{{ request.h.readble_date_with_time(formDetails.last) }}</dd>
+                </div>
+            {% else %}
+                <div class="col-sm-8 text-sm-left">
+                    <dd class="mb-1">{{ _('Without submissions') }}</dd>
+                </div>
+            {% endif %}
         </dl>
-        <dl class="row mb-0">
-            <div class="col-sm-4 text-sm-right">
-                <dt>{{ _('By') }}:</dt>
-            </div>
-            <div class="col-sm-8 text-sm-left">
-                <dd class="mb-1"><a class="text-info">{{ formDetails.bydetails.coll_name }}</a></dd>
-            </div>
-        </dl>
+        {% if formDetails.submissions > 0 %}
+            <dl class="row mb-0">
+                <div class="col-sm-4 text-sm-right">
+                    <dt>{{ _('By') }}:</dt>
+                </div>
+                <div class="col-sm-8 text-sm-left">
+                    <dd class="mb-1"><a class="text-info">{{ formDetails.bydetails.coll_name }}</a></dd>
+                </div>
+            </dl>
+        {% endif %}
         <dl class="row mb-0">
             <div class="col-sm-4 text-sm-right">
                 <dt>{{ _('Submissions') }}:</dt>

@@ -323,49 +323,52 @@ def table_belongs_to_form(request, project, form, table_name):
 
 
 def get_table_items(request, project, form, table_name, just_main=False):
-    if just_main:
-        items = request.dbsession.query(Sepsection, Sepitem).outerjoin((Sepitem, and_(
-            Sepitem.section_project == Sepsection.project_id, Sepitem.section_form == Sepsection.form_id,
-            Sepitem.section_table == Sepsection.table_name, Sepitem.section_id == Sepsection.section_id))).filter(
-            Sepsection.project_id == project).filter(Sepsection.form_id == form).filter(
-            Sepsection.table_name == table_name).filter(Sepsection.section_name == 'main').\
-            order_by(Sepsection.section_order.asc(), Sepitem.item_order.asc()).all()
-    else:
-        items = request.dbsession.query(Sepsection, Sepitem).outerjoin((Sepitem, and_(
-            Sepitem.section_project == Sepsection.project_id, Sepitem.section_form == Sepsection.form_id,
-            Sepitem.section_table == Sepsection.table_name, Sepitem.section_id == Sepsection.section_id))).filter(
-            Sepsection.project_id == project).filter(Sepsection.form_id == form).filter(
-            Sepsection.table_name == table_name).filter(Sepsection.section_name != 'main'). \
-            order_by(Sepsection.section_order.asc(), Sepitem.item_order.asc()).all()
-
-    # sql = "SELECT sepsection.section_id,sepsection.section_name,sepsection.section_desc," \
-    #       "sepsection.section_order, sepitems.item_name,sepitems.item_desc," \
-    #       "IFNULL(sepitems.item_order,0) as item_order, sepitems.item_notdisplay " \
-    #       "FROM sepsection " \
-    #       "LEFT JOIN sepitems " \
-    #       "ON sepitems.section_project = sepsection.project_id " \
-    #       "AND sepitems.section_form = sepsection.form_id " \
-    #       "AND sepitems.section_table = sepsection.table_name " \
-    #       "AND sepitems.section_id = sepsection.section_id " \
-    #       "WHERE sepsection.project_id = '" + projectID + "' " \
-    #       "AND sepsection.form_id = '" + formID + "' " \
-    #       "AND sepsection.table_name = '" + tableName + "' "
-    # if justMain:
-    #     sql = sql + "AND sepsection.section_name = 'main' "
+    # if just_main:
+    #     items = request.dbsession.query(Sepsection, Sepitem).outerjoin((Sepitem, and_(
+    #         Sepitem.section_project == Sepsection.project_id, Sepitem.section_form == Sepsection.form_id,
+    #         Sepitem.section_table == Sepsection.table_name, Sepitem.section_id == Sepsection.section_id))).filter(
+    #         Sepsection.project_id == project).filter(Sepsection.form_id == form).filter(
+    #         Sepsection.table_name == table_name).filter(Sepsection.section_name == 'main').\
+    #         order_by(Sepsection.section_order.asc(), Sepitem.item_order.asc()).all()
     # else:
-    #     sql = sql + "AND sepsection.section_name != 'main' "
-    # sql = sql +  "ORDER BY sepsection.section_order,item_order"
-    # items = request.dbsession.execute(sql).fetchall()
+    #     items = request.dbsession.query(Sepsection, Sepitem).outerjoin((Sepitem, and_(
+    #         Sepitem.section_project == Sepsection.project_id, Sepitem.section_form == Sepsection.form_id,
+    #         Sepitem.section_table == Sepsection.table_name, Sepitem.section_id == Sepsection.section_id))).filter(
+    #         Sepsection.project_id == project).filter(Sepsection.form_id == form).filter(
+    #         Sepsection.table_name == table_name).filter(Sepsection.section_name != 'main'). \
+    #         order_by(Sepsection.section_order.asc(), Sepitem.item_order.asc()).all()
 
-    # result = []
-    # for qst in items:
-    #     dct = (dict(qst))
-    #     for key, value in dct.items():
-    #         dct[key] = value
-    #     result.append(dct)
-    #
-    # return result
-    return map_from_schema(items)
+    sql = "SELECT sepsection.section_id,sepsection.section_name,sepsection.section_desc," \
+          "sepsection.section_order, sepitems.item_name,sepitems.item_desc," \
+          "IFNULL(sepitems.item_order,0) as item_order, sepitems.item_notdisplay " \
+          "FROM sepsection " \
+          "LEFT JOIN sepitems " \
+          "ON sepitems.section_project = sepsection.project_id " \
+          "AND sepitems.section_form = sepsection.form_id " \
+          "AND sepitems.section_table = sepsection.table_name " \
+          "AND sepitems.section_id = sepsection.section_id " \
+          "WHERE sepsection.project_id = '" + project + "' " \
+          "AND sepsection.form_id = '" + form + "' " \
+          "AND sepsection.table_name = '" + table_name + "' "
+    if just_main:
+        sql = sql + "AND sepsection.section_name = 'main' "
+    else:
+        sql = sql + "AND sepsection.section_name != 'main' "
+    sql = sql + "ORDER BY sepsection.section_order,item_order"
+    items = request.dbsession.execute(sql).fetchall()
+
+    result = []
+    for qst in items:
+        dct = (dict(qst))
+        for key, value in dct.items():
+            dct[key] = value
+        result.append(dct)
+
+    return result
+    # if items is not None:
+    #     return map_from_schema(items)
+    # else:
+    #     return None
 
 
 def is_separation_ok(request, project, form, table_name):
@@ -453,7 +456,7 @@ def get_group_name_from_id(request, project, form, table_name, section_id):
         Sepsection.form_id == form).filter(Sepsection.table_name == table_name).filter(
         Sepsection.section_id == section_id).first()
     if res is not None:
-        return res.section_name
+        return res.section_desc
     else:
         return None
 

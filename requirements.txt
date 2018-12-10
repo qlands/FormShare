@@ -78,7 +78,6 @@ Sphinx==1.8.1
 sphinxcontrib-websupport==1.1.0
 SQLAlchemy==1.2.12
 stream-framework==1.4.0
-test1==1.0
 traceback2==1.4.0
 transaction==2.2.1
 translationstring==1.3

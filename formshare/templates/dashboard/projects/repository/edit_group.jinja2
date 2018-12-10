@@ -1,36 +1,30 @@
 {% extends 'dashboard/page.jinja2' %}
 {% import 'dashboard/macros/form.jinja2' as form %}
 
-{% block titlesection %}{{ _('Creating repository for') }}{{ formDetails.form_name }}{% endblock titlesection %}
+{% block titlesection %}{{ _('Creating repository for') }}{{ formid }}{% endblock titlesection %}
 
 {% block breadcrumbs %}
-    {% include 'dashboard/projects/forms/snippets/brdcrbs_frmdtls.jinja2' %}
+    {% include 'dashboard/projects/repository/snippets/brdcrbs_edit_group.jinja2' %}
 {% endblock breadcrumbs %}
 
 {% block mainsection %}
-    {% if errors|length > 0 %}
-        {{ form.display_errors(errors) }}
-    {% endif %}
-    <form class="dataset-form form-horizontal add-member-form" method='post'>
-        <input type="hidden" name="csrf_token" value="{{ request.session.get_csrf_token() }}">
-        <div class="row-fluid">
-            <div class="control-group control-medium">
-                <label class="control-label" for="desc">
-                    {{ _('Group description') }}
-                </label>
-                <span>{{ _('A meanful description of the group') }}</span>
-                <div class="controls">
-                    <input id="desc" type="text" name="desc" value="{{ group_desc }}" class="control-medium">
+    <div style="margin-top: 10px" class="row">
+        <div class="col-md-12">
+            {% if errors|length > 0 %}
+                {{ form.display_errors(errors) }}
+            {% endif %}
+            <form class="dataset-form form-horizontal add-member-form" method='post'>
+                <input type="hidden" name="csrf_token" value="{{ request.session.get_csrf_token() }}">
+                <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Section description') }}</label>
+                    <div class="col-sm-10"><input id="desc" type="text" name="desc" value="{{ groupName }}" class="form-control"> <span class="form-text m-b-none">A meaningful description of the section.</span>
+                    </div>
                 </div>
-            </div>
+                <div class="form-actions">
+                    <button class="btn btn-primary" type="submit">
+                        {{ _('Update section') }}
+                    </button>
+                </div>
+            </form>
         </div>
-        <div class="form-actions">
-            <button class="btn btn-primary" type="submit">
-                {{ _('Update section') }}
-            </button>
-        </div>
-    </form>
-    <button onclick="location.href='{{ request.route_url('separatetable', userid=userid, projcode=projcode, formid=formid,tablename=tableName,_query=qvars) }}';" class="btn btn-default pull-left" name="changepass" >
-                {{ _('Go back') }}
-    </button>
+    </div>
 {% endblock mainsection %}

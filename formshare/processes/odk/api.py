@@ -14,7 +14,7 @@ from formshare.processes.db import assistant_has_form, get_assistant_forms, get_
     form_exists, get_form_directory, get_form_xml_file, get_form_xls_file, update_form, get_form_data, \
     get_form_schema, get_submission_data, add_submission, add_json_log, update_json_status, add_json_history, \
     form_file_exists, get_url_from_file, set_file_with_error, update_file_info, get_project_from_assistant, \
-    get_form_files, get_project_code_from_id, get_form_geopoint
+    get_form_files, get_project_code_from_id, get_form_geopoint, get_media_files, add_file_to_form
 import uuid
 import datetime
 import re
@@ -41,7 +41,7 @@ __all__ = ['generate_form_list', 'generate_manifest', 'get_form_list',
            'get_html_from_diff', 'generate_diff', 'store_new_version', 'restore_from_revision', 'push_revision',
            'get_tables_from_form', 'get_fields_from_table', 'get_table_desc', 'is_field_key', 'get_request_data',
            'update_data', 'upload_odk_form', 'update_form_title', 'retrieve_form_file', 'cache_external_file',
-           'get_odk_path']
+           'get_odk_path', 'store_file_in_directory']
 
 
 def get_odk_path(request):
@@ -89,6 +89,61 @@ def cache_external_file(request, project, form, file_name):
                 update_file_info(request, project, form, file_name, md5sum)
     else:
         raise HTTPNotFound
+
+
+def store_file_in_directory(request, project, form, file_name, directory):
+    if form_file_exists(request, project, form, file_name):
+        file_url, last_download = get_url_from_file(request, project, form, file_name)
+        if file_url is None:
+            bucket_id = project + form
+            bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
+            stream = get_stream(request, bucket_id, file_name)
+            if stream is not None:
+                target_file = os.path.join(directory, *[file_name])
+                file = open(target_file, 'wb')
+                file.write(stream.read())
+                file.close()
+        else:
+            download = False
+            if last_download is not None:
+                lapsed = datetime.datetime.now() - last_download
+                minutes_lapsed = divmod(lapsed.days * 86400 + lapsed.seconds, 60)
+                minutes_lapsed = minutes_lapsed[0]
+                if minutes_lapsed > 5:
+                    download = True
+            else:
+                download = True
+            if download:
+                repository_path = request.registry.settings['repository.path']
+                downloads_path = os.path.join(repository_path, *["downloads"])
+                if not os.path.exists(downloads_path):
+                    os.makedirs(downloads_path)
+                target_file = os.path.join(downloads_path, *[str(uuid.uuid4()) + ".tmp"])
+                try:
+                    log.info("Retrieving file {}".format(file_url))
+                    urlretrieve(file_url, target_file)
+                except Exception as e:
+                    set_file_with_error(request, project, form, file_name)
+                    log.error(
+                        "Error {} while downloading external file {} for form {}".format(str(e), file_name, form))
+                bucket_id = project + form
+                bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
+                file = open(target_file, 'rb')
+                store_file(request, bucket_id, file_name, file)
+                file.close()
+                file = open(target_file, 'rb')
+                md5sum = md5(file.read()).hexdigest()
+                file.close()
+                update_file_info(request, project, form, file_name, md5sum)
+
+            bucket_id = project + form
+            bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
+            stream = get_stream(request, bucket_id, file_name)
+            if stream is not None:
+                target_file = os.path.join(directory, *[file_name])
+                file = open(target_file, 'wb')
+                file.write(stream.read())
+                file.close()
 
 
 def retrieve_form_file(request, project, form, file_name):
@@ -197,15 +252,23 @@ def get_geopoint_variable_from_xlsx(xlsx_file):
         variable_type = sheet.cell(x, type_column).value
         if variable_type is not None:
             variable_name = sheet.cell(x, name_column).value
-            variable_type = variable_type.lower().strip()
+            variable_type = " ".join(variable_type.split())
+            variable_type = variable_type.lower()
             if variable_type == 'begin repeat':
                 repeats.append(variable_name)
             if variable_type == 'end repeat':
-                del repeats[-1]
+                try:
+                    del repeats[-1]
+                except IndexError:
+                    log.error("It seems that the file {} is closing an invalid group".format(xlsx_file))
             if variable_type == 'begin group':
                 groups.append(variable_name)
             if variable_type == 'end group':
-                del groups[-1]
+                try:
+                    del groups[-1]
+                except IndexError:
+                    log.error("It seems that the file {} is closing an invalid group".format(xlsx_file))
+
             if variable_type == 'geopoint':
                 if len(repeats) == 0:
                     if len(groups) > 0:
@@ -300,11 +363,21 @@ def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
                     if not added:
                         return added, message
 
-                    # If we have itemsets.csv add it to the media path
+                    # If we have itemsets.csv add it as media files
                     if itemsets_csv != "":
-                        paths = ['forms', form_directory, 'media', 'itemsets.csv']
-                        itemset_file = os.path.join(odk_dir, *paths)
-                        shutil.copyfile(itemsets_csv, itemset_file)
+                        with open(itemsets_csv, "rb", ) as itemset_file:
+                            md5sum = md5(itemset_file.read()).hexdigest()
+                            added, message = add_file_to_form(request, project_id, form_id, 'itemsets.csv', None, True,
+                                                              md5sum)
+                            if added:
+                                itemset_file.seek(0)
+                                bucket_id = project_id + form_id
+                                bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
+                                store_file(request, bucket_id, 'itemsets.csv', itemset_file)
+
+                        #paths = ['forms', form_directory, 'media', 'itemsets.csv']
+                        #itemset_file = os.path.join(odk_dir, *paths)
+                        #shutil.copyfile(itemsets_csv, itemset_file)
 
                     paths = ['forms', form_directory, parts[0]+".json"]
                     json_file = os.path.join(odk_dir, *paths)
@@ -641,7 +714,14 @@ def create_repository(request, project, form, odk_dir, xform_directory, primary_
         args.append("-o m")
 
         # Append all media files
-        path = os.path.join(odk_dir, *["forms", xform_directory, 'media', '*.*'])
+
+        media_files = get_media_files(request, project, form)
+        tmp_uid = str(uuid.uuid4())
+        target_dir = os.path.join(odk_dir, *["tmp", tmp_uid])
+        os.makedirs(target_dir)
+        for media_file in media_files:
+            store_file_in_directory(request, project, form, media_file.file_name, target_dir)
+        path = os.path.join(odk_dir, *["tmp", tmp_uid, '*.*'])
         files = glob.glob(path)
         if files:
             for aFile in files:

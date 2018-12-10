@@ -13,8 +13,14 @@
         <li class="breadcrumb-item">
             <a href="{{ request.route_url("form_details",userid=userid, projcode=projcode, formid=formid) }}">{{ formData.name }}</a>
         </li>
+        <li class="breadcrumb-item">
+            <a href="{{ request.route_url("createrepository",userid=userid, projcode=projcode, formid=formid) }}">{{ _('Creating repository') }}</a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ request.route_url('separatetable', userid=userid, projcode=projcode,formid=formid, tablename=table_name, _query=qvars) }}">{{ _('Separate tables') }}</a>
+        </li>
         <li class="breadcrumb-item active">
-            <strong>Create repository</strong>
+            <strong>{{ _('Add section') }}</strong>
         </li>
     </ol>
 </div>

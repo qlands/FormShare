@@ -279,9 +279,9 @@ class GenerateRepository(PrivateView):
                         has_tables_to_separate, sep_tables = get_tables_to_separate(self.request, project_id, form_id)
 
                         primary_key = postdata["primarykey"]
-                        default_language = postdata["default_language"]
-                        other_languages = postdata["other_languages"]
-                        yes_no_strings = postdata["yes_no_strings"]
+                        default_language = postdata["defaultLanguage"]
+                        other_languages = postdata["otherLanguages"]
+                        yes_no_strings = postdata["yesNoStrings"]
 
                         if not has_tables_to_separate:
 
@@ -394,9 +394,9 @@ class GenerateRepository(PrivateView):
                     if postdata["stage"] == "4":
                         stage = 4
                         primary_key = postdata["primarykey"]
-                        default_language = postdata["default_language"]
-                        other_languages = postdata["other_languages"]
-                        yes_no_strings = postdata["yes_no_strings"]
+                        default_language = postdata["defaultLanguage"]
+                        other_languages = postdata["otherLanguages"]
+                        yes_no_strings = postdata["yesNoStrings"]
 
                         if default_language == "":
                             default_language = None
@@ -503,9 +503,9 @@ class GenerateRepository(PrivateView):
                     if postdata["stage"] == "5":
                         stage = 5
                         primary_key = postdata["primarykey"]
-                        default_language = postdata["default_language"]
-                        other_languages = postdata["other_languages"]
-                        yes_no_strings = postdata["yes_no_strings"]
+                        default_language = postdata["defaultLanguage"]
+                        other_languages = postdata["otherLanguages"]
+                        yes_no_strings = postdata["yesNoStrings"]
 
                         if default_language == "":
                             default_language = None
@@ -612,9 +612,9 @@ class GenerateRepository(PrivateView):
                     if postdata["stage"] == "6":
                         stage = 6
                         primary_key = postdata["primarykey"]
-                        default_language = postdata["default_language"]
-                        other_languages = postdata["other_languages"]
-                        yes_no_strings = postdata["yes_no_strings"]
+                        default_language = postdata["defaultLanguage"]
+                        other_languages = postdata["otherLanguages"]
+                        yes_no_strings = postdata["yesNoStrings"]
 
                         if default_language == "":
                             default_language = None
@@ -720,14 +720,21 @@ class GenerateRepository(PrivateView):
                     if len(languages) == 0 and stage == 2:
                         stage = 1
 
-                return {'formData': form_data, 'stage': stage, 'error_summary': self.errors,
-                        'resCode': result_code, 'primaryKey': primary_key, 'languages': languages,
-                        'yesvalue': yesvalue, 'novalue': novalue,
-                        'deflanguage': deflanguage, 'otherLanguages': other_languages,
-                        'yesNoStrings': yes_no_strings, 'defaultLanguage': default_language,
-                        'listArray': list_array, 'sepTables': sep_tables, 'qvars': qvars,
-                        'userid': user_id, 'projcode': project_code, 'formid': form_id,
-                        'hasTablesToSeparate': has_tables_to_separate,'get': get}
+                if result_code == 0:
+                    self.returnRawViewResult = True
+                    self.request.session.flash(self._('The repository was created successfully'))
+                    return HTTPFound(
+                        self.request.route_url('form_details', userid=user_id, projcode=project_code, formid=form_id))
+                else:
+                    return {'formData': form_data, 'stage': stage, 'error_summary': self.errors,
+                            'resCode': result_code, 'primaryKey': primary_key, 'languages': languages,
+                            'yesvalue': yesvalue, 'novalue': novalue,
+                            'deflanguage': deflanguage, 'otherLanguages': other_languages,
+                            'yesNoStrings': yes_no_strings, 'defaultLanguage': default_language,
+                            'listArray': list_array, 'sepTables': sep_tables, 'qvars': qvars,
+                            'userid': user_id, 'projcode': project_code, 'formid': form_id,
+                            'hasTablesToSeparate': has_tables_to_separate, 'get': get,
+                            'projectDetails': project_details}
             else:
                 return HTTPFound(
                     location=self.request.route_url('exist', userid=user_id, projcode=project_code, formid=form_id))
@@ -736,6 +743,10 @@ class GenerateRepository(PrivateView):
 
 
 class SeparateTable(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+
     def get_group_count(self, project_id, form_id, table_name, section_id):
         return get_group_number_of_items(self.request, project_id, form_id, table_name, section_id)
 
@@ -745,6 +756,7 @@ class SeparateTable(PrivateView):
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         form_id = self.request.matchdict['formid']
         table_name = self.request.matchdict['tablename']
+        form_data = get_form_data(project_id, form_id, self.request)
         project_details = {}
         if project_id is not None:
             project_found = False
@@ -761,7 +773,6 @@ class SeparateTable(PrivateView):
             raise HTTPNotFound
 
         if table_belongs_to_form(self.request, project_id, form_id, table_name):
-            error_summary = {}
             if self.request.method == 'POST':
                 if 'saveorder' in self.request.POST:
                     new_order_str = self.request.POST.get('neworder', '[]')
@@ -786,9 +797,15 @@ class SeparateTable(PrivateView):
                         modified, error = save_separation_order(self.request, project_id, form_id, table_name,
                                                                 new_order, new_order2)
                         if not modified:
-                            error_summary["question_without_group"] = error
+                            self.errors.append(error)
+                        else:
+                            self.returnRawViewResult = True
+                            return HTTPFound(self.request.url)
                     else:
-                        error_summary["question_without_group"] = self._("Items cannot be outside a group")
+                        self.errors.append(self._("Items cannot be outside a group"))
+                else:
+                    self.returnRawViewResult = True
+                    return HTTPFound(self.request.url)
 
             data = get_table_items(self.request, project_id, form_id, table_name, True)
             # The following is to help jinja2 to render the groups and questions
@@ -864,12 +881,13 @@ class SeparateTable(PrivateView):
 
             separation_ok = is_separation_ok(self.request, project_id, form_id, table_name)
             qvars = {'formid': form_id}
-            return {'data': data, 'data2': data2, 'final_close_question': final_close_question,
-                    'error_summary': error_summary, 'project_id': project_id,
-                    'form_id': form_id, 'table_name': table_name,
-                    'get_group_count': self.get_group_count,
-                    'final_close_question2': final_close_question2, 'qvars': qvars,
-                    'userid': user_id, 'projcode': project_code, 'formid': form_id, 'separationOK': separation_ok}
+            return {'data': data, 'data2': data2, 'finalCloseQst': final_close_question,
+                    'projectID': project_id,
+                    'tableName': table_name,
+                    'getGroupCount': self.get_group_count,
+                    'finalCloseQst2': final_close_question2, 'qvars': qvars,
+                    'userid': user_id, 'projcode': project_code, 'formid': form_id, 'separationOK': separation_ok,
+                    'formData': form_data, 'projectDetails': project_details}
         else:
             raise HTTPNotFound()
 
@@ -922,6 +940,10 @@ def check_table_name(table_name):
 
 
 class NewGroup(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+
     def process_view(self):
         user_id = self.request.matchdict['userid']
         project_code = self.request.matchdict['projcode']
@@ -929,6 +951,7 @@ class NewGroup(PrivateView):
         table_name = self.request.matchdict['tablename']
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         project_details = {}
+        form_data = get_form_data(project_id, form_id, self.request)
         if project_id is not None:
             project_found = False
             for project in self.user_projects:
@@ -946,36 +969,43 @@ class NewGroup(PrivateView):
         if table_belongs_to_form(self.request, project_id, form_id, table_name):
             if self.request.method == 'POST':
                 post_data = self.get_post_dict()
-                group_name = post_data["name"]
-                group_name = re.sub('[^A-Za-z0-9\-]+', '', group_name)
+                group_name = post_data["name"].lower()
                 group_name = group_name.replace(' ', '')
                 group_desc = post_data["desc"]
                 if group_name != "" and group_desc != "":
-                    if group_name[0].isdigit():
-                        self.errors.append(self._("The name cannot start with a number"))
-                    else:
-                        if check_table_name(group_name):
-                            added, message = add_group(self.request, project_id, form_id, table_name, group_name,
-                                                       group_desc)
-                            qvars = {'formid': form_id}
-                            if added:
-                                return HTTPFound(location=self.request.route_url('separatetable', userid=user_id,
-                                                                                 projcode=project_code, formid=form_id,
-                                                                                 tablename=table_name, _query=qvars))
-                            else:
-                                self.errors.append(message)
+                    if re.match(r'^[A-Za-z0-9_]+$', group_name):
+                        if group_name[0].isdigit():
+                            self.errors.append(self._("The name cannot start with a number"))
                         else:
-                            self.errors.append(self._("Such name is not valid"))
+                            if check_table_name(group_name):
+                                added, message = add_group(self.request, project_id, form_id, table_name, group_name,
+                                                           group_desc)
+                                qvars = {'formid': form_id}
+                                if added:
+                                    self.returnRawViewResult = True
+                                    return HTTPFound(location=self.request.route_url('separatetable', userid=user_id,
+                                                                                     projcode=project_code, formid=form_id,
+                                                                                     tablename=table_name, _query=qvars))
+                                else:
+                                    self.errors.append(message)
+                            else:
+                                self.errors.append(self._("Such name is not valid"))
+                    else:
+                        self.errors.append(self._("The group name has invalid characters. Only underscore is allowed"))
                 else:
                     self.errors.append(self._("The group name and description cannot be empty"))
             qvars = {'formid': form_id}
             return {'table_name': table_name, 'userid': user_id, 'projcode': project_code, 'formid': form_id,
-                    'qvars': qvars}
+                    'qvars': qvars, 'formData': form_data, 'projectDetails': project_details}
         else:
             raise HTTPNotFound()
 
 
 class EditGroup(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+
     def process_view(self):
         user_id = self.request.matchdict['userid']
         project_code = self.request.matchdict['projcode']
@@ -984,6 +1014,7 @@ class EditGroup(PrivateView):
         group_id = self.request.matchdict['groupid']
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         project_details = {}
+        form_data = get_form_data(project_id, form_id, self.request)
         if project_id is not None:
             project_found = False
             for project in self.user_projects:
@@ -1009,6 +1040,7 @@ class EditGroup(PrivateView):
                                                           group_desc)
                         qvars = {'formid': form_id}
                         if updated:
+                            self.returnRawViewResult = True
                             return HTTPFound(
                                 location=self.request.route_url('separatetable', userid=user_id, projcode=project_code,
                                                                 formid=form_id, tablename=table_name, _query=qvars))
@@ -1018,7 +1050,7 @@ class EditGroup(PrivateView):
                         self.errors.append(self._("The group description cannot be empty"))
                 qvars = {'formid': form_id}
                 return {'tableName': table_name, 'userid': user_id, 'projcode': project_code, 'formid': form_id,
-                        'qvars': qvars, 'groupName': group_name}
+                        'qvars': qvars, 'groupName': group_name, 'formData': form_data, 'projectDetails': project_details}
             else:
                 raise HTTPNotFound()
         else:
@@ -1026,6 +1058,11 @@ class EditGroup(PrivateView):
 
 
 class DeleteGroup(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+
     def process_view(self):
         user_id = self.request.matchdict['userid']
         project_code = self.request.matchdict['projcode']
@@ -1056,6 +1093,7 @@ class DeleteGroup(PrivateView):
                         deleted, message = delete_group(self.request, project_id, form_id, table_name, group_id)
                         qvars = {'formid': form_id}
                         if deleted:
+                            self.returnRawViewResult = True
                             return HTTPFound(
                                 location=self.request.route_url('separatetable', userid=user_id, projcode=project_code,
                                                                 formid=form_id, tablename=table_name, _query=qvars))
@@ -1070,6 +1108,10 @@ class DeleteGroup(PrivateView):
 
 
 class RepositoryExist(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+
     def process_view(self):
         user_id = self.request.matchdict['userid']
         project_code = self.request.matchdict['projcode']

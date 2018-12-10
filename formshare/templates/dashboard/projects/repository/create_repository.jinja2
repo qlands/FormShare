@@ -1,7 +1,7 @@
 {% extends 'dashboard/page.jinja2' %}
 {% import 'dashboard/macros/form.jinja2' as form %}
 
-{% block titlesection %}{{ _('Creating repository for') }}{{ formid }}{% endblock titlesection %}
+{% block titlesection %}{{ _('Creating repository') }} {% endblock titlesection %}
 
 {% block breadcrumbs %}
     {% include 'dashboard/projects/repository/snippets/brdcrbs_repository.jinja2' %}
@@ -76,7 +76,7 @@
                 {% endif %}
             {% endif %}
             <hr>
-            <form class="dataset-form form-horizontal add-member-form" method='post'>
+            <form id="repform" class="dataset-form form-horizontal add-member-form" method='post'>
                 <input type="hidden" name="csrf_token" value="{{ request.session.get_csrf_token() }}">
                 <input type="hidden" name="stage" value="{{ stage }}">
                 {% if stage == 1 %}
@@ -231,3 +231,14 @@
         You can close this page
     {% endif %}
 {% endblock mainsection %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function() {
+            $('#repform').submit(function() {
+                $(this).find("button[type='submit']").prop('disabled',true);
+            });
+        });
+        </script>
+{% endblock scripts %}

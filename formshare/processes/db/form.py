@@ -21,7 +21,7 @@ __all__ = ['get_form_details', 'assistant_has_form', 'get_assistant_forms', 'get
            'get_form_assistants', 'update_assistant_privileges', 'remove_assistant_from_form', 'add_group_to_form',
            'get_form_groups', 'update_group_privileges', 'remove_group_from_form', 'get_project_forms',
            'get_number_of_submissions_in_database', 'get_by_details', 'get_form_geopoint', 'get_primary_key',
-           'get_number_of_submissions_by_assistant']
+           'get_number_of_submissions_by_assistant','get_media_files']
 
 log = logging.getLogger(__name__)
 
@@ -398,6 +398,13 @@ def delete_form(request, project, form):
         request.dbsession.rollback()
         log.error("Error {} while updating form {} in project {}".format(str(e), project, form))
         return False, str(e)
+
+
+def get_media_files(request, project, form):
+    res = request.dbsession.query(MediaFile).filter(MediaFile.project_id == project).filter(
+        MediaFile.form_id == form).all()
+    return res
+
 
 
 def add_file_to_form(request, project, form, file_name, file_url=None, overwrite=False, md5sum=None):

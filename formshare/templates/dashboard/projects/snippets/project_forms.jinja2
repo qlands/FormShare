@@ -38,15 +38,7 @@
                         {% endif %}
                     {% endfor %}
                 {% else %}
-                    <div class="middle-box text-center animated fadeInDown" style="margin-top: 0px">
-                        <h1><i class="far fa-plus-square"></i></h1>
-                        <h3 class="font-bold">{{ _('This project has no forms.') }}</h3>
-                        <div class="error-desc">
-                            {% if projectData.access_type != 4 %}
-                                <button id="add_form" data-toggle="modal" data-target="#upload_form" type="button" class="btn btn-block btn-outline btn-primary">{{ _('Add new form') }}</button>
-                            {% endif %}
-                        </div>
-                    </div>
+                    {% include 'dashboard/projects/snippets/no_forms.jinja2' %}
                 {% endif %}
             </div>
         </div>

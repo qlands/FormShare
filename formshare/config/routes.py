@@ -4,7 +4,8 @@ from ..views.basic_views import NotFoundView, HomeView, log_out_view, LoginView,
     AssistantLoginView, assistant_log_out_view
 from ..views.dashboard import UserDashBoardView
 from ..views.projects import AddProjectView, ProjectListView, ProjectDetailsView, ProjectStoredFileView, \
-    EditProjectView, DeleteProjectView, AddFileToProject, RemoveFileFromProject, DownloadProjectGPSPoints
+    EditProjectView, DeleteProjectView, AddFileToProject, RemoveFileFromProject, DownloadProjectGPSPoints, \
+    ActivateProjectView
 from ..views.profile import UserProfileView, EditProfileView
 from ..views.collaborators import CollaboratorsListView, RemoveCollaborator
 from ..views.assistants import AssistantsListView, AddAssistantsView, EditAssistantsView, DeleteAssistant, \
@@ -14,9 +15,11 @@ from ..views.assistant_groups import GroupListView, AddGroupView, EditGroupView,
     RemoveMember
 from ..views.form import FormDetails, AddNewForm, EditForm, DeleteForm, AddFileToForm, RemoveFileFromForm, \
     FormStoredFile, AddAssistant, EditAssistant, RemoveAssistant, AddGroupToForm, EditFormGroup, RemoveGroupForm, \
-    DownloadCSVData, DownloadXLSX, DownloadSubmissionFiles, DownloadGPSPoints, DownloadXLSData, UploadNewVersion
+    DownloadCSVData, DownloadXLSX, DownloadSubmissionFiles, DownloadGPSPoints, DownloadXLSData, UploadNewVersion, \
+    ActivateForm, DeActivateForm
 from ..views.odk import ODKFormList, ODKManifest, ODKMediaFile, ODKPushData, ODKSubmission, ODKXMLForm
-from ..views.repository import GenerateRepository, SeparateTable, NewSeparationGroup, EditSeparationGroup, DeleteSeparationGroup, RepositoryExist
+from ..views.repository import GenerateRepository, SeparateTable, NewSeparationGroup, EditSeparationGroup, \
+    DeleteSeparationGroup, RepositoryExist
 from ..views.assistant_views.forms import AssistantForms
 from ..views.assistant_views.jsonlogs import JSONList, JSONCompare, JSONCheckout, JSONCancelCheckout, \
     JSONGetSubmission, JSONCheckin, JSONViewRevision, JSONCancelRevision, JSONPushRevision, JSONDisregard, \
@@ -82,6 +85,9 @@ def load_routes(config):
                             'dashboard/projects/project_edit.jinja2'))
 
     routes.append(add_route('project_delete', '/user/{userid}/project/{projcode}/delete', DeleteProjectView, None))
+
+    routes.append(
+        add_route('project_setactive', '/user/{userid}/project/{projcode}/setactive', ActivateProjectView, None))
 
     routes.append(add_route('project_upload', '/user/{userid}/project/{projcode}/upload', AddFileToProject, None))
 
@@ -150,6 +156,13 @@ def load_routes(config):
 
     routes.append(add_route('delete_form', '/user/{userid}/project/{projcode}/form/{formid}/delete', DeleteForm,
                             None))
+
+    routes.append(add_route('activate_form', '/user/{userid}/project/{projcode}/form/{formid}/activate', ActivateForm,
+                            None))
+
+    routes.append(add_route('deactivate_form', '/user/{userid}/project/{projcode}/form/{formid}/deactivate', DeActivateForm,
+                            None))
+
     # Form files
     routes.append(
         add_route('form_upload', '/user/{userid}/project/{projcode}/form/{formid}/upload', AddFileToForm, None))

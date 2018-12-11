@@ -5,6 +5,11 @@
                 <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
                 <h4 class="modal-title">{{ _('Upload new version') }}</h4>
             </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <h5 class="text-center text-warning">{{ _('Warning: Uploading a new version will remove any test data') }}</h5>
+                </div>
+            </div>
             <form role="form" method="post" enctype="multipart/form-data" action="{{ request.route_url('update_form',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formid) }}">
                 {{ form.secure_form(request) }}
                 <div class="modal-body">

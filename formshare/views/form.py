@@ -2,7 +2,8 @@ from .classes import PrivateView
 from formshare.processes.db import get_project_id_from_name, get_form_details, get_form_data, update_form, delete_form,\
     add_file_to_form, get_form_files, remove_file_from_form, get_all_assistants, add_assistant_to_form, \
     get_form_assistants, update_assistant_privileges, remove_assistant_from_form, get_project_groups, \
-    add_group_to_form, get_form_groups, update_group_privileges, remove_group_from_form, get_form_xls_file
+    add_group_to_form, get_form_groups, update_group_privileges, remove_group_from_form, get_form_xls_file, \
+    set_form_status
 from formshare.processes.storage import store_file, delete_stream
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 import validators
@@ -10,7 +11,7 @@ import os
 from cgi import FieldStorage
 from hashlib import md5
 import logging
-from formshare.processes.elasticsearch.repository_index import delete_dataset_index
+from formshare.processes.elasticsearch.repository_index import delete_dataset_index, get_number_of_datasets_with_gps
 from pyramid.response import FileResponse
 from formshare.processes.submission.api import get_submission_media_files, json_to_csv, get_gps_points_from_form, \
     generate_xlsx_file
@@ -40,17 +41,21 @@ class FormDetails(PrivateView):
             raise HTTPNotFound
 
         form_data = get_form_details(self.request, user_id, project_id, form_id)
-        form_files = get_form_files(self.request, project_id, form_id)
-        if self.user is not None:
-            assistants = get_all_assistants(self.request, project_id, self.user.login)
+        if form_data is not None:
+            form_files = get_form_files(self.request, project_id, form_id)
+            if self.user is not None:
+                assistants = get_all_assistants(self.request, project_id, self.user.login)
+            else:
+                assistants = []
+            form_assistants = get_form_assistants(self.request, project_id, form_id)
+            groups = get_project_groups(self.request, project_id)
+            form_groups = get_form_groups(self.request, project_id, form_id)
+            return {'projectDetails': project_details, 'formid': form_id, 'formDetails': form_data, 'userid': user_id,
+                    'formFiles': form_files, 'assistants': assistants, 'formassistants': form_assistants, 'groups': groups,
+                    'formgroups': form_groups,
+                    'withgps': get_number_of_datasets_with_gps(self.request, user_id, project_code, form_id)}
         else:
-            assistants = []
-        form_assistants = get_form_assistants(self.request, project_id, form_id)
-        groups = get_project_groups(self.request, project_id)
-        form_groups = get_form_groups(self.request, project_id, form_id)
-        return {'projectDetails': project_details, 'formid': form_id, 'formDetails': form_data, 'userid': user_id,
-                'formFiles': form_files, 'assistants': assistants, 'formassistants': form_assistants, 'groups': groups,
-                'formgroups': form_groups}
+            raise HTTPNotFound
 
 
 class AddNewForm(PrivateView):
@@ -225,6 +230,8 @@ class EditForm(PrivateView):
                 self.errors.append(message)
         else:
             form_data = get_form_data(self.request, project_id, form_id)
+            if form_data is None:
+                raise HTTPNotFound
         return {'formData': form_data, 'projectDetails': project_details, 'userid': user_id, 'formid': form_id}
 
 
@@ -256,6 +263,8 @@ class DeleteForm(PrivateView):
             raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
         if project_details["access_type"] == 1 or form_data["form_pubby"] == self.user.id:
             if self.request.method == 'POST':
                 next_page = self.request.params.get('next') or self.request.route_url('project_details',
@@ -267,8 +276,114 @@ class DeleteForm(PrivateView):
                     self.request.session.flash(self._('The form was deleted successfully'))
                     self.returnRawViewResult = True
                     return HTTPFound(next_page)
+                else:
+                    self.returnRawViewResult = True
+                    self.add_error(message)
+                    return HTTPFound(next_page)
             else:
                 raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+
+class ActivateForm(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+        form_id = self.request.matchdict['formid']
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        if self.activeProject['project_id'] == project_id:
+            self.set_active_menu('assistants')
+        else:
+            self.set_active_menu('projects')
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] == 4:
+            raise HTTPNotFound
+
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+
+        if self.request.method == 'POST':
+            next_page = self.request.params.get('next') or self.request.route_url('project_details',
+                                                                                  userid=user_id,
+                                                                                  projcode=project_code)
+            changed, message = set_form_status(self.request, project_id, form_id, 1)
+            if changed:
+                self.request.session.flash(self._('The form was activated successfully'))
+                self.returnRawViewResult = True
+                return HTTPFound(next_page)
+            else:
+                self.returnRawViewResult = True
+                self.add_error(message)
+                return HTTPFound(next_page)
+        else:
+            raise HTTPNotFound
+
+
+class DeActivateForm(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+        form_id = self.request.matchdict['formid']
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        if self.activeProject['project_id'] == project_id:
+            self.set_active_menu('assistants')
+        else:
+            self.set_active_menu('projects')
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] == 4:
+            raise HTTPNotFound
+
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+
+        if self.request.method == 'POST':
+            next_page = self.request.params.get('next') or self.request.route_url('project_details',
+                                                                                  userid=user_id,
+                                                                                  projcode=project_code)
+            changed, message = set_form_status(self.request, project_id, form_id, 0)
+            if changed:
+                self.request.session.flash(self._('The form was deactivated successfully'))
+                self.returnRawViewResult = True
+                return HTTPFound(next_page)
+            else:
+                self.returnRawViewResult = True
+                self.add_error(message)
+                return HTTPFound(next_page)
         else:
             raise HTTPNotFound
 
@@ -298,6 +413,10 @@ class AddFileToForm(PrivateView):
 
         if project_details["access_type"] == 4:
             raise HTTPNotFound  # Don't edit a public or a project that I am just a member
+
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
 
         if self.request.method == 'POST':
             files = self.request.POST.getall('filetoupload')
@@ -389,6 +508,10 @@ class RemoveFileFromForm(PrivateView):
         if project_details["access_type"] == 4:
             raise HTTPNotFound  # Don't edit a public or a project that I am just a member
 
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+
         if self.request.method == 'POST':
             self.returnRawViewResult = True
 
@@ -420,6 +543,11 @@ class FormStoredFile(PrivateView):
         form_id = self.request.matchdict['formid']
         file_name = self.request.matchdict['filename']
         project_id = get_project_id_from_name(self.request, user_id, project_code)
+
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+
         if project_id is not None:
             project_found = False
             for project in self.user_projects:
@@ -459,6 +587,10 @@ class AddAssistant(PrivateView):
             raise HTTPNotFound
 
         if project_details["access_type"] == 4:
+            raise HTTPNotFound
+
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
             raise HTTPNotFound
 
         if self.request.method == 'POST':
@@ -524,6 +656,10 @@ class EditAssistant(PrivateView):
         if project_details["access_type"] == 4:
             raise HTTPNotFound
 
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+
         if self.request.method == 'POST':
             assistant_data = self.get_post_dict()
             privilege = assistant_data["privilege"]
@@ -572,6 +708,10 @@ class RemoveAssistant(PrivateView):
         if project_details["access_type"] == 4:
             raise HTTPNotFound
 
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+
         if self.request.method == 'POST':
             removed, message = remove_assistant_from_form(self.request, project_id, form_id, assistant_project_id,
                                                           assistant_id)
@@ -614,6 +754,10 @@ class AddGroupToForm(PrivateView):
             raise HTTPNotFound
 
         if project_details["access_type"] == 4:
+            raise HTTPNotFound
+
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
             raise HTTPNotFound
 
         if self.request.method == 'POST':
@@ -670,6 +814,10 @@ class EditFormGroup(PrivateView):
         if project_details["access_type"] == 4:
             raise HTTPNotFound
 
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+
         if self.request.method == 'POST':
             assistant_data = self.get_post_dict()
             privilege = assistant_data["privilege"]
@@ -716,6 +864,10 @@ class RemoveGroupForm(PrivateView):
         if project_details["access_type"] == 4:
             raise HTTPNotFound
 
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+
         if self.request.method == 'POST':
             removed, message = remove_group_from_form(self.request, project_id, form_id, group_id)
             if removed:
@@ -754,14 +906,19 @@ class DownloadCSVData(PrivateView):
         else:
             raise HTTPNotFound
 
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+
         created, file = json_to_csv(self.request, project_id, form_id)
         if created:
             response = FileResponse(file, request=self.request, content_type='application/csv')
             response.content_disposition = 'attachment; filename="' + form_id + '.csv"'
             return response
         else:
-            next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
-                                               formid=form_id)
+            self.add_error(file)
+            next_page = self.request.params.get('next') or self.request.route_url('form_details', userid=user_id,
+                                                                                  projcode=project_code, formid=form_id)
             return HTTPFound(location=next_page)
 
 
@@ -788,6 +945,10 @@ class DownloadXLSData(PrivateView):
         else:
             raise HTTPNotFound
 
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+
         if project_details["access_type"] == 4:
             include_sensitive = False
         else:
@@ -801,8 +962,8 @@ class DownloadXLSData(PrivateView):
             return response
         else:
             self.add_error(file)
-            next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
-                                               formid=form_id)
+            next_page = self.request.params.get('next') or self.request.route_url('form_details', userid=user_id,
+                                                                                  projcode=project_code, formid=form_id)
             return HTTPFound(location=next_page)
 
 
@@ -826,6 +987,10 @@ class DownloadXLSX(PrivateView):
             if not project_found:
                 raise HTTPNotFound
         else:
+            raise HTTPNotFound
+
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
             raise HTTPNotFound
 
         xlsx_file = get_form_xls_file(self.request, project_id, form_id)
@@ -856,14 +1021,19 @@ class DownloadSubmissionFiles(PrivateView):
         else:
             raise HTTPNotFound
 
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+
         created, file = get_submission_media_files(self.request, project_id, form_id)
         if created:
             response = FileResponse(file, request=self.request, content_type='application/zip')
             response.content_disposition = 'attachment; filename="' + form_id + '.zip"'
             return response
         else:
-            next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
-                                               formid=form_id)
+            self.add_error(file)
+            next_page = self.request.params.get('next') or self.request.route_url('form_details', userid=user_id,
+                                                                                  projcode=project_code, formid=form_id)
             return HTTPFound(location=next_page)
 
 
@@ -887,6 +1057,10 @@ class DownloadGPSPoints(PrivateView):
             if not project_found:
                 raise HTTPNotFound
         else:
+            raise HTTPNotFound
+
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
             raise HTTPNotFound
 
         created, data = get_gps_points_from_form(self.request, user_id, project_code, form_id)

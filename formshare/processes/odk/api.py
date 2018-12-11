@@ -449,7 +449,7 @@ def update_odk_form(request, project_id, for_form_id, user_id, odk_dir, form_dat
             if re.match(r'^[A-Za-z0-9_]+$', form_id):
                 if form_id == for_form_id:
                     form_title = root.findall(".//{" + h_nsmap + "}title")
-                    if not form_exists(request, project_id, form_id):
+                    if form_exists(request, project_id, form_id):
                         paths = ['forms', form_directory, 'media']
                         if not os.path.exists(os.path.join(odk_dir, *paths)):
                             os.makedirs(os.path.join(odk_dir, *paths))
@@ -523,7 +523,7 @@ def update_odk_form(request, project_id, for_form_id, user_id, odk_dir, form_dat
                             outfile.write(json_string)
                         return True, form_id
                     else:
-                        return False, request.translate("The form already exists in this project")
+                        return False, request.translate("The form does not exists in this project")
                 else:
                     return False, request.translate('The "form_id" of the current form does not match the "form_id" of '
                                                     'the one you uploaded. You cannot update a form with another form')

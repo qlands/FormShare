@@ -99,6 +99,36 @@
                         }
                     });
             });
+            $('.set_active').click(function () {
+                var action_url = $( this ).attr('urn');
+                swal({
+                        title: "{{ _('Changing active project') }}",
+                        text: "{{ _('Are you sure that you want this project as active?') }}",
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#DD6B55",
+                        confirmButtonText: "{{ _('Yes, go ahead') }}",
+                        cancelButtonText: "{{ _('Oops, cancel!') }}",
+                        closeOnConfirm: true,
+                        closeOnCancel: true },
+                    function (isConfirm) {
+                        if (isConfirm) {
+                            var form = document.createElement('form');
+                            form.setAttribute('method', 'post');
+                            form.setAttribute('action', action_url);
+                            form.style.display = 'hidden';
+
+                            var i = document.createElement("input"); //input element, text
+                            i.setAttribute('type',"text");
+                            i.setAttribute('name',"csrf_token");
+                            i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                            form.appendChild(i);
+
+                            document.body.appendChild(form);
+                            form.submit();
+                        }
+                    });
+            });
         });
     </script>
 

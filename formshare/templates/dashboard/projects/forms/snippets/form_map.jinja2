@@ -12,13 +12,17 @@
     </div>
     <div class="ibox-content">
         <div id="mapbox">
-            {% if formDetails.submissions > 0 and formDetails.form_geopoint != None %}
+            {% if formDetails.submissions > 0 and formDetails.form_geopoint != None and withgps > 0 %}
                 <div id="projmap" style="height: 600px"></div>
             {% else %}
                 {% if formDetails.form_geopoint == None %}
                     This form is not georeferenced
                 {% else %}
-                    No map is available at the moment. Waiting for submissions
+                    {% if formDetails.submissions == 0 %}
+                        No map is available at the moment. Waiting for submissions
+                    {% else %}
+                        Waiting for submissions with GPS data
+                    {% endif %}
                 {% endif %}
             {% endif %}
         </div>

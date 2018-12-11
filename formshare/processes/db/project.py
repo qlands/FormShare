@@ -12,7 +12,7 @@ import dateutil.parser
 __all__ = [
     'get_project_id_from_name', 'get_user_projects', 'get_active_project', 'add_project', 'modify_project',
     'delete_project', 'is_collaborator', 'add_file_to_project', 'get_project_files', 'remove_file_from_project',
-    'get_project_code_from_id', 'get_project_details']
+    'get_project_code_from_id', 'get_project_details', 'set_project_as_active']
 
 log = logging.getLogger(__name__)
 
@@ -219,6 +219,19 @@ def delete_project(request, user, project):
                 request.dbsession.flush()
     except RuntimeError:
         log.error("Error {} while deleting project {}".format(sys.exc_info()[0], project))
+        return False, sys.exc_info()[0]
+    return True, ""
+
+
+def set_project_as_active(request, user, project):
+    try:
+        request.dbsession.query(Userproject).filter(Userproject.user_id == user).update({'project_active': 0})
+        request.dbsession.flush()
+        request.dbsession.query(Userproject).filter(Userproject.user_id == user).filter(
+            Userproject.project_id == project).update({'project_active': 1})
+        request.dbsession.flush()
+    except RuntimeError:
+        log.error("Error {} while setting project {} as active".format(sys.exc_info()[0], project))
         return False, sys.exc_info()[0]
     return True, ""
 

@@ -93,6 +93,20 @@ def get_datasets_dict(query_from=None, query_size=None):
     return _dict
 
 
+def get_datasets_with_gps():
+    _dict = {
+        "size": 0,
+        "query": {
+            "constant_score": {
+                "filter": {
+                    "exists": {"field": "_geopoint"}
+                }
+            }
+        }
+    }
+    return _dict
+
+
 def get_search_dict_by_project(project):
     """
     Constructs a ES search that will be used to search for the datasets related to a form in a project
@@ -254,6 +268,38 @@ def get_dataset_stats_for_form(request, user, project, form):
                 return 0, None, None
         except NotFoundError:
             return 0, None, None
+    else:
+        raise RequestError("Cannot connect to ElasticSearch")
+
+
+def get_number_of_datasets_with_gps(request, user, project, form):
+    index_name = get_index_name(user, project, form)
+    connection = create_connection(request)
+    if connection is not None:
+        try:
+            es_result = connection.search(index=index_name, body=get_datasets_with_gps())
+            if es_result['hits']['total'] > 0:
+                return es_result['hits']['total']
+            else:
+                return 0
+        except NotFoundError:
+            return 0
+    else:
+        raise RequestError("Cannot connect to ElasticSearch")
+
+
+def get_number_of_datasets_with_gps_in_project(request, user, project):
+    index_name = user.lower() + "_" + project.lower() + "_*"
+    connection = create_connection(request)
+    if connection is not None:
+        try:
+            es_result = connection.search(index=index_name, body=get_datasets_with_gps())
+            if es_result['hits']['total'] > 0:
+                return es_result['hits']['total']
+            else:
+                return 0
+        except NotFoundError:
+            return 0
     else:
         raise RequestError("Cannot connect to ElasticSearch")
 

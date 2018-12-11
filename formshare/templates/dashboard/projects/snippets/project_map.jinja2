@@ -12,11 +12,15 @@
     </div>
     <div class="ibox-content">
         <div id="mapbox">
-            {% if submissions > 0 %}
+            {% if submissions > 0 and withgps > 0 %}
                 <div id="projmap" style="height: 300px"></div>
             {% else %}
                 {% if forms|length > 0 %}
-                    Nothing to show. Waiting for submissions
+                    {% if submissions == 0 %}
+                        Nothing to show. Waiting for submissions
+                    {% else %}
+                        Nothing to show. Waiting for submissions with GPS data
+                    {% endif %}
                 {% else %}
                      Nothing to show. This project has not forms
                 {% endif %}

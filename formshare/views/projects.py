@@ -2,7 +2,7 @@ from formshare.views.classes import ProjectsView
 from formshare.processes.db import add_project, modify_project, delete_project, is_collaborator, \
     get_project_id_from_name, get_project_collaborators, get_project_assistants, get_project_groups, \
     add_file_to_project, get_project_files, remove_file_from_project, get_user_details, get_project_forms, \
-    get_by_details
+    get_by_details, set_project_as_active
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from formshare.config.elasticfeeds import get_manager
 from elasticfeeds.activity import Actor, Object, Activity
@@ -14,7 +14,7 @@ import zlib
 import base64
 import io
 from formshare.processes.elasticsearch.repository_index import get_dataset_stats_for_project, \
-    delete_dataset_index_by_project
+    delete_dataset_index_by_project, get_number_of_datasets_with_gps_in_project
 from formshare.processes.submission.api import get_gps_points_from_project
 import re
 
@@ -92,7 +92,8 @@ class ProjectDetailsView(ProjectsView):
                 'groups': get_project_groups(self.request, project_id),
                 'files': get_project_files(self.request, project_id), 'userDetails': user_details,
                 'forms': forms, 'activeforms': active_forms, 'inactiveforms': inactive_forms,
-                'submissions': submissions, 'last': last, 'by': by, 'bydetails': bydetails, 'infom': in_form}
+                'submissions': submissions, 'last': last, 'by': by, 'bydetails': bydetails, 'infom': in_form,
+                'withgps': get_number_of_datasets_with_gps_in_project(self.request, user_id, project_code)}
 
 
 class AddProjectView(ProjectsView):
@@ -218,6 +219,40 @@ class EditProjectView(ProjectsView):
         return {'projectDetails': project_details}
 
 
+class ActivateProjectView(ProjectsView):
+    def __init__(self, request):
+        ProjectsView.__init__(self, request)
+        self.checkCrossPost = False
+        self.privateOnly = True
+
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if self.request.method == 'POST':
+            next_page = self.request.params.get('next') or self.request.route_url('projects', userid=self.user.login)
+            self.returnRawViewResult = True
+            activated, message = set_project_as_active(self.request, self.user.login, project_id)
+            if activated:
+                self.request.session.flash(self._('The active project has changed'))
+                return HTTPFound(location=next_page)
+            else:
+                self.add_error(self._('Error activating project: ') + message)
+                return HTTPFound(location=next_page)
+        else:
+            raise HTTPNotFound
+
+
 class DeleteProjectView(ProjectsView):
     def __init__(self, request):
         ProjectsView.__init__(self, request)
@@ -244,9 +279,8 @@ class DeleteProjectView(ProjectsView):
             raise HTTPNotFound  # Don't edit a public or a project that I am just a member
 
         if self.request.method == 'POST':
-            success_page = self.request.params.get('success') or self.request.route_url('projects',
-                                                                                        userid=self.user.login)
-            fail_page = self.request.params.get('fail') or self.request.route_url('projects', userid=self.user.login)
+            next_page = self.request.params.get('next') or self.request.route_url('projects', userid=self.user.login)
+
             self.returnRawViewResult = True
             deleted, message = delete_project(self.request, self.user.login, project_id)
             if deleted:
@@ -262,10 +296,10 @@ class DeleteProjectView(ProjectsView):
                 # Deletes the project from the dataset index
                 delete_dataset_index_by_project(self.request, user_id, project_code)
                 self.request.session.flash(self._('The project was deleted successfully'))
-                return HTTPFound(location=success_page)
+                return HTTPFound(location=next_page)
             else:
-                self.request.session.flash(self._('Unable to delete the project: ') + message)
-                return HTTPFound(location=fail_page)
+                self.add_error(self._('Unable to delete the project: ') + message)
+                return HTTPFound(location=next_page)
         else:
             raise HTTPNotFound
 
@@ -370,6 +404,12 @@ class DownloadProjectGPSPoints(ProjectsView):
     def process_view(self):
         user_id = self.request.matchdict['userid']
         project_code = self.request.matchdict['projcode']
+        query_from = self.request.params.get('from')
+        if query_from is None:
+            query_from = 0
+        query_size = self.request.params.get('size')
+        if query_size is None:
+            query_size = 10000
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         if project_id is not None:
             project_found = False
@@ -381,5 +421,5 @@ class DownloadProjectGPSPoints(ProjectsView):
         else:
             raise HTTPNotFound
 
-        created, data = get_gps_points_from_project(self.request, user_id, project_code)
+        created, data = get_gps_points_from_project(self.request, user_id, project_code, query_from, query_size)
         return data

@@ -105,7 +105,7 @@ def get_submission_media_files(request, project, form):
             zip_file = os.path.join(odk_dir, *['tmp', uid])
             shutil.make_archive(zip_file, 'zip', tmp_dir)
             return True, zip_file + ".zip"
-    return False, ''
+    return False, request.translate("There are no media files to download")
 
 
 def json_to_csv(request, project, form):
@@ -154,9 +154,9 @@ def json_to_csv(request, project, form):
                 return False, msg
             return True, csv_file
         else:
-            return False, ""
+            return False, stderr
     else:
-        return False, ""
+        return False, request.translate("There are not submissions to download")
 
 
 def generate_xlsx_file(request, project, form, include_sensitive=False):

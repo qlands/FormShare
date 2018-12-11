@@ -2,8 +2,12 @@
     {% block summary_form_section %}
         <div class="col-lg-6 m-b-lg">
             {% block summary_section_forms %}
-                {% set scroll_content = true %}
-                {% include 'dashboard/projects/snippets/project_forms.jinja2' %}
+                {% if forms|length > 0 %}
+                    {% set scroll_content = true %}
+                    {% include 'dashboard/projects/snippets/project_forms.jinja2' %}
+                {% else %}
+                    {% include 'dashboard/projects/snippets/no_forms_tab.jinja2' %}
+                {% endif %}
             {% endblock summary_section_forms %}
             {% block summary_section_forms_extra %}
 

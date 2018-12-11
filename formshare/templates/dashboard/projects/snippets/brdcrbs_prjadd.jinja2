@@ -2,6 +2,9 @@
     <h2>{{ _('Add new project') }}</h2>
     <ol class="breadcrumb">
         <li class="breadcrumb-item">
+            <a href="{{ request.route_url("dashboard",userid=activeUser.login) }}">{{ _('Dashboard') }}</a>
+        </li>
+        <li class="breadcrumb-item">
             <a href="{{ request.route_url('projects',userid=activeUser.login) }}">{{ _('Projects') }}</a>
         </li>
         <li class="breadcrumb-item active">

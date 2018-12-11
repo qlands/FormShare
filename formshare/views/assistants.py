@@ -32,10 +32,6 @@ class AssistantsListView(PrivateView):
         if project_details["access_type"] == 4:
             raise HTTPNotFound
 
-        error = self.request.params.get('error')
-        if error is not None:
-            self.errors.append(error)
-
         assistants, more = get_project_assistants(self.request, project_id)
         return {'assistants': assistants, 'projectDetails': project_details, 'userid': user_id}
 
@@ -236,16 +232,14 @@ class ChangeAssistantPassword(PrivateView):
                         self.request.session.flash(self._('The password was changed successfully'))
                         return HTTPFound(self.request.route_url('assistants', userid=user_id, projcode=project_code))
                     else:
-                        return HTTPFound(self.request.route_url('assistants', userid=user_id, projcode=project_code,
-                                                                _query={'error': self._(
-                                                                    'Unable to the password: ') + message}))
+                        self.add_error(self._('Unable to change the password: ') + message)
+                        return HTTPFound(self.request.route_url('assistants', userid=user_id, projcode=project_code))
                 else:
-                    return HTTPFound(self.request.route_url('assistants', userid=user_id, projcode=project_code,
-                                                            _query={'error': self._(
-                                                                "The password and its confirmation are not the same")}))
+                    self.add_error(self._("The password and its confirmation are not the same"))
+                    return HTTPFound(self.request.route_url('assistants', userid=user_id, projcode=project_code))
             else:
-                return HTTPFound(self.request.route_url('assistants', userid=user_id, projcode=project_code,
-                                                        _query={'error': self._("The password cannot be empty")}))
+                self.add_error(self._("The password cannot be empty"))
+                return HTTPFound(self.request.route_url('assistants', userid=user_id, projcode=project_code))
 
         else:
             raise HTTPNotFound

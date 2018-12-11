@@ -14,9 +14,9 @@ from ..views.assistant_groups import GroupListView, AddGroupView, EditGroupView,
     RemoveMember
 from ..views.form import FormDetails, AddNewForm, EditForm, DeleteForm, AddFileToForm, RemoveFileFromForm, \
     FormStoredFile, AddAssistant, EditAssistant, RemoveAssistant, AddGroupToForm, EditFormGroup, RemoveGroupForm, \
-    DownloadCSVData, DownloadXLSX, DownloadSubmissionFiles, DownloadGPSPoints
+    DownloadCSVData, DownloadXLSX, DownloadSubmissionFiles, DownloadGPSPoints, DownloadXLSData, UploadNewVersion
 from ..views.odk import ODKFormList, ODKManifest, ODKMediaFile, ODKPushData, ODKSubmission, ODKXMLForm
-from ..views.repository import GenerateRepository, SeparateTable, NewGroup, EditGroup, DeleteGroup, RepositoryExist
+from ..views.repository import GenerateRepository, SeparateTable, NewSeparationGroup, EditSeparationGroup, DeleteSeparationGroup, RepositoryExist
 from ..views.assistant_views.forms import AssistantForms
 from ..views.assistant_views.jsonlogs import JSONList, JSONCompare, JSONCheckout, JSONCancelCheckout, \
     JSONGetSubmission, JSONCheckin, JSONViewRevision, JSONCancelRevision, JSONPushRevision, JSONDisregard, \
@@ -143,6 +143,8 @@ def load_routes(config):
     routes.append(add_route('form_details', '/user/{userid}/project/{projcode}/form/{formid}', FormDetails,
                             'dashboard/projects/forms/form_details.jinja2'))
 
+    routes.append(add_route('update_form', '/user/{userid}/project/{projcode}/form/{formid}/updateodk', UploadNewVersion, None))
+
     routes.append(add_route('form_edit', '/user/{userid}/project/{projcode}/form/{formid}/edit', EditForm,
                             'dashboard/projects/forms/form_edit.jinja2'))
 
@@ -199,6 +201,12 @@ def load_routes(config):
 
     routes.append(
         add_route(
+            'form_download_xlsx_data',
+            '/user/{userid}/project/{projcode}/form/{formid}/download/xlsx',
+            DownloadXLSData, None))
+
+    routes.append(
+        add_route(
             'form_download_xlsx',
             '/user/{userid}/project/{projcode}/form/{formid}/download/odk',
             DownloadXLSX, None))
@@ -230,16 +238,16 @@ def load_routes(config):
 
     routes.append(
         add_route('addgroup', '/user/{userid}/project/{projcode}/form/{formid}/separate/{tablename}/group/new',
-                  NewGroup, 'dashboard/projects/repository/create_group.jinja2'))
+                  NewSeparationGroup, 'dashboard/projects/repository/create_group.jinja2'))
 
     routes.append(add_route('editgroup',
                             '/user/{userid}/project/{projcode}/form/{formid}/separate/{tablename}/group/{groupid}/edit',
-                            EditGroup, 'dashboard/projects/repository/edit_group.jinja2'))
+                            EditSeparationGroup, 'dashboard/projects/repository/edit_group.jinja2'))
 
     routes.append(add_route('deletegroup',
                             '/user/{userid}/project/{projcode}/form/{formid}/separate'
                             '/{tablename}/group/{groupid}/delete',
-                            DeleteGroup, None))
+                            DeleteSeparationGroup, None))
 
     # Assistant access
 

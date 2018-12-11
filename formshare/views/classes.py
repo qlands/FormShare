@@ -24,6 +24,7 @@ from ast import literal_eval
 from formshare.processes.db import get_project_id_from_name, user_exists, get_user_details, get_active_project, \
     get_user_projects, get_project_from_assistant
 import logging
+from pyramid.security import forget
 log = logging.getLogger(__name__)
 
 
@@ -150,7 +151,7 @@ class PrivateView(object):
         self.classResult = {"activeUser": None, "userProjects": [], 'activeProject': {}}
         self.viewResult = {}
         self.returnRawViewResult = False
-        self.privateOnly = False
+        self.privateOnly = True
         self.guestAccess = False
         self.viewingSelfAccount = True
         self.showWelcome = False
@@ -166,6 +167,10 @@ class PrivateView(object):
         self.classResult['activeMenu'] = ""
 
     def __call__(self):
+        error = self.request.session.pop_flash(queue='error')
+        if len(error) > 0:
+            self.errors.append(error[0])
+
         login_data = authenticated_userid(self.request)
         if login_data is not None:
             login_data = literal_eval(login_data)
@@ -195,6 +200,7 @@ class PrivateView(object):
                     else:
                         raise HTTPNotFound()
                 else:
+                    forget(self.request)
                     raise HTTPNotFound()
             else:
                 raise HTTPNotFound()
@@ -208,6 +214,7 @@ class PrivateView(object):
                     else:
                         self.guestAccess = True
             else:
+                forget(self.request)
                 if self.request.registry.settings['auth.allow_guest_access'] == 'false' or self.privateOnly:
                     raise HTTPFound(location=self.request.route_url('login', _query={'next': self.request.url}))
                 else:
@@ -265,6 +272,9 @@ class PrivateView(object):
 
     def reload_user_details(self):
         self.classResult["userDetails"] = get_user_details(self.request, self.userID)
+
+    def add_error(self, message):
+        self.request.session.flash(message, queue='error')
 
 
 class DashboardView(PrivateView):
@@ -326,6 +336,10 @@ class AssistantView(object):
         self.project_assistant = None
 
     def __call__(self):
+        error = self.request.session.pop_flash(queue='error')
+        if len(error) > 0:
+            self.errors.append(error[0])
+
         self.userID = self.request.matchdict['userid']
         self.projectCode = self.request.matchdict['projcode']
         self.projectID = get_project_id_from_name(self.request, self.userID, self.projectCode)
@@ -375,3 +389,6 @@ class AssistantView(object):
     def get_post_dict(self):
         dct = variable_decode(self.request.POST)
         return dct
+
+    def add_error(self, message):
+        self.request.session.flash(message, queue='error')

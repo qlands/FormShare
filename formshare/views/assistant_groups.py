@@ -3,7 +3,6 @@ from formshare.processes.db import get_project_id_from_name, get_project_groups,
     modify_group, delete_group, get_members, add_assistant_to_group, remove_assistant_from_group
 from formshare.processes.db import get_all_assistants
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
-from formshare.processes.utilities import add_params_to_url
 
 
 class GroupListView(PrivateView):
@@ -216,9 +215,6 @@ class GroupMembersView(PrivateView):
         members = get_members(self.request, project_id, group_id)
         assistants = get_all_assistants(self.request, project_id, self.user.login)
         group_data = get_group_data(self.request, project_id, group_id)
-        error = self.request.params.get('error')
-        if error:
-            self.errors.append(error)
 
         if self.request.method == 'POST':
             group_data = self.get_post_dict()
@@ -239,14 +235,14 @@ class GroupMembersView(PrivateView):
                             self.returnRawViewResult = True
                             return HTTPFound(next_page)
                         else:
-                            params = {'error': message}
-                            return HTTPFound(add_params_to_url(next_page, params))
+                            self.add_error(message)
+                            return HTTPFound(next_page)
                     else:
-                        params = {'error': self._('You need to specify an assistant')}
-                        return HTTPFound(add_params_to_url(next_page, params))
+                        self.add_error(self._('You need to specify an assistant'))
+                        return HTTPFound(next_page)
                 else:
-                    params = {'error': self._('You need to specify an assistant')}
-                    return HTTPFound(add_params_to_url(next_page, params))
+                    self.add_error(self._('You need to specify an assistant'))
+                    return HTTPFound(next_page)
         return {'groupData': group_data, 'members': members, 'assistants': assistants,
                 'projectDetails': project_details, 'userid': user_id}
 

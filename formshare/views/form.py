@@ -5,7 +5,6 @@ from formshare.processes.db import get_project_id_from_name, get_form_details, g
     add_group_to_form, get_form_groups, update_group_privileges, remove_group_from_form, get_form_xls_file
 from formshare.processes.storage import store_file, delete_stream
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
-from formshare.processes.utilities import add_params_to_url
 import validators
 import os
 from cgi import FieldStorage
@@ -13,8 +12,10 @@ from hashlib import md5
 import logging
 from formshare.processes.elasticsearch.repository_index import delete_dataset_index
 from pyramid.response import FileResponse
-from formshare.processes.submission.api import get_submission_media_files, json_to_csv, get_gps_points_from_form
-from formshare.processes.odk.api import get_odk_path, upload_odk_form, update_form_title, retrieve_form_file
+from formshare.processes.submission.api import get_submission_media_files, json_to_csv, get_gps_points_from_form, \
+    generate_xlsx_file
+from formshare.processes.odk.api import get_odk_path, upload_odk_form, update_form_title, retrieve_form_file, \
+    update_odk_form
 
 
 log = logging.getLogger(__name__)
@@ -38,13 +39,12 @@ class FormDetails(PrivateView):
         else:
             raise HTTPNotFound
 
-        error = self.request.params.get('error')
-        if error is not None:
-            self.errors.append(error)
-
         form_data = get_form_details(self.request, user_id, project_id, form_id)
         form_files = get_form_files(self.request, project_id, form_id)
-        assistants = get_all_assistants(self.request, project_id, self.user.login)
+        if self.user is not None:
+            assistants = get_all_assistants(self.request, project_id, self.user.login)
+        else:
+            assistants = []
         form_assistants = get_form_assistants(self.request, project_id, form_id)
         groups = get_project_groups(self.request, project_id)
         form_groups = get_form_groups(self.request, project_id, form_id)
@@ -102,8 +102,65 @@ class AddNewForm(PrivateView):
                 next_page = self.request.params.get('next') or self.request.route_url('project_details',
                                                                                       userid=project_details['owner'],
                                                                                       projcode=project_code)
-                params = {'error': self._('Unable to upload the form: ') + message}
-                return HTTPFound(add_params_to_url(next_page, params))
+                self.add_error(self._('Unable to upload the form: ') + message)
+                return HTTPFound(next_page)
+
+        else:
+            raise HTTPNotFound
+
+
+class UploadNewVersion(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+        form_id = self.request.matchdict['formid']
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] == 4:
+            raise HTTPNotFound
+
+        if self.request.method == 'POST':
+            self.returnRawViewResult = True
+            odk_path = get_odk_path(self.request)
+
+            form_data = self.get_post_dict()
+            if 'form_target' not in form_data.keys():
+                form_data['form_target'] = 0
+
+            form_data.pop('xlsx')
+
+            if form_data['form_target'] == '':
+                form_data['form_target'] = 0
+
+            updated, message = update_odk_form(self.request, project_id, form_id, user_id, odk_path, form_data)
+
+            if updated:
+                delete_dataset_index(self.request, user_id, project_code, form_id)
+                next_page = self.request.route_url('form_details', userid=project_details['owner'],
+                                                   projcode=project_code, formid=form_id)
+                self.request.session.flash(self._('The ODK form was successfully updated'))
+                return HTTPFound(next_page)
+            else:
+                next_page = self.request.route_url('form_details', userid=project_details['owner'],
+                                                   projcode=project_code, formid=form_id)
+                self.add_error(self._('Unable to upload the form: ') + message)
+                return HTTPFound(next_page)
 
         else:
             raise HTTPNotFound
@@ -250,8 +307,9 @@ class AddFileToForm(PrivateView):
                 processing_upload = True
             else:
                 if not validators.url(form_data['form_file']):
+                    self.add_error("The URL is invalid")
                     next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
-                                                       formid=form_id, _query={'error': "The URL is invalid"})
+                                                       formid=form_id)
                     return HTTPFound(location=next_page)
 
             self.returnRawViewResult = True
@@ -264,8 +322,9 @@ class AddFileToForm(PrivateView):
                     self.request.session.flash(self._('The file was linked successfully'))
                     return HTTPFound(location=next_page)
                 else:
+                    self.add_error(message)
                     next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
-                                                       formid=form_id, _query={'error': message})
+                                                       formid=form_id)
                     return HTTPFound(location=next_page)
             else:
                 error = False
@@ -294,8 +353,9 @@ class AddFileToForm(PrivateView):
                         self.request.session.flash(self._('The files were uploaded successfully'))
                     return HTTPFound(location=next_page)
                 else:
+                    self.add_error(message)
                     next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
-                                                       formid=form_id, _query={'error': message})
+                                                       formid=form_id)
                     return HTTPFound(location=next_page)
 
         else:
@@ -340,8 +400,9 @@ class RemoveFileFromForm(PrivateView):
                 delete_stream(self.request, bucket_id, file_name)
                 self.request.session.flash(self._('The files was removed successfully'))
             else:
+                self.add_error(message)
                 next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
-                                                   formid=form_id, _query={'error': message})
+                                                   formid=form_id)
                 return HTTPFound(location=next_page)
             return HTTPFound(location=next_page)
         else:
@@ -414,19 +475,20 @@ class AddAssistant(PrivateView):
                                                            formid=form_id)
                         return HTTPFound(location=next_page)
                     else:
+                        self.add_error(message)
                         next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
-                                                           formid=form_id,
-                                                           _query={'error': message})
+                                                           formid=form_id)
                         return HTTPFound(location=next_page)
 
                 else:
+                    self.add_error("Error in submitted assistant")
                     next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
-                                                       formid=form_id,
-                                                       _query={'error': "Error in submitted assistant"})
+                                                       formid=form_id)
                     return HTTPFound(location=next_page)
             else:
+                self.add_error("The assistant cannot be empty")
                 next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
-                                                   formid=form_id, _query={'error': "The assistant cannot be empty"})
+                                                   formid=form_id)
                 return HTTPFound(location=next_page)
 
         else:
@@ -473,9 +535,9 @@ class EditAssistant(PrivateView):
                                                    formid=form_id)
                 return HTTPFound(location=next_page)
             else:
+                self.add_error(message)
                 next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
-                                                   formid=form_id,
-                                                   _query={'error': message})
+                                                   formid=form_id)
                 return HTTPFound(location=next_page)
         else:
             raise HTTPNotFound
@@ -519,9 +581,9 @@ class RemoveAssistant(PrivateView):
                                                    formid=form_id)
                 return HTTPFound(location=next_page)
             else:
+                self.add_error(message)
                 next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
-                                                   formid=form_id,
-                                                   _query={'error': message})
+                                                   formid=form_id)
                 return HTTPFound(location=next_page)
         else:
             raise HTTPNotFound
@@ -566,13 +628,14 @@ class AddGroupToForm(PrivateView):
                                                        formid=form_id)
                     return HTTPFound(location=next_page)
                 else:
+                    self.add_error(message)
                     next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
-                                                       formid=form_id,
-                                                       _query={'error': message})
+                                                       formid=form_id)
                     return HTTPFound(location=next_page)
             else:
+                self.add_error("The group cannot be empty")
                 next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
-                                                   formid=form_id, _query={'error': "The group cannot be empty"})
+                                                   formid=form_id)
                 return HTTPFound(location=next_page)
 
         else:
@@ -617,9 +680,9 @@ class EditFormGroup(PrivateView):
                                                    formid=form_id)
                 return HTTPFound(location=next_page)
             else:
+                self.add_error(message)
                 next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
-                                                   formid=form_id,
-                                                   _query={'error': message})
+                                                   formid=form_id)
                 return HTTPFound(location=next_page)
         else:
             raise HTTPNotFound
@@ -661,9 +724,9 @@ class RemoveGroupForm(PrivateView):
                                                    formid=form_id)
                 return HTTPFound(location=next_page)
             else:
+                self.add_error(message)
                 next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
-                                                   formid=form_id,
-                                                   _query={'error': message})
+                                                   formid=form_id)
                 return HTTPFound(location=next_page)
         else:
             raise HTTPNotFound
@@ -697,6 +760,47 @@ class DownloadCSVData(PrivateView):
             response.content_disposition = 'attachment; filename="' + form_id + '.csv"'
             return response
         else:
+            next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
+                                               formid=form_id)
+            return HTTPFound(location=next_page)
+
+
+class DownloadXLSData(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.checkCrossPost = False
+        self.returnRawViewResult = True
+
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+        form_id = self.request.matchdict['formid']
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] == 4:
+            include_sensitive = False
+        else:
+            include_sensitive = True
+
+        created, file = generate_xlsx_file(self.request, project_id, form_id, include_sensitive)
+        if created:
+            response = FileResponse(file, request=self.request,
+                                    content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+            response.content_disposition = 'attachment; filename="' + form_id + '.xlsx"'
+            return response
+        else:
+            self.add_error(file)
             next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
                                                formid=form_id)
             return HTTPFound(location=next_page)

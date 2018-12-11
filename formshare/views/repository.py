@@ -11,6 +11,7 @@ from formshare.processes.odk.api import create_repository, get_odk_path
 from lxml import etree
 import json
 import re
+from formshare.processes.elasticsearch.repository_index import delete_dataset_index
 
 
 class GenerateRepository(PrivateView):
@@ -42,8 +43,7 @@ class GenerateRepository(PrivateView):
         odk_path = get_odk_path(self.request)
         if form_data:
             if form_data["schema"] is None:
-                get = True
-                error_summary = {}
+                get = True                
                 list_array = []
                 result_code = -1
                 stage, primary_key, deflanguage, languages, yesvalue, novalue, other_languages, yes_no_strings, \
@@ -131,13 +131,13 @@ class GenerateRepository(PrivateView):
                                 # Tell the user it missed a CSV or ZIP file
                                 update_form_stage_number(self.request, project_id, form_id, 6)
                                 stage = 6
-                                error_summary = {'error': message}
+                                self.errors.append(message)
 
                             if result_code == 1:
                                 # This is bad!!! So send the form to QLands
-                                error_summary = {'error': message}
+                                self.errors.append(message)
                         else:
-                            error_summary = {'error': self._('You need to specify a variable as primary key')}
+                            self.errors.append(self._('You need to specify a variable as primary key'))
 
                     # ----------------------------------------------Stage 2
 
@@ -156,9 +156,8 @@ class GenerateRepository(PrivateView):
                             cont_proc = True
                             if deflanguage.upper() != "ENGLISH":
                                 if yesvalue == "" or novalue == "":
-                                    error_summary = {'error': self._(
-                                        'Since the default language is not English you '
-                                        'need to indicate Yes / No values')}
+                                    self.errors.append(self._('Since the default language is not English you need '
+                                                              'to indicate Yes / No values'))
                                     cont_proc = False
                                     result_code = 3
                             if cont_proc:
@@ -234,8 +233,8 @@ class GenerateRepository(PrivateView):
                                         update_form_stage_number(self.request, project_id, form_id, 4)
                                         stage = 4
                                     if result_code == 5:
-                                        error_summary = {'error': message + self._(
-                                            ". You need to fix the XLSX, upload it again and continue this process.")}
+                                        self.errors.append(message + self._(
+                                            ". You need to fix the XLSX, upload it again and continue this process."))
                                     if result_code == 10 or result_code == 11:
                                         # At this stage the information should be ok. However if the user
                                         # exits the process, changes the form so much that the primary key is invalid
@@ -261,17 +260,17 @@ class GenerateRepository(PrivateView):
                                         # Tell the user it missed a CSV or ZIP file
                                         update_form_stage_number(self.request, project_id, form_id, 6)
                                         stage = 6
-                                        error_summary = {'error': message}
+                                        self.errors.append(message)
 
                                     if result_code == 1:
                                         # This is bad!!! So send the form to QLands
-                                        error_summary = {'error': message}
+                                        self.errors.append(message)
                                 else:
                                     result_code = 3
-                                    error_summary = {'error': self._('Each language needs a ISO 639-1 code')}
+                                    self.errors.append(self._('Each language needs a ISO 639-1 code'))
 
                         else:
-                            error_summary = {'error': self._('You need to specify a default language')}
+                            self.errors.append(self._('You need to specify a default language'))
 
                     # -----------------------------------------------------------------Stage 3
 
@@ -335,8 +334,8 @@ class GenerateRepository(PrivateView):
                                 stage = 2
 
                             if result_code == 5:
-                                error_summary = {'error': message + self._(
-                                    ". You need to fix the XLSX, upload it again and continue this process.")}
+                                self.errors.append(message + self._(". You need to fix the XLSX, upload it again "
+                                                                    "and continue this process."))
 
                             if result_code == 2:
                                 # At this stage the information should be ok however,
@@ -383,11 +382,11 @@ class GenerateRepository(PrivateView):
                                 # Tell the user it missed a CSV or ZIP file
                                 update_form_stage_number(self.request, project_id, form_id, 6)
                                 stage = 6
-                                error_summary = {'error': message}
+                                self.errors.append(message)
 
                             if result_code == 1:
                                 # This is bad!!! So send the form to QLands
-                                error_summary = {'error': message}
+                                self.errors.append(message)
 
                     # ---------------------------------------------------------------------Stage 4
 
@@ -445,8 +444,8 @@ class GenerateRepository(PrivateView):
                             stage = 2
 
                         if result_code == 5:
-                            error_summary = {'error': message + self._(
-                                ". You need to fix the XLSX, upload it again and continue this process.")}
+                            self.errors.append(message + self._(". You need to fix the XLSX, upload it again and "
+                                                                "continue this process."))
 
                         if result_code == 2:
                             # At this stage the information should be ok however,
@@ -492,11 +491,11 @@ class GenerateRepository(PrivateView):
                             # Tell the user it missed a CSV or ZIP file
                             update_form_stage_number(self.request, project_id, form_id, 6)
                             stage = 6
-                            error_summary = {'error': message}
+                            self.errors.append(message)
 
                         if result_code == 1:
                             # This is bad!!! So send the form to QLands
-                            error_summary = {'error': message}
+                            self.errors.append(message)
 
                     # ----------------------------------------Stage 5------------------------------------------------
 
@@ -554,8 +553,8 @@ class GenerateRepository(PrivateView):
                             stage = 2
 
                         if result_code == 5:
-                            error_summary = {'error': message + self._(
-                                ". You need to fix the XLSX, upload it again and continue this process.")}
+                            self.errors.append(message + self._(". You need to fix the XLSX, upload it again "
+                                                                "and continue this process."))
 
                         if result_code == 2:
                             # At this stage the information should be ok however,
@@ -601,11 +600,11 @@ class GenerateRepository(PrivateView):
                             # Tell the user it missed a CSV or ZIP file
                             update_form_stage_number(self.request, project_id, form_id, 6)
                             stage = 6
-                            error_summary = {'error': message}
+                            self.errors.append(message)
 
                         if result_code == 1:
                             # This is bad!!! So send the form to QLands
-                            error_summary = {'error': message}
+                            self.errors.append(message)
 
                     # ----------------------------------------Stage 6
 
@@ -663,8 +662,8 @@ class GenerateRepository(PrivateView):
                             stage = 2
 
                         if result_code == 5:
-                            error_summary = {'error': message + self._(
-                                ". You need to fix the XLSX, upload it again and continue this process.")}
+                            self.errors.append(message + self._(". You need to fix the XLSX, upload it "
+                                                                "again and continue this process."))
 
                         if result_code == 2:
                             # At this stage the information should be ok however,
@@ -710,11 +709,11 @@ class GenerateRepository(PrivateView):
                             # Tell the user it missed a CSV or ZIP file
                             update_form_stage_number(self.request, project_id, form_id, 6)
                             stage = 6
-                            error_summary = {'error': message}
+                            self.errors.append(message)
 
                         if result_code == 1:
                             # This is bad!!! So send the form to QLands
-                            error_summary = {'error': message}
+                            self.errors.append(message)
 
                 if self.request.method == 'GET':
                     if len(languages) == 0 and stage == 2:
@@ -722,6 +721,7 @@ class GenerateRepository(PrivateView):
 
                 if result_code == 0:
                     self.returnRawViewResult = True
+                    delete_dataset_index(self.request, user_id, project_code, form_id)
                     self.request.session.flash(self._('The repository was created successfully'))
                     return HTTPFound(
                         self.request.route_url('form_details', userid=user_id, projcode=project_code, formid=form_id))
@@ -939,7 +939,7 @@ def check_table_name(table_name):
     return res
 
 
-class NewGroup(PrivateView):
+class NewSeparationGroup(PrivateView):
     def __init__(self, request):
         PrivateView.__init__(self, request)
         self.privateOnly = True
@@ -984,8 +984,10 @@ class NewGroup(PrivateView):
                                 if added:
                                     self.returnRawViewResult = True
                                     return HTTPFound(location=self.request.route_url('separatetable', userid=user_id,
-                                                                                     projcode=project_code, formid=form_id,
-                                                                                     tablename=table_name, _query=qvars))
+                                                                                     projcode=project_code,
+                                                                                     formid=form_id,
+                                                                                     tablename=table_name,
+                                                                                     _query=qvars))
                                 else:
                                     self.errors.append(message)
                             else:
@@ -1001,7 +1003,7 @@ class NewGroup(PrivateView):
             raise HTTPNotFound()
 
 
-class EditGroup(PrivateView):
+class EditSeparationGroup(PrivateView):
     def __init__(self, request):
         PrivateView.__init__(self, request)
         self.privateOnly = True
@@ -1050,14 +1052,15 @@ class EditGroup(PrivateView):
                         self.errors.append(self._("The group description cannot be empty"))
                 qvars = {'formid': form_id}
                 return {'tableName': table_name, 'userid': user_id, 'projcode': project_code, 'formid': form_id,
-                        'qvars': qvars, 'groupName': group_name, 'formData': form_data, 'projectDetails': project_details}
+                        'qvars': qvars, 'groupName': group_name, 'formData': form_data,
+                        'projectDetails': project_details}
             else:
                 raise HTTPNotFound()
         else:
             raise HTTPNotFound()
 
 
-class DeleteGroup(PrivateView):
+class DeleteSeparationGroup(PrivateView):
     def __init__(self, request):
         PrivateView.__init__(self, request)
         self.privateOnly = True

@@ -26,7 +26,7 @@ from zope.sqlalchemy import mark_changed
 from pyxform import xls2xform
 from openpyxl import load_workbook
 from pyxform.errors import PyXFormError
-from formshare.processes.storage import get_stream, response_stream, store_file
+from formshare.processes.storage import get_stream, response_stream, store_file, delete_stream
 from pyramid.response import Response
 from urllib.request import urlretrieve
 from pyramid.httpexceptions import HTTPFound
@@ -41,7 +41,7 @@ __all__ = ['generate_form_list', 'generate_manifest', 'get_form_list',
            'get_html_from_diff', 'generate_diff', 'store_new_version', 'restore_from_revision', 'push_revision',
            'get_tables_from_form', 'get_fields_from_table', 'get_table_desc', 'is_field_key', 'get_request_data',
            'update_data', 'upload_odk_form', 'update_form_title', 'retrieve_form_file', 'cache_external_file',
-           'get_odk_path', 'store_file_in_directory']
+           'get_odk_path', 'store_file_in_directory', 'update_odk_form']
 
 
 def get_odk_path(request):
@@ -406,6 +406,139 @@ def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
         log.error("Error {} while adding form {} in project {}".format(sys.exc_info()[0], input_file_name, project_id))
         return False, sys.exc_info()[0]
 
+
+def update_odk_form(request, project_id, for_form_id, user_id, odk_dir, form_data):
+    uid = str(uuid.uuid4())
+    form_directory = uid[-12:]
+    paths = ['tmp', uid]
+    os.makedirs(os.path.join(odk_dir, *paths))
+
+    input_file = request.POST['xlsx'].file
+    input_file_name = request.POST['xlsx'].filename
+
+    paths = ['tmp', uid, input_file_name]
+    file_name = os.path.join(odk_dir, *paths)
+
+    input_file.seek(0)
+    with open(file_name, 'wb') as permanent_file:
+        shutil.copyfileobj(input_file, permanent_file)
+
+    input_file.close()
+
+    parts = os.path.splitext(input_file_name)
+
+    paths = ['tmp', uid, parts[0]+'.xml']
+    xml_file = os.path.join(odk_dir, *paths)
+
+    try:
+        xls2xform.xls2xform_convert(file_name, xml_file)
+
+        # Check if the conversion created itemsets.csv
+        output_dir = os.path.split(xml_file)[0]
+        itemsets_csv = os.path.join(output_dir, "itemsets.csv")
+        if not os.path.isfile(itemsets_csv):
+            itemsets_csv = ""
+
+        tree = etree.parse(xml_file)
+        root = tree.getroot()
+        nsmap = root.nsmap[None]
+        h_nsmap = root.nsmap['h']
+        eid = root.findall(".//{" + nsmap + "}" + parts[0])
+        if eid:
+            form_id = eid[0].get("id")
+            if re.match(r'^[A-Za-z0-9_]+$', form_id):
+                if form_id == for_form_id:
+                    form_title = root.findall(".//{" + h_nsmap + "}title")
+                    if not form_exists(request, project_id, form_id):
+                        paths = ['forms', form_directory, 'media']
+                        if not os.path.exists(os.path.join(odk_dir, *paths)):
+                            os.makedirs(os.path.join(odk_dir, *paths))
+
+                            paths = ['forms', form_directory, 'submissions']
+                            os.makedirs(os.path.join(odk_dir, *paths))
+
+                            paths = ['forms', form_directory, 'submissions', 'logs']
+                            os.makedirs(os.path.join(odk_dir, *paths))
+
+                            paths = ['forms', form_directory, 'submissions', 'maps']
+                            os.makedirs(os.path.join(odk_dir, *paths))
+
+                            paths = ['forms', form_directory, 'repository']
+                            os.makedirs(os.path.join(odk_dir, *paths))
+                            paths = ['forms', form_directory, 'repository', 'temp']
+                            os.makedirs(os.path.join(odk_dir, *paths))
+
+                        xls_file_fame = os.path.basename(file_name)
+                        xml_file_name = os.path.basename(xml_file)
+                        paths = ['forms', form_directory, xls_file_fame]
+                        final_xls = os.path.join(odk_dir, *paths)
+                        paths = ['forms', form_directory, xml_file_name]
+                        final_xml = os.path.join(odk_dir, *paths)
+                        shutil.copyfile(file_name, final_xls)
+                        shutil.copyfile(xml_file, final_xml)
+                        geopoint = get_geopoint_variable_from_xlsx(final_xls)
+                        form_data['project_id'] = project_id
+                        form_data['form_id'] = form_id
+                        form_data['form_name'] = form_title[0].text
+                        form_data['form_cdate'] = datetime.datetime.now()
+                        form_data['form_directory'] = form_directory
+                        form_data['form_accsub'] = 1
+                        form_data['form_testing'] = 1
+                        form_data['form_xlsfile'] = final_xls
+                        form_data['form_xmlfile'] = final_xml
+                        form_data['form_pubby'] = user_id
+                        form_data['form_geopoint'] = geopoint
+
+                        updated, message = update_form(request, project_id, for_form_id, form_data)
+                        if not updated:
+                            return updated, message
+
+                        # If we have itemsets.csv add it as media files
+                        if itemsets_csv != "":
+                            bucket_id = project_id + form_id
+                            bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
+                            try:
+                                delete_stream(request, bucket_id, 'itemsets.csv')
+                            except Exception as e:
+                                log.error("Error {} removing filename {} from bucket {}".format(str(e), 'itemsets.csv',
+                                                                                                bucket_id))
+                            with open(itemsets_csv, "rb", ) as itemset_file:
+                                md5sum = md5(itemset_file.read()).hexdigest()
+                                added, message = add_file_to_form(request, project_id, form_id, 'itemsets.csv', None, True,
+                                                                  md5sum)
+                                if added:
+                                    itemset_file.seek(0)
+                                    store_file(request, bucket_id, 'itemsets.csv', itemset_file)
+
+                        paths = ['forms', form_directory, parts[0]+".json"]
+                        json_file = os.path.join(odk_dir, *paths)
+
+                        metadata = {"formID": form_id, "name": form_title[0].text, "majorMinorVersion": "",
+                                    "version": datetime.datetime.now().strftime("%Y%m%d"),
+                                    "hash": 'md5:' + md5(open(final_xml, 'rb').read()).hexdigest(),
+                                    "descriptionText": form_title[0].text}
+
+                        with open(json_file, "w",) as outfile:
+                            json_string = json.dumps(metadata, indent=4, ensure_ascii=False)
+                            outfile.write(json_string)
+                        return True, form_id
+                    else:
+                        return False, request.translate("The form already exists in this project")
+                else:
+                    return False, request.translate('The "form_id" of the current form does not match the "form_id" of '
+                                                    'the one you uploaded. You cannot update a form with another form')
+            else:
+                return False, request.translate(
+                    "The form ID has especial characters. FormShare only allows letters, numbers and underscores(_)")
+        else:
+            return False, request.translate(
+                "Cannot find XForm ID. Please send this form to support_formshare@qlands.com")
+    except PyXFormError as e:
+        log.error("Error {} while adding form {} in project {}".format(str(e), input_file_name, project_id))
+        return False, str(e)
+    except RuntimeError:
+        log.error("Error {} while adding form {} in project {}".format(sys.exc_info()[0], input_file_name, project_id))
+        return False, sys.exc_info()[0]
 
 class FileIterator(object):
     chunk_size = 4096

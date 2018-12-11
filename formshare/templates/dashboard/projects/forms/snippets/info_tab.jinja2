@@ -29,6 +29,7 @@
             <div class="actions">
                 {% if formDetails.form_schema == None %}
                     <a href="{{ request.route_url('createrepository',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-database"></i> {{ _('Create repository') }} </a>
+                    <a class="btn btn-xs btn-white" data-toggle="modal" data-target="#update_form"><i class="fas fa-file-upload"></i> {{ _('Update ODK form') }} </a>
                 {% else %}
 {#                    <a href="" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-code-branch"></i> {{ _('Upload new version') }} </a>#}
                 {% endif %}

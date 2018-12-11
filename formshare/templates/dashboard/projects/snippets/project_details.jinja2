@@ -72,7 +72,7 @@
                         {% if assistants|length > 0 %}
                             <small>{{ _('Click/Tab and hold to remove assistants') }}</small>
                         {% else %}
-                             <small>{{ _('This project has no assistants. Use the + button to add one') }}</small>
+                            <small class="text-danger"><b>{{ _('This project has no assistants. Use the + button to add one') }}</b></small>
                         {% endif %}
                     {% endif %}
                     <div class="row">
@@ -117,7 +117,7 @@
                         {% if groups|length > 0 %}
                             <small>{{ _('Click/Tab and hold to remove groups') }}</small>
                         {% else %}
-                             <small>{{ _('This project has no groups. Use the + button to add one') }}</small>
+                            <small class="text-warning"><b>{{ _('This project has no groups. Use the + button to add them') }}</b></small>
                         {% endif %}
                     {% endif %}
                     <div class="row">
@@ -238,6 +238,9 @@
                                         {% endfor %}
                                         {% if moreCollaborators > 0 %}
                                             <a href="{{ request.route_url('collaborators',userid=userid,projcode=projectData.project_code) }}"><div class="rounded-circle" title="{{ _('Plus') }} {{ moreCollaborators }} {{ request.h.pluralize(request, _('other'), moreCollaborators) }}" style="background-color: #1ab394; width: 32px; height: 32px; display: inline-block; vertical-align: middle" ><span style="font-size: 20px; margin-left: 3px; color: white">+{{ moreCollaborators }}</span></div></a>
+                                        {% endif %}
+                                        {% if projectData.access_type != 4 %}
+                                            <a href="{{ request.route_url('collaborators',userid=userid,projcode=projectData.project_code) }}"><div class="rounded-circle" title="Add" style="background-color: #026AA8; width: 32px; height: 32px; display: inline-block; vertical-align: middle" ><span style="font-size: 20px; margin-left: 10px; color: white">+</span></div></a>
                                         {% endif %}
                                     </dd>
                                 </div>

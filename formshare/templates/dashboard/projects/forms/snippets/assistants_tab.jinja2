@@ -39,7 +39,13 @@
         {% if formassistants|length > 0 %}
             <small>{{ _('Assistants in') }} <span class="text-danger">{{ _('red') }}</span> {{ _('are inactive') }}</small>
         {% else %}
-            <small>{{ _('There are no assistants. You can add one by clicking on the + button') }}</small>
+            {% if projectDetails.access_type != 4 %}
+                {% if formgroups|length == 0 %}
+                    <small class="text-danger">{{ _('Assistants help you to collect and clean data. Add one by clicking on the + button') }}</small>
+                {% else %}
+                    <small>{{ _('Assistants help you to collect and clean data. Add one by clicking on the + button') }}</small>
+                {% endif %}
+            {% endif %}
         {% endif %}
     </div>
 </div>

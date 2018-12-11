@@ -90,6 +90,37 @@
                 $('.custom-file-input').next('.custom-file-label').addClass("selected").html("{{ _('Choose file...') }}");
             });
 
+            $('.remove_form').click(function () {
+                var action_url = $( this ).attr('urn');
+                swal({
+                        title: "{{ _('Are you sure?') }}",
+                        text: "{{ _('All the data in this form will be deleted!') }}",
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#DD6B55",
+                        confirmButtonText: "{{ _('Yes, delete this form!') }}",
+                        cancelButtonText: "{{ _('Oops!, cancel!') }}",
+                        closeOnConfirm: true,
+                        closeOnCancel: true },
+                    function (isConfirm) {
+                        if (isConfirm) {
+                            var form = document.createElement('form');
+                            form.setAttribute('method', 'post');
+                            form.setAttribute('action', action_url);
+                            form.style.display = 'hidden';
+
+                            var i = document.createElement("input"); //input element, text
+                            i.setAttribute('type',"text");
+                            i.setAttribute('name',"csrf_token");
+                            i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                            form.appendChild(i);
+
+                            document.body.appendChild(form);
+                            form.submit();
+                        }
+                    });
+            });
+
             $('#delete_project').click(function () {
                 swal({
                         title: "{{ _('Are you sure?') }}",
@@ -216,76 +247,78 @@
         });
     </script>
 
-    <script>
-        var mymap = L.map('projmap').setView([51.505, -0.09], 13);
-        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
-            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-            maxZoom: 18,
-            id: 'mapbox.streets',
-            accessToken: 'pk.eyJ1IjoicWxhbmRzIiwiYSI6ImNqZHB1ZDh4YzEwZHEyeG1rcjc0NmFsNzIifQ.i3YebmNDByns1c1ixZE0bA'
-        }).addTo(mymap);
+    {% if submissions > 0 %}
+        <script>
+            var mymap = L.map('projmap').setView([51.505, -0.09], 13);
+            L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                maxZoom: 18,
+                id: 'mapbox.streets',
+                accessToken: 'pk.eyJ1IjoicWxhbmRzIiwiYSI6ImNqZHB1ZDh4YzEwZHEyeG1rcjc0NmFsNzIifQ.i3YebmNDByns1c1ixZE0bA'
+            }).addTo(mymap);
 
-        var element = document.getElementById('mapbox');
-        var full_screen = false;
-        var normal_height = $("#projmap").height();
-        new ResizeSensor(element, function() {
-            var window_width = $(window).width();
-            var element_width =  element.clientWidth;
-            if ((element_width / window_width) >= 0.80)
-            {
-                $("#projmap").height($(window).height()-80);
-                mymap.invalidateSize();
-                //console.log('Changed to ' + element.clientWidth);
-                full_screen = true;
-            }
-            else
-            {
-                if (full_screen)
+            var element = document.getElementById('mapbox');
+            var full_screen = false;
+            var normal_height = $("#projmap").height();
+            new ResizeSensor(element, function() {
+                var window_width = $(window).width();
+                var element_width =  element.clientWidth;
+                if ((element_width / window_width) >= 0.80)
                 {
-                    $("#projmap").height(normal_height);
+                    $("#projmap").height($(window).height()-80);
                     mymap.invalidateSize();
-                    //console.log('Back to ' + normal_height);
                     //console.log('Changed to ' + element.clientWidth);
-                    full_screen = false;
+                    full_screen = true;
                 }
-            }
-        });
-
-        var options = {
-          iconShape: 'circle-dot',
-          borderWidth: 5,
-          borderColor: '#b3334f'
-        };
-
-        $.getJSON("{{ request.route_url('project_download_gpspoints',userid=userid,projcode=projectData.project_code) }}", function( data ) {
-            var markers = [];
-            data.points.forEach(function(entry)
-            {
-                var marker = L.marker([entry.lati, entry.long], {
-                    icon: L.BeautifyIcon.icon(entry.options),
-                    draggable: false
-                }).addTo(mymap);
-                markers.push(marker);
-            });
-            var group = new L.featureGroup(markers);
-            mymap.fitBounds(group.getBounds());
-        });
-
-        {% if projectData.project_abstract != None %}
-
-            $(document).ready(function() {
-                var val = $("#abstract_hidden").val();
-                document.getElementById('project_abstract').innerHTML = markdown.toHTML(val);
-
-                {% if projectData.project_abstract|length < 170 %}
-                    $('.scroll_content').slimscroll({'height': '60px'});
-                {% else %}
-                    $('.scroll_content').slimscroll();
-                {% endif %}
+                else
+                {
+                    if (full_screen)
+                    {
+                        $("#projmap").height(normal_height);
+                        mymap.invalidateSize();
+                        //console.log('Back to ' + normal_height);
+                        //console.log('Changed to ' + element.clientWidth);
+                        full_screen = false;
+                    }
+                }
             });
 
-        {% endif %}
+            var options = {
+                iconShape: 'circle-dot',
+                borderWidth: 5,
+                borderColor: '#b3334f'
+            };
 
-    </script>
+            $.getJSON("{{ request.route_url('project_download_gpspoints',userid=userid,projcode=projectData.project_code) }}", function( data ) {
+                var markers = [];
+                data.points.forEach(function(entry)
+                {
+                    var marker = L.marker([entry.lati, entry.long], {
+                        icon: L.BeautifyIcon.icon(entry.options),
+                        draggable: false
+                    }).addTo(mymap);
+                    markers.push(marker);
+                });
+                var group = new L.featureGroup(markers);
+                mymap.fitBounds(group.getBounds());
+            });
+
+            {% if projectData.project_abstract != None %}
+
+                $(document).ready(function() {
+                    var val = $("#abstract_hidden").val();
+                    document.getElementById('project_abstract').innerHTML = markdown.toHTML(val);
+
+                    {% if projectData.project_abstract|length < 170 %}
+                        $('.scroll_content').slimscroll({'height': '60px'});
+                    {% else %}
+                        $('.scroll_content').slimscroll();
+                    {% endif %}
+                });
+
+            {% endif %}
+
+        </script>
+    {% endif %}
 
 {% endblock scripts %}

@@ -71,10 +71,6 @@ class ProjectDetailsView(ProjectsView):
         else:
             raise HTTPNotFound
 
-        error = self.request.params.get('error')
-        if error is not None:
-            self.errors.append(error)
-
         assistants, more_assistants = get_project_assistants(self.request, project_id, 8)
         if self.user is not None:
             collaborators, more_collaborators = get_project_collaborators(self.request, project_id, self.user.login, 4)
@@ -118,7 +114,8 @@ class AddProjectView(ProjectsView):
             if project_details['project_code'] != "":
                 project_details['project_code'] = project_details['project_code'].lower()
                 if re.match(r'^[A-Za-z0-9_]+$', project_details['project_code']):
-                    next_page = self.request.params.get('next') or self.request.route_url('dashboard', userid=self.user.login)
+                    next_page = self.request.params.get('next') or self.request.route_url('dashboard',
+                                                                                          userid=self.user.login)
                     added, message = add_project(self.request, self.user.login, project_details)
                     if added:
                         # Generate the QR image
@@ -186,8 +183,6 @@ class EditProjectView(ProjectsView):
 
         if project_details["access_type"] == 4:
             raise HTTPNotFound  # Don't edit a public or a project that I am just a member
-
-        current_image_file = project_details["project_image"]
 
         if self.request.method == 'POST':
             project_details = self.get_post_dict()
@@ -314,8 +309,8 @@ class AddFileToProject(ProjectsView):
                     store_file(self.request, project_id, file_name, self.request.POST['upload'].file)
                     self.request.session.flash(self._('The files was added successfully'))
                 else:
-                    next_page = self.request.route_url('project_details', userid=user_id, projcode=project_code,
-                                                       _query={'error': message})
+                    self.add_error(message)
+                    next_page = self.request.route_url('project_details', userid=user_id, projcode=project_code)
                     return HTTPFound(location=next_page)
             return HTTPFound(location=next_page)
         else:
@@ -357,8 +352,8 @@ class RemoveFileFromProject(ProjectsView):
                 delete_stream(self.request, project_id, file_name)
                 self.request.session.flash(self._('The files was removed successfully'))
             else:
-                next_page = self.request.route_url('project_details', userid=user_id, projcode=project_code,
-                                                   _query={'error': message})
+                self.add_error(message)
+                next_page = self.request.route_url('project_details', userid=user_id, projcode=project_code)
                 return HTTPFound(location=next_page)
             return HTTPFound(location=next_page)
         else:

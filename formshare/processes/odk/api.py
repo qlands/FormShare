@@ -376,10 +376,6 @@ def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
                                 bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
                                 store_file(request, bucket_id, 'itemsets.csv', itemset_file)
 
-                        #paths = ['forms', form_directory, 'media', 'itemsets.csv']
-                        #itemset_file = os.path.join(odk_dir, *paths)
-                        #shutil.copyfile(itemsets_csv, itemset_file)
-
                     paths = ['forms', form_directory, parts[0]+".json"]
                     json_file = os.path.join(odk_dir, *paths)
 
@@ -505,8 +501,8 @@ def update_odk_form(request, project_id, for_form_id, user_id, odk_dir, form_dat
                                                                                                 bucket_id))
                             with open(itemsets_csv, "rb", ) as itemset_file:
                                 md5sum = md5(itemset_file.read()).hexdigest()
-                                added, message = add_file_to_form(request, project_id, form_id, 'itemsets.csv', None, True,
-                                                                  md5sum)
+                                added, message = add_file_to_form(request, project_id, form_id, 'itemsets.csv', None,
+                                                                  True, md5sum)
                                 if added:
                                     itemset_file.seek(0)
                                     store_file(request, bucket_id, 'itemsets.csv', itemset_file)
@@ -540,6 +536,7 @@ def update_odk_form(request, project_id, for_form_id, user_id, odk_dir, form_dat
     except Exception as e:
         log.error("Error {} while adding form {} in project {}".format(str(e), input_file_name, project_id))
         return False, sys.exc_info()[0]
+
 
 class FileIterator(object):
     chunk_size = 4096
@@ -687,7 +684,7 @@ class ChangeDir:
         os.chdir(self.savedPath)
 
 
-def build_odata_service(request, schema):
+def build_odata_service(request, cnf_file, schema):
     instance_id = str(uuid.uuid4())
     instance_id = instance_id[-12:]
     temp_dir = os.path.join(get_odk_path(request), *["tmp", instance_id])
@@ -702,11 +699,21 @@ def build_odata_service(request, schema):
     file.write("    port: " + request.registry.settings['mysql.port'] + "\n")
     file.write("    buffered: True\n")
     file.write("generator:\n")
-    file.write("  group_id: org.cabi." + schema + "\n")
+    file.write("  group_id: org.formshare." + schema + "\n")
     file.write("  artifact_id: " + schema + "\n")
-    file.write("  project_description: CABI OData " + schema + "\n")
+    file.write("  project_description: FormShare OData Service (" + schema + ")\n")
     file.write("  project_name: " + schema + "\n")
-    file.write("  root_package_name: org.cabi." + schema + "\n")
+    file.write("  root_package_name: org.formshare." + schema + "\n")
+    file.write("  security:\n")
+    file.write("    userdb:\n")
+    file.write("      name: " + schema + "\n")
+    file.write("      jdbc_url: jdbc:mysql://" + request.registry.settings['mysql.host'] + ":" +
+               request.registry.settings['mysql.port'] + "/" + schema + "\n")
+    file.write("      user: " + request.registry.settings['mysql.user'] + "\n")
+    file.write("      password: " + request.registry.settings['mysql.password'] + "\n")
+    file.write("      user_table_name: odata_users\n")
+    # file.write("      role_table_name: odata_roles\n") Jetty
+    file.write("      user_role_table_name: odata_user_roles\n")
     file.close()
     args = ["odata_generator", "-c", yml_file, schema, temp_dir]
 
@@ -730,13 +737,29 @@ def build_odata_service(request, schema):
                         shutil.copyfile(source_war_file, target_war_file)
                     except Exception as e:
                         log.error("Unable to copy WAR file to final directory:" + str(e))
+
+                    # Load the mapping table
+                    mapping_file = os.path.join(get_odk_path(request), *["tmp", instance_id, "sql", "schema_map.sql"])
+                    args = ["mysql", "--defaults-file=" + cnf_file, schema]
+                    with open(mapping_file) as input_file:
+                        proc = Popen(
+                            args, stdin=input_file, stderr=PIPE, stdout=PIPE)
+                        output, error = proc.communicate()
+                        if proc.returncode != 0:
+                            error_message = "Error creating database \n"
+                            error_message = error_message + "File: " + mapping_file + "\n"
+                            error_message = error_message + "Error: \n"
+                            error_message = error_message + error.decode() + "\n"
+                            error_message = error_message + "Output: \n"
+                            error_message = error_message + output.encode() + "\n"
+                            log.error(error_message)
         else:
-            log.error("ODATA Generator Error: " + stdout.decode() + " - " + stderr.decode() + " - " + " ".join(args))
+            log.error("ODATA Generator Error: " + stdout + " - " + stderr + " - " + " ".join(args))
     
         # Do not stop the process if OData does not build
         return 0, ""
     except Exception as e:
-        log.error("Error generating ODK: " + str(e))
+        log.error("Error generating OData Servlet: " + str(e))
         return 0, ""
 
 
@@ -888,12 +911,27 @@ def create_repository(request, project, form, odk_dir, xform_directory, primary_
             audit.write("audit_insdeldata TEXT NULL ,\n")
             audit.write("PRIMARY KEY (audit_id) )\n")
             audit.write(" ENGINE = InnoDB CHARSET=utf8;\n")
+            audit.write("\n")
+            audit.write("CREATE TABLE odata_users (user_name VARCHAR(120) NOT NULL PRIMARY KEY,"
+                        "password VARCHAR(32) NOT NULL) ENGINE = InnoDB CHARSET=utf8;\n")
+            audit.write("\n")
+            audit.write("CREATE TABLE odata_user_roles (user_name VARCHAR(120) NOT NULL,role VARCHAR(30) NOT NULL,"
+                        "PRIMARY KEY (user_name, role)) ENGINE = InnoDB CHARSET=utf8;\n")
+            audit.write("\n")
+            audit.write("CREATE TABLE table_mapping (table_name VARCHAR(255) NOT NULL,"
+                        "entity_name VARCHAR(255) NOT NULL,PRIMARY KEY (table_name)) ENGINE = InnoDB CHARSET=utf8;\n")
+            audit.write("\n")
+            audit.write("CREATE TABLE table_permissions (table_name VARCHAR(255) NOT NULL,user_name VARCHAR(120),"
+                        "permissions VARCHAR(4),PRIMARY KEY (table_name, user_name)) ENGINE = InnoDB CHARSET=utf8;\n")
+
             audit.close()
 
             error, db_message = build_database(request.registry.settings['mysql.cnf'], create_file, insert_file,
                                                audit_file, schema)
             if not error:
-                odata_error_code, odata_error_message = build_odata_service(request, schema)
+                odata_error_code, odata_error_message = build_odata_service(request,
+                                                                            request.registry.settings['mysql.cnf'],
+                                                                            schema)
                 if odata_error_code == 0:
                     form_data = {'form_schema': schema, 'form_pkey': primary_key}
                     update_form(request, project, form, form_data)

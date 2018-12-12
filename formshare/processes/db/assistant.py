@@ -1,6 +1,5 @@
 from formshare.models import Collaborator, Project, map_from_schema, map_to_schema, Userproject
 import logging
-import sys
 import datetime
 from sqlalchemy.exc import IntegrityError
 from formshare.config.encdecdata import encode_data
@@ -78,11 +77,11 @@ def delete_assistant(request, project, assistant):
             Collaborator.coll_id == assistant).delete()
         request.dbsession.flush()
         return True, ""
-    except RuntimeError:
+    except Exception as e:
         log.error(
-            "Error {} while removing assistant {} from project {}".format(sys.exc_info()[0], assistant, project))
+            "Error {} while removing assistant {} from project {}".format(str(e), assistant, project))
         request.dbsession.rollback()
-        return False, sys.exc_info()[0]
+        return False, str(e)
 
 
 def add_assistant(request, project, assistant_data):
@@ -99,12 +98,12 @@ def add_assistant(request, project, assistant_data):
     except IntegrityError:
         request.dbsession.rollback()
         return False, request.translate("The assistant is already part of this project")
-    except RuntimeError:
+    except Exception as e:
         request.dbsession.rollback()
         log.error(
-            "Error {} while adding assistant {} in project {}".format(sys.exc_info()[0], assistant_data['coll_name'],
+            "Error {} while adding assistant {} in project {}".format(str(e), assistant_data['coll_name'],
                                                                       project))
-        return False, sys.exc_info()[0]
+        return False, str(e)
 
 
 def modify_assistant(request, project, assistant, assistant_data):
@@ -117,12 +116,12 @@ def modify_assistant(request, project, assistant, assistant_data):
     except IntegrityError:
         request.dbsession.rollback()
         return False, request.translate("The assistant is already part of this project")
-    except RuntimeError:
+    except Exception as e:
         request.dbsession.rollback()
         log.error(
-            "Error {} while adding assistant {} in project {}".format(sys.exc_info()[0], assistant_data['coll_name'],
+            "Error {} while adding assistant {} in project {}".format(str(e), assistant_data['coll_name'],
                                                                       project))
-        return False, sys.exc_info()[0]
+        return False, str(e)
 
 
 def change_assistant_password(request, project, assistant, password):
@@ -132,11 +131,11 @@ def change_assistant_password(request, project, assistant, password):
             Collaborator.coll_id == assistant).update({'coll_password': encrypted_password})
         request.dbsession.flush()
         return True, ''
-    except RuntimeError:
+    except Exception as e:
         request.dbsession.rollback()
         log.error(
-            "Error {} while adding assistant {} in project {}".format(sys.exc_info()[0], assistant, project))
-        return False, sys.exc_info()[0]
+            "Error {} while adding assistant {} in project {}".format(str(e), assistant, project))
+        return False, str(e)
 
 
 def get_project_from_assistant(request, user, requested_project, assistant):

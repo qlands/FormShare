@@ -437,6 +437,7 @@ def add_file_to_form(request, project, form, file_name, file_url=None, overwrite
             request.dbsession.flush()
 
         except Exception as e:
+            request.dbsession.rollback()
             log.error("Error {} while adding file {} in "
                       "form {} of project {} ".format(str(e), file_name, form, project))
             return False, str(e)
@@ -450,6 +451,7 @@ def add_file_to_form(request, project, form, file_name, file_url=None, overwrite
                     MediaFile.form_id == form).filter(MediaFile.file_name == file_name).update({'file_md5': md5sum})
                 request.dbsession.flush()
             except Exception as e:
+                request.dbsession.rollback()
                 log.error(
                     "Error {} while adding file {} in form {} of project {} ".format(str(e), file_name, form, project))
                 return False, str(e)
@@ -462,6 +464,7 @@ def remove_file_from_form(request, project, form, file_name):
             MediaFile.form_id == form).filter(MediaFile.file_name == file_name).delete()
         request.dbsession.flush()
     except Exception as e:
+        request.dbsession.rollback()
         log.error(
             "Error {} while deleting file {} in form {} of project {} ".format(str(e), file_name, form, project))
         return False, str(e)
@@ -493,6 +496,7 @@ def update_file_info(request, project, form, file_name, md5sum, download_datetim
             {'file_lstdwnld': download_datetime, 'file_dwnlderror': 0, 'file_md5': md5sum})
         request.dbsession.flush()
     except Exception as e:
+        request.dbsession.rollback()
         log.error("Error {} while updating datetime in file {} in form {} of project {} ".format(str(e),
                                                                                                  file_name, form,
                                                                                                  project))
@@ -507,6 +511,7 @@ def set_file_with_error(request, project, form, file_name):
             {'file_dwnlderror': 1})
         request.dbsession.flush()
     except Exception as e:
+        request.dbsession.rollback()
         log.error(
             "Error {} while updating error in file {} in form {} of project {} ".format(str(e), file_name, form,
                                                                                         project))

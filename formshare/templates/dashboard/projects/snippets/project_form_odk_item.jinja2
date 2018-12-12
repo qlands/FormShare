@@ -14,10 +14,10 @@
                 {% endif %}
                 {% if form.form_target > 0 %}
                     <div class="progress">
-                        <div class="progress-bar progress-bar-striped progress-bar-animated progress-bar-warning" style="width: {{ form.submissions*100/form.form_target }}%" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
+                        <div class="progress-bar progress-bar-striped progress-bar-animated {% if form.form_schema == None %}progress-bar-warning {% else %}progress-bar-primary{% endif %}" style="width: {{ form.submissions*100/form.form_target }}%" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
                     </div>
                 {% endif %}
-                {% if form.submissions > 0  %}{{ form.submissions }} {% if form.form_target > 0 %}of {{ form.form_target }} {% endif %} submissions {% if form.form_schema != None %}: <strong><a class="text-success">{{ form.indb }} {{ _('in database') }}</a>. <a class="text-danger">{{ form.inlogs }} {{ _('in error logs') }}</a></strong>{% endif %} {% endif %}
+                {% if form.submissions > 0  %}{{ form.submissions }} {% if form.form_target > 0 %}of {{ form.form_target }} {% endif %} submissions {% if form.form_schema != None %}: <strong><a target="_blank" href="{{ request.route_url('clean', userid=projectData.owner, projcode=projectData.project_code,formid=form.form_id) }}" class="text-success">{{ form.indb }} {{ _('in database') }}.</a> {% if form.inlogs > 0 %}<a target="_blank" href="{{ request.route_url('errorlist', userid=projectData.owner, projcode=projectData.project_code,formid=form.form_id) }}" class="text-warning">{{ form.inlogs }} {{ _('in error logs') }}.</a>{% endif %} {% if form.inerror > 0 %}<a target="_blank" href="{{ request.route_url('errorlist', userid=projectData.owner, projcode=projectData.project_code,formid=form.form_id) }}" class="text-danger">{{ form.inerror }} {{ _('in error logs') }}</a>{% endif %}</strong>{% endif %} {% endif %}
                 <div class="actions">
                     <a class="btn btn-xs btn-white" href="{{ request.route_url('form_download_xlsx',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id) }}"><i class="fa far fa-file-excel"></i> {{ _('Download ODK XLSX form') }}</a>
                     {% if form.form_schema == None %}
@@ -27,7 +27,11 @@
                         {% endif %}
                         <a href="{{ request.route_url('createrepository',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id) }}" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-database"></i> {{ _('Create repository') }} </a>
                     {% else %}
-
+                        <a class="btn btn-xs btn-white" href=""><i class="fa fa-rss"></i> {{ _('OData endpoint') }}</a>
+                        <a class="btn btn-xs btn-white" href="{{ request.route_url('form_download_xlsx_data',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next':request.url}) }}"><i class="fa fa-download"></i> {{ _('Download data in XLS form') }}</a>
+                        <a class="btn btn-xs btn-white" href="{{ request.route_url('form_download_media',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next':request.url}) }}"><i class="fa fa-images"></i> {{ _('Download submitted media') }}</a>
+                        <a class="btn btn-xs btn-white" target="_blank" href="{{ request.route_url('clean', userid=projectData.owner, projcode=projectData.project_code,formid=form.form_id) }}"><i class="fa fa-pencil"></i> {{ _('Clean data') }}</a>
+                        <a class="btn btn-xs btn-white" target="_blank" href="{{ request.route_url('errorlist', userid=projectData.owner, projcode=projectData.project_code,formid=form.form_id) }}"><i class="fa fa-bug"></i> {{ _('Clean error logs') }}</a>
                     {% endif %}
                     <a {% if form.form_accsub ==0 %} data-title="{{ _('Activate form') }}" data-message="{{ _('Are you sure that you want to activate this form') }}" urn="{{ request.route_url('activate_form', userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next': request.url}) }}"{% else %}data-title="{{ _('Deactivate form') }}" data-message="{{ _('Are you sure that you want to deactivate this form') }}" urn="{{ request.route_url('deactivate_form', userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next': request.url}) }}"{% endif %} class="btn btn-xs btn-white change-status"><i {% if form.form_accsub ==0 %}class="fas fa-check"{% else %}class="fas fa-ban"{% endif %}></i> {% if form.form_accsub ==0 %}{{ _('Set as active') }}{% else %}{{ _('Set as inactive') }}{% endif %}</a>
                     <a class="btn btn-xs btn-white" href="{{ request.route_url('form_edit',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next': request.url}) }}" ><i class="fa fa-pencil text-warning"></i> {{ _('Edit') }}</a>

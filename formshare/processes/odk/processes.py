@@ -13,6 +13,9 @@ from formshare.processes.db.form import get_assistant_forms
 from formshare.processes.db.assistant import get_project_from_assistant
 from sqlalchemy import and_, func
 from sqlalchemy.sql import label
+import logging
+
+log = logging.getLogger(__name__)
 
 
 def get_assistant_name(request, project, assistant):
@@ -441,7 +444,11 @@ def save_separation_order(request, project, form, table_name, order, order2):
         if item["type"] == "question":
             return False, request.translate("One item is outside a group!")
 
-    request.dbsession.flush()
+    try:
+        request.dbsession.flush()
+    except Exception as e:
+        log.error(str(e))
+        request.dbsession.rollback()
     return True, ""
 
 
@@ -697,83 +704,85 @@ def handle_uploaded_file(f, target_file):
     os.rename(tmp_filepath, target_file)
 
 
-def checkout_submission(request, project, form, submission, assistant):
+def checkout_submission(request, project, form, submission, project_of_assistant, assistant):
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(Jsonlog.form_id == form,
                                                                                   Jsonlog.log_id == submission).update(
         {'status': 2})
     sequence = str(uuid.uuid4())
     sequence = sequence[-12:]
     new_record = Jsonhistory(project_id=project, form_id=form, log_id=submission, log_sequence=sequence,
-                             log_dtime=datetime.datetime.now(), log_action=2, enum_project=project, coll_id=assistant)
+                             log_dtime=datetime.datetime.now(), log_action=2, enum_project=project_of_assistant,
+                             coll_id=assistant)
     request.dbsession.add(new_record)
 
 
-def cancel_checkout(request, project, form, submission, assistant):
+def cancel_checkout(request, project, form, submission, project_of_assistant, assistant):
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(Jsonlog.form_id == form,
                                                                                   Jsonlog.log_id == submission).update(
         {'status': 1})
     sequence = str(uuid.uuid4())
     sequence = sequence[-12:]
     new_record = Jsonhistory(project_id=project, form_id=form, log_id=submission, log_sequence=sequence,
-                             log_dtime=datetime.datetime.now(), log_action=5, enum_project=project, coll_id=assistant)
+                             log_dtime=datetime.datetime.now(), log_action=5, enum_project=project_of_assistant,
+                             coll_id=assistant)
     request.dbsession.add(new_record)
 
 
-def cancel_revision(request, project, form, submission, assistant, revision):
+def cancel_revision(request, project, form, submission, project_of_assistant, assistant, revision):
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(Jsonlog.form_id == form,
                                                                                   Jsonlog.log_id == submission).update(
         {'status': 1})
     sequence = str(uuid.uuid4())
     sequence = sequence[-12:]
     new_record = Jsonhistory(project_id=project, form_id=form, log_id=submission, log_sequence=sequence,
-                             log_dtime=datetime.datetime.now(), log_action=6, enum_project=project, coll_id=assistant,
-                             log_commit=revision)
+                             log_dtime=datetime.datetime.now(), log_action=6, enum_project=project_of_assistant,
+                             coll_id=assistant, log_commit=revision)
     request.dbsession.add(new_record)
 
 
-def fix_revision(request, project, form, submission, assistant, revision):
+def fix_revision(request, project, form, submission, project_of_assistant, assistant, revision):
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(Jsonlog.form_id == form,
                                                                                   Jsonlog.log_id == submission).update(
         {'status': 0})
     sequence = str(uuid.uuid4())
     sequence = sequence[-12:]
     new_record = Jsonhistory(project_id=project, form_id=form, log_id=submission, log_sequence=sequence,
-                             log_dtime=datetime.datetime.now(), log_action=0, enum_project=project, coll_id=assistant,
-                             log_commit=revision)
+                             log_dtime=datetime.datetime.now(), log_action=0, enum_project=project_of_assistant,
+                             coll_id=assistant, log_commit=revision)
     request.dbsession.add(new_record)
 
 
-def fail_revision(request, project, form, submission, assistant, revision):
+def fail_revision(request, project, form, submission, project_of_assistant, assistant, revision):
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(Jsonlog.form_id == form,
                                                                                   Jsonlog.log_id == submission).update(
         {'status': 1})
     sequence = str(uuid.uuid4())
     sequence = sequence[-12:]
     new_record = Jsonhistory(project_id=project, form_id=form, log_id=submission, log_sequence=sequence,
-                             log_dtime=datetime.datetime.now(), log_action=7, enum_project=project, coll_id=assistant,
-                             log_commit=revision)
+                             log_dtime=datetime.datetime.now(), log_action=7, enum_project=project_of_assistant,
+                             coll_id=assistant, log_commit=revision)
     request.dbsession.add(new_record)
 
 
-def disregard_revision(request, project, form, submission, assistant, notes):
+def disregard_revision(request, project, form, submission, project_of_assistant, assistant, notes):
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(Jsonlog.form_id == form,
                                                                                   Jsonlog.log_id == submission).update(
         {'status': 4})
     sequence = str(uuid.uuid4())
     sequence = sequence[-12:]
     new_record = Jsonhistory(project_id=project, form_id=form, log_id=submission, log_sequence=sequence,
-                             log_dtime=datetime.datetime.now(), log_action=4, enum_project=project, coll_id=assistant,
-                             log_notes=notes)
+                             log_dtime=datetime.datetime.now(), log_action=4, enum_project=project_of_assistant,
+                             coll_id=assistant, log_notes=notes)
     request.dbsession.add(new_record)
 
 
-def cancel_disregard_revision(request, project, form, submission, assistant, notes):
+def cancel_disregard_revision(request, project, form, submission, project_of_assistant, assistant, notes):
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(Jsonlog.form_id == form,
                                                                                   Jsonlog.log_id == submission).update(
         {'status': 1})
     sequence = str(uuid.uuid4())
     sequence = sequence[-12:]
     new_record = Jsonhistory(project_id=project, form_id=form, log_id=submission, log_sequence=sequence,
-                             log_dtime=datetime.datetime.now(), log_action=8, enum_project=project, coll_id=assistant,
-                             log_notes=notes)
+                             log_dtime=datetime.datetime.now(), log_action=8, enum_project=project_of_assistant,
+                             coll_id=assistant, log_notes=notes)
     request.dbsession.add(new_record)

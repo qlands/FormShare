@@ -1,6 +1,5 @@
 from formshare.models import Collgroup, Collingroup, Collaborator, map_from_schema, map_to_schema
 import logging
-import sys
 import datetime
 import uuid
 from sqlalchemy.exc import IntegrityError
@@ -44,11 +43,11 @@ def delete_group(request, project, group):
             Collgroup.group_id == group).delete()
         request.dbsession.flush()
         return True, ""
-    except RuntimeError:
+    except Exception as e:
         log.error(
-            "Error {} while removing group {} from project {}".format(sys.exc_info()[0], group, project))
+            "Error {} while removing group {} from project {}".format(str(e), group, project))
         request.dbsession.rollback()
-        return False, sys.exc_info()[0]
+        return False, str(e)
 
 
 def add_group(request, project, group_data):
@@ -73,11 +72,11 @@ def add_group(request, project, group_data):
             request.dbsession.rollback()
             log.error("The group code {} already exists in project {}".format(group_id, project))
             return False, request.translate("The group is already part of this project")
-        except RuntimeError:
+        except Exception as e:
             request.dbsession.rollback()
-            log.error("Error {} while adding group {} in project {}".format(sys.exc_info()[0], group_data['group_desc'],
+            log.error("Error {} while adding group {} in project {}".format(str(e), group_data['group_desc'],
                                                                             project))
-            return False, sys.exc_info()[0]
+            return False, str(e)
     else:
         return False, request.translate("Such group already exists in this project")
 
@@ -97,11 +96,11 @@ def modify_group(request, project, group, group_data):
         except IntegrityError:
             request.dbsession.rollback()
             return False, request.translate("The group is already part of this project")
-        except RuntimeError:
+        except Exception as e:
             request.dbsession.rollback()
-            log.error("Error {} while editing collaborator {} in project {}".format(sys.exc_info()[0],
+            log.error("Error {} while editing collaborator {} in project {}".format(str(e),
                                                                                     group_data['group_desc'], project))
-            return False, sys.exc_info()[0]
+            return False, str(e)
     else:
         return False, request.translate("Such group already exists in this project")
 
@@ -117,12 +116,12 @@ def add_assistant_to_group(request, project, group, assistant_project, assistant
         request.dbsession.rollback()
         log.error("The group member {} already exists in group {} of project {}".format(assistant, group, project))
         return False, request.translate("The member is already part of this group")
-    except RuntimeError:
+    except Exception as e:
         request.dbsession.rollback()
         log.error(
-            "Error {} while adding member {} in group {} of project {}".format(sys.exc_info()[0], assistant, group,
+            "Error {} while adding member {} in group {} of project {}".format(str(e), assistant, group,
                                                                                project))
-        return False, sys.exc_info()[0]
+        return False, str(e)
 
 
 def remove_assistant_from_group(request, project, group, assistant_project, assistant):
@@ -136,8 +135,9 @@ def remove_assistant_from_group(request, project, group, assistant_project, assi
         request.dbsession.rollback()
         log.error("Cannot remove member {} from group {} of project {}".format(assistant, group, project))
         return False, request.translate("Cannot remove the member")
-    except RuntimeError:
+    except Exception as e:
         request.dbsession.rollback()
         log.error(
-            "Error {} while removing member {} in group {} of project {}".format(sys.exc_info()[0], assistant, group,
+            "Error {} while removing member {} in group {} of project {}".format(str(e), assistant, group,
                                                                                  project))
+        return False, str(e)

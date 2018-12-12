@@ -2,7 +2,6 @@ from formshare.models import Project, Userproject, map_to_schema, map_from_schem
     Submission, Odkform, Collaborator, ProjectFile
 import logging
 import datetime
-import sys
 import uuid
 from sqlalchemy.exc import IntegrityError
 from formshare.processes.elasticsearch.repository_index import get_dataset_stats_for_project
@@ -166,20 +165,22 @@ def add_project(request, user, project_data):
                 request.dbsession.add(new_access)
                 request.dbsession.flush()
             except IntegrityError:
+                request.dbsession.rollback()
                 log.error("Duplicated access for user {} in project {}".format(user, mapped_data["project_id"]))
                 return False, request.translate("Error allocating access")
-            except RuntimeError:
-                log.error("Error {} while allocating access for user {} in project {}".format(sys.exc_info()[0], user,
+            except Exception as e:
+                request.dbsession.rollback()
+                log.error("Error {} while allocating access for user {} in project {}".format(str(e), user,
                                                                                               mapped_data[
                                                                                                   "project_id"]))
-                return False, sys.exc_info()[0]
+                return False, str(e)
             return True, project_data['project_id']
         except IntegrityError:
             log.error("Duplicated project {}".format(mapped_data["project_id"]))
             return False, request.translate("The project already exist")
-        except RuntimeError:
-            log.error("Error {} while inserting project {}".format(sys.exc_info()[0], mapped_data["project_id"]))
-            return False, sys.exc_info()[0]
+        except Exception as e:
+            log.error("Error {} while inserting project {}".format(str(e), mapped_data["project_id"]))
+            return False, str(e)
     else:
         return False, request.translate("A project with name '{}' already exists in your account").format(
             project_data["project_code"])
@@ -194,9 +195,10 @@ def modify_project(request, user, project, project_data):
         try:
             request.dbsession.query(Project).filter(Project.project_id == project).update(mapped_data)
             request.dbsession.flush()
-        except RuntimeError:
-            log.error("Error {} while updating project {}".format(sys.exc_info()[0], project))
-            return False, sys.exc_info()[0]
+        except Exception as e:
+            request.dbsession.rollback()
+            log.error("Error {} while updating project {}".format(str(e), project))
+            return False, str(e)
         return True, ""
     else:
         return False, request.translate("A project with name '{}' already exists in your account").format(
@@ -217,9 +219,10 @@ def delete_project(request, user, project):
                 request.dbsession.query(Userproject).filter(Userproject.user_id == user).filter(
                     Userproject.project_id == new_active_project).update({'project_active': 1})
                 request.dbsession.flush()
-    except RuntimeError:
-        log.error("Error {} while deleting project {}".format(sys.exc_info()[0], project))
-        return False, sys.exc_info()[0]
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error("Error {} while deleting project {}".format(str(e), project))
+        return False, str(e)
     return True, ""
 
 
@@ -230,9 +233,10 @@ def set_project_as_active(request, user, project):
         request.dbsession.query(Userproject).filter(Userproject.user_id == user).filter(
             Userproject.project_id == project).update({'project_active': 1})
         request.dbsession.flush()
-    except RuntimeError:
-        log.error("Error {} while setting project {} as active".format(sys.exc_info()[0], project))
-        return False, sys.exc_info()[0]
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error("Error {} while setting project {} as active".format(str(e), project))
+        return False, str(e)
     return True, ""
 
 
@@ -247,9 +251,10 @@ def add_file_to_project(request, project, file_name):
             request.dbsession.add(new_file)
             request.dbsession.flush()
 
-        except RuntimeError:
-            log.error("Error {} while adding file {} in project {}".format(sys.exc_info()[0], file_name, project))
-            return False, sys.exc_info()[0]
+        except Exception as e:
+            request.dbsession.rollback()
+            log.error("Error {} while adding file {} in project {}".format(str(e), file_name, project))
+            return False, str(e)
         return True, new_file_id
     else:
         return False, request.translate("The file {} already exist".format(file_name))
@@ -266,9 +271,10 @@ def remove_file_from_project(request, project, file_name):
             ProjectFile.file_name == file_name).delete()
         request.dbsession.flush()
         return True, ""
-    except RuntimeError:
-        log.error("Error {} while removing file {} in project {}".format(sys.exc_info()[0], file_name, project))
-        return False, sys.exc_info()[0]
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error("Error {} while removing file {} in project {}".format(str(e), file_name, project))
+        return False, str(e)
 
 
 def get_project_details(request, project):

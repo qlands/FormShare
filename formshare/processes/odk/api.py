@@ -14,7 +14,8 @@ from formshare.processes.db import assistant_has_form, get_assistant_forms, get_
     form_exists, get_form_directory, get_form_xml_file, get_form_xls_file, update_form, get_form_data, \
     get_form_schema, get_submission_data, add_submission, add_json_log, update_json_status, add_json_history, \
     form_file_exists, get_url_from_file, set_file_with_error, update_file_info, get_project_from_assistant, \
-    get_form_files, get_project_code_from_id, get_form_geopoint, get_media_files, add_file_to_form
+    get_form_files, get_project_code_from_id, get_form_geopoint, get_media_files, add_file_to_form, \
+    add_submission_same_as
 import uuid
 import datetime
 import re
@@ -402,8 +403,8 @@ def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
     except PyXFormError as e:
         log.error("Error {} while adding form {} in project {}".format(str(e), input_file_name, project_id))
         return False, str(e)
-    except RuntimeError:
-        log.error("Error {} while adding form {} in project {}".format(sys.exc_info()[0], input_file_name, project_id))
+    except Exception as e:
+        log.error("Error {} while adding form {} in project {}".format(str(e), input_file_name, project_id))
         return False, sys.exc_info()[0]
 
 
@@ -536,8 +537,8 @@ def update_odk_form(request, project_id, for_form_id, user_id, odk_dir, form_dat
     except PyXFormError as e:
         log.error("Error {} while adding form {} in project {}".format(str(e), input_file_name, project_id))
         return False, str(e)
-    except RuntimeError:
-        log.error("Error {} while adding form {} in project {}".format(sys.exc_info()[0], input_file_name, project_id))
+    except Exception as e:
+        log.error("Error {} while adding form {} in project {}".format(str(e), input_file_name, project_id))
         return False, sys.exc_info()[0]
 
 class FileIterator(object):
@@ -727,8 +728,8 @@ def build_odata_service(request, schema):
                     target_war_file = os.path.join(request.registry.settings['tomcat.wardirectory'], schema + ".war")
                     try:
                         shutil.copyfile(source_war_file, target_war_file)
-                    except RuntimeError:
-                        log.error("Unable to copy WAR file to final directory")
+                    except Exception as e:
+                        log.error("Unable to copy WAR file to final directory:" + str(e))
         else:
             log.error("ODATA Generator Error: " + stdout.decode() + " - " + stderr.decode() + " - " + " ".join(args))
     
@@ -905,8 +906,8 @@ def create_repository(request, project, form, odk_dir, xform_directory, primary_
                         for file in files:
                             try:
                                 os.remove(file)
-                            except RuntimeError:
-                                pass
+                            except Exception as e:
+                                log.error(str(e))
                     submissions_path = os.path.join(odk_dir, *['forms', xform_directory, "submissions", '*/'])
                     files = glob.glob(submissions_path)
                     if files:
@@ -914,8 +915,8 @@ def create_repository(request, project, form, odk_dir, xform_directory, primary_
                             if file[-5:] != "logs/" and file[-5:] != "maps/":
                                 try:
                                     shutil.rmtree(file)
-                                except RuntimeError:
-                                    pass
+                                except Exception as e:
+                                    log.error(str(e))
 
                     return 0, ""
                 else:
@@ -938,7 +939,7 @@ def move_media_files(odk_dir, xform_directory, src_submission, trg_submission):
     for file in files:
         try:
             shutil.move(file, target_path)
-        except RuntimeError as e:
+        except Exception as e:
             log.error(
                 "moveMediaFiles. Error moving from " + src_submission + " to " + trg_submission + " . Message: " + str(
                     e))
@@ -1029,20 +1030,24 @@ def convert_xml_to_json(odk_dir, xml_file, xform_directory, schema, xml_form_fil
                         stdout, stderr = p.communicate()
                         # An error 2 is an SQL error that goes to the logs
                         if p.returncode == 0 or p.returncode == 2:
-                            added, message = add_submission(request, project, form, assistant, submission_id, md5sum,
-                                                            p.returncode)
+                            project_of_assistant = get_project_from_assistant(request, user, project, assistant)
+                            added, message = add_submission(request, project, form, project_of_assistant, assistant,
+                                                            submission_id, md5sum, p.returncode)
+
                             if not added:
+                                log.error(message)
                                 return 1, message
-                            else:
-                                # Add the JSON to the Elastic Search index
-                                create_dataset_index(request, user, project_code, form)
-                                add_dataset(request, user, project_code, form, submission_id, submission_data)
 
                             if p.returncode == 2:
                                 added, message = add_json_log(request, project, form, submission_id, json_file,
-                                                              log_file, 1, assistant)
+                                                              log_file, 1, project_of_assistant, assistant)
                                 if not added:
+                                    log.error(message)
                                     return 1, message
+                            else:
+                                # Add the JSON to the Elastic Search index but only submissions without error
+                                create_dataset_index(request, user, project_code, form)
+                                add_dataset(request, user, project_code, form, submission_id, submission_data)
 
                             return 0, ""
                         else:
@@ -1057,9 +1062,11 @@ def convert_xml_to_json(odk_dir, xml_file, xform_directory, schema, xml_form_fil
                         # This will fix the issue when the media files are so big
                         # that multiple posts are done by ODK Collect for the same
                         # submission
-
-                        added, message = add_submission(request, project, form, assistant, submission_id, md5sum, 0)
+                        project_of_assistant = get_project_from_assistant(request, user, project, assistant)
+                        added, message = add_submission_same_as(request, project, form, project_of_assistant, assistant,
+                                                                submission_id, md5sum, 0, sameas.submission_id)
                         if not added:
+                            log.error(message)
                             return 1, message
 
                         move_media_files(odk_dir, xform_directory, submission_id, sameas.submission_id)
@@ -1275,7 +1282,7 @@ def generate_diff(request, project, form, json_file_a, json_file_b):
             return 1, "The files are the same"
 
 
-def store_new_version(request, project, form, submission, assistant, sequence, new_file, notes):
+def store_new_version(request, user, project, form, submission, assistant, sequence, new_file, notes):
     odk_dir = get_odk_path(request)
     form_directory = get_form_directory(request, project, form)
     diff_path = os.path.join(odk_dir, *['forms', form_directory, 'submissions', submission, 'diffs', sequence])
@@ -1303,8 +1310,9 @@ def store_new_version(request, project, form, submission, assistant, sequence, n
                 final.close()
                 if p.returncode == 1:
                     update_json_status(request, project, form, submission, 3)
-
-                    added, message = add_json_history(request, project, form, submission, sequence, 3, assistant, notes)
+                    project_of_assistant = get_project_from_assistant(request, user, project, assistant)
+                    added, message = add_json_history(request, project, form, submission, sequence, 3,
+                                                      project_of_assistant, assistant, notes)
                     if not added:
                         return 1, message
 
@@ -1318,16 +1326,16 @@ def store_new_version(request, project, form, submission, assistant, sequence, n
                         return 1, message
                     else:
                         return 1, "The files are the same"
-            except RuntimeError:
-                log.error(sys.exc_info()[0])
+            except Exception as e:
+                log.error(str(e))
                 if not os.path.exists(current_file):
                     shutil.copyfile(backup_file, current_file)
                 return 1, "Cannot save new submission"
-        except RuntimeError:
-            log.error(sys.exc_info()[0])
+        except Exception as e:
+            log.error(str(e))
             return 1, "Cannot create backup of current submission"
-    except RuntimeError:
-        log.error(sys.exc_info()[0])
+    except Exception as e:
+        log.error(str(e))
         return 1, "Cannot created path for submission"
 
 
@@ -1340,8 +1348,8 @@ def restore_from_revision(request, project, form, submission, sequence):
     try:
         shutil.copyfile(backup_file, current_file)
         return 0, ""
-    except RuntimeError:
-        log.error(sys.exc_info()[0])
+    except Exception as e:
+        log.error(str(e))
         return 1, "Cannot restore from revision " + sequence
 
 
@@ -1380,6 +1388,7 @@ def push_revision(request, user, project, form, submission):
     if p.returncode == 0:
         with open(current_file, 'r') as f:
             submission_data = json.load(f)
+
             # Add the JSON to the Elastic Search index
             project_code = get_project_code_from_id(request, user, project)
             create_dataset_index(request, user, project_code, form)
@@ -1525,7 +1534,7 @@ def get_request_data(request, project, form, table_name, draw, fields, start, le
                                         a_record[field] = record[field]
                                     else:
                                         a_record[field] = record[field][-12:]
-                except RuntimeError as e:
+                except Exception as e:
                     a_record[field] = "AJAX Data error. Report this error to support_for_cabi@qlands.com"
                     log.error("AJAX Error in field " + field + ". Error: " + str(e))
             data.append(a_record)

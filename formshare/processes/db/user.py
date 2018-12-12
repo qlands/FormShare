@@ -1,5 +1,4 @@
 from ...models import map_to_schema, User, map_from_schema, Userproject, Odkform, Project
-import sys
 from sqlalchemy.exc import IntegrityError
 import logging
 import validators
@@ -76,11 +75,13 @@ def register_user(request, user_data):
                 request.dbsession.flush()
                 return True, ""
             except IntegrityError:
+                request.dbsession.rollback()
                 log.error("Duplicated user {}".format(mapped_data["user_id"]))
                 return False, request.translate("Username is already taken")
-            except RuntimeError:
-                log.error("Error {} when inserting user {}".format(sys.exc_info()[0], mapped_data["user_id"]))
-                return False, sys.exc_info()[0]
+            except Exception as e:
+                request.dbsession.rollback()
+                log.error("Error {} when inserting user {}".format(str(e), mapped_data["user_id"]))
+                return False, str(e)
         else:
             log.error("Duplicated user with email {}".format(mapped_data["user_email"]))
             return False, request.translate("Email already taken")
@@ -111,6 +112,7 @@ def update_profile(request, user, profile_data):
         request.dbsession.query(User).filter(User.user_id == user).update(mapped_data)
         request.dbsession.flush()
         return True, ""
-    except RuntimeError:
-        log.error("Error {} when updating user user {}".format(sys.exc_info()[0], user))
-        return False, sys.exc_info()[0]
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error("Error {} when updating user user {}".format(str(e), user))
+        return False, str(e)

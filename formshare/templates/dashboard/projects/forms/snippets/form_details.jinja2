@@ -60,15 +60,23 @@
                     <dt>In database:</dt>
                 </div>
                 <div class="col-sm-8 text-sm-left">
-                    <dd class="mb-1">{{ formDetails.indb }} {% if formDetails.indb > 0 %}<a>[Clean data]</a>{% endif %}</dd>
+                    <dd class="mb-1">{{ formDetails.indb }} {% if formDetails.indb > 0 %}<a target="_blank" href="{{ request.route_url('clean', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}">[Clean data]</a>{% endif %}</dd>
                 </div>
             </dl>
             <dl class="row mb-0">
                 <div class="col-sm-4 text-sm-right">
-                    <dt>In error log:</dt>
+                    <dt>In logs:</dt>
                 </div>
                 <div class="col-sm-8 text-sm-left">
-                    <dd class="mb-1">{{ formDetails.inerror }} {% if formDetails.inerror > 0 %}<a>[Manage errors]</a>{% endif %}</dd>
+                    <dd class="mb-1">{{ formDetails.inlogs }} {% if formDetails.inlogs > 0 %}<a target="_blank" href="{{ request.route_url('errorlist', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}">[View logs]</a>{% endif %}</dd>
+                </div>
+            </dl>
+            <dl class="row mb-0">
+                <div class="col-sm-4 text-sm-right">
+                    <dt>With errors:</dt>
+                </div>
+                <div class="col-sm-8 text-sm-left">
+                    <dd class="mb-1" {% if formDetails.inerror > 0 %}style="color: red"{% endif %}>{{ formDetails.inerror }} {% if formDetails.inerror > 0 %}<a style="color: red" target="_blank" href="{{ request.route_url('errorlist', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}">[Manage errors]</a>{% endif %}</dd>
                 </div>
             </dl>
         {% endif %}

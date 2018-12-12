@@ -1,6 +1,5 @@
 from formshare.models import Userproject, User, map_from_schema
 import logging
-import sys
 import datetime
 from sqlalchemy.exc import IntegrityError
 
@@ -44,10 +43,11 @@ def remove_collaborator_from_project(request, project, collaborator):
             Userproject.user_id == collaborator).delete()
         request.dbsession.flush()
         return True, ""
-    except RuntimeError:
+    except Exception as e:
+        request.dbsession.rollback()
         log.error(
-            "Error {} while removing collaborator {} from project {}".format(sys.exc_info()[0], collaborator, project))
-        return False, sys.exc_info()[0]
+            "Error {} while removing collaborator {} from project {}".format(str(e), collaborator, project))
+        return False, str(e)
 
 
 def set_collaborator_role(request, project, collaborator, role):
@@ -56,12 +56,12 @@ def set_collaborator_role(request, project, collaborator, role):
             Userproject.user_id == collaborator).update({'access_type': role})
         request.dbsession.flush()
         return True, ""
-    except RuntimeError:
+    except Exception as e:
         request.dbsession.rollback()
         log.error(
-            "Error {} while changing role to collaborator {} in project {}".format(sys.exc_info()[0], collaborator,
+            "Error {} while changing role to collaborator {} in project {}".format(str(e), collaborator,
                                                                                    project))
-        return False, sys.exc_info()[0]
+        return False, str(e)
 
 
 def add_collaborator_to_project(request, project, collaborator):
@@ -74,8 +74,8 @@ def add_collaborator_to_project(request, project, collaborator):
     except IntegrityError:
         request.dbsession.rollback()
         return False, request.translate("The collaborator is already part of this project")
-    except RuntimeError:
+    except Exception as e:
         request.dbsession.rollback()
         log.error(
-            "Error {} while adding collaborator {} in project {}".format(sys.exc_info()[0], collaborator, project))
-        return False, sys.exc_info()[0]
+            "Error {} while adding collaborator {} in project {}".format(str(e), collaborator, project))
+        return False, str(e)

@@ -2,10 +2,9 @@ from formshare.models import Submission
 import logging
 import datetime
 from sqlalchemy.exc import IntegrityError
-import sys
 
 
-__all__ = ['get_submission_data', 'add_submission']
+__all__ = ['get_submission_data', 'add_submission', 'add_submission_same_as']
 
 log = logging.getLogger(__name__)
 
@@ -17,11 +16,11 @@ def get_submission_data(request, project, form, md5sum):
     return res
 
 
-def add_submission(request, project, form, assistant, submission, md5sum, status):
+def add_submission(request, project, form, project_of_assistant, assistant, submission, md5sum, status):
     new_submission = Submission(submission_id=submission,
                                 submission_dtime=datetime.datetime.now(),
                                 submission_status=status, project_id=project,
-                                form_id=form, enum_project=project, coll_id=assistant,
+                                form_id=form, enum_project=project_of_assistant, coll_id=assistant,
                                 md5sum=md5sum)
     try:
         request.dbsession.add(new_submission)
@@ -31,10 +30,31 @@ def add_submission(request, project, form, assistant, submission, md5sum, status
         request.dbsession.rollback()
         log.error(str(e))
         return False, str(e)
-    except RuntimeError:
+    except Exception as e:
         request.dbsession.rollback()
-        log.error(sys.exc_info()[0])
-        return False, sys.exc_info()[0]
+        log.error(str(e))
+        return False, str(e)
+
+
+def add_submission_same_as(request, project, form, project_of_assistant, assistant, submission, md5sum, status,
+                           same_as):
+    new_submission = Submission(submission_id=submission,
+                                submission_dtime=datetime.datetime.now(),
+                                submission_status=status, project_id=project,
+                                form_id=form, enum_project=project_of_assistant, coll_id=assistant,
+                                md5sum=md5sum, sameas=same_as)
+    try:
+        request.dbsession.add(new_submission)
+        request.dbsession.flush()
+        return True, ""
+    except IntegrityError as e:
+        request.dbsession.rollback()
+        log.error(str(e))
+        return False, str(e)
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error(str(e))
+        return False, str(e)
 
 
 

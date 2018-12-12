@@ -4,22 +4,34 @@ import os
 
 from pyramid.authentication import AuthTktAuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
+from pyramid_authstack import AuthenticationStackPolicy
 
 
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
     """
 
-    authn_policy = AuthTktAuthenticationPolicy(settings['auth.secret'], cookie_name='formshare_auth_tkt')
+    auth_policy = AuthenticationStackPolicy()
+    policy_array = []
 
+    main_policy = AuthTktAuthenticationPolicy(settings['auth.main.secret'], timeout=60 * 60,
+                                              cookie_name=settings['auth.main.cookie'])
+    auth_policy.add_policy('main', main_policy)
+    policy_array.append({'name': 'main', 'policy': main_policy})
+
+    assistant_policy = AuthTktAuthenticationPolicy(settings['auth.assistant.secret'], timeout=60 * 60,
+                                                   cookie_name=settings['auth.assistant.cookie'])
+    auth_policy.add_policy('assistant', assistant_policy)
+    policy_array.append({'name': 'assistant', 'policy': assistant_policy})
+
+    # authn_policy = AuthTktAuthenticationPolicy(settings['auth.secret'], cookie_name='formshare_auth_tkt')
     authz_policy = ACLAuthorizationPolicy()
-
-    config = Configurator(settings=settings, authentication_policy=authn_policy,
+    config = Configurator(settings=settings, authentication_policy=auth_policy,
                           authorization_policy=authz_policy)
 
     apppath = os.path.dirname(os.path.abspath(__file__))
 
     config.include('.models')
     # Load and configure the host application
-    load_environment(settings, config, apppath)
+    load_environment(settings, config, apppath, policy_array)
     return config.make_wsgi_app()

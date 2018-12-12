@@ -2,8 +2,6 @@ from pyramid.security import remember
 from pyramid.httpexceptions import HTTPFound
 from ..config.auth import get_user_data, get_assistant_data
 from .classes import PublicView
-from pyramid.security import authenticated_userid
-from pyramid.security import forget
 from pyramid.session import check_csrf_token
 from pyramid.httpexceptions import HTTPNotFound
 from formencode.variabledecode import variable_decode
@@ -36,7 +34,8 @@ class LoginView(PublicView):
         # If we logged in then go to dashboard
         next_page = self.request.params.get('next')
         if self.request.method == 'GET':
-            login_data = authenticated_userid(self.request)
+            policy = get_policy(self.request, 'main')
+            login_data = policy.authenticated_userid(self.request)
             if login_data is not None:
                 login_data = literal_eval(login_data)
                 if login_data["group"] == "mainApp":
@@ -63,7 +62,7 @@ class LoginView(PublicView):
                             continue_login = False
                         break  # Only one plugging will be called to extend after_login
                     if continue_login:
-                        headers = remember(self.request, str(login_data))
+                        headers = remember(self.request, str(login_data), policies=['main'])
                         next_page = self.request.params.get('next') or self.request.route_url('dashboard',
                                                                                               userid=user.login)
                         return HTTPFound(location=next_page, headers=headers)
@@ -85,7 +84,8 @@ class AssistantLoginView(PublicView):
         next_page = self.request.params.get('next') or self.request.route_url('assistant_forms', userid=user_id,
                                                                               projcode=project_code)
         if self.request.method == 'GET':
-            login_data = authenticated_userid(self.request)
+            policy = get_policy(self.request, 'assistant')
+            login_data = policy.authenticated_userid(self.request)
             if login_data is not None:
                 login_data = literal_eval(login_data)
                 if login_data["group"] == "collaborator":
@@ -116,7 +116,7 @@ class AssistantLoginView(PublicView):
                             continue_login = False
                         break  # Only one plugging will be called to extend after_collaborator_login
                     if continue_login:
-                        headers = remember(self.request, str(login_data))
+                        headers = remember(self.request, str(login_data), policies=['assistant'])
                         return HTTPFound(location=next_page, headers=headers)
                 else:
                     self.errors.append(self._("Invalid credentials"))
@@ -125,14 +125,24 @@ class AssistantLoginView(PublicView):
         return {'next': next_page, 'userid': user_id, 'projcode': project_code}
 
 
+def get_policy(request, policy_name):
+    policies = request.policies()
+    for policy in policies:
+        if policy['name'] == policy_name:
+            return policy['policy']
+    return None
+
+
 def log_out_view(request):
-    headers = forget(request)
+    policy = get_policy(request, 'main')
+    headers = policy.forget(request)
     loc = request.route_url('home')
     raise HTTPFound(location=loc, headers=headers)
 
 
 def assistant_log_out_view(request):
-    headers = forget(request)
+    policy = get_policy(request, 'assistant')
+    headers = policy.forget(request)
     project_code = request.matchdict['projcode']
     user_id = request.matchdict['userid']
     loc = request.route_url('assistant_login', userid=user_id, projcode=project_code)
@@ -205,7 +215,7 @@ class RegisterView(PublicView):
                                                 next_page = plugin_next_page
                                     if next_page == self.request.route_url('dashboard', userid=data["user_id"]):
                                         login_data = {"login": data["user_id"], "group": "mainApp"}
-                                        headers = remember(self.request, str(login_data))
+                                        headers = remember(self.request, str(login_data), policies=['main'])
                                         return HTTPFound(
                                             location=self.request.route_url('dashboard', userid=data["user_id"]),
                                             headers=headers)

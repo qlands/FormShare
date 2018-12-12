@@ -13,6 +13,8 @@ from formshare.processes.elasticsearch.user_index import configure_user_index_ma
 
 my_session_factory = SignedCookieSessionFactory('`h6N[wQ8@S"B$bGy;')
 
+main_policy_array = []
+
 
 def __url_for_static(request, static_file, library='fstatic'):
     """
@@ -24,6 +26,10 @@ def __url_for_static(request, static_file, library='fstatic'):
     :return: URL to the static resource
     """
     return request.application_url + '/' + library + "/" + static_file
+
+
+def get_policy_array(request):
+    return main_policy_array
 
 
 def __helper(request):
@@ -51,7 +57,9 @@ class RequestResources(object):
         return False
 
 
-def load_environment(settings, config, apppath):
+def load_environment(settings, config, apppath, policy_array):
+    for policy in policy_array:
+        main_policy_array.append(policy)
     # Load the feeds manager
     configure_manager(settings)
 
@@ -99,6 +107,8 @@ def load_environment(settings, config, apppath):
     # Add a series of helper functions to the request like pluralize
     helpers.load_plugin_helpers()
     config.add_request_method(__helper, 'h', reify=True)
+
+    config.add_request_method(get_policy_array, 'policies', reify=False)
 
     # Load any change in the configuration done by connected plugins
     for plugin in p.PluginImplementations(p.IConfig):

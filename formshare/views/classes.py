@@ -10,7 +10,6 @@
     :license: AGPL, see LICENSE for more details.
 """
 
-from pyramid.security import authenticated_userid
 from ..config.auth import get_user_data, get_assistant_data
 from pyramid.httpexceptions import HTTPFound
 from pyramid.session import check_csrf_token
@@ -24,7 +23,6 @@ from ast import literal_eval
 from formshare.processes.db import get_project_id_from_name, user_exists, get_user_details, get_active_project, \
     get_user_projects, get_project_from_assistant
 import logging
-from pyramid.security import forget
 log = logging.getLogger(__name__)
 
 
@@ -166,12 +164,22 @@ class PrivateView(object):
             self.classResult["rtl"] = True
         self.classResult['activeMenu'] = ""
 
+    def get_policy(self, policy_name):
+        policies = self.request.policies()
+        for policy in policies:
+            if policy['name'] == policy_name:
+                return policy['policy']
+        return None
+
     def __call__(self):
         error = self.request.session.pop_flash(queue='error')
         if len(error) > 0:
             self.errors.append(error[0])
 
-        login_data = authenticated_userid(self.request)
+        # login_data = authenticated_userid(self.request)
+        policy = self.get_policy('main')
+        login_data = policy.authenticated_userid(self.request)
+
         if login_data is not None:
             login_data = literal_eval(login_data)
         self.guestAccess = False
@@ -200,7 +208,6 @@ class PrivateView(object):
                     else:
                         raise HTTPNotFound()
                 else:
-                    forget(self.request)
                     raise HTTPNotFound()
             else:
                 raise HTTPNotFound()
@@ -214,7 +221,6 @@ class PrivateView(object):
                     else:
                         self.guestAccess = True
             else:
-                forget(self.request)
                 if self.request.registry.settings['auth.allow_guest_access'] == 'false' or self.privateOnly:
                     raise HTTPFound(location=self.request.route_url('login', _query={'next': self.request.url}))
                 else:
@@ -292,7 +298,9 @@ class DashboardView(PrivateView):
 
 class ProfileView(PrivateView):
     def __call__(self):
-        login_data = authenticated_userid(self.request)
+        policy = self.get_policy('main')
+        login_data = policy.authenticated_userid(self.request)
+        # login_data = authenticated_userid(self.request)
         if login_data is not None:
             self.set_active_menu('profile')
             PrivateView.__call__(self)
@@ -335,6 +343,13 @@ class AssistantView(object):
         self.returnRawViewResult = False
         self.project_assistant = None
 
+    def get_policy(self, policy_name):
+        policies = self.request.policies()
+        for policy in policies:
+            if policy['name'] == policy_name:
+                return policy['policy']
+        return None
+
     def __call__(self):
         error = self.request.session.pop_flash(queue='error')
         if len(error) > 0:
@@ -346,7 +361,8 @@ class AssistantView(object):
         if self.projectID is None:
             raise HTTPNotFound()
 
-        login_data = authenticated_userid(self.request)
+        policy = self.get_policy('assistant')
+        login_data = policy.authenticated_userid(self.request)
         if login_data is not None:
             login_data = literal_eval(login_data)
             if login_data["group"] == "collaborators":

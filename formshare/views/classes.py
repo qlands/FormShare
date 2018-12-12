@@ -391,7 +391,7 @@ class AssistantView(object):
         self.resultDict["activeAssistant"] = self.assistant
         self.resultDict["userid"] = self.userID
         self.resultDict["projcode"] = self.projectCode
-        self.resultDict["errors"] = self.errors
+        self.resultDict["posterrors"] = self.errors
         process_dict = self.process_view()
         if not self.returnRawViewResult:
             self.resultDict.update(process_dict)

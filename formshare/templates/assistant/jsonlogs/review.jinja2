@@ -28,6 +28,7 @@
 {% endblock breadcrumbs %}
 
 {% block maincontent %}
+    {{ form.display_errors(posterrors) }}
     <div class="ibox">
         <div class="ibox-title">
             <h5>{{ _('Compare submissions') }}</h5>

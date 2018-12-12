@@ -8,7 +8,7 @@
 {% endblock logingheadmsg %}
 
 {% block loginform %}
-    <form class="m-t" role="form" method="post" action="{{ request.route_url('assistant_login', userid=userid, projcode=projcode) }}">
+    <form class="m-t" role="form" method="post" action="{{ request.url }}">
         {{ form.secure_form(request) }}
         <div class="form-group">
             <input type="text" name="login" class="form-control" placeholder="Assistant ID" required="">

@@ -137,7 +137,6 @@ def change_assistant_password(request, project, assistant, password):
             "Error {} while adding assistant {} in project {}".format(str(e), assistant, project))
         return False, str(e)
 
-
 def get_project_from_assistant(request, user, requested_project, assistant):
     # Get all the assistants the user has with that name across projects
     num_assistants = request.dbsession.query(Userproject, Collaborator).filter(

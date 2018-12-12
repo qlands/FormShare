@@ -20,7 +20,7 @@ from ..views.form import FormDetails, AddNewForm, EditForm, DeleteForm, AddFileT
 from ..views.odk import ODKFormList, ODKManifest, ODKMediaFile, ODKPushData, ODKSubmission, ODKXMLForm
 from ..views.repository import GenerateRepository, SeparateTable, NewSeparationGroup, EditSeparationGroup, \
     DeleteSeparationGroup, RepositoryExist
-from ..views.assistant_views.forms import AssistantForms
+from ..views.assistant_views.forms import AssistantForms, ChangeMyAssistantPassword, GetQRCode
 from ..views.assistant_views.jsonlogs import JSONList, JSONCompare, JSONCheckout, JSONCancelCheckout, \
     JSONGetSubmission, JSONCheckin, JSONViewRevision, JSONCancelRevision, JSONPushRevision, JSONDisregard, \
     JSONCancelDisregard, JSONCompareSubmissions
@@ -265,73 +265,85 @@ def load_routes(config):
     # Assistant access
 
     routes.append(
-        add_route('assistant_login', '/user/{userid}/project/{projcode}/assistant/login', AssistantLoginView,
+        add_route('assistant_login', '/user/{userid}/project/{projcode}/assistantaccess/login', AssistantLoginView,
                   'generic/assistant_login.jinja2'))
 
     routes.append(
-        add_route('assistant_logout', '/user/{userid}/project/{projcode}/assistant/logout', assistant_log_out_view,
+        add_route('assistant_logout', '/user/{userid}/project/{projcode}/assistantaccess/logout', assistant_log_out_view,
                   None))
 
     routes.append(
-        add_route('assistant_forms', '/user/{userid}/project/{projcode}/assistant/forms', AssistantForms,
+        add_route('assistant_forms', '/user/{userid}/project/{projcode}/assistantaccess/forms', AssistantForms,
                   'assistant/index.jinja2'))
+
+    routes.append(
+        add_route('assistant_change_my_pass', '/user/{userid}/project/{projcode}/assistantaccess/changemypassword',
+                  ChangeMyAssistantPassword, None))
+
+    routes.append(
+        add_route('assistant_qr_code', '/user/{userid}/project/{projcode}/assistantaccess/form/{formid}/qrcode',
+                  GetQRCode, None))
 
     # JSON logs
 
-    routes.append(add_route('errorlist', '/user/{userid}/project/{projcode}/{formid}/errors', JSONList,
-                            'assistant/jsonlogs/loglist.jinja2'))
-
     routes.append(
-        add_route('comparejsons', '/user/{userid}/project/{projcode}/{formid}/{submissionid}/compare', JSONCompare,
-                  'assistant/jsonlogs/compare.jinja2'))
+        add_route('errorlist', '/user/{userid}/project/{projcode}/assistantaccess/form/{formid}/errors', JSONList,
+                  'assistant/jsonlogs/loglist.jinja2'))
 
-    routes.append(
-        add_route('checkoutjson', '/user/{userid}/project/{projcode}/{formid}/{submissionid}/checkout', JSONCheckout,
-                  None))
+    routes.append(add_route('comparejsons',
+                            '/user/{userid}/project/{projcode}/assistantaccess/form/{formid}/{submissionid}/compare',
+                            JSONCompare, 'assistant/jsonlogs/compare.jinja2'))
 
-    routes.append(add_route('cancelcheckout', '/user/{userid}/project/{projcode}/{formid}/{submissionid}/cancel',
+    routes.append(add_route('checkoutjson',
+                            '/user/{userid}/project/{projcode}/assistantaccess/form/{formid}/{submissionid}/checkout',
+                            JSONCheckout, None))
+
+    routes.append(add_route('cancelcheckout',
+                            '/user/{userid}/project/{projcode}/assistantaccess/form/{formid}/{submissionid}/cancel',
                             JSONCancelCheckout, None))
 
     routes.append(
-        add_route('getsubmission', '/user/{userid}/project/{projcode}/{formid}/{submissionid}/get', JSONGetSubmission,
-                  None))
+        add_route('getsubmission', '/user/{userid}/project/{projcode}/assistantaccess/form/{formid}/{submissionid}/get',
+                  JSONGetSubmission, None))
 
-    routes.append(
-        add_route('checkinjson', '/user/{userid}/project/{projcode}/{formid}/{submissionid}/checkin', JSONCheckin,
-                  'assistant/jsonlogs/checkin.jinja2'))
+    routes.append(add_route('checkinjson',
+                            '/user/{userid}/project/{projcode}/assistantaccess/form/{formid}/{submissionid}/checkin',
+                            JSONCheckin, 'assistant/jsonlogs/checkin.jinja2'))
 
-    routes.append(
-        add_route('viewrevision', '/user/{userid}/project/{projcode}/{formid}/{submissionid}/{revisionid}/view',
-                  JSONViewRevision, 'assistant/jsonlogs/review.jinja2'))
+    routes.append(add_route('viewrevision', '/user/{userid}/project/{projcode}/assistantaccess'
+                                            '/form/{formid}/{submissionid}/{revisionid}/view',
+                            JSONViewRevision, 'assistant/jsonlogs/review.jinja2'))
 
-    routes.append(
-        add_route('cancelrevision', '/user/{userid}/project/{projcode}/{formid}/{submissionid}/{revisionid}/cancel',
-                  JSONCancelRevision, None))
+    routes.append(add_route('cancelrevision', '/user/{userid}/project/{projcode}/assistantaccess/'
+                                              'form/{formid}/{submissionid}/{revisionid}/cancel',
+                            JSONCancelRevision, None))
 
-    routes.append(
-        add_route('pushrevision', '/user/{userid}/project/{projcode}/{formid}/{submissionid}/{revisionid}/push',
-                  JSONPushRevision, None))
+    routes.append(add_route('pushrevision', '/user/{userid}/project/{projcode}/assistantaccess'
+                                            '/form/{formid}/{submissionid}/{revisionid}/push', JSONPushRevision, None))
 
-    routes.append(
-        add_route('disregard', '/user/{userid}/project/{projcode}/{formid}/{submissionid}/disregard', JSONDisregard,
-                  'assistant/jsonlogs/disregard.jinja2'))
+    routes.append(add_route('disregard', '/user/{userid}/project/{projcode}/assistantaccess'
+                                         '/form/{formid}/{submissionid}/disregard',
+                            JSONDisregard, 'assistant/jsonlogs/disregard.jinja2'))
 
-    routes.append(
-        add_route('canceldisregard', '/user/{userid}/project/{projcode}/{formid}/{submissionid}/canceldisregard',
-                  JSONCancelDisregard, 'assistant/jsonlogs/cancel_disregard.jinja2'))
+    routes.append(add_route('canceldisregard', '/user/{userid}/project/{projcode}/assistantaccess'
+                                               '/form/{formid}/{submissionid}/canceldisregard',
+                            JSONCancelDisregard, 'assistant/jsonlogs/cancel_disregard.jinja2'))
 
-    routes.append(add_route('comparesubmissions',
-                            '/user/{userid}/project/{projcode}/{formid}/{submissiona}/{submissionb}/compare',
+    routes.append(add_route('comparesubmissions', '/user/{userid}/project/{projcode}/assistantaccess'
+                                                  '/form/{formid}/{submissiona}/{submissionb}/compare',
                             JSONCompareSubmissions, 'assistant/jsonlogs/compare_submissions.jinja2'))
 
     # Clean interface
 
-    routes.append(add_route('clean', '/user/{userid}/project/{projcode}/{formid}/clean', CleanInterface,
-                            'assistant/clean/clean_data.jinja2'))
     routes.append(
-        add_route('request', '/user/{userid}/project/{projcode}/{formid}/{tablename}/request', DataRequest, 'json'))
+        add_route('clean', '/user/{userid}/project/{projcode}/assistantaccess/form/{formid}/clean', CleanInterface,
+                  'assistant/clean/clean_data.jinja2'))
     routes.append(
-        add_route('action', '/user/{userid}/project/{projcode}/{formid}/{tablename}/action', PerformAction, 'json'))
+        add_route('request', '/user/{userid}/project/{projcode}/assistantaccess/form/{formid}/{tablename}/request',
+                  DataRequest, 'json'))
+    routes.append(
+        add_route('action', '/user/{userid}/project/{projcode}/assistantaccess/form/{formid}/{tablename}/action',
+                  PerformAction, 'json'))
 
     # API
     routes.append(add_route('api_select2_users', '/api/select2_user', APIUserSearchSelect2, 'json'))

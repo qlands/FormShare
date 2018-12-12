@@ -21,7 +21,7 @@
                 <br style="margin-top: 5px" />
                 Mine: {{ form.assistant_data.submissions }} submissions. {% if form.form_schema != None %}: <strong><a href="{{ request.route_url('clean',userid=userid,projcode=projcode,formid=form.form_id) }}" class="text-success">{{ form.assistant_data.indb }} in database.</a> <a href="{{ request.route_url('errorlist',userid=userid,projcode=projcode,formid=form.form_id) }}" class="text-warning">{{ form.assistant_data.inlogs }} in error logs.</a>  <a href="{{ request.route_url('errorlist',userid=userid,projcode=projcode,formid=form.form_id) }}" class="text-danger">{{ form.assistant_data.inerror }} with errors</a>  </strong>{% endif %}
                 <div class="actions">
-                    <a href="" class="btn btn-xs btn-white"><i class="fas fa-qrcode"></i> {{ _('Show configuration QR') }} </a>
+                    <a data-toggle="modal" data-target="#qrcode" urn="{{ request.route_url('assistant_qr_code',userid=userid,projcode=projcode,formid=form.form_id) }}" class="btn btn-xs btn-white qrbutton"><i class="fas fa-qrcode"></i> {{ _('Show configuration QR') }} </a>
                     {% if form.submissions > 0 %}
 
                     {% endif %}

@@ -753,6 +753,23 @@ def build_odata_service(request, cnf_file, schema):
                             error_message = error_message + "Output: \n"
                             error_message = error_message + output.encode() + "\n"
                             log.error(error_message)
+
+                    # Load basic permissions
+                    mapping_file = os.path.join(get_odk_path(request),
+                                                *["tmp", instance_id, "sql", "permission_data.sql"])
+                    args = ["mysql", "--defaults-file=" + cnf_file, schema]
+                    with open(mapping_file) as input_file:
+                        proc = Popen(
+                            args, stdin=input_file, stderr=PIPE, stdout=PIPE)
+                        output, error = proc.communicate()
+                        if proc.returncode != 0:
+                            error_message = "Error creating database \n"
+                            error_message = error_message + "File: " + mapping_file + "\n"
+                            error_message = error_message + "Error: \n"
+                            error_message = error_message + error.decode() + "\n"
+                            error_message = error_message + "Output: \n"
+                            error_message = error_message + output.encode() + "\n"
+                            log.error(error_message)
         else:
             log.error("ODATA Generator Error: " + stdout + " - " + stderr + " - " + " ".join(args))
     
@@ -923,6 +940,9 @@ def create_repository(request, project, form, odk_dir, xform_directory, primary_
             audit.write("\n")
             audit.write("CREATE TABLE table_permissions (table_name VARCHAR(255) NOT NULL,user_name VARCHAR(120),"
                         "permissions VARCHAR(4),PRIMARY KEY (table_name, user_name)) ENGINE = InnoDB CHARSET=utf8;\n")
+
+            audit.write("INSERT INTO odata_users VALUES ('odata', MD5('123'));\n")
+            audit.write("INSERT INTO odata_user_roles VALUES ('odata', 'ODATA_USER');\n")
 
             audit.close()
 

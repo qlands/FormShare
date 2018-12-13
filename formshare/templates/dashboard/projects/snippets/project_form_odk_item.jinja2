@@ -27,7 +27,7 @@
                         {% endif %}
                         <a href="{{ request.route_url('createrepository',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id) }}" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-database"></i> {{ _('Create repository') }} </a>
                     {% else %}
-                        <a class="btn btn-xs btn-white" href=""><i class="fa fa-rss"></i> {{ _('OData endpoint') }}</a>
+                        <a class="btn btn-xs btn-white" target="_blank" href="{{ request.host_url }}/odata/{{ form.form_schema }}/odata.svc/"><i class="fa fa-rss"></i> {{ _('OData endpoint') }}</a>
                         <a class="btn btn-xs btn-white" href="{{ request.route_url('form_download_xlsx_data',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next':request.url}) }}"><i class="fa fa-download"></i> {{ _('Download data in XLS form') }}</a>
                         <a class="btn btn-xs btn-white" href="{{ request.route_url('form_download_media',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next':request.url}) }}"><i class="fa fa-images"></i> {{ _('Download submitted media') }}</a>
                         <a class="btn btn-xs btn-white" target="_blank" href="{{ request.route_url('clean', userid=projectData.owner, projcode=projectData.project_code,formid=form.form_id) }}"><i class="fa fa-pencil"></i> {{ _('Clean data') }}</a>

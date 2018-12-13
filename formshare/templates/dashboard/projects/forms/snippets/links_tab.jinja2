@@ -17,7 +17,7 @@
                 <ul class="tag-list" style="padding: 0">
                     <li><a href="{{ request.route_url('form_download_xlsx',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fa far fa-file-excel"></i> {{ _('Download ODK XLSX form') }}</a></li>
                     {% if formDetails.form_schema != None %}
-                        <li><a href=""><i class="fa fa-rss"></i> OData endpoint</a></li>
+                        <li><a target="_blank" href="{{ request.host_url }}/odata/{{ formDetails.form_schema }}/odata.svc/"><i class="fa fa-rss"></i> OData endpoint</a></li>
                         <li><a href="{{ request.route_url('form_download_xlsx_data',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fa fa-download"></i> {{ _('Download data in XLS form') }}</a></li>
                         <li><a href="{{ request.route_url('form_download_media',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fa fa-images"></i> {{ _('Download submitted media') }}</a></li>
                         <li><a target="_blank" href="{{ request.route_url('clean', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}"><i class="fa fa-pencil"></i> {{ _('Clean data') }}</a></li>

@@ -715,7 +715,7 @@ def build_odata_service(request, cnf_file, schema):
     # file.write("      role_table_name: odata_roles\n") Jetty
     file.write("      user_role_table_name: odata_user_roles\n")
     file.close()
-    args = ["odata_generator", "-c", yml_file, schema, temp_dir]
+    args = [request.registry.settings['odata.generator'], "-c", yml_file, schema, temp_dir]
 
     try:
         p = Popen(args, stdout=PIPE, stderr=PIPE)

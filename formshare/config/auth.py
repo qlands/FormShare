@@ -18,7 +18,7 @@ class User(object):
         size = 45
         self.id = user_data["user_id"]
         self.email = user_data["user_email"]
-        gravatar_url = "http://www.gravatar.com/avatar/" + hashlib.md5(
+        gravatar_url = "https://www.gravatar.com/avatar/" + hashlib.md5(
             self.email.lower().encode('utf8')).hexdigest() + "?"
         gravatar_url += urllib.parse.urlencode({'d': default, 's': str(size)})
         self.userData = user_data
@@ -43,14 +43,14 @@ class User(object):
 
     def get_gravatar_url(self, size):
         default = "identicon"
-        gravatar_url = "http://www.gravatar.com/avatar/" + hashlib.md5(self.email.lower()).hexdigest() + "?"
+        gravatar_url = "https://www.gravatar.com/avatar/" + hashlib.md5(self.email.lower()).hexdigest() + "?"
         gravatar_url += urllib.parse.urlencode({'d': default, 's': str(size)})
         return gravatar_url
 
     def update_gravatar_url(self):
         default = "identicon"
         size = 45
-        gravatar_url = "http://www.gravatar.com/avatar/" + hashlib.md5(self.email.lower()).hexdigest() + "?"
+        gravatar_url = "https://www.gravatar.com/avatar/" + hashlib.md5(self.email.lower()).hexdigest() + "?"
         gravatar_url += urllib.parse.urlencode({'d': default, 's': str(size)})
         self.gravatarURL = gravatar_url
 
@@ -62,7 +62,7 @@ class Assistant(object):
         self.email = assistant_data["coll_email"]
         if self.email is not None:
             if validators.email(self.email):
-                gravatar_url = "http://www.gravatar.com/avatar/" + hashlib.md5(
+                gravatar_url = "https://www.gravatar.com/avatar/" + hashlib.md5(
                     self.email.lower().encode('utf8')).hexdigest() + "?"
                 gravatar_url += urllib.parse.urlencode({'d': default, 's': str(size)})
                 self.gravatarURL = gravatar_url
@@ -83,7 +83,7 @@ class Assistant(object):
         if self.email is not None:
             if validators.email(self.email):
                 default = "identicon"
-                gravatar_url = "http://www.gravatar.com/avatar/" + hashlib.md5(self.email.lower()).hexdigest() + "?"
+                gravatar_url = "https://www.gravatar.com/avatar/" + hashlib.md5(self.email.lower()).hexdigest() + "?"
                 gravatar_url += urllib.parse.urlencode({'d': default, 's': str(size)})
                 return gravatar_url
             else:

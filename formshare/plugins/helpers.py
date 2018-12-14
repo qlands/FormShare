@@ -131,7 +131,7 @@ def get_gravatar_url(email, size=45):
     """
     encoded_email = email.encode('utf-8')
     default = "identicon"
-    gravatar_url = "http://www.gravatar.com/avatar/" + hashlib.md5(encoded_email.lower()).hexdigest() + "?"
+    gravatar_url = "https://www.gravatar.com/avatar/" + hashlib.md5(encoded_email.lower()).hexdigest() + "?"
     gravatar_url += urllib.parse.urlencode({'d': default, 's': str(size)})
     return gravatar_url
 

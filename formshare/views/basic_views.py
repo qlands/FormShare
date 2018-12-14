@@ -28,7 +28,6 @@ class NotFoundView(PublicView):
         self.request.response.status = 404
         return {}
 
-
 class LoginView(PublicView):
     def process_view(self):
         # If we logged in then go to dashboard
@@ -71,6 +70,11 @@ class LoginView(PublicView):
             else:
                 self.errors.append(self._("The user account does not exists or the password is invalid"))
         return {'next': next_page}
+
+
+class RefreshSessionView(PublicView):
+    def process_view(self):
+        return {}
 
 
 class AssistantLoginView(PublicView):

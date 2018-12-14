@@ -77,6 +77,10 @@ class JSONCompare(AssistantView):
 
 
 class JSONCheckout(AssistantView):
+    def __init__(self, request):
+        AssistantView.__init__(self, request)
+        self.checkCrossPost = False
+
     def process_view(self):
         self.returnRawViewResult = True
         form_id = self.request.matchdict['formid']
@@ -96,9 +100,7 @@ class JSONCheckout(AssistantView):
                             location=self.request.route_url('errorlist', userid=self.userID, projcode=self.projectCode,
                                                             formid=form_id))
                     else:
-                        return HTTPFound(
-                            location=self.request.route_url('errorlist', userid=self.userID, projcode=self.projectCode,
-                                                            formid=form_id))
+                        raise HTTPNotFound()
                 else:
                     raise HTTPNotFound()
             else:
@@ -108,6 +110,10 @@ class JSONCheckout(AssistantView):
         
 
 class JSONCancelCheckout(AssistantView):
+    def __init__(self, request):
+        AssistantView.__init__(self, request)
+        self.checkCrossPost = False
+
     def process_view(self):
         self.returnRawViewResult = True
         form_id = self.request.matchdict['formid']
@@ -128,9 +134,7 @@ class JSONCancelCheckout(AssistantView):
                             location=self.request.route_url('errorlist', userid=self.userID, projcode=self.projectCode,
                                                             formid=form_id))
                     else:
-                        return HTTPFound(
-                            location=self.request.route_url('errorlist', userid=self.userID, projcode=self.projectCode,
-                                                            formid=form_id))
+                        raise HTTPNotFound()
                 else:
                     raise HTTPNotFound()
             else:
@@ -242,6 +246,10 @@ class JSONViewRevision(AssistantView):
         
 
 class JSONCancelRevision(AssistantView):
+    def __init__(self, request):
+        AssistantView.__init__(self, request)
+        self.checkCrossPost = False
+
     def process_view(self):
         self.returnRawViewResult = True
         form_id = self.request.matchdict['formid']
@@ -267,9 +275,7 @@ class JSONCancelRevision(AssistantView):
                             location=self.request.route_url('errorlist', userid=self.userID, projcode=self.projectCode,
                                                             formid=form_id))
                     else:
-                        return HTTPFound(
-                            location=self.request.route_url('errorlist', userid=self.userID, projcode=self.projectCode,
-                                                            formid=form_id))
+                        raise HTTPNotFound()
                 else:
                     raise HTTPNotFound()
             else:
@@ -279,6 +285,10 @@ class JSONCancelRevision(AssistantView):
         
 
 class JSONPushRevision(AssistantView):
+    def __init__(self, request):
+        AssistantView.__init__(self, request)
+        self.checkCrossPost = False
+
     def process_view(self):
         self.returnRawViewResult = True
         form_id = self.request.matchdict['formid']
@@ -307,9 +317,7 @@ class JSONPushRevision(AssistantView):
                             location=self.request.route_url('errorlist', userid=self.userID, projcode=self.projectCode,
                                                             formid=form_id))
                     else:
-                        return HTTPFound(
-                            location=self.request.route_url('errorlist', userid=self.userID, projcode=self.projectCode,
-                                                            formid=form_id))
+                        raise HTTPNotFound()
                 else:
                     raise HTTPNotFound()
             else:

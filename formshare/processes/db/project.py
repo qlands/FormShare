@@ -219,6 +219,11 @@ def delete_project(request, user, project):
                 request.dbsession.query(Userproject).filter(Userproject.user_id == user).filter(
                     Userproject.project_id == new_active_project).update({'project_active': 1})
                 request.dbsession.flush()
+    except IntegrityError as e:
+        request.dbsession.rollback()
+        log.error("Error {} while deleting project {}".format(str(e), project))
+        return False, request.translate(
+            "If you have forms with submissions. First you need to delete such forms")
     except Exception as e:
         request.dbsession.rollback()
         log.error("Error {} while deleting project {}".format(str(e), project))

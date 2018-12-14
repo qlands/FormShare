@@ -196,7 +196,7 @@ class PrivateView(object):
                         if not safe:
                             self.request.session.pop_flash()
                             log.error("SECURITY-CSRF error at {} ".format(self.request.url))
-                            raise HTTPNotFound()
+                            raise HTTPFound(self.request.route_url('refresh'))
                         else:
                             if self.checkCrossPost:
                                 if self.request.referer != self.request.url:
@@ -342,6 +342,7 @@ class AssistantView(object):
             self.resultDict["rtl"] = True
         self.returnRawViewResult = False
         self.project_assistant = None
+        self.checkCrossPost = True
 
     def get_policy(self, policy_name):
         policies = self.request.policies()
@@ -385,7 +386,17 @@ class AssistantView(object):
         if self.request.method == 'POST':
             safe = check_csrf_token(self.request, raises=False)
             if not safe:
-                raise HTTPNotFound()
+                self.request.session.pop_flash()
+                log.error("SECURITY-CSRF error at {} ".format(self.request.url))
+                raise HTTPFound(self.request.route_url('refresh'))
+            else:
+                if self.checkCrossPost:
+                    if self.request.referer != self.request.url:
+                        self.request.session.pop_flash()
+                        log.error(
+                            "SECURITY-CrossPost error. Posting at {} from {} ".format(self.request.url,
+                                                                                      self.request.referer))
+                        raise HTTPNotFound()
 
         self.assistantID = self.assistant.login
         self.resultDict["activeAssistant"] = self.assistant

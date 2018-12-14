@@ -1,7 +1,7 @@
 from ..plugins.utilities import add_route
 import formshare.plugins as p
 from ..views.basic_views import NotFoundView, HomeView, log_out_view, LoginView, RegisterView, \
-    AssistantLoginView, assistant_log_out_view
+    AssistantLoginView, assistant_log_out_view, RefreshSessionView
 from ..views.dashboard import UserDashBoardView
 from ..views.projects import AddProjectView, ProjectListView, ProjectDetailsView, ProjectStoredFileView, \
     EditProjectView, DeleteProjectView, AddFileToProject, RemoveFileFromProject, DownloadProjectGPSPoints, \
@@ -61,6 +61,7 @@ def load_routes(config):
 
     # FormShare routes
     routes.append(add_route('home', '/', HomeView, 'landing/index.jinja2'))
+    routes.append(add_route('refresh', '/refresh', RefreshSessionView, 'generic/refresh.jinja2'))
     routes.append(add_route('login', '/login', LoginView, 'generic/login.jinja2'))
     routes.append(add_route('register', '/join', RegisterView, 'generic/register.jinja2'))
     routes.append(add_route('logout', '/logout', log_out_view, None))

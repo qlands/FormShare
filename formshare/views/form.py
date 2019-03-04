@@ -3,20 +3,23 @@ from formshare.processes.db import get_project_id_from_name, get_form_details, g
     add_file_to_form, get_form_files, remove_file_from_form, get_all_assistants, add_assistant_to_form, \
     get_form_assistants, update_assistant_privileges, remove_assistant_from_form, get_project_groups, \
     add_group_to_form, get_form_groups, update_group_privileges, remove_group_from_form, get_form_xls_file, \
-    set_form_status
-from formshare.processes.storage import store_file, delete_stream
+    set_form_status, get_assigned_assistants, get_form_directory
+from formshare.processes.storage import store_file, delete_stream, delete_bucket
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 import validators
 import os
 from cgi import FieldStorage
 from hashlib import md5
 import logging
+import simplekml
 from formshare.processes.elasticsearch.repository_index import delete_dataset_index, get_number_of_datasets_with_gps
 from pyramid.response import FileResponse
 from formshare.processes.submission.api import get_submission_media_files, json_to_csv, get_gps_points_from_form, \
     generate_xlsx_file
 from formshare.processes.odk.api import get_odk_path, upload_odk_form, update_form_title, retrieve_form_file, \
-    update_odk_form
+    update_odk_form, get_missing_support_files, import_json_data
+import uuid
+import shutil
 
 
 log = logging.getLogger(__name__)
@@ -50,10 +53,16 @@ class FormDetails(PrivateView):
             form_assistants = get_form_assistants(self.request, project_id, form_id)
             groups = get_project_groups(self.request, project_id)
             form_groups = get_form_groups(self.request, project_id, form_id)
+            if form_data['form_reqfiles'] is not None:
+                required_files = form_data['form_reqfiles'].split(',')
+                missing_files = get_missing_support_files(self.request, project_id, form_id, required_files, form_files)
+            else:
+                missing_files = []
             return {'projectDetails': project_details, 'formid': form_id, 'formDetails': form_data, 'userid': user_id,
-                    'formFiles': form_files, 'assistants': assistants, 'formassistants': form_assistants, 'groups': groups,
-                    'formgroups': form_groups,
-                    'withgps': get_number_of_datasets_with_gps(self.request, user_id, project_code, form_id)}
+                    'formFiles': form_files, 'assistants': assistants, 'formassistants': form_assistants,
+                    'groups': groups, 'formgroups': form_groups,
+                    'withgps': get_number_of_datasets_with_gps(self.request.registry.settings, user_id, project_code,
+                                                               form_id), 'missingFiles': ", ".join(missing_files)}
         else:
             raise HTTPNotFound
 
@@ -107,6 +116,9 @@ class AddNewForm(PrivateView):
                 next_page = self.request.params.get('next') or self.request.route_url('project_details',
                                                                                       userid=project_details['owner'],
                                                                                       projcode=project_code)
+                print("*****************************66")
+                print(str(message))
+                print("*****************************66")
                 self.add_error(self._('Unable to upload the form: ') + message)
                 return HTTPFound(next_page)
 
@@ -153,10 +165,10 @@ class UploadNewVersion(PrivateView):
             if form_data['form_target'] == '':
                 form_data['form_target'] = 0
 
-            updated, message = update_odk_form(self.request, project_id, form_id, user_id, odk_path, form_data)
+            updated, message = update_odk_form(self.request, project_id, form_id, odk_path, form_data)
 
             if updated:
-                delete_dataset_index(self.request, user_id, project_code, form_id)
+                delete_dataset_index(self.request.registry.settings, user_id, project_code, form_id)
                 next_page = self.request.route_url('form_details', userid=project_details['owner'],
                                                    projcode=project_code, formid=form_id)
                 self.request.session.flash(self._('The ODK form was successfully updated'))
@@ -270,9 +282,22 @@ class DeleteForm(PrivateView):
                 next_page = self.request.params.get('next') or self.request.route_url('project_details',
                                                                                       userid=user_id,
                                                                                       projcode=project_code)
+                form_directory = get_form_directory(self.request, project_id, form_id)
+                paths = ['forms', form_directory]
+                odk_dir = get_odk_path(self.request)
+                form_directory = os.path.join(odk_dir, *paths)
                 deleted, message = delete_form(self.request, project_id, form_id)
                 if deleted:
-                    delete_dataset_index(self.request, user_id, project_code, form_id)
+                    delete_dataset_index(self.request.registry.settings, user_id, project_code, form_id)
+                    try:
+                        shutil.rmtree(form_directory)
+                    except Exception as e:
+                        log.error("Error {} while removing form {} in project {}. Cannot delete directory {}".
+                                  format(str(e), form_id, project_id, form_directory))
+                    bucket_id = project_id + form_id
+                    bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
+                    delete_bucket(self.request, bucket_id)
+
                     self.request.session.flash(self._('The form was deleted successfully'))
                     self.returnRawViewResult = True
                     return HTTPFound(next_page)
@@ -1065,3 +1090,86 @@ class DownloadGPSPoints(PrivateView):
 
         created, data = get_gps_points_from_form(self.request, user_id, project_code, form_id)
         return data
+
+
+class DownloadKML(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+        self.returnRawViewResult = True
+
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+        form_id = self.request.matchdict['formid']
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+
+        created, data = get_gps_points_from_form(self.request, user_id, project_code, form_id)
+        if created:
+            kml = simplekml.Kml()
+            for point in data["points"]:
+                kml.newpoint(name=point['key'], coords=[(float(point['long']), float(point['lati']))])
+            odk_dir = get_odk_path(self.request)
+            uid = str(uuid.uuid4())
+            tmp_file = os.path.join(odk_dir, *['tmp', uid + ".kml"])
+            kml.save(tmp_file)
+            response = FileResponse(tmp_file, request=self.request, content_type='application/vnd.google-earth.kml+xml')
+            response.content_disposition = 'attachment; filename="' + form_id + '.kml"'
+            return response
+        else:
+            raise HTTPNotFound
+
+
+class ImportData(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+        form_id = self.request.matchdict['formid']
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] == 4:
+            raise HTTPNotFound
+
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is not None:
+            if self.request.method == 'POST':
+                odk_path = get_odk_path(self.request)
+
+                form_post_data = self.get_post_dict()
+                parts = form_post_data['assistant'].split("@")
+                import_json_data(self.request, user_id, project_id, form_id, odk_path, form_data['form_directory'],
+                                 form_data['form_schema'], parts[0])
+
+            return {'projectDetails': project_details, 'formid': form_id, 'formDetails': form_data, 'userid': user_id,
+                    'assistants': get_assigned_assistants(self.request, project_id, form_id)}
+        else:
+            raise HTTPNotFound

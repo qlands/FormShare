@@ -108,7 +108,8 @@ def get_user_projects(request, user, logged_user, private=False):
         projects = map_from_schema(res)
 
     for project in projects:
-        submissions, last, by, form = get_dataset_stats_for_project(request, user, project['project_code'])
+        submissions, last, by, form = get_dataset_stats_for_project(request.registry.settings, user,
+                                                                    project['project_code'])
         if last is not None:
             project['last_submission'] = dateutil.parser.parse(last)
         else:

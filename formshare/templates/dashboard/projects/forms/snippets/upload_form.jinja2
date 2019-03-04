@@ -2,7 +2,7 @@
     <div class="modal-dialog">
         <div class="modal-content animated fadeIn">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <button id="cross_upload_form_button" type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
                 <h4 class="modal-title">{{ _('Upload form') }}</h4>
             </div>
             <form role="form" method="post" enctype="multipart/form-data" action="{{ action_url }}">
@@ -15,8 +15,8 @@
                     <div style="margin-top: 10px" class="form-group"><label>Target number of submissions</label> <input type="number" name="form_target" value="0" class="form-control"><span class="form-text m-b-none">{{ _('Leave blank or indicate 0 if there is no target ') }}</span></div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
-                    <button type="submit" class="btn btn-primary">{{ _('Upload') }}</button>
+                    <button id="cancel_upload_form_button" type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
+                    <button id="upload_form_button" type="submit" class="btn btn-primary">{{ _('Upload') }}</button>
                 </div>
             </form>
         </div>

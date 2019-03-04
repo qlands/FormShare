@@ -16,7 +16,7 @@ from ..views.assistant_groups import GroupListView, AddGroupView, EditGroupView,
 from ..views.form import FormDetails, AddNewForm, EditForm, DeleteForm, AddFileToForm, RemoveFileFromForm, \
     FormStoredFile, AddAssistant, EditAssistant, RemoveAssistant, AddGroupToForm, EditFormGroup, RemoveGroupForm, \
     DownloadCSVData, DownloadXLSX, DownloadSubmissionFiles, DownloadGPSPoints, DownloadXLSData, UploadNewVersion, \
-    ActivateForm, DeActivateForm
+    ActivateForm, DeActivateForm, ImportData, DownloadKML
 from ..views.odk import ODKFormList, ODKManifest, ODKMediaFile, ODKPushData, ODKSubmission, ODKXMLForm
 from ..views.repository import GenerateRepository, SeparateTable, NewSeparationGroup, EditSeparationGroup, \
     DeleteSeparationGroup, RepositoryExist
@@ -150,7 +150,8 @@ def load_routes(config):
     routes.append(add_route('form_details', '/user/{userid}/project/{projcode}/form/{formid}', FormDetails,
                             'dashboard/projects/forms/form_details.jinja2'))
 
-    routes.append(add_route('update_form', '/user/{userid}/project/{projcode}/form/{formid}/updateodk', UploadNewVersion, None))
+    routes.append(
+        add_route('update_form', '/user/{userid}/project/{projcode}/form/{formid}/updateodk', UploadNewVersion, None))
 
     routes.append(add_route('form_edit', '/user/{userid}/project/{projcode}/form/{formid}/edit', EditForm,
                             'dashboard/projects/forms/form_edit.jinja2'))
@@ -161,8 +162,13 @@ def load_routes(config):
     routes.append(add_route('activate_form', '/user/{userid}/project/{projcode}/form/{formid}/activate', ActivateForm,
                             None))
 
-    routes.append(add_route('deactivate_form', '/user/{userid}/project/{projcode}/form/{formid}/deactivate', DeActivateForm,
-                            None))
+    routes.append(
+        add_route('deactivate_form', '/user/{userid}/project/{projcode}/form/{formid}/deactivate', DeActivateForm,
+                  None))
+
+    routes.append(
+        add_route('import_data', '/user/{userid}/project/{projcode}/form/{formid}/import', ImportData,
+                  'dashboard/projects/forms/import_data/import_form.jinja2'))
 
     # Form files
     routes.append(
@@ -237,6 +243,12 @@ def load_routes(config):
             '/user/{userid}/project/{projcode}/form/{formid}/download/gpspoints',
             DownloadGPSPoints, 'json'))
 
+    routes.append(
+        add_route(
+            'form_download_kml',
+            '/user/{userid}/project/{projcode}/form/{formid}/download/kml',
+            DownloadKML, None))
+
     # Repository
 
     routes.append(
@@ -269,9 +281,8 @@ def load_routes(config):
         add_route('assistant_login', '/user/{userid}/project/{projcode}/assistantaccess/login', AssistantLoginView,
                   'generic/assistant_login.jinja2'))
 
-    routes.append(
-        add_route('assistant_logout', '/user/{userid}/project/{projcode}/assistantaccess/logout', assistant_log_out_view,
-                  None))
+    routes.append(add_route('assistant_logout', '/user/{userid}/project/{projcode}/assistantaccess/logout',
+                            assistant_log_out_view, None))
 
     routes.append(
         add_route('assistant_forms', '/user/{userid}/project/{projcode}/assistantaccess/forms', AssistantForms,

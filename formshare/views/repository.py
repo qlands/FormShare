@@ -12,6 +12,7 @@ from lxml import etree
 import json
 import re
 from formshare.processes.elasticsearch.repository_index import delete_dataset_index
+from webhelpers2.html import literal
 
 
 class GenerateRepository(PrivateView):
@@ -43,7 +44,7 @@ class GenerateRepository(PrivateView):
         odk_path = get_odk_path(self.request)
         if form_data:
             if form_data["schema"] is None:
-                get = True                
+                get = True
                 list_array = []
                 result_code = -1
                 stage, primary_key, deflanguage, languages, yesvalue, novalue, other_languages, yes_no_strings, \
@@ -111,6 +112,31 @@ class GenerateRepository(PrivateView):
                                 stage = 4
                             if result_code == 10 or result_code == 11:
                                 # This would happen if for some reason the id that was chosen has a problem
+                                self.errors.append(self._("The primary key field does not exists or "
+                                                          "is inside a repeat"))
+                                stage = 1
+                                primary_key = ""
+                                deflanguage = ""
+                                languages = ""
+                                yesvalue = ""
+                                novalue = ""
+                                other_languages = ""
+                                yes_no_strings = ""
+                                default_language = ""
+                                update_form_stage_number(self.request, project_id, form_id, 1)
+
+                            if result_code == 17:
+                                root = etree.fromstring(message)
+                                xml_duplicates = root.findall(".//variable")
+                                error_message = self._("The ODK has the following variables duplicated within "
+                                                       "the same repeat or outside a repeat: <br/>")
+                                if xml_duplicates:
+                                    for aDuplicate in xml_duplicates:
+                                        error_message = error_message + aDuplicate.text + "<br/>"
+                                error_message = error_message[:-5]
+                                self.errors.append(literal(error_message))
+
+                                # This would happen if the ODK has repeated columns. So go back to 1
                                 stage = 1
                                 primary_key = ""
                                 deflanguage = ""
@@ -236,6 +262,8 @@ class GenerateRepository(PrivateView):
                                         self.errors.append(message + self._(
                                             ". You need to fix the XLSX, upload it again and continue this process."))
                                     if result_code == 10 or result_code == 11:
+                                        self.errors.append(
+                                            self._("The primary key field does not exists or is inside a repeat"))
                                         # At this stage the information should be ok. However if the user
                                         # exits the process, changes the form so much that the primary key is invalid
                                         # reenter this information is required
@@ -250,6 +278,20 @@ class GenerateRepository(PrivateView):
                                         default_language = ""
                                         update_form_stage_number(self.request, project_id, form_id, 1)
                                         # We need to reset the language
+
+                                    if result_code == 17:
+                                        self.errors.append(message)
+                                        # This would happen if the ODK has repeated columns. So go back to 1
+                                        stage = 1
+                                        primary_key = ""
+                                        deflanguage = ""
+                                        languages = ""
+                                        yesvalue = ""
+                                        novalue = ""
+                                        other_languages = ""
+                                        yes_no_strings = ""
+                                        default_language = ""
+                                        update_form_stage_number(self.request, project_id, form_id, 1)
 
                                     if result_code == 13:
                                         # Tell the user it missed a CSV or ZIP file
@@ -307,6 +349,22 @@ class GenerateRepository(PrivateView):
                                 # the changes in the options but changed the form so much
                                 # and the primary key is invalid. So reset everything and
                                 # go back to stage 1
+                                self.errors.append(
+                                    self._("The primary key field does not exists or is inside a repeat"))
+                                stage = 1
+                                primary_key = ""
+                                deflanguage = ""
+                                languages = ""
+                                yesvalue = ""
+                                novalue = ""
+                                other_languages = ""
+                                yes_no_strings = ""
+                                default_language = ""
+                                update_form_stage_number(self.request, project_id, form_id, 1)
+
+                            if result_code == 17:
+                                self.errors.append(message)
+                                # This would happen if the ODK has repeated columns. So go back to 1
                                 stage = 1
                                 primary_key = ""
                                 deflanguage = ""
@@ -412,11 +470,26 @@ class GenerateRepository(PrivateView):
                             update_form_stage(self.request, project_id, form_id, stage, primary_key, default_language,
                                               other_languages, yes_no_strings, None)
                         if result_code == 10 or result_code == 11:
+                            self.errors.append(self._("The primary key field does not exists or is inside a repeat"))
                             # At this stage the information should be ok however,
                             # this would happen if the user exited the process to make
                             # the changes in the options but changed the form so much
                             # and the primary key is invalid. So reset everything and
                             # go back to stage 1
+                            stage = 1
+                            primary_key = ""
+                            deflanguage = ""
+                            languages = ""
+                            yesvalue = ""
+                            novalue = ""
+                            other_languages = ""
+                            yes_no_strings = ""
+                            default_language = ""
+                            update_form_stage_number(self.request, project_id, form_id, 1)
+
+                        if result_code == 17:
+                            self.errors.append(message)
+                            # This would happen if the ODK has repeated columns. So go back to 1
                             stage = 1
                             primary_key = ""
                             deflanguage = ""
@@ -526,6 +599,21 @@ class GenerateRepository(PrivateView):
                             # the changes in the options but changed the form so much
                             # and the primary key is invalid. So reset everything and
                             # go back to stage 1
+                            self.errors.append(self._("The primary key field does not exists or is inside a repeat"))
+                            stage = 1
+                            primary_key = ""
+                            deflanguage = ""
+                            languages = ""
+                            yesvalue = ""
+                            novalue = ""
+                            other_languages = ""
+                            yes_no_strings = ""
+                            default_language = ""
+                            update_form_stage_number(self.request, project_id, form_id, 1)
+
+                        if result_code == 17:
+                            self.errors.append(message)
+                            # This would happen if the ODK has repeated columns. So go back to 1
                             stage = 1
                             primary_key = ""
                             deflanguage = ""
@@ -635,6 +723,21 @@ class GenerateRepository(PrivateView):
                             # the changes in the options but changed the form so much
                             # and the primary key is invalid. So reset everything and
                             # go back to stage 1
+                            self.errors.append(self._("The primary key field does not exists or is inside a repeat"))
+                            stage = 1
+                            primary_key = ""
+                            deflanguage = ""
+                            languages = ""
+                            yesvalue = ""
+                            novalue = ""
+                            other_languages = ""
+                            yes_no_strings = ""
+                            default_language = ""
+                            update_form_stage_number(self.request, project_id, form_id, 1)
+
+                        if result_code == 17:
+                            # This would happen if the ODK has repeated columns. So go back to 1
+                            self.errors.append(message)
                             stage = 1
                             primary_key = ""
                             deflanguage = ""
@@ -721,7 +824,7 @@ class GenerateRepository(PrivateView):
 
                 if result_code == 0:
                     self.returnRawViewResult = True
-                    delete_dataset_index(self.request, user_id, project_code, form_id)
+                    delete_dataset_index(self.request.registry.settings, user_id, project_code, form_id)
                     self.request.session.flash(self._('The repository was created successfully'))
                     return HTTPFound(
                         self.request.route_url('form_details', userid=user_id, projcode=project_code, formid=form_id))

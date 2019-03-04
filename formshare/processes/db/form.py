@@ -21,7 +21,8 @@ __all__ = ['get_form_details', 'assistant_has_form', 'get_assistant_forms', 'get
            'get_form_assistants', 'update_assistant_privileges', 'remove_assistant_from_form', 'add_group_to_form',
            'get_form_groups', 'update_group_privileges', 'remove_group_from_form', 'get_project_forms',
            'get_number_of_submissions_in_database', 'get_by_details', 'get_form_geopoint', 'get_primary_key',
-           'get_number_of_submissions_by_assistant', 'get_media_files', 'set_form_status']
+           'get_number_of_submissions_by_assistant', 'get_media_files', 'set_form_status', 'get_form_primary_key',
+           'get_form_survey_file']
 
 log = logging.getLogger(__name__)
 
@@ -58,17 +59,7 @@ def get_submission_by(filename):
 
 
 def get_number_of_submissions(request, user, project, form):
-    return get_dataset_stats_for_form(request, user, project, form)
-    # form_directory = get_form_directory(request, project, form)
-    # odk_dir = _get_odk_path(request)
-    # submission_directory = os.path.join(odk_dir, *["forms", form_directory, "submissions", '*.json'])
-    #
-    # files = glob.glob(submission_directory)
-    # if files:
-    #     files.sort(key=os.path.getmtime, reverse=True)
-    #     return len(files), modification_date(files[0]), get_submission_by(files[0])
-    # else:
-    #     return 0, None, None
+    return get_dataset_stats_for_form(request.registry.settings, user, project, form)
 
 
 def get_number_of_submissions_in_database(request, project, form):
@@ -295,6 +286,13 @@ def get_form_geopoint(request, project, form,):
     return None
 
 
+def get_form_primary_key(request, project, form,):
+    res = request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(Odkform.form_id == form).first()
+    if res is not None:
+        return res.form_pkey
+    return None
+
+
 def get_form_directory(request, project, form):
     form_data = request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(
         Odkform.form_id == form).one()
@@ -309,6 +307,15 @@ def get_form_xml_file(request, project, form):
         Odkform.form_id == form).one()
     if form_data is not None:
         return form_data.form_xmlfile
+    else:
+        return None
+
+
+def get_form_survey_file(request, project, form):
+    form_data = request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(
+        Odkform.form_id == form).one()
+    if form_data is not None:
+        return form_data.form_jsonfile
     else:
         return None
 

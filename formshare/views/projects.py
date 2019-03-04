@@ -85,7 +85,8 @@ class ProjectDetailsView(ProjectsView):
                 active_forms = active_forms + 1
             else:
                 inactive_forms = inactive_forms + 1
-        submissions, last, by, in_form = get_dataset_stats_for_project(self.request, user_id, project_code)
+        submissions, last, by, in_form = get_dataset_stats_for_project(self.request.registry.settings, user_id,
+                                                                       project_code)
         bydetails = get_by_details(self.request, user_id, project_id, by)
         return {'projectData': project_data, 'userid': user_id, 'collaborators': collaborators,
                 'moreCollaborators': more_collaborators, 'assistants': assistants, 'moreAssistants': more_assistants,
@@ -93,7 +94,7 @@ class ProjectDetailsView(ProjectsView):
                 'files': get_project_files(self.request, project_id), 'userDetails': user_details,
                 'forms': forms, 'activeforms': active_forms, 'inactiveforms': inactive_forms,
                 'submissions': submissions, 'last': last, 'by': by, 'bydetails': bydetails, 'infom': in_form,
-                'withgps': get_number_of_datasets_with_gps_in_project(self.request, user_id, project_code)}
+                'withgps': get_number_of_datasets_with_gps_in_project(self.request.registry.settings, user_id, project_code)}
 
 
 class AddProjectView(ProjectsView):
@@ -294,7 +295,7 @@ class DeleteProjectView(ProjectsView):
                 activity = Activity('delete', actor, feed_object)
                 feed_manager.add_activity_feed(activity)
                 # Deletes the project from the dataset index
-                delete_dataset_index_by_project(self.request, user_id, project_code)
+                delete_dataset_index_by_project(self.request.registry.settings, user_id, project_code)
                 self.request.session.flash(self._('The project was deleted successfully'))
                 return HTTPFound(location=next_page)
             else:

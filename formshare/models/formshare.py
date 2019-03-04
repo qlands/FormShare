@@ -117,6 +117,18 @@ class Collgroup(Base):
     project = relationship('Project')
 
 
+class Task(Base):
+    __tablename__ = 'task'
+    task_id = Column(Unicode(64), primary_key=True, nullable=False)
+
+
+class FinishedTask(Base):
+    __tablename__ = 'finishedtask'
+    task_id = Column(Unicode(64), primary_key=True, nullable=False)
+    task_enumber = Column(INTEGER)
+    task_error = Column(UnicodeText)
+
+
 class Odkform(Base):
     __tablename__ = 'odkform'
     __table_args__ = (
@@ -128,6 +140,7 @@ class Odkform(Base):
     form_id = Column(Unicode(120), primary_key=True, nullable=False)
     form_name = Column(Unicode(120))
     form_cdate = Column(DateTime)
+    form_lupdate = Column(DateTime)
     form_pubby = Column(ForeignKey('fsuser.user_id', ondelete='CASCADE'), nullable=False)
     form_directory = Column(Unicode(120))
     form_target = Column(INTEGER)
@@ -145,6 +158,8 @@ class Odkform(Base):
     form_sepfile = Column(UnicodeText)
     form_xlsfile = Column(UnicodeText)
     form_xmlfile = Column(UnicodeText)
+    form_jsonfile = Column(UnicodeText)
+    form_reqfiles = Column(UnicodeText)
     form_public = Column(INTEGER)
     form_geopoint = Column(UnicodeText)
     extras = Column(UnicodeText)
@@ -175,11 +190,31 @@ class MediaFile(Base):
     project = relationship('Odkform')
 
 
+class Product(Base):
+    __tablename__ = 'product'
+    __table_args__ = (
+        ForeignKeyConstraint(['project_id', 'form_id'], ['odkform.project_id', 'odkform.form_id'], ondelete='CASCADE'),
+    )
+
+    celery_taskid = Column(Unicode(64), primary_key=True, nullable=False)
+    process_name = Column(Unicode(120), nullable=False)
+    project_id = Column(Unicode(64), nullable=False)
+    form_id = Column(Unicode(120), nullable=False)
+    product_id = Column(Unicode(64), nullable=False)
+    output_id = Column(Unicode(64), nullable=False)
+    output_mimetype = Column(Unicode(120), nullable=False)
+    process_only = Column(INTEGER, server_default=text("'0'"))
+    datetime_added = Column(DateTime)
+
+    odkform = relationship('Odkform')
+
+
 class Userproject(Base):
     __tablename__ = 'userproject'
 
     user_id = Column(ForeignKey('fsuser.user_id', ondelete='CASCADE'), primary_key=True, nullable=False)
-    project_id = Column(ForeignKey('project.project_id', ondelete='CASCADE'), primary_key=True, nullable=False, index=True)
+    project_id = Column(ForeignKey('project.project_id', ondelete='CASCADE'), primary_key=True, nullable=False,
+                        index=True)
     access_type = Column(INTEGER)  # 1=Owner,2=Admin,3=Editor,4=Member
     access_date = Column(DateTime)
     project_active = Column(INTEGER, server_default=text("'1'"))

@@ -28,6 +28,10 @@
                         {% endif %}
                     {% endfor %}
                 </ul>
+                {% if missingFiles != "" %}
+                    <br/>
+                    <small class="text-danger">{{ _('You need to attach the following files: ') }} <b>{{ missingFiles }}.</b><br/> {{ _('Click on the + button to add them ') }}</small>
+                {% endif %}
             </div>
         </div>
     </div>

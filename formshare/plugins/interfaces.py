@@ -13,7 +13,8 @@ __all__ = [
     'ISchema',
     'IDatabase',
     'IAuthorize',
-    'ITemplateHelpers'
+    'ITemplateHelpers',
+    'IProduct'
 ]
 
 
@@ -271,6 +272,20 @@ class ITemplateHelpers(Interface):
         the function, to prevent name clashes between extensions.
         :return:
         """
+
+
+class IProduct(Interface):
+    """
+        Allows to hook into FormShare's Celery task manager.
+    """
+    def register_products(self, config):
+        """
+            Called by the host application so plugins can add new products with Celery as task manager
+
+            :param config: ``pyramid.config`` object
+            :return Returns a dict array [{'name':'productName','description':'A description about the product','metadata':{'key':value},outputs:[{'filename':'myproduct.pdf','mimetype':'application/pdf'}] }]
+        """
+        raise NotImplementedError("register_products must be implemented in subclasses")
 
 
 class IPluginObserver(Interface):

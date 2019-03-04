@@ -36,7 +36,7 @@
                             {% endif %}
                         {% endif %}
                         <h3 style="color:white;">{{ _('Recent activity in project') }} "<a style="color: white" href="{{ request.route_url('project_details', userid=activeProject.owner, projcode=activeProject.project_code) }}" >{{ activeProject.project_name }}</a>"</h3>
-                        {{ form.display_errors(errors) }}
+                        {{ form.display_errors(errors,true) }}
                         {% include 'dashboard/snippets/active_project_summary.jinja2' %}
                     </div>
                 {% endblock project_list_section %}
@@ -102,6 +102,15 @@
     {% else %}
         <script>
             $(document).ready(function() {
+
+                $('#upload_form').submit(function() {
+                    $('#upload_form_button').prop("disabled", "disabled");
+                    $('#cross_upload_form_button').prop("disabled", "disabled");
+                    $('#cancel_upload_form_button').prop("disabled", "disabled");
+                    $('#upload_form_button').html('{{ _("One moment please...") }}');
+                });
+
+
                 $('.scroll_content').slimscroll({'height':300});
 
                 $('.custom-file-input').on('change', function() {

@@ -18,7 +18,7 @@ log = logging.getLogger(__name__)
 
 
 def get_gps_points_from_project(request, user, project, query_from=None, query_size=None):
-    total, datasets = get_datasets_from_project(request, user, project, query_from, query_size)
+    total, datasets = get_datasets_from_project(request.registry.settings, user, project, query_from, query_size)
     data = []
     for dataset in datasets:
         if '_geopoint' in dataset.keys():
@@ -32,7 +32,7 @@ def get_gps_points_from_project(request, user, project, query_from=None, query_s
 
 
 def get_gps_points_from_form(request, user, project, form, query_from=None, query_size=None):
-    total, datasets = get_datasets_from_form(request, user, project, form, query_from, query_size)
+    total, datasets = get_datasets_from_form(request.registry.settings, user, project, form, query_from, query_size)
     data = []
     for dataset in datasets:
         if '_geopoint' in dataset.keys():

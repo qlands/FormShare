@@ -81,14 +81,20 @@
     {{ super() }}
     <script>
 
-        function setSwitchery(switchElement, checkedBool) {
-            if((checkedBool && !switchElement.isChecked()) || (!checkedBool && switchElement.isChecked())) {
-                switchElement.setPosition(true);
-                switchElement.handleOnchange(true);
-            }
-        }
+        {#function setSwitchery(switchElement, checkedBool) {#}
+        {#    if((checkedBool && !switchElement.isChecked()) || (!checkedBool && switchElement.isChecked())) {#}
+        {#        switchElement.setPosition(true);#}
+        {#        switchElement.handleOnchange(true);#}
+        {#    }#}
+        {#}#}
 
         $(document).ready(function() {
+
+            $('.custom-file-input').on('change', function() {
+                let fileName = $(this).val().split('\\').pop();
+                $(this).next('.custom-file-label').addClass("selected").html(fileName);
+            });
+
             {% if formDetails.form_geopoint != None and formDetails.submissions > 0 and withgps > 0 %}
                 var mymap = L.map('projmap').setView([51.505, -0.09], 13);
                 L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {

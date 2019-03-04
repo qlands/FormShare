@@ -4,11 +4,13 @@ from ofs.base import BucketExists
 import os
 from pairtree import FileNotFoundException
 import mimetypes
+import logging
 
 __all__ = ['store_file', 'get_stream', 'response_stream', 'stream_exists', 'delete_stream', 'delete_bucket']
 
 _BLOCK_SIZE = 4096 * 64  # 256K
 
+log = logging.getLogger(__name__)
 
 def get_storage_object(request):
     repository_path = request.registry.settings['repository.path']
@@ -46,7 +48,9 @@ def delete_bucket(request, bucket_id, uri_base="urn:uuid:", hashing_type="md5", 
                                                hashing_type=hashing_type)
         storage_object.delete_object(bucket_id)
     except ObjectNotFoundException:
-        pass
+        return
+    except Exception as e:
+        log.error("Error {} while deleting buckeid form {}".format(str(e), bucket_id))
 
 
 def get_stream(request, bucket_id, file_name):

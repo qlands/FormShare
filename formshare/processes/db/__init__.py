@@ -6,3 +6,5 @@ from .assistant_group import *
 from .form import *
 from .submission import *
 from .json import *
+from .products import *
+from .celery import *

@@ -26,6 +26,9 @@
                         <li><a href="{{ request.route_url('form_download_csv',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fa fa-download"></i> {{ _('Download data in CSV format') }}</a></li>
                         <li><a href="{{ request.route_url('form_download_media',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fa fa-images"></i> {{ _('Download submitted media') }}</a></li>
                     {% endif %}
+                    {% if formDetails.submissions > 0 and formDetails.form_geopoint != None and withgps > 0 %}
+                        <li><a href="{{ request.route_url('form_download_kml',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fas fa-globe-americas"></i> {{ _('Download KML') }}</a></li>
+                    {% endif %}
                 </ul>
             </div>
         </div>

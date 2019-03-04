@@ -1,11 +1,14 @@
-from ..processes import addProductInstance,getRunningTasksByProcess,cancelTask, deleteProducts
-from climmob.config.celery_app import celeryApp
+from ..processes.db import add_product_instance, get_running_tasks_by_process_name, cancel_task, delete_product
+from formshare.config.celery_app import celeryApp
+import logging
 
 __all__ = [
-    'addProduct','registerProductInstance','product_found', 'getProducts','stopTasksByProcess'
-]
+    'add_product', 'register_product_instance', 'product_found', 'get_products', 'stop_tasks_by_process_name']
+
+log = logging.getLogger(__name__)
 
 _PRODUCTS = []
+
 
 def product_found(name):
     for product in _PRODUCTS:
@@ -13,7 +16,8 @@ def product_found(name):
             return True
     return False
 
-def output_found(product,output):
+
+def output_found(product, output):
     for p in _PRODUCTS:
         if p["name"] == product:
             for o in p["outputs"]:
@@ -21,34 +25,31 @@ def output_found(product,output):
                     return True
     return False
 
-def addProduct(product):
+
+def add_product(product):
     if not product_found(product["name"]):
-        #if product["outputs"]:
         _PRODUCTS.append(product)
-        #else:
-        #    raise Exception("The products {} does not have outputs".format(product["name"]))
     else:
         raise Exception("Product name {} is already in use".format(product["name"]))
 
-def registerProductInstance(user,project,product,output,mimeType,processName,instanceID,request):
-    if product_found(product):
-        addProductInstance(user,project,product,output,mimeType,processName,instanceID,request)
 
-def getProducts():
+def register_product_instance(request, project, form, product, output, mime_type, process_name, instance_id,
+                              process_only=False):
+    if product_found(product):
+        add_product_instance(request, project, form, product, output, mime_type, process_name, instance_id,
+                             process_only)
+
+
+def get_products():
     return list(_PRODUCTS)
 
-def stopTasksByProcess(request,user,project, processName="ALL"):
-    tasks = getRunningTasksByProcess(request,user,project,processName)
+
+def stop_tasks_by_process_name(request, project, form, process_name="ALL"):
+    tasks = get_running_tasks_by_process_name(request, project, form, process_name)
     for task in tasks:
-        print "*****stopTasksByProcess. Revoking task " + task
+        log.warning("*****stop_tasks_by_process_name. Revoking task " + task)
         celeryApp.control.revoke(task, terminate=True)
-        print "*****stopTasksByProcess. Cancelling task from database " + task
-        cancelTask(request,task)
+        log.warning("*****stop_tasks_by_process_name. Cancelling task from database " + task)
+        cancel_task(request, task)
 
-    deleteProducts(request,user, project, processName)
-
-
-
-
-
-
+    delete_product(request, project, form, process_name)

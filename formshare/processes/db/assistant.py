@@ -1,4 +1,5 @@
-from formshare.models import Collaborator, Project, map_from_schema, map_to_schema, Userproject
+from formshare.models import Collaborator, Project, map_from_schema, map_to_schema, Userproject, \
+    Formacces, Formgrpacces, Collingroup
 import logging
 import datetime
 from sqlalchemy.exc import IntegrityError
@@ -7,9 +8,43 @@ from formshare.config.encdecdata import decode_data
 
 __all__ = ['get_project_assistants', 'delete_assistant', 'add_assistant', 'get_assistant_data',
            'modify_assistant', 'change_assistant_password', 'get_all_assistants', 'is_assistant_active',
-           'get_assistant_password', 'get_project_from_assistant']
+           'get_assistant_password', 'get_project_from_assistant', 'get_assigned_assistants']
 
 log = logging.getLogger(__name__)
+
+
+def get_assigned_assistants(request, project, form):
+    assistants = []
+    groups = request.dbsession.query(Formgrpacces).filter(Formgrpacces.form_project == project).filter(
+        Formgrpacces.form_id == form).all()
+    for group in groups:
+        res = request.dbsession.query(Collaborator, Collingroup).filter(
+            Collingroup.enum_project == Collaborator.project_id).filter(
+            Collingroup.coll_id == Collaborator.coll_id).filter(Collingroup.project == group.project_id).filter(
+            Collingroup.group_id == group.group_id).all()
+        group_assistants = map_from_schema(res)
+        for assistant in group_assistants:
+            assistants.append({'project': assistant['enum_project'], 'assistant': assistant['coll_id'],
+                               'name': assistant['coll_name']})
+
+    res = request.dbsession.query(Formacces, Collaborator).filter(
+        Formacces.project_id == Collaborator.project_id).filter(Formacces.coll_id == Collaborator.coll_id).filter(
+        Formacces.form_project == project).filter(Formacces.form_id == form).all()
+    form_assistants = map_from_schema(res)
+    for an_assistant in form_assistants:
+        found = False
+        for assistant in assistants:
+            if assistant['project'] == an_assistant['project_id'] and assistant['assistant'] == an_assistant['coll_id']:
+                found = True
+        if not found:
+            assistants.append({'project': an_assistant['project_id'], 'assistant': an_assistant['coll_id'],
+                               'name': an_assistant['coll_name']})
+    return assistants
+
+
+
+
+
 
 
 def get_all_assistants(request, project, user):
@@ -136,6 +171,7 @@ def change_assistant_password(request, project, assistant, password):
         log.error(
             "Error {} while adding assistant {} in project {}".format(str(e), assistant, project))
         return False, str(e)
+
 
 def get_project_from_assistant(request, user, requested_project, assistant):
     # Get all the assistants the user has with that name across projects

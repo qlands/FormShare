@@ -2,11 +2,20 @@
   <input type="hidden" name="csrf_token" value="{{ request.session.get_csrf_token() }}">
 {% endmacro %}
 
-{% macro display_errors(errors) %}
-    {% for error in errors %}
-        <div class="alert alert-danger alert-dismissable">
-            <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
-            {{ error }}.
-        </div>
-    {% endfor %}
+{% macro display_errors(errors,modal=false) %}
+    {% if modal == false %}
+        {% for error in errors %}
+            <div class="alert alert-danger alert-dismissable">
+                <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
+                {{ error }}.
+            </div>
+        {% endfor %}
+    {% else %}
+        {% if errors|length > 0 %}
+            <div class="alert alert-danger alert-dismissable">
+                <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
+                {{ _('The last action reported errors') }}. <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#error_modal">{{ _('See errors') }}</button>
+            </div>
+        {% endif %}
+    {% endif %}
 {% endmacro %}

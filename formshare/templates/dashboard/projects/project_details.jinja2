@@ -37,7 +37,7 @@
     {% if viewingSelfAccount %}
         {{ super() }}
     {% else %}
-        {{ form.display_errors(errors) }}
+        {{ form.display_errors(errors,true) }}
         {% if not projectData.user_collaborates  %}
             {% include 'dashboard/profile/snippets/profile_head.jinja2' %}
         {% endif %}
@@ -50,7 +50,7 @@
 
 {% block mainsection %}
     {% if viewingSelfAccount %}
-        {{ form.display_errors(errors) }}
+        {{ form.display_errors(errors,true) }}
         {% include 'dashboard/projects/snippets/project_details.jinja2' %}
         {% set action_url = request.route_url('form_add',userid=activeProject.owner,projcode=activeProject.project_code) %}
         {% include 'dashboard/projects/forms/snippets/upload_form.jinja2' %}
@@ -79,6 +79,13 @@
     <script>
         $(document).ready(function() {
             new ClipboardJS('.clipboard');
+
+            $('#upload_form').submit(function() {
+                $('#upload_form_button').prop("disabled", "disabled");
+                $('#cross_upload_form_button').prop("disabled", "disabled");
+                $('#cancel_upload_form_button').prop("disabled", "disabled");
+                $('#upload_form_button').html('{{ _("One moment please...") }}');
+            });
 
             $('.custom-file-input').on('change', function() {
                 let fileName = $(this).val().split('\\').pop();

@@ -206,11 +206,11 @@ class PrivateView(object):
                                                                                                   self.request.referer))
                                     raise HTTPNotFound()
                     else:
-                        raise HTTPNotFound()
+                        raise HTTPFound(location=self.request.route_url('login'))
                 else:
-                    raise HTTPNotFound()
+                    raise HTTPFound(location=self.request.route_url('login'))
             else:
-                raise HTTPNotFound()
+                raise HTTPFound(location=self.request.route_url('login'))
 
         if login_data is not None:
             if login_data["group"] == "mainApp":

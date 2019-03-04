@@ -135,28 +135,28 @@ def get_search_dict_by_project(project):
     return _dict
 
 
-def create_connection(request):
+def create_connection(settings):
     """
     Creates a connection to ElasticSearch and pings it.
     :return: A tested (pinged) connection to ElasticSearch
     """
     try:
-        host = request.registry.settings['elasticsearch.repository.host']
+        host = settings['elasticsearch.repository.host']
     except KeyError:
         host = "localhost"
 
     try:
-        port = int(request.registry.settings['elasticsearch.repository.port'])
+        port = int(settings['elasticsearch.repository.port'])
     except KeyError:
         port = 9200
 
     try:
-        url_prefix = request.registry.settings['elasticsearch.repository.url_prefix']
+        url_prefix = settings['elasticsearch.repository.url_prefix']
     except KeyError:
         url_prefix = None
 
     try:
-        use_ssl = request.registry.settings['elasticsearch.repository.use_ssl']
+        use_ssl = settings['elasticsearch.repository.use_ssl']
         if use_ssl == 'True':
             use_ssl = True
         else:
@@ -180,18 +180,18 @@ def get_index_name(user, project, form):
     return user.lower() + "_" + project.lower() + "_" + form.lower()
 
 
-def create_dataset_index(request, user, project, form):
+def create_dataset_index(settings, user, project, form):
     try:
-        number_of_shards = int(request.registry.settings['elasticsearch.repository.number_of_shards'])
+        number_of_shards = int(settings['elasticsearch.repository.number_of_shards'])
     except KeyError:
         number_of_shards = 5
 
     try:
-        number_of_replicas = int(request.registry.settings['elasticsearch.repository.number_of_replicas'])
+        number_of_replicas = int(settings['elasticsearch.repository.number_of_replicas'])
     except KeyError:
         number_of_replicas = 1
 
-    connection = create_connection(request)
+    connection = create_connection(settings)
     if connection is not None:
         try:
             index_name = get_index_name(user, project, form)
@@ -209,8 +209,8 @@ def create_dataset_index(request, user, project, form):
         raise RequestError("Cannot connect to ElasticSearch")
 
 
-def delete_dataset_index(request, user, project, form):
-    connection = create_connection(request)
+def delete_dataset_index(settings, user, project, form):
+    connection = create_connection(settings)
     if connection is not None:
         try:
             index_name = get_index_name(user, project, form)
@@ -227,8 +227,8 @@ def delete_dataset_index(request, user, project, form):
         raise RequestError("Cannot connect to ElasticSearch")
 
 
-def delete_dataset_index_by_project(request, user, project):
-    connection = create_connection(request)
+def delete_dataset_index_by_project(settings, user, project):
+    connection = create_connection(settings)
     if connection is not None:
         try:
             index_name = user.lower() + "_" + project.lower() + "_*"
@@ -245,18 +245,18 @@ def delete_dataset_index_by_project(request, user, project):
         raise RequestError("Cannot connect to ElasticSearch")
 
 
-def add_dataset(request, user, project, form, dataset_id, data_dict):
+def add_dataset(settings, user, project, form, dataset_id, data_dict):
     index_name = get_index_name(user, project, form)
-    connection = create_connection(request)
+    connection = create_connection(settings)
     if connection is not None:
         connection.index(index=index_name, doc_type='dataset', id=dataset_id, body=data_dict)
     else:
         raise RequestError("Cannot connect to ElasticSearch")
 
 
-def get_dataset_stats_for_form(request, user, project, form):
+def get_dataset_stats_for_form(settings, user, project, form):
     index_name = get_index_name(user, project, form)
-    connection = create_connection(request)
+    connection = create_connection(settings)
     if connection is not None:
         try:
             es_result = connection.search(index=index_name, body=get_search_dict_by_form())
@@ -272,9 +272,9 @@ def get_dataset_stats_for_form(request, user, project, form):
         raise RequestError("Cannot connect to ElasticSearch")
 
 
-def get_number_of_datasets_with_gps(request, user, project, form):
+def get_number_of_datasets_with_gps(settings, user, project, form):
     index_name = get_index_name(user, project, form)
-    connection = create_connection(request)
+    connection = create_connection(settings)
     if connection is not None:
         try:
             es_result = connection.search(index=index_name, body=get_datasets_with_gps())
@@ -288,9 +288,9 @@ def get_number_of_datasets_with_gps(request, user, project, form):
         raise RequestError("Cannot connect to ElasticSearch")
 
 
-def get_number_of_datasets_with_gps_in_project(request, user, project):
+def get_number_of_datasets_with_gps_in_project(settings, user, project):
     index_name = user.lower() + "_" + project.lower() + "_*"
-    connection = create_connection(request)
+    connection = create_connection(settings)
     if connection is not None:
         try:
             es_result = connection.search(index=index_name, body=get_datasets_with_gps())
@@ -304,9 +304,9 @@ def get_number_of_datasets_with_gps_in_project(request, user, project):
         raise RequestError("Cannot connect to ElasticSearch")
 
 
-def get_datasets_from_form(request, user, project, form, query_from=None, query_size=None):
+def get_datasets_from_form(settings, user, project, form, query_from=None, query_size=None):
     index_name = get_index_name(user, project, form)
-    connection = create_connection(request)
+    connection = create_connection(settings)
     if connection is not None:
         try:
             es_result = connection.search(index=index_name, body=get_datasets_dict(query_from, query_size))
@@ -323,9 +323,9 @@ def get_datasets_from_form(request, user, project, form, query_from=None, query_
         raise RequestError("Cannot connect to ElasticSearch")
 
 
-def get_datasets_from_project(request, user, project, query_from=None, query_size=None):
+def get_datasets_from_project(settings, user, project, query_from=None, query_size=None):
     index_name = user.lower() + "_" + project.lower() + "_*"
-    connection = create_connection(request)
+    connection = create_connection(settings)
     if connection is not None:
         try:
             es_result = connection.search(index=index_name, body=get_datasets_dict(query_from, query_size))
@@ -342,9 +342,9 @@ def get_datasets_from_project(request, user, project, query_from=None, query_siz
         raise RequestError("Cannot connect to ElasticSearch")
 
 
-def get_dataset_stats_for_project(request, user, project):
+def get_dataset_stats_for_project(settings, user, project):
     index_name = user.lower() + "_" + project.lower() + "_*"
-    connection = create_connection(request)
+    connection = create_connection(settings)
     if connection is not None:
         try:
             es_result = connection.search(index=index_name,

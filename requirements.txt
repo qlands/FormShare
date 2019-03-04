@@ -38,10 +38,11 @@ lingua==4.13
 lxml==4.2.5
 Mako==1.0.7
 MarkupSafe==1.0
+mysql-connector==2.1.4
 mysql-connector-python==8.0.12
 nose==1.3.7
+odata-generator==1.0
 ofs==0.4.3
-openpyxl==2.5.11
 packaging==18.0
 paginate==0.5.6
 Pairtree==0.8.1
@@ -57,6 +58,7 @@ pycrypto==2.6.1
 Pygments==2.2.0
 pyparsing==2.3.0
 pyramid==1.9.2
+-e git+https://github.com/wichert/pyramid_authstack.git@ef3aa348f08d62f7fbcbf3fd1942022093f9c057#egg=pyramid_authstack
 pyramid-debugtoolbar==4.5
 pyramid-jinja2==2.7
 pyramid-mako==1.0.2
@@ -67,11 +69,14 @@ python-editor==1.0.3
 pytz==2018.5
 PyUtilib==5.4.1
 -e git+https://github.com/XLSForm/pyxform.git@f00ec761c989c7f074d757d0b7f03577dda2927d#egg=pyxform
+PyYAML==3.12
+pyzmq==17.1.2
 qrcode==6.0
 redis==2.10.6
 repoze.lru==0.7
 requests==2.19.1
 simplejson==3.16.0
+simplekml==1.3.1
 six==1.11.0
 snowballstemmer==1.2.1
 Sphinx==1.8.1
@@ -95,4 +100,3 @@ xlrd==1.1.0
 zope.deprecation==4.3.0
 zope.interface==4.5.0
 zope.sqlalchemy==1.0
--e git+https://github.com/wichert/pyramid_authstack.git#egg=pyramid_authstack

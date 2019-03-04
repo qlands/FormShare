@@ -43,7 +43,7 @@ class UserDashBoardView(DashboardView):
                 else:
                     inactive_forms = inactive_forms + 1
 
-            submissions, last, by, in_form = get_dataset_stats_for_project(self.request, user_id,
+            submissions, last, by, in_form = get_dataset_stats_for_project(self.request.registry.settings, user_id,
                                                                            self.activeProject['project_code'])
 
             bydetails = get_by_details(self.request, user_id, self.activeProject['project_id'], by)
@@ -53,7 +53,7 @@ class UserDashBoardView(DashboardView):
                     'files': get_project_files(self.request, self.activeProject['project_id']), 'userDetails': user_details,
                     'forms': forms, 'activeforms': active_forms, 'inactiveforms': inactive_forms,
                     'submissions': submissions, 'last': last, 'by': by, 'bydetails': bydetails, 'infom': in_form,
-                    'withgps': get_number_of_datasets_with_gps_in_project(self.request, user_id,
+                    'withgps': get_number_of_datasets_with_gps_in_project(self.request.registry.settings, user_id,
                                                                           self.activeProject['project_code'])}
         else:
             return {'projectData': None, 'userid': user_id, 'collaborators': [],

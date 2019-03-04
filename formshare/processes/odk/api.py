@@ -1,6 +1,5 @@
 from lxml import etree
 import os
-import glob
 import io
 import json
 import mimetypes
@@ -11,7 +10,7 @@ from uuid import uuid4
 from subprocess import Popen, PIPE, check_call, CalledProcessError
 from pyramid.response import FileResponse
 from formshare.processes.db import assistant_has_form, get_assistant_forms, get_project_id_from_name, add_new_form, \
-    form_exists, get_form_directory, get_form_xml_file, get_form_xls_file, update_form, get_form_data, \
+    form_exists, get_form_directory, get_form_xml_file, get_form_survey_file, update_form, get_form_data, \
     get_form_schema, get_submission_data, add_submission, add_json_log, update_json_status, add_json_history, \
     form_file_exists, get_url_from_file, set_file_with_error, update_file_info, get_project_from_assistant, \
     get_form_files, get_project_code_from_id, get_form_geopoint, get_media_files, add_file_to_form, \
@@ -19,21 +18,24 @@ from formshare.processes.db import assistant_has_form, get_assistant_forms, get_
 import uuid
 import datetime
 import re
-import sys
 from bs4 import BeautifulSoup
 from sqlalchemy import exc
 from decimal import Decimal
 from zope.sqlalchemy import mark_changed
 from pyxform import xls2xform
-from openpyxl import load_workbook
+from pyxform.xls2json import parse_file_to_json
 from pyxform.errors import PyXFormError
 from formshare.processes.storage import get_stream, response_stream, store_file, delete_stream
 from pyramid.response import Response
 from urllib.request import urlretrieve
-from pyramid.httpexceptions import HTTPFound
 from formshare.processes.elasticsearch.repository_index import create_dataset_index, add_dataset
-
+from formshare.processes.elasticsearch.record_index import create_record_index, add_record
 import logging
+import zipfile
+import glob
+from formshare.products.fs1import.fs1import import formshare_one_import_json
+
+
 log = logging.getLogger(__name__)
 
 __all__ = ['generate_form_list', 'generate_manifest', 'get_form_list',
@@ -42,7 +44,10 @@ __all__ = ['generate_form_list', 'generate_manifest', 'get_form_list',
            'get_html_from_diff', 'generate_diff', 'store_new_version', 'restore_from_revision', 'push_revision',
            'get_tables_from_form', 'get_fields_from_table', 'get_table_desc', 'is_field_key', 'get_request_data',
            'update_data', 'upload_odk_form', 'update_form_title', 'retrieve_form_file', 'cache_external_file',
-           'get_odk_path', 'store_file_in_directory', 'update_odk_form']
+           'get_odk_path', 'store_file_in_directory', 'update_odk_form', 'import_json_data', 'store_json_file',
+           'check_jxform_file', 'get_missing_support_files']
+
+_GPS_types = ['add location prompt', 'geopoint', 'gps', 'location', 'q geopoint', 'q location']
 
 
 def get_odk_path(request):
@@ -147,67 +152,88 @@ def store_file_in_directory(request, project, form, file_name, directory):
                 file.close()
 
 
+def retrieve_form_file_stream(request, project, form, file_name):
+    file_url, last_download = get_url_from_file(request, project, form, file_name)
+    if file_url is None:
+        bucket_id = project + form
+        bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
+        stream = get_stream(request, bucket_id, file_name)
+        return stream
+    else:
+        download = False
+        if last_download is not None:
+            lapsed = datetime.datetime.now() - last_download
+            minutes_lapsed = divmod(lapsed.days * 86400 + lapsed.seconds, 60)
+            minutes_lapsed = minutes_lapsed[0]
+            if minutes_lapsed > 5:
+                download = True
+        else:
+            download = True
+        if download:
+            repository_path = request.registry.settings['repository.path']
+            downloads_path = os.path.join(repository_path, *["downloads"])
+            if not os.path.exists(downloads_path):
+                os.makedirs(downloads_path)
+            target_file = os.path.join(downloads_path, *[str(uuid.uuid4()) + ".tmp"])
+            try:
+                log.info("Retrieving file {}".format(file_url))
+                urlretrieve(file_url, target_file)
+            except Exception as e:
+                set_file_with_error(request, project, form, file_name)
+                log.error(
+                    "Error {} while downloading external file {} for form {}".format(str(e), file_name, form))
+                return None
+            bucket_id = project + form
+            bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
+            file = open(target_file, 'rb')
+            store_file(request, bucket_id, file_name, file)
+            file.close()
+            file = open(target_file, 'rb')
+            md5sum = md5(file.read()).hexdigest()
+            file.close()
+            update_file_info(request, project, form, file_name, md5sum)
+
+        bucket_id = project + form
+        bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
+        stream = get_stream(request, bucket_id, file_name)
+        return stream
+
+
 def retrieve_form_file(request, project, form, file_name):
     if form_file_exists(request, project, form, file_name):
-        file_url, last_download = get_url_from_file(request, project, form, file_name)
-        if file_url is None:
-            bucket_id = project + form
-            bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
-            stream = get_stream(request, bucket_id, file_name)
-            if stream is not None:
-                response = Response()
-                return response_stream(stream, file_name, response)
-            else:
-                raise HTTPNotFound
+        stream = retrieve_form_file_stream(request, project, form, file_name)
+        if stream is not None:
+            response = Response()
+            return response_stream(stream, file_name, response)
         else:
-            download = False
-            if last_download is not None:
-                lapsed = datetime.datetime.now() - last_download
-                minutes_lapsed = divmod(lapsed.days * 86400 + lapsed.seconds, 60)
-                minutes_lapsed = minutes_lapsed[0]
-                if minutes_lapsed > 5:
-                    download = True
-            else:
-                download = True
-            if download:
-                repository_path = request.registry.settings['repository.path']
-                downloads_path = os.path.join(repository_path, *["downloads"])
-                if not os.path.exists(downloads_path):
-                    os.makedirs(downloads_path)
-                target_file = os.path.join(downloads_path, *[str(uuid.uuid4()) + ".tmp"])
-                try:
-                    log.info("Retrieving file {}".format(file_url))
-                    urlretrieve(file_url, target_file)
-                except Exception as e:
-                    set_file_with_error(request, project, form, file_name)
-                    log.error(
-                        "Error {} while downloading external file {} for form {}".format(str(e), file_name, form))
-                    return HTTPFound(file_url)
-                bucket_id = project + form
-                bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
-                file = open(target_file, 'rb')
-                store_file(request, bucket_id, file_name, file)
-                file.close()
-                file = open(target_file, 'rb')
-                md5sum = md5(file.read()).hexdigest()
-                file.close()
-                update_file_info(request, project, form, file_name, md5sum)
-
-            bucket_id = project + form
-            bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
-            stream = get_stream(request, bucket_id, file_name)
-            if stream is not None:
-                response = Response()
-                return response_stream(stream, file_name, response)
-            else:
-                raise HTTPNotFound
+            raise HTTPNotFound
     else:
         raise HTTPNotFound
 
 
+def get_missing_support_files(request, project, form, required_files, form_files):
+    missing_files = []
+    current_form_files = []
+    for form_file in form_files:
+        stream = retrieve_form_file_stream(request, project, form, form_file['file_name'])
+        if stream is not None:
+            try:
+                zip_file = zipfile.ZipFile(io.BytesIO(stream))
+                if form_file not in zip_file.namelist():
+                    current_form_files.append(form_file['file_name'])
+            except Exception as e:
+                log.info(str(e))
+                if form_file not in required_files:
+                    current_form_files.append(form_file['file_name'])
+    for required_file in required_files:
+        if required_file not in current_form_files:
+            missing_files.append(required_file)
+
+    return missing_files
+
+
 def update_form_title(request, project, form, title):
     xml_file = get_form_xml_file(request, project, form)
-    xlsx_file = get_form_xls_file(request, project, form)
     tree = etree.parse(xml_file)
     root = tree.getroot()
     h_nsmap = root.nsmap['h']
@@ -229,54 +255,149 @@ def update_form_title(request, project, form, title):
         json_string = json.dumps(json_metadata, indent=4, ensure_ascii=False)
         outfile.write(json_string)
 
-    wb = load_workbook(xlsx_file)
-    sheet = wb['settings']
-    for y in range(sheet.min_column, sheet.max_column+1):
-        if sheet.cell(row=1, column=y).value == "form_title":
-            sheet.cell(row=2, column=y, value=title)
-    wb.save(xlsx_file)
+
+def get_geopoint_variable_from_json(json_dict, parent_array):
+    result = None
+    if json_dict['type'] == 'survey' or json_dict['type'] == 'group':
+        if json_dict['type'] == 'group':
+            parent_array.append(json_dict['name'])
+        for child in json_dict['children']:
+            result = get_geopoint_variable_from_json(child, parent_array)
+            if result is not None:
+                break
+        if result is None:
+            parent_array.pop()
+    else:
+        if json_dict['type'] in _GPS_types:
+            result = json_dict['name']
+    return result
 
 
-def get_geopoint_variable_from_xlsx(xlsx_file):
-    wb = load_workbook(xlsx_file)
-    sheet = wb['survey']
-    type_column = -1
-    name_column = -1
-    groups = []
-    repeats = []
-    for y in range(sheet.min_column, sheet.max_column+1):
-        if sheet.cell(row=1, column=y).value == "type":
-            type_column = y
-        if sheet.cell(row=1, column=y).value == "name":
-            name_column = y
-    for x in range(2, sheet.max_row+1):
-        variable_type = sheet.cell(x, type_column).value
-        if variable_type is not None:
-            variable_name = sheet.cell(x, name_column).value
-            variable_type = " ".join(variable_type.split())
-            variable_type = variable_type.lower()
-            if variable_type == 'begin repeat':
-                repeats.append(variable_name)
-            if variable_type == 'end repeat':
-                try:
-                    del repeats[-1]
-                except IndexError:
-                    log.error("It seems that the file {} is closing an invalid group".format(xlsx_file))
-            if variable_type == 'begin group':
-                groups.append(variable_name)
-            if variable_type == 'end group':
-                try:
-                    del groups[-1]
-                except IndexError:
-                    log.error("It seems that the file {} is closing an invalid group".format(xlsx_file))
+def import_json_data(request, user, project, form, odk_dir, form_directory, schema, assistant):
+    input_file_name = request.POST['file'].filename
+    input_file_name = input_file_name.lower()
 
-            if variable_type == 'geopoint':
-                if len(repeats) == 0:
-                    if len(groups) > 0:
-                        return "/".join(groups) + '/' + variable_name
-                    else:
-                        return variable_name
-    return None
+    if input_file_name[-4:] != "json" and input_file_name[-3:] != "zip":
+        return False, request.translate("Invalid file. Only json or zip are allowed")
+
+    uid = str(uuid.uuid4())
+    paths = ['tmp', uid]
+    temp_dir = os.path.join(odk_dir, *paths)
+    os.makedirs(temp_dir)
+
+    input_file = request.POST['file'].file
+
+    paths = ['tmp', uid, input_file_name]
+    file_name = os.path.join(odk_dir, *paths)
+
+    input_file.seek(0)
+    with open(file_name, 'wb') as permanent_file:
+        shutil.copyfileobj(input_file, permanent_file)
+
+    input_file.close()
+    if input_file_name[-3:] == "zip":
+        if zipfile.is_zipfile(file_name):
+            with zipfile.ZipFile(file_name, 'r') as zip_ref:
+                zip_ref.extractall(temp_dir)
+        else:
+            return False, "Invalid Zip file"
+
+    extension = "json"
+    path_to_files = temp_dir + '/**/*.' + extension
+
+    # Call the background Celery task
+    formshare_one_import_json(request, user, project, form, odk_dir, form_directory, schema, assistant, path_to_files)
+
+    return True, ""
+
+
+def check_jxform_file(request, json_file, external_file=None):
+    jxform_to_mysql = os.path.join(request.registry.settings['odktools.path'], *["JXFormToMysql", "jxformtomysql"])
+    args = [jxform_to_mysql, "-j " + json_file, "-t maintable", "-v dummy",
+            "-e " + os.path.join(os.path.dirname(json_file), *['tmp']), "-o m", "-K"]
+    if external_file is not None:
+        args.append(external_file)
+    p = Popen(args, stdout=PIPE, stderr=PIPE)
+    stdout, stderr = p.communicate()
+    if p.returncode == 0:
+        try:
+            root = etree.fromstring(stdout)
+            files_array = []
+            missing_files = root.findall(".//missingFile")
+            for a_file in missing_files:
+                files_array.append(a_file.get("fileName"))
+            if len(files_array) > 0:
+                return 0, ",".join(files_array)
+            else:
+                return 0, ""
+        except Exception as e:
+            log.info("Checking JXForm returned 0 with no addition messages: {}".format(str(e)))
+            return 0, ""
+    else:
+        print("*************************111")
+        print(p.returncode)
+        print(stdout)
+        print("--------------------")
+        print(stderr)
+        print("*************************111")
+        if p.returncode == 23:
+            root = etree.fromstring(stdout)
+            duplicated_tables = root.findall(".//duplicatedTable")
+            message = request.translate("FormShare checks a little bit more your ODK for inconsistencies.") + "\n"
+            message = message + request.translate(
+                "The following variables are duplicated within repeats or groups in the ODK you just submitted:") + "\n"
+            if duplicated_tables:
+                for a_table in duplicated_tables:
+                    table_name = a_table.get("tableName")
+                    if table_name == "maintable":
+                        table_name = request.translate("Outside any repeat")
+                    message = message + "\t" + request.translate("In repeat/group: {}".format(table_name)) + ": \n"
+                    duplicated_fields = a_table.findall(".//duplicatedField")
+                    if duplicated_fields:
+                        for a_field in duplicated_fields:
+                            field_name = a_field.get("fieldName")
+                            message = message + "\t\t" + request.translate("Variable: {}".format(field_name)) + "\n"
+                message = message + "\n" + request.translate(
+                    "Please note that FormShare only allows basic Latin letters, digits 0-9, dollar and underscore "
+                    "in repeat, group and variable names.")
+            return 23, message
+        if p.returncode == 22:
+            root = etree.fromstring(stdout)
+            duplicated_tables = root.findall(".//duplicatedItem")
+            message = request.translate("FormShare checks a little bit more your ODK for inconsistencies.") + "\n"
+            message = message + request.translate(
+                "The following repeats or groups are duplicated in the ODK you just submitted:") + "\n"
+            if duplicated_tables:
+                for a_table in duplicated_tables:
+                    table_name = a_table.get("tableName")
+                    message = message + "\t" + request.translate("Repeat or group: {}".format(table_name)) + "\n"
+                message = message + "\n" + request.translate(
+                    "Please note that FormShare only allows basic Latin letters, digits 0-9, dollar and underscore "
+                    "in repeat, group and variable names.")
+            return 22, message
+        if p.returncode == 9:
+            root = etree.fromstring(stdout)
+            duplicated_items = root.findall(".//duplicatedItem")
+            message = request.translate("FormShare checks a little bit more your ODK for inconsistencies.") + "\n"
+            message = message + request.translate(
+                "The following options are duplicated in the ODK you just submitted:") + "\n"
+            if duplicated_items:
+                for a_item in duplicated_items:
+                    variable_name = a_item.get("variableName")
+                    duplicated_option = a_item.get("duplicatedValue")
+                    message = message + "\t" + request.translate(
+                        "Option {} in variable {}".format(duplicated_option, variable_name)) + "\n"
+            return 9, message
+        if p.returncode == 16:
+            message = request.translate("FormShare checks a little bit more your ODK for inconsistencies.") + "\n"
+            message = message + request.translate("The ODK you just submitted has a search statement in the appearance "
+                                                  "column with a syntax that is not recognised by FormShare. Please "
+                                                  "go to https://github.com/qlands/FormShare an raise an issue so the"
+                                                  "technical team can inspect your ODK and find a solution.") + "\n"
+            return 9, message
+
+        log.error(". Error: " + "-" + stderr.decode() + " while checking PyXForm. Command line: " + " ".join(args))
+        return p.returncode, stderr.decode()
 
 
 def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
@@ -286,11 +407,11 @@ def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
     os.makedirs(os.path.join(odk_dir, *paths))
 
     input_file = request.POST['xlsx'].file
-    input_file_name = request.POST['xlsx'].filename
+    input_file_name = request.POST['xlsx'].filename.lower()
 
     paths = ['tmp', uid, input_file_name]
     file_name = os.path.join(odk_dir, *paths)
-
+    file_name = file_name.lower()
     input_file.seek(0)
     with open(file_name, 'wb') as permanent_file:
         shutil.copyfileobj(input_file, permanent_file)
@@ -302,25 +423,38 @@ def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
     paths = ['tmp', uid, parts[0]+'.xml']
     xml_file = os.path.join(odk_dir, *paths)
 
-    try:
-        xls2xform.xls2xform_convert(file_name, xml_file)
+    # try:
+    if file_name.find('.xls') == -1 and file_name.find('.xlsx') == -1 and file_name.find('.xlsm') == -1:
+        return False, request.translate('Invalid file type')
 
-        # Check if the conversion created itemsets.csv
-        output_dir = os.path.split(xml_file)[0]
-        itemsets_csv = os.path.join(output_dir, "itemsets.csv")
-        if not os.path.isfile(itemsets_csv):
-            itemsets_csv = ""
+    xls2xform.xls2xform_convert(file_name, xml_file)
 
-        tree = etree.parse(xml_file)
-        root = tree.getroot()
-        nsmap = root.nsmap[None]
-        h_nsmap = root.nsmap['h']
-        eid = root.findall(".//{" + nsmap + "}" + parts[0])
-        if eid:
-            form_id = eid[0].get("id")
-            if re.match(r'^[A-Za-z0-9_]+$', form_id):
-                form_title = root.findall(".//{" + h_nsmap + "}title")
-                if not form_exists(request, project_id, form_id):
+    warnings = []
+    json_dict = parse_file_to_json(file_name, warnings=warnings)
+    paths = ['tmp', uid, parts[0] + ".srv"]
+    survey_file = os.path.join(odk_dir, *paths)
+    with open(survey_file, "w", ) as outfile:
+        json_string = json.dumps(json_dict, indent=4, ensure_ascii=False)
+        outfile.write(json_string)
+
+    # Check if the conversion created itemsets.csv
+    output_dir = os.path.split(xml_file)[0]
+    itemsets_csv = os.path.join(output_dir, "itemsets.csv")
+    if not os.path.isfile(itemsets_csv):
+        itemsets_csv = None
+
+    tree = etree.parse(xml_file)
+    root = tree.getroot()
+    nsmap = root.nsmap[None]
+    h_nsmap = root.nsmap['h']
+    eid = root.findall(".//{" + nsmap + "}" + parts[0])
+    if eid:
+        form_id = eid[0].get("id")
+        if re.match(r'^[A-Za-z0-9_]+$', form_id):
+            form_title = root.findall(".//{" + h_nsmap + "}title")
+            if not form_exists(request, project_id, form_id):
+                error, message = check_jxform_file(request, survey_file, itemsets_csv)
+                if error == 0:
                     paths = ['forms', form_directory, 'media']
                     if not os.path.exists(os.path.join(odk_dir, *paths)):
                         os.makedirs(os.path.join(odk_dir, *paths))
@@ -341,13 +475,22 @@ def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
 
                     xls_file_fame = os.path.basename(file_name)
                     xml_file_name = os.path.basename(xml_file)
+                    survey_file_name = os.path.basename(survey_file)
                     paths = ['forms', form_directory, xls_file_fame]
                     final_xls = os.path.join(odk_dir, *paths)
                     paths = ['forms', form_directory, xml_file_name]
                     final_xml = os.path.join(odk_dir, *paths)
+                    paths = ['forms', form_directory, survey_file_name]
+                    final_survey = os.path.join(odk_dir, *paths)
                     shutil.copyfile(file_name, final_xls)
                     shutil.copyfile(xml_file, final_xml)
-                    geopoint = get_geopoint_variable_from_xlsx(final_xls)
+                    shutil.copyfile(survey_file, final_survey)
+                    parent_array = []
+                    try:
+                        geopoint = get_geopoint_variable_from_json(json_dict, parent_array)
+                    except Exception as e:
+                        geopoint = None
+                        log.warning("Unable to extract GeoPoint from file {}. Error: {}".format(final_survey, str(e)))
                     form_data['project_id'] = project_id
                     form_data['form_id'] = form_id
                     form_data['form_name'] = form_title[0].text
@@ -357,19 +500,23 @@ def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
                     form_data['form_testing'] = 1
                     form_data['form_xlsfile'] = final_xls
                     form_data['form_xmlfile'] = final_xml
+                    form_data['form_jsonfile'] = final_survey
                     form_data['form_pubby'] = user_id
-                    form_data['form_geopoint'] = geopoint
+                    if geopoint is not None:
+                        form_data['form_geopoint'] = '/'.join(parent_array) + "/" + geopoint
+                    if message != "":
+                        form_data['form_reqfiles'] = message
 
                     added, message = add_new_form(request, form_data)
                     if not added:
                         return added, message
 
                     # If we have itemsets.csv add it as media files
-                    if itemsets_csv != "":
+                    if itemsets_csv is not None:
                         with open(itemsets_csv, "rb", ) as itemset_file:
                             md5sum = md5(itemset_file.read()).hexdigest()
-                            added, message = add_file_to_form(request, project_id, form_id, 'itemsets.csv', None, True,
-                                                              md5sum)
+                            added, message = add_file_to_form(request, project_id, form_id, 'itemsets.csv', None,
+                                                              True, md5sum)
                             if added:
                                 itemset_file.seek(0)
                                 bucket_id = project_id + form_id
@@ -389,32 +536,34 @@ def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
                         outfile.write(json_string)
                     return True, form_id
                 else:
-                    return False, request.translate("The form already exists in this project")
+                    return False, message
             else:
-                return False, request.translate(
-                    "The form ID has especial characters. FormShare only allows letters, numbers and underscores(_)")
+                return False, request.translate("The form already exists in this project")
         else:
             return False, request.translate(
-                "Cannot find XForm ID. Please send this form to support_formshare@qlands.com")
-    except PyXFormError as e:
-        log.error("Error {} while adding form {} in project {}".format(str(e), input_file_name, project_id))
-        return False, str(e)
-    except Exception as e:
-        log.error("Error {} while adding form {} in project {}".format(str(e), input_file_name, project_id))
-        return False, sys.exc_info()[0]
+                "The form ID has especial characters. FormShare only allows letters, numbers and underscores(_)")
+    else:
+        return False, request.translate(
+            "Cannot find XForm ID. Please send this form to support_formshare@qlands.com")
+    # except PyXFormError as e:
+    #     log.error("Error {} while adding form {} in project {}".format(str(e), input_file_name, project_id))
+    #     return False, str(e)
+    # except Exception as e:
+    #     log.error("Error {} while adding form {} in project {}".format(str(e), input_file_name, project_id))
+    #     return False, str(e)
 
 
-def update_odk_form(request, project_id, for_form_id, user_id, odk_dir, form_data):
+def update_odk_form(request, project_id, for_form_id, odk_dir, form_data):
     uid = str(uuid.uuid4())
-    form_directory = uid[-12:]
     paths = ['tmp', uid]
     os.makedirs(os.path.join(odk_dir, *paths))
 
     input_file = request.POST['xlsx'].file
-    input_file_name = request.POST['xlsx'].filename
+    input_file_name = request.POST['xlsx'].filename.lower()
 
     paths = ['tmp', uid, input_file_name]
     file_name = os.path.join(odk_dir, *paths)
+    file_name = file_name.lower()
 
     input_file.seek(0)
     with open(file_name, 'wb') as permanent_file:
@@ -428,13 +577,24 @@ def update_odk_form(request, project_id, for_form_id, user_id, odk_dir, form_dat
     xml_file = os.path.join(odk_dir, *paths)
 
     try:
+        if file_name.find('.xls') == -1 and file_name.find('.xlsx') == -1 and file_name.find('.xlsm') == -1:
+            return False, request.translate('Invalid file type')
+
         xls2xform.xls2xform_convert(file_name, xml_file)
+
+        warnings = []
+        json_dict = parse_file_to_json(file_name, warnings=warnings)
+        paths = ['tmp', uid, parts[0] + ".srv"]
+        survey_file = os.path.join(odk_dir, *paths)
+        with open(survey_file, "w", ) as outfile:
+            json_string = json.dumps(json_dict, indent=4, ensure_ascii=False)
+            outfile.write(json_string)
 
         # Check if the conversion created itemsets.csv
         output_dir = os.path.split(xml_file)[0]
         itemsets_csv = os.path.join(output_dir, "itemsets.csv")
         if not os.path.isfile(itemsets_csv):
-            itemsets_csv = ""
+            itemsets_csv = None
 
         tree = etree.parse(xml_file)
         root = tree.getroot()
@@ -447,78 +607,94 @@ def update_odk_form(request, project_id, for_form_id, user_id, odk_dir, form_dat
                 if form_id == for_form_id:
                     form_title = root.findall(".//{" + h_nsmap + "}title")
                     if form_exists(request, project_id, form_id):
-                        paths = ['forms', form_directory, 'media']
-                        if not os.path.exists(os.path.join(odk_dir, *paths)):
-                            os.makedirs(os.path.join(odk_dir, *paths))
+                        error, message = check_jxform_file(request, survey_file, itemsets_csv)
+                        if error == 0:
+                            form_directory = get_form_directory(request, project_id, form_id)
+                            paths = ['forms', form_directory, 'media']
+                            if not os.path.exists(os.path.join(odk_dir, *paths)):
+                                os.makedirs(os.path.join(odk_dir, *paths))
 
-                            paths = ['forms', form_directory, 'submissions']
-                            os.makedirs(os.path.join(odk_dir, *paths))
+                                paths = ['forms', form_directory, 'submissions']
+                                os.makedirs(os.path.join(odk_dir, *paths))
 
-                            paths = ['forms', form_directory, 'submissions', 'logs']
-                            os.makedirs(os.path.join(odk_dir, *paths))
+                                paths = ['forms', form_directory, 'submissions', 'logs']
+                                os.makedirs(os.path.join(odk_dir, *paths))
 
-                            paths = ['forms', form_directory, 'submissions', 'maps']
-                            os.makedirs(os.path.join(odk_dir, *paths))
+                                paths = ['forms', form_directory, 'submissions', 'maps']
+                                os.makedirs(os.path.join(odk_dir, *paths))
 
-                            paths = ['forms', form_directory, 'repository']
-                            os.makedirs(os.path.join(odk_dir, *paths))
-                            paths = ['forms', form_directory, 'repository', 'temp']
-                            os.makedirs(os.path.join(odk_dir, *paths))
+                                paths = ['forms', form_directory, 'repository']
+                                os.makedirs(os.path.join(odk_dir, *paths))
+                                paths = ['forms', form_directory, 'repository', 'temp']
+                                os.makedirs(os.path.join(odk_dir, *paths))
 
-                        xls_file_fame = os.path.basename(file_name)
-                        xml_file_name = os.path.basename(xml_file)
-                        paths = ['forms', form_directory, xls_file_fame]
-                        final_xls = os.path.join(odk_dir, *paths)
-                        paths = ['forms', form_directory, xml_file_name]
-                        final_xml = os.path.join(odk_dir, *paths)
-                        shutil.copyfile(file_name, final_xls)
-                        shutil.copyfile(xml_file, final_xml)
-                        geopoint = get_geopoint_variable_from_xlsx(final_xls)
-                        form_data['project_id'] = project_id
-                        form_data['form_id'] = form_id
-                        form_data['form_name'] = form_title[0].text
-                        form_data['form_cdate'] = datetime.datetime.now()
-                        form_data['form_directory'] = form_directory
-                        form_data['form_accsub'] = 1
-                        form_data['form_testing'] = 1
-                        form_data['form_xlsfile'] = final_xls
-                        form_data['form_xmlfile'] = final_xml
-                        form_data['form_pubby'] = user_id
-                        form_data['form_geopoint'] = geopoint
-
-                        updated, message = update_form(request, project_id, for_form_id, form_data)
-                        if not updated:
-                            return updated, message
-
-                        # If we have itemsets.csv add it as media files
-                        if itemsets_csv != "":
-                            bucket_id = project_id + form_id
-                            bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
+                            xls_file_fame = os.path.basename(file_name)
+                            xml_file_name = os.path.basename(xml_file)
+                            survey_file_name = os.path.basename(survey_file)
+                            paths = ['forms', form_directory, xls_file_fame]
+                            final_xls = os.path.join(odk_dir, *paths)
+                            paths = ['forms', form_directory, xml_file_name]
+                            final_xml = os.path.join(odk_dir, *paths)
+                            paths = ['forms', form_directory, survey_file_name]
+                            final_survey = os.path.join(odk_dir, *paths)
+                            shutil.copyfile(file_name, final_xls)
+                            shutil.copyfile(xml_file, final_xml)
+                            shutil.copyfile(survey_file, final_survey)
+                            parent_array = []
                             try:
-                                delete_stream(request, bucket_id, 'itemsets.csv')
+                                geopoint = get_geopoint_variable_from_json(json_dict, parent_array)
                             except Exception as e:
-                                log.error("Error {} removing filename {} from bucket {}".format(str(e), 'itemsets.csv',
-                                                                                                bucket_id))
-                            with open(itemsets_csv, "rb", ) as itemset_file:
-                                md5sum = md5(itemset_file.read()).hexdigest()
-                                added, message = add_file_to_form(request, project_id, form_id, 'itemsets.csv', None,
-                                                                  True, md5sum)
-                                if added:
-                                    itemset_file.seek(0)
-                                    store_file(request, bucket_id, 'itemsets.csv', itemset_file)
+                                geopoint = None
+                                log.warning(
+                                    "Unable to extract GeoPoint from file {}. Error: {}".format(final_survey, str(e)))
+                            form_data['project_id'] = project_id
+                            form_data['form_id'] = form_id
+                            form_data['form_name'] = form_title[0].text
+                            form_data['form_lupdate'] = datetime.datetime.now()
+                            form_data['form_xlsfile'] = final_xls
+                            form_data['form_xmlfile'] = final_xml
+                            form_data['form_jsonfile'] = final_survey
+                            if geopoint is not None:
+                                form_data['form_geopoint'] = "/".join(parent_array) + "/" + geopoint
+                            if message != "":
+                                form_data['form_reqfiles'] = message
 
-                        paths = ['forms', form_directory, parts[0]+".json"]
-                        json_file = os.path.join(odk_dir, *paths)
+                            updated, message = update_form(request, project_id, for_form_id, form_data)
+                            if not updated:
+                                return updated, message
 
-                        metadata = {"formID": form_id, "name": form_title[0].text, "majorMinorVersion": "",
-                                    "version": datetime.datetime.now().strftime("%Y%m%d"),
-                                    "hash": 'md5:' + md5(open(final_xml, 'rb').read()).hexdigest(),
-                                    "descriptionText": form_title[0].text}
+                            # If we have itemsets.csv add it as media files
+                            if itemsets_csv is not None:
+                                bucket_id = project_id + form_id
+                                bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
+                                try:
+                                    delete_stream(request, bucket_id, 'itemsets.csv')
+                                except Exception as e:
+                                    log.error(
+                                        "Error {} removing filename {} from bucket {}".format(str(e), 'itemsets.csv',
+                                                                                              bucket_id))
+                                with open(itemsets_csv, "rb", ) as itemset_file:
+                                    md5sum = md5(itemset_file.read()).hexdigest()
+                                    added, message = add_file_to_form(request, project_id, form_id, 'itemsets.csv',
+                                                                      None, True, md5sum)
+                                    if added:
+                                        itemset_file.seek(0)
+                                        store_file(request, bucket_id, 'itemsets.csv', itemset_file)
 
-                        with open(json_file, "w",) as outfile:
-                            json_string = json.dumps(metadata, indent=4, ensure_ascii=False)
-                            outfile.write(json_string)
-                        return True, form_id
+                            paths = ['forms', form_directory, parts[0]+".json"]
+                            json_file = os.path.join(odk_dir, *paths)
+
+                            metadata = {"formID": form_id, "name": form_title[0].text, "majorMinorVersion": "",
+                                        "version": datetime.datetime.now().strftime("%Y%m%d"),
+                                        "hash": 'md5:' + md5(open(final_xml, 'rb').read()).hexdigest(),
+                                        "descriptionText": form_title[0].text}
+
+                            with open(json_file, "w",) as outfile:
+                                json_string = json.dumps(metadata, indent=4, ensure_ascii=False)
+                                outfile.write(json_string)
+                            return True, form_id
+                        else:
+                            return False, message
                     else:
                         return False, request.translate("The form does not exists in this project")
                 else:
@@ -535,7 +711,7 @@ def update_odk_form(request, project_id, for_form_id, user_id, odk_dir, form_dat
         return False, str(e)
     except Exception as e:
         log.error("Error {} while adding form {} in project {}".format(str(e), input_file_name, project_id))
-        return False, sys.exc_info()[0]
+        return False, str(e)
 
 
 class FileIterator(object):
@@ -859,11 +1035,11 @@ def build_database(cnf_file, create_file, insert_file, audit_file, schema):
 def create_repository(request, project, form, odk_dir, xform_directory, primary_key, separation_file=None,
                       default_language=None, other_languages=None, yes_no_strings=None):
     print("*************************** create_repository ***********************")
-    odk_to_mysql = os.path.join(request.registry.settings['odktools.path'], *["ODKToMySQL", "odktomysql"])
+    jxform_to_mysql = os.path.join(request.registry.settings['odktools.path'], *["JXFormToMysql", "jxformtomysql"])
 
-    xlsx_file = get_form_xls_file(request, project, form)
-    if xlsx_file is not None:
-        args = [odk_to_mysql, "-x " + xlsx_file, "-t maintable", "-v " + primary_key,
+    survey_file = get_form_survey_file(request, project, form)
+    if survey_file is not None:
+        args = [jxform_to_mysql, "-j " + survey_file, "-t maintable", "-v " + primary_key,
                 "-c " + os.path.join(odk_dir, *["forms", xform_directory, "repository", "create.sql"]),
                 "-C " + os.path.join(odk_dir, *["forms", xform_directory, "repository", "create.xml"]),
                 "-i " + os.path.join(odk_dir, *["forms", xform_directory, "repository", "insert.sql"]),
@@ -1003,6 +1179,192 @@ def move_media_files(odk_dir, xform_directory, src_submission, trg_submission):
                     e))
 
 
+def store_json_file(request, submission_id, temp_json_file, json_file, odk_dir, xform_directory, schema, user,
+                    project, form, assistant):
+    if schema is not None:
+        if schema != "":
+            # Add the controlling fields to the JSON file
+            project_code = get_project_code_from_id(request, user, project)
+            with open(temp_json_file, 'r') as f:
+                submission_data = json.load(f)
+                submission_data["_submitted_by"] = assistant
+                submission_data["_submitted_date"] = datetime.datetime.now().isoformat()
+                submission_data["_user_id"] = user
+                submission_data.pop("_version", "")
+                submission_data.pop("_id", "")
+                submission_data["_submission_id"] = submission_id
+                submission_data["_project_code"] = project_code
+                geopoint_variable = get_form_geopoint(request, project, form)
+                if geopoint_variable is not None:
+                    if geopoint_variable in submission_data.keys():
+                        submission_data["_geopoint"] = submission_data[geopoint_variable]
+                # pkey_variable = get_form_primary_key(request, project, form)
+                # if pkey_variable is not None:
+                #     if geopoint_variable in submission_data.keys():
+                #         submission_data["_geopoint"] = submission_data[geopoint_variable]
+
+            with open(temp_json_file, "w", ) as outfile:
+                json_string = json.dumps(submission_data, indent=4, ensure_ascii=False)
+                outfile.write(json_string)
+
+            # Second we pass the temporal JSON to jQ to order its elements
+            # this will help later on if we want to compare between JSONs
+            args = ["jq", "-S", ".", temp_json_file]
+
+            final = open(json_file, "w")
+            p = Popen(args, stdout=final, stderr=PIPE)
+            stdout, stderr = p.communicate()
+            final.close()
+            if p.returncode == 0:
+                try:
+                    os.remove(temp_json_file)
+                except Exception as e:
+                    log.error(
+                        "XMLToJSON error. Temporary file " + temp_json_file + " might not exist! Error: " + str(e))
+                    return 1, ""
+
+                # Get the MD5Sum of the JSON file and looks for it in the submissions
+                # This will get an exact match that will not move into the database
+                md5sum = md5(open(json_file, 'rb').read()).hexdigest()
+                sameas = get_submission_data(request, project, form, md5sum)
+                if sameas is None:
+                    # Third we try to move the JSON data into the database
+                    mysql_user = request.registry.settings['mysql.user']
+                    mysql_password = request.registry.settings['mysql.password']
+                    mysql_host = request.registry.settings['mysql.host']
+                    mysql_port = request.registry.settings['mysql.port']
+                    log_file_name = os.path.splitext(json_file)[0] + ".xml"
+                    uuid_file_name = os.path.splitext(json_file)[0] + ".log"
+                    log_file = os.path.join(odk_dir, *['forms', xform_directory, 'submissions', 'logs',
+                                                       os.path.basename(log_file_name)])
+                    imported_file = os.path.join(odk_dir,
+                                                 *['forms', xform_directory, 'submissions', 'logs', 'imported.log'])
+                    uuid_file = os.path.join(odk_dir,
+                                             *['forms', xform_directory, 'submissions', 'logs', uuid_file_name])
+                    maps_directory = os.path.join(odk_dir, *['forms', xform_directory, 'submissions', 'maps'])
+                    manifest_file = os.path.join(odk_dir, *['forms', xform_directory, 'repository', 'manifest.xml'])
+                    args = []
+                    json_to_mysql = os.path.join(request.registry.settings['odktools.path'],
+                                                 *["JSONToMySQL", "jsontomysql"])
+                    args.append(json_to_mysql)
+                    args.append("-H " + mysql_host)
+                    args.append("-P " + mysql_port)
+                    args.append("-u " + mysql_user)
+                    args.append("-p " + mysql_password)
+                    args.append("-s " + schema)
+                    args.append("-o " + log_file)
+                    args.append("-j " + json_file)
+                    args.append("-i " + imported_file)
+                    args.append("-M " + maps_directory)
+                    args.append("-m " + manifest_file)
+                    args.append("-U " + uuid_file)
+                    args.append("-O m")
+                    args.append("-w")
+                    p = Popen(args, stdout=PIPE, stderr=PIPE)
+                    stdout, stderr = p.communicate()
+                    # An error 2 is an SQL error that goes to the logs
+                    if p.returncode == 0 or p.returncode == 2:
+                        project_of_assistant = get_project_from_assistant(request, user, project, assistant)
+                        added, message = add_submission(request, project, form, project_of_assistant, assistant,
+                                                        submission_id, md5sum, p.returncode)
+
+                        if not added:
+                            log.error(message)
+                            return 1, message
+
+                        if p.returncode == 2:
+                            added, message = add_json_log(request, project, form, submission_id, json_file,
+                                                          log_file, 1, project_of_assistant, assistant)
+                            if not added:
+                                log.error(message)
+                                return 1, message
+                        else:
+                            # Add the JSON to the Elastic Search index but only submissions without error
+                            create_dataset_index(request.registry.settings, user, project_code, form)
+                            add_dataset(request.registry.settings, user, project_code, form, submission_id,
+                                        submission_data)
+                            # Add the inserted records in the record index
+                            create_record_index(request.registry.settings)
+                            with open(uuid_file) as f:
+                                lines = f.readlines()
+                                for line in lines:
+                                    parts = line.split(",")
+                                    add_record(request.registry.settings, schema, parts[0], parts[1])
+
+                        return 0, ""
+                    else:
+                        log.error(
+                            "JSONToMySQL error. Inserting " + json_file + ". Error: " + stdout.decode() + "-" +
+                            stderr.decode() + ". Command line: " + " ".join(args))
+                        return 2, ""
+                else:
+                    # If the MD5Sum is the same then add it to the submission table
+                    # indicating the "sameas" field. Any media files of the
+                    # duplicated submission moves to the "sameas" submission.
+                    # This will fix the issue when the media files are so big
+                    # that multiple posts are done by ODK Collect for the same
+                    # submission
+                    project_of_assistant = get_project_from_assistant(request, user, project, assistant)
+                    added, message = add_submission_same_as(request, project, form, project_of_assistant, assistant,
+                                                            submission_id, md5sum, 0, sameas.submission_id)
+                    if not added:
+                        log.error(message)
+                        return 1, message
+
+                    move_media_files(odk_dir, xform_directory, submission_id, sameas.submission_id)
+                    return 0, ""
+            else:
+                log.error(
+                    "jQ error. Converting " + temp_json_file + "  to " + json_file + ". Error: " + "-" +
+                    stderr + ". Command line: " + " ".join(args))
+                return 1, ""
+    else:
+        # We compare the MD5Sum of the testing submissions so the
+        # media files are stored in the proper way if ODK Collect
+        # send the media files in separate submissions when such
+        # file are so big that separation is required
+        try:
+            shutil.move(temp_json_file, json_file)
+            project_code = get_project_code_from_id(request, user, project)
+            with open(json_file, 'r') as f:
+                submission_data = json.load(f)
+                submission_data["_submitted_by"] = assistant
+                submission_data["_submitted_date"] = datetime.datetime.now().isoformat()
+                submission_data["_user_id"] = user
+                submission_data["_submission_id"] = submission_id
+                submission_data["_project_code"] = project_code
+                geopoint_variable = get_form_geopoint(request, project, form)
+                if geopoint_variable is not None:
+                    try:
+                        submission_data["_geopoint"] = submission_data[geopoint_variable]
+                    except KeyError:
+                        pass
+
+            # Adds the dataset to the Elastic Search index
+            create_dataset_index(request.registry.settings, user, project_code, form)
+            add_dataset(request.registry.settings, user, project_code, form, submission_id, submission_data)
+
+            with open(json_file, "w", ) as outfile:
+                json_string = json.dumps(submission_data, indent=4, ensure_ascii=False)
+                outfile.write(json_string)
+
+            submissions_path = os.path.join(odk_dir, *['forms', xform_directory, "submissions", '*.json'])
+            files = glob.glob(submissions_path)
+            md5sum = md5(open(json_file, 'rb').read()).hexdigest()
+            for aFile in files:
+                if aFile != json_file:
+                    othmd5sum = md5(open(aFile, 'rb').read()).hexdigest()
+                    if md5sum == othmd5sum:
+                        target_submission_id = os.path.basename(aFile)
+                        target_submission_id = target_submission_id.replace(".json", "")
+                        move_media_files(odk_dir, xform_directory, target_submission_id, submission_id)
+                        os.remove(aFile)
+            return 0, ""
+        except Exception as e:
+            log.error("Store JSON error. Temporary file " + temp_json_file + " might not exist! Error: " + str(e))
+            return 1, ""
+
+
 def convert_xml_to_json(odk_dir, xml_file, xform_directory, schema, xml_form_file, user, project, form, assistant,
                         request):
     xml_to_json = os.path.join(request.registry.settings['odktools.path'], *["XMLtoJSON", "xmltojson"])
@@ -1016,169 +1378,9 @@ def convert_xml_to_json(odk_dir, xml_file, xform_directory, schema, xml_form_fil
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()
     if p.returncode == 0:
-        if schema is not None:
-            if schema != "":
-                # Add the controlling fields to the JSON file
-                project_code = get_project_code_from_id(request, user, project)
-                with open(temp_json_file, 'r') as f:
-                    submission_data = json.load(f)
-                    submission_data["_submitted_by"] = assistant
-                    submission_data["_submitted_date"] = datetime.datetime.now().isoformat()
-                    submission_data["_user_id"] = user
-                    submission_data["_submission_id"] = submission_id
-                    submission_data["_project_code"] = project_code
-                    geopoint_variable = get_form_geopoint(request, project, form)
-                    if geopoint_variable is not None:
-                        if geopoint_variable in submission_data.keys():
-                            submission_data["_geopoint"] = submission_data[geopoint_variable]
-
-                with open(temp_json_file, "w", ) as outfile:
-                    json_string = json.dumps(submission_data, indent=4, ensure_ascii=False)
-                    outfile.write(json_string)
-
-                # Second we pass the temporal JSON to jQ to order its elements
-                # this will help later on if we want to compare between JSONs
-                args = ["jq", "-S", ".", temp_json_file]
-
-                final = open(json_file, "w")
-                p = Popen(args, stdout=final, stderr=PIPE)
-                p.communicate()
-                final.close()
-                if p.returncode == 0:
-                    try:
-                        os.remove(temp_json_file)
-                    except Exception as e:
-                        log.error(
-                            "XMLToJSON error. Temporary file " + temp_json_file + " might not exist! Error: " + str(e))
-                        return 1, ""
-
-                    # Get the MD5Sum of the JSON file and looks for it in the submissions
-                    # This will get an exact match that will not move into the database
-                    md5sum = md5(open(json_file, 'rb').read()).hexdigest()
-                    sameas = get_submission_data(request, project, form, md5sum)
-                    if sameas is None:
-                        # Third we try to move the JSON data into the database
-                        mysql_user = request.registry.settings['mysql.user']
-                        mysql_password = request.registry.settings['mysql.password']
-                        mysql_host = request.registry.settings['mysql.host']
-                        mysql_port = request.registry.settings['mysql.port']
-                        log_file = os.path.join(odk_dir, *['forms', xform_directory, 'submissions', 'logs',
-                                                           os.path.basename(xml_file)])
-                        imported_file = os.path.join(odk_dir,
-                                                     *['forms', xform_directory, 'submissions', 'logs', 'imported.log'])
-                        maps_directory = os.path.join(odk_dir, *['forms', xform_directory, 'submissions', 'maps'])
-                        manifest_file = os.path.join(odk_dir, *['forms', xform_directory, 'repository', 'manifest.xml'])
-                        args = []
-                        json_to_mysql = os.path.join(request.registry.settings['odktools.path'],
-                                                     *["JSONToMySQL", "jsontomysql"])
-                        args.append(json_to_mysql)
-                        args.append("-H " + mysql_host)
-                        args.append("-P " + mysql_port)
-                        args.append("-u " + mysql_user)
-                        args.append("-p " + mysql_password)
-                        args.append("-s " + schema)
-                        args.append("-o " + log_file)
-                        args.append("-j " + json_file)
-                        args.append("-i " + imported_file)
-                        args.append("-M " + maps_directory)
-                        args.append("-m " + manifest_file)
-                        args.append("-O m")
-                        args.append("-w")
-                        p = Popen(args, stdout=PIPE, stderr=PIPE)
-                        stdout, stderr = p.communicate()
-                        # An error 2 is an SQL error that goes to the logs
-                        if p.returncode == 0 or p.returncode == 2:
-                            project_of_assistant = get_project_from_assistant(request, user, project, assistant)
-                            added, message = add_submission(request, project, form, project_of_assistant, assistant,
-                                                            submission_id, md5sum, p.returncode)
-
-                            if not added:
-                                log.error(message)
-                                return 1, message
-
-                            if p.returncode == 2:
-                                added, message = add_json_log(request, project, form, submission_id, json_file,
-                                                              log_file, 1, project_of_assistant, assistant)
-                                if not added:
-                                    log.error(message)
-                                    return 1, message
-                            else:
-                                # Add the JSON to the Elastic Search index but only submissions without error
-                                create_dataset_index(request, user, project_code, form)
-                                add_dataset(request, user, project_code, form, submission_id, submission_data)
-
-                            return 0, ""
-                        else:
-                            log.error(
-                                "JSONToMySQL error. Inserting " + json_file + ". Error: " + stdout.decode() + "-" +
-                                stderr.decode() + ". Command line: " + " ".join(args))
-                            return 2, ""
-                    else:
-                        # If the MD5Sum is the same then add it to the submission table
-                        # indicating the "sameas" field. Any media files of the
-                        # duplicated submission moves to the "sameas" submission.
-                        # This will fix the issue when the media files are so big
-                        # that multiple posts are done by ODK Collect for the same
-                        # submission
-                        project_of_assistant = get_project_from_assistant(request, user, project, assistant)
-                        added, message = add_submission_same_as(request, project, form, project_of_assistant, assistant,
-                                                                submission_id, md5sum, 0, sameas.submission_id)
-                        if not added:
-                            log.error(message)
-                            return 1, message
-
-                        move_media_files(odk_dir, xform_directory, submission_id, sameas.submission_id)
-                        return 0, ""
-                else:
-                    log.error(
-                        "jQ error. Converting " + xml_file + "  to " + json_file + ". Error: " + "-" +
-                        stderr.decode() + ". Command line: " + " ".join(args))
-                    return 1, ""
-        else:
-            # We compare the MD5Sum of the testing submissions so the
-            # media files are stored in the proper way if ODK Collect
-            # send the media files in separate submissions when such
-            # file are so big that separation is required
-            try:
-                shutil.move(temp_json_file, json_file)
-                project_code = get_project_code_from_id(request, user, project)
-                with open(json_file, 'r') as f:
-                    submission_data = json.load(f)
-                    submission_data["_submitted_by"] = assistant
-                    submission_data["_submitted_date"] = datetime.datetime.now().isoformat()
-                    submission_data["_user_id"] = user
-                    submission_data["_submission_id"] = submission_id
-                    submission_data["_project_code"] = project_code
-                    geopoint_variable = get_form_geopoint(request, project, form)
-                    if geopoint_variable is not None:
-                        try:
-                            submission_data["_geopoint"] = submission_data[geopoint_variable]
-                        except KeyError:
-                            pass
-
-                # Adds the dataset to the Elastic Search index
-                create_dataset_index(request, user, project_code, form)
-                add_dataset(request, user, project_code, form, submission_id, submission_data)
-
-                with open(json_file, "w", ) as outfile:
-                    json_string = json.dumps(submission_data, indent=4, ensure_ascii=False)
-                    outfile.write(json_string)
-
-                submissions_path = os.path.join(odk_dir, *['forms', xform_directory, "submissions", '*.json'])
-                files = glob.glob(submissions_path)
-                md5sum = md5(open(json_file, 'rb').read()).hexdigest()
-                for aFile in files:
-                    if aFile != json_file:
-                        othmd5sum = md5(open(aFile, 'rb').read()).hexdigest()
-                        if md5sum == othmd5sum:
-                            target_submission_id = os.path.basename(aFile)
-                            target_submission_id = target_submission_id.replace(".json", "")
-                            move_media_files(odk_dir, xform_directory, target_submission_id, submission_id)
-                            os.remove(aFile)
-                return 0, ""
-            except Exception as e:
-                log.error("XMLToJSON error. Temporary file " + temp_json_file + " might not exist! Error: " + str(e))
-                return 1, ""
+        stored, message = store_json_file(request, submission_id, temp_json_file, json_file, odk_dir, xform_directory,
+                                          schema, user, project, form, assistant)
+        return stored, message
     else:
         log.error("XMLToJSON error. Converting " + xml_file + "  to " + json_file + ". Error: " + stdout.decode() +
                   "-" + stderr.decode() + ". Command line: " + " ".join(args))
@@ -1449,8 +1651,8 @@ def push_revision(request, user, project, form, submission):
 
             # Add the JSON to the Elastic Search index
             project_code = get_project_code_from_id(request, user, project)
-            create_dataset_index(request, user, project_code, form)
-            add_dataset(request, user, project_code, form, submission, submission_data)
+            create_dataset_index(request.registry.settings, user, project_code, form)
+            add_dataset(request.registry.settings, user, project_code, form, submission, submission_data)
         return 0, ""
     else:
         log.error("JSONToMySQL error. Pushing " + current_file + ". Error: " + stdout.decode() + "-" +

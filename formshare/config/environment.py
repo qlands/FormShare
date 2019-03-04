@@ -1,6 +1,7 @@
 import os
 from pyramid.session import SignedCookieSessionFactory
 import formshare.plugins as p
+import formshare.products as prd
 import formshare.resources as r
 from formshare.models import add_column_to_schema
 from .jinja_extensions import initialize, ExtendThis, CSSResourceExtension, JSResourceExtension
@@ -10,6 +11,7 @@ from .routes import load_routes
 from pyramid.csrf import SessionCSRFStoragePolicy
 from .elasticfeeds import configure_manager
 from formshare.processes.elasticsearch.user_index import configure_user_index_manager
+from formshare.products.formshare_products import register_products
 
 my_session_factory = SignedCookieSessionFactory('`h6N[wQ8@S"B$bGy;')
 
@@ -131,6 +133,16 @@ def load_environment(settings, config, apppath, policy_array):
         js_resources = plugin.add_js_resources(config)
         for resource in js_resources:
             r.add_js_resource(resource["libraryname"], resource["id"], resource["file"], resource["depends"])
+
+    # Register FormShare build-in products
+    for product in register_products():
+        prd.add_product(product)
+
+    # Call any connected plugins to add their products
+    for plugin in p.PluginImplementations(p.IProduct):
+        products = plugin.register_products(config)
+        for product in products:
+            prd.add_product(product)
 
     # Call any connected plugins to add their modifications into the schema. Not all tables has extras so only
     # certain tables are allowed

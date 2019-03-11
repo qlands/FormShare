@@ -1,22 +1,28 @@
 <div class="ibox">
     <div class="ibox-title">
-        <h5>{{ _('Collaborations') }}</h5>
-        <div class="ibox-tools">
-            <a class="collapse-link" style="margin-right: 10px">
-                <i class="fas fa-chevron-up"></i>
-            </a>
-            <a class="fullscreen-link">
-                <i class="fas fa-expand"></i>
-            </a>
-        </div>
+        {% block collaborators_tab_title %}
+            <h5>{{ _('Collaborations') }}</h5>
+            <div class="ibox-tools">
+                {% block collaborators_tab_tools %}
+                    <a class="collapse-link" style="margin-right: 10px">
+                        <i class="fas fa-chevron-up"></i>
+                    </a>
+                    <a class="fullscreen-link">
+                        <i class="fas fa-expand"></i>
+                    </a>
+                {% endblock collaborators_tab_tools %}
+            </div>
+        {% endblock collaborators_tab_title %}
     </div>
     <div class="ibox-content">
-        {% block profile_collaborators_list %}
-            <div class="user-friends">
-                {% for collaborator in userDetails.user_stats.collaborators %}
-                    <a href="{{ request.route_url('dashboard',userid=collaborator.user_id) }}"><img alt="image" title="{{ collaborator.user_name }}" class="rounded-circle" src="{{ request.h.get_gravatar_url(collaborator.user_email) }}"></a>
-                {% endfor %}
-            </div>
-        {% endblock profile_collaborators_list %}
+        {% block collaborators_tab_content %}
+            {% block profile_collaborators_list %}
+                <div class="user-friends">
+                    {% for collaborator in userDetails.user_stats.collaborators %}
+                        <a href="{{ request.route_url('dashboard',userid=collaborator.user_id) }}"><img alt="image" title="{{ collaborator.user_name }}" class="rounded-circle" src="{{ request.h.get_gravatar_url(collaborator.user_email) }}"></a>
+                    {% endfor %}
+                </div>
+            {% endblock profile_collaborators_list %}
+        {% endblock collaborators_tab_content %}
     </div>
 </div>

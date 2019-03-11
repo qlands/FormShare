@@ -1,6 +1,6 @@
 {% extends 'base.jinja2' %}
 
-{% block titlesection %}Application error{% endblock titlesection %}
+{% block titlesection %}{{ _('Application error') }}{% endblock titlesection %}
 
 {% block css %}
     {% cssresource request,'formshare','style' %}
@@ -11,13 +11,15 @@
 {% block body %}
     <div class="middle-box text-center animated fadeInDown">
         <h1>500</h1>
-        <h3 class="font-bold">Internal Server Error</h3>
+        <h3 class="font-bold">{{ _('Internal Server Error') }}</h3>
 
         <div class="error-desc">
-            The server encountered an unexpected error and was not able to complete your request. Please send the error information to formshare_support@qlands.com
-            <textarea>The error goes here</textarea>
-            We apologize for the inconvenience.<br/>
-            You can go back to main page: <br/><a href="index.html" class="btn btn-primary m-t">Home</a>
+            {% block 500_message %}
+                {{ _('The server encountered an unexpected error and was not able to complete your request. Please send the error information to ') }} formshare_support@qlands.com
+                <textarea>The error goes here</textarea>
+                {{ _('We apologize for the inconvenience') }}.<br/>
+                {{ ('You can go back to main page:') }} <br/><a href="index.html" class="btn btn-primary m-t">{{ _('Home') }}</a>
+            {% endblock 500_message %}
         </div>
     </div>
     {% jsresource request,'formshare','bootstrap' %}

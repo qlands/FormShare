@@ -27,7 +27,9 @@
         {% block register_extra %}
 
         {% endblock register_extra%}
-        <button type="submit" class="btn btn-primary block full-width m-b">{{ _('Create an account') }}</button>
+        {% block register_actions %}
+            <button type="submit" class="btn btn-primary block full-width m-b">{{ _('Create an account') }}</button>
+        {% endblock register_actions %}
     </form>
 {% endblock loginform %}
 {% block login_tools %}

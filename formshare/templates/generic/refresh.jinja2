@@ -1,6 +1,6 @@
 {% extends 'base.jinja2' %}
 
-{% block titlesection %}Session timeout{% endblock titlesection %}
+{% block titlesection %}{{ _('Session timeout') }}{% endblock titlesection %}
 
 {% block css %}
     {% cssresource request,'formshare','style' %}
@@ -10,12 +10,14 @@
 
 {% block body %}
     <div class="middle-box text-center animated fadeInDown">
-        <h1><i class="far fa-clock"></i></h1>
-        <h3 class="font-bold">Your session has expired.</h3>
+        {% block refresh_message %}
+            <h1><i class="far fa-clock"></i></h1>
+            <h3 class="font-bold">{{ _('Your session has expired.') }}</h3>
 
-        <div class="error-desc">
-            Dont worry, just go back and refresh the page to obtain a new secure session.
-        </div>
+            <div class="error-desc">
+                {{ _('Dont worry, just go back and refresh the page to obtain a new secure session.') }}
+            </div>
+        {% endblock refresh_message %}
     </div>
     {% jsresource request,'formshare','bootstrap' %}
 {% endblock body %}

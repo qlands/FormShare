@@ -44,9 +44,11 @@
 
                                 {% endblock profile_edit_controls_extra %}
                                 <div class="form-group row">
-                                    <div class="col-sm-4 col-sm-offset-2">
-                                        <button class="btn btn-primary btn-sm" name="editprofile" type="submit">{{ _('Save changes') }}</button>
-                                    </div>
+                                    {% block profile_edit_actions %}
+                                        <div class="col-sm-4 col-sm-offset-2">
+                                            <button class="btn btn-primary btn-sm" name="editprofile" type="submit">{{ _('Save changes') }}</button>
+                                        </div>
+                                    {% endblock profile_edit_actions %}
                                 </div>
                             </form>
                         {% endblock profile_edit_form %}

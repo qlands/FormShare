@@ -36,6 +36,11 @@ def create_resources(apppath, config):
     r.add_css_resource('formshare', 'switchery', 'css/plugins/switchery/switchery.css', None)
     r.add_js_resource('formshare', 'switchery', 'js/plugins/switchery/switchery.js', None)
 
+    r.add_css_resource('formshare', 'colorpicker', 'css/plugins/evol-colorpicker/evol-colorpicker.min.css', None)
+    r.add_js_resource('formshare', 'colorpicker', 'js/plugins/evol-colorpicker/evol-colorpicker.min.js', None)
+
+
+
     # ------------------------------Project details --------------------------------------
     r.add_js_resource('formshare', 'element_queries', 'js/plugins/css-element-queries/ElementQueries.js', None)
     r.add_js_resource('formshare', 'element_sensors', 'js/plugins/css-element-queries/ResizeSensor.js',

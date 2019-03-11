@@ -1,51 +1,57 @@
 <div class="ibox">
     <div class="ibox-title">
-        <h5>{{ _('Assigned assistants') }}</h5>
-        <div class="ibox-tools">
-            <a style="margin-right: 10px" data-toggle="modal" data-target="#add_assistant" >
-                <i class="fa fa-plus-square text-success" title="{{ _('Assign assistant') }}"></i>
-            </a>
-            <a class="collapse-link">
-                <i class="fa fa-chevron-up" style="margin-right: 10px"></i>
-            </a>
-            <a class="fullscreen-link">
-                <i class="fa fa-expand"></i>
-            </a>
-        </div>
+        {% block assistants_tab_title %}
+            <h5>{{ _('Assigned assistants') }}</h5>
+            <div class="ibox-tools">
+                {% block assistants_tab_tools %}
+                    <a style="margin-right: 10px" data-toggle="modal" data-target="#add_assistant" >
+                        <i class="fa fa-plus-square text-success" title="{{ _('Assign assistant') }}"></i>
+                    </a>
+                    <a class="collapse-link">
+                        <i class="fa fa-chevron-up" style="margin-right: 10px"></i>
+                    </a>
+                    <a class="fullscreen-link">
+                        <i class="fa fa-expand"></i>
+                    </a>
+                {% endblock assistants_tab_tools %}
+            </div>
+        {% endblock assistants_tab_title %}
     </div>
     <div class="ibox-content">
-        <div class="row">
-            <div class="col-md-12">
-                {% if formassistants|length > 0 %}
-                    <small>{{ _('Click/Tab and hold to remove') }}</small>
-                {% endif %}
-                <ul class="tag-list" style="padding: 0">
-                    {% for assistant in formassistants %}
-                        {% set assistant_role = _('Undefined') %}
-                        {% if assistant.coll_privileges == 1 %}
-                            {% set assistant_role = _('Submmit') %}
-                        {% endif %}
-                        {% if assistant.coll_privileges == 2 %}
-                            {% set assistant_role = _('Clean') %}
-                        {% endif %}
-                        {% if assistant.coll_privileges == 3 %}
-                            {% set assistant_role = _('Submmit & clean') %}
-                        {% endif %}
-                        <li><a title="{{ assistant_role }}" id="btn_edit_assistant" urn="{{ request.route_url('form_edit_assistant',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, projectid=assistant.project_id,assistantid=assistant.coll_id) }}" data-toggle="modal" data-target="#edit_assistant" data-assistant-remove-url="{{ request.route_url('form_remove_assistant',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, projectid=assistant.project_id,assistantid=assistant.coll_id) }}" data-assistant-role="{{ assistant.coll_privileges }}" data-assistant-name="{{ assistant.coll_name }}" class="assistant-item {% if assistant.coll_active == 0 %} text-danger {% endif %}"> {{ assistant.coll_name }}</a></li>
-                    {% endfor %}
-                </ul>
+        {% block assistants_tab_content %}
+            <div class="row">
+                <div class="col-md-12">
+                    {% if formassistants|length > 0 %}
+                        <small>{{ _('Click/Tab and hold to remove') }}</small>
+                    {% endif %}
+                    <ul class="tag-list" style="padding: 0">
+                        {% for assistant in formassistants %}
+                            {% set assistant_role = _('Undefined') %}
+                            {% if assistant.coll_privileges == 1 %}
+                                {% set assistant_role = _('Submmit') %}
+                            {% endif %}
+                            {% if assistant.coll_privileges == 2 %}
+                                {% set assistant_role = _('Clean') %}
+                            {% endif %}
+                            {% if assistant.coll_privileges == 3 %}
+                                {% set assistant_role = _('Submmit & clean') %}
+                            {% endif %}
+                            <li><a title="{{ assistant_role }}" id="btn_edit_assistant" urn="{{ request.route_url('form_edit_assistant',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, projectid=assistant.project_id,assistantid=assistant.coll_id) }}" data-toggle="modal" data-target="#edit_assistant" data-assistant-remove-url="{{ request.route_url('form_remove_assistant',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, projectid=assistant.project_id,assistantid=assistant.coll_id) }}" data-assistant-role="{{ assistant.coll_privileges }}" data-assistant-name="{{ assistant.coll_name }}" class="assistant-item {% if assistant.coll_active == 0 %} text-danger {% endif %}"> {{ assistant.coll_name }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
             </div>
-        </div>
-        {% if formassistants|length > 0 %}
-            <small>{{ _('Assistants in') }} <span class="text-danger">{{ _('red') }}</span> {{ _('are inactive') }}</small>
-        {% else %}
-            {% if projectDetails.access_type != 4 %}
-                {% if formgroups|length == 0 %}
-                    <small class="text-danger">{{ _('Assistants help you to collect and clean data. Add one by clicking on the + button') }}</small>
-                {% else %}
-                    <small>{{ _('Assistants help you to collect and clean data. Add one by clicking on the + button') }}</small>
+            {% if formassistants|length > 0 %}
+                <small>{{ _('Assistants in') }} <span class="text-danger">{{ _('red') }}</span> {{ _('are inactive') }}</small>
+            {% else %}
+                {% if projectDetails.access_type != 4 %}
+                    {% if formgroups|length == 0 %}
+                        <small class="text-danger">{{ _('Assistants help you to collect and clean data. Add one by clicking on the + button') }}</small>
+                    {% else %}
+                        <small>{{ _('Assistants help you to collect and clean data. Add one by clicking on the + button') }}</small>
+                    {% endif %}
                 {% endif %}
             {% endif %}
-        {% endif %}
+        {% endblock assistants_tab_content %}
     </div>
 </div>

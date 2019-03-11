@@ -34,6 +34,8 @@ import logging
 import zipfile
 import glob
 from formshare.products.fs1import.fs1import import formshare_one_import_json
+from formshare.processes.color_hash import ColorHash
+import formshare.plugins as p
 
 
 log = logging.getLogger(__name__)
@@ -44,7 +46,7 @@ __all__ = ['generate_form_list', 'generate_manifest', 'get_form_list',
            'get_html_from_diff', 'generate_diff', 'store_new_version', 'restore_from_revision', 'push_revision',
            'get_tables_from_form', 'get_fields_from_table', 'get_table_desc', 'is_field_key', 'get_request_data',
            'update_data', 'upload_odk_form', 'update_form_title', 'retrieve_form_file', 'cache_external_file',
-           'get_odk_path', 'store_file_in_directory', 'update_odk_form', 'import_json_data', 'store_json_file',
+           'get_odk_path', 'store_file_in_directory', 'update_odk_form', 'import_external_data', 'store_json_file',
            'check_jxform_file', 'get_missing_support_files']
 
 _GPS_types = ['add location prompt', 'geopoint', 'gps', 'location', 'q geopoint', 'q location']
@@ -273,12 +275,10 @@ def get_geopoint_variable_from_json(json_dict, parent_array):
     return result
 
 
-def import_json_data(request, user, project, form, odk_dir, form_directory, schema, assistant):
+def import_external_data(request, user, project, form, odk_dir, form_directory, schema, assistant, import_type,
+                         ignore_xform, form_post_data):
     input_file_name = request.POST['file'].filename
     input_file_name = input_file_name.lower()
-
-    if input_file_name[-4:] != "json" and input_file_name[-3:] != "zip":
-        return False, request.translate("Invalid file. Only json or zip are allowed")
 
     uid = str(uuid.uuid4())
     paths = ['tmp', uid]
@@ -302,11 +302,22 @@ def import_json_data(request, user, project, form, odk_dir, form_directory, sche
         else:
             return False, "Invalid Zip file"
 
-    extension = "json"
-    path_to_files = temp_dir + '/**/*.' + extension
+    project_code = get_project_code_from_id(request, user, project)
+    geopoint_variable = get_form_geopoint(request, project, form)
+    project_of_assistant = get_project_from_assistant(request, user, project, assistant)
 
-    # Call the background Celery task
-    formshare_one_import_json(request, user, project, form, odk_dir, form_directory, schema, assistant, path_to_files)
+    if import_type == 1:
+        # Call the background Celery task
+        formshare_one_import_json(request, user, project, form, odk_dir, form_directory, schema, assistant, temp_dir,
+                                  project_code, geopoint_variable, project_of_assistant, ignore_xform)
+    if import_type == 2:
+        pass  # We need to implement the BriefCase Import
+    if import_type > 2:
+        # We call connected plugins to see if there is other ways to import
+        for plugin in p.PluginImplementations(p.IImportExternalData):
+            plugin.import_external_data(request, user, project, form, odk_dir, form_directory, schema, assistant,
+                                        temp_dir, project_code, geopoint_variable, project_of_assistant, import_type,
+                                        form_post_data, ignore_xform)
 
     return True, ""
 
@@ -502,6 +513,7 @@ def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
                     form_data['form_xmlfile'] = final_xml
                     form_data['form_jsonfile'] = final_survey
                     form_data['form_pubby'] = user_id
+                    form_data['form_hexcolor'] = ColorHash(form_id).hex
                     if geopoint is not None:
                         form_data['form_geopoint'] = '/'.join(parent_array) + "/" + geopoint
                     if message != "":

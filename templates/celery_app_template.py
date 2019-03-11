@@ -23,7 +23,7 @@ def get_ini_value(key, default=None):
         config = configparser.ConfigParser()
         config.read(FORMSHARE_INI_FILE)
         return config.get('app:main', key)
-    except OSError:
+    except:
         return default
 
 
@@ -42,7 +42,6 @@ def get_tasks():
     return tasks
 
 
-celeryApp = Celery(get_ini_value('celery.fstask'), broker=get_ini_value('celery.broker'),
+celeryApp = Celery(get_ini_value('celery.taskname'), broker=get_ini_value('celery.broker'),
                    backend=get_ini_value('celery.backend'), include=get_tasks())
 celeryApp.config_from_object(celery_config)
-celeryApp.autodiscover_tasks(['stream_framework'])

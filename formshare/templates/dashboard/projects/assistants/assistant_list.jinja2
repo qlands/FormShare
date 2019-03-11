@@ -28,63 +28,71 @@
             {{ form.display_errors(errors) }}
             <div class="ibox">
                 <div class="ibox-content">
-                    <h2>{{ _('Assistants') }}</h2>
-                    <p>
-                        {{ _('Assistants help you collect and clean data.') }}
-                    </p>
-{#                    <div class="input-group">#}
-{#                        <input type="text" placeholder="{{ _('Search assistants') }} " class="input form-control">#}
-{#                        <span class="input-group-append"><button type="button" class="btn btn btn-primary"> <i class="fa fa-search"></i> {{ _('Search') }}</button></span>#}
-{#                    </div>#}
-                    <div style="margin-top: 10px" class="row">
-                        <div class="col-md-9">
+                    {% block assistant_list_heading %}
+                        <h2>{{ _('Assistants') }}</h2>
+                        <p>
+                            {{ _('Assistants help you collect and clean data.') }}
+                        </p>
+                        {#                    <div class="input-group">#}
+                        {#                        <input type="text" placeholder="{{ _('Search assistants') }} " class="input form-control">#}
+                        {#                        <span class="input-group-append"><button type="button" class="btn btn btn-primary"> <i class="fa fa-search"></i> {{ _('Search') }}</button></span>#}
+                        {#                    </div>#}
+                        <div style="margin-top: 10px" class="row">
+                            <div class="col-md-9">
 
-                        </div>
-                        <div class="col-md-3">
-                            <button  onclick="location.href='{{ request.route_url('assistant_add',userid=projectDetails.owner,projcode=projectDetails.project_code) }}';" class="btn btn-block btn-primary"> <i class="fa fa-plus"></i> {{ _('Add assistant') }}</button>
-                        </div>
-                    </div>
-                    <hr class="hr-line-dashed">
-                    <div class="clients-list">
-                        <div class="row">
-                            <div class="col-lg-12">
-                                <div class="grid-header">
-                                    <div class="row">
-                                        <div class="col-md-3">
-                                            <div class="text-center">
-                                                {{ _('Name') }}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="text-center">
-                                                {{ _('Email') }}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-2">
-                                            <div class="text-center">
-                                                {{ _('Telephone') }}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-1">
-                                            <div class="text-center">
-                                                {{ _('Status') }}
-                                            </div>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <div class="text-center">
-                                                {{ _('Actions') }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <hr class="hr-line-solid">
-                                </div>
-                                {% for assistant in assistants %}
-                                    {% set assistant_count = loop.index %}
-                                    {% include 'dashboard/projects/assistants/snippets/assistant_item.jinja2' %}
-                                {% endfor %}
+                            </div>
+                            <div class="col-md-3">
+                                <button  onclick="location.href='{{ request.route_url('assistant_add',userid=projectDetails.owner,projcode=projectDetails.project_code) }}';" class="btn btn-block btn-primary"> <i class="fa fa-plus"></i> {{ _('Add assistant') }}</button>
                             </div>
                         </div>
-                    </div>
+                    {% endblock assistant_list_heading %}
+                    <hr class="hr-line-dashed">
+                    {% block assistant_list_table %}
+                        <div class="clients-list">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    {% block assistant_list_table_header %}
+                                        <div class="grid-header">
+                                            <div class="row">
+                                                <div class="col-md-3">
+                                                    <div class="text-center">
+                                                        {{ _('Name') }}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="text-center">
+                                                        {{ _('Email') }}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <div class="text-center">
+                                                        {{ _('Telephone') }}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-1">
+                                                    <div class="text-center">
+                                                        {{ _('Status') }}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="text-center">
+                                                        {{ _('Actions') }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <hr class="hr-line-solid">
+                                        </div>
+                                    {% endblock assistant_list_table_header %}
+                                    {% block assistant_list_table_items %}
+                                        {% for assistant in assistants %}
+                                            {% set assistant_count = loop.index %}
+                                            {% include 'dashboard/projects/assistants/snippets/assistant_item.jinja2' %}
+                                        {% endfor %}
+                                    {% endblock assistant_list_table_items %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endblock assistant_list_table %}
                 </div>
             </div>
         </div>
@@ -101,24 +109,28 @@
                     {{ form.secure_form(request) }}
                     <input type="hidden" id="assistant_id" name="assistant_id" value="">
                     <div class="modal-body">
-                        <div class="form-group">
-                            <label class="col-sm-2 col-form-label">{{ _('Password') }}</label>
-                            <div class="col-sm-10">
-                                <input type="password" class="form-control" name="coll_password">
+                        {% block assistant_list_form_fields %}
+                            <div class="form-group">
+                                <label class="col-sm-2 col-form-label">{{ _('Password') }}</label>
+                                <div class="col-sm-10">
+                                    <input type="password" class="form-control" name="coll_password">
+                                </div>
                             </div>
-                        </div>
-                        <div class="hr-line-dashed"></div>
-                        <div class="form-group">
-                            <label class="col-sm-2 col-form-label">{{ _('Confirmation') }}</label>
-                            <div class="col-sm-10">
-                                <input type="password" class="form-control" name="coll_password2">
+                            <div class="hr-line-dashed"></div>
+                            <div class="form-group">
+                                <label class="col-sm-2 col-form-label">{{ _('Confirmation') }}</label>
+                                <div class="col-sm-10">
+                                    <input type="password" class="form-control" name="coll_password2">
+                                </div>
                             </div>
+                        {% endblock assistant_list_form_fields %}
+                    </div>
+                    {% block assistant_list_form_actions %}
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
+                            <button type="submit" name="change_password" class="btn btn-primary">{{ _('Change password') }}</button>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
-                        <button type="submit" name="change_password" class="btn btn-primary">{{ _('Change password') }}</button>
-                    </div>
+                    {% endblock assistant_list_form_actions %}
                 </form>
             </div>
         </div>

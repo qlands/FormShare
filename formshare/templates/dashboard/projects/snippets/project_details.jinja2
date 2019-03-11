@@ -1,261 +1,311 @@
 <div class="row">
     <div class="col-lg-3">
-        <div class="wrapper wrapper-content project-manager">
-            <div class="ibox">
-                <div class="ibox-title">
-                    <h5>{{ projectData.project_name }}</h5>
-                    <div class="ibox-tools">
-                        {% if projectData.access_type != 4 %}
-                            <a href="{{ request.route_url('project_edit',userid=projectData.owner,projcode=projectData.project_code,_query={'next':request.url}) }}" style="margin-right: 10px">
-                                <i class="fa fa-pencil text-warning" title="{{ _('Edit') }}"></i>
-                            </a>
-                        {% endif %}
-                        <a class="collapse-link" style="margin-right: 10px">
-                            <i class="fa fa-chevron-up"></i>
-                        </a>
-                        <a class="fullscreen-link">
-                            <i class="fa fa-expand"></i>
-                        </a>
-                    </div>
-                </div>
-                <div class="ibox-content">
-                    <div style="text-align: center">
-                        <span class="text-center">{{ _('Use this QR to configure ODK collect') }}</span><br/>
-                        <a title="{{ _('ODK settings') }}" href="{{ request.route_url('project_stored_file', userid=userid, projcode=projectData.project_code, filename=projectData.project_image) }}"><img style="max-width: 150px" src="{{ request.route_url('project_stored_file', userid=userid, projcode=projectData.project_code, filename=projectData.project_image) }}" class="img-fluid"></a>
-                    </div>
-                    ODK URL:<br/>
-                    <div class="input-group">
-                        <input type="text" value="{{ request.route_url('project_details', userid=userid, projcode=projectData.project_code) }}" class="form-control"> <span class="input-group-append"> <a class="btn btn-white btn-bitbucket clipboard" data-clipboard-text="{{ request.route_url('project_details', userid=userid, projcode=projectData.project_code) }}" title="{{ _('Copy to clipboard') }}"><i class="far fa-copy"></i></a> </span>
-                    </div>
-                    <hr>
-                    {% if projectData.project_abstract != None %}
-                        <textarea id="abstract_hidden" style="display:none;">{{ projectData.project_abstract }}</textarea>
-                        <div class="scroll_content">
-                            <small id="project_abstract">
-
-                            </small>
+        {% block project_details_sections %}
+            <div class="wrapper wrapper-content project-manager">
+                {% block project_details_main_section %}
+                    <div class="ibox">
+                        <div class="ibox-title">
+                            {% block project_details_main_title %}
+                                <h5>{{ projectData.project_name }}</h5>
+                                <div class="ibox-tools">
+                                    {% block project_details_main_tools %}
+                                        {% if projectData.access_type != 4 %}
+                                            <a href="{{ request.route_url('project_edit',userid=projectData.owner,projcode=projectData.project_code,_query={'next':request.url}) }}" style="margin-right: 10px">
+                                                <i class="fa fa-pencil text-warning" title="{{ _('Edit') }}"></i>
+                                            </a>
+                                        {% endif %}
+                                        <a class="collapse-link" style="margin-right: 10px">
+                                            <i class="fa fa-chevron-up"></i>
+                                        </a>
+                                        <a class="fullscreen-link">
+                                            <i class="fa fa-expand"></i>
+                                        </a>
+                                    {% endblock project_details_main_tools %}
+                                </div>
+                            {% endblock project_details_main_title %}
                         </div>
-                    {% else %}
-                        <small id="project_abstract">{{ _('Without abstract') }}</small> {% if projectData.access_type != 4 %} <a href="{{ request.route_url('project_edit',userid=projectData.owner,projcode=projectData.project_code,_query={'next':request.url}) }}"><i class="fas fa-pencil-alt text-warning" title="{{ _('Edit') }}"></i></a> {% endif %}
-                    {% endif %}
-                    <hr>
-                    {% if projectData.project_public == 1 %}
-                        <p class="small font-bold">
-                            <span><i class="fa fa-circle text-info"></i> {{ _('Open access') }}</span>
-                        </p>
-                    {% else %}
-                        <p class="small font-bold">
-                            <span><i class="fa fa-circle text-danger"></i> {{ _('Private') }}</span>
-                        </p>
-                    {% endif %}
-                </div>
-            </div>
-            {% include 'dashboard/projects/snippets/project_map.jinja2' %}
-            <div class="ibox">
-                <div class="ibox-title">
-                    <h5>{{ _('Assistants') }}</h5>
-                    <div class="ibox-tools">
-                        {% if projectData.access_type != 4 %}
-                            <a href="{{ request.route_url('assistant_add',userid=userid,projcode=projectData.project_code,_query={'next': request.url}) }}" style="margin-right: 10px">
-                                <i class="fa fa-plus-square text-success" title="{{ _('Add new assistant') }}"></i>
-                            </a>
-                        {% endif %}
-                        <a class="collapse-link">
-                            <i class="fa fa-chevron-up" style="margin-right: 10px"></i>
-                        </a>
-                        <a class="fullscreen-link">
-                            <i class="fa fa-expand"></i>
-                        </a>
+                        <div class="ibox-content">
+                            {% block project_details_main_content %}
+                                <div style="text-align: center">
+                                    <span class="text-center">{{ _('Use this QR to configure ODK collect') }}</span><br/>
+                                    <a title="{{ _('ODK settings') }}" href="{{ request.route_url('project_stored_file', userid=userid, projcode=projectData.project_code, filename=projectData.project_image) }}"><img style="max-width: 150px" src="{{ request.route_url('project_stored_file', userid=userid, projcode=projectData.project_code, filename=projectData.project_image) }}" class="img-fluid"></a>
+                                </div>
+                                ODK URL:<br/>
+                                <div class="input-group">
+                                    <input type="text" value="{{ request.route_url('project_details', userid=userid, projcode=projectData.project_code) }}" class="form-control"> <span class="input-group-append"> <a class="btn btn-white btn-bitbucket clipboard" data-clipboard-text="{{ request.route_url('project_details', userid=userid, projcode=projectData.project_code) }}" title="{{ _('Copy to clipboard') }}"><i class="far fa-copy"></i></a> </span>
+                                </div>
+                                <hr>
+                                {% if projectData.project_abstract != None %}
+                                    <textarea id="abstract_hidden" style="display:none;">{{ projectData.project_abstract }}</textarea>
+                                    <div class="scroll_content">
+                                        <small id="project_abstract">
+
+                                        </small>
+                                    </div>
+                                {% else %}
+                                    <small id="project_abstract">{{ _('Without abstract') }}</small> {% if projectData.access_type != 4 %} <a href="{{ request.route_url('project_edit',userid=projectData.owner,projcode=projectData.project_code,_query={'next':request.url}) }}"><i class="fas fa-pencil-alt text-warning" title="{{ _('Edit') }}"></i></a> {% endif %}
+                                {% endif %}
+                                <hr>
+                                {% if projectData.project_public == 1 %}
+                                    <p class="small font-bold">
+                                        <span><i class="fa fa-circle text-info"></i> {{ _('Open access') }}</span>
+                                    </p>
+                                {% else %}
+                                    <p class="small font-bold">
+                                        <span><i class="fa fa-circle text-danger"></i> {{ _('Private') }}</span>
+                                    </p>
+                                {% endif %}
+                            {% endblock project_details_main_content %}
+                        </div>
                     </div>
-                </div>
-                <div class="ibox-content">
-                    {% if projectData.access_type != 4 %}
-                        {% if assistants|length > 0 %}
-                            <small>{{ _('Click/Tab and hold to remove assistants') }}</small>
-                        {% else %}
-                            <small class="text-danger"><b>{{ _('This project has no assistants. Use the + button to add one') }}</b></small>
-                        {% endif %}
-                    {% endif %}
-                    <div class="row">
-                        <div class="col-md-12">
-                            <ul class="tag-list" style="padding: 0">
-                                {% for assistant in assistants %}
-                                    <li><a class="{% if assistant.coll_active == 0 %}text-danger{% endif %} assistant-item" {% if projectData.access_type != 4 %} urn="{{ request.route_url('assistant_delete',userid=userid,projcode=projectData.project_code,assistid=assistant.coll_id,_query={'next': request.url}) }}" href="{{ request.route_url('assistant_edit',userid=userid,projcode=projectData.project_code,assistid=assistant.coll_id,_query={'next': request.url}) }}" {% endif %}> {{ assistant.coll_name }}</a></li>
-                                {% endfor %}
+                {% endblock project_details_main_section %}
+                {% include 'dashboard/projects/snippets/project_map.jinja2' %}
+                {% block project_details_assistant_section %}
+                    <div class="ibox">
+                        <div class="ibox-title">
+                            {% block project_details_assistant_title %}
+                                <h5>{{ _('Assistants') }}</h5>
+                                <div class="ibox-tools">
+                                    {% block project_details_assistant_tools %}
+                                        {% if projectData.access_type != 4 %}
+                                            <a href="{{ request.route_url('assistant_add',userid=userid,projcode=projectData.project_code,_query={'next': request.url}) }}" style="margin-right: 10px">
+                                                <i class="fa fa-plus-square text-success" title="{{ _('Add new assistant') }}"></i>
+                                            </a>
+                                        {% endif %}
+                                        <a class="collapse-link">
+                                            <i class="fa fa-chevron-up" style="margin-right: 10px"></i>
+                                        </a>
+                                        <a class="fullscreen-link">
+                                            <i class="fa fa-expand"></i>
+                                        </a>
+                                    {% endblock project_details_assistant_tools %}
+                                </div>
+                            {% endblock project_details_assistant_title %}
+                        </div>
+                        <div class="ibox-content">
+                            {% block project_details_assistant_content %}
                                 {% if projectData.access_type != 4 %}
-                                    {% if moreAssistants > 0 %}
-                                        <li><a class="text-success" href="{{ request.route_url('assistants',userid=userid,projcode=projectData.project_code) }}"> {{ _('And') }} {{ more }} {{ _('more') }}</a></li>
+                                    {% if assistants|length > 0 %}
+                                        <small>{{ _('Click/Tab and hold to remove assistants') }}</small>
+                                    {% else %}
+                                        <small class="text-danger"><b>{{ _('This project has no assistants. Use the + button to add one') }}</b></small>
                                     {% endif %}
                                 {% endif %}
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <ul class="tag-list" style="padding: 0">
+                                            {% for assistant in assistants %}
+                                                <li><a class="{% if assistant.coll_active == 0 %}text-danger{% endif %} assistant-item" {% if projectData.access_type != 4 %} urn="{{ request.route_url('assistant_delete',userid=userid,projcode=projectData.project_code,assistid=assistant.coll_id,_query={'next': request.url}) }}" href="{{ request.route_url('assistant_edit',userid=userid,projcode=projectData.project_code,assistid=assistant.coll_id,_query={'next': request.url}) }}" {% endif %}> {{ assistant.coll_name }}</a></li>
+                                            {% endfor %}
+                                            {% if projectData.access_type != 4 %}
+                                                {% if moreAssistants > 0 %}
+                                                    <li><a class="text-success" href="{{ request.route_url('assistants',userid=userid,projcode=projectData.project_code) }}"> {{ _('And') }} {{ more }} {{ _('more') }}</a></li>
+                                                {% endif %}
+                                            {% endif %}
 
-                            </ul>
-                        </div>
-                    </div>
-                    {% if assistants|length > 0 %}
-                        <small>{{ _('Assistants in') }} <span class="text-danger">{{ _('red') }}</span> {{ _('are inactive') }}</small>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="ibox">
-                <div class="ibox-title">
-                    <h5>{{ _('Assistant groups') }}</h5>
-                    <div class="ibox-tools">
-                        {% if projectData.access_type != 4 %}
-                            <a href="{{ request.route_url('group_add',userid=userid,projcode=projectData.project_code,_query={'next': request.url}) }}" style="margin-right: 10px">
-                                <i class="fa fa-plus-square text-success" title="{{ _('Add new group') }}"></i>
-                            </a>
-                        {% endif %}
-                        <a class="collapse-link">
-                            <i class="fa fa-chevron-up" style="margin-right: 10px"></i>
-                        </a>
-                        <a class="fullscreen-link">
-                            <i class="fa fa-expand"></i>
-                        </a>
-                    </div>
-                </div>
-                <div class="ibox-content">
-                    {% if projectData.access_type != 4 %}
-                        {% if groups|length > 0 %}
-                            <small>{{ _('Click/Tab and hold to remove groups') }}</small>
-                        {% else %}
-                            <small class="text-warning"><b>{{ _('This project has no groups. Use the + button to add them') }}</b></small>
-                        {% endif %}
-                    {% endif %}
-                    <div class="row">
-                        <div class="col-md-12">
-                            <ul class="tag-list" style="padding: 0">
-                                {% for group in groups %}
-                                    <li><a class="{% if group.group_active == 0 %}text-danger{% endif %} group-item" {% if projectData.access_type != 4 %} urn="{{ request.route_url('group_delete',userid=userid,projcode=projectData.project_code,groupid=group.group_id,_query={'next': request.url}) }}" href="{{ request.route_url('group_edit',userid=userid,projcode=projectData.project_code,groupid=group.group_id,_query={'next': request.url}) }}" {% endif %}> {{ group.group_desc }}</a></li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                    </div>
-                    {% if groups|length > 0 %}
-                        <small>{{ _('Groups in') }} <span class="text-danger">{{ _('red') }}</span> {{ _('are inactive') }}</small>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="ibox">
-                <div class="ibox-title">
-                    <h5>{{ _('Project files') }}</h5>
-                    <div class="ibox-tools">
-                        {% if projectData.access_type != 4 %}
-                            <a id="add_file" data-toggle="modal" data-target="#myModal" style="margin-right: 10px">
-                                <i class="fa fa-plus-square text-success" title="{{ _('Add new file') }}"></i>
-                            </a>
-                        {% endif %}
-                        <a class="collapse-link" style="margin-right: 10px">
-                            <i class="fa fa-chevron-up"></i>
-                        </a>
-                        <a class="fullscreen-link">
-                            <i class="fa fa-expand"></i>
-                        </a>
-                    </div>
-                </div>
-                <div class="ibox-content">
-                    <div class="row">
-                        <div class="col-md-12">
-                            {% if projectData.access_type != 4 %}
-                                {% if files|length > 0 %}
-                                    <small>{{ _('Click/Tab and hold to remove files') }}</small>
-                                {% else %}
-                                    <small>{{ _('No attached files. Use the + button to add files') }}</small>
+                                        </ul>
+                                    </div>
+                                </div>
+                                {% if assistants|length > 0 %}
+                                    <small>{{ _('Assistants in') }} <span class="text-danger">{{ _('red') }}</span> {{ _('are inactive') }}</small>
                                 {% endif %}
-                            {% endif %}
-                            <ul class="tag-list" style="padding: 0">
-                                {% for file in files %}
-                                    <li><a class="file-item" urn="{{ request.route_url('project_remove_file',userid=userid,projcode=projectData.project_code,filename=file.file_name) }}" href="{{ request.route_url('project_stored_file',userid=userid,projcode=projectData.project_code,filename=file.file_name) }}"><i class="fa fa-file-pdf-o"></i> {{ file.file_name }}</a></li>
-                                {% endfor %}
-                            </ul>
+                            {% endblock project_details_assistant_content %}
                         </div>
                     </div>
+                {% endblock project_details_assistant_section %}
+                {% block project_details_groups_section %}
+                    <div class="ibox">
+                        <div class="ibox-title">
+                            {% block project_details_groups_title %}
+                                <h5>{{ _('Assistant groups') }}</h5>
+                                <div class="ibox-tools">
+                                    {% block project_details_groups_tools %}
+                                        {% if projectData.access_type != 4 %}
+                                            <a href="{{ request.route_url('group_add',userid=userid,projcode=projectData.project_code,_query={'next': request.url}) }}" style="margin-right: 10px">
+                                                <i class="fa fa-plus-square text-success" title="{{ _('Add new group') }}"></i>
+                                            </a>
+                                        {% endif %}
+                                        <a class="collapse-link">
+                                            <i class="fa fa-chevron-up" style="margin-right: 10px"></i>
+                                        </a>
+                                        <a class="fullscreen-link">
+                                            <i class="fa fa-expand"></i>
+                                        </a>
+                                    {% endblock project_details_groups_tools %}
+                                </div>
+                            {% endblock project_details_groups_title %}
+                        </div>
+                        <div class="ibox-content">
+                            {% block project_details_groups_content %}
+                                {% if projectData.access_type != 4 %}
+                                    {% if groups|length > 0 %}
+                                        <small>{{ _('Click/Tab and hold to remove groups') }}</small>
+                                    {% else %}
+                                        <small class="text-warning"><b>{{ _('This project has no groups. Use the + button to add them') }}</b></small>
+                                    {% endif %}
+                                {% endif %}
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <ul class="tag-list" style="padding: 0">
+                                            {% for group in groups %}
+                                                <li><a class="{% if group.group_active == 0 %}text-danger{% endif %} group-item" {% if projectData.access_type != 4 %} urn="{{ request.route_url('group_delete',userid=userid,projcode=projectData.project_code,groupid=group.group_id,_query={'next': request.url}) }}" href="{{ request.route_url('group_edit',userid=userid,projcode=projectData.project_code,groupid=group.group_id,_query={'next': request.url}) }}" {% endif %}> {{ group.group_desc }}</a></li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                                {% if groups|length > 0 %}
+                                    <small>{{ _('Groups in') }} <span class="text-danger">{{ _('red') }}</span> {{ _('are inactive') }}</small>
+                                {% endif %}
+                            {% endblock project_details_groups_content %}
+                        </div>
+                    </div>
+                {% endblock project_details_groups_section %}
+                {% block project_details_files_section %}
+                    <div class="ibox">
+                        <div class="ibox-title">
+                            {% block project_details_files_title %}
+                                <h5>{{ _('Project files') }}</h5>
+                                <div class="ibox-tools">
+                                    {% block project_details_files_tools %}
+                                        {% if projectData.access_type != 4 %}
+                                            <a id="add_file" data-toggle="modal" data-target="#myModal" style="margin-right: 10px">
+                                                <i class="fa fa-plus-square text-success" title="{{ _('Add new file') }}"></i>
+                                            </a>
+                                        {% endif %}
+                                        <a class="collapse-link" style="margin-right: 10px">
+                                            <i class="fa fa-chevron-up"></i>
+                                        </a>
+                                        <a class="fullscreen-link">
+                                            <i class="fa fa-expand"></i>
+                                        </a>
+                                    {% endblock project_details_files_tools %}
+                                </div>
+                            {% endblock project_details_files_title %}
+                        </div>
+                        <div class="ibox-content">
+                            {% block project_details_files_content %}
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        {% if projectData.access_type != 4 %}
+                                            {% if files|length > 0 %}
+                                                <small>{{ _('Click/Tab and hold to remove files') }}</small>
+                                            {% else %}
+                                                <small>{{ _('No attached files. Use the + button to add files') }}</small>
+                                            {% endif %}
+                                        {% endif %}
+                                        <ul class="tag-list" style="padding: 0">
+                                            {% for file in files %}
+                                                <li><a class="file-item" urn="{{ request.route_url('project_remove_file',userid=userid,projcode=projectData.project_code,filename=file.file_name) }}" href="{{ request.route_url('project_stored_file',userid=userid,projcode=projectData.project_code,filename=file.file_name) }}"><i class="fa fa-file-pdf-o"></i> {{ file.file_name }}</a></li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                            {% endblock project_details_files_content %}
+                        </div>
+                    </div>
+                {% endblock project_details_files_section %}
+                <div class="text-center m-t-md" style="margin-bottom: 20px">
+                    {% block project_details_files_bottom %}
+                        {% if projectData.access_type != 4 %}<a href="{{ request.route_url('project_edit',userid=projectData.owner,projcode=projectData.project_code,_query={'next':request.url}) }}" class="btn btn-xs btn-warning">Edit project</a>{% endif %} {% if projectData.access_type == 1 %} <a id="delete_project" style="color: white" class="btn btn-xs btn-danger">Remove project</a> {% endif %}
+                    {% endblock project_details_files_bottom %}
                 </div>
             </div>
-            <div class="text-center m-t-md" style="margin-bottom: 20px">
-                {% if projectData.access_type != 4 %}<a href="{{ request.route_url('project_edit',userid=projectData.owner,projcode=projectData.project_code,_query={'next':request.url}) }}" class="btn btn-xs btn-warning">Edit project</a>{% endif %} {% if projectData.access_type == 1 %} <a id="delete_project" style="color: white" class="btn btn-xs btn-danger">Remove project</a> {% endif %}
-            </div>
-        </div>
+        {% endblock project_details_sections %}
     </div>
     <div class="col-lg-9">
-        <div class="wrapper wrapper-content">
-            <div class="ibox">
-                <div class="ibox-content">
-                    <div class="row">
-                        <div class="col-lg-12">
-                            <div class="m-b-md">
-                                <h2>{{ _('Project details') }}</h2>
-                            </div>
+        {% block project_stats_sections %}
+            <div class="wrapper wrapper-content">
+                <div class="ibox">
+                    <div class="ibox-content">
+                        {% block project_stats_title %}
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="m-b-md">
+                                        <h2>{{ _('Project details') }}</h2>
+                                    </div>
 
+                                </div>
+                            </div>
+                        {% endblock project_stats_title %}
+                        <div class="row">
+                            {% block project_stats_details %}
+                                <div class="col-lg-6">
+                                    {% block project_stats_numbers %}
+                                        <dl class="row mb-0">
+                                            <div class="col-sm-4 text-sm-right"><dt>{{ _('Created by') }}:</dt> </div>
+                                            <div class="col-sm-8 text-sm-left"><dd class="mb-1">{{ userDetails.user_name }}</dd> </div>
+                                        </dl>
+                                        <dl class="row mb-0">
+                                            <div class="col-sm-4 text-sm-right"><dt>{{ _('Forms') }}:</dt> </div>
+                                            <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ forms|length }}</dd></div>
+                                        </dl>
+                                        <dl class="row mb-0">
+                                            <div class="col-sm-4 text-sm-right"><dt>{{ _('Total submissions') }}:</dt> </div>
+                                            <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ submissions}}</dd></div>
+                                        </dl>
+                                        <dl class="row mb-0">
+                                            <div class="col-sm-4 text-sm-right"><dt>{{ _('Created') }}:</dt> </div>
+                                            <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date(projectData.project_cdate) }}</dd></div>
+                                        </dl>
+                                    {% endblock project_stats_numbers %}
+                                </div>
+                                <div class="col-lg-6" id="cluster_info">
+                                    {% block project_stats_submissions %}
+                                        <dl class="row mb-0">
+                                            <div class="col-sm-4 text-sm-right">
+                                                <dt>{{ _('Last Updated') }}:</dt>
+                                            </div>
+                                            <div class="col-sm-8 text-sm-left">
+                                                <dd class="mb-1">{{ request.h.readble_date(projectData.project_cdate) }}</dd>
+                                            </div>
+                                        </dl>
+                                        <dl class="row mb-0">
+                                            <div class="col-sm-4 text-sm-right">
+                                                <dt>{{ _('Last Submission') }}:</dt>
+                                            </div>
+                                            <div class="col-sm-8 text-sm-left">
+                                                {% if submissions > 0 %}
+                                                    <dd class="mb-1">{{ request.h.readble_date_with_time(last) }} {{ _('by') }} <a class="text-info">{{ bydetails.coll_name }}</a></dd>
+                                                {% else %}
+                                                    <dd class="mb-1"></dd>
+                                                {% endif %}
+                                            </div>
+                                        </dl>
+                                    {% endblock project_stats_submissions %}
+                                    <dl class="row mb-0">
+                                        {% block project_stats_collaborators %}
+                                            <div class="col-sm-4 text-sm-right">
+                                                <dt>{{ _('Collaborators:') }}</dt>
+                                            </div>
+                                            <div class="col-sm-8 text-sm-left">
+                                                <dd class="project-people mb-1">
+                                                    {% for collaborator in collaborators %}
+                                                        <a href="{{ request.route_url('dashboard',userid=collaborator.user_id) }}"><img title="{{ collaborator.user_name }}" class="rounded-circle" src="{{ request.h.get_gravatar_url(collaborator.user_email) }}"></a>
+                                                    {% endfor %}
+                                                    {% if moreCollaborators > 0 %}
+                                                        <a href="{{ request.route_url('collaborators',userid=userid,projcode=projectData.project_code) }}"><div class="rounded-circle" title="{{ _('Plus') }} {{ moreCollaborators }} {{ request.h.pluralize(request, _('other'), moreCollaborators) }}" style="background-color: #1ab394; width: 32px; height: 32px; display: inline-block; vertical-align: middle" ><span style="font-size: 20px; margin-left: 3px; color: white">+{{ moreCollaborators }}</span></div></a>
+                                                    {% endif %}
+                                                    {% if projectData.access_type != 4 %}
+                                                        <a href="{{ request.route_url('collaborators',userid=userid,projcode=projectData.project_code) }}"><div class="rounded-circle" title="Add" style="background-color: #026AA8; width: 32px; height: 32px; display: inline-block; vertical-align: middle" ><span style="font-size: 20px; margin-left: 10px; color: white">+</span></div></a>
+                                                    {% endif %}
+                                                </dd>
+                                            </div>
+                                        {% endblock project_stats_collaborators %}
+                                    </dl>
+                                </div>
+                            {% endblock project_stats_details %}
                         </div>
-                    </div>
-                    <div class="row">
-                        <div class="col-lg-6">
-                            <dl class="row mb-0">
-                                <div class="col-sm-4 text-sm-right"><dt>{{ _('Created by') }}:</dt> </div>
-                                <div class="col-sm-8 text-sm-left"><dd class="mb-1">{{ userDetails.user_name }}</dd> </div>
-                            </dl>
-                            <dl class="row mb-0">
-                                <div class="col-sm-4 text-sm-right"><dt>{{ _('Forms') }}:</dt> </div>
-                                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ forms|length }}</dd></div>
-                            </dl>
-                            <dl class="row mb-0">
-                                <div class="col-sm-4 text-sm-right"><dt>{{ _('Total submissions') }}:</dt> </div>
-                                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ submissions}}</dd></div>
-                            </dl>
-                            <dl class="row mb-0">
-                                <div class="col-sm-4 text-sm-right"><dt>{{ _('Created') }}:</dt> </div>
-                                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date(projectData.project_cdate) }}</dd></div>
-                            </dl>
-                        </div>
-                        <div class="col-lg-6" id="cluster_info">
-                            <dl class="row mb-0">
-                                <div class="col-sm-4 text-sm-right">
-                                    <dt>{{ _('Last Updated') }}:</dt>
+                        {% block project_stats_forms_section %}
+                            <div class="row m-t-sm">
+                                <div class="col-lg-12">
+                                    {% include 'dashboard/projects/snippets/project_forms.jinja2' %}
+                                    {#                            {% include 'dashboard/projects/snippets/project_activity.jinja2' %}#}
                                 </div>
-                                <div class="col-sm-8 text-sm-left">
-                                    <dd class="mb-1">{{ request.h.readble_date(projectData.project_cdate) }}</dd>
-                                </div>
-                            </dl>
-                            <dl class="row mb-0">
-                                <div class="col-sm-4 text-sm-right">
-                                    <dt>{{ _('Last Submission') }}:</dt>
-                                </div>
-                                <div class="col-sm-8 text-sm-left">
-                                    {% if submissions > 0 %}
-                                        <dd class="mb-1">{{ request.h.readble_date_with_time(last) }} {{ _('by') }} <a class="text-info">{{ bydetails.coll_name }}</a></dd>
-                                    {% else %}
-                                        <dd class="mb-1"></dd>
-                                    {% endif %}
-                                </div>
-                            </dl>
-                            <dl class="row mb-0">
-                                <div class="col-sm-4 text-sm-right">
-                                    <dt>{{ _('Collaborators:') }}</dt>
-                                </div>
-                                <div class="col-sm-8 text-sm-left">
-                                    <dd class="project-people mb-1">
-                                        {% for collaborator in collaborators %}
-                                            <a href="{{ request.route_url('dashboard',userid=collaborator.user_id) }}"><img title="{{ collaborator.user_name }}" class="rounded-circle" src="{{ request.h.get_gravatar_url(collaborator.user_email) }}"></a>
-                                        {% endfor %}
-                                        {% if moreCollaborators > 0 %}
-                                            <a href="{{ request.route_url('collaborators',userid=userid,projcode=projectData.project_code) }}"><div class="rounded-circle" title="{{ _('Plus') }} {{ moreCollaborators }} {{ request.h.pluralize(request, _('other'), moreCollaborators) }}" style="background-color: #1ab394; width: 32px; height: 32px; display: inline-block; vertical-align: middle" ><span style="font-size: 20px; margin-left: 3px; color: white">+{{ moreCollaborators }}</span></div></a>
-                                        {% endif %}
-                                        {% if projectData.access_type != 4 %}
-                                            <a href="{{ request.route_url('collaborators',userid=userid,projcode=projectData.project_code) }}"><div class="rounded-circle" title="Add" style="background-color: #026AA8; width: 32px; height: 32px; display: inline-block; vertical-align: middle" ><span style="font-size: 20px; margin-left: 10px; color: white">+</span></div></a>
-                                        {% endif %}
-                                    </dd>
-                                </div>
-                            </dl>
-                        </div>
-                    </div>
-                    <div class="row m-t-sm">
-                        <div class="col-lg-12">
-                            {% include 'dashboard/projects/snippets/project_forms.jinja2' %}
-{#                            {% include 'dashboard/projects/snippets/project_activity.jinja2' %}#}
-                        </div>
+                            </div>
+                        {% endblock project_stats_forms_section %}
                     </div>
                 </div>
             </div>
-        </div>
+        {% endblock project_stats_sections %}
     </div>
 </div>

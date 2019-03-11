@@ -4,7 +4,7 @@ import shutil
 import glob
 from decimal import Decimal
 from subprocess import Popen, PIPE, check_call, CalledProcessError
-from formshare.processes.db import get_form_schema, get_form_directory, get_primary_key
+from formshare.processes.db import get_form_schema, get_form_directory, get_primary_key, get_project_form_colors
 from formshare.processes.odk import get_odk_path
 import datetime
 from formshare.processes.elasticsearch.repository_index import get_datasets_from_form, get_datasets_from_project
@@ -17,17 +17,21 @@ __all__ = ['get_submission_media_files', 'json_to_csv', 'get_gps_points_from_for
 log = logging.getLogger(__name__)
 
 
-def get_gps_points_from_project(request, user, project, query_from=None, query_size=None):
+def get_gps_points_from_project(request, user, project, project_id, query_from=None, query_size=None):
     total, datasets = get_datasets_from_project(request.registry.settings, user, project, query_from, query_size)
     data = []
+    colors = get_project_form_colors(request, project_id)
     for dataset in datasets:
         if '_geopoint' in dataset.keys():
             parts = dataset['_geopoint'].split(" ")
             if len(parts) >= 2:
-                color = ColorHash(dataset["_xform_id_string"])
+                if dataset["_xform_id_string"] not in colors.keys():
+                    color = ColorHash(dataset["_xform_id_string"]).hex
+                else:
+                    color = colors[dataset["_xform_id_string"]]
                 data.append(
                     {'key': dataset["_xform_id_string"], 'lati': parts[0], 'long': parts[1],
-                     'options': {'iconShape': 'circle-dot', 'borderWidth': 5, 'borderColor': color.hex}})
+                     'options': {'iconShape': 'circle-dot', 'borderWidth': 5, 'borderColor': color}})
     return True, {'points': data}
 
 

@@ -422,5 +422,6 @@ class DownloadProjectGPSPoints(ProjectsView):
         else:
             raise HTTPNotFound
 
-        created, data = get_gps_points_from_project(self.request, user_id, project_code, query_from, query_size)
+        created, data = get_gps_points_from_project(self.request, user_id, project_code, project_id, query_from,
+                                                    query_size)
         return data

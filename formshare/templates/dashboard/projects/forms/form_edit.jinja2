@@ -6,6 +6,7 @@
 {% block css %}
     {{ super() }}
     {% cssresource request,'formshare','switchery' %}
+    {% cssresource request,'formshare','colorpicker' %}
 {% endblock css %}
 
 {% block topScripts %}
@@ -38,11 +39,16 @@
 
 {% block scripts %}
     {{ super() }}
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js" type="text/javascript" charset="utf-8"></script>
+    {% jsresource request,'formshare','colorpicker' %}
     <script>
         $(document).ready(function() {
             var elem = document.querySelector('.js-switch');
             var switchery = new Switchery(elem, { color: '#1AB394' });
         });
+        $('#noIndColor').colorpicker({
+		    displayIndicator: false
+	    });
     </script>
 
 {% endblock scripts %}

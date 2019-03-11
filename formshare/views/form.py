@@ -17,7 +17,7 @@ from pyramid.response import FileResponse
 from formshare.processes.submission.api import get_submission_media_files, json_to_csv, get_gps_points_from_form, \
     generate_xlsx_file
 from formshare.processes.odk.api import get_odk_path, upload_odk_form, update_form_title, retrieve_form_file, \
-    update_odk_form, get_missing_support_files, import_json_data
+    update_odk_form, get_missing_support_files, import_external_data
 import uuid
 import shutil
 
@@ -1165,9 +1165,17 @@ class ImportData(PrivateView):
                 odk_path = get_odk_path(self.request)
 
                 form_post_data = self.get_post_dict()
+                if 'file' in form_post_data.keys():
+                    form_post_data.pop('file')
                 parts = form_post_data['assistant'].split("@")
-                import_json_data(self.request, user_id, project_id, form_id, odk_path, form_data['form_directory'],
-                                 form_data['form_schema'], parts[0])
+                import_type = int(form_post_data['import_type'])
+                if 'ignore_xform' in form_post_data:
+                    ignore_xform = True
+                else:
+                    ignore_xform = False
+
+                import_external_data(self.request, user_id, project_id, form_id, odk_path, form_data['form_directory'],
+                                     form_data['form_schema'], parts[0], import_type, ignore_xform, form_post_data)
 
             return {'projectDetails': project_details, 'formid': form_id, 'formDetails': form_data, 'userid': user_id,
                     'assistants': get_assigned_assistants(self.request, project_id, form_id)}

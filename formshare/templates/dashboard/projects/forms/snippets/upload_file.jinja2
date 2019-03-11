@@ -2,44 +2,52 @@
     <div class="modal-dialog">
         <div class="modal-content animated fadeIn">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                <h4 class="modal-title">{{ _('Upload file') }}</h4>
+                {% block upload_file_header %}
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                    <h4 class="modal-title">{{ _('Upload file') }}</h4>
+                {% endblock upload_file_header %}
             </div>
             <form role="form" method="post" enctype="multipart/form-data" action="{{ request.route_url('form_upload',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formid) }}">
-                {{ form.secure_form(request) }}
-                <input style="display:none;"  multiple type="file" id="filetoupload" name="filetoupload"/>
-                <div class="modal-body">
-                    <div class="form-group row"><label id="file_label" class="col-sm-2 col-form-label">{{ _('File/s') }}</label>
-                        <div id="imageinput" class="input-group col-sm-10">
+                {% block upload_file_form %}
+                    {{ form.secure_form(request) }}
+                    <input style="display:none;"  multiple type="file" id="filetoupload" name="filetoupload"/>
+                    <div class="modal-body">
+                        {% block upload_file_form_fields %}
+                            <div class="form-group row"><label id="file_label" class="col-sm-2 col-form-label">{{ _('File/s') }}</label>
+                                <div id="imageinput" class="input-group col-sm-10">
 
-                                <a id="uploadbutton" class="btn btn-white btn-bitbucket"><i class="fa fa-upload"></i> Upload</a>
-                                <a style="margin-left: 10px" id="linkbutton" class="btn btn-white btn-bitbucket"><i class="fa fa-globe"></i> Link</a>
+                                    <a id="uploadbutton" class="btn btn-white btn-bitbucket"><i class="fa fa-upload"></i> Upload</a>
+                                    <a style="margin-left: 10px" id="linkbutton" class="btn btn-white btn-bitbucket"><i class="fa fa-globe"></i> Link</a>
 
-                                <input style="display:none;" type="text" class="form-control" name="form_file" id="form_file">
-                                <div style="display:none;" class="input-group-append" id="clear_section">
-                                    <button id="clear_button" type="button" class="btn btn-danger btn-xs">Remove</button>
+                                    <input style="display:none;" type="text" class="form-control" name="form_file" id="form_file">
+                                    <div style="display:none;" class="input-group-append" id="clear_section">
+                                        <button id="clear_button" type="button" class="btn btn-danger btn-xs">Remove</button>
+                                    </div>
                                 </div>
-                        </div>
-                    </div>
-                    <div id="file_info">
-                        <div class="hr-line-dashed"></div>
-                        <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('File name') }}</label>
-                            <div class="col-sm-10">
-                                <input type="text" class="form-control" name="file_name" id="file_name">
                             </div>
-                        </div>
+                            <div id="file_info">
+                                <div class="hr-line-dashed"></div>
+                                <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('File name') }}</label>
+                                    <div class="col-sm-10">
+                                        <input type="text" class="form-control" name="file_name" id="file_name">
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="overwrite_section">
+                                <div class="hr-line-dashed"></div>
+                                <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Overwrite') }}</label>
+                                    <div class="col-sm-10"><input type="checkbox" id="overwrite" name="overwrite" class="js-switch"/><span class="form-text m-b-none">{{ _('Overwrite any existent file') }}</span></div>
+                                </div>
+                            </div>
+                        {% endblock upload_file_form_fields %}
                     </div>
-                    <div id="overwrite_section">
-                        <div class="hr-line-dashed"></div>
-                        <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Overwrite') }}</label>
-                            <div class="col-sm-10"><input type="checkbox" id="overwrite" name="overwrite" class="js-switch"/><span class="form-text m-b-none">{{ _('Overwrite any existent file') }}</span></div>
-                        </div>
+                    <div class="modal-footer">
+                        {% block upload_file_form_actions %}
+                            <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
+                            <button type="submit" class="btn btn-primary">{{ _('Upload') }}</button>
+                        {% endblock upload_file_form_actions %}
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
-                    <button type="submit" class="btn btn-primary">{{ _('Upload') }}</button>
-                </div>
+                {% endblock upload_file_form %}
             </form>
         </div>
     </div>

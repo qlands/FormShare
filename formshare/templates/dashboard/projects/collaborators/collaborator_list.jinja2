@@ -30,45 +30,51 @@
             {{ form.display_errors(errors) }}
             <div class="ibox">
                 <div class="ibox-content">
-                    <span class="text-muted small float-right">Last modification: <i class="fa fa-clock-o"></i> 2:10 pm - 12.06.2014</span>
-                    <h2>{{ _('Collaborators') }}</h2>
-                    <p>
-                        {{ _('Collaborators can have different roles: ') }}<br/>
-                        <span class="badge badge-danger">{{ _('Administrator') }}</span> &rarr; {{ _('Can make modifications including changing collaborators') }} <br/>
-                        <span style="margin-top: 5px" class="badge badge-warning">{{ _('Editor') }}</span> &rarr; {{ _('Can make modifications but not change the collaborators') }} <br/>
-                        <span style="margin-top: 5px" class="badge badge-dark">{{ _('Member') }}</span> &rarr; {{ _('Read only access to forms and data') }}
-                    </p>
-{#                    <div class="input-group">#}
-{#                        <input type="text" placeholder="{{ _('Search collaborators') }} " class="input form-control">#}
-{#                        <span class="input-group-append"><button type="button" class="btn btn btn-primary"> <i class="fa fa-search"></i> {{ _('Search') }}</button></span>#}
-{#                    </div>#}
-                    <hr>
-                    <div class="clients-list">
-                        <div class="row">
-                            <div class="col-lg-12">
-                                {% for collaborator in collaborators %}
-                                    {% include 'dashboard/projects/collaborators/snippets/collaborator_item.jinja2' %}
-                                {% endfor %}
+                    {% block collaborator_list_heading %}
+                        <span class="text-muted small float-right">Last modification: <i class="fa fa-clock-o"></i> 2:10 pm - 12.06.2014</span>
+                        <h2>{{ _('Collaborators') }}</h2>
+                        <p>
+                            {{ _('Collaborators can have different roles: ') }}<br/>
+                            <span class="badge badge-danger">{{ _('Administrator') }}</span> &rarr; {{ _('Can make modifications including changing collaborators') }} <br/>
+                            <span style="margin-top: 5px" class="badge badge-warning">{{ _('Editor') }}</span> &rarr; {{ _('Can make modifications but not change the collaborators') }} <br/>
+                            <span style="margin-top: 5px" class="badge badge-dark">{{ _('Member') }}</span> &rarr; {{ _('Read only access to forms and data') }}
+                        </p>
+                        {#                    <div class="input-group">#}
+                        {#                        <input type="text" placeholder="{{ _('Search collaborators') }} " class="input form-control">#}
+                        {#                        <span class="input-group-append"><button type="button" class="btn btn btn-primary"> <i class="fa fa-search"></i> {{ _('Search') }}</button></span>#}
+                        {#                    </div>#}
+                        <hr>
+                        {% block collaborator_list_items %}
+                            <div class="clients-list">
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        {% for collaborator in collaborators %}
+                                            {% include 'dashboard/projects/collaborators/snippets/collaborator_item.jinja2' %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
                             </div>
-                        </div>
-                    </div>
+                        {% endblock collaborator_list_items %}
+                    {% endblock collaborator_list_heading %}
                 </div>
             </div>
-            <div class="ibox-content text-left">
-                <h2>Add collaborator</h2>
-                <small>Search by username, full name or email address</small>
-                <form role="form" method="post" action="{{ request.url }}">
-                    {{ form.secure_form(request) }}
-                    <div class="row">
-                        <div class="col-md-9">
-                            <select name="collaborator" style="width: 100%; !important;" class="js-example-data-ajax form-control"></select>
+            {% block collaborator_list_search %}
+                <div class="ibox-content text-left">
+                    <h2>{{ _('Add collaborator') }}</h2>
+                    <small>{{ _('Search by username, full name or email address') }}</small>
+                    <form role="form" method="post" action="{{ request.url }}">
+                        {{ form.secure_form(request) }}
+                        <div class="row">
+                            <div class="col-md-9">
+                                <select name="collaborator" style="width: 100%; !important;" class="js-example-data-ajax form-control"></select>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" name="add_collaborator" class="btn btn-block btn-primary action-buttons"> <i class="fa fa-plus"></i> {{ _('Add collaborator') }}</button>
+                            </div>
                         </div>
-                        <div class="col-md-3">
-                            <button type="submit" name="add_collaborator" class="btn btn-block btn-primary action-buttons"> <i class="fa fa-plus"></i> {{ _('Add collaborator') }}</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
+                    </form>
+                </div>
+            {% endblock collaborator_list_search %}
         </div>
     </div>
     <div class="modal inmodal" id="myModal" tabindex="-1" role="dialog" aria-hidden="true">
@@ -83,16 +89,20 @@
                     {{ form.secure_form(request) }}
                     <input type="hidden" id="collaborator_id" name="collaborator_id" value="">
                     <div class="modal-body">
-                        <div>
-                            <label><input type="radio" checked value="2" id="role_admin" name="role_collaborator">{{ _('Administrator') }}</label><br/>
-                            <label><input type="radio" value="3" id="role_editor" name="role_collaborator">{{ _('Editor') }}</label><br/>
-                            <label><input type="radio" value="4" id="role_member" name="role_collaborator">{{ _('Member') }}</label>
+                        {% block collaborator_list_form_fields %}
+                            <div>
+                                <label><input type="radio" checked value="2" id="role_admin" name="role_collaborator">{{ _('Administrator') }}</label><br/>
+                                <label><input type="radio" value="3" id="role_editor" name="role_collaborator">{{ _('Editor') }}</label><br/>
+                                <label><input type="radio" value="4" id="role_member" name="role_collaborator">{{ _('Member') }}</label>
+                            </div>
+                        {% endblock collaborator_list_form_fields %}
+                    </div>
+                    {% block collaborator_list_form_actions %}
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
+                            <button type="submit" name="change_role" class="btn btn-primary">{{ _('Change role') }}</button>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
-                        <button type="submit" name="change_role" class="btn btn-primary">{{ _('Change role') }}</button>
-                    </div>
+                    {% endblock collaborator_list_form_actions %}
                 </form>
             </div>
         </div>
@@ -150,10 +160,7 @@
                     role_member.prop( "checked", true );
 
             });
-        });
-    </script>
-    <script>
-        $(document).ready(function() {
+
             $(".js-example-data-ajax").select2({
                 ajax: {
                     url: "{{ request.route_url('api_select2_users') }}",
@@ -177,8 +184,7 @@
                     cache: true
                 }
             });
-            {#$("#role").select2();#}
+
         });
     </script>
-
 {% endblock scripts %}

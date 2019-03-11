@@ -1,46 +1,56 @@
 <div class="ibox">
     <div class="ibox-title">
-        <h5>Forms</h5>
-        <div class="ibox-tools">
-            <a class="collapse-link" style="margin-right: 10px">
-                <i class="fa fa-chevron-up"></i>
-            </a>
-            <a class="fullscreen-link">
-                <i class="fa fa-expand"></i>
-            </a>
-        </div>
+        {% block project_forms_title %}
+            <h5>{{ _('Forms') }}</h5>
+            <div class="ibox-tools">
+                {% block project_forms_tools %}
+                    <a class="collapse-link" style="margin-right: 10px">
+                        <i class="fa fa-chevron-up"></i>
+                    </a>
+                    <a class="fullscreen-link">
+                        <i class="fa fa-expand"></i>
+                    </a>
+                {% endblock project_forms_tools %}
+            </div>
+        {% endblock project_forms_title %}
     </div>
     <div class="ibox-content">
-        <div {% if scroll_content %}class="scroll_content" {% endif %}>
-            <div class="row">
-                <div class="col-md-8">
-                    Total: {{ forms|length }}
-                    {% if forms|length > 0 %}
-                    <br/>Active: {{ activeforms }}. Inactive: {{ inactiveforms }}
-                    {% endif %}
+        {% block project_forms_content %}
+            <div {% if scroll_content %}class="scroll_content" {% endif %}>
+                <div class="row">
+                    {% block project_forms_content_heading %}
+                        <div class="col-md-8">
+                            Total: {{ forms|length }}
+                            {% if forms|length > 0 %}
+                                <br/>Active: {{ activeforms }}. Inactive: {{ inactiveforms }}
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            {% if forms|length > 0 %}
+                                {% if projectData.access_type != 4 %}
+                                    <button id="add_form" data-toggle="modal" data-target="#upload_form" type="button" class="btn btn-block btn-outline btn-primary">{{ _('Add new form') }}</button>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    {% endblock project_forms_content_heading %}
                 </div>
-                <div class="col-md-4">
-                    {% if forms|length > 0 %}
-                        {% if projectData.access_type != 4 %}
-                            <button id="add_form" data-toggle="modal" data-target="#upload_form" type="button" class="btn btn-block btn-outline btn-primary">{{ _('Add new form') }}</button>
-                        {% endif %}
-                    {% endif %}
-                </div>
-            </div>
-            <hr>
-            <div class="feed-activity-list">
-                {% if forms|length > 0 %}
-                    {% for form in forms %}
-                        {% if form.form_incversion == 0 %}
-                            {% include 'dashboard/projects/snippets/project_form_odk_item.jinja2' %}
+                <hr>
+                {% block project_forms_content_list %}
+                    <div class="feed-activity-list">
+                        {% if forms|length > 0 %}
+                            {% for form in forms %}
+                                {% if form.form_incversion == 0 %}
+                                    {% include 'dashboard/projects/snippets/project_form_odk_item.jinja2' %}
+                                {% else %}
+                                    {% include 'dashboard/projects/snippets/project_subversion_item.jinja2' %}
+                                {% endif %}
+                            {% endfor %}
                         {% else %}
-                            {% include 'dashboard/projects/snippets/project_subversion_item.jinja2' %}
+                            {% include 'dashboard/projects/snippets/no_forms.jinja2' %}
                         {% endif %}
-                    {% endfor %}
-                {% else %}
-                    {% include 'dashboard/projects/snippets/no_forms.jinja2' %}
-                {% endif %}
+                    </div>
+                {% endblock project_forms_content_list %}
             </div>
-        </div>
+        {% endblock project_forms_content %}
     </div>
 </div>

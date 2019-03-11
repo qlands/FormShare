@@ -61,42 +61,17 @@
 
 {% block scripts %}
     {% jsresource request,'formshare','inspinia' %}
-    {% set messageData = request.session.pop_flash() %}
-    {% if messageData|length > 0 %}
-        <script>
-            $(document).ready(function() {
-                messageData = '{{ messageData[0] }}';
-                swal({
-                    title: 'FormShare',
-                    text: messageData,
-                    type: "success"
-                });
-
-            });
-        </script>
-    {% endif %}
-
     <script>
         $(document).ready(function() {
+            {% include 'dashboard/snippets/pop_flash_js.jinja2' %}
+
+            {% include 'dashboard/projects/forms/snippets/upload_form_js.jinaj2' %}
+
+            {% for form in forms %}
+                {% include 'dashboard/projects/snippets/project_form_odk_item_js.jinja2' %}
+            {% endfor %}
+
             new ClipboardJS('.clipboard');
-
-            $('#upload_form').submit(function() {
-                $('#upload_form_button').prop("disabled", "disabled");
-                $('#cross_upload_form_button').prop("disabled", "disabled");
-                $('#cancel_upload_form_button').prop("disabled", "disabled");
-                $('#upload_form_button').html('{{ _("One moment please...") }}');
-            });
-
-            $('.custom-file-input').on('change', function() {
-                let fileName = $(this).val().split('\\').pop();
-                $(this).next('.custom-file-label').addClass("selected").html(fileName);
-            });
-
-            $('#add_form').click(function () {
-                $("#xlsx").val("");
-                $('.custom-file-input').next('.custom-file-label').addClass("selected").html("{{ _('Choose file...') }}");
-            });
-
             $('.remove_form').click(function () {
                 var action_url = $( this ).attr('urn');
                 swal({
@@ -281,13 +256,8 @@
                             }
                         });
                 });
-
             {% endif %}
 
-        });
-    </script>
-
-        <script>
             {% if submissions > 0 and withgps > 0 %}
                 var mymap = L.map('projmap').setView([51.505, -0.09], 13);
                 L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
@@ -354,19 +324,17 @@
                 // TODO: We need to perfom pagination here so the size sould not be 10000
                 get_more(0,10000);
             {% endif %}
+
             {% if projectData.project_abstract != None %}
+                var val = $("#abstract_hidden").val();
+                document.getElementById('project_abstract').innerHTML = markdown.toHTML(val);
 
-                $(document).ready(function() {
-                    var val = $("#abstract_hidden").val();
-                    document.getElementById('project_abstract').innerHTML = markdown.toHTML(val);
-
-                    {% if projectData.project_abstract|length < 170 %}
-                        $('.scroll_content').slimscroll({'height': '60px'});
-                    {% else %}
-                        $('.scroll_content').slimscroll();
-                    {% endif %}
-                });
-
+                {% if projectData.project_abstract|length < 170 %}
+                    $('.scroll_content').slimscroll({'height': '60px'});
+                {% else %}
+                    $('.scroll_content').slimscroll();
+                {% endif %}
             {% endif %}
-        </script>
+        });
+    </script>
 {% endblock scripts %}

@@ -40,7 +40,8 @@ def add_json_log(engine, project, form, submission, json_file, log_file, status,
 
 
 def store_json_file(engine, submission_id, temp_json_file, json_file, odk_dir, xform_directory, schema, user,
-                    project, form, assistant, project_code, geopoint_variable, project_of_assistant, settings):
+                    project, form, assistant, project_code, geopoint_variable, project_of_assistant, settings,
+                    ignore_xform_check=False):
     mysql_user = settings['mysql.user']
     mysql_password = settings['mysql.password']
     mysql_host = settings['mysql.host']
@@ -51,6 +52,13 @@ def store_json_file(engine, submission_id, temp_json_file, json_file, odk_dir, x
     # Add the controlling fields to the JSON file
     with open(temp_json_file, 'r') as f:
         submission_data = json.load(f)
+        if not ignore_xform_check:
+            if submission_data["_xform_id_string"] != form:
+                log.error("File {} has XFomID = {} but {} was expected".format(temp_json_file,
+                                                                               submission_data["_xform_id_string"], form))
+                return 1, ""
+        else:
+            submission_data["_xform_id_string"] = form
         submission_data["_submitted_by"] = assistant
         submission_data["_submitted_date"] = datetime.datetime.now().isoformat()
         submission_data["_user_id"] = user
@@ -142,13 +150,15 @@ def store_json_file(engine, submission_id, temp_json_file, json_file, odk_dir, x
 
 @celeryApp.task(base=CeleryTask)
 def import_json_files(user, project, form, odk_dir, form_directory, schema, assistant, path_to_files, project_code,
-                      geopoint_variable, project_of_assistant, settings):
+                      geopoint_variable, project_of_assistant, settings, ignore_xform_check=False):
     time.sleep(5)
     engine = create_engine(settings['sqlalchemy.url'])
-    for file_to_import in glob.iglob(path_to_files, recursive=True):
+    list_of_files = path_to_files + '/**/*.json'
+    for file_to_import in glob.iglob(list_of_files, recursive=True):
         file_name = os.path.basename(file_to_import)
         submission_id = os.path.splitext(os.path.basename(file_to_import))[0]
         json_file = os.path.join(odk_dir, *['forms', form_directory, "submissions", file_name])
         store_json_file(engine, submission_id, file_to_import, json_file, odk_dir, form_directory, schema,
-                        user, project, form, assistant, project_code, geopoint_variable, project_of_assistant, settings)
+                        user, project, form, assistant, project_code, geopoint_variable, project_of_assistant, settings,
+                        ignore_xform_check)
     engine.dispose()

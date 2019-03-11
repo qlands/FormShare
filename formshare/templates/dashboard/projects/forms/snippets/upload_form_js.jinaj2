@@ -1,0 +1,16 @@
+$('#upload_form').submit(function() {
+    $('#upload_form_button').prop("disabled", "disabled");
+    $('#cross_upload_form_button').prop("disabled", "disabled");
+    $('#cancel_upload_form_button').prop("disabled", "disabled");
+    $('#upload_form_button').html('{{ _("One moment please...") }}');
+});
+
+$('.custom-file-input').on('change', function() {
+    let fileName = $(this).val().split('\\').pop();
+    $(this).next('.custom-file-label').addClass("selected").html(fileName);
+});
+
+$('#add_form').click(function () {
+    $("#xlsx").val("");
+    $('.custom-file-input').next('.custom-file-label').addClass("selected").html("{{ _('Choose file...') }}");
+});

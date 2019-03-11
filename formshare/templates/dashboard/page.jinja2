@@ -98,19 +98,11 @@
 
         {% block scripts %}
             {% jsresource request,'formshare','inspinia' %}
-            {% set messageData = request.session.pop_flash() %}
-            {% if messageData|length > 0 %}
-                <script>
-                    $(document).ready(function() {
-                        messageData = '{{ messageData[0] }}';
-                        swal({
-                            title: 'FormShare',
-                            text: messageData,
-                            type: "success"
-                        });
-                    });
-                </script>
-            {% endif %}
+            <script>
+                $(document).ready(function() {
+                    {% include 'dashboard/snippets/pop_flash_js.jinja2' %}
+                });
+            </script>
         {% endblock scripts %}
     {% endblock body %}
     </body>

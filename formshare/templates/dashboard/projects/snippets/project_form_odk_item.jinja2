@@ -1,43 +1,69 @@
 <div style="border-bottom: 0px;" class="feed-element {% if form.form_accsub ==0 %}form-inactive {% else %}form-active {% endif %}" >
-    <a href="{{ request.route_url('form_details',userid=userid,projcode=projectData.project_code,formid=form.form_id) }}" class="float-left">
-        <div class="rounded-circle" style="margin-right: 10px; background-color: {{ form._xid_color }}; width: 38px; height: 38px; display: inline-block; vertical-align: middle" ><span style="color: white; position: relative; float: left; top: 50%; left: 50%; transform: translate(-50%, -50%);">ODK</span></div>
-    </a>
+    {% block form_item_incon %}
+        <a href="{{ request.route_url('form_details',userid=userid,projcode=projectData.project_code,formid=form.form_id) }}" class="float-left">
+            <div class="rounded-circle" style="margin-right: 10px; background-color: {{ form._xid_color }}; width: 38px; height: 38px; display: inline-block; vertical-align: middle" ><span style="color: white; position: relative; float: left; top: 50%; left: 50%; transform: translate(-50%, -50%);">ODK</span></div>
+        </a>
+    {% endblock form_item_incon %}
     <div class="media-body ">
         <div class="row">
             <div class="col-md-12">
-                <span class="float-right">{{ _('Uploaded on') }} {{ request.h.readble_date(form.form_cdate) }}</span>
-                <strong><a href="{{ request.route_url('form_details',userid=userid,projcode=projectData.project_code,formid=form.form_id) }}">{{ form.form_name }}</a></strong> {% if form.form_schema != None %} <span class="badge badge-primary">{{ _('With repository') }}</span>{% else %}<span class="badge badge-warning" title="{{ _('Data is not stored in a database') }}">{{ _('In testing') }}</span>{% endif %} {% if form.form_accsub ==0 %}<span class="label label-danger">{{ _('Inactive') }}</span>{% else %}<span class="label label-primary">{{ _('Active') }}</span>{% endif %} {% if form.form_geopoint != None %}<span class="label label-default">{{ _('Georeferenced') }}</span>{% endif %}<br>
-                {% if form.submissions > 0  %}
-                    <span class="text-muted">{{ _('Last submission') }}: {{ request.h.readble_date_with_time(form.last) }} {{ _('by') }} <a class="text-info">{{ form.bydetails.coll_name }}</a></span>
-                {% else %}
-                    <span class="text-muted">Without submissions</span>
-                {% endif %}
-                {% if form.form_target > 0 %}
-                    <div class="progress">
-                        <div class="progress-bar progress-bar-striped progress-bar-animated {% if form.form_schema == None %}progress-bar-warning {% else %}progress-bar-primary{% endif %}" style="width: {{ form.submissions*100/form.form_target }}%" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
-                    </div>
-                {% endif %}
+                {% block form_item_content %}
+                    <span class="float-right">{{ _('Uploaded on') }} {{ request.h.readble_date(form.form_cdate) }}</span>
+                    <strong><a href="{{ request.route_url('form_details',userid=userid,projcode=projectData.project_code,formid=form.form_id) }}">{{ form.form_name }}</a></strong> {% if form.form_schema != None %} <span class="badge badge-primary">{{ _('With repository') }}</span>{% else %}<span class="badge badge-warning" title="{{ _('Data is not stored in a database') }}">{{ _('In testing') }}</span>{% endif %} {% if form.form_accsub ==0 %}<span class="label label-danger">{{ _('Inactive') }}</span>{% else %}<span class="label label-primary">{{ _('Active') }}</span>{% endif %} {% if form.form_geopoint != None %}<span class="label label-default">{{ _('Georeferenced') }}</span>{% endif %}<br>
+                    {% if form.submissions > 0  %}
+                        <span class="text-muted">{{ _('Last submission') }}: {{ request.h.readble_date_with_time(form.last) }} {{ _('by') }} <a class="text-info">{{ form.bydetails.coll_name }}</a></span>
+                    {% else %}
+                        <span class="text-muted">Without submissions</span>
+                    {% endif %}
+                    {% if form.form_target > 0 %}
+                        <div class="progress">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated {% if form.form_schema == None %}progress-bar-warning {% else %}progress-bar-primary{% endif %}" style="width: {{ form.submissions*100/form.form_target }}%" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    {% endif %}
+                {% endblock form_item_content %}
                 {% if form.submissions > 0  %}{{ form.submissions }} {% if form.form_target > 0 %}of {{ form.form_target }} {% endif %} submissions {% if form.form_schema != None %}: <strong><a target="_blank" href="{{ request.route_url('clean', userid=projectData.owner, projcode=projectData.project_code,formid=form.form_id) }}" class="text-success">{{ form.indb }} {{ _('in database') }}.</a> {% if form.inlogs > 0 %}<a target="_blank" href="{{ request.route_url('errorlist', userid=projectData.owner, projcode=projectData.project_code,formid=form.form_id) }}" class="text-warning">{{ form.inlogs }} {{ _('in error logs') }}.</a>{% endif %} {% if form.inerror > 0 %}<a target="_blank" href="{{ request.route_url('errorlist', userid=projectData.owner, projcode=projectData.project_code,formid=form.form_id) }}" class="text-danger">{{ form.inerror }} {{ _('in error logs') }}</a>{% endif %}</strong>{% endif %} {% endif %}
                 <div class="actions">
-                    <a class="btn btn-xs btn-white" href="{{ request.route_url('form_download_xlsx',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id) }}"><i class="fa far fa-file-excel"></i> {{ _('Download ODK XLSX form') }}</a>
-                    {% if form.form_schema == None %}
-                        {% if form.submissions > 0  %}
-                            <a class="btn btn-xs btn-white" href="{{ request.route_url('form_download_csv',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id, _query={'next': request.url}) }}"><i class="fa fa-download"></i> {{ _('Download data in CSV format') }}</a>
-                            <a class="btn btn-xs btn-white" href="{{ request.route_url('form_download_media',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id, _query={'next': request.url}) }}"><i class="fa fa-images"></i> {{ _('Download submitted media') }}</a>
+                    {% block form_item_actions %}
+                        <a class="btn btn-xs btn-white" href="{{ request.route_url('form_download_xlsx',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id) }}"><i class="fab fa-wpforms"></i> {{ _('Download ODK form') }}</a>
+                        {% if form.form_schema == None %}
+                            {% if form.submissions > 0  %}
+                                <div id="btn-group-{{ form.form_id }}" class="btn-group">
+                                    <button data-toggle="dropdown" class="btn btn-default btn-xs dropdown-toggle">{{ _('Downloads') }}</button>
+                                    <ul id="dropdown-menu-{{ form.form_id }}" class="dropdown-menu">
+                                        {% block download_types_norepo %}
+                                            <li><a class="dropdown-item" href="{{ request.route_url('form_download_csv',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id, _query={'next': request.url}) }}">{{ _('Download data in CSV format') }}</a></li>
+                                            <li><a class="dropdown-item" href="{{ request.route_url('form_download_media',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id, _query={'next': request.url}) }}">{{ _('Download submitted media') }}</a></li>
+                                        {% endblock download_types_norepo %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                            <a href="{{ request.route_url('createrepository',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id) }}" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-database"></i> {{ _('Create repository') }} </a>
+                        {% else %}
+                            <div id="btn-group-{{ form.form_id }}" class="btn-group">
+                                <button data-toggle="dropdown" class="btn btn-default btn-xs dropdown-toggle">{{ _('Downloads') }}</button>
+                                <ul id="dropdown-menu-{{ form.form_id }}" class="dropdown-menu">
+                                    {% block download_types_repo %}
+                                        <li><a class="dropdown-item" href="{{ request.route_url('form_download_xlsx_data',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next':request.url}) }}"><i class="far fa-file-excel"></i> {{ _('Download data in Excel format') }}</a></li>
+                                        <li><a class="dropdown-item" href="{{ request.route_url('form_download_media',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next':request.url}) }}"><i class="fas fa-images"></i> {{ _('Download submitted media') }}</a></li>
+                                        {% if form.submissions > 0 and form.form_geopoint != None and withgps > 0 %}
+                                            <li><a style="line-height: 1.5;" href="{{ request.route_url('form_download_kml',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id) }}"><i class="fas fa-globe-americas"></i> {{ _('Download KML') }}</a></li>
+                                        {% endif %}
+                                    {% endblock download_types_repo %}
+                                </ul>
+                            </div>
+                            {% block form_item_links %}
+                                <a class="btn btn-xs btn-white" target="_blank" href="{{ request.route_url('clean', userid=projectData.owner, projcode=projectData.project_code,formid=form.form_id) }}"><i class="fa fa-pencil"></i> {{ _('Clean data') }}</a>
+                                <a class="btn btn-xs btn-white" target="_blank" href="{{ request.route_url('errorlist', userid=projectData.owner, projcode=projectData.project_code,formid=form.form_id) }}"><i class="fa fa-bug"></i> {{ _('Clean error logs') }}</a>
+                            {% endblock form_item_links %}
                         {% endif %}
-                        <a href="{{ request.route_url('createrepository',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id) }}" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-database"></i> {{ _('Create repository') }} </a>
-                    {% else %}
-                        <a class="btn btn-xs btn-white" target="_blank" href="{{ request.host_url }}/odata/{{ form.form_schema }}/odata.svc/"><i class="fa fa-rss"></i> {{ _('OData endpoint') }}</a>
-                        <a class="btn btn-xs btn-white" href="{{ request.route_url('form_download_xlsx_data',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next':request.url}) }}"><i class="fa fa-download"></i> {{ _('Download data in XLS form') }}</a>
-                        <a class="btn btn-xs btn-white" href="{{ request.route_url('form_download_media',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next':request.url}) }}"><i class="fa fa-images"></i> {{ _('Download submitted media') }}</a>
-                        <a class="btn btn-xs btn-white" target="_blank" href="{{ request.route_url('clean', userid=projectData.owner, projcode=projectData.project_code,formid=form.form_id) }}"><i class="fa fa-pencil"></i> {{ _('Clean data') }}</a>
-                        <a class="btn btn-xs btn-white" target="_blank" href="{{ request.route_url('errorlist', userid=projectData.owner, projcode=projectData.project_code,formid=form.form_id) }}"><i class="fa fa-bug"></i> {{ _('Clean error logs') }}</a>
-                    {% endif %}
-                    <a {% if form.form_accsub ==0 %} data-title="{{ _('Activate form') }}" data-message="{{ _('Are you sure that you want to activate this form') }}" urn="{{ request.route_url('activate_form', userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next': request.url}) }}"{% else %}data-title="{{ _('Deactivate form') }}" data-message="{{ _('Are you sure that you want to deactivate this form') }}" urn="{{ request.route_url('deactivate_form', userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next': request.url}) }}"{% endif %} class="btn btn-xs btn-white change-status"><i {% if form.form_accsub ==0 %}class="fas fa-check"{% else %}class="fas fa-ban"{% endif %}></i> {% if form.form_accsub ==0 %}{{ _('Set as active') }}{% else %}{{ _('Set as inactive') }}{% endif %}</a>
-                    <a class="btn btn-xs btn-white" href="{{ request.route_url('form_edit',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next': request.url}) }}" ><i class="fa fa-pencil text-warning"></i> {{ _('Edit') }}</a>
-                    {% if projectData.access_type == 1 or form.pubby.user_id == activeUser.id %}
-                        <a urn="{{ request.route_url('delete_form', userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next': request.url}) }}" class="btn btn-xs btn-white remove_form"><i style="color: red" class="far fa-trash-alt"></i> {{ _('Delete') }}</a>
-                    {% endif %}
+                        {% block form_item_maintance %}
+                            <a {% if form.form_accsub ==0 %} data-title="{{ _('Activate form') }}" data-message="{{ _('Are you sure that you want to activate this form') }}" urn="{{ request.route_url('activate_form', userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next': request.url}) }}"{% else %}data-title="{{ _('Deactivate form') }}" data-message="{{ _('Are you sure that you want to deactivate this form') }}" urn="{{ request.route_url('deactivate_form', userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next': request.url}) }}"{% endif %} class="btn btn-xs btn-white change-status"><i {% if form.form_accsub ==0 %}class="fas fa-check"{% else %}class="fas fa-ban"{% endif %}></i> {% if form.form_accsub ==0 %}{{ _('Set as active') }}{% else %}{{ _('Set as inactive') }}{% endif %}</a>
+                            <a class="btn btn-xs btn-white" href="{{ request.route_url('form_edit',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next': request.url}) }}" ><i class="fa fa-pencil text-warning"></i> {{ _('Edit') }}</a>
+                            {% if projectData.access_type == 1 or form.pubby.user_id == activeUser.id %}
+                                <a urn="{{ request.route_url('delete_form', userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next': request.url}) }}" class="btn btn-xs btn-white remove_form"><i style="color: red" class="far fa-trash-alt"></i> {{ _('Delete') }}</a>
+                            {% endif %}
+                        {% endblock form_item_maintance %}
+                    {% endblock %}
                 </div>
             </div>
         </div>

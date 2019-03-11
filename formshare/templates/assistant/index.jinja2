@@ -58,9 +58,11 @@
 {% block scripts %}
     {{ super() }}
     <script>
-        $('.qrbutton').click(function () {
-            var qr_url = $( this ).attr('urn');
-            $("#qrimage").attr("src",qr_url);
+        $(document).ready(function() {
+            $('.qrbutton').click(function () {
+                var qr_url = $( this ).attr('urn');
+                $("#qrimage").attr("src",qr_url);
+            });
         });
     </script>
 {% endblock %}

@@ -22,7 +22,7 @@ __all__ = ['get_form_details', 'assistant_has_form', 'get_assistant_forms', 'get
            'get_form_groups', 'update_group_privileges', 'remove_group_from_form', 'get_project_forms',
            'get_number_of_submissions_in_database', 'get_by_details', 'get_form_geopoint', 'get_primary_key',
            'get_number_of_submissions_by_assistant', 'get_media_files', 'set_form_status', 'get_form_primary_key',
-           'get_form_survey_file']
+           'get_form_survey_file', 'get_project_form_colors']
 
 log = logging.getLogger(__name__)
 
@@ -137,6 +137,14 @@ def get_form_data(request, project, form):
         return None
 
 
+def get_project_form_colors(request, project):
+    res = {}
+    records = request.dbsession.query(Odkform).filter(Odkform.project_id == project).all()
+    for record in records:
+        res[record.form_id] = record.form_hexcolor
+    return res
+
+
 def get_form_details(request, user, project, form):
     result = get_form_data(request, project, form)
     if result is not None:
@@ -211,7 +219,10 @@ def get_project_forms(request, user, project):
     for form in forms:
         form['pubby'] = get_creator_data(request, form['form_pubby'])
         color = ColorHash(form["form_id"])
-        form['_xid_color'] = color.hex
+        if form['form_hexcolor'] is None:
+            form['_xid_color'] = color.hex
+        else:
+            form['_xid_color'] = form['form_hexcolor']
         if form['form_schema'] is None:
             project_code = get_project_code_from_id(request, user, project)
             submissions, last, by = get_number_of_submissions(request, user, project_code, form['form_id'])

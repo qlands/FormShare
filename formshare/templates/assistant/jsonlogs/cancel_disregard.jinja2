@@ -55,7 +55,9 @@
 {%- block scripts %}
     {{ super() }}
     <script>
-        var simplemde = new SimpleMDE({ element: $("#notes")[0] });
+        $(document).ready(function() {
+            var simplemde = new SimpleMDE({ element: $("#notes")[0] });
+        });
     </script>
 {% endblock scripts -%}
 

@@ -14,7 +14,8 @@ __all__ = [
     'IDatabase',
     'IAuthorize',
     'ITemplateHelpers',
-    'IProduct'
+    'IProduct',
+    'IImportExternalData'
 ]
 
 
@@ -286,6 +287,36 @@ class IProduct(Interface):
             :return Returns a dict array [{'name':'productName','description':'A description about the product','metadata':{'key':value},outputs:[{'filename':'myproduct.pdf','mimetype':'application/pdf'}] }]
         """
         raise NotImplementedError("register_products must be implemented in subclasses")
+
+
+class IImportExternalData(Interface):
+    """
+        Allows to create new data imports
+    """
+    def import_external_data(self, request, user, project, form, odk_dir, form_directory, schema, assistant, temp_dir,
+                             project_code, geopoint_variable, project_of_assistant, import_type, post_data,
+                             ignore_xform):
+        """
+        Called by the host application so plugins can import new types of data into FormShare. You should do this as a
+        product and use Celery to not hang a request in case the import process several files
+        :param request: Pyramid request object
+        :param user: FormShare user account ID
+        :param project: FormShare project ID
+        :param form: FormShare form ID
+        :param odk_dir: Path to the ODK repository directory
+        :param form_directory: Path to the directory of the form
+        :param schema: Schema holding the data of the form
+        :param assistant: Assistant ID importing the data
+        :param temp_dir: Path to the files to be imported
+        :param project_code: Project code
+        :param geopoint_variable: Which variable should be used to pull the geo localtion
+        :param project_of_assistant: Project ID of the assistant
+        :param import_type: Type of import > 2
+        :param post_data: Data from the import page
+        :param ignore_xform: Whether to ignore the ignore_xform ID while importing
+        :return: None
+        """
+        raise NotImplementedError("import_external_data must be implemented in subclasses")
 
 
 class IPluginObserver(Interface):

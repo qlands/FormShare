@@ -16,7 +16,7 @@ def main(argv=sys.argv):
     config_uri = argv[1]
     formshare_path = os.path.abspath(argv[2])
     formshare_ini_file = os.path.join(formshare_path, os.path.basename(config_uri))
-    climmob_celery_app = os.path.join(formshare_path, *['formshare', 'config', 'celery_app.py'])
+    formshare_celery_app = os.path.join(formshare_path, *['formshare', 'config', 'celery_app.py'])
 
     template_environment = Environment(autoescape=False,
                                        loader=FileSystemLoader(os.path.join(formshare_path, 'templates')),
@@ -28,5 +28,5 @@ def main(argv=sys.argv):
 
     rendered_template = template_environment.get_template('celery_app_template.py').render(context)
 
-    with open(climmob_celery_app, 'w') as f:
+    with open(formshare_celery_app, 'w') as f:
         f.write(rendered_template)

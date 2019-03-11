@@ -1,0 +1,13 @@
+$('#btn-group-{{ form.form_id }}').on('show.bs.dropdown', function () {
+    $('body').append($('#dropdown-menu-{{ form.form_id }}').css({
+        position:'absolute',
+        left:$('#dropdown-menu-{{ form.form_id }}').offset().left,
+        top:$('#dropdown-menu-{{ form.form_id }}').offset().top
+    }).detach());
+});
+
+$('#btn-group-{{ form.form_id }}').on('hidden.bs.dropdown', function () {
+    $('#btn-group-{{ form.form_id }}').append($('#dropdown-menu-{{ form.form_id }}').css({
+        position:false, left:false, top:false
+    }).detach());
+});

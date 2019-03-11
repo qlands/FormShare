@@ -1,92 +1,100 @@
 <div class="row">
     <div class="col-lg-6">
-        <dl class="row mb-0">
-            <div class="col-sm-4 text-sm-right"><dt>{{ _('Created by') }}:</dt> </div>
-            <div class="col-sm-8 text-sm-left"><dd class="mb-1">{{ formDetails.pubby.user_name }}</dd> </div>
-        </dl>
-        <dl class="row mb-0">
-            <div class="col-sm-4 text-sm-right"><dt>{{ _('Created') }}:</dt> </div>
-            <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date(formDetails.form_cdate) }}</dd></div>
-        </dl>
-        <dl class="row mb-0">
-            <div class="col-sm-4 text-sm-right"><dt>{{ _('Last updated') }}:</dt> </div>
-            <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date(formDetails.form_cdate) }}</dd></div>
-        </dl>
-        <dl class="row mb-0">
-            <div class="col-sm-4 text-sm-right"><dt>{{ _('Assistants') }}:</dt> </div>
-            <div class="col-sm-8 text-sm-left"> <dd class="mb-1"> {{ formassistants|length }} {% if formassistants|length == 0 and formgroups|length == 0 and projectDetails.access_type != 4 %} <span class="text-danger"><a data-toggle="modal" data-target="#add_assistant"> ({{ _('You need to add one') }}</a>  )</span>{% endif %}</dd></div>
-        </dl>
-        <dl class="row mb-0">
-            <div class="col-sm-4 text-sm-right"><dt>{{ _('Assistant groups') }}:</dt> </div>
-            <div class="col-sm-8 text-sm-left"> <dd class="mb-1"> {{ formgroups|length }}</dd></div>
-        </dl>
+        {% block form_details_header %}
+            <dl class="row mb-0">
+                <div class="col-sm-4 text-sm-right"><dt>{{ _('Created by') }}:</dt> </div>
+                <div class="col-sm-8 text-sm-left"><dd class="mb-1">{{ formDetails.pubby.user_name }}</dd> </div>
+            </dl>
+            <dl class="row mb-0">
+                <div class="col-sm-4 text-sm-right"><dt>{{ _('Created') }}:</dt> </div>
+                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date(formDetails.form_cdate) }}</dd></div>
+            </dl>
+            <dl class="row mb-0">
+                <div class="col-sm-4 text-sm-right"><dt>{{ _('Last updated') }}:</dt> </div>
+                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date(formDetails.form_cdate) }}</dd></div>
+            </dl>
+            <dl class="row mb-0">
+                <div class="col-sm-4 text-sm-right"><dt>{{ _('Assistants') }}:</dt> </div>
+                <div class="col-sm-8 text-sm-left"> <dd class="mb-1"> {{ formassistants|length }} {% if formassistants|length == 0 and formgroups|length == 0 and projectDetails.access_type != 4 %} <span class="text-danger"><a data-toggle="modal" data-target="#add_assistant"> ({{ _('You need to add one') }}</a>  )</span>{% endif %}</dd></div>
+            </dl>
+            <dl class="row mb-0">
+                <div class="col-sm-4 text-sm-right"><dt>{{ _('Assistant groups') }}:</dt> </div>
+                <div class="col-sm-8 text-sm-left"> <dd class="mb-1"> {{ formgroups|length }}</dd></div>
+            </dl>
+        {% endblock form_details_header %}
     </div>
     <div class="col-lg-6" id="cluster_info">
-        <dl class="row mb-0">
-            <div class="col-sm-4 text-sm-right">
-                <dt>{{ _('Last Submission') }}:</dt>
-            </div>
+        {% block form_details_submissions %}
+            <dl class="row mb-0">
+                <div class="col-sm-4 text-sm-right">
+                    <dt>{{ _('Last Submission') }}:</dt>
+                </div>
+                {% if formDetails.submissions > 0 %}
+                    <div class="col-sm-8 text-sm-left">
+                        <dd class="mb-1">{{ request.h.readble_date_with_time(formDetails.last) }}</dd>
+                    </div>
+                {% else %}
+                    <div class="col-sm-8 text-sm-left">
+                        <dd class="mb-1">{{ _('Without submissions') }}</dd>
+                    </div>
+                {% endif %}
+            </dl>
             {% if formDetails.submissions > 0 %}
-                <div class="col-sm-8 text-sm-left">
-                    <dd class="mb-1">{{ request.h.readble_date_with_time(formDetails.last) }}</dd>
-                </div>
-            {% else %}
-                <div class="col-sm-8 text-sm-left">
-                    <dd class="mb-1">{{ _('Without submissions') }}</dd>
-                </div>
+                <dl class="row mb-0">
+                    <div class="col-sm-4 text-sm-right">
+                        <dt>{{ _('By') }}:</dt>
+                    </div>
+                    <div class="col-sm-8 text-sm-left">
+                        <dd class="mb-1"><a class="text-info">{{ formDetails.bydetails.coll_name }}</a></dd>
+                    </div>
+                </dl>
             {% endif %}
-        </dl>
-        {% if formDetails.submissions > 0 %}
             <dl class="row mb-0">
                 <div class="col-sm-4 text-sm-right">
-                    <dt>{{ _('By') }}:</dt>
+                    <dt>{{ _('Submissions') }}:</dt>
                 </div>
                 <div class="col-sm-8 text-sm-left">
-                    <dd class="mb-1"><a class="text-info">{{ formDetails.bydetails.coll_name }}</a></dd>
+                    <dd class="mb-1">{{ formDetails.submissions }}</dd>
                 </div>
             </dl>
-        {% endif %}
-        <dl class="row mb-0">
-            <div class="col-sm-4 text-sm-right">
-                <dt>{{ _('Submissions') }}:</dt>
-            </div>
-            <div class="col-sm-8 text-sm-left">
-                <dd class="mb-1">{{ formDetails.submissions }}</dd>
-            </div>
-        </dl>
+        {% endblock form_details_submissions %}
         {% if formDetails.form_schema != None %}
-            <dl class="row mb-0">
-                <div class="col-sm-4 text-sm-right">
-                    <dt>In database:</dt>
-                </div>
-                <div class="col-sm-8 text-sm-left">
-                    <dd class="mb-1">{{ formDetails.indb }} {% if formDetails.indb > 0 %}<a target="_blank" href="{{ request.route_url('clean', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}">[Clean data]</a>{% endif %}</dd>
-                </div>
-            </dl>
-            <dl class="row mb-0">
-                <div class="col-sm-4 text-sm-right">
-                    <dt>In logs:</dt>
-                </div>
-                <div class="col-sm-8 text-sm-left">
-                    <dd class="mb-1">{{ formDetails.inlogs }} {% if formDetails.inlogs > 0 %}<a target="_blank" href="{{ request.route_url('errorlist', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}">[View logs]</a>{% endif %}</dd>
-                </div>
-            </dl>
-            <dl class="row mb-0">
-                <div class="col-sm-4 text-sm-right">
-                    <dt>With errors:</dt>
-                </div>
-                <div class="col-sm-8 text-sm-left">
-                    <dd class="mb-1" {% if formDetails.inerror > 0 %}style="color: red"{% endif %}>{{ formDetails.inerror }} {% if formDetails.inerror > 0 %}<a style="color: red" target="_blank" href="{{ request.route_url('errorlist', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}">[Manage errors]</a>{% endif %}</dd>
-                </div>
-            </dl>
+            {% block form_details_submissions_db %}
+                <dl class="row mb-0">
+                    <div class="col-sm-4 text-sm-right">
+                        <dt>In database:</dt>
+                    </div>
+                    <div class="col-sm-8 text-sm-left">
+                        <dd class="mb-1">{{ formDetails.indb }} {% if formDetails.indb > 0 %}<a target="_blank" href="{{ request.route_url('clean', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}">[Clean data]</a>{% endif %}</dd>
+                    </div>
+                </dl>
+                <dl class="row mb-0">
+                    <div class="col-sm-4 text-sm-right">
+                        <dt>In logs:</dt>
+                    </div>
+                    <div class="col-sm-8 text-sm-left">
+                        <dd class="mb-1">{{ formDetails.inlogs }} {% if formDetails.inlogs > 0 %}<a target="_blank" href="{{ request.route_url('errorlist', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}">[View logs]</a>{% endif %}</dd>
+                    </div>
+                </dl>
+                <dl class="row mb-0">
+                    <div class="col-sm-4 text-sm-right">
+                        <dt>With errors:</dt>
+                    </div>
+                    <div class="col-sm-8 text-sm-left">
+                        <dd class="mb-1" {% if formDetails.inerror > 0 %}style="color: red"{% endif %}>{{ formDetails.inerror }} {% if formDetails.inerror > 0 %}<a style="color: red" target="_blank" href="{{ request.route_url('errorlist', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}">[Manage errors]</a>{% endif %}</dd>
+                    </div>
+                </dl>
+            {% endblock form_details_submissions_db %}
         {% endif %}
     </div>
 </div>
 {% if formDetails.form_schema == None and projectDetails.access_type != 4%}
-    <div class="row">
-        <div class="col-lg-12">
-            <h4 class="text-center text-warning">{{ _('This form is in testing stage. This means that you can change it at all times and submissions are for testing purposes. ') }}</h4>
-            <h4 class="text-center text-warning">{{ _('When you finished testing it you can')}} <a href="{{ request.route_url('createrepository',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" style="color: #026AA8 !important;">create a repository for it</a> {{ _('and collect production data.') }}</h4>
+    {% block form_details_nodb %}
+        <div class="row">
+            <div class="col-lg-12">
+                <h4 class="text-center text-warning">{{ _('This form is in testing stage. This means that you can change it at all times and submissions are for testing purposes. ') }}</h4>
+                <h4 class="text-center text-warning">{{ _('When you finished testing it you can')}} <a href="{{ request.route_url('createrepository',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" style="color: #026AA8 !important;">create a repository for it</a> {{ _('and collect production data.') }}</h4>
+            </div>
         </div>
-    </div>
+    {% endblock form_details_nodb %}
 {% endif %}

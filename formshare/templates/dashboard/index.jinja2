@@ -86,42 +86,28 @@
             $(document).ready(function() {
                 $('.scroll_content2').slimscroll();
                 new ClipboardJS('.clipboard');
-            });
-        </script>
 
-        {% if userDetails.user_about != None %}
-            <script>
-                $(document).ready(function() {
+                {% if userDetails.user_about != None %}
+
                     var val = $("#bio_hidden").val();
                     document.getElementById('profile_bio').innerHTML = markdown.toHTML(val);
 
                     $('.scroll_content').slimscroll();
-                });
-            </script>
-        {% endif %}
+
+                {% endif %}
+            });
+        </script>
     {% else %}
         <script>
             $(document).ready(function() {
 
-                $('#upload_form').submit(function() {
-                    $('#upload_form_button').prop("disabled", "disabled");
-                    $('#cross_upload_form_button').prop("disabled", "disabled");
-                    $('#cancel_upload_form_button').prop("disabled", "disabled");
-                    $('#upload_form_button').html('{{ _("One moment please...") }}');
-                });
+                {% include 'dashboard/projects/forms/snippets/upload_form_js.jinaj2' %}
 
+                {% for form in forms %}
+                    {% include 'dashboard/projects/snippets/project_form_odk_item_js.jinja2' %}
+                {% endfor %}
 
                 $('.scroll_content').slimscroll({'height':300});
-
-                $('.custom-file-input').on('change', function() {
-                    let fileName = $(this).val().split('\\').pop();
-                    $(this).next('.custom-file-label').addClass("selected").html(fileName);
-                });
-
-                $('#add_form').click(function () {
-                    $("#xlsx").val("");
-                    $('.custom-file-input').next('.custom-file-label').addClass("selected").html("{{ _('Choose file...') }}");
-                });
 
                 $('.remove_form').click(function () {
                     var action_url = $( this ).attr('urn');

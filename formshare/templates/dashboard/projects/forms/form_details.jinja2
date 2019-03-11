@@ -10,6 +10,11 @@
     {% if formDetails.form_geopoint != None %}
         {% cssresource request,'formshare','leaflet' %}
     {% endif %}
+    <style>
+        .remove-all-styles {
+            all: unset;
+        }
+    </style>
 {% endblock css %}
 
 {% block topScripts %}
@@ -80,14 +85,6 @@
 {% block scripts %}
     {{ super() }}
     <script>
-
-        {#function setSwitchery(switchElement, checkedBool) {#}
-        {#    if((checkedBool && !switchElement.isChecked()) || (!checkedBool && switchElement.isChecked())) {#}
-        {#        switchElement.setPosition(true);#}
-        {#        switchElement.handleOnchange(true);#}
-        {#    }#}
-        {#}#}
-
         $(document).ready(function() {
 
             $('.custom-file-input').on('change', function() {

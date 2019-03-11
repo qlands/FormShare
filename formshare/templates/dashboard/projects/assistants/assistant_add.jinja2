@@ -20,18 +20,24 @@
 {% block maincontent %}
     <div class="ibox">
         <div class="ibox-title">
-            <h5>{{ _('Information for the new assistant') }}</h5>
-            <div class="ibox-tools">
-                <a class="fullscreen-link">
-                    <i class="fa fa-expand"></i>
-                </a>
-            </div>
+            {% block assistant_add_title %}
+                <h5>{{ _('Information for the new assistant') }}</h5>
+                <div class="ibox-tools">
+                    {% block assistant_add_tools %}
+                        <a class="fullscreen-link">
+                            <i class="fa fa-expand"></i>
+                        </a>
+                    {% endblock assistant_add_tools %}
+                </div>
+            {% endblock assistant_add_title %}
         </div>
         <div class="ibox-content">
-            {% block form_errors %}
-                {{ form.display_errors(errors) }}
-            {% endblock form_errors %}
-            {% include 'dashboard/projects/assistants/snippets/assistant_form.jinja2' %}
+            {% block assistant_add_content %}
+                {% block assistant_add_form_errors %}
+                    {{ form.display_errors(errors) }}
+                {% endblock assistant_add_form_errors %}
+                {% include 'dashboard/projects/assistants/snippets/assistant_form.jinja2' %}
+            {% endblock assistant_add_content %}
         </div>
     </div>
 {% endblock maincontent %}
@@ -44,5 +50,4 @@
             var switchery = new Switchery(elem, { color: '#1AB394' });
         });
     </script>
-
 {% endblock scripts %}

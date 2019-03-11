@@ -34,17 +34,12 @@
         $(document).ready(function() {
             $('.scroll_content2').slimscroll();
             new ClipboardJS('.clipboard');
-        });
-    </script>
 
-    {% if userDetails.user_about != None %}
-        <script>
-            $(document).ready(function() {
+            {% if userDetails.user_about != None %}
                 var val = $("#bio_hidden").val();
                 document.getElementById('profile_bio').innerHTML = markdown.toHTML(val);
-
                 $('.scroll_content').slimscroll();
-            });
-        </script>
-    {% endif %}
+            {% endif %}
+        });
+    </script>
 {% endblock scripts %}

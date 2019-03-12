@@ -6,9 +6,7 @@ from formshare.processes.db import get_project_id_from_name, get_form_details, g
     set_form_status, get_assigned_assistants, get_form_directory
 from formshare.processes.storage import store_file, delete_stream, delete_bucket
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
-import validators
 import os
-from cgi import FieldStorage
 from hashlib import md5
 import logging
 import simplekml
@@ -446,61 +444,39 @@ class AddFileToForm(PrivateView):
         if self.request.method == 'POST':
             files = self.request.POST.getall('filetoupload')
             form_data = self.get_post_dict()
-            processing_upload = False
-            if isinstance(files[0], FieldStorage):
-                processing_upload = True
-            else:
-                if not validators.url(form_data['form_file']):
-                    self.add_error("The URL is invalid")
-                    next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
-                                                       formid=form_id)
-                    return HTTPFound(location=next_page)
-
             self.returnRawViewResult = True
 
             next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code, formid=form_id)
-            if not processing_upload:
-                added, message = add_file_to_form(self.request, project_id, form_id, form_data['file_name'],
-                                                  form_data['form_file'])
-                if added:
-                    self.request.session.flash(self._('The file was linked successfully'))
-                    return HTTPFound(location=next_page)
-                else:
-                    self.add_error(message)
-                    next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
-                                                       formid=form_id)
-                    return HTTPFound(location=next_page)
+
+            error = False
+            message = ""
+            if "overwrite" in form_data.keys():
+                overwrite = True
             else:
-                error = False
-                message = ""
-                if "overwrite" in form_data.keys():
-                    overwrite = True
+                overwrite = False
+            for file in files:
+                file_name = file.filename
+                md5sum = md5(file.file.read()).hexdigest()
+                added, message = add_file_to_form(self.request, project_id, form_id, file_name, overwrite, md5sum)
+                if added:
+                    file.file.seek(0)
+                    bucket_id = project_id + form_id
+                    bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
+                    store_file(self.request, bucket_id, file_name, file.file)
                 else:
-                    overwrite = False
-                for file in files:
-                    file_name = file.filename
-                    md5sum = md5(file.file.read()).hexdigest()
-                    added, message = add_file_to_form(self.request, project_id, form_id, file_name, None, overwrite,
-                                                      md5sum)
-                    if added:
-                        file.file.seek(0)
-                        bucket_id = project_id + form_id
-                        bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
-                        store_file(self.request, bucket_id, file_name, file.file)
-                    else:
-                        error = True
-                        break
-                if not error:
-                    if len(files) == 1:
-                        self.request.session.flash(self._('The file was uploaded successfully'))
-                    else:
-                        self.request.session.flash(self._('The files were uploaded successfully'))
-                    return HTTPFound(location=next_page)
+                    error = True
+                    break
+            if not error:
+                if len(files) == 1:
+                    self.request.session.flash(self._('The file was uploaded successfully'))
                 else:
-                    self.add_error(message)
-                    next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
-                                                       formid=form_id)
-                    return HTTPFound(location=next_page)
+                    self.request.session.flash(self._('The files were uploaded successfully'))
+                return HTTPFound(location=next_page)
+            else:
+                self.add_error(message)
+                next_page = self.request.route_url('form_details', userid=user_id, projcode=project_code,
+                                                   formid=form_id)
+                return HTTPFound(location=next_page)
 
         else:
             raise HTTPNotFound

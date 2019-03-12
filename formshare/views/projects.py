@@ -13,10 +13,13 @@ import qrcode
 import zlib
 import base64
 import io
+import os
+import uuid
 from formshare.processes.elasticsearch.repository_index import get_dataset_stats_for_project, \
     delete_dataset_index_by_project, get_number_of_datasets_with_gps_in_project
 from formshare.processes.submission.api import get_gps_points_from_project
 import re
+from pyramid.response import FileResponse
 
 
 class ProjectStoredFileView(ProjectsView):
@@ -94,7 +97,8 @@ class ProjectDetailsView(ProjectsView):
                 'files': get_project_files(self.request, project_id), 'userDetails': user_details,
                 'forms': forms, 'activeforms': active_forms, 'inactiveforms': inactive_forms,
                 'submissions': submissions, 'last': last, 'by': by, 'bydetails': bydetails, 'infom': in_form,
-                'withgps': get_number_of_datasets_with_gps_in_project(self.request.registry.settings, user_id, project_code)}
+                'withgps': get_number_of_datasets_with_gps_in_project(self.request.registry.settings, user_id,
+                                                                      project_code)}
 
 
 class AddProjectView(ProjectsView):
@@ -425,3 +429,47 @@ class DownloadProjectGPSPoints(ProjectsView):
         created, data = get_gps_points_from_project(self.request, user_id, project_code, project_id, query_from,
                                                     query_size)
         return data
+
+
+class GetProjectQRCode(ProjectsView):
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        url = self.request.route_url('project_details', userid=self.userID,
+                                     projcode=project_code)
+
+        odk_settings = {'admin': {"change_server": True, "change_form_metadata": False},
+                        'general': {"change_server": True, "navigation": "buttons",
+                                    'server_url': url}}
+        qr_json = json.dumps(odk_settings).encode()
+        zip_json = zlib.compress(qr_json)
+        serialization = base64.encodebytes(zip_json)
+        serialization = serialization.decode()
+        serialization = serialization.replace("\n", "")
+        img = qrcode.make(serialization)
+
+        repository_path = self.request.registry.settings['repository.path']
+        if not os.path.exists(repository_path):
+            os.makedirs(repository_path)
+        unique_id = str(uuid.uuid4())
+        temp_path = os.path.join(repository_path, *["odk", "tmp", unique_id])
+        os.makedirs(temp_path)
+
+        qr_file = os.path.join(temp_path, *[project_id + ".png"])
+        img.save(qr_file)
+        response = FileResponse(qr_file, request=self.request, content_type='image/png')
+        response.content_disposition = 'attachment; filename="' + project_id + '.png"'
+        self.returnRawViewResult = True
+        return response

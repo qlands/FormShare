@@ -20,8 +20,8 @@
                     {% block update_form_form_fields %}
                         <div class="modal-body">
                             <div class="custom-file">
-                                <input id="xlsx" accept="*.xlsx" name="xlsx" type="file" class="custom-file-input">
-                                <label for="xlsx" class="custom-file-label">{{ _('Choose file...') }}</label>
+                                <input type="file" name="xlsx" class="custom-file-input">
+                                <label class="custom-file-label" for="inputGroupFile01">{{ _('Choose file') }}</label>
                             </div>
                         </div>
                     {% endblock update_form_form_fields %}

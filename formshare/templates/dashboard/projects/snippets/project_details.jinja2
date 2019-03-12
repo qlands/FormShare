@@ -28,7 +28,7 @@
                             {% block project_details_main_content %}
                                 <div style="text-align: center">
                                     <span class="text-center">{{ _('Use this QR to configure ODK collect') }}</span><br/>
-                                    <a title="{{ _('ODK settings') }}" href="{{ request.route_url('project_stored_file', userid=userid, projcode=projectData.project_code, filename=projectData.project_image) }}"><img style="max-width: 150px" src="{{ request.route_url('project_stored_file', userid=userid, projcode=projectData.project_code, filename=projectData.project_image) }}" class="img-fluid"></a>
+                                    <a title="{{ _('ODK settings') }}" href="{{ request.route_url('project_qr', userid=userid, projcode=projectData.project_code) }}"><img style="max-width: 150px" src="{{ request.route_url('project_qr', userid=userid, projcode=projectData.project_code) }}" class="img-fluid"></a>
                                 </div>
                                 ODK URL:<br/>
                                 <div class="input-group">

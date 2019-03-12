@@ -12,7 +12,7 @@ from pyramid.response import FileResponse
 from formshare.processes.db import assistant_has_form, get_assistant_forms, get_project_id_from_name, add_new_form, \
     form_exists, get_form_directory, get_form_xml_file, get_form_survey_file, update_form, get_form_data, \
     get_form_schema, get_submission_data, add_submission, add_json_log, update_json_status, add_json_history, \
-    form_file_exists, get_url_from_file, set_file_with_error, update_file_info, get_project_from_assistant, \
+    form_file_exists, get_project_from_assistant, \
     get_form_files, get_project_code_from_id, get_form_geopoint, get_media_files, add_file_to_form, \
     add_submission_same_as
 import uuid
@@ -27,7 +27,6 @@ from pyxform.xls2json import parse_file_to_json
 from pyxform.errors import PyXFormError
 from formshare.processes.storage import get_stream, response_stream, store_file, delete_stream
 from pyramid.response import Response
-from urllib.request import urlretrieve
 from formshare.processes.elasticsearch.repository_index import create_dataset_index, add_dataset
 from formshare.processes.elasticsearch.record_index import create_record_index, add_record
 import logging
@@ -45,7 +44,7 @@ __all__ = ['generate_form_list', 'generate_manifest', 'get_form_list',
            'build_database', 'create_repository', 'move_media_files', 'convert_xml_to_json', 'store_submission',
            'get_html_from_diff', 'generate_diff', 'store_new_version', 'restore_from_revision', 'push_revision',
            'get_tables_from_form', 'get_fields_from_table', 'get_table_desc', 'is_field_key', 'get_request_data',
-           'update_data', 'upload_odk_form', 'update_form_title', 'retrieve_form_file', 'cache_external_file',
+           'update_data', 'upload_odk_form', 'update_form_title', 'retrieve_form_file',
            'get_odk_path', 'store_file_in_directory', 'update_odk_form', 'import_external_data', 'store_json_file',
            'check_jxform_file', 'get_missing_support_files']
 
@@ -59,146 +58,22 @@ def get_odk_path(request):
     return os.path.join(repository_path, *["odk"])
 
 
-def cache_external_file(request, project, form, file_name):
-    if form_file_exists(request, project, form, file_name):
-        file_url, last_download = get_url_from_file(request, project, form, file_name)
-        if file_url is not None:
-            download = False
-            if last_download is not None:
-                lapsed = datetime.datetime.now() - last_download
-                minutes_lapsed = divmod(lapsed.days * 86400 + lapsed.seconds, 60)
-                minutes_lapsed = minutes_lapsed[0]
-                if minutes_lapsed > 5:
-                    download = True
-            else:
-                download = True
-            if download:
-                repository_path = request.registry.settings['repository.path']
-                downloads_path = os.path.join(repository_path, *["downloads"])
-                if not os.path.exists(downloads_path):
-                    os.makedirs(downloads_path)
-                target_file = os.path.join(downloads_path, *[str(uuid.uuid4()) + ".tmp"])
-                try:
-                    log.info("Retrieving file {}".format(file_url))
-                    urlretrieve(file_url, target_file)
-                except Exception as e:
-                    set_file_with_error(request, project, form, file_name)
-                    log.error(
-                        "Error {} while downloading external file {} for form {}".format(str(e), file_name, form))
-                    raise HTTPNotFound
-                bucket_id = project + form
-                bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
-                file = open(target_file, 'rb')
-                store_file(request, bucket_id, file_name, file)
-                file.close()
-                file = open(target_file, 'rb')
-                md5sum = md5(file.read()).hexdigest()
-                file.close()
-                update_file_info(request, project, form, file_name, md5sum)
-    else:
-        raise HTTPNotFound
-
-
 def store_file_in_directory(request, project, form, file_name, directory):
     if form_file_exists(request, project, form, file_name):
-        file_url, last_download = get_url_from_file(request, project, form, file_name)
-        if file_url is None:
-            bucket_id = project + form
-            bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
-            stream = get_stream(request, bucket_id, file_name)
-            if stream is not None:
-                target_file = os.path.join(directory, *[file_name])
-                file = open(target_file, 'wb')
-                file.write(stream.read())
-                file.close()
-        else:
-            download = False
-            if last_download is not None:
-                lapsed = datetime.datetime.now() - last_download
-                minutes_lapsed = divmod(lapsed.days * 86400 + lapsed.seconds, 60)
-                minutes_lapsed = minutes_lapsed[0]
-                if minutes_lapsed > 5:
-                    download = True
-            else:
-                download = True
-            if download:
-                repository_path = request.registry.settings['repository.path']
-                downloads_path = os.path.join(repository_path, *["downloads"])
-                if not os.path.exists(downloads_path):
-                    os.makedirs(downloads_path)
-                target_file = os.path.join(downloads_path, *[str(uuid.uuid4()) + ".tmp"])
-                try:
-                    log.info("Retrieving file {}".format(file_url))
-                    urlretrieve(file_url, target_file)
-                except Exception as e:
-                    set_file_with_error(request, project, form, file_name)
-                    log.error(
-                        "Error {} while downloading external file {} for form {}".format(str(e), file_name, form))
-                bucket_id = project + form
-                bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
-                file = open(target_file, 'rb')
-                store_file(request, bucket_id, file_name, file)
-                file.close()
-                file = open(target_file, 'rb')
-                md5sum = md5(file.read()).hexdigest()
-                file.close()
-                update_file_info(request, project, form, file_name, md5sum)
-
-            bucket_id = project + form
-            bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
-            stream = get_stream(request, bucket_id, file_name)
-            if stream is not None:
-                target_file = os.path.join(directory, *[file_name])
-                file = open(target_file, 'wb')
-                file.write(stream.read())
-                file.close()
-
+        bucket_id = project + form
+        bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
+        stream = get_stream(request, bucket_id, file_name)
+        if stream is not None:
+            target_file = os.path.join(directory, *[file_name])
+            file = open(target_file, 'wb')
+            file.write(stream.read())
+            file.close()
 
 def retrieve_form_file_stream(request, project, form, file_name):
-    file_url, last_download = get_url_from_file(request, project, form, file_name)
-    if file_url is None:
-        bucket_id = project + form
-        bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
-        stream = get_stream(request, bucket_id, file_name)
-        return stream
-    else:
-        download = False
-        if last_download is not None:
-            lapsed = datetime.datetime.now() - last_download
-            minutes_lapsed = divmod(lapsed.days * 86400 + lapsed.seconds, 60)
-            minutes_lapsed = minutes_lapsed[0]
-            if minutes_lapsed > 5:
-                download = True
-        else:
-            download = True
-        if download:
-            repository_path = request.registry.settings['repository.path']
-            downloads_path = os.path.join(repository_path, *["downloads"])
-            if not os.path.exists(downloads_path):
-                os.makedirs(downloads_path)
-            target_file = os.path.join(downloads_path, *[str(uuid.uuid4()) + ".tmp"])
-            try:
-                log.info("Retrieving file {}".format(file_url))
-                urlretrieve(file_url, target_file)
-            except Exception as e:
-                set_file_with_error(request, project, form, file_name)
-                log.error(
-                    "Error {} while downloading external file {} for form {}".format(str(e), file_name, form))
-                return None
-            bucket_id = project + form
-            bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
-            file = open(target_file, 'rb')
-            store_file(request, bucket_id, file_name, file)
-            file.close()
-            file = open(target_file, 'rb')
-            md5sum = md5(file.read()).hexdigest()
-            file.close()
-            update_file_info(request, project, form, file_name, md5sum)
-
-        bucket_id = project + form
-        bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
-        stream = get_stream(request, bucket_id, file_name)
-        return stream
+    bucket_id = project + form
+    bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
+    stream = get_stream(request, bucket_id, file_name)
+    return stream
 
 
 def retrieve_form_file(request, project, form, file_name):
@@ -527,7 +402,7 @@ def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
                     if itemsets_csv is not None:
                         with open(itemsets_csv, "rb", ) as itemset_file:
                             md5sum = md5(itemset_file.read()).hexdigest()
-                            added, message = add_file_to_form(request, project_id, form_id, 'itemsets.csv', None,
+                            added, message = add_file_to_form(request, project_id, form_id, 'itemsets.csv',
                                                               True, md5sum)
                             if added:
                                 itemset_file.seek(0)
@@ -688,7 +563,7 @@ def update_odk_form(request, project_id, for_form_id, odk_dir, form_data):
                                 with open(itemsets_csv, "rb", ) as itemset_file:
                                     md5sum = md5(itemset_file.read()).hexdigest()
                                     added, message = add_file_to_form(request, project_id, form_id, 'itemsets.csv',
-                                                                      None, True, md5sum)
+                                                                      True, md5sum)
                                     if added:
                                         itemset_file.seek(0)
                                         store_file(request, bucket_id, 'itemsets.csv', itemset_file)
@@ -799,11 +674,6 @@ def get_form_list(request, user, project_code, assistant):
 
 
 def get_manifest(request, user, project, project_id, form):
-    form_files = get_form_files(request, project_id, form)
-    for file in form_files:
-        if file['file_url'] is not None:
-            cache_external_file(request, project_id, form, file['file_name'])
-
     form_files = get_form_files(request, project_id, form)
     if form_files:
         file_array = []

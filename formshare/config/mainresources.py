@@ -54,6 +54,8 @@ def create_resources(apppath, config):
                        'js/plugins/leaflet/plugins/leaflet-beautify-marker-icon.css', 'leaflet')
     r.add_js_resource('formshare', 'leaflet_beautify_marker_icon',
                       'js/plugins/leaflet/plugins/leaflet-beautify-marker-icon.js', 'leaflet')
+    r.add_js_resource('formshare', 'bs-custom-file-input',
+                      'js/plugins/bs-custom-file-input/bs-custom-file-input.min.js', None)
 
     # ------------------------------Collaborators, assistants and groups --------------------------------------
     r.add_css_resource('formshare', 'select2', 'css/plugins/select2/select2.min.css', 'bootstrap')

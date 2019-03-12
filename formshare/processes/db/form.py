@@ -16,8 +16,8 @@ from formshare.processes.color_hash import ColorHash
 
 __all__ = ['get_form_details', 'assistant_has_form', 'get_assistant_forms', 'get_form_directory', 'add_new_form',
            'form_exists', 'get_form_xml_file', 'get_form_xls_file', 'update_form', 'get_form_data', 'get_form_schema',
-           'delete_form', 'add_file_to_form', 'get_form_files', 'remove_file_from_form', 'get_url_from_file',
-           'form_file_exists', 'update_file_info', 'set_file_with_error', 'add_assistant_to_form',
+           'delete_form', 'add_file_to_form', 'get_form_files', 'remove_file_from_form',
+           'form_file_exists', 'add_assistant_to_form',
            'get_form_assistants', 'update_assistant_privileges', 'remove_assistant_from_form', 'add_group_to_form',
            'get_form_groups', 'update_group_privileges', 'remove_group_from_form', 'get_project_forms',
            'get_number_of_submissions_in_database', 'get_by_details', 'get_form_geopoint', 'get_primary_key',
@@ -439,7 +439,7 @@ def get_media_files(request, project, form):
     return res
 
 
-def add_file_to_form(request, project, form, file_name, file_url=None, overwrite=False, md5sum=None):
+def add_file_to_form(request, project, form, file_name, overwrite=False, md5sum=None):
     res = request.dbsession.query(MediaFile).filter(MediaFile.project_id == project).filter(
         MediaFile.form_id == form).filter(MediaFile.file_name == file_name).first()
     if res is None:
@@ -448,7 +448,7 @@ def add_file_to_form(request, project, form, file_name, file_url=None, overwrite
         if content_type is None:
             content_type = 'application/binary'
         new_file = MediaFile(file_id=new_file_id, project_id=project, form_id=form, file_name=file_name,
-                             file_udate=datetime.datetime.now(), file_url=file_url, file_md5=md5sum,
+                             file_udate=datetime.datetime.now(), file_md5=md5sum,
                              file_mimetype=content_type)
         try:
             request.dbsession.add(new_file)
@@ -496,45 +496,6 @@ def form_file_exists(request, project, form, file_name):
         return True
     else:
         return False
-
-
-def get_url_from_file(request, project, form, file_name):
-    res = request.dbsession.query(MediaFile).filter(MediaFile.project_id == project).filter(
-        MediaFile.form_id == form).filter(MediaFile.file_name == file_name).first()
-    if res is not None:
-        return res.file_url, res.file_lstdwnld
-    else:
-        return None, None
-
-
-def update_file_info(request, project, form, file_name, md5sum, download_datetime=datetime.datetime.now()):
-    try:
-        request.dbsession.query(MediaFile).filter(MediaFile.project_id == project).filter(
-            MediaFile.form_id == form).filter(MediaFile.file_name == file_name).update(
-            {'file_lstdwnld': download_datetime, 'file_dwnlderror': 0, 'file_md5': md5sum})
-        request.dbsession.flush()
-    except Exception as e:
-        request.dbsession.rollback()
-        log.error("Error {} while updating datetime in file {} in form {} of project {} ".format(str(e),
-                                                                                                 file_name, form,
-                                                                                                 project))
-        return False, str(e)
-    return True, ""
-
-
-def set_file_with_error(request, project, form, file_name):
-    try:
-        request.dbsession.query(MediaFile).filter(MediaFile.project_id == project).filter(
-            MediaFile.form_id == form).filter(MediaFile.file_name == file_name).update(
-            {'file_dwnlderror': 1})
-        request.dbsession.flush()
-    except Exception as e:
-        request.dbsession.rollback()
-        log.error(
-            "Error {} while updating error in file {} in form {} of project {} ".format(str(e), file_name, form,
-                                                                                        project))
-        return False, str(e)
-    return True, ""
 
 
 def add_assistant_to_form(request, project, form, from_project, assistant, privilege):

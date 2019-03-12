@@ -22,6 +22,7 @@
     {% jsresource request,'formshare','switchery' %}
     {% jsresource request,'formshare','taphold' %}
     {% jsresource request,'formshare','select2' %}
+    {% jsresource request,'formshare','bs-custom-file-input' %}
     {% if formDetails.form_geopoint != None %}
         {% jsresource request,'formshare','leaflet' %}
     {% endif %}
@@ -86,11 +87,17 @@
     {{ super() }}
     <script>
         $(document).ready(function() {
-
-            $('.custom-file-input').on('change', function() {
-                let fileName = $(this).val().split('\\').pop();
-                $(this).next('.custom-file-label').addClass("selected").html(fileName);
-            });
+            bsCustomFileInput.init();
+            {#$('#xlsx').on('change', function() {#}
+            {#    let fileName = $(this).val().split('\\').pop();#}
+            {#    $(this).next('#xlsx_label').addClass("selected").html(fileName);#}
+            {# });#}
+            {##}
+            {#$('#support_file').on('change', function() {#}
+            {#    console.log($(this).val());#}
+            {#    let fileName = $(this).val().split('\\').pop();#}
+            {#    $(this).next('#support_file_label').addClass("selected").html(fileName);#}
+            {# });#}
 
             {% if formDetails.form_geopoint != None and formDetails.submissions > 0 and withgps > 0 %}
                 var mymap = L.map('projmap').setView([51.505, -0.09], 13);
@@ -184,58 +191,6 @@
                     });
             });
 
-            $( "#add_file" ).click(function() {
-                $( "#clear_button").click();
-            });
-
-            $( "#uploadbutton" ).click(function() {
-                $( "#filetoupload" ).click();
-                $("#file_label").text('{{ _('File(s)') }}')
-                $("#file_info").hide();
-            });
-
-            jQuery("#filetoupload").change(function () {
-                var fileInput = document.getElementById('filetoupload');
-                var fileNames = [];
-                for (var i = 0; i < fileInput.files.length; i++) {
-                    fileNames.push(fileInput.files[i].name);
-                }
-                //var filename = fileInput.files[0].name;
-                var file_object = $("#form_file");
-                file_object.val(fileNames.join(' , '));
-                file_object.show();
-                $("#clear_section").show();
-                $("#uploadbutton").hide();
-                $("#linkbutton").hide();
-                $("#overwrite_section").show();
-            });
-            $( "#clear_button" ).click(function() {
-                $("#filetoupload").val("");
-                var file_object = $("#form_file");
-                file_object.val("");
-                file_object.hide();
-                $("#clear_section").hide();
-                $("#uploadbutton").show();
-                $("#linkbutton").show();
-                $("#file_label").text('{{ _('Type') }}');
-                $("#file_info").hide();
-                $("#overwrite_section").hide();
-
-                setSwitchery(overwrite_switch, false);
-
-                $("#file_name").val("");
-            });
-            $( "#linkbutton" ).click(function() {
-                var file_object = $("#form_file");
-                file_object.attr("placeholder", "http://example.com/files/my_file.csv").blur();
-                file_object.show();
-                $("#clear_section").show();
-                $("#uploadbutton").hide();
-                $("#linkbutton").hide();
-                $("#file_label").text('{{ _('Link') }}');
-                $("#file_info").show();
-                $("#overwrite_section").hide();
-            });
 
             $(".file-item").on("taphold", function()
                 {

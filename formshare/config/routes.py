@@ -5,7 +5,7 @@ from ..views.basic_views import NotFoundView, HomeView, log_out_view, LoginView,
 from ..views.dashboard import UserDashBoardView
 from ..views.projects import AddProjectView, ProjectListView, ProjectDetailsView, ProjectStoredFileView, \
     EditProjectView, DeleteProjectView, AddFileToProject, RemoveFileFromProject, DownloadProjectGPSPoints, \
-    ActivateProjectView
+    ActivateProjectView, GetProjectQRCode
 from ..views.profile import UserProfileView, EditProfileView
 from ..views.collaborators import CollaboratorsListView, RemoveCollaborator
 from ..views.assistants import AssistantsListView, AddAssistantsView, EditAssistantsView, DeleteAssistant, \
@@ -86,6 +86,8 @@ def load_routes(config):
                             'dashboard/projects/project_edit.jinja2'))
 
     routes.append(add_route('project_delete', '/user/{userid}/project/{projcode}/delete', DeleteProjectView, None))
+
+    routes.append(add_route('project_qr', '/user/{userid}/project/{projcode}/qr', GetProjectQRCode, None))
 
     routes.append(
         add_route('project_setactive', '/user/{userid}/project/{projcode}/setactive', ActivateProjectView, None))

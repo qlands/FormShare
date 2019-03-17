@@ -877,9 +877,11 @@ def build_database(cnf_file, create_file, insert_file, audit_file, schema):
                 error_message = "Error creating database \n"
                 error_message = error_message + "File: " + create_file + "\n"
                 error_message = error_message + "Error: \n"
-                error_message = error_message + error.encode() + "\n"
+                if error is not None:
+                    error_message = error_message + error.decode() + "\n"
                 error_message = error_message + "Output: \n"
-                error_message = error_message + output.encode() + "\n"
+                if output is not None:
+                    error_message = error_message + output.decode() + "\n"
                 log.error(error_message)
                 error = True
 
@@ -891,9 +893,11 @@ def build_database(cnf_file, create_file, insert_file, audit_file, schema):
                 error_message = "Error loading lookup tables \n"
                 error_message = error_message + "File: " + insert_file + "\n"
                 error_message = error_message + "Error: \n"
-                error_message = error_message + error.encode() + "\n"
+                if error is not None:
+                    error_message = error_message + error.decode() + "\n"
                 error_message = error_message + "Output: \n"
-                error_message = error_message + output.encode() + "\n"
+                if output is not None:
+                    error_message = error_message + output.decode() + "\n"
                 log.error(error_message)
                 error = True
 
@@ -905,9 +909,11 @@ def build_database(cnf_file, create_file, insert_file, audit_file, schema):
                 error_message = "Error loading lookup tables \n"
                 error_message = error_message + "File: " + audit_file + "\n"
                 error_message = error_message + "Error: \n"
-                error_message = error_message + error.encode() + "\n"
+                if error is not None:
+                    error_message = error_message + error.decode() + "\n"
                 error_message = error_message + "Output: \n"
-                error_message = error_message + output.encode() + "\n"
+                if output is not None:
+                    error_message = error_message + output.decode() + "\n"
                 log.error(error_message)
                 error = True
 

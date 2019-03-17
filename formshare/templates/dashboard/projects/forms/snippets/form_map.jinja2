@@ -1,4 +1,5 @@
-<div  class="ibox">
+{% set active_tab = request.params.get('tab',None) %}
+<div id="maptab" class="ibox {% if active_tab != 'map' and active_tab != None %}collapsed{% endif %}">
     <div class="ibox-title">
         {% block form_map_title %}
             <h5>{{ _('Map') }}</h5>

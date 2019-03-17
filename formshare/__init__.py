@@ -14,12 +14,12 @@ def main(global_config, **settings):
     auth_policy = AuthenticationStackPolicy()
     policy_array = []
 
-    main_policy = AuthTktAuthenticationPolicy(settings['auth.main.secret'], timeout=60 * 60,
+    main_policy = AuthTktAuthenticationPolicy(settings['auth.main.secret'], timeout=1800 * 60,
                                               cookie_name=settings['auth.main.cookie'])
     auth_policy.add_policy('main', main_policy)
     policy_array.append({'name': 'main', 'policy': main_policy})
 
-    assistant_policy = AuthTktAuthenticationPolicy(settings['auth.assistant.secret'], timeout=60 * 60,
+    assistant_policy = AuthTktAuthenticationPolicy(settings['auth.assistant.secret'], timeout=1800 * 60,
                                                    cookie_name=settings['auth.assistant.cookie'])
     auth_policy.add_policy('assistant', assistant_policy)
     policy_array.append({'name': 'assistant', 'policy': assistant_policy})

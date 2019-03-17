@@ -35,6 +35,12 @@ $(document).ready(function () {
         content.slideToggle(200);
         button.toggleClass('fa-chevron-up').toggleClass('fa-chevron-down');
         ibox.toggleClass('').toggleClass('border-bottom');
+
+        if (button.hasClass("fa-chevron-up"))
+            ibox.trigger('ibox-expanded');
+        else
+            ibox.trigger('ibox-collapsed');
+
         setTimeout(function () {
             ibox.resize();
             ibox.find('[id^=map-]').resize();

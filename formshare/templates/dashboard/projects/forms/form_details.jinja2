@@ -23,6 +23,7 @@
     {% jsresource request,'formshare','taphold' %}
     {% jsresource request,'formshare','select2' %}
     {% jsresource request,'formshare','bs-custom-file-input' %}
+    {% jsresource request,'formshare','sse' %}
     {% if formDetails.form_geopoint != None %}
         {% jsresource request,'formshare','leaflet' %}
     {% endif %}
@@ -67,6 +68,7 @@
                                 {% if formDetails.form_geopoint != None %}
                                     {% include 'dashboard/projects/forms/snippets/form_map.jinja2' %}
                                 {% endif %}
+                            {% include 'dashboard/projects/forms/snippets/form_tasks.jinja2' %}
 {#                                {% include 'dashboard/projects/forms/snippets/form_activity.jinja2' %}#}
                             </div>
                         </div>
@@ -84,23 +86,35 @@
 {% endblock mainsection %}
 
 {% block scripts %}
+{#    <script>#}
+{#        $(function() {#}
+{#            source = new EventSource('{{ request.route_url('form_sse', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}');#}
+{#            source.addEventListener('message', messageReceived, false);#}
+{#        });#}
+{##}
+{#        function messageReceived(event) {#}
+{#            console.log(JSON.parse(event.data)['message']);#}
+{#        }#}
+{#    </script>#}
     {{ super() }}
     <script>
         $(document).ready(function() {
-            bsCustomFileInput.init();
-            {#$('#xlsx').on('change', function() {#}
-            {#    let fileName = $(this).val().split('\\').pop();#}
-            {#    $(this).next('#xlsx_label').addClass("selected").html(fileName);#}
-            {# });#}
-            {##}
-            {#$('#support_file').on('change', function() {#}
-            {#    console.log($(this).val());#}
-            {#    let fileName = $(this).val().split('\\').pop();#}
-            {#    $(this).next('#support_file_label').addClass("selected").html(fileName);#}
-            {# });#}
 
-            {% if formDetails.form_geopoint != None and formDetails.submissions > 0 and withgps > 0 %}
-                var mymap = L.map('projmap').setView([51.505, -0.09], 13);
+            let sse = $.SSE('{{ request.route_url('form_sse', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}', {
+                onMessage: function(e){
+                    console.log(JSON.parse(e.data)['message']);
+                }
+             });
+            sse.start();
+
+            bsCustomFileInput.init();
+
+            {% set active_tab = request.params.get('tab',None) %}
+            var mymap;
+
+            function load_map()
+            {
+                mymap = L.map('projmap').setView([51.505, -0.09], 13);
                 L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
                     attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
                     maxZoom: 18,
@@ -146,7 +160,21 @@
                     var group = new L.featureGroup(markers);
                     mymap.fitBounds(group.getBounds());
                 });
+            }
 
+            {% if formDetails.form_geopoint != None and formDetails.submissions > 0 and withgps > 0 %}
+                {% if active_tab == 'map' or active_tab == None %}
+                    load_map();
+                {% else %}
+                    $(".ibox").on('ibox-collapsed',function(){
+                        var id = $(this).attr('id');
+                        if (id === "maptab") {
+                            if (typeof mymap === 'undefined') {
+                                load_map();
+                            }
+                        }
+                    });
+                {% endif %}
             {% endif %}
 
             $(".collaborator-list").select2({

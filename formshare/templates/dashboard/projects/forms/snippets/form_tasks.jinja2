@@ -1,0 +1,66 @@
+{% set active_tab = request.params.get('tab',None) %}
+<div class="ibox {% if active_tab != 'task' %}collapsed{% endif %}">
+    <div class="ibox-title">
+        {% block project_tasks_title %}
+            <h5>{{ _('Products & tasks') }}</h5>
+            <div class="ibox-tools">
+                {% block project_tasks_tools %}
+                    <a class="collapse-link" style="margin-right: 10px">
+                        <i class="fa fa-chevron-up"></i>
+                    </a>
+                    <a class="fullscreen-link">
+                        <i class="fa fa-expand"></i>
+                    </a>
+                {% endblock project_tasks_tools %}
+            </div>
+        {% endblock project_tasks_title %}
+    </div>
+    <div class="ibox-content">
+        {% block project_tasks_content %}
+            <div class="clients-list">
+                <div class="row">
+                    <div class="col-lg-12">
+                        {% block project_tasks_table_header %}
+                            <div class="grid-header">
+                                <div class="row">
+                                    <div class="col-md-3">
+                                        <div class="text-center">
+                                            {{ _('Task') }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <div class="text-center">
+                                            {{ _('Download') }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center">
+                                            {{ _('Datetime') }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="text-center">
+                                            {{ _('Status') }}
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="text-center">
+                                            {{ _('Actions') }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <hr class="hr-line-solid">
+                            </div>
+                        {% endblock project_tasks_table_header %}
+                        {% block project_tasks_table_items %}
+{#                            {% for assistant in assistants %}#}
+{#                                {% set assistant_count = loop.index %}#}
+                                {% include 'dashboard/projects/forms/snippets/task_item.jinja2' %}
+{#                            {% endfor %}#}
+                        {% endblock project_tasks_table_items %}
+                    </div>
+                </div>
+            </div>
+        {% endblock project_tasks_content %}
+    </div>
+</div>

@@ -14,7 +14,9 @@
             {% block title %}
                 <title>FormShare | {% block titlesection %}{{ _('Dashboard') }}{% endblock titlesection %}</title>
             {% endblock title %}
-
+            {% block links %}
+                <link rel="shortcut icon" href="{{ request.url_for_static('fs-ico.png') }}" />
+            {% endblock  links%}
             {% block css %}
 
             {% endblock css %}

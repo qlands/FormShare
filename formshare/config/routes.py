@@ -25,6 +25,7 @@ from ..views.assistant_views.jsonlogs import JSONList, JSONCompare, JSONCheckout
     JSONGetSubmission, JSONCheckin, JSONViewRevision, JSONCancelRevision, JSONPushRevision, JSONDisregard, \
     JSONCancelDisregard, JSONCompareSubmissions
 from ..views.assistant_views.clean import CleanInterface, PerformAction, DataRequest
+from ..views.sse import SSEventStream
 
 route_list = []
 
@@ -162,6 +163,9 @@ def load_routes(config):
                             None))
 
     routes.append(add_route('activate_form', '/user/{userid}/project/{projcode}/form/{formid}/activate', ActivateForm,
+                            None))
+
+    routes.append(add_route('form_sse', '/user/{userid}/project/{projcode}/form/{formid}/sse', SSEventStream,
                             None))
 
     routes.append(

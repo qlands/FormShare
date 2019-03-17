@@ -71,8 +71,8 @@
                                         {% if resCode == 14 %}
                                             {% if request.method == 'POST' %}
                                                 <h2>Some of your CSVs have invalid characters.</h2>
-                                                {% for key, error in error_summary.items() %}
-                                                    <li data-field-label="{{ key }}">{% if key %}{{ key }}: {% endif %}{{ error }}</li>
+                                                {% for error in error_summary %}
+                                                    <li>{{ error }}</li>
                                                 {% endfor %}
                                             {% else %}
                                                 <h2>Your <b>had</b> some CSVs with invalid characters</h2>
@@ -82,8 +82,8 @@
                                         {% if resCode == 15 %}
                                             {% if request.method == 'POST' %}
                                                 <h2>An option in the XLSX has invalid characters.</h2>
-                                                {% for key, error in error_summary.items() %}
-                                                    <li data-field-label="{{ key }}">{% if key %}{{ key }}: {% endif %}{{ error }}</li>
+                                                {% for error in error_summary %}
+                                                    <li>{{ error }}</li>
                                                 {% endfor %}
                                                 You need to correct the XLSX form, upload the new version and continue the process.
                                             {% else %}
@@ -203,11 +203,11 @@
                                         </div>
                                     </form>
                                 {% else %}
-                                    <h2 style="color: red">Ups! There has been an error while creating the repository</h2>
-                                    We need to check your ODK. Please send the XLSX to formshare_support@qlands.com and we will get back to you as soon as possible with an explanation and a solution. In your email please use the below error code and message if any.<br/>We are sorry for the inconvenience.
+                                    <h2 style="color: red">Oops! There has been an error while creating the repository</h2>
+                                    We would need to check your ODK. We issued an internal report to the support team and they will get back to you as soon as possible with an explanation and a solution.<br/>We are sorry for the inconvenience.
                                     <h3>Error code: {{ resCode }}</h3>
-                                    {% for key, error in error_summary.items() %}
-                                        <li data-field-label="{{ key }}">{% if key %}{{ key }}: {% endif %}{{ error }}</li>
+                                    {% for error in error_summary %}
+                                        <li>{{ error }}</li>
                                     {% endfor %}
                                 {% endif %}
                             {% else %}

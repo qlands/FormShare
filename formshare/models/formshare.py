@@ -198,13 +198,16 @@ class Product(Base):
     process_name = Column(Unicode(120), nullable=False)
     project_id = Column(Unicode(64), nullable=False)
     form_id = Column(Unicode(120), nullable=False)
-    product_id = Column(Unicode(64), nullable=False)
+    product_id = Column(Unicode(120), nullable=False)
     output_id = Column(Unicode(64), nullable=False)
     output_mimetype = Column(Unicode(120), nullable=False)
     process_only = Column(INTEGER, server_default=text("'0'"))
     datetime_added = Column(DateTime)
+    product_published = Column(INTEGER, server_default=text("'0'"))
+    published_by = Column(ForeignKey('fsuser.user_id', ondelete='CASCADE'))
 
     odkform = relationship('Odkform')
+    user = relationship('User')
 
 
 class Userproject(Base):

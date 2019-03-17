@@ -42,7 +42,8 @@ requires = [
     'paginate',
     'Pillow',
     'qrcode',
-    'bs4'
+    'bs4',
+    'pika'
 ]
 
 postgresql_requires = ['psycopg2']

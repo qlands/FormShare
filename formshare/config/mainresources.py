@@ -39,8 +39,6 @@ def create_resources(apppath, config):
     r.add_css_resource('formshare', 'colorpicker', 'css/plugins/evol-colorpicker/evol-colorpicker.min.css', None)
     r.add_js_resource('formshare', 'colorpicker', 'js/plugins/evol-colorpicker/evol-colorpicker.min.js', None)
 
-
-
     # ------------------------------Project details --------------------------------------
     r.add_js_resource('formshare', 'element_queries', 'js/plugins/css-element-queries/ElementQueries.js', None)
     r.add_js_resource('formshare', 'element_sensors', 'js/plugins/css-element-queries/ResizeSensor.js',
@@ -55,7 +53,9 @@ def create_resources(apppath, config):
     r.add_js_resource('formshare', 'leaflet_beautify_marker_icon',
                       'js/plugins/leaflet/plugins/leaflet-beautify-marker-icon.js', 'leaflet')
     r.add_js_resource('formshare', 'bs-custom-file-input',
-                      'js/plugins/bs-custom-file-input/bs-custom-file-input.min.js', None)
+                      'js/plugins/bs-custom-file-input/bs-custom-file-input.min.js', 'jquery')
+    r.add_js_resource('formshare', 'sse',
+                      'js/plugins/sse/jquery.sse.min.js', 'jquery')
 
     # ------------------------------Collaborators, assistants and groups --------------------------------------
     r.add_css_resource('formshare', 'select2', 'css/plugins/select2/select2.min.css', 'bootstrap')

@@ -1,7 +1,8 @@
 from ...models import Task, FinishedTask, Product
+import datetime
 
 __all__ = [
-    'add_task', 'get_running_tasks_by_process_name', 'cancel_task']
+    'add_task', 'cancel_task', 'get_task_status', 'task_exists']
 
 
 def add_task(request, task_id):
@@ -13,30 +14,28 @@ def add_task(request, task_id):
         return False, str(e)
 
 
-def get_running_tasks_by_process_name(request, project, form, process_name):
-
-    if process_name != "ALL":
-        tasks = request.query(Product).filter(Product.project_id == project).filter(Product.form_id == form).filter(
-            Product.process_name == process_name).filter(
-            Product.celery_taskid.notin_(request.query(FinishedTask.task_id).all())).all()
-        # sql = "SELECT celery_taskid FROM products WHERE user_name='"+user+"' and project_cod = '"+project+"'
-        # and process_name = '" + processName + "' AND celery_taskid NOT IN (SELECT taskid FROM finishedtasks)"
-    else:
-        tasks = request.query(Product).filter(Product.project_id == project).filter(Product.form_id == form).filter(
-            Product.celery_taskid.notin_(request.query(FinishedTask.task_id).all())).all()
-        # sql = "SELECT celery_taskid FROM products WHERE user_name='" + user + "' and project_cod = '" + project +
-        # "' AND celery_taskid NOT IN (SELECT taskid FROM finishedtasks)"
-    # tasks = request.dbsession.execute(sql).fetchall()
-    result = []
-    for task in tasks:
-        result.append(task.celery_taskid)
-    return result
-
-
-def cancel_task(request, task_id):
-    new_cancelled_task = FinishedTask(task_id=task_id, task_enumber=2)
+def cancel_task(request, user, task_id):
+    new_cancelled_task = FinishedTask(task_id=task_id, task_enumber=-2, task_error="Task canceled by {} on {}".
+                                      format(user, datetime.datetime.now().isoformat()))
     try:
         request.dbsession.add(new_cancelled_task)
+        request.dbsession.flush()
         return True, ""
     except Exception as e:
         return False, str(e)
+
+
+def task_exists(request, project, form, task):
+    res = request.dbsession.query(Product).filter(Product.project_id == project).filter(Product.form_id == form).\
+        filter(Product.celery_taskid == task).first()
+    if res is None:
+        return False
+    return True
+
+
+def get_task_status(request, task_id):
+    res = request.dbsession.query(FinishedTask).filter(FinishedTask.task_id == task_id).first()
+    if res is not None:
+        return res.task_enumber, res.task_error
+    else:
+        return -1, ""

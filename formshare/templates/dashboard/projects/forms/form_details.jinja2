@@ -86,26 +86,54 @@
 {% endblock mainsection %}
 
 {% block scripts %}
-{#    <script>#}
-{#        $(function() {#}
-{#            source = new EventSource('{{ request.route_url('form_sse', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}');#}
-{#            source.addEventListener('message', messageReceived, false);#}
-{#        });#}
-{##}
-{#        function messageReceived(event) {#}
-{#            console.log(JSON.parse(event.data)['message']);#}
-{#        }#}
-{#    </script>#}
     {{ super() }}
     <script>
         $(document).ready(function() {
 
-            let sse = $.SSE('{{ request.route_url('form_sse', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}', {
-                onMessage: function(e){
-                    console.log(JSON.parse(e.data)['message']);
+            {% if formDetails.form_schema == None and formDetails.form_reptask != None and taskdata.rescode < 0%}
+                let sse = $.SSE('{{ request.route_url('form_sse', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}', {
+                    onMessage: function(e){
+                        let message = JSON.parse(e.data)['message'];
+                        if (message !== null)
+                        {
+                            message = JSON.parse(message);
+                            if (typeof message === 'object')
+                            {
+                                let task_id = message['task'];
+                                let task_status = message['status'];
+                                if (task_id === "{{ formDetails.form_reptask }}")
+                                {
+                                    if ((task_status === "success") || (task_status === "failure"))
+                                    {
+                                        location.reload(true);
+                                    }
+                                    else {
+                                        document.getElementById('repository_message').innerText = task_status;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                console.log(message)
+                            }
+                        }
+                    }
+                });
+                sse.start();
+
+                let $element = $('#repository_message');
+                function fadeInOut () {
+                    $element.fadeIn(1000, function () {
+                        $element.fadeOut(1500, function () {
+                            $element.fadeIn(1500, function () {
+                                setTimeout(fadeInOut, 500);
+                            });
+                        });
+                    });
                 }
-             });
-            sse.start();
+                fadeInOut();
+
+            {% endif %}
 
             bsCustomFileInput.init();
 
@@ -205,6 +233,36 @@
                             var form = document.createElement('form');
                             form.setAttribute('method', 'post');
                             form.setAttribute('action', action_url);
+                            form.style.display = 'hidden';
+
+                            var i = document.createElement("input"); //input element, text
+                            i.setAttribute('type',"text");
+                            i.setAttribute('name',"csrf_token");
+                            i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                            form.appendChild(i);
+
+                            document.body.appendChild(form);
+                            form.submit();
+                        }
+                    });
+            });
+
+            $('.cancel_repository').click(function () {
+                swal({
+                        title: "{{ _('Are you sure?') }}",
+                        text: "{{ _('Your form will go back to the testing phase') }}",
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#DD6B55",
+                        confirmButtonText: "{{ _('Yes, stop the process') }}",
+                        cancelButtonText: "{{ _('Oops!, cancel!') }}",
+                        closeOnConfirm: true,
+                        closeOnCancel: true },
+                    function (isConfirm) {
+                        if (isConfirm) {
+                            var form = document.createElement('form');
+                            form.setAttribute('method', 'post');
+                            form.setAttribute('action', '{{ request.route_url('stop_repository',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}');
                             form.style.display = 'hidden';
 
                             var i = document.createElement("input"); //input element, text

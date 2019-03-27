@@ -22,7 +22,7 @@ __all__ = ['get_form_details', 'assistant_has_form', 'get_assistant_forms', 'get
            'get_form_groups', 'update_group_privileges', 'remove_group_from_form', 'get_project_forms',
            'get_number_of_submissions_in_database', 'get_by_details', 'get_form_geopoint', 'get_primary_key',
            'get_number_of_submissions_by_assistant', 'get_media_files', 'set_form_status', 'get_form_primary_key',
-           'get_form_survey_file', 'get_project_form_colors']
+           'get_form_survey_file', 'get_project_form_colors', 'reset_form_repository']
 
 log = logging.getLogger(__name__)
 
@@ -430,6 +430,21 @@ def set_form_status(request, project, form, status):
     except Exception as e:
         request.dbsession.rollback()
         log.error("Error {} while updating status of form {} in project {}".format(str(e), project, form))
+        return False, str(e)
+
+
+def reset_form_repository(request, project, form):
+    try:
+        request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(Odkform.form_id == form).update(
+            {'form_reptask': None})
+        request.dbsession.flush()
+        return True, ""
+    except IntegrityError as e:
+        request.dbsession.rollback()
+        return False, str(e)
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error("Error {} while resetting the repository form {} in project {}".format(str(e), project, form))
         return False, str(e)
 
 

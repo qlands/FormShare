@@ -10,7 +10,8 @@ def formshare_one_import_json(request, user, project, form, odk_dir, form_direct
         if isinstance(value, str):
             settings[key] = value
 
-    task = import_json_files.delay(user, project, form, odk_dir, form_directory, schema, assistant, path_to_files,
-                                   project_code, geopoint_variable, project_of_assistant, settings, ignore_xform_check,
-                                   sse_project_id=project, sse_form_id=form)
+    task = import_json_files.apply_async((user, project, form, odk_dir, form_directory, schema, assistant,
+                                          path_to_files, project_code, geopoint_variable,
+                                          project_of_assistant, settings, ignore_xform_check),
+                                         {'sse_project_id': project, 'sse_form_id': form}, countdown=2)
     register_product_instance(request, project, form, 'fs1import', '', '', 'fs1import', task.id, True)

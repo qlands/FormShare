@@ -825,7 +825,7 @@ class GenerateRepository(PrivateView):
                 if result_code == 0:
                     self.returnRawViewResult = True
                     delete_dataset_index(self.request.registry.settings, user_id, project_code, form_id)
-                    self.request.session.flash(self._('The repository was created successfully'))
+                    self.request.session.flash(self._('FormShare is creating the repository') + "|info")
                     return HTTPFound(
                         self.request.route_url('form_details', userid=user_id, projcode=project_code, formid=form_id))
                 else:

@@ -16,7 +16,7 @@ from ..views.assistant_groups import GroupListView, AddGroupView, EditGroupView,
 from ..views.form import FormDetails, AddNewForm, EditForm, DeleteForm, AddFileToForm, RemoveFileFromForm, \
     FormStoredFile, AddAssistant, EditAssistant, RemoveAssistant, AddGroupToForm, EditFormGroup, RemoveGroupForm, \
     DownloadCSVData, DownloadXLSX, DownloadSubmissionFiles, DownloadGPSPoints, DownloadXLSData, UploadNewVersion, \
-    ActivateForm, DeActivateForm, ImportData, DownloadKML
+    ActivateForm, DeActivateForm, ImportData, DownloadKML, StopTask, StopRepository
 from ..views.odk import ODKFormList, ODKManifest, ODKMediaFile, ODKPushData, ODKSubmission, ODKXMLForm
 from ..views.repository import GenerateRepository, SeparateTable, NewSeparationGroup, EditSeparationGroup, \
     DeleteSeparationGroup, RepositoryExist
@@ -167,6 +167,12 @@ def load_routes(config):
 
     routes.append(add_route('form_sse', '/user/{userid}/project/{projcode}/form/{formid}/sse', SSEventStream,
                             None))
+
+    routes.append(add_route('stop_task', '/user/{userid}/project/{projcode}/form/{formid}/task/{taskid}/stop', StopTask,
+                            None))
+
+    routes.append(add_route('stop_repository', '/user/{userid}/project/{projcode}/form/{formid}/stoprepository',
+                            StopRepository, None))
 
     routes.append(
         add_route('deactivate_form', '/user/{userid}/project/{projcode}/form/{formid}/deactivate', DeActivateForm,

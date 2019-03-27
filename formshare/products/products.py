@@ -1,9 +1,9 @@
-from ..processes.db import add_product_instance, get_running_tasks_by_process_name, cancel_task, delete_product
+from ..processes.db import add_product_instance, cancel_task, task_exists
 from formshare.config.celery_app import celeryApp
 import logging
 
 __all__ = [
-    'add_product', 'register_product_instance', 'product_found', 'get_products', 'stop_tasks_by_process_name']
+    'add_product', 'register_product_instance', 'product_found', 'get_products', 'stop_task']
 
 log = logging.getLogger(__name__)
 
@@ -12,25 +12,16 @@ _PRODUCTS = []
 
 def product_found(name):
     for product in _PRODUCTS:
-        if product["name"] == name:
+        if product["code"] == name:
             return True
     return False
 
 
-def output_found(product, output):
-    for p in _PRODUCTS:
-        if p["name"] == product:
-            for o in p["outputs"]:
-                if o["filename"] == output:
-                    return True
-    return False
-
-
 def add_product(product):
-    if not product_found(product["name"]):
+    if not product_found(product["code"]):
         _PRODUCTS.append(product)
     else:
-        raise Exception("Product name {} is already in use".format(product["name"]))
+        raise Exception("Product code {} is already in use".format(product["code"]))
 
 
 def register_product_instance(request, project, form, product, output, mime_type, process_name, instance_id,
@@ -44,12 +35,11 @@ def get_products():
     return list(_PRODUCTS)
 
 
-def stop_tasks_by_process_name(request, project, form, process_name="ALL"):
-    tasks = get_running_tasks_by_process_name(request, project, form, process_name)
-    for task in tasks:
-        log.warning("*****stop_tasks_by_process_name. Revoking task " + task)
+def stop_task(request, user, project, form, task):
+    if task_exists(request, project, form, task):
+        log.warning("Stopping task {}".format(task))
         celeryApp.control.revoke(task, terminate=True)
-        log.warning("*****stop_tasks_by_process_name. Cancelling task from database " + task)
-        cancel_task(request, task)
+        log.warning("Cancelling task {} in database ".format(task))
+        return cancel_task(request, user, task)
+    return False, ""
 
-    delete_product(request, project, form, process_name)

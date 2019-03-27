@@ -150,7 +150,7 @@ def store_json_file(engine, submission_id, temp_json_file, json_file, odk_dir, x
 
 @celeryApp.task(base=CeleryTask)
 def import_json_files(user, project, form, odk_dir, form_directory, schema, assistant, path_to_files, project_code,
-                      geopoint_variable, project_of_assistant, settings, ignore_xform_check=False):
+                      geopoint_variable, project_of_assistant, settings, ignore_xform_check=False, **kwargs):
     time.sleep(5)
     engine = create_engine(settings['sqlalchemy.url'])
     list_of_files = path_to_files + '/**/*.json'

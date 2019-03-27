@@ -56,6 +56,8 @@ def message_generator(project_id, form_id):
                     try:
                         msg = "data: %s\n\n" % json.dumps({'message': body.decode()})
                     except Exception as e:
+                        log.error("JSON convection error for project {}, form {}. Error: {}".format(project_id, form_id,
+                                                                                                    str(e)))
                         msg = "data: %s\n\n" % json.dumps({'message': "error {}".format(str(e))})
                     connection.close()
                     yield msg.encode()
@@ -76,7 +78,7 @@ def message_generator(project_id, form_id):
             msg = "data: %s\n\n" % json.dumps({'message': "The messaging service is not available for "
                                                           "project {}, form {}".format(project_id, form_id)})
             yield msg.encode()
-            time.sleep(random.randint(1, 10))
+            time.sleep(10)
 
 
 class SSEventStream(PrivateView):

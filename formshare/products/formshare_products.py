@@ -39,8 +39,8 @@ def get_product_directory(request, project, form, product):
         return None
 
 
-def add_product(name, description):
-    return {"name": name, "description": description, "metadata": {}}
+def add_product(product_code):
+    return {"code": product_code, "metadata": {}}
 
 
 def add_metadata_to_product(product, key, value):
@@ -70,7 +70,13 @@ def register_celery_task(request, task_id):
 def register_products():
     products = []
     # A new product
-    new_product = add_product('fs1import', 'Import JSON data from FormShare 1.0')
+    new_product = add_product('fs1import')
+    add_metadata_to_product(new_product, 'author', 'QLands Technology Consultants')
+    add_metadata_to_product(new_product, 'version', '1.0')
+    add_metadata_to_product(new_product, 'Licence', 'LGPL')
+    products.append(new_product)
+
+    new_product = add_product('repository')
     add_metadata_to_product(new_product, 'author', 'QLands Technology Consultants')
     add_metadata_to_product(new_product, 'version', '1.0')
     add_metadata_to_product(new_product, 'Licence', 'LGPL')

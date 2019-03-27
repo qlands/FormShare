@@ -3,7 +3,7 @@ from formshare.processes.db import get_project_id_from_name, get_form_details, g
     add_file_to_form, get_form_files, remove_file_from_form, get_all_assistants, add_assistant_to_form, \
     get_form_assistants, update_assistant_privileges, remove_assistant_from_form, get_project_groups, \
     add_group_to_form, get_form_groups, update_group_privileges, remove_group_from_form, get_form_xls_file, \
-    set_form_status, get_assigned_assistants, get_form_directory
+    set_form_status, get_assigned_assistants, get_form_directory, reset_form_repository
 from formshare.processes.storage import store_file, delete_stream, delete_bucket
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 import os
@@ -16,6 +16,8 @@ from formshare.processes.submission.api import get_submission_media_files, json_
     generate_xlsx_file
 from formshare.processes.odk.api import get_odk_path, upload_odk_form, update_form_title, retrieve_form_file, \
     update_odk_form, get_missing_support_files, import_external_data
+from formshare.processes.db import get_task_status
+from formshare.products import stop_task
 import uuid
 import shutil
 
@@ -56,11 +58,18 @@ class FormDetails(PrivateView):
                 missing_files = get_missing_support_files(self.request, project_id, form_id, required_files, form_files)
             else:
                 missing_files = []
+            if form_data['form_reptask'] is not None:
+                res_code, error = get_task_status(self.request, form_data['form_reptask'])
+                task_data = {'rescode': res_code, 'error': error}
+            else:
+                task_data = {'rescode': None, 'error': None}
+
             return {'projectDetails': project_details, 'formid': form_id, 'formDetails': form_data, 'userid': user_id,
                     'formFiles': form_files, 'assistants': assistants, 'formassistants': form_assistants,
                     'groups': groups, 'formgroups': form_groups,
                     'withgps': get_number_of_datasets_with_gps(self.request.registry.settings, user_id, project_code,
-                                                               form_id), 'missingFiles': ", ".join(missing_files)}
+                                                               form_id), 'missingFiles': ", ".join(missing_files),
+                    'taskdata': task_data}
         else:
             raise HTTPNotFound
 
@@ -114,9 +123,6 @@ class AddNewForm(PrivateView):
                 next_page = self.request.params.get('next') or self.request.route_url('project_details',
                                                                                       userid=project_details['owner'],
                                                                                       projcode=project_code)
-                print("*****************************66")
-                print(str(message))
-                print("*****************************66")
                 self.add_error(self._('Unable to upload the form: ') + message)
                 return HTTPFound(next_page)
 
@@ -1150,10 +1156,122 @@ class ImportData(PrivateView):
                 else:
                     ignore_xform = False
 
-                import_external_data(self.request, user_id, project_id, form_id, odk_path, form_data['form_directory'],
-                                     form_data['form_schema'], parts[0], import_type, ignore_xform, form_post_data)
+                imported, message = import_external_data(self.request, user_id, project_id, form_id, odk_path,
+                                                         form_data['form_directory'], form_data['form_schema'],
+                                                         parts[0], import_type, ignore_xform, form_post_data)
+                if imported:
+                    next_page = self.request.route_url('form_details', userid=user_id,
+                                                       projcode=project_code, formid=form_id)
+                    return HTTPFound(location=next_page)
 
             return {'projectDetails': project_details, 'formid': form_id, 'formDetails': form_data, 'userid': user_id,
                     'assistants': get_assigned_assistants(self.request, project_id, form_id)}
+        else:
+            raise HTTPNotFound
+
+
+class StopTask(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+        form_id = self.request.matchdict['formid']
+        task_id = self.request.matchdict['taskid']
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        if self.activeProject['project_id'] == project_id:
+            self.set_active_menu('assistants')
+        else:
+            self.set_active_menu('projects')
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] == 4:
+            raise HTTPNotFound
+
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+
+        if self.request.method == 'POST':
+            next_page = self.request.params.get('next') or self.request.route_url('form_details',
+                                                                                  userid=user_id,
+                                                                                  projcode=project_code,
+                                                                                  formid=form_id)
+            stopped, message = stop_task(self.request, self.userID, project_id, form_id, task_id)
+            if stopped:
+                self.request.session.flash(self._('The process was stopped successfully'))
+                self.returnRawViewResult = True
+                return HTTPFound(next_page)
+            else:
+                self.request.session.flash(self._('FormShare was not able to stop the process') + "|error")
+                self.returnRawViewResult = True
+                return HTTPFound(next_page)
+        else:
+            raise HTTPNotFound
+
+
+class StopRepository(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+        form_id = self.request.matchdict['formid']
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        if self.activeProject['project_id'] == project_id:
+            self.set_active_menu('assistants')
+        else:
+            self.set_active_menu('projects')
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] == 4:
+            raise HTTPNotFound
+
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+
+        if self.request.method == 'POST':
+            task_id = form_data['form_reptask']
+            next_page = self.request.params.get('next') or self.request.route_url('form_details',
+                                                                                  userid=user_id,
+                                                                                  projcode=project_code,
+                                                                                  formid=form_id)
+            stopped, message = stop_task(self.request, self.userID, project_id, form_id, task_id)
+            if stopped:
+                reset_form_repository(self.request, project_id, form_id)
+                self.request.session.flash(self._('The process was stopped successfully'))
+                self.returnRawViewResult = True
+                return HTTPFound(next_page)
+            else:
+                self.request.session.flash(self._('FormShare was not able to stop the process') + "|error")
+                self.returnRawViewResult = True
+                return HTTPFound(next_page)
         else:
             raise HTTPNotFound

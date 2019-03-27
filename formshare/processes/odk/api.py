@@ -7,7 +7,7 @@ import shutil
 from hashlib import md5
 from pyramid.httpexceptions import HTTPNotFound
 from uuid import uuid4
-from subprocess import Popen, PIPE, check_call, CalledProcessError
+from subprocess import Popen, PIPE
 from pyramid.response import FileResponse
 from formshare.processes.db import assistant_has_form, get_assistant_forms, get_project_id_from_name, add_new_form, \
     form_exists, get_form_directory, get_form_xml_file, get_form_survey_file, update_form, get_form_data, \
@@ -34,14 +34,15 @@ import zipfile
 import glob
 from formshare.products.fs1import.fs1import import formshare_one_import_json
 from formshare.processes.color_hash import ColorHash
-import formshare.plugins as p
+import formshare.plugins as plugin
+from formshare.products.repository import create_database_repository
 
 
 log = logging.getLogger(__name__)
 
 __all__ = ['generate_form_list', 'generate_manifest', 'get_form_list',
-           'get_manifest', 'get_xml_form', 'get_media_file', 'get_submission_file', 'build_odata_service',
-           'build_database', 'create_repository', 'move_media_files', 'convert_xml_to_json', 'store_submission',
+           'get_manifest', 'get_xml_form', 'get_media_file', 'get_submission_file',
+           'move_media_files', 'convert_xml_to_json', 'store_submission',
            'get_html_from_diff', 'generate_diff', 'store_new_version', 'restore_from_revision', 'push_revision',
            'get_tables_from_form', 'get_fields_from_table', 'get_table_desc', 'is_field_key', 'get_request_data',
            'update_data', 'upload_odk_form', 'update_form_title', 'retrieve_form_file',
@@ -68,6 +69,7 @@ def store_file_in_directory(request, project, form, file_name, directory):
             file = open(target_file, 'wb')
             file.write(stream.read())
             file.close()
+
 
 def retrieve_form_file_stream(request, project, form, file_name):
     bucket_id = project + form
@@ -189,10 +191,10 @@ def import_external_data(request, user, project, form, odk_dir, form_directory, 
         pass  # We need to implement the BriefCase Import
     if import_type > 2:
         # We call connected plugins to see if there is other ways to import
-        for plugin in p.PluginImplementations(p.IImportExternalData):
-            plugin.import_external_data(request, user, project, form, odk_dir, form_directory, schema, assistant,
-                                        temp_dir, project_code, geopoint_variable, project_of_assistant, import_type,
-                                        form_post_data, ignore_xform)
+        for a_plugin in plugin.PluginImplementations(plugin.IImportExternalData):
+            a_plugin.import_external_data(request, user, project, form, odk_dir, form_directory, schema, assistant,
+                                          temp_dir, project_code, geopoint_variable, project_of_assistant,
+                                          import_type, form_post_data, ignore_xform)
 
     return True, ""
 
@@ -742,187 +744,8 @@ class ChangeDir:
         os.chdir(self.savedPath)
 
 
-def build_odata_service(request, cnf_file, schema):
-    instance_id = str(uuid.uuid4())
-    instance_id = instance_id[-12:]
-    temp_dir = os.path.join(get_odk_path(request), *["tmp", instance_id])
-    os.makedirs(temp_dir)
-    yml_file = os.path.join(get_odk_path(request), *["tmp", instance_id, schema + ".yml"])
-    file = open(yml_file, "w")
-    file.write("connector:\n")
-    file.write("  mysql:\n")
-    file.write("    user: " + request.registry.settings['mysql.user'] + "\n")
-    file.write("    password: " + request.registry.settings['mysql.password'] + "\n")
-    file.write("    host: " + request.registry.settings['mysql.host'] + "\n")
-    file.write("    port: " + request.registry.settings['mysql.port'] + "\n")
-    file.write("    buffered: True\n")
-    file.write("generator:\n")
-    file.write("  group_id: org.formshare." + schema + "\n")
-    file.write("  artifact_id: " + schema + "\n")
-    file.write("  project_description: FormShare OData Service (" + schema + ")\n")
-    file.write("  project_name: " + schema + "\n")
-    file.write("  root_package_name: org.formshare." + schema + "\n")
-    file.write("  security:\n")
-    file.write("    userdb:\n")
-    file.write("      name: " + schema + "\n")
-    file.write("      jdbc_url: jdbc:mysql://" + request.registry.settings['mysql.host'] + ":" +
-               request.registry.settings['mysql.port'] + "/" + schema + "\n")
-    file.write("      user: " + request.registry.settings['mysql.user'] + "\n")
-    file.write("      password: " + request.registry.settings['mysql.password'] + "\n")
-    file.write("      user_table_name: odata_users\n")
-    # file.write("      role_table_name: odata_roles\n") Jetty
-    file.write("      user_role_table_name: odata_user_roles\n")
-    file.close()
-    args = [request.registry.settings['odata.generator'], "-c", yml_file, schema, temp_dir]
-
-    try:
-        p = Popen(args, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = p.communicate()
-        if p.returncode == 0:
-            with ChangeDir(temp_dir):
-                args = ["mvn", "clean", "package"]
-                p = Popen(args, stdout=PIPE, stderr=PIPE)
-                stdout, stderr = p.communicate()
-                if p.returncode != 0:
-                    log.error("Error creating package with maven")
-                    log.error("In directory: " + os.getcwd())
-                    log.error("Error:" + stdout.decode() + " - " + stderr.decode() + " - " + " ".join(args))
-                else:
-                    source_war_file = os.path.join(get_odk_path(request),
-                                                   *["tmp", instance_id, "target", schema + ".war"])
-                    target_war_file = os.path.join(request.registry.settings['tomcat.wardirectory'], schema + ".war")
-                    try:
-                        shutil.copyfile(source_war_file, target_war_file)
-                    except Exception as e:
-                        log.error("Unable to copy WAR file to final directory:" + str(e))
-
-                    # Load the mapping table
-                    mapping_file = os.path.join(get_odk_path(request), *["tmp", instance_id, "sql", "schema_map.sql"])
-                    args = ["mysql", "--defaults-file=" + cnf_file, schema]
-                    with open(mapping_file) as input_file:
-                        proc = Popen(
-                            args, stdin=input_file, stderr=PIPE, stdout=PIPE)
-                        output, error = proc.communicate()
-                        if proc.returncode != 0:
-                            error_message = "Error creating database \n"
-                            error_message = error_message + "File: " + mapping_file + "\n"
-                            error_message = error_message + "Error: \n"
-                            error_message = error_message + error.decode() + "\n"
-                            error_message = error_message + "Output: \n"
-                            error_message = error_message + output.encode() + "\n"
-                            log.error(error_message)
-
-                    # Load basic permissions
-                    mapping_file = os.path.join(get_odk_path(request),
-                                                *["tmp", instance_id, "sql", "permission_data.sql"])
-                    args = ["mysql", "--defaults-file=" + cnf_file, schema]
-                    with open(mapping_file) as input_file:
-                        proc = Popen(
-                            args, stdin=input_file, stderr=PIPE, stdout=PIPE)
-                        output, error = proc.communicate()
-                        if proc.returncode != 0:
-                            error_message = "Error creating database \n"
-                            error_message = error_message + "File: " + mapping_file + "\n"
-                            error_message = error_message + "Error: \n"
-                            error_message = error_message + error.decode() + "\n"
-                            error_message = error_message + "Output: \n"
-                            error_message = error_message + output.encode() + "\n"
-                            log.error(error_message)
-        else:
-            log.error("ODATA Generator Error: " + stdout + " - " + stderr + " - " + " ".join(args))
-    
-        # Do not stop the process if OData does not build
-        return 0, ""
-    except Exception as e:
-        log.error("Error generating OData Servlet: " + str(e))
-        return 0, ""
-
-
-def build_database(cnf_file, create_file, insert_file, audit_file, schema):
-    error = False
-    error_message = ""
-
-    args = ["mysql", "--defaults-file=" + cnf_file, '--execute=DROP SCHEMA IF EXISTS ' + schema]
-    try:
-        check_call(args)
-    except CalledProcessError as e:
-        error_message = "Error dropping schema \n"
-        error_message = error_message + "Error: \n"
-        if e.stderr is not None:
-            error_message = error_message + e.stderr.encode() + "\n"
-        log.error(error_message)
-        error = True
-
-    if not error:
-        args = ["mysql", "--defaults-file=" + cnf_file,
-                '--execute=CREATE SCHEMA ' + schema + ' DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci']
-        try:
-            check_call(args)
-        except CalledProcessError as e:
-            error_message = "Error dropping schema \n"
-            error_message = error_message + "Error: \n"
-            if e.stderr is not None:
-                error_message = error_message + e.stderr.encode() + "\n"
-            log.error(error_message)
-            error = True
-
-    if not error:
-        args = ["mysql", "--defaults-file=" + cnf_file, schema]
-
-        with open(create_file) as input_file:
-            proc = Popen(
-                args, stdin=input_file, stderr=PIPE, stdout=PIPE)
-            output, error = proc.communicate()
-            if proc.returncode != 0:
-                error_message = "Error creating database \n"
-                error_message = error_message + "File: " + create_file + "\n"
-                error_message = error_message + "Error: \n"
-                if error is not None:
-                    error_message = error_message + error.decode() + "\n"
-                error_message = error_message + "Output: \n"
-                if output is not None:
-                    error_message = error_message + output.decode() + "\n"
-                log.error(error_message)
-                error = True
-
-    if not error:
-        with open(insert_file) as input_file:
-            proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)
-            output, error = proc.communicate()
-            if proc.returncode != 0:
-                error_message = "Error loading lookup tables \n"
-                error_message = error_message + "File: " + insert_file + "\n"
-                error_message = error_message + "Error: \n"
-                if error is not None:
-                    error_message = error_message + error.decode() + "\n"
-                error_message = error_message + "Output: \n"
-                if output is not None:
-                    error_message = error_message + output.decode() + "\n"
-                log.error(error_message)
-                error = True
-
-    if not error:
-        with open(audit_file) as input_file:
-            proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)
-            output, error = proc.communicate()
-            if proc.returncode != 0:
-                error_message = "Error loading lookup tables \n"
-                error_message = error_message + "File: " + audit_file + "\n"
-                error_message = error_message + "Error: \n"
-                if error is not None:
-                    error_message = error_message + error.decode() + "\n"
-                error_message = error_message + "Output: \n"
-                if output is not None:
-                    error_message = error_message + output.decode() + "\n"
-                log.error(error_message)
-                error = True
-
-    return error, error_message
-
-
 def create_repository(request, project, form, odk_dir, xform_directory, primary_key, separation_file=None,
                       default_language=None, other_languages=None, yes_no_strings=None):
-    print("*************************** create_repository ***********************")
     jxform_to_mysql = os.path.join(request.registry.settings['odktools.path'], *["JXFormToMysql", "jxformtomysql"])
 
     survey_file = get_form_survey_file(request, project, form)
@@ -993,58 +816,38 @@ def create_repository(request, project, form, odk_dir, xform_directory, primary_
             audit.write("PRIMARY KEY (audit_id) )\n")
             audit.write(" ENGINE = InnoDB CHARSET=utf8;\n")
             audit.write("\n")
-            audit.write("CREATE TABLE odata_users (user_name VARCHAR(120) NOT NULL PRIMARY KEY,"
-                        "password VARCHAR(32) NOT NULL) ENGINE = InnoDB CHARSET=utf8;\n")
-            audit.write("\n")
-            audit.write("CREATE TABLE odata_user_roles (user_name VARCHAR(120) NOT NULL,role VARCHAR(30) NOT NULL,"
-                        "PRIMARY KEY (user_name, role)) ENGINE = InnoDB CHARSET=utf8;\n")
-            audit.write("\n")
-            audit.write("CREATE TABLE table_mapping (table_name VARCHAR(255) NOT NULL,"
-                        "entity_name VARCHAR(255) NOT NULL,PRIMARY KEY (table_name)) ENGINE = InnoDB CHARSET=utf8;\n")
-            audit.write("\n")
-            audit.write("CREATE TABLE table_permissions (table_name VARCHAR(255) NOT NULL,user_name VARCHAR(120),"
-                        "permissions VARCHAR(4),PRIMARY KEY (table_name, user_name)) ENGINE = InnoDB CHARSET=utf8;\n")
-
-            audit.write("INSERT INTO odata_users VALUES ('odata', MD5('123'));\n")
-            audit.write("INSERT INTO odata_user_roles VALUES ('odata', 'ODATA_USER');\n")
-
             audit.close()
 
-            error, db_message = build_database(request.registry.settings['mysql.cnf'], create_file, insert_file,
-                                               audit_file, schema)
-            if not error:
-                odata_error_code, odata_error_message = build_odata_service(request,
-                                                                            request.registry.settings['mysql.cnf'],
-                                                                            schema)
-                if odata_error_code == 0:
-                    form_data = {'form_schema': schema, 'form_pkey': primary_key}
-                    update_form(request, project, form, form_data)
+            formshare_create_repository = True
+            cnf_file = request.registry.settings['mysql.cnf']
+            for a_plugin in plugin.PluginImplementations(plugin.IRepository):
+                if formshare_create_repository:
+                    formshare_create_repository = a_plugin.before_creating_repository(request, project, form, cnf_file,
+                                                                                      create_file, insert_file,
+                                                                                      audit_file, schema)
+            if formshare_create_repository:
+                # Calls the Celery task
+                task = create_database_repository(request, project, form, odk_dir, xform_directory, schema,
+                                                  primary_key, cnf_file, create_file, insert_file, audit_file)
+                form_data = {'form_reptask': task}
+                update_form(request, project, form, form_data)
+                for a_plugin in plugin.PluginImplementations(plugin.IRepository):
+                    a_plugin.on_creating_repository(request, project, form, task)
 
-                    # Remove any test submissions if any. In try because nothing happens if they
-                    # don't get removed... just junk files
-                    submissions_path = os.path.join(odk_dir, *['forms', xform_directory, "submissions", '*.*'])
-                    files = glob.glob(submissions_path)
-                    if files:
-                        for file in files:
-                            try:
-                                os.remove(file)
-                            except Exception as e:
-                                log.error(str(e))
-                    submissions_path = os.path.join(odk_dir, *['forms', xform_directory, "submissions", '*/'])
-                    files = glob.glob(submissions_path)
-                    if files:
-                        for file in files:
-                            if file[-5:] != "logs/" and file[-5:] != "maps/":
-                                try:
-                                    shutil.rmtree(file)
-                                except Exception as e:
-                                    log.error(str(e))
+            custom_repository_process = False
+            custom_task = None
+            for a_plugin in plugin.PluginImplementations(plugin.IRepository):
+                custom_task = a_plugin.custom_repository_process(request, project, form, cnf_file, create_file,
+                                                                 insert_file, audit_file, schema, primary_key)
+                custom_repository_process = True
+                break  # Only one plugin implementing custom_repository_process will be called
+            if custom_repository_process:
+                form_data = {'form_reptask': custom_task}
+                update_form(request, project, form, form_data)
+                for a_plugin in plugin.PluginImplementations(plugin.IRepository):
+                    a_plugin.on_creating_repository(request, project, form, custom_task)
 
-                    return 0, ""
-                else:
-                    return 1, odata_error_message
-            else:
-                return 1, db_message
+            return 0, ""
         else:
             if p.returncode == 1 or p.returncode < 0:
                 return p.returncode, stdout.decode() + " - " + stderr.decode() + " - " + " ".join(args)

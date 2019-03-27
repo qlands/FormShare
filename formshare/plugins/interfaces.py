@@ -15,7 +15,8 @@ __all__ = [
     'IAuthorize',
     'ITemplateHelpers',
     'IProduct',
-    'IImportExternalData'
+    'IImportExternalData',
+    'IRepository'
 ]
 
 
@@ -284,9 +285,19 @@ class IProduct(Interface):
             Called by the host application so plugins can add new products with Celery as task manager
 
             :param config: ``pyramid.config`` object
-            :return Returns a dict array [{'name':'productName','description':'A description about the product','metadata':{'key':value},outputs:[{'filename':'myproduct.pdf','mimetype':'application/pdf'}] }]
+            :return Returns a dict array [{'code':'productCode','metadata':{'key':value}}]
         """
         raise NotImplementedError("register_products must be implemented in subclasses")
+
+    def get_product_description(self, request, product_code):
+        """
+        Called by FormShare to retrieve the description of a product. Connected plugins can use this to produce the
+        description of the product in different languages
+        :param request: Pyramid request object
+        :param product_code: Product code
+        :return: String. The description of the product
+        """
+        raise NotImplementedError("get_product_description must be implemented in subclasses")
 
 
 class IImportExternalData(Interface):
@@ -317,6 +328,59 @@ class IImportExternalData(Interface):
         :return: None
         """
         raise NotImplementedError("import_external_data must be implemented in subclasses")
+
+
+class IRepository(Interface):
+    """
+        Allows to hook into FormShare's repository process.
+        Please note that there is no "After creating repository", this is because the creation of the repository
+        is runs in a background as a Celery task.
+    """
+    def before_creating_repository(self, request, project, form, cnf_file, create_file, insert_file, audit_file,
+                                   schema):
+        """
+        Called before creating a repository so plugins can perform extra actions or overwrite the process
+        :param request: Pyramid request object
+        :param project: Project ID
+        :param form: Form ID
+        :param cnf_file: MySQL CNF file
+        :param create_file: Repository create SQL file
+        :param insert_file: Repository insert SQL file
+        :param audit_file: Repository audit SQL file
+        :param schema: Schema to create
+        :return: True if FormShare should continue creating the repository, otherwise return False
+        """
+        raise NotImplementedError("before_creating_repository must be implemented in subclasses")
+
+    def on_creating_repository(self, request, project, form, task_id):
+        """
+        Called after FormShare tells Celery to create the repository
+        :param request: Pyramid request object
+        :param project: Project ID
+        :param form: Form ID
+        :param task_id: Celery task ID creating the repository
+        :return: None
+        """
+        raise NotImplementedError("on_creating_repository must be implemented in subclasses")
+
+    def custom_repository_process(self, request, project, form, cnf_file, create_file, insert_file, audit_file, schema,
+                                  primary_key):
+        """
+        Called after FormShare tells Celery to create the repository if before_creating_repository == True. You can
+        use this to create your own version of the repository. You MUST use Celery to not block the request. The
+        returned Celery task ID will be passed to on_creating_repository
+        :param request: Pyramid request object
+        :param project: Project ID
+        :param form: Form ID
+        :param cnf_file: MySQL CNF file
+        :param create_file: Repository create SQL file
+        :param insert_file: Repository insert SQL file
+        :param audit_file: Repository audit SQL file
+        :param schema: Schema to create
+        :param primary_key: Primary key that should be used
+        :return: Celery task ID
+        """
+        raise NotImplementedError("custom_repository_process must be implemented in subclasses")
 
 
 class IPluginObserver(Interface):

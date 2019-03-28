@@ -139,7 +139,7 @@ class Odkform(Base):
     form_pubby = Column(ForeignKey('fsuser.user_id', ondelete='CASCADE'), nullable=False)
     form_directory = Column(Unicode(120))
     form_target = Column(INTEGER)
-    form_schema = Column(Unicode(13))
+    form_schema = Column(Unicode(64))
     form_accsub = Column(INTEGER)
     form_testing = Column(INTEGER, server_default=text("'0'"))
     form_incversion = Column(INTEGER, server_default=text("'0'"))

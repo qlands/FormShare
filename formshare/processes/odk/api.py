@@ -97,7 +97,7 @@ def get_missing_support_files(request, project, form, required_files, form_files
         stream = retrieve_form_file_stream(request, project, form, form_file['file_name'])
         if stream is not None:
             try:
-                zip_file = zipfile.ZipFile(io.BytesIO(stream))
+                zip_file = zipfile.ZipFile(io.BytesIO(stream.read()))
                 if form_file not in zip_file.namelist():
                     current_form_files.append(form_file['file_name'])
             except Exception as e:
@@ -290,7 +290,7 @@ def check_jxform_file(request, json_file, external_file=None):
 
 def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
     uid = str(uuid.uuid4())
-    form_directory = uid[-12:]
+    form_directory = uid
     paths = ['tmp', uid]
     os.makedirs(os.path.join(odk_dir, *paths))
 
@@ -795,8 +795,7 @@ def create_repository(request, project, form, odk_dir, xform_directory, primary_
         p = Popen(args, stdout=PIPE, stderr=PIPE)
         stdout, stderr = p.communicate()
         if p.returncode == 0:
-            schema = str(uuid.uuid4())
-            schema = "D" + schema[-12:]
+            schema = "P" + project[-12:] + "_D" + str(uuid.uuid4())[-12:]
             create_file = os.path.join(odk_dir, *["forms", xform_directory, "repository", "create.sql"])
             insert_file = os.path.join(odk_dir, *["forms", xform_directory, "repository", "insert.sql"])
             audit_file = os.path.join(odk_dir, *["forms", xform_directory, "repository", "audit.sql"])
@@ -1194,7 +1193,6 @@ def generate_diff(request, project, form, json_file_a, json_file_b):
     file_b = os.path.join(odk_dir, *['forms', form_directory, 'submissions', json_file_b + '.json'])
 
     diff_id = str(uuid.uuid4())
-    diff_id = "DIFF" + diff_id[-12:]
     temp_dir = os.path.join(odk_dir, *["tmp", diff_id])
     os.makedirs(temp_dir)
     diff_file = os.path.join(odk_dir, *["tmp", diff_id, diff_id + ".diff"])

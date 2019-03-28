@@ -20,7 +20,7 @@ _ = gettext.gettext
 
 class BuildDataBaseError(Exception):
     """
-        Exception raised when ElasticFeeds checks whether extra is a dict.
+        Exception raised when there is an error while creating the repository.
     """
 
     def __str__(self):
@@ -30,7 +30,9 @@ class BuildDataBaseError(Exception):
 def build_database(cnf_file, create_file, insert_file, audit_file, schema, sse_project_id, sse_form_id, task_id):
     error = False
     error_message = ""
-    args = ["mysql", "--defaults-file=" + cnf_file, '--execute=DROP SCHEMA IF EXISTS ' + schema]
+
+    args = ["mysql", "--defaults-file=" + cnf_file,
+            '--execute=CREATE SCHEMA ' + schema + ' DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci']
     try:
         check_call(args)
     except CalledProcessError as e:
@@ -40,19 +42,6 @@ def build_database(cnf_file, create_file, insert_file, audit_file, schema, sse_p
             error_message = error_message + e.stderr.encode() + "\n"
         log.error(error_message)
         error = True
-
-    if not error:
-        args = ["mysql", "--defaults-file=" + cnf_file,
-                '--execute=CREATE SCHEMA ' + schema + ' DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci']
-        try:
-            check_call(args)
-        except CalledProcessError as e:
-            error_message = "Error dropping schema \n"
-            error_message = error_message + "Error: \n"
-            if e.stderr is not None:
-                error_message = error_message + e.stderr.encode() + "\n"
-            log.error(error_message)
-            error = True
 
     if not error:
         send_task_status_to_form(sse_project_id, sse_form_id, task_id, _("Creating new tables..."))

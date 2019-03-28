@@ -142,7 +142,7 @@ def load_environment(settings, config, apppath, policy_array):
     for plugin in p.PluginImplementations(p.IProduct):
         products = plugin.register_products(config)
         for product in products:
-            prd.add_product(product)
+            prd.add_product(product, True)
 
     # Call any connected plugins to add their modifications into the schema. Not all tables has extras so only
     # certain tables are allowed

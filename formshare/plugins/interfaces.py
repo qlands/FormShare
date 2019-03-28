@@ -295,7 +295,7 @@ class IProduct(Interface):
         description of the product in different languages
         :param request: Pyramid request object
         :param product_code: Product code
-        :return: String. The description of the product
+        :return: String/None. The description of the product otherwise None MUST be returned
         """
         raise NotImplementedError("get_product_description must be implemented in subclasses")
 

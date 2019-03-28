@@ -1,17 +1,7 @@
-from ...models import Task, FinishedTask, Product
+from ...models import FinishedTask, Product
 import datetime
 
-__all__ = [
-    'add_task', 'cancel_task', 'get_task_status', 'task_exists']
-
-
-def add_task(request, task_id):
-    new_task = Task(task_id=task_id)
-    try:
-        request.dbsession.add(new_task)
-        return True, ""
-    except Exception as e:
-        return False, str(e)
+__all__ = ['cancel_task', 'get_task_status', 'task_exists']
 
 
 def cancel_task(request, user, task_id):

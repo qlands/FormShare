@@ -1,4 +1,4 @@
-from formshare.products.formshare_products import register_product_instance
+from formshare.products import register_product_instance
 from .celery_task import import_json_files
 
 
@@ -14,4 +14,4 @@ def formshare_one_import_json(request, user, project, form, odk_dir, form_direct
                                           path_to_files, project_code, geopoint_variable,
                                           project_of_assistant, settings, ignore_xform_check),
                                          {'sse_project_id': project, 'sse_form_id': form}, countdown=2)
-    register_product_instance(request, project, form, 'fs1import', '', '', 'fs1import', task.id, True)
+    register_product_instance(request, user, project, form, 'fs1import', task.id, None, None, True)

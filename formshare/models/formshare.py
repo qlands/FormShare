@@ -117,11 +117,6 @@ class Collgroup(Base):
     project = relationship('Project')
 
 
-class Task(Base):
-    __tablename__ = 'task'
-    task_id = Column(Unicode(64), primary_key=True, nullable=False)
-
-
 class FinishedTask(Base):
     __tablename__ = 'finishedtask'
     task_id = Column(Unicode(64), primary_key=True, nullable=False)
@@ -196,19 +191,21 @@ class Product(Base):
     )
 
     celery_taskid = Column(Unicode(64), primary_key=True, nullable=False)
-    process_name = Column(Unicode(120), nullable=False)
+    output_file = Column(Unicode(120))
     project_id = Column(Unicode(64), nullable=False)
     form_id = Column(Unicode(120), nullable=False)
     product_id = Column(Unicode(120), nullable=False)
     output_id = Column(Unicode(64), nullable=False)
-    output_mimetype = Column(Unicode(120), nullable=False)
+    output_mimetype = Column(Unicode(120))
     process_only = Column(INTEGER, server_default=text("'0'"))
     datetime_added = Column(DateTime)
     product_published = Column(INTEGER, server_default=text("'0'"))
-    published_by = Column(ForeignKey('fsuser.user_id', ondelete='CASCADE'))
+    published_by = Column(ForeignKey('fsuser.user_id', ondelete='CASCADE'), index=True)
+    created_by = Column(ForeignKey('fsuser.user_id', ondelete='CASCADE'), nullable=False, index=True)
 
     odkform = relationship('Odkform')
-    user = relationship('User')
+    fsuser = relationship('User', primaryjoin='Product.created_by == User.user_id')
+    fsuser1 = relationship('User', primaryjoin='Product.published_by == User.user_id')
 
 
 class Userproject(Base):

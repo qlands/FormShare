@@ -1,12 +1,14 @@
-from ..processes.db import add_product_instance, cancel_task, task_exists, get_form_used_products
+from ..processes.db import add_product_instance, cancel_task, task_exists, get_form_used_products, get_form_outputs, \
+    get_user_name
 from formshare.config.celery_app import celeryApp
 import formshare.plugins as p
 import logging
 import os
+import pprint
 
 __all__ = [
     'add_product', 'register_product_instance', 'product_found', 'get_products', 'stop_task', 'get_product',
-    'create_product', 'add_metadata_to_product', 'get_product_directory']
+    'create_product', 'add_metadata_to_product', 'get_product_directory', 'get_form_products']
 
 log = logging.getLogger(__name__)
 
@@ -70,6 +72,8 @@ def get_form_products(request, project, form):
     for a_product in used_products:
         product_info = get_product(a_product['code'])
         if product_info is not None:
+            a_product['icon'] = product_info['icon']
+            a_product['hidden'] = product_info['hidden']
             if not product_info['plugin']:
                 a_product['desc'] = get_product_description(request, a_product['code'])
                 result.append(a_product)
@@ -84,6 +88,13 @@ def get_form_products(request, project, form):
                     if plugin_description is not None:
                         a_product['desc'] = plugin_description
                     result.append(a_product)
+
+    for a_product in result:
+        a_product['outputs'] = get_form_outputs(request, project, form, a_product['code'])
+        for output in a_product['outputs']:
+            output['published_by_name'] = get_user_name(request, output['published_by'])
+            output['created_by_name'] = get_user_name(request, output['created_by'])
+    return result
 
 
 def get_product_directory(request, project, form, product):
@@ -101,8 +112,8 @@ def get_product_directory(request, project, form, product):
         return None
 
 
-def create_product(product_code):
-    return {"code": product_code, "metadata": {}}
+def create_product(product_code, hidden=False, icon='fas fa-box-open'):
+    return {"code": product_code, "hidden": hidden, "icon": icon, "metadata": {}}
 
 
 def add_metadata_to_product(product, key, value):

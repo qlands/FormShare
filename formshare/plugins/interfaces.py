@@ -285,7 +285,8 @@ class IProduct(Interface):
             Called by the host application so plugins can add new products with Celery as task manager
 
             :param config: ``pyramid.config`` object
-            :return Returns a dict array [{'code':'productCode','metadata':{'key':value}}]
+            :return Must returns a dict array [{'code':'productCode', 'hidden': False, 'icon':'fas fa-box-open',
+            'metadata':{'key':value}}]
         """
         raise NotImplementedError("register_products must be implemented in subclasses")
 

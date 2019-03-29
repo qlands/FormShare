@@ -105,10 +105,11 @@
                                 {
                                     if ((task_status === "success") || (task_status === "failure"))
                                     {
-                                        location.reload(true);
+                                        location.reload();
                                     }
                                     else {
-                                        document.getElementById('repository_message').innerText = task_status;
+                                        $(".repository_message").text(task_status);
+                                        {#document.getElementById('repository_message').innerText = task_status;#}
                                     }
                                 }
                             }
@@ -121,7 +122,7 @@
                 });
                 sse.start();
 
-                let $element = $('#repository_message');
+                let $element = $('.repository_message');
                 function fadeInOut () {
                     $element.fadeIn(1000, function () {
                         $element.fadeOut(1500, function () {
@@ -132,6 +133,47 @@
                     });
                 }
                 fadeInOut();
+
+            {% endif %}
+            {% if processing > 0 %}
+                let sse2 = $.SSE('{{ request.route_url('form_sse', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}', {
+                    onMessage: function(e){
+                        let message = JSON.parse(e.data)['message'];
+                        if (message !== null)
+                        {
+                            message = JSON.parse(message);
+                            if (typeof message === 'object')
+                            {
+                                let task_id = message['task'];
+                                let task_status = message['status'];
+                                if ((task_status === "success") || (task_status === "failure")) {
+
+                                }
+                                else {
+                                    $("#sse_" + task_id).text(task_status);
+                                }
+
+                            }
+                            else
+                            {
+                                console.log(message)
+                            }
+                        }
+                    }
+                });
+                sse2.start();
+
+                let $element2 = $('.sse-message');
+                function fadeInOut2 () {
+                    $element2.fadeIn(1000, function () {
+                        $element2.fadeOut(1500, function () {
+                            $element2.fadeIn(1500, function () {
+                                setTimeout(fadeInOut2, 500);
+                            });
+                        });
+                    });
+                }
+                fadeInOut2();
 
             {% endif %}
 

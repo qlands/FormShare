@@ -201,6 +201,9 @@ class Product(Base):
     datetime_added = Column(DateTime)
     product_published = Column(INTEGER, server_default=text("'0'"))
     published_by = Column(ForeignKey('fsuser.user_id', ondelete='CASCADE'), index=True)
+    date_published = Column(DateTime)
+    last_download = Column(DateTime)
+    downloads = Column(INTEGER, server_default=text("'0'"))
     created_by = Column(ForeignKey('fsuser.user_id', ondelete='CASCADE'), nullable=False, index=True)
 
     odkform = relationship('Odkform')

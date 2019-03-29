@@ -83,10 +83,32 @@ def readble_date_with_time(date):
     """
     Returns a readable date"
     :param date: Datetime
-    :return: A readable date
+    :return: A readable date with time
     """
     ar = arrow.get(date)
     return ar.format('dddd Do of MMMM, YYYY. HH:mm:ss')
+
+
+@core_helper
+def simple_date(date):
+    """
+    Returns a readable date"
+    :param date: Datetime
+    :return: A readable date
+    """
+    ar = arrow.get(date)
+    return ar.format('DD/MM/YYYY')
+
+
+@core_helper
+def simple_date_usa(date):
+    """
+    Returns a readable date"
+    :param date: Datetime
+    :return: A readable date
+    """
+    ar = arrow.get(date)
+    return ar.format('MM/DD/YYYY')
 
 
 @core_helper

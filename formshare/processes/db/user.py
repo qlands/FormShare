@@ -4,7 +4,7 @@ import logging
 import validators
 
 __all__ = [
-    'register_user', 'user_exists', 'get_user_details', 'update_profile'
+    'register_user', 'user_exists', 'get_user_details', 'update_profile', 'get_user_name'
 ]
 
 log = logging.getLogger(__name__)
@@ -104,6 +104,14 @@ def get_user_details(request, user):
         result["user_stats"] = get_user_stats(request, user)
         return result
     return {}
+
+
+def get_user_name(request, user):
+    res = request.dbsession.query(User).filter(User.user_id == user).filter(User.user_active == 1).first()
+    if res is not None:
+        return res.user_name
+    else:
+        return None
 
 
 def update_profile(request, user, profile_data):

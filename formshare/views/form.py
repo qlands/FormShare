@@ -3,7 +3,8 @@ from formshare.processes.db import get_project_id_from_name, get_form_details, g
     add_file_to_form, get_form_files, remove_file_from_form, get_all_assistants, add_assistant_to_form, \
     get_form_assistants, update_assistant_privileges, remove_assistant_from_form, get_project_groups, \
     add_group_to_form, get_form_groups, update_group_privileges, remove_group_from_form, get_form_xls_file, \
-    set_form_status, get_assigned_assistants, get_form_directory, reset_form_repository
+    set_form_status, get_assigned_assistants, get_form_directory, reset_form_repository, get_form_processing_products, \
+    get_task_status
 from formshare.processes.storage import store_file, delete_stream, delete_bucket
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 import os
@@ -16,8 +17,8 @@ from formshare.processes.submission.api import get_submission_media_files, json_
     generate_xlsx_file
 from formshare.processes.odk.api import get_odk_path, upload_odk_form, update_form_title, retrieve_form_file, \
     update_odk_form, get_missing_support_files, import_external_data
-from formshare.processes.db import get_task_status
 from formshare.products import stop_task
+from formshare.products import get_form_products
 import uuid
 import shutil
 
@@ -69,7 +70,9 @@ class FormDetails(PrivateView):
                     'groups': groups, 'formgroups': form_groups,
                     'withgps': get_number_of_datasets_with_gps(self.request.registry.settings, user_id, project_code,
                                                                form_id), 'missingFiles': ", ".join(missing_files),
-                    'taskdata': task_data}
+                    'taskdata': task_data, 'products': get_form_products(self.request, project_id, form_id),
+                    'processing': get_form_processing_products(self.request, project_id, form_id,
+                                                               form_data['form_reptask'])}
         else:
             raise HTTPNotFound
 

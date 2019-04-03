@@ -224,41 +224,48 @@ def load_routes(config):
             '/user/{userid}/project/{projcode}/form/{formid}/group/{groupid}/remove',
             RemoveGroupForm, None))
 
-    # Form actions
+    # Form Downloads
+
+    routes.append(
+        add_route(
+            'form_download_private_product',
+            '/user/{userid}/project/{projcode}/form/{formid}/private_download/{productid}/output/{outputid}',
+            DownloadCSVData, None))
+
     routes.append(
         add_route(
             'form_download_csv',
-            '/user/{userid}/project/{projcode}/form/{formid}/download/csv',
+            '/user/{userid}/project/{projcode}/form/{formid}/generate/csv',
             DownloadCSVData, None))
 
     routes.append(
         add_route(
             'form_download_xlsx_data',
-            '/user/{userid}/project/{projcode}/form/{formid}/download/xlsx',
+            '/user/{userid}/project/{projcode}/form/{formid}/generate/xlsx',
             DownloadXLSData, None))
 
     routes.append(
         add_route(
             'form_download_xlsx',
-            '/user/{userid}/project/{projcode}/form/{formid}/download/odk',
+            '/user/{userid}/project/{projcode}/form/{formid}/get/odk',
             DownloadXLSX, None))
 
     routes.append(
         add_route(
             'form_download_media',
-            '/user/{userid}/project/{projcode}/form/{formid}/download/media',
+            '/user/{userid}/project/{projcode}/form/{formid}/generate/media',
             DownloadSubmissionFiles, None))
 
     routes.append(
         add_route(
             'form_download_gpspoints',
-            '/user/{userid}/project/{projcode}/form/{formid}/download/gpspoints',
+            '/user/{userid}/project/{projcode}/form/{formid}/get/gpspoints',
             DownloadGPSPoints, 'json'))
 
     routes.append(
         add_route(
             'form_download_kml',
-            '/user/{userid}/project/{projcode}/form/{formid}/download/kml',
+            '/user/{userid}/project/{projcode}/form/{formid}/generate/kml',
             DownloadKML, None))
 
     # Repository

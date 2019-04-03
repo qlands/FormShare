@@ -10,9 +10,12 @@ from sqlalchemy import create_engine
 from hashlib import md5
 from formshare.processes.elasticsearch.repository_index import create_dataset_index, add_dataset
 from formshare.processes.elasticsearch.record_index import create_record_index, add_record
-import time
+from formshare.processes.sse.messaging import send_task_status_to_form
+import gettext
 
-
+gettext.bindtextdomain('formshare', 'formshare:locate')
+gettext.textdomain('formshare')
+_ = gettext.gettext
 log = logging.getLogger(__name__)
 
 
@@ -150,15 +153,40 @@ def store_json_file(engine, submission_id, temp_json_file, json_file, odk_dir, x
 
 @celeryApp.task(base=CeleryTask)
 def import_json_files(user, project, form, odk_dir, form_directory, schema, assistant, path_to_files, project_code,
-                      geopoint_variable, project_of_assistant, settings, ignore_xform_check=False, **kwargs):
-    time.sleep(5)
+                      geopoint_variable, project_of_assistant, settings, ignore_xform_check=False):
+    task_id = import_json_files.request.id
     engine = create_engine(settings['sqlalchemy.url'])
     list_of_files = path_to_files + '/**/*.json'
-    for file_to_import in glob.iglob(list_of_files, recursive=True):
+    files_to_import = glob.iglob(list_of_files, recursive=True)
+    index = 0
+    for file_to_import in files_to_import:
+        index = index + 1
+    total_files = index
+    files_to_import = glob.iglob(list_of_files, recursive=True)
+    index = 1
+    send_25 = True
+    send_50 = True
+    send_75 = True
+    for file_to_import in files_to_import:
+        percentage = (index * 100) / total_files
+        # We report chucks to not overload the messaging system
+        if 25 <= percentage <= 50:
+            if send_25:
+                send_task_status_to_form(settings, task_id, _("25% processed"))
+                send_25 = False
+        if 50 <= percentage <= 75:
+            if send_50:
+                send_task_status_to_form(settings, task_id, _("50% processed"))
+                send_50 = False
+        if 75 <= percentage <= 100:
+            if send_75:
+                send_task_status_to_form(settings, task_id, _("75% processed"))
+                send_75 = False
         file_name = os.path.basename(file_to_import)
         submission_id = os.path.splitext(os.path.basename(file_to_import))[0]
         json_file = os.path.join(odk_dir, *['forms', form_directory, "submissions", file_name])
         store_json_file(engine, submission_id, file_to_import, json_file, odk_dir, form_directory, schema,
                         user, project, form, assistant, project_code, geopoint_variable, project_of_assistant, settings,
                         ignore_xform_check)
+        index = index + 1
     engine.dispose()

@@ -1165,6 +1165,7 @@ class ImportData(PrivateView):
                 if imported:
                     next_page = self.request.route_url('form_details', userid=user_id,
                                                        projcode=project_code, formid=form_id)
+                    self.returnRawViewResult = True
                     return HTTPFound(location=next_page)
 
             return {'projectDetails': project_details, 'formid': form_id, 'formDetails': form_data, 'userid': user_id,

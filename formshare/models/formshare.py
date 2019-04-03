@@ -1,7 +1,8 @@
 # coding: utf-8
-from sqlalchemy import Column, DateTime, ForeignKey, ForeignKeyConstraint, INTEGER, Index, text, Unicode, UnicodeText
+from sqlalchemy import Column, DateTime, ForeignKey, ForeignKeyConstraint, INTEGER, Index, text, Unicode, UnicodeText, TIMESTAMP
 from sqlalchemy.orm import relationship
 from .meta import Base
+
 metadata = Base.metadata
 
 
@@ -209,6 +210,17 @@ class Product(Base):
     odkform = relationship('Odkform')
     fsuser = relationship('User', primaryjoin='Product.created_by == User.user_id')
     fsuser1 = relationship('User', primaryjoin='Product.published_by == User.user_id')
+
+
+class TaskMessages(Base):
+    __tablename__ = 'taskmessages'
+
+    message_id = Column(Unicode(64), primary_key=True, nullable=False)
+    celery_taskid = Column(ForeignKey('product.celery_taskid', ondelete='CASCADE'), nullable=False)
+    message_date = Column(DateTime)
+    message_content = Column(UnicodeText)
+
+    product = relationship('Product')
 
 
 class Userproject(Base):

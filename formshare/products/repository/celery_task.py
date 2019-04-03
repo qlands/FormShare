@@ -9,7 +9,7 @@ import transaction
 from formshare.models import get_engine, get_session_factory, get_tm_session, Odkform, map_to_schema, initialize_schema
 from formshare.processes.elasticsearch.repository_index import delete_dataset_index
 from sqlalchemy.orm import configure_mappers
-from formshare.processes.rabbitmq.messaging import send_task_status_to_form
+from formshare.processes.sse.messaging import send_task_status_to_form
 import gettext
 
 log = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ class BuildDataBaseError(Exception):
         return 'Error building database'
 
 
-def build_database(cnf_file, create_file, insert_file, audit_file, schema, sse_project_id, sse_form_id, task_id):
+def build_database(settings, cnf_file, create_file, insert_file, audit_file, schema, task_id):
     error = False
     error_message = ""
 
@@ -44,7 +44,7 @@ def build_database(cnf_file, create_file, insert_file, audit_file, schema, sse_p
         error = True
 
     if not error:
-        send_task_status_to_form(sse_project_id, sse_form_id, task_id, _("Creating new tables..."))
+        send_task_status_to_form(settings, task_id, _("Creating new tables..."))
         args = ["mysql", "--defaults-file=" + cnf_file, schema]
         with open(create_file) as input_file:
             proc = Popen(
@@ -63,7 +63,7 @@ def build_database(cnf_file, create_file, insert_file, audit_file, schema, sse_p
                 error = True
 
     if not error:
-        send_task_status_to_form(sse_project_id, sse_form_id, task_id, _("Inserting lookup values..."))
+        send_task_status_to_form(settings, task_id, _("Inserting lookup values..."))
         with open(insert_file) as input_file:
             proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)
             output, error = proc.communicate()
@@ -114,11 +114,9 @@ def update_form(db_session, project, form, form_data):
 
 @celeryApp.task(base=CeleryTask)
 def create_mysql_repository(settings, user, project_id, project_code, form, odk_dir, form_directory, schema,
-                            primary_key, cnf_file, create_file, insert_file, audit_file, **kwargs):
-    sse_project_id = kwargs['sse_project_id']
-    sse_form_id = kwargs['sse_form_id']
+                            primary_key, cnf_file, create_file, insert_file, audit_file):
     task_id = create_mysql_repository.request.id
-    build_database(cnf_file, create_file, insert_file, audit_file, schema, sse_project_id, sse_form_id, task_id)
+    build_database(settings, cnf_file, create_file, insert_file, audit_file, schema, task_id)
 
     session_factory = get_session_factory(get_engine(settings))
 

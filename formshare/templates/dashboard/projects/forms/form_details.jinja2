@@ -96,6 +96,7 @@
                         let message = JSON.parse(e.data)['message'];
                         if (message !== null)
                         {
+                            console.log(message)
                             message = JSON.parse(message);
                             if (typeof message === 'object')
                             {
@@ -109,7 +110,7 @@
                                     }
                                     else {
                                         $(".repository_message").text(task_status);
-                                        {#document.getElementById('repository_message').innerText = task_status;#}
+                                        $("#sse_" + task_id).text(task_status);
                                     }
                                 }
                             }
@@ -122,7 +123,7 @@
                 });
                 sse.start();
 
-                let $element = $('.repository_message');
+                let $element = $('.repository_message, .sse-message');
                 function fadeInOut () {
                     $element.fadeIn(1000, function () {
                         $element.fadeOut(1500, function () {
@@ -134,48 +135,59 @@
                 }
                 fadeInOut();
 
-            {% endif %}
-            {% if processing > 0 %}
-                let sse2 = $.SSE('{{ request.route_url('form_sse', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}', {
-                    onMessage: function(e){
-                        let message = JSON.parse(e.data)['message'];
-                        if (message !== null)
-                        {
-                            message = JSON.parse(message);
-                            if (typeof message === 'object')
+
+
+            {% else %}
+                {% if processing > 0 %}
+                    let active_tasks = [{% for product in products %}{% for output in product.outputs %}{% if output.status == -1 %}'{{ output.celery_taskid }}',{% endif %}{% endfor %}{% endfor %}];
+                    let finished_tasks = [];
+                    let sse2 = $.SSE('{{ request.route_url('form_sse', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}', {
+                        onMessage: function(e){
+                            let message = JSON.parse(e.data)['message'];
+                            if (message !== null)
                             {
-                                let task_id = message['task'];
-                                let task_status = message['status'];
-                                if ((task_status === "success") || (task_status === "failure")) {
+                                message = JSON.parse(message);
+                                if (typeof message === 'object')
+                                {
+                                    let task_id = message['task'];
+                                    let task_status = message['status'];
+                                    if ((task_status === "success") || (task_status === "failure")) {
+                                        if (active_tasks.indexOf(task_id) >= 0) {
+                                            finished_tasks.push(task_id);
+                                            if (active_tasks.length === finished_tasks.length)
+                                                sse2.stop();
+                                            $('#feed_element_' + task_id).load('{{ request.url }} #feed_element_' + task_id);
+                                        }
+                                    }
+                                    else {
+                                        $("#sse_" + task_id).text(task_status);
+                                    }
 
                                 }
-                                else {
-                                    $("#sse_" + task_id).text(task_status);
+                                else
+                                {
+                                    console.log(message)
                                 }
-
-                            }
-                            else
-                            {
-                                console.log(message)
                             }
                         }
-                    }
-                });
-                sse2.start();
+                    });
+                    sse2.start();
 
-                let $element2 = $('.sse-message');
-                function fadeInOut2 () {
-                    $element2.fadeIn(1000, function () {
-                        $element2.fadeOut(1500, function () {
-                            $element2.fadeIn(1500, function () {
-                                setTimeout(fadeInOut2, 500);
+                    let $element2 = $('.sse-message');
+                    function fadeInOut2 () {
+                        $element2.fadeIn(1000, function () {
+                            $element2.fadeOut(1500, function () {
+                                $element2.fadeIn(1500, function () {
+                                    setTimeout(fadeInOut2, 500);
+                                });
                             });
                         });
-                    });
-                }
-                fadeInOut2();
+                    }
+                    fadeInOut2();
 
+                {% endif %}
             {% endif %}
+
 
             bsCustomFileInput.init();
 
@@ -291,8 +303,8 @@
 
             $('.cancel_repository').click(function () {
                 swal({
-                        title: "{{ _('Are you sure?') }}",
-                        text: "{{ _('Your form will go back to the testing phase') }}",
+                        title: "{{ _('Stop the generation of the repository') }}",
+                        text: "{{ _('Are you sure that you want to stop this?') }}",
                         type: "warning",
                         showCancelButton: true,
                         confirmButtonColor: "#DD6B55",
@@ -305,6 +317,37 @@
                             var form = document.createElement('form');
                             form.setAttribute('method', 'post');
                             form.setAttribute('action', '{{ request.route_url('stop_repository',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}');
+                            form.style.display = 'hidden';
+
+                            var i = document.createElement("input"); //input element, text
+                            i.setAttribute('type',"text");
+                            i.setAttribute('name',"csrf_token");
+                            i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                            form.appendChild(i);
+
+                            document.body.appendChild(form);
+                            form.submit();
+                        }
+                    });
+            });
+
+            $('.cancel-task').click(function () {
+                var action_url = $( this ).attr('urn');
+                swal({
+                        title: "{{ _('Cancel the process') }}",
+                        text: "{{ _('Are you sure that you want to cancel this process') }}",
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#DD6B55",
+                        confirmButtonText: "{{ _('Yes, stop the process') }}",
+                        cancelButtonText: "{{ _('Oops!, cancel!') }}",
+                        closeOnConfirm: true,
+                        closeOnCancel: true },
+                    function (isConfirm) {
+                        if (isConfirm) {
+                            var form = document.createElement('form');
+                            form.setAttribute('method', 'post');
+                            form.setAttribute('action', action_url);
                             form.style.display = 'hidden';
 
                             var i = document.createElement("input"); //input element, text

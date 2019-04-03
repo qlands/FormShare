@@ -8,7 +8,7 @@ import zope.sqlalchemy
 
 from .formshare import Base, Collaboratorlog, User, Userlog, Project, Collaborator, Collgroup, Odkform,\
     Collingroup, Formacces, Formgrpacces, Jsonlog, Septable, Submission, Jsonhistory, Sepsection, Sepitem, \
-    Userproject, ProjectFile, MediaFile, Product, FinishedTask
+    Userproject, ProjectFile, MediaFile, Product, FinishedTask, TaskMessages
 
 from .schema import *
 

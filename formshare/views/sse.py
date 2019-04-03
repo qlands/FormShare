@@ -3,11 +3,12 @@ from pyramid.httpexceptions import HTTPNotFound
 from formshare.processes.db import get_project_id_from_name
 from pyramid.response import Response
 import json
-import pika
 import time
 import random
 import logging
 import datetime
+import transaction
+from formshare.models import get_engine, get_session_factory, get_tm_session, TaskMessages, Product
 
 
 log = logging.getLogger(__name__)
@@ -33,52 +34,47 @@ def safe_exit(then, project_id, form_id):
         return False
 
 
-def message_generator(project_id, form_id):
+def message_generator(settings, project_id, form_id):
     generator_start_time = datetime.datetime.now()
+    ids_sent = []
+    since = datetime.datetime.now() - datetime.timedelta(hours=24)
     while True and not safe_exit(generator_start_time, project_id, form_id):
-        query_messages = True
-        try:
-            connection = pika.BlockingConnection(pika.ConnectionParameters(host='localhost'))
-        except Exception as e:
-            log.error(
-                "Error connecting to messaging service for project {}, form {}. Error: {}".format(project_id, form_id,
-                                                                                                  str(e)))
-            query_messages = False
-            connection = None
-        if query_messages:
-            try:
-                channel = connection.channel()
-                parts = ['formshare', project_id, form_id]
-                channel.queue_declare(queue='_'.join(parts))
-                method_frame, header_frame, body = channel.basic_get('_'.join(parts))
-                if method_frame:
-                    channel.basic_ack(method_frame.delivery_tag)
-                    try:
-                        msg = "data: %s\n\n" % json.dumps({'message': body.decode()})
-                    except Exception as e:
-                        log.error("JSON convection error for project {}, form {}. Error: {}".format(project_id, form_id,
-                                                                                                    str(e)))
-                        msg = "data: %s\n\n" % json.dumps({'message': "error {}".format(str(e))})
-                    connection.close()
-                    yield msg.encode()
-                    time.sleep(random.randint(1, 10))
+        # try:
+        session_factory = get_session_factory(get_engine(settings))
+        with transaction.manager:
+            db_session = get_tm_session(session_factory, transaction.manager)
+            last_message = db_session.query(TaskMessages.message_id,
+                                            Product.celery_taskid, TaskMessages.message_content).\
+                filter(TaskMessages.celery_taskid == Product.celery_taskid).\
+                filter(Product.project_id == project_id).filter(Product.form_id == form_id).\
+                filter(TaskMessages.message_date >= since).order_by(TaskMessages.message_date.asc()).all()
+            if last_message is not None:
+                to_send = []
+                for message in last_message:
+                    if message.message_id not in ids_sent:
+                        ids_sent.append(message.message_id)
+                        to_send.append(message.message_content)
+                if len(to_send) > 0:
+                    for a_message in to_send:
+                        msg = "data: %s\n\n" % json.dumps({'message': a_message})
+                        print("************************77")
+                        print(msg)
+                        print("************************77")
+                        yield msg.encode()
                 else:
-                    connection.close()
                     msg = "data: %s\n\n" % json.dumps({'message': None})
                     yield msg.encode()
-                    time.sleep(random.randint(1, 10))
-            except Exception as e:
-                connection.close()
-                log.error(
-                    "Error in SSE generator for project {}, form {}. Error: {}".format(project_id, form_id, str(e)))
-                msg = "data: %s\n\n" % json.dumps({'message': "error {}".format(str(e))})
+                time.sleep(random.randint(1, 10))
+            else:
+                msg = "data: %s\n\n" % json.dumps({'message': None})
                 yield msg.encode()
                 time.sleep(random.randint(1, 10))
-        else:
-            msg = "data: %s\n\n" % json.dumps({'message': "The messaging service is not available for "
-                                                          "project {}, form {}".format(project_id, form_id)})
-            yield msg.encode()
-            time.sleep(10)
+            # except Exception as e:
+            #     log.error(
+            #         "Error in SSE generator for project {}, form {}. Error: {}".format(project_id, form_id, str(e)))
+            #     msg = "data: %s\n\n" % json.dumps({'message': "error {}".format(str(e))})
+            #     yield msg.encode()
+            #     time.sleep(random.randint(1, 10))
 
 
 class SSEventStream(PrivateView):
@@ -106,5 +102,10 @@ class SSEventStream(PrivateView):
         headers = [('Content-Type', 'text/event-stream'),
                    ('Cache-Control', 'no-cache')]
         response = Response(headerlist=headers)
-        response.app_iter = message_generator(project_id, form_id)
+        settings = {}
+        for key, value in self.request.registry.settings.items():
+            if isinstance(value, str):
+                settings[key] = value
+
+        response.app_iter = message_generator(settings, project_id, form_id)
         return response

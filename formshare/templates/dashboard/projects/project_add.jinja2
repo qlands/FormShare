@@ -6,13 +6,11 @@
 {% block css %}
     {{ super() }}
     {% cssresource request,'formshare','bsmarkdown' %}
-    {% cssresource request,'formshare','switchery' %}
 {% endblock css %}
 
 {% block topScripts %}
     {{ super() }}
     {% jsresource request,'formshare','markdown' %}
-    {% jsresource request,'formshare','switchery' %}
 {% endblock topScripts %}
 
 {% block breadcrumbs %}
@@ -37,14 +35,3 @@
         </div>
     </div>
 {% endblock maincontent %}
-
-{% block scripts %}
-    {{ super() }}
-    <script>
-        $(document).ready(function() {
-            var elem = document.querySelector('.js-switch');
-            var switchery = new Switchery(elem, { color: '#1AB394' });
-        });
-    </script>
-
-{% endblock scripts %}

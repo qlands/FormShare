@@ -44,7 +44,7 @@
             {% if formassistants|length > 0 %}
                 <small>{{ _('Assistants in') }} <span class="text-danger">{{ _('red') }}</span> {{ _('are inactive') }}</small>
             {% else %}
-                {% if projectDetails.access_type != 4 %}
+                {% if projectDetails.access_type < 4 %}
                     {% if formgroups|length == 0 %}
                         <small class="text-danger">{{ _('Assistants help you to collect and clean data. Add one by clicking on the + button') }}</small>
                     {% else %}

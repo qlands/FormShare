@@ -229,7 +229,7 @@ class Userproject(Base):
     user_id = Column(ForeignKey('fsuser.user_id', ondelete='CASCADE'), primary_key=True, nullable=False)
     project_id = Column(ForeignKey('project.project_id', ondelete='CASCADE'), primary_key=True, nullable=False,
                         index=True)
-    access_type = Column(INTEGER)  # 1=Owner,2=Admin,3=Editor,4=Member
+    access_type = Column(INTEGER)  # 1=Owner,2=Admin,3=Editor,4=Member. Note: 5=Public access (Set internally)
     access_date = Column(DateTime)
     project_active = Column(INTEGER, server_default=text("'1'"))
 

@@ -100,7 +100,7 @@ def get_user_projects(request, user, logged_user, private=False):
                 else:
                     if project["project_public"] == 1:
                         project['collaborate'] = False
-                        project['access_type'] = 4
+                        project['access_type'] = 5
                         projects.append(project)
     else:
         res = request.dbsession.query(Project, Userproject).filter(Project.project_id == Userproject.project_id).filter(
@@ -127,7 +127,7 @@ def get_user_projects(request, user, logged_user, private=False):
                 project['owner'] = get_project_owner(request, project['project_id'])
         else:
             project['owner'] = get_project_owner(request, project['project_id'])
-            project['access_type'] = 4
+            project['access_type'] = 5
     projects = sorted(projects, key=lambda prj: project["project_cdate"], reverse=True)
     return projects
 

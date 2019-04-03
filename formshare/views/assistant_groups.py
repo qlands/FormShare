@@ -30,7 +30,7 @@ class GroupListView(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] == 5:
             raise HTTPNotFound
 
         groups = get_project_groups(self.request, project_id)
@@ -62,7 +62,7 @@ class AddGroupView(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         if self.request.method == 'POST':
@@ -111,7 +111,7 @@ class EditGroupView(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         if self.request.method == 'POST':
@@ -162,7 +162,7 @@ class DeleteGroup(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         if self.request.method == 'POST':
@@ -209,7 +209,7 @@ class GroupMembersView(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] == 5:
             raise HTTPNotFound
 
         members = get_members(self.request, project_id, group_id)
@@ -269,7 +269,7 @@ class RemoveMember(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         if self.request.method == 'POST':

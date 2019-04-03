@@ -13,11 +13,3 @@
         </div>
     </div>
 {% endblock project_form_actions %}
-
-{% block open_access_comment %}
-    {% if projectDetails.project_public == 1 %}
-        <span style="color: red">{{ _('Warning!!') }}</span> {{ _('Making an open access project into private access will un-follow any public user following this project.') }}
-    {% else %}
-        {{ _('(Recommended) This means that the project is visible to the public and its data will be available within 6 months from the first submission.') }}
-    {% endif %}
-{% endblock open_access_comment %}

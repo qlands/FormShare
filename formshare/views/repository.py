@@ -37,7 +37,7 @@ class GenerateRepository(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         form_data = get_form_data(project_id, form_id, self.request)
@@ -872,7 +872,7 @@ class SeparateTable(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         if table_belongs_to_form(self.request, project_id, form_id, table_name):
@@ -1066,7 +1066,7 @@ class NewSeparationGroup(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         if table_belongs_to_form(self.request, project_id, form_id, table_name):
@@ -1131,7 +1131,7 @@ class EditSeparationGroup(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         if table_belongs_to_form(self.request, project_id, form_id, table_name):
@@ -1188,7 +1188,7 @@ class DeleteSeparationGroup(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         if table_belongs_to_form(self.request, project_id, form_id, table_name):

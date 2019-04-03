@@ -6,13 +6,11 @@
 {% block css %}
     {{ super() }}
     {% cssresource request,'formshare','bsmarkdown' %}
-    {% cssresource request,'formshare','switchery' %}
 {% endblock css %}
 
 {% block topScripts %}
     {{ super() }}
     {% jsresource request,'formshare','markdown' %}
-    {% jsresource request,'formshare','switchery' %}
 {% endblock topScripts %}
 
 {% block breadcrumbs %}
@@ -37,53 +35,3 @@
         </div>
     </div>
 {% endblock maincontent %}
-
-{% block scripts %}
-    {{ super() }}
-    <script>
-        $(document).ready(function() {
-            var elem = document.querySelector('.js-switch');
-            var switchery = new Switchery(elem, { color: '#1AB394' });
-
-            $( "#uploadbutton" ).click(function() {
-                $( "#filetoupload" ).click();
-            });
-
-            jQuery("#filetoupload").change(function () {
-                console.log("Setting file");
-                var fileInput = document.getElementById('filetoupload');
-                var filename = fileInput.files[0].name;
-                var file_object = $("#file_name");
-                file_object.val(filename);
-                file_object.show();
-                file_object.prop('readonly', true);
-                $("#clear_section").show();
-                $("#uploadbutton").hide();
-                $("#linkbutton").hide();
-            });
-
-            $( "#clear_button" ).click(function() {
-                document.getElementById("filetoupload").value = "";
-                var file_object = $("#file_name");
-                file_object.val("");
-                file_object.hide();
-                $("#clear_section").hide();
-                $("#uploadbutton").show();
-                $("#linkbutton").show();
-
-            });
-
-            $( "#linkbutton" ).click(function() {
-                var file_object = $("#file_name");
-                file_object.attr("placeholder", "http://example.com/images/test.jpg").blur();
-                file_object.show();
-                file_object.prop('readonly', false);
-                $("#clear_section").show();
-                $("#uploadbutton").hide();
-                $("#linkbutton").hide();
-            });
-
-        });
-    </script>
-
-{% endblock scripts %}

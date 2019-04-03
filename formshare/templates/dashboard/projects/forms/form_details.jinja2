@@ -44,7 +44,7 @@
                 {% include 'dashboard/projects/forms/snippets/assistants_tab.jinja2' %}
                 {% include 'dashboard/projects/forms/snippets/groups_tab.jinja2' %}
                 <div class="text-center m-t-md">
-                    {% if projectDetails.access_type != 4 %}
+                    {% if projectDetails.access_type < 4 %}
                         <a href="{{ request.route_url('form_edit',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" class="btn btn-xs btn-warning">Edit form</a>
                     {% endif %}
                 </div>

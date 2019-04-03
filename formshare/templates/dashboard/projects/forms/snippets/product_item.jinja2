@@ -30,7 +30,7 @@
                     <small class="float-right text-navy">{{ _('Published by') }} {{ output.published_by_name }} ({{ request.h.simple_date(output.date_published) }})</small>
                 {% endif %}
                 {% if output.output_file == None %}{{ _('Ran by') }}{% else %}{{ _('Created by') }}{% endif %} <strong>{{ output.created_by_name }}</strong> {% if output.published == 1 %}<span class="label" style="color: white; background: cornflowerblue" title="{{ _('Public Access') }}">{{ _('Public') }}</span>{% endif %} <br>
-                <small class="text-muted">{{ request.h.readble_date_with_time(output.datetime_added) }} {% if output.output_file != None %}- <span class="text-success"> {{ output.downloads }} {{ request.h.pluralize(request,_('download'),output.downloads) }} (last: {{ request.h.simple_date(output.last_download) }})</span>{% endif %}</small>
+                <small class="text-muted">{{ request.h.readble_date_with_time(output.datetime_added) }} {% if output.output_file != None %}- <span class="text-success"> {{ output.downloads }} {{ request.h.pluralize(request,_('download'),output.downloads) }} {% if output.last_download != None %}(last: {{ request.h.simple_date(output.last_download) }}){% endif %}</span>{% endif %}</small>
                 <div class="actions">
                     {% block product_item_ready_actions %}
                         {% if output.output_file != None %}
@@ -39,7 +39,7 @@
                                 <a href=""  class="btn btn-xs btn-white"><i class="fas fa-lock"></i> Unpublish</a>
                             {% else %}
                                 <a href=""  class="btn btn-xs btn-white"><i class="fas fa-download"></i> Download </a>
-                                <a href=""  class="btn btn-xs btn-white"><i class="fas fa-lock"></i> Publish</a>
+                                <a href=""  class="btn btn-xs btn-white"><i class="fas fa-unlock"></i> Publish</a>
                             {% endif %}
                             <a href=""  class="btn btn-xs btn-white"><i class="far fa-trash-alt"  style="color: red;"></i> Delete</a>
                         {% endif %}

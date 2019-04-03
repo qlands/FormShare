@@ -187,7 +187,7 @@ class EditProjectView(ProjectsView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound  # Don't edit a public or a project that I am just a member
 
         if self.request.method == 'POST':
@@ -331,7 +331,7 @@ class AddFileToProject(ProjectsView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound  # Don't edit a public or a project that I am just a member
 
         if self.request.method == 'POST':
@@ -379,7 +379,7 @@ class RemoveFileFromProject(ProjectsView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound  # Don't edit a public or a project that I am just a member
 
         if self.request.method == 'POST':

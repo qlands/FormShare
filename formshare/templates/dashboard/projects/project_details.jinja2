@@ -165,7 +165,7 @@
                         }
                     });
             });
-            {% if projectData.access_type != 4 %}
+            {% if projectData.access_type < 4 %}
                 $(".assistant-item").on("taphold", function()
                 {
                     var action_url = $( this ).attr('urn');

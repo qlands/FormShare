@@ -13,14 +13,14 @@ import logging
 import simplekml
 from formshare.processes.elasticsearch.repository_index import delete_dataset_index, get_number_of_datasets_with_gps
 from pyramid.response import FileResponse
-from formshare.processes.submission.api import get_submission_media_files, json_to_csv, get_gps_points_from_form, \
-    generate_xlsx_file
+from formshare.processes.submission.api import get_submission_media_files, json_to_csv, get_gps_points_from_form
 from formshare.processes.odk.api import get_odk_path, upload_odk_form, update_form_title, retrieve_form_file, \
     update_odk_form, get_missing_support_files, import_external_data
 from formshare.products import stop_task
 from formshare.products import get_form_products
 import uuid
 import shutil
+from formshare.products.export.xlsx import generate_xlsx_file
 
 
 log = logging.getLogger(__name__)
@@ -99,7 +99,7 @@ class AddNewForm(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         if self.request.method == 'POST':
@@ -156,7 +156,7 @@ class UploadNewVersion(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         if self.request.method == 'POST':
@@ -216,7 +216,7 @@ class EditForm(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         if self.request.method == 'POST':
@@ -345,7 +345,7 @@ class ActivateForm(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)
@@ -396,7 +396,7 @@ class DeActivateForm(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)
@@ -443,7 +443,7 @@ class AddFileToForm(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound  # Don't edit a public or a project that I am just a member
 
         form_data = get_form_data(self.request, project_id, form_id)
@@ -515,7 +515,7 @@ class RemoveFileFromForm(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound  # Don't edit a public or a project that I am just a member
 
         form_data = get_form_data(self.request, project_id, form_id)
@@ -596,7 +596,7 @@ class AddAssistant(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)
@@ -663,7 +663,7 @@ class EditAssistant(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)
@@ -715,7 +715,7 @@ class RemoveAssistant(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)
@@ -763,7 +763,7 @@ class AddGroupToForm(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)
@@ -821,7 +821,7 @@ class EditFormGroup(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)
@@ -871,7 +871,7 @@ class RemoveGroupForm(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)
@@ -959,22 +959,19 @@ class DownloadXLSData(PrivateView):
         if form_data is None:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
-            include_sensitive = False
-        else:
-            include_sensitive = True
+        if project_details["access_type"] >= 4:
+            raise HTTPNotFound
 
-        created, file = generate_xlsx_file(self.request, project_id, form_id, include_sensitive)
-        if created:
-            response = FileResponse(file, request=self.request,
-                                    content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-            response.content_disposition = 'attachment; filename="' + form_id + '.xlsx"'
-            return response
-        else:
-            self.add_error(file)
-            next_page = self.request.params.get('next') or self.request.route_url('form_details', userid=user_id,
-                                                                                  projcode=project_code, formid=form_id)
-            return HTTPFound(location=next_page)
+        odk_dir = get_odk_path(self.request)
+        form_directory = get_form_directory(self.request, project_id, form_id)
+        generate_xlsx_file(self.request, self.userID, project_id, form_id, odk_dir, form_directory,
+                           form_data['form_schema'], True)
+
+        next_page = self.request.route_url('form_details', userid=user_id,
+                                           projcode=project_code, formid=form_id,
+                                           _query={'tab': 'task', 'product': 'xlsx_export'})
+        self.returnRawViewResult = True
+        return HTTPFound(location=next_page)
 
 
 class DownloadXLSX(PrivateView):
@@ -1141,7 +1138,7 @@ class ImportData(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)
@@ -1202,7 +1199,7 @@ class StopTask(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)
@@ -1254,7 +1251,7 @@ class StopRepository(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)

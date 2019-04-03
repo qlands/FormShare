@@ -4,7 +4,7 @@
             <h5 style="color: {{ formDetails.form_hexcolor }}">{{ formDetails.form_name }}</h5>
             <div class="ibox-tools">
                 {% block info_tab_tools %}
-                    {% if projectDetails.access_type != 4 %}
+                    {% if projectDetails.access_type < 4 %}
                         <a href="{{ request.route_url('form_edit',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" style="margin-right: 10px">
                             <i class="fa fa-pencil text-warning" title="{{ _('Edit') }}"></i>
                         </a>
@@ -34,7 +34,7 @@
                     {% if formDetails.form_schema != None %}<span class="badge badge-primary">With repository</span>{% else %}{% if formDetails.form_reptask == None or (formDetails.form_reptask != None and taskdata.rescode > 0) %}<span class="badge badge-warning" title="{{ _('Data is not stored in a database') }}">{{ _('In testing') }}</span>{% else %}<span class="badge badge-info" title="{{ _('FormShare is generating your repository. Please wait....') }}">{{ _('Generating repository...') }}</span>{% endif %}{% endif %} {% if formDetails.form_accsub == 1 %}<span class="label label-primary" title="{{ _('Accept submissions') }}">{{ _('Active') }}</span>{% else %}<span class="label label-danger" title="{{ _('Does\'t accept submissions') }}">{{ _('Inactive') }}</span>{% endif %} {% if formDetails.form_geopoint != None %}<span class="label label-default">{{ _('Georeferenced') }}</span>{% endif %}
                 {% endblock info_tab_content_badges %}
             </p>
-            {% if projectDetails.access_type != 4 %}
+            {% if projectDetails.access_type < 4 %}
                 <div class="actions">
                     {% block info_tab_content_actions %}
                         {% if formDetails.form_schema == None %}

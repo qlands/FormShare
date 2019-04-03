@@ -29,7 +29,7 @@ class AssistantsListView(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] == 5:
             raise HTTPNotFound
 
         assistants, more = get_project_assistants(self.request, project_id)
@@ -61,7 +61,7 @@ class AddAssistantsView(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         if self.request.method == 'POST':
@@ -122,7 +122,7 @@ class EditAssistantsView(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         if self.request.method == 'POST':
@@ -174,7 +174,7 @@ class DeleteAssistant(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         if self.request.method == 'POST':
@@ -217,7 +217,7 @@ class ChangeAssistantPassword(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 4:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         if self.request.method == 'POST':

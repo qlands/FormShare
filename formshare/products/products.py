@@ -60,6 +60,8 @@ def get_product_description(request, product):
         return request.translate('Import data')
     if product == "repository":
         return request.translate('Build repository')
+    if product == "xlsx_export":
+        return request.translate('Export to Excel')
     return request.translate("Without description")
 
 

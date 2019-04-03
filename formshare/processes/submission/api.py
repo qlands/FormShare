@@ -11,7 +11,7 @@ from formshare.processes.elasticsearch.repository_index import get_datasets_from
 from formshare.processes.color_hash import ColorHash
 import logging
 
-__all__ = ['get_submission_media_files', 'json_to_csv', 'get_gps_points_from_form', 'generate_xlsx_file',
+__all__ = ['get_submission_media_files', 'json_to_csv', 'get_gps_points_from_form',
            'get_gps_points_from_project']
 
 log = logging.getLogger(__name__)
@@ -161,50 +161,3 @@ def json_to_csv(request, project, form):
             return False, stderr
     else:
         return False, request.translate("There are not submissions to download")
-
-
-def generate_xlsx_file(request, project, form, include_sensitive=False):
-    odk_dir = get_odk_path(request)
-    form_directory = get_form_directory(request, project, form)
-    form_schema = get_form_schema(request, project, form)
-    mysql_user = request.registry.settings['mysql.user']
-    mysql_password = request.registry.settings['mysql.password']
-    mysql_host = request.registry.settings['mysql.host']
-    mysql_port = request.registry.settings['mysql.port']
-    odk_tools_dir = request.registry.settings['odktools.path']
-
-    paths = ['forms', form_directory, "repository", "create.xml"]
-    create_xml = os.path.join(odk_dir, *paths)
-
-    paths = [odk_tools_dir, "utilities", "MySQLToXLSX", "mysqltoxlsx"]
-    mysql_to_xlsx = os.path.join(odk_dir, *paths)
-
-    uid = str(uuid.uuid4())
-    paths = ['tmp', uid + ".xlsx"]
-    xlsx_file = os.path.join(odk_dir, *paths)
-
-    paths = ['tmp', uid]
-    temp_dir = os.path.join(odk_dir, *paths)
-    os.makedirs(temp_dir)
-
-    args = [mysql_to_xlsx, "-H " + mysql_host, "-P " + mysql_port, "-u " + mysql_user, "-p " + mysql_password,
-            "-s " + form_schema, "-x " + create_xml, "-o " + xlsx_file, "-T " + temp_dir]
-
-    if include_sensitive:
-        args.append("-i")
-
-    p = Popen(args, stdout=PIPE, stderr=PIPE)
-    stdout, stderr = p.communicate()
-    if p.returncode == 0:
-        return True, xlsx_file
-    else:
-        log.error("MySQLToXLSX Error: " + stderr + "-" + stdout + ". Args: " + " ".join(args))
-        error = stdout + stderr
-        if error.find("Worksheet name is already in use") >= 0:
-            return False, request.translate(
-                'A worksheet name has been repeated. Excel only allow 30 characters in the worksheet name. '
-                'You can fix this by editing the dictionary and change the description of the tables to a maximum of '
-                '30 characters.\n Please report this error to support_for_cabi@qlands.com')
-        else:
-            return False, request.transalate('Unknown error while creating the XLSX. Sorry about this. '
-                                             'Please report this error to support_for_ilri@qlands.com')

@@ -9,7 +9,7 @@
 {% block bodyclass %}gray-bg{% endblock bodyclass %}
 
 {% block body %}
-    {% block 404_message %}
+    {% block error_message %}
         <div class="middle-box text-center animated fadeInDown">
             <h1>404</h1>
             <h3 class="font-bold">{{ _('Page Not Found') }}</h3>
@@ -18,6 +18,6 @@
                 {{ _('Sorry, but the page you are looking for has not been found. Try checking the URL for errors.') }}
             </div>
         </div>
-    {% endblock 404_message %}
+    {% endblock error_message %}
     {% jsresource request,'formshare','bootstrap' %}
 {% endblock body %}

@@ -28,6 +28,7 @@ class NotFoundView(PublicView):
         self.request.response.status = 404
         return {}
 
+
 class LoginView(PublicView):
     def process_view(self):
         # If we logged in then go to dashboard
@@ -40,6 +41,7 @@ class LoginView(PublicView):
                 if login_data["group"] == "mainApp":
                     current_user = get_user_data(login_data["login"], self.request)
                     if current_user is not None:
+                        self.returnRawViewResult = True
                         return HTTPFound(location=self.request.route_url('dashboard', userid=current_user.login))
         else:
             safe = check_csrf_token(self.request, raises=False)
@@ -64,6 +66,7 @@ class LoginView(PublicView):
                         headers = remember(self.request, str(login_data), policies=['main'])
                         next_page = self.request.params.get('next') or self.request.route_url('dashboard',
                                                                                               userid=user.login)
+                        self.returnRawViewResult = True
                         return HTTPFound(location=next_page, headers=headers)
                 else:
                     self.errors.append(self._("The user account does not exists or the password is invalid"))
@@ -97,6 +100,7 @@ class AssistantLoginView(PublicView):
                                                                    login_data["login"])
                     current_collaborator = get_assistant_data(project_assistant, login_data["login"], self.request)
                     if current_collaborator is not None:
+                        self.returnRawViewResult = True
                         return HTTPFound(
                             location=self.request.route_url('assistant_forms', userid=user_id, projcode=project_code))
         else:
@@ -121,6 +125,7 @@ class AssistantLoginView(PublicView):
                         break  # Only one plugging will be called to extend after_collaborator_login
                     if continue_login:
                         headers = remember(self.request, str(login_data), policies=['assistant'])
+                        self.returnRawViewResult = True
                         return HTTPFound(location=next_page, headers=headers)
                 else:
                     self.errors.append(self._("Invalid credentials"))
@@ -220,10 +225,12 @@ class RegisterView(PublicView):
                                     if next_page == self.request.route_url('dashboard', userid=data["user_id"]):
                                         login_data = {"login": data["user_id"], "group": "mainApp"}
                                         headers = remember(self.request, str(login_data), policies=['main'])
+                                        self.returnRawViewResult = True
                                         return HTTPFound(
                                             location=self.request.route_url('dashboard', userid=data["user_id"]),
                                             headers=headers)
                                     else:
+                                        self.returnRawViewResult = True
                                         return HTTPFound(next_page)
                         else:
                             self.errors.append(self._("The password and its confirmation are not the same"))

@@ -29,6 +29,7 @@ class User(object):
             self.about = ""
         else:
             self.about = user_data["user_about"]
+        self.apikey = user_data["user_apikey"]
 
     def check_password(self, password, request):
         # Load connected plugins and check if they modify the password authentication

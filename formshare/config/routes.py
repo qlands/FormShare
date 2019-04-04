@@ -26,6 +26,8 @@ from ..views.assistant_views.jsonlogs import JSONList, JSONCompare, JSONCheckout
     JSONCancelDisregard, JSONCompareSubmissions
 from ..views.assistant_views.clean import CleanInterface, PerformAction, DataRequest
 from ..views.sse import SSEventStream
+from ..views.products import DownloadPrivateProduct, DownloadPublicProduct, DownloadPrivateProductByAPI, \
+    PublishProduct, UnPublishProduct, DeleteProduct
 
 route_list = []
 
@@ -224,13 +226,45 @@ def load_routes(config):
             '/user/{userid}/project/{projcode}/form/{formid}/group/{groupid}/remove',
             RemoveGroupForm, None))
 
-    # Form Downloads
+    # Form Products
 
     routes.append(
         add_route(
-            'form_download_private_product',
+            'download_private_product',
             '/user/{userid}/project/{projcode}/form/{formid}/private_download/{productid}/output/{outputid}',
-            DownloadCSVData, None))
+            DownloadPrivateProduct, None))
+
+    routes.append(
+        add_route(
+            'download_public_product',
+            '/user/{userid}/project/{projcode}/form/{formid}/public_download/{productid}/output/{outputid}',
+            DownloadPublicProduct, None))
+
+    routes.append(
+        add_route(
+            'api_download_private_product',
+            '/user/{userid}/project/{projcode}/form/{formid}/api_download/{productid}/output/{outputid}',
+            DownloadPrivateProductByAPI, 'json'))
+
+    routes.append(
+        add_route(
+            'publish_product',
+            '/user/{userid}/project/{projcode}/form/{formid}/products/{productid}/output/{outputid}/publish',
+            PublishProduct, None))
+
+    routes.append(
+        add_route(
+            'unpublish_product',
+            '/user/{userid}/project/{projcode}/form/{formid}/products/{productid}/output/{outputid}/unpublish',
+            UnPublishProduct, None))
+
+    routes.append(
+        add_route(
+            'delete_product',
+            '/user/{userid}/project/{projcode}/form/{formid}/products/{productid}/output/{outputid}/delete',
+            DeleteProduct, None))
+
+    # Form Downloads
 
     routes.append(
         add_route(

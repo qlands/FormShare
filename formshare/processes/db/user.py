@@ -4,7 +4,7 @@ import logging
 import validators
 
 __all__ = [
-    'register_user', 'user_exists', 'get_user_details', 'update_profile', 'get_user_name'
+    'register_user', 'user_exists', 'get_user_details', 'update_profile', 'get_user_name', 'get_user_by_api_key'
 ]
 
 log = logging.getLogger(__name__)
@@ -124,3 +124,12 @@ def update_profile(request, user, profile_data):
         request.dbsession.rollback()
         log.error("Error {} when updating user user {}".format(str(e), user))
         return False, str(e)
+
+
+def get_user_by_api_key(request, api_key):
+    res = request.dbsession.query(User).filter(User.user_apikey == api_key).filter(User.user_active == 1).first()
+    if res is not None:
+        result = map_from_schema(res)
+        result["user_stats"] = get_user_stats(request, result['user_id'])
+        return result
+    return None

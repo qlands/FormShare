@@ -5,7 +5,8 @@ import logging
 
 __all__ = [
     'add_product_instance', 'delete_product', 'get_form_used_products', 'get_form_outputs',
-    'get_form_processing_products']
+    'get_form_processing_products', 'get_product_output', 'update_download_counter', 'set_output_public_state',
+    'output_exists']
 
 log = logging.getLogger(__name__)
 
@@ -30,9 +31,17 @@ def add_product_instance(request, user, project, form, product, task, output_fil
         return False, str(e)
 
 
-def delete_product(request, task):
-        request.dbsession.query(Product).filter(Product.celery_taskid == task).delete()
-        request.dbsession.query(FinishedTask).filter(FinishedTask.task_id == task).delete()
+def delete_product(request, project, form, product, output):
+    try:
+        request.dbsession.query(Product).filter(Product.project_id == project).filter(Product.form_id == form) \
+            .filter(Product.product_id == product).filter(Product.output_id == output).delete()
+        request.dbsession.flush()
+        return True, ""
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error(
+            "Error {} while updating setting public access for product {} output ()".format(str(e), product, output))
+        return False, str(e)
 
 
 def get_form_used_products(request, project, form):
@@ -70,3 +79,70 @@ def get_form_outputs(request, project, form, product):
         return []
 
 
+def get_product_output(request, project, form, product, output, public=False):
+    if not public:
+        public = 0
+    else:
+        public = 1
+    if output != "latest":
+        res = request.dbsession.query(Product).filter(Product.project_id == project).filter(Product.form_id == form)\
+            .filter(Product.product_id == product).filter(Product.output_id == output)\
+            .filter(Product.product_published == public).first()
+        if res is not None:
+            return output, res.output_file, res.output_mimetype
+        else:
+            return None, None, None
+    else:
+        if public:
+            res = request.dbsession.query(Product).filter(Product.project_id == project).\
+                filter(Product.form_id == form).filter(Product.product_id == product).\
+                filter(Product.product_published == public).\
+                order_by(Product.date_published.desc()).first()
+        else:
+            res = request.dbsession.query(Product).filter(Product.project_id == project).\
+                filter(Product.form_id == form).filter(Product.product_id == product).\
+                filter(Product.product_published == public). \
+                order_by(Product.datetime_added.desc()).first()
+        if res is not None:
+            return res.output_id, res.output_file, res.output_mimetype
+        else:
+            return None, None, None
+
+
+def output_exists(request, project, form, product, output):
+    res = request.dbsession.query(Product).filter(Product.project_id == project).filter(Product.form_id == form) \
+        .filter(Product.product_id == product).filter(Product.output_id == output).first()
+    if res is not None:
+        return True
+    return False
+
+
+def update_download_counter(request, project, form, product, output):
+    try:
+        request.dbsession.query(Product).filter(Product.project_id == project).filter(Product.form_id == form) \
+            .filter(Product.product_id == product).filter(Product.output_id == output)\
+            .update({'downloads': Product.downloads + 1, 'last_download': datetime.datetime.now()})
+        request.dbsession.flush()
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error(
+            "Error {} while updating product download counter for product {} output ()".format(str(e), product,
+                                                                                               output))
+        return False, str(e)
+
+
+def set_output_public_state(request, project, form, product, output, public, by):
+    if not public:
+        public = 0
+    else:
+        public = 1
+    try:
+        request.dbsession.query(Product).filter(Product.project_id == project).filter(Product.form_id == form) \
+            .filter(Product.product_id == product).filter(Product.output_id == output)\
+            .update({'product_published': public, 'date_published': datetime.datetime.now(), 'published_by': by})
+        request.dbsession.flush()
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error(
+            "Error {} while updating setting public access for product {} output ()".format(str(e), product, output))
+        return False, str(e)

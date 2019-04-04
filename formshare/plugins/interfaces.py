@@ -300,6 +300,48 @@ class IProduct(Interface):
         """
         raise NotImplementedError("get_product_description must be implemented in subclasses")
 
+    def before_download_private_product(self, request, project, form, product, output, file_name, mime_type):
+        """
+        Called before the a product gets downloaded. Must return true to indicate that the download should proceed.
+        :param request: Pyramid request object
+        :param project: Project ID
+        :param form: Form ID
+        :param product: Product ID
+        :param output: Output ID
+        :param file_name: File name
+        :param mime_type: Mime type of the file name
+        :return: True / False
+        """
+        raise NotImplementedError("before_download_private_product must be implemented in subclasses")
+
+    def before_download_public_product(self, request, project, form, product, output, file_name, mime_type):
+        """
+        Called before the a product gets downloaded. Must return true to indicate that the download should proceed.
+        :param request: Pyramid request object
+        :param project: Project ID
+        :param form: Form ID
+        :param product: Product ID
+        :param output: Output ID
+        :param file_name: File name
+        :param mime_type: Mime type of the file name
+        :return: True / False
+        """
+        raise NotImplementedError("before_download_public_product must be implemented in subclasses")
+
+    def before_download_product_by_api(self, request, project, form, product, output, file_name, mime_type):
+        """
+        Called before the a product gets downloaded. Must return true to indicate that the download should proceed.
+        :param request: Pyramid request object
+        :param project: Project ID
+        :param form: Form ID
+        :param product: Product ID
+        :param output: Output ID
+        :param file_name: File name
+        :param mime_type: Mime type of the file name
+        :return: True / False
+        """
+        raise NotImplementedError("before_download_public_product must be implemented in subclasses")
+
 
 class IImportExternalData(Interface):
     """

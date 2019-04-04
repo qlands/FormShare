@@ -21,7 +21,7 @@ from babel import Locale
 import uuid
 from ast import literal_eval
 from formshare.processes.db import get_project_id_from_name, user_exists, get_user_details, get_active_project, \
-    get_user_projects, get_project_from_assistant
+    get_user_projects, get_project_from_assistant, get_user_by_api_key
 import logging
 log = logging.getLogger(__name__)
 
@@ -116,6 +116,7 @@ class PublicView(object):
         self._ = self.request.translate
         self.resultDict = {"errors": []}
         self.errors = []
+        self.returnRawViewResult = False
         locale = Locale(request.locale_name)
         if locale.character_order == "left-to-right":
             self.resultDict["rtl"] = False
@@ -125,7 +126,7 @@ class PublicView(object):
     def __call__(self):
         self.resultDict["errors"] = self.errors
         process_dict = self.process_view()
-        if type(process_dict) == dict:
+        if not self.returnRawViewResult:
             self.resultDict.update(process_dict)
             return self.resultDict
         else:
@@ -419,3 +420,35 @@ class AssistantView(object):
 
     def add_error(self, message):
         self.request.session.flash(message, queue='error')
+
+
+class APIView(object):
+    def __init__(self, request):
+        self.request = request
+        self.user = None
+        self.body = None
+        self.api_key = ""
+        self._ = self.request.translate
+
+    def __call__(self):
+        self.api_key = self.request.params.get('apikey', None)
+        if self.api_key is not None:
+            self.user = get_user_by_api_key(self.request, self.api_key)
+            if self.user is None:
+                response = Response(status=401, body={'error': self.request.translate("This API key does not "
+                                                                                      "exist or is inactive.")})
+                return response
+
+            if self.request.method == "POST":
+                self.body = self.request.params.get('Body', None)
+                if self.body is None:
+                    response = Response(status=401, body={'error': self.request.translate("Body non-existent")})
+                    return response
+        else:
+            response = Response(status=401, body={'error': self.request.translate("You need to specify an API key")})
+            return response
+
+        return self.process_view()
+
+    def process_view(self):
+        return {'key': self.api_key}

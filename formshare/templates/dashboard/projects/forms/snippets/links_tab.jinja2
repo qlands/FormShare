@@ -27,10 +27,10 @@
                                 <li><a target="_blank" href="{{ request.route_url('errorlist', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}"><i class="fa fa-bug"></i> {{ _('Clean error logs') }}</a></li>
                             {% endblock form_links_rep %}
                             {% block form_downloads_rep %}
-                                <li><a style="line-height: 1.5;" href="{{ request.route_url('form_download_xlsx_data',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="far fa-file-excel"></i> {{ _('Download data in Excel format') }}</a></li>
-                                <li><a style="line-height: 1.5;" href="{{ request.route_url('form_download_media',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fas fa-images"></i> {{ _('Download submitted media') }}</a></li>
+                                <li><a style="line-height: 1.5;" href="{{ request.route_url('form_download_xlsx_data',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="far fa-file-excel"></i> {{ _('Export data in Excel format') }}</a></li>
+                                <li><a style="line-height: 1.5;" href="{{ request.route_url('form_download_media',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fas fa-images"></i> {{ _('Export submitted media') }}</a></li>
                                 {% if formDetails.submissions > 0 and formDetails.form_geopoint != None and withgps > 0 %}
-                                    <li><a style="line-height: 1.5;" href="{{ request.route_url('form_download_kml',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fas fa-globe-americas"></i> {{ _('Download KML') }}</a></li>
+                                    <li><a style="line-height: 1.5;" href="{{ request.route_url('form_download_kml',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fas fa-globe-americas"></i> {{ _('Export KML') }}</a></li>
                                 {% endif %}
                             {% endblock form_downloads_rep %}
                         {% else %}

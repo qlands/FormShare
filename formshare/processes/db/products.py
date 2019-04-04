@@ -2,6 +2,7 @@ from ...models import Product, FinishedTask, map_from_schema
 from formshare.processes.db.celery import get_task_status
 import datetime
 import logging
+from sqlalchemy import func
 
 __all__ = [
     'add_product_instance', 'delete_product', 'get_form_used_products', 'get_form_outputs',
@@ -46,8 +47,9 @@ def delete_product(request, project, form, product, output):
 
 def get_form_used_products(request, project, form):
     products = []
-    res = request.dbsession.query(Product).distinct(Product.product_id).filter(Product.project_id == project).filter(
-        Product.form_id == form).all()
+    res = request.dbsession.query(Product.product_id, func.max(Product.datetime_added)).\
+        filter(Product.project_id == project).filter(Product.form_id == form).\
+        group_by(Product.product_id).order_by(func.max(Product.datetime_added).desc()).all()
     for product in res:
         products.append({'code': product.product_id})
     return products

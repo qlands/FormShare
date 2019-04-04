@@ -4,7 +4,7 @@ from formshare.processes.db import get_project_id_from_name, get_form_details, g
     get_form_assistants, update_assistant_privileges, remove_assistant_from_form, get_project_groups, \
     add_group_to_form, get_form_groups, update_group_privileges, remove_group_from_form, get_form_xls_file, \
     set_form_status, get_assigned_assistants, get_form_directory, reset_form_repository, get_form_processing_products, \
-    get_task_status
+    get_task_status, get_output_by_task
 from formshare.processes.storage import store_file, delete_stream, delete_bucket
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 import os
@@ -1207,19 +1207,25 @@ class StopTask(PrivateView):
             raise HTTPNotFound
 
         if self.request.method == 'POST':
-            next_page = self.request.params.get('next') or self.request.route_url('form_details',
-                                                                                  userid=user_id,
-                                                                                  projcode=project_code,
-                                                                                  formid=form_id)
-            stopped, message = stop_task(self.request, self.userID, project_id, form_id, task_id)
-            if stopped:
-                self.request.session.flash(self._('The process was stopped successfully'))
-                self.returnRawViewResult = True
-                return HTTPFound(next_page)
+            product_id, output_id = get_output_by_task(self.request, project_id, form_id, task_id)
+            if product_id is not None:
+                next_page = self.request.params.get('next') or self.request.route_url('form_details',
+                                                                                      userid=user_id,
+                                                                                      projcode=project_code,
+                                                                                      formid=form_id,
+                                                                                      _query={'tab': 'task',
+                                                                                              'product': product_id})
+                stopped, message = stop_task(self.request, self.userID, project_id, form_id, task_id)
+                if stopped:
+                    self.request.session.flash(self._('The process was stopped successfully'))
+                    self.returnRawViewResult = True
+                    return HTTPFound(next_page)
+                else:
+                    self.request.session.flash(self._('FormShare was not able to stop the process') + "|error")
+                    self.returnRawViewResult = True
+                    return HTTPFound(next_page)
             else:
-                self.request.session.flash(self._('FormShare was not able to stop the process') + "|error")
-                self.returnRawViewResult = True
-                return HTTPFound(next_page)
+                raise HTTPNotFound
         else:
             raise HTTPNotFound
 
@@ -1260,19 +1266,25 @@ class StopRepository(PrivateView):
 
         if self.request.method == 'POST':
             task_id = form_data['form_reptask']
-            next_page = self.request.params.get('next') or self.request.route_url('form_details',
-                                                                                  userid=user_id,
-                                                                                  projcode=project_code,
-                                                                                  formid=form_id)
-            stopped, message = stop_task(self.request, self.userID, project_id, form_id, task_id)
-            if stopped:
-                reset_form_repository(self.request, project_id, form_id)
-                self.request.session.flash(self._('The process was stopped successfully'))
-                self.returnRawViewResult = True
-                return HTTPFound(next_page)
+            product_id, output_id = get_output_by_task(self.request, project_id, form_id, task_id)
+            if product_id is not None:
+                next_page = self.request.params.get('next') or self.request.route_url('form_details',
+                                                                                      userid=user_id,
+                                                                                      projcode=project_code,
+                                                                                      formid=form_id,
+                                                                                      _query={'tab': 'task',
+                                                                                              'product': product_id})
+                stopped, message = stop_task(self.request, self.userID, project_id, form_id, task_id)
+                if stopped:
+                    reset_form_repository(self.request, project_id, form_id)
+                    self.request.session.flash(self._('The process was stopped successfully'))
+                    self.returnRawViewResult = True
+                    return HTTPFound(next_page)
+                else:
+                    self.request.session.flash(self._('FormShare was not able to stop the process') + "|error")
+                    self.returnRawViewResult = True
+                    return HTTPFound(next_page)
             else:
-                self.request.session.flash(self._('FormShare was not able to stop the process') + "|error")
-                self.returnRawViewResult = True
-                return HTTPFound(next_page)
+                raise HTTPNotFound
         else:
             raise HTTPNotFound

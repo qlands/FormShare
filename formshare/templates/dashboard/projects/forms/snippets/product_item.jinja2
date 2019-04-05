@@ -23,7 +23,7 @@
     {% block product_item_ready %}
         <div id="feed_element_{{ output.celery_taskid }}" class="feed-element">
             <a href="#" class="float-left">
-                <div class="rounded-circle" style="margin-right: 10px; background-color: #026AA8; width: 38px; height: 38px; display: inline-block; vertical-align: middle" ><span style="color: white; position: relative; float: left; top: 50%; left: 50%; transform: translate(-50%, -50%);"><i class="{{ product.icon }} fa-2x"></i></span></div>
+                <div class="rounded-circle" style="margin-right: 10px; {% if output.status == 0 %}background-color: #026AA8;{% else %}{% if output.status > 0 %}background-color:red;{% else %}background-color: orange;{% endif %}{% endif %} width: 38px; height: 38px; display: inline-block; vertical-align: middle" ><span style="color: white; position: relative; float: left; top: 50%; left: 50%; transform: translate(-50%, -50%);"><i class="{{ product.icon }} fa-2x"></i></span></div>
             </a>
             <div class="media-body ">
                 {% block product_item_ready_head %}
@@ -34,7 +34,8 @@
                         <small class="float-right text-danger">{{ output.error }}</small>
                     {% endif %}
                     {% if output.output_file == None %}{{ _('Ran by') }}{% else %}{{ _('Created by') }}{% endif %} <strong>{{ output.created_by_name }}</strong> {% if output.published == 1 %}<span class="label" style="color: white; background: cornflowerblue" title="{{ _('Public Access') }}">{{ _('Public') }}</span>{% endif %} <br>
-                    <small class="text-muted">{{ request.h.readble_date_with_time(output.datetime_added) }} {% if output.output_file != None %}- <span class="text-success"> {{ output.downloads }} {{ request.h.pluralize(request,_('download'),output.downloads) }} {% if output.last_download != None %}(last: {{ request.h.simple_date(output.last_download) }}){% endif %}</span>{% endif %}</small>
+                    {% if output.status > 0 %} <textarea style="display:none;" id="error_{{ output.celery_taskid }}">{{ output.error }}</textarea> {{ _('The process generated an error. Click ') }}<a style="color: red" data-toggle="modal" data-target="#product_error" data-task-id="{{ output.celery_taskid }}" class="error_link"><b>{{ _('here') }}</b></a> {{ _('to see it') }}<br>{% endif %}
+                    <small class="text-muted">{{ request.h.readble_date_with_time(output.datetime_added) }} {% if output.status == 0 %} {% if output.output_file != None %}- <span class="text-success"> {{ output.downloads }} {{ request.h.pluralize(request,_('download'),output.downloads) }} {% if output.last_download != None %}(last: {{ request.h.simple_date(output.last_download) }}){% endif %}</span>{% endif %} {% endif %}</small>
                 {% endblock product_item_ready_head %}
                 <div class="actions">
                     {% block product_item_ready_actions %}

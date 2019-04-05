@@ -41,6 +41,6 @@ class CeleryTask(Task):
                 "INSERT INTO finishedtask(task_id,task_enumber,task_error) "
                 "VALUES ('{}','{}','{}')".format(str(task_id), 1, trace_back.replace("'", "")))
         except Exception as e:
-            log.error("Error {} reporting failure for task {}").format(str(e), task_id)
+            log.error("Error {} reporting failure for task {}".format(str(e), task_id))
         send_sse_event(engine, task_id, "failure")
         engine.dispose()

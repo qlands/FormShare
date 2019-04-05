@@ -22,6 +22,7 @@ import uuid
 import shutil
 from formshare.products.export.xlsx import generate_xlsx_file
 from formshare.products.export.media import generate_media_zip_file
+from formshare.products.export.kml import generate_kml_file
 
 
 log = logging.getLogger(__name__)
@@ -1040,8 +1041,10 @@ class DownloadSubmissionFiles(PrivateView):
                 return response
             else:
                 self.add_error(file)
-                next_page = self.request.params.get('next') or self.request.route_url('form_details', userid=user_id,
-                                                                                      projcode=project_code, formid=form_id)
+                next_page = self.request.params.get('next') or self.request.route_url('form_details',
+                                                                                      userid=user_id,
+                                                                                      projcode=project_code,
+                                                                                      formid=form_id)
                 return HTTPFound(location=next_page)
         else:
             odk_dir = get_odk_path(self.request)
@@ -1111,20 +1114,14 @@ class DownloadKML(PrivateView):
         if form_data is None:
             raise HTTPNotFound
 
-        created, data = get_gps_points_from_form(self.request, user_id, project_code, form_id)
-        if created:
-            kml = simplekml.Kml()
-            for point in data["points"]:
-                kml.newpoint(name=point['key'], coords=[(float(point['long']), float(point['lati']))])
-            odk_dir = get_odk_path(self.request)
-            uid = str(uuid.uuid4())
-            tmp_file = os.path.join(odk_dir, *['tmp', uid + ".kml"])
-            kml.save(tmp_file)
-            response = FileResponse(tmp_file, request=self.request, content_type='application/vnd.google-earth.kml+xml')
-            response.content_disposition = 'attachment; filename="' + form_id + '.kml"'
-            return response
-        else:
-            raise HTTPNotFound
+        generate_kml_file(self.request, self.userID, project_id, form_id, form_data['form_schema'],
+                          form_data['form_pkey'])
+        next_page = self.request.params.get('next') or self.request.route_url('form_details', userid=user_id,
+                                                                              projcode=project_code,
+                                                                              formid=form_id,
+                                                                              _query={'tab': 'task',
+                                                                                      'product': 'kml_export'})
+        return HTTPFound(location=next_page)
 
 
 class ImportData(PrivateView):

@@ -34,4 +34,10 @@ def register_products():
     add_metadata_to_product(new_product, 'Licence', 'LGPL')
     products.append(new_product)
 
+    new_product = create_product('csv_export', False, "fas fa-file-csv")
+    add_metadata_to_product(new_product, 'author', 'QLands Technology Consultants')
+    add_metadata_to_product(new_product, 'version', '1.0')
+    add_metadata_to_product(new_product, 'Licence', 'LGPL')
+    products.append(new_product)
+
     return products

@@ -10,7 +10,6 @@ from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 import os
 from hashlib import md5
 import logging
-import simplekml
 from formshare.processes.elasticsearch.repository_index import delete_dataset_index, get_number_of_datasets_with_gps
 from pyramid.response import FileResponse
 from formshare.processes.submission.api import get_submission_media_files, json_to_csv, get_gps_points_from_form
@@ -18,11 +17,11 @@ from formshare.processes.odk.api import get_odk_path, upload_odk_form, update_fo
     update_odk_form, get_missing_support_files, import_external_data
 from formshare.products import stop_task
 from formshare.products import get_form_products
-import uuid
 import shutil
 from formshare.products.export.xlsx import generate_xlsx_file
 from formshare.products.export.media import generate_media_zip_file
 from formshare.products.export.kml import generate_kml_file
+from formshare.products.export.csv import generate_csv_file
 
 
 log = logging.getLogger(__name__)
@@ -1121,6 +1120,43 @@ class DownloadKML(PrivateView):
                                                                               formid=form_id,
                                                                               _query={'tab': 'task',
                                                                                       'product': 'kml_export'})
+        return HTTPFound(location=next_page)
+
+
+class DownloadCSV(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+        self.returnRawViewResult = True
+
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+        form_id = self.request.matchdict['formid']
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+
+        generate_csv_file(self.request, self.userID, project_id, form_id, form_data['form_schema'],
+                          form_data['form_directory'])
+
+        next_page = self.request.params.get('next') or self.request.route_url('form_details', userid=user_id,
+                                                                              projcode=project_code,
+                                                                              formid=form_id,
+                                                                              _query={'tab': 'task',
+                                                                                      'product': 'csv_export'})
         return HTTPFound(location=next_page)
 
 

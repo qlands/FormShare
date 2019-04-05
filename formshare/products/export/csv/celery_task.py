@@ -1,9 +1,11 @@
 from formshare.config.celery_app import celeryApp
 from formshare.config.celery_class import CeleryTask
 import logging
-from formshare.models import get_engine
+import os
 import gettext
-import simplekml
+import uuid
+from subprocess import Popen, PIPE, check_call
+import glob
 from formshare.processes.sse.messaging import send_task_status_to_form
 
 log = logging.getLogger(__name__)
@@ -14,49 +16,88 @@ _ = gettext.gettext
 
 class EmptyFileError(Exception):
     """
-        Exception raised when there is an error while creating the repository.
+        Exception raised when there is an error while creating the CSV.
     """
 
     def __str__(self):
-        return _('The ODK form does not contain any submissions with GPS coordinates')
+        return _('The ODK form does not contain any submissions')
+
+
+class JQError(Exception):
+    """
+        Exception raised when there is an error while creating the CSV.
+    """
+
+    def __str__(self):
+        return _('Error calling JQ')
+
+
+class MySQLDenormalizeError(Exception):
+    """
+        Exception raised when there is an error while creating the CSV.
+    """
+
+    def __str__(self):
+        return _('Error calling MySQLDenormalize')
 
 
 @celeryApp.task(base=CeleryTask)
-def build_kml(settings, form_schema, kml_file, primary_key):
-    task_id = build_kml.request.id
-    engine = get_engine(settings)
-    sql = "SELECT count(surveyid) as total FROM " + form_schema + ".maintable WHERE _geopoint IS NOT NULL"
-    submissions = engine.execute(sql).fetchone()
-    total = submissions.total
+def build_csv(settings, form_directory, form_schema, csv_file):
+    task_id = build_csv.request.id
 
-    sql = "SELECT " + primary_key + ",_geopoint FROM " + form_schema + ".maintable WHERE _geopoint IS NOT NULL"
-    submissions = engine.execute(sql).fetchall()
-    index = 0
-    send_25 = True
-    send_50 = True
-    send_75 = True
-    if total > 0:
-        kml = simplekml.Kml()
-        for submission in submissions:
-            index = index + 1
-            percentage = (index * 100) / total
-            # We report chucks to not overload the messaging system
-            if 25 <= percentage <= 50:
-                if send_25:
-                    send_task_status_to_form(settings, task_id, _("25% processed"))
-                    send_25 = False
-            if 50 <= percentage <= 75:
-                if send_50:
-                    send_task_status_to_form(settings, task_id, _("50% processed"))
-                    send_50 = False
-            if 75 <= percentage <= 100:
-                if send_75:
-                    send_task_status_to_form(settings, task_id, _("75% processed"))
-                    send_75 = False
-            geo_point = submission['_geopoint']
-            parts = geo_point.split(" ")
-            if len(parts) >= 2:
-                kml.newpoint(name=submission[primary_key], coords=[(float(parts[1]), float(parts[0]))])
-        kml.save(kml_file)
+    paths = ['odk', 'forms', form_directory, "submissions", 'maps']
+    maps_path = os.path.join(settings['repository.path'], *paths)
+
+    paths = ["utilities", "MySQLDenormalize", "mysqldenormalize"]
+    mysql_denormalize = os.path.join(settings['odktools.path'], *paths)
+
+    uid = str(uuid.uuid4())
+    paths = ['tmp', uid]
+    temp_path = os.path.join(settings['repository.path'], *paths)
+    os.makedirs(temp_path)
+
+    uid = str(uuid.uuid4())
+    paths = ['tmp', uid]
+    out_path = os.path.join(settings['repository.path'], *paths)
+    os.makedirs(out_path)
+
+    args = [mysql_denormalize, "-H " + settings['mysql.host'], "-P " + settings['mysql.port'],
+            "-u " + settings['mysql.user'], "-p " + settings['mysql.password'], "-s " + form_schema, "-t maintable",
+            "-m " + maps_path, "-o " + out_path, "-T " + temp_path, "-i"]
+
+    send_task_status_to_form(settings, task_id, "Denormalizing database")
+    p = Popen(args, stdout=PIPE, stderr=PIPE)
+    stdout, stderr = p.communicate()
+    if p.returncode == 0:
+        paths = ["*.json"]
+        out_path = os.path.join(out_path, *paths)
+        files = glob.glob(out_path)
+        if files:
+            # Join The files with JQ
+            args = ["jq", "-s", "."]
+            for file in files:
+                args.append(file)
+            send_task_status_to_form(settings, task_id, "Joining JSON files")
+            p = Popen(args, stdout=PIPE, stderr=PIPE)
+            stdout, stderr = p.communicate()
+            if p.returncode == 0:
+                uid = str(uuid.uuid4())
+                paths = ['tmp', uid + ".json"]
+                json_file = os.path.join(settings['repository.path'], *paths)
+                file = open(json_file, "w")
+                file.write(stdout.decode())
+                file.close()
+                # Convert the file to CSV
+                args = ["json2csv", json_file, csv_file]
+                send_task_status_to_form(settings, task_id, "Building CSV")
+                check_call(args)
+
+            else:
+                raise JQError("JQ error: " + stderr.decode('utf-8') + "-" + stdout.decode('utf-8') + ":" +
+                              " ".join(args))
+
+        else:
+            raise EmptyFileError(_('The ODK form does not contain any submissions'))
     else:
-        raise EmptyFileError(_('The ODK form does not contain any submissions with GPS coordinates'))
+        raise MySQLDenormalizeError("MySQLDenormalize Error: " + stderr.decode('utf-8') + "-" +
+                                    stdout.decode('utf-8') + ". Args: " + " ".join(args))

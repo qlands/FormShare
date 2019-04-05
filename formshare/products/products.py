@@ -70,6 +70,8 @@ def get_product_description(request, product):
         return request.translate('Media')
     if product == "kml_export":
         return request.translate('KML')
+    if product == "csv_export":
+        return request.translate('CSV')
     return request.translate("Without description")
 
 

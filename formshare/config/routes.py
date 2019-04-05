@@ -16,7 +16,7 @@ from ..views.assistant_groups import GroupListView, AddGroupView, EditGroupView,
 from ..views.form import FormDetails, AddNewForm, EditForm, DeleteForm, AddFileToForm, RemoveFileFromForm, \
     FormStoredFile, AddAssistant, EditAssistant, RemoveAssistant, AddGroupToForm, EditFormGroup, RemoveGroupForm, \
     DownloadCSVData, DownloadXLSX, DownloadSubmissionFiles, DownloadGPSPoints, DownloadXLSData, UploadNewVersion, \
-    ActivateForm, DeActivateForm, ImportData, DownloadKML, StopTask, StopRepository
+    ActivateForm, DeActivateForm, ImportData, DownloadKML, StopTask, StopRepository, DownloadCSV
 from ..views.odk import ODKFormList, ODKManifest, ODKMediaFile, ODKPushData, ODKSubmission, ODKXMLForm
 from ..views.repository import GenerateRepository, SeparateTable, NewSeparationGroup, EditSeparationGroup, \
     DeleteSeparationGroup, RepositoryExist
@@ -301,6 +301,12 @@ def load_routes(config):
             'form_download_kml',
             '/user/{userid}/project/{projcode}/form/{formid}/generate/kml',
             DownloadKML, None))
+
+    routes.append(
+        add_route(
+            'form_download_repo_csv',
+            '/user/{userid}/project/{projcode}/form/{formid}/generate/repo_csv',
+            DownloadCSV, None))
 
     # Repository
 

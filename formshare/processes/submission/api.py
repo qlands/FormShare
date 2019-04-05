@@ -48,57 +48,19 @@ def get_gps_points_from_form(request, user, project, form, query_from=None, quer
 
 def get_submission_media_files(request, project, form):
     uid = str(uuid.uuid4())
-    schema = get_form_schema(request, project, form)
     form_directory = get_form_directory(request, project, form)
     odk_dir = get_odk_path(request)
-    if schema is None:
-        submissions_path = os.path.join(odk_dir, *['forms', form_directory, "submissions", '*.json'])
-        submissions = glob.glob(submissions_path)
-        if submissions:
-            created = False
-            for submission in submissions:
-                submission_id = os.path.basename(submission).replace(".json", "")
-                tmp_dir = os.path.join(odk_dir, *['tmp', uid, submission_id])
-                os.makedirs(tmp_dir)
-                submissions_path = os.path.join(odk_dir,
-                                                *['forms', form_directory, "submissions", submission_id, '*.*'])
-                files = glob.glob(submissions_path)
-                if files:
-                    for file in files:
-                        shutil.copy(file, tmp_dir)
-                        created = True
-            if created:
-                tmp_dir = os.path.join(odk_dir, *['tmp', uid])
-                zip_file = os.path.join(odk_dir, *['tmp', uid])
-                shutil.make_archive(zip_file, 'zip', tmp_dir)
-                return True, zip_file + ".zip"
-    else:
-        primary_key = get_primary_key(request, project, form)
-        sql = "SELECT surveyid," + primary_key + " FROM " + schema + ".maintable"
-        submissions = request.dbsession.execute(sql).fetchall()
+
+    submissions_path = os.path.join(odk_dir, *['forms', form_directory, "submissions", '*.json'])
+    submissions = glob.glob(submissions_path)
+    if submissions:
         created = False
         for submission in submissions:
-            key_value = submission[primary_key]
-
-            if isinstance(key_value, datetime.datetime) or \
-                    isinstance(key_value, datetime.date) or \
-                    isinstance(key_value, datetime.time):
-                key_value = key_value.isoformat().replace("T", " ")
-            else:
-                if isinstance(key_value, float):
-                    key_value = str(key_value)
-                else:
-                    if isinstance(key_value, Decimal):
-                        key_value = str(key_value)
-                    else:
-                        if isinstance(key_value, datetime.timedelta):
-                            key_value = str(key_value)
-
-            key_value = key_value.replace("/", "_")  # Replace invalid character for directory
-            tmp_dir = os.path.join(odk_dir, *['tmp', uid, key_value])
+            submission_id = os.path.basename(submission).replace(".json", "")
+            tmp_dir = os.path.join(odk_dir, *['tmp', uid, submission_id])
             os.makedirs(tmp_dir)
-            submission_id = submission.surveyid
-            submissions_path = os.path.join(odk_dir, *['forms', form_directory, "submissions", submission_id, '*.*'])
+            submissions_path = os.path.join(odk_dir,
+                                            *['forms', form_directory, "submissions", submission_id, '*.*'])
             files = glob.glob(submissions_path)
             if files:
                 for file in files:
@@ -109,6 +71,7 @@ def get_submission_media_files(request, project, form):
             zip_file = os.path.join(odk_dir, *['tmp', uid])
             shutil.make_archive(zip_file, 'zip', tmp_dir)
             return True, zip_file + ".zip"
+
     return False, request.translate("There are no media files to download")
 
 

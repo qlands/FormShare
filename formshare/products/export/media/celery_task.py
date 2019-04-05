@@ -17,16 +17,6 @@ gettext.textdomain('formshare')
 _ = gettext.gettext
 
 
-class BuildFileError(Exception):
-    """
-        Exception raised when there is an error while creating the repository.
-    """
-
-    def __str__(self):
-        return _('Unknown error while creating the XLSX. Sorry about this. '
-                 'Please report this error to support_for_ilri@qlands.com')
-
-
 class EmptyFileError(Exception):
     """
         Exception raised when there is an error while creating the repository.

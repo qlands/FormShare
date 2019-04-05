@@ -50,7 +50,7 @@ class DownloadPrivateProduct(PrivateView):
                 if file_extension == '':
                     file_extension = 'unknown'
                 response = FileResponse(output_file, request=self.request, content_type=mime_type)
-                response.content_disposition = 'attachment; filename="' + form_id + '.' + file_extension + '"'
+                response.content_disposition = 'attachment; filename="' + form_id + file_extension + '"'
                 update_download_counter(self.request, project_id, form_id, product_id, output_id)
                 return response
             else:
@@ -86,7 +86,7 @@ class DownloadPublicProduct(PublicView):
                 if file_extension == '':
                     file_extension = 'unknown'
                 response = FileResponse(output_file, request=self.request, content_type=mime_type)
-                response.content_disposition = 'attachment; filename="' + form_id + '.' + file_extension + '"'
+                response.content_disposition = 'attachment; filename="' + form_id + file_extension + '"'
                 update_download_counter(self.request, project_id, form_id, product_id, output_id)
                 return response
             else:
@@ -134,7 +134,7 @@ class DownloadPrivateProductByAPI(APIView):
                 if file_extension == '':
                     file_extension = 'unknown'
                 response = FileResponse(output_file, request=self.request, content_type=mime_type)
-                response.content_disposition = 'attachment; filename="' + form_id + '.' + file_extension + '"'
+                response.content_disposition = 'attachment; filename="' + form_id + file_extension + '"'
                 update_download_counter(self.request, project_id, form_id, product_id, output_id)
                 return response
             else:

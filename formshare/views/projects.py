@@ -20,6 +20,7 @@ from formshare.processes.elasticsearch.repository_index import get_dataset_stats
 from formshare.processes.submission.api import get_gps_points_from_project
 import re
 from pyramid.response import FileResponse
+from hashlib import md5
 
 
 class ProjectStoredFileView(ProjectsView):
@@ -335,23 +336,37 @@ class AddFileToProject(ProjectsView):
             raise HTTPNotFound  # Don't edit a public or a project that I am just a member
 
         if self.request.method == 'POST':
+            files = self.request.POST.getall('filetoupload')
+            form_data = self.get_post_dict()
             self.returnRawViewResult = True
-            try:
-                input_file = self.request.POST['upload'].file
-            except AttributeError:
-                input_file = None
+
             next_page = self.request.route_url('project_details', userid=user_id, projcode=project_code)
-            if input_file is not None:
-                file_name = self.request.POST['upload'].filename
-                added, message = add_file_to_project(self.request, project_id, file_name)
+
+            error = False
+            message = ""
+            if "overwrite" in form_data.keys():
+                overwrite = True
+            else:
+                overwrite = False
+            for file in files:
+                file_name = file.filename
+                added, message = add_file_to_project(self.request, project_id, file_name, overwrite)
                 if added:
-                    store_file(self.request, project_id, file_name, self.request.POST['upload'].file)
-                    self.request.session.flash(self._('The files was added successfully'))
+                    file.file.seek(0)
+                    store_file(self.request, project_id, file_name, file.file)
                 else:
-                    self.add_error(message)
-                    next_page = self.request.route_url('project_details', userid=user_id, projcode=project_code)
-                    return HTTPFound(location=next_page)
-            return HTTPFound(location=next_page)
+                    error = True
+                    break
+            if not error:
+                if len(files) == 1:
+                    self.request.session.flash(self._('The file was uploaded successfully'))
+                else:
+                    self.request.session.flash(self._('The files were uploaded successfully'))
+                return HTTPFound(location=next_page)
+            else:
+                self.add_error(message)
+                next_page = self.request.route_url('project_details', userid=user_id, projcode=project_code)
+                return HTTPFound(location=next_page)
         else:
             raise HTTPNotFound
 

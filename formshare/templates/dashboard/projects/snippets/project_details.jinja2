@@ -161,7 +161,7 @@
                                 <div class="ibox-tools">
                                     {% block project_details_files_tools %}
                                         {% if projectData.access_type < 4 %}
-                                            <a id="add_file" data-toggle="modal" data-target="#myModal" style="margin-right: 10px">
+                                            <a id="add_file" data-toggle="modal" data-target="#upload_file" style="margin-right: 10px">
                                                 <i class="fa fa-plus-square text-success" title="{{ _('Add new file') }}"></i>
                                             </a>
                                         {% endif %}
@@ -188,7 +188,7 @@
                                         {% endif %}
                                         <ul class="tag-list" style="padding: 0">
                                             {% for file in files %}
-                                                <li><a class="file-item" urn="{{ request.route_url('project_remove_file',userid=userid,projcode=projectData.project_code,filename=file.file_name) }}" href="{{ request.route_url('project_stored_file',userid=userid,projcode=projectData.project_code,filename=file.file_name) }}"><i class="fa fa-file-pdf-o"></i> {{ file.file_name }}</a></li>
+                                                <li><a class="file-item" data-file-name="{{ file.file_name }}" urn="{{ request.route_url('project_remove_file',userid=userid,projcode=projectData.project_code,filename=file.file_name) }}" href="{{ request.route_url('project_stored_file',userid=userid,projcode=projectData.project_code,filename=file.file_name) }}"><i class="fa fa-file-pdf-o"></i> {{ file.file_name }}</a></li>
                                             {% endfor %}
                                         </ul>
                                     </div>

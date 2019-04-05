@@ -246,7 +246,7 @@ def set_project_as_active(request, user, project):
     return True, ""
 
 
-def add_file_to_project(request, project, file_name):
+def add_file_to_project(request, project, file_name, overwrite=False):
     res = request.dbsession.query(ProjectFile).filter(ProjectFile.project_id == project).filter(
         ProjectFile.file_name == file_name).first()
     if res is None:
@@ -263,7 +263,10 @@ def add_file_to_project(request, project, file_name):
             return False, str(e)
         return True, new_file_id
     else:
-        return False, request.translate("The file {} already exist".format(file_name))
+        if not overwrite:
+            return False, request.translate("The file {} already exist".format(file_name))
+        else:
+            return True, res.file_id
 
 
 def get_project_files(request, project):

@@ -9,6 +9,7 @@
 
     {% cssresource request,'formshare','bsmarkdown' %}
     {% cssresource request,'formshare','leaflet_beautify_marker_icon' %}
+    {% cssresource request,'formshare','switchery' %}
 
 {% endblock css %}
 
@@ -19,6 +20,8 @@
     {% jsresource request,'formshare','leaflet_beautify_marker_icon' %}
     {% jsresource request,'formshare','taphold' %}
     {% jsresource request,'formshare','clipboard' %}
+    {% jsresource request,'formshare','bs-custom-file-input' %}
+    {% jsresource request,'formshare','switchery' %}
 
 
 {% endblock topScripts %}
@@ -44,6 +47,7 @@
         {% include 'dashboard/projects/snippets/project_details.jinja2' %}
         {% set action_url = request.route_url('form_add',userid=activeProject.owner,projcode=activeProject.project_code) %}
         {% include 'dashboard/projects/forms/snippets/upload_form.jinja2' %}
+        {% include 'dashboard/projects/snippets/upload_file.jinja2' %}
     {% endif %}
 
 {% endblock maincontent %}
@@ -54,6 +58,7 @@
         {% include 'dashboard/projects/snippets/project_details.jinja2' %}
         {% set action_url = request.route_url('form_add',userid=activeProject.owner,projcode=activeProject.project_code) %}
         {% include 'dashboard/projects/forms/snippets/upload_form.jinja2' %}
+        {% include 'dashboard/projects/snippets/upload_file.jinja2' %}
     {% else %}
         {{ super() }}
     {% endif %}
@@ -70,6 +75,11 @@
             {% for form in forms %}
                 {% include 'dashboard/projects/snippets/project_form_odk_item_js.jinja2' %}
             {% endfor %}
+
+            bsCustomFileInput.init();
+
+            var elem = document.querySelector('.js-switch');
+            var overwrite_switch = new Switchery(elem, { color: '#1AB394' });
 
             new ClipboardJS('.clipboard');
             $('.remove_form').click(function () {
@@ -144,7 +154,7 @@
                         showCancelButton: true,
                         confirmButtonColor: "#DD6B55",
                         confirmButtonText: "{{ _('Yes, delete it!') }}",
-                        cancelButtonText: "{{ _('Ups, cancel!') }}",
+                        cancelButtonText: "{{ _('Oops, cancel!') }}",
                         closeOnConfirm: true,
                         closeOnCancel: true },
                     function (isConfirm) {
@@ -170,7 +180,8 @@
                 {
                     var action_url = $( this ).attr('urn');
                     swal({
-                            title: "{{ _('Are you sure?') }}",
+                            title: "{{ _('Remove assistant') }}",
+                            text: "{{ _('Are you sure?') }}",
                             type: "warning",
                             showCancelButton: true,
                             confirmButtonColor: "#DD6B55",
@@ -200,7 +211,8 @@
                 {
                     var action_url = $( this ).attr('urn');
                     swal({
-                            title: "{{ _('Are you sure?') }}",
+                            title: "{{ _('Remove group') }}",
+                            text: "{{ _('Are you sure?') }}",
                             type: "warning",
                             showCancelButton: true,
                             confirmButtonColor: "#DD6B55",
@@ -229,8 +241,10 @@
                 $(".file-item").on("taphold", function()
                 {
                     var action_url = $( this ).attr('urn');
+                    var file_name = $( this ).attr('data-file-name');
                     swal({
-                            title: "{{ _('Are you sure?') }}",
+                            title: "{{ _('Delete file') }} ",
+                            text: "{{ _('Are you sure that you want to delete') }} " + file_name + "?",
                             type: "warning",
                             showCancelButton: true,
                             confirmButtonColor: "#DD6B55",

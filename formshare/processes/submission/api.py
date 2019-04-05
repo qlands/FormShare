@@ -2,11 +2,9 @@ import uuid
 import os
 import shutil
 import glob
-from decimal import Decimal
 from subprocess import Popen, PIPE, check_call, CalledProcessError
 from formshare.processes.db import get_form_schema, get_form_directory, get_primary_key, get_project_form_colors
 from formshare.processes.odk import get_odk_path
-import datetime
 from formshare.processes.elasticsearch.repository_index import get_datasets_from_form, get_datasets_from_project
 from formshare.processes.color_hash import ColorHash
 import logging

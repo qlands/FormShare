@@ -93,11 +93,13 @@ def build_csv(settings, form_directory, form_schema, csv_file):
                 check_call(args)
 
             else:
-                raise JQError("JQ error: " + stderr.decode('utf-8') + "-" + stdout.decode('utf-8') + ":" +
-                              " ".join(args))
+                log.error("JQ error: " + stderr.decode('utf-8') + "-" + stdout.decode('utf-8') + ":" + " ".join(args))
+                raise JQError("JQ error: " + stderr.decode('utf-8') + "-" + stdout.decode('utf-8'))
 
         else:
             raise EmptyFileError(_('The ODK form does not contain any submissions'))
     else:
+        log.error("MySQLDenormalize Error: " + stderr.decode('utf-8') + "-" + stdout.decode('utf-8') + ":"
+                  + " ".join(args))
         raise MySQLDenormalizeError("MySQLDenormalize Error: " + stderr.decode('utf-8') + "-" +
-                                    stdout.decode('utf-8') + ". Args: " + " ".join(args))
+                                    stdout.decode('utf-8'))

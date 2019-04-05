@@ -21,6 +21,7 @@ from formshare.products import get_form_products
 import uuid
 import shutil
 from formshare.products.export.xlsx import generate_xlsx_file
+from formshare.products.export.media import generate_media_zip_file
 
 
 log = logging.getLogger(__name__)
@@ -1031,16 +1032,26 @@ class DownloadSubmissionFiles(PrivateView):
         form_data = get_form_data(self.request, project_id, form_id)
         if form_data is None:
             raise HTTPNotFound
-
-        created, file = get_submission_media_files(self.request, project_id, form_id)
-        if created:
-            response = FileResponse(file, request=self.request, content_type='application/zip')
-            response.content_disposition = 'attachment; filename="' + form_id + '.zip"'
-            return response
+        if form_data['form_schema'] is None:
+            created, file = get_submission_media_files(self.request, project_id, form_id)
+            if created:
+                response = FileResponse(file, request=self.request, content_type='application/zip')
+                response.content_disposition = 'attachment; filename="' + form_id + '.zip"'
+                return response
+            else:
+                self.add_error(file)
+                next_page = self.request.params.get('next') or self.request.route_url('form_details', userid=user_id,
+                                                                                      projcode=project_code, formid=form_id)
+                return HTTPFound(location=next_page)
         else:
-            self.add_error(file)
+            odk_dir = get_odk_path(self.request)
+            generate_media_zip_file(self.request, self.userID, project_id, form_id, odk_dir,
+                                    form_data['form_directory'], form_data['form_schema'], form_data['form_pkey'])
             next_page = self.request.params.get('next') or self.request.route_url('form_details', userid=user_id,
-                                                                                  projcode=project_code, formid=form_id)
+                                                                                  projcode=project_code,
+                                                                                  formid=form_id,
+                                                                                  _query={'tab': 'task',
+                                                                                          'product': 'media_export'})
             return HTTPFound(location=next_page)
 
 

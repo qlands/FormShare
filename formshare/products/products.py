@@ -4,7 +4,6 @@ from formshare.config.celery_app import celeryApp
 import formshare.plugins as p
 import logging
 import os
-import pprint
 
 __all__ = [
     'add_product', 'register_product_instance', 'product_found', 'get_products', 'stop_task', 'get_product',
@@ -39,6 +38,11 @@ def add_product(product, from_plugin=False):
 
 def register_product_instance(request, user, project, form, product, task, output_file, file_mime, process_only=False):
     if product_found(product):
+        repo_dir = request.registry.settings['repository.path']
+        paths = ['products']
+        products_dir = os.path.join(repo_dir, *paths)
+        if not os.path.exists(products_dir):
+            os.makedirs(products_dir)
         add_product_instance(request, user, project, form, product, task, output_file, file_mime, process_only)
 
 
@@ -62,6 +66,8 @@ def get_product_description(request, product):
         return request.translate('Build repository')
     if product == "xlsx_export":
         return request.translate('Export to Excel')
+    if product == "media_export":
+        return request.translate('Export Media')
     return request.translate("Without description")
 
 

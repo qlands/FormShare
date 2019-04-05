@@ -11,8 +11,9 @@ def generate_xlsx_file(request, user, project, form, odk_dir, form_directory, fo
             settings[key] = value
 
     uid = str(uuid.uuid4())
-    paths = ['tmp', uid + ".xlsx"]
-    xlsx_file = os.path.join(odk_dir, *paths)
+    paths = ['products', uid + ".xlsx"]
+    repo_dir = request.registry.settings['repository.path']
+    xlsx_file = os.path.join(repo_dir, *paths)
 
     task = build_xlsx.apply_async((settings, odk_dir, form_directory, form_schema, xlsx_file, include_sensitive),
                                   countdown=2)

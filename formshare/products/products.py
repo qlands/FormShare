@@ -65,9 +65,11 @@ def get_product_description(request, product):
     if product == "repository":
         return request.translate('Build repository')
     if product == "xlsx_export":
-        return request.translate('Export to Excel')
+        return request.translate('Excel')
     if product == "media_export":
-        return request.translate('Export Media')
+        return request.translate('Media')
+    if product == "kml_export":
+        return request.translate('KML')
     return request.translate("Without description")
 
 

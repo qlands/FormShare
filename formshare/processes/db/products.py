@@ -3,6 +3,7 @@ from formshare.processes.db.celery import get_task_status
 import datetime
 import logging
 from sqlalchemy import func
+import os
 
 __all__ = [
     'add_product_instance', 'delete_product', 'get_form_used_products', 'get_form_outputs',
@@ -33,16 +34,34 @@ def add_product_instance(request, user, project, form, product, task, output_fil
 
 
 def delete_product(request, project, form, product, output):
-    try:
-        request.dbsession.query(Product).filter(Product.project_id == project).filter(Product.form_id == form) \
-            .filter(Product.product_id == product).filter(Product.output_id == output).delete()
-        request.dbsession.flush()
-        return True, ""
-    except Exception as e:
-        request.dbsession.rollback()
-        log.error(
-            "Error {} while updating setting public access for product {} output ()".format(str(e), product, output))
-        return False, str(e)
+    res = request.dbsession.query(Product).filter(Product.project_id == project).filter(Product.form_id == form)\
+        .filter(Product.product_id == product).filter(Product.output_id == output).one()
+    if res is not None:
+        file_deleted = False
+        try:
+            os.remove(res.output_file)
+            file_deleted = True
+        except Exception as e:
+            if os.path.exists(res.output_file):
+                log.error("Unable to delete file {} for product {} output ()".format(str(e), product, output))
+            else:
+                file_deleted = True
+        if file_deleted:
+            try:
+                request.dbsession.query(Product).filter(Product.project_id == project).filter(Product.form_id == form) \
+                    .filter(Product.product_id == product).filter(Product.output_id == output).delete()
+                request.dbsession.flush()
+                return True, ""
+            except Exception as e:
+                request.dbsession.rollback()
+                log.error(
+                    "Error {} while updating setting public access for product {} output ()".format(str(e), product,
+                                                                                                    output))
+                return False, str(e)
+        else:
+            return False, request.translate("Unable to delete product file")
+    else:
+        return False, request.translate('Output does not exists')
 
 
 def get_form_used_products(request, project, form):

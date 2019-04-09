@@ -1,0 +1,15 @@
+- Messaging, Watch and Follow
+- Search engine
+- Edit Dictionary
+- Clean Database
+- Manage submissions (Delete)
+- Pagination and filter in submission logs
+- New create repository
+- Manage separation files
+- Submission plugin interfaces
+- Import from BriefCase
+- Clean data JSON API
+- Audit log (Record changes, View changes)
+- Check access levels (Admin, Editor, Member)
+- Manage form types (CSPro, ODK X, etc)
+

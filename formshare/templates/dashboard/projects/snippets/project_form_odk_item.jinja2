@@ -11,7 +11,7 @@
                     <span class="float-right">{{ _('Uploaded on') }} {{ request.h.readble_date(form.form_cdate) }}</span>
                     <strong><a href="{{ request.route_url('form_details',userid=userid,projcode=projectData.project_code,formid=form.form_id) }}">{{ form.form_name }}</a></strong> {% if form.form_schema != None %} <span class="badge badge-primary">{{ _('With repository') }}</span>{% else %}<span class="badge badge-warning" title="{{ _('Data is not stored in a database') }}">{{ _('In testing') }}</span>{% endif %} {% if form.form_accsub ==0 %}<span class="label label-danger">{{ _('Inactive') }}</span>{% else %}<span class="label label-primary">{{ _('Active') }}</span>{% endif %} {% if form.form_geopoint != None %}<span class="label label-default">{{ _('Georeferenced') }}</span>{% endif %}<br>
                     {% if form.submissions > 0  %}
-                        <span class="text-muted">{{ _('Last submission') }}: {{ request.h.readble_date_with_time(form.last) }} {{ _('by') }} <a class="text-info">{{ form.bydetails.coll_name }}</a></span>
+                        <span class="text-muted">{{ _('Last submission') }}: {{ request.h.readble_date_with_time(form.last) }} {{ _('by') }} <a class="text-info">{{ form.bydetails.coll_name }}</a></span><br>
                     {% else %}
                         <span class="text-muted">Without submissions</span>
                     {% endif %}
@@ -40,13 +40,14 @@
                             <a href="{{ request.route_url('createrepository',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id) }}" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-database"></i> {{ _('Create repository') }} </a>
                         {% else %}
                             <div id="btn-group-{{ form.form_id }}" class="btn-group">
-                                <button data-toggle="dropdown" class="btn btn-default btn-xs dropdown-toggle">{{ _('Downloads') }}</button>
+                                <button data-toggle="dropdown" class="btn btn-default btn-xs dropdown-toggle">{{ _('Exports') }}</button>
                                 <ul id="dropdown-menu-{{ form.form_id }}" class="dropdown-menu">
                                     {% block download_types_repo %}
-                                        <li><a class="dropdown-item" href="{{ request.route_url('form_download_xlsx_data',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next':request.url}) }}"><i class="far fa-file-excel"></i> {{ _('Download data in Excel format') }}</a></li>
-                                        <li><a class="dropdown-item" href="{{ request.route_url('form_download_media',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next':request.url}) }}"><i class="fas fa-images"></i> {{ _('Download submitted media') }}</a></li>
+                                        <li><a class="dropdown-item" href="{{ request.route_url('form_download_xlsx_data',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next':request.url}) }}"><i class="far fa-file-excel"></i> {{ _('Export data in Excel format') }}</a></li>
+                                        <li><a class="dropdown-item" href="{{ request.route_url('form_download_media',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next':request.url}) }}"><i class="fas fa-images"></i> {{ _('Export submitted media') }}</a></li>
+                                        <li><a class="dropdown-item" href="{{ request.route_url('form_download_repo_csv',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next':request.url}) }}"><i class="fas fa-file-csv"></i> {{ _('Export data in CSV format') }}</a></li>
                                         {% if form.submissions > 0 and form.form_geopoint != None and withgps > 0 %}
-                                            <li><a style="line-height: 1.5;" href="{{ request.route_url('form_download_kml',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id) }}"><i class="fas fa-globe-americas"></i> {{ _('Download KML') }}</a></li>
+                                            <li><a style="line-height: 1.5;" href="{{ request.route_url('form_download_kml',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id) }}"><i class="fas fa-globe-americas"></i> {{ _('Export KML') }}</a></li>
                                         {% endif %}
                                     {% endblock download_types_repo %}
                                 </ul>

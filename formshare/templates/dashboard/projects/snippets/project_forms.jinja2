@@ -39,10 +39,8 @@
                     <div class="feed-activity-list">
                         {% if forms|length > 0 %}
                             {% for form in forms %}
-                                {% if form.form_incversion == 0 %}
+                                {% if form.form_type == 1 %}
                                     {% include 'dashboard/projects/snippets/project_form_odk_item.jinja2' %}
-                                {% else %}
-                                    {% include 'dashboard/projects/snippets/project_subversion_item.jinja2' %}
                                 {% endif %}
                             {% endfor %}
                         {% else %}

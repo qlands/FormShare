@@ -5,35 +5,46 @@
 
 {% block css %}
     {{ super() }}
-    {% cssresource request,'formshare','switchery' %}
-    {% cssresource request,'formshare','select2' %}
-    {% if formDetails.form_geopoint != None %}
-        {% cssresource request,'formshare','leaflet' %}
+    {% if formDetails.form_type == 1 %}
+        {% cssresource request,'formshare','switchery' %}
+        {% cssresource request,'formshare','select2' %}
+        {% if formDetails.form_geopoint != None %}
+            {% cssresource request,'formshare','leaflet' %}
+        {% endif %}
+        {% if products|length > 0 %}
+            {% cssresource request,'formshare','codemirror-ambiance' %}
+        {% endif %}
+        <style>
+            .remove-all-styles {
+                all: unset;
+            }
+        </style>
+    {% else %}
+        {% block form_css_other %}
+
+        {% endblock form_css_other %}
     {% endif %}
-    {% if products|length > 0 %}
-        {% cssresource request,'formshare','codemirror-ambiance' %}
-    {% endif %}
-    <style>
-        .remove-all-styles {
-            all: unset;
-        }
-    </style>
 {% endblock css %}
 
 {% block topScripts %}
     {{ super() }}
-    {% jsresource request,'formshare','switchery' %}
-    {% jsresource request,'formshare','taphold' %}
-    {% jsresource request,'formshare','select2' %}
-    {% jsresource request,'formshare','bs-custom-file-input' %}
-    {% jsresource request,'formshare','sse' %}
-    {% if formDetails.form_geopoint != None %}
-        {% jsresource request,'formshare','leaflet' %}
-    {% endif %}
-    {% if products|length > 0 %}
-        {% jsresource request,'formshare','codemirror-shell' %}
-    {% endif %}
+    {% if formDetails.form_type == 1 %}
+        {% jsresource request,'formshare','switchery' %}
+        {% jsresource request,'formshare','taphold' %}
+        {% jsresource request,'formshare','select2' %}
+        {% jsresource request,'formshare','bs-custom-file-input' %}
+        {% jsresource request,'formshare','sse' %}
+        {% if formDetails.form_geopoint != None %}
+            {% jsresource request,'formshare','leaflet' %}
+        {% endif %}
+        {% if products|length > 0 %}
+            {% jsresource request,'formshare','codemirror-shell' %}
+        {% endif %}
+    {% else %}
+        {% block form_topscripts_other %}
 
+        {% endblock form_topscripts_other %}
+    {% endif %}
 {% endblock topScripts %}
 
 {% block breadcrumbs %}
@@ -41,231 +52,477 @@
 {% endblock breadcrumbs %}
 
 {% block mainsection %}
-    {{ form.display_errors(errors) }}
-    <div class="row">
-        <div class="col-lg-3">
-            <div class="wrapper wrapper-content project-manager">
-                {% include 'dashboard/projects/forms/snippets/info_tab.jinja2' %}
-                {% include 'dashboard/projects/forms/snippets/links_tab.jinja2' %}
-                {% if formDetails.form_schema != None %}
-                    {% include 'dashboard/projects/forms/snippets/repository_tab.jinja2' %}
-                {% endif %}
-                {% include 'dashboard/projects/forms/snippets/files_tab.jinja2' %}
-                {% include 'dashboard/projects/forms/snippets/assistants_tab.jinja2' %}
-                {% include 'dashboard/projects/forms/snippets/groups_tab.jinja2' %}
-                <div class="text-center m-t-md">
-                    {% if projectDetails.access_type < 4 %}
-                        <a href="{{ request.route_url('form_edit',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" class="btn btn-xs btn-warning">Edit form</a>
+    {% if formDetails.form_type == 1 %}
+        {{ form.display_errors(errors) }}
+        <div class="row">
+            <div class="col-lg-3">
+                <div class="wrapper wrapper-content project-manager">
+                    {% include 'dashboard/projects/forms/snippets/info_tab.jinja2' %}
+                    {% include 'dashboard/projects/forms/snippets/links_tab.jinja2' %}
+                    {% if formDetails.form_schema != None %}
+                        {% include 'dashboard/projects/forms/snippets/repository_tab.jinja2' %}
                     {% endif %}
+                    {% include 'dashboard/projects/forms/snippets/files_tab.jinja2' %}
+                    {% include 'dashboard/projects/forms/snippets/assistants_tab.jinja2' %}
+                    {% include 'dashboard/projects/forms/snippets/groups_tab.jinja2' %}
+                    <div class="text-center m-t-md">
+                        {% if projectDetails.access_type < 4 %}
+                            <a href="{{ request.route_url('form_edit',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" class="btn btn-xs btn-warning">Edit form</a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="col-lg-9">
-            <div class="wrapper wrapper-content">
-                <div class="ibox">
-                    <div class="ibox-content">
-                        <div class="row">
-                            <div class="col-lg-12">
-                                <div class="m-b-md">
-                                    <h2>Form details</h2>
-                                </div>
+            <div class="col-lg-9">
+                <div class="wrapper wrapper-content">
+                    <div class="ibox">
+                        <div class="ibox-content">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    <div class="m-b-md">
+                                        <h2>Form details</h2>
+                                    </div>
 
+                                </div>
                             </div>
-                        </div>
-                        {% include 'dashboard/projects/forms/snippets/form_details.jinja2' %}
-                        <div class="row m-t-sm">
-                            <div class="col-lg-12">
-                                {% if formDetails.form_geopoint != None %}
-                                    {% include 'dashboard/projects/forms/snippets/form_map.jinja2' %}
-                                {% endif %}
-                            {% include 'dashboard/projects/forms/snippets/form_tasks.jinja2' %}
-{#                                {% include 'dashboard/projects/forms/snippets/form_activity.jinja2' %}#}
+                            {% include 'dashboard/projects/forms/snippets/form_details.jinja2' %}
+                            <div class="row m-t-sm">
+                                <div class="col-lg-12">
+                                    {% if formDetails.form_geopoint != None %}
+                                        {% include 'dashboard/projects/forms/snippets/form_map.jinja2' %}
+                                    {% endif %}
+                                    {% include 'dashboard/projects/forms/snippets/form_tasks.jinja2' %}
+                                    {#                                {% include 'dashboard/projects/forms/snippets/form_activity.jinja2' %}#}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    {% include 'dashboard/projects/forms/snippets/update_form.jinja2' %}
-    {% include 'dashboard/projects/forms/snippets/upload_file.jinja2' %}
-    {% include 'dashboard/projects/forms/snippets/add_assistant.jinja2' %}
-    {% include 'dashboard/projects/forms/snippets/edit_assistant.jinja2' %}
-    {% include 'dashboard/projects/forms/snippets/add_group.jinja2' %}
-    {% include 'dashboard/projects/forms/snippets/edit_group.jinja2' %}
-    {% include 'dashboard/projects/forms/snippets/product_error.jinja2' %}
+        {% include 'dashboard/projects/forms/snippets/update_form.jinja2' %}
+        {% include 'dashboard/projects/forms/snippets/upload_file.jinja2' %}
+        {% include 'dashboard/projects/forms/snippets/add_assistant.jinja2' %}
+        {% include 'dashboard/projects/forms/snippets/edit_assistant.jinja2' %}
+        {% include 'dashboard/projects/forms/snippets/add_group.jinja2' %}
+        {% include 'dashboard/projects/forms/snippets/edit_group.jinja2' %}
+        {% include 'dashboard/projects/forms/snippets/product_error.jinja2' %}
+    {% else %}
+        {% block form_mainsection_other %}
+
+        {% endblock form_mainsection_other %}
+    {% endif %}
 {% endblock mainsection %}
 
 {% block scripts %}
     {{ super() }}
-    <script>
-        $(document).ready(function() {
-
-            {% if formDetails.form_schema == None and formDetails.form_reptask != None and taskdata.rescode < 0%}
-                let sse = $.SSE('{{ request.route_url('form_sse', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}', {
-                    onMessage: function(e){
-                        let message = JSON.parse(e.data)['message'];
-                        if (message !== null)
-                        {
-                            console.log(message)
-                            message = JSON.parse(message);
-                            if (typeof message === 'object')
-                            {
-                                let task_id = message['task'];
-                                let task_status = message['status'];
-                                if (task_id === "{{ formDetails.form_reptask }}")
+    {% if formDetails.form_type == 1 %}
+        <script>
+            $(document).ready(function() {
+                {% block odk_scripts %}
+                    {% if formDetails.form_schema == None and formDetails.form_reptask != None and taskdata.rescode < 0%}
+                        let sse = $.SSE('{{ request.route_url('form_sse', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}', {
+                            onMessage: function(e){
+                                let message = JSON.parse(e.data)['message'];
+                                if (message !== null)
                                 {
-                                    if ((task_status === "success") || (task_status === "failure"))
+                                    console.log(message)
+                                    message = JSON.parse(message);
+                                    if (typeof message === 'object')
                                     {
-                                        location.reload();
+                                        let task_id = message['task'];
+                                        let task_status = message['status'];
+                                        if (task_id === "{{ formDetails.form_reptask }}")
+                                        {
+                                            if ((task_status === "success") || (task_status === "failure"))
+                                            {
+                                                location.reload();
+                                            }
+                                            else {
+                                                $(".repository_message").text(task_status);
+                                                $("#sse_" + task_id).text(task_status);
+                                            }
+                                        }
                                     }
-                                    else {
-                                        $(".repository_message").text(task_status);
-                                        $("#sse_" + task_id).text(task_status);
+                                    else
+                                    {
+                                        console.log(message)
                                     }
                                 }
+                            }
+                        });
+                        sse.start();
+
+                        let $element = $('.repository_message, .sse-message');
+                        function fadeInOut () {
+                            $element.fadeIn(1000, function () {
+                                $element.fadeOut(1500, function () {
+                                    $element.fadeIn(1500, function () {
+                                        setTimeout(fadeInOut, 500);
+                                    });
+                                });
+                            });
+                        }
+                        fadeInOut();
+
+                        $('.cancel_repository').click(function () {
+                            swal({
+                                    title: "{{ _('Stop the generation of the repository') }}",
+                                    text: "{{ _('Are you sure that you want to stop this?') }}",
+                                    type: "warning",
+                                    showCancelButton: true,
+                                    confirmButtonColor: "#DD6B55",
+                                    confirmButtonText: "{{ _('Yes, stop the process') }}",
+                                    cancelButtonText: "{{ _('Oops!, cancel!') }}",
+                                    closeOnConfirm: true,
+                                    closeOnCancel: true },
+                                function (isConfirm) {
+                                    if (isConfirm) {
+                                        var form = document.createElement('form');
+                                        form.setAttribute('method', 'post');
+                                        form.setAttribute('action', '{{ request.route_url('stop_repository',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}');
+                                        form.style.display = 'hidden';
+
+                                        var i = document.createElement("input"); //input element, text
+                                        i.setAttribute('type',"text");
+                                        i.setAttribute('name',"csrf_token");
+                                        i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                                        form.appendChild(i);
+
+                                        document.body.appendChild(form);
+                                        form.submit();
+                                    }
+                                });
+                        });
+
+                        $('.cancel-task').click(function () {
+                            var action_url = $( this ).attr('urn');
+                            swal({
+                                    title: "{{ _('Cancel the process') }}",
+                                    text: "{{ _('Are you sure that you want to cancel this process') }}",
+                                    type: "warning",
+                                    showCancelButton: true,
+                                    confirmButtonColor: "#DD6B55",
+                                    confirmButtonText: "{{ _('Yes, stop the process') }}",
+                                    cancelButtonText: "{{ _('Oops!, cancel!') }}",
+                                    closeOnConfirm: true,
+                                    closeOnCancel: true },
+                                function (isConfirm) {
+                                    if (isConfirm) {
+                                        var form = document.createElement('form');
+                                        form.setAttribute('method', 'post');
+                                        form.setAttribute('action', action_url);
+                                        form.style.display = 'hidden';
+
+                                        var i = document.createElement("input"); //input element, text
+                                        i.setAttribute('type',"text");
+                                        i.setAttribute('name',"csrf_token");
+                                        i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                                        form.appendChild(i);
+
+                                        document.body.appendChild(form);
+                                        form.submit();
+                                    }
+                                });
+                        });
+
+                    {% else %}
+                        {% if processing > 0 %}
+                            let active_tasks = [{% for product in products %}{% for output in product.outputs %}{% if output.status == -1 %}'{{ output.celery_taskid }}',{% endif %}{% endfor %}{% endfor %}];
+                            let finished_tasks = [];
+                            let sse2 = $.SSE('{{ request.route_url('form_sse', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}', {
+                                onMessage: function(e){
+                                    let message = JSON.parse(e.data)['message'];
+                                    if (message !== null)
+                                    {
+                                        message = JSON.parse(message);
+                                        if (typeof message === 'object')
+                                        {
+                                            let task_id = message['task'];
+                                            let task_status = message['status'];
+                                            if ((task_status === "success") || (task_status === "failure")) {
+                                                if (active_tasks.indexOf(task_id) >= 0) {
+                                                    finished_tasks.push(task_id);
+                                                    if (active_tasks.length === finished_tasks.length)
+                                                        sse2.stop();
+                                                    $('#feed_element_' + task_id).load('{{ request.url }} #feed_element_' + task_id,function(){
+                                                        product_buttons()
+                                                    });
+                                                }
+                                            }
+                                            else {
+                                                $("#sse_" + task_id).text(task_status);
+                                            }
+
+                                        }
+                                        else
+                                        {
+                                            console.log(message)
+                                        }
+                                    }
+                                }
+                            });
+                            sse2.start();
+
+                            let $element2 = $('.sse-message');
+                            function fadeInOut2 () {
+                                $element2.fadeIn(1000, function () {
+                                    $element2.fadeOut(1500, function () {
+                                        $element2.fadeIn(1500, function () {
+                                            setTimeout(fadeInOut2, 500);
+                                        });
+                                    });
+                                });
+                            }
+                            fadeInOut2();
+
+                            $('.cancel-task').click(function () {
+                                var action_url = $( this ).attr('urn');
+                                swal({
+                                        title: "{{ _('Cancel the process') }}",
+                                        text: "{{ _('Are you sure that you want to cancel this process') }}",
+                                        type: "warning",
+                                        showCancelButton: true,
+                                        confirmButtonColor: "#DD6B55",
+                                        confirmButtonText: "{{ _('Yes, stop the process') }}",
+                                        cancelButtonText: "{{ _('Oops!, cancel!') }}",
+                                        closeOnConfirm: true,
+                                        closeOnCancel: true },
+                                    function (isConfirm) {
+                                        if (isConfirm) {
+                                            var form = document.createElement('form');
+                                            form.setAttribute('method', 'post');
+                                            form.setAttribute('action', action_url);
+                                            form.style.display = 'hidden';
+
+                                            var i = document.createElement("input"); //input element, text
+                                            i.setAttribute('type',"text");
+                                            i.setAttribute('name',"csrf_token");
+                                            i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                                            form.appendChild(i);
+
+                                            document.body.appendChild(form);
+                                            form.submit();
+                                        }
+                                    });
+                            });
+
+                        {% endif %}
+                    {% endif %}
+
+
+                    {% if products|length > 0 %}
+
+                        let editor = CodeMirror.fromTextArea(document.getElementById("error_code"), {
+                            lineNumbers: true,
+                            matchBrackets: true,
+                            styleActiveLine: true,
+                            readOnly: true,
+                            theme:"ambiance"
+                        });
+
+                        function product_buttons() {
+                            let error_message = "";
+
+                            $(".error_link").click(function() {
+                                var task_id = $( this ).attr('data-task-id');
+                                error_message = $('#error_' + task_id).val();
+                            });
+
+
+                            $("#product_error").on('shown.bs.modal', function() {
+                                editor.getDoc().setValue(error_message);
+                            });
+
+                            $('.delete-product').click(function () {
+                                console.log("delete-product");
+                                var action_url = $(this).attr('urn');
+                                swal({
+                                        title: "{{ _('Delete product') }}",
+                                        text: "{{ _('Are you sure that you want to delete this product') }}",
+                                        type: "warning",
+                                        showCancelButton: true,
+                                        confirmButtonColor: "#DD6B55",
+                                        confirmButtonText: "{{ _('Yes, delete it') }}",
+                                        cancelButtonText: "{{ _('Oops!, cancel!') }}",
+                                        closeOnConfirm: true,
+                                        closeOnCancel: true
+                                    },
+                                    function (isConfirm) {
+                                        if (isConfirm) {
+                                            var form = document.createElement('form');
+                                            form.setAttribute('method', 'post');
+                                            form.setAttribute('action', action_url);
+                                            form.style.display = 'hidden';
+
+                                            var i = document.createElement("input"); //input element, text
+                                            i.setAttribute('type', "text");
+                                            i.setAttribute('name', "csrf_token");
+                                            i.setAttribute('value', '{{ request.session.get_csrf_token() }}');
+                                            form.appendChild(i);
+
+                                            document.body.appendChild(form);
+                                            form.submit();
+                                        }
+                                    });
+                            });
+
+                            $('.unpublish-product').click(function () {
+                                var action_url = $(this).attr('urn');
+                                swal({
+                                        title: "{{ _('Unpublish product') }}",
+                                        text: "{{ _('Are you sure that you want to unpublish this product') }}",
+                                        type: "warning",
+                                        showCancelButton: true,
+                                        confirmButtonColor: "#DD6B55",
+                                        confirmButtonText: "{{ _('Yes, unpublish it') }}",
+                                        cancelButtonText: "{{ _('Oops!, cancel!') }}",
+                                        closeOnConfirm: true,
+                                        closeOnCancel: true
+                                    },
+                                    function (isConfirm) {
+                                        if (isConfirm) {
+                                            var form = document.createElement('form');
+                                            form.setAttribute('method', 'post');
+                                            form.setAttribute('action', action_url);
+                                            form.style.display = 'hidden';
+
+                                            var i = document.createElement("input"); //input element, text
+                                            i.setAttribute('type', "text");
+                                            i.setAttribute('name', "csrf_token");
+                                            i.setAttribute('value', '{{ request.session.get_csrf_token() }}');
+                                            form.appendChild(i);
+
+                                            document.body.appendChild(form);
+                                            form.submit();
+                                        }
+                                    });
+                            });
+
+                            $('.publish-product').click(function () {
+                                var action_url = $(this).attr('urn');
+                                swal({
+                                        title: "{{ _('Publish product') }}",
+                                        text: "{{ _('Are you sure that you want to publish this product') }}",
+                                        type: "warning",
+                                        showCancelButton: true,
+                                        confirmButtonColor: "#DD6B55",
+                                        confirmButtonText: "{{ _('Yes, publish it') }}",
+                                        cancelButtonText: "{{ _('Oops!, cancel!') }}",
+                                        closeOnConfirm: true,
+                                        closeOnCancel: true
+                                    },
+                                    function (isConfirm) {
+                                        if (isConfirm) {
+                                            var form = document.createElement('form');
+                                            form.setAttribute('method', 'post');
+                                            form.setAttribute('action', action_url);
+                                            form.style.display = 'hidden';
+
+                                            var i = document.createElement("input"); //input element, text
+                                            i.setAttribute('type', "text");
+                                            i.setAttribute('name', "csrf_token");
+                                            i.setAttribute('value', '{{ request.session.get_csrf_token() }}');
+                                            form.appendChild(i);
+
+                                            document.body.appendChild(form);
+                                            form.submit();
+                                        }
+                                    });
+                            });
+                        }
+                        product_buttons();
+                    {% endif %}
+
+                    bsCustomFileInput.init();
+
+                    {% set active_tab = request.params.get('tab',None) %}
+                    var mymap;
+
+                    function load_map()
+                    {
+                        mymap = L.map('projmap').setView([51.505, -0.09], 13);
+                        L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+                            attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                            maxZoom: 18,
+                            id: 'mapbox.streets',
+                            accessToken: 'pk.eyJ1IjoicWxhbmRzIiwiYSI6ImNqZHB1ZDh4YzEwZHEyeG1rcjc0NmFsNzIifQ.i3YebmNDByns1c1ixZE0bA'
+                        }).addTo(mymap);
+
+                        var element = document.getElementById('mapbox');
+                        var full_screen = false;
+                        var normal_height = $("#projmap").height();
+                        new ResizeSensor(element, function() {
+                            var window_width = $(window).width();
+                            var element_width =  element.clientWidth;
+                            if ((element_width / window_width) >= 0.80)
+                            {
+                                $("#projmap").height($(window).height()-80);
+                                mymap.invalidateSize();
+                                //console.log('Changed to ' + element.clientWidth);
+                                full_screen = true;
                             }
                             else
                             {
-                                console.log(message)
-                            }
-                        }
-                    }
-                });
-                sse.start();
-
-                let $element = $('.repository_message, .sse-message');
-                function fadeInOut () {
-                    $element.fadeIn(1000, function () {
-                        $element.fadeOut(1500, function () {
-                            $element.fadeIn(1500, function () {
-                                setTimeout(fadeInOut, 500);
-                            });
-                        });
-                    });
-                }
-                fadeInOut();
-
-                $('.cancel_repository').click(function () {
-                    swal({
-                            title: "{{ _('Stop the generation of the repository') }}",
-                            text: "{{ _('Are you sure that you want to stop this?') }}",
-                            type: "warning",
-                            showCancelButton: true,
-                            confirmButtonColor: "#DD6B55",
-                            confirmButtonText: "{{ _('Yes, stop the process') }}",
-                            cancelButtonText: "{{ _('Oops!, cancel!') }}",
-                            closeOnConfirm: true,
-                            closeOnCancel: true },
-                        function (isConfirm) {
-                            if (isConfirm) {
-                                var form = document.createElement('form');
-                                form.setAttribute('method', 'post');
-                                form.setAttribute('action', '{{ request.route_url('stop_repository',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}');
-                                form.style.display = 'hidden';
-
-                                var i = document.createElement("input"); //input element, text
-                                i.setAttribute('type',"text");
-                                i.setAttribute('name',"csrf_token");
-                                i.setAttribute('value','{{ request.session.get_csrf_token() }}');
-                                form.appendChild(i);
-
-                                document.body.appendChild(form);
-                                form.submit();
+                                if (full_screen)
+                                {
+                                    $("#projmap").height(normal_height);
+                                    mymap.invalidateSize();
+                                    //console.log('Back to ' + normal_height);
+                                    //console.log('Changed to ' + element.clientWidth);
+                                    full_screen = false;
+                                }
                             }
                         });
-                });
 
-                $('.cancel-task').click(function () {
-                    var action_url = $( this ).attr('urn');
-                    swal({
-                            title: "{{ _('Cancel the process') }}",
-                            text: "{{ _('Are you sure that you want to cancel this process') }}",
-                            type: "warning",
-                            showCancelButton: true,
-                            confirmButtonColor: "#DD6B55",
-                            confirmButtonText: "{{ _('Yes, stop the process') }}",
-                            cancelButtonText: "{{ _('Oops!, cancel!') }}",
-                            closeOnConfirm: true,
-                            closeOnCancel: true },
-                        function (isConfirm) {
-                            if (isConfirm) {
-                                var form = document.createElement('form');
-                                form.setAttribute('method', 'post');
-                                form.setAttribute('action', action_url);
-                                form.style.display = 'hidden';
-
-                                var i = document.createElement("input"); //input element, text
-                                i.setAttribute('type',"text");
-                                i.setAttribute('name',"csrf_token");
-                                i.setAttribute('value','{{ request.session.get_csrf_token() }}');
-                                form.appendChild(i);
-
-                                document.body.appendChild(form);
-                                form.submit();
-                            }
-                        });
-                });
-
-            {% else %}
-                {% if processing > 0 %}
-                    let active_tasks = [{% for product in products %}{% for output in product.outputs %}{% if output.status == -1 %}'{{ output.celery_taskid }}',{% endif %}{% endfor %}{% endfor %}];
-                    let finished_tasks = [];
-                    let sse2 = $.SSE('{{ request.route_url('form_sse', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}', {
-                        onMessage: function(e){
-                            let message = JSON.parse(e.data)['message'];
-                            if (message !== null)
+                        $.getJSON("{{ request.route_url('form_download_gpspoints',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}", function( data ) {
+                            var markers = [];
+                            data.points.forEach(function(entry)
                             {
-                                message = JSON.parse(message);
-                                if (typeof message === 'object')
-                                {
-                                    let task_id = message['task'];
-                                    let task_status = message['status'];
-                                    if ((task_status === "success") || (task_status === "failure")) {
-                                        if (active_tasks.indexOf(task_id) >= 0) {
-                                            finished_tasks.push(task_id);
-                                            if (active_tasks.length === finished_tasks.length)
-                                                sse2.stop();
-                                            $('#feed_element_' + task_id).load('{{ request.url }} #feed_element_' + task_id,function(){
-                                                    product_buttons()
-                                                });
-                                        }
-                                    }
-                                    else {
-                                        $("#sse_" + task_id).text(task_status);
-                                    }
-
-                                }
-                                else
-                                {
-                                    console.log(message)
-                                }
-                            }
-                        }
-                    });
-                    sse2.start();
-
-                    let $element2 = $('.sse-message');
-                    function fadeInOut2 () {
-                        $element2.fadeIn(1000, function () {
-                            $element2.fadeOut(1500, function () {
-                                $element2.fadeIn(1500, function () {
-                                    setTimeout(fadeInOut2, 500);
-                                });
+                                var latlng = L.latLng({ lat: entry.lati, lng: entry.long });
+                                var marker = L.marker(latlng).addTo(mymap);
+                                //marker.bindPopup("<b>" + entry.key + "</b>");
+                                markers.push(marker);
                             });
+                            var group = new L.featureGroup(markers);
+                            mymap.fitBounds(group.getBounds());
                         });
                     }
-                    fadeInOut2();
 
-                    $('.cancel-task').click(function () {
+                    {% if formDetails.form_geopoint != None and formDetails.submissions > 0 and withgps > 0 %}
+                        {% if active_tab == 'map' or active_tab == None %}
+                            load_map();
+                        {% else %}
+                            $(".ibox").on('ibox-collapsed',function(){
+                                var id = $(this).attr('id');
+                                if (id === "maptab") {
+                                    if (typeof mymap === 'undefined') {
+                                        load_map();
+                                    }
+                                }
+                            });
+                        {% endif %}
+                    {% endif %}
+
+                    $(".collaborator-list").select2({
+                        dropdownParent: $('#member_form')
+                    });
+
+                    $(".group-list").select2({
+                        dropdownParent: $('#group_form')
+                    });
+
+                    var elem = document.querySelector('.js-switch');
+                    var overwrite_switch = new Switchery(elem, { color: '#1AB394' });
+
+                    $('.remove_form').click(function () {
                         var action_url = $( this ).attr('urn');
                         swal({
-                                title: "{{ _('Cancel the process') }}",
-                                text: "{{ _('Are you sure that you want to cancel this process') }}",
+                                title: "{{ _('Are you sure?') }}",
+                                text: "{{ _('All the data in this form will be deleted!') }}",
                                 type: "warning",
                                 showCancelButton: true,
                                 confirmButtonColor: "#DD6B55",
-                                confirmButtonText: "{{ _('Yes, stop the process') }}",
+                                confirmButtonText: "{{ _('Yes, delete this form!') }}",
                                 cancelButtonText: "{{ _('Oops!, cancel!') }}",
                                 closeOnConfirm: true,
                                 closeOnCancel: true },
@@ -288,47 +545,19 @@
                             });
                     });
 
-                {% endif %}
-            {% endif %}
 
-
-            {% if products|length > 0 %}
-
-                let editor = CodeMirror.fromTextArea(document.getElementById("error_code"), {
-                        lineNumbers: true,
-                        matchBrackets: true,
-                        styleActiveLine: true,
-                        readOnly: true,
-                        theme:"ambiance"
-                    });
-
-                function product_buttons() {
-                    let error_message = "";
-
-                    $(".error_link").click(function() {
-                        var task_id = $( this ).attr('data-task-id');
-                        error_message = $('#error_' + task_id).val();
-                    });
-
-
-                    $("#product_error").on('shown.bs.modal', function() {
-                        editor.getDoc().setValue(error_message);
-                    });
-
-                    $('.delete-product').click(function () {
-                        console.log("delete-product");
-                        var action_url = $(this).attr('urn');
+                    $(".file-item").on("taphold", function()
+                    {
+                        var action_url = $( this ).attr('urn');
                         swal({
-                                title: "{{ _('Delete product') }}",
-                                text: "{{ _('Are you sure that you want to delete this product') }}",
+                                title: "{{ _('Are you sure?') }}",
                                 type: "warning",
                                 showCancelButton: true,
                                 confirmButtonColor: "#DD6B55",
-                                confirmButtonText: "{{ _('Yes, delete it') }}",
+                                confirmButtonText: "{{ _('Yes, remove it!') }}",
                                 cancelButtonText: "{{ _('Oops!, cancel!') }}",
                                 closeOnConfirm: true,
-                                closeOnCancel: true
-                            },
+                                closeOnCancel: true },
                             function (isConfirm) {
                                 if (isConfirm) {
                                     var form = document.createElement('form');
@@ -337,9 +566,9 @@
                                     form.style.display = 'hidden';
 
                                     var i = document.createElement("input"); //input element, text
-                                    i.setAttribute('type', "text");
-                                    i.setAttribute('name', "csrf_token");
-                                    i.setAttribute('value', '{{ request.session.get_csrf_token() }}');
+                                    i.setAttribute('type',"text");
+                                    i.setAttribute('name',"csrf_token");
+                                    i.setAttribute('value','{{ request.session.get_csrf_token() }}');
                                     form.appendChild(i);
 
                                     document.body.appendChild(form);
@@ -348,19 +577,39 @@
                             });
                     });
 
-                    $('.unpublish-product').click(function () {
-                        var action_url = $(this).attr('urn');
+                    var assistant_item = $(".assistant-item");
+
+                    assistant_item.click(function() {
+                        var assistant_name = $( this ).attr('data-assistant-name');
+                        var assistant_role = $( this ).attr('data-assistant-role');
+                        var action_url = $( this ).attr('urn');
+                        $("#edit_assistant_form").prop('action',action_url)
+                        $("#rolewho").text("{{ _('Changing the role of') }} " + assistant_name);
+
+                        var role_submmit = $( "#role_submmit" );
+                        var role_clean = $( "#role_clean" );
+                        var role_both = $( "#role_both" );
+                        if (assistant_role === "1")
+                            role_submmit.prop( "checked", true );
+                        if (assistant_role === "2")
+                            role_clean.prop( "checked", true );
+                        if (assistant_role === "3")
+                            role_both.prop( "checked", true );
+
+                    });
+
+                    assistant_item.on("taphold", function()
+                    {
+                        var action_url = $( this ).attr('data-assistant-remove-url');
                         swal({
-                                title: "{{ _('Unpublish product') }}",
-                                text: "{{ _('Are you sure that you want to unpublish this product') }}",
+                                title: "{{ _('Are you sure?') }}",
                                 type: "warning",
                                 showCancelButton: true,
                                 confirmButtonColor: "#DD6B55",
-                                confirmButtonText: "{{ _('Yes, unpublish it') }}",
+                                confirmButtonText: "{{ _('Yes, remove it!') }}",
                                 cancelButtonText: "{{ _('Oops!, cancel!') }}",
                                 closeOnConfirm: true,
-                                closeOnCancel: true
-                            },
+                                closeOnCancel: true },
                             function (isConfirm) {
                                 if (isConfirm) {
                                     var form = document.createElement('form');
@@ -369,9 +618,9 @@
                                     form.style.display = 'hidden';
 
                                     var i = document.createElement("input"); //input element, text
-                                    i.setAttribute('type', "text");
-                                    i.setAttribute('name', "csrf_token");
-                                    i.setAttribute('value', '{{ request.session.get_csrf_token() }}');
+                                    i.setAttribute('type',"text");
+                                    i.setAttribute('name',"csrf_token");
+                                    i.setAttribute('value','{{ request.session.get_csrf_token() }}');
                                     form.appendChild(i);
 
                                     document.body.appendChild(form);
@@ -380,19 +629,39 @@
                             });
                     });
 
-                    $('.publish-product').click(function () {
-                        var action_url = $(this).attr('urn');
+                    var group_item = $(".group-item");
+
+                    group_item.click(function() {
+                        var group_name = $( this ).attr('data-group-name');
+                        var group_role = $( this ).attr('data-group-role');
+                        var action_url = $( this ).attr('urn');
+                        $("#edit_group_form").prop('action',action_url)
+                        $("#grprolewho").text("{{ _('Changing the role of') }} " + group_name);
+
+                        var role_submmit = $( "#grp_role_submmit" );
+                        var role_clean = $( "#grp_role_clean" );
+                        var role_both = $( "#grp_role_both" );
+                        if (group_role === "1")
+                            role_submmit.prop( "checked", true );
+                        if (group_role === "2")
+                            role_clean.prop( "checked", true );
+                        if (group_role === "3")
+                            role_both.prop( "checked", true );
+
+                    });
+
+                    group_item.on("taphold", function()
+                    {
+                        var action_url = $( this ).attr('data-group-remove-url');
                         swal({
-                                title: "{{ _('Publish product') }}",
-                                text: "{{ _('Are you sure that you want to publish this product') }}",
+                                title: "{{ _('Are you sure?') }}",
                                 type: "warning",
                                 showCancelButton: true,
                                 confirmButtonColor: "#DD6B55",
-                                confirmButtonText: "{{ _('Yes, publish it') }}",
+                                confirmButtonText: "{{ _('Yes, remove it!') }}",
                                 cancelButtonText: "{{ _('Oops!, cancel!') }}",
                                 closeOnConfirm: true,
-                                closeOnCancel: true
-                            },
+                                closeOnCancel: true },
                             function (isConfirm) {
                                 if (isConfirm) {
                                     var form = document.createElement('form');
@@ -401,9 +670,9 @@
                                     form.style.display = 'hidden';
 
                                     var i = document.createElement("input"); //input element, text
-                                    i.setAttribute('type', "text");
-                                    i.setAttribute('name', "csrf_token");
-                                    i.setAttribute('value', '{{ request.session.get_csrf_token() }}');
+                                    i.setAttribute('type',"text");
+                                    i.setAttribute('name',"csrf_token");
+                                    i.setAttribute('value','{{ request.session.get_csrf_token() }}');
                                     form.appendChild(i);
 
                                     document.body.appendChild(form);
@@ -411,261 +680,15 @@
                                 }
                             });
                     });
-                }
-                product_buttons();
-            {% endif %}
 
-            bsCustomFileInput.init();
-
-            {% set active_tab = request.params.get('tab',None) %}
-            var mymap;
-
-            function load_map()
-            {
-                mymap = L.map('projmap').setView([51.505, -0.09], 13);
-                L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
-                    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
-                    maxZoom: 18,
-                    id: 'mapbox.streets',
-                    accessToken: 'pk.eyJ1IjoicWxhbmRzIiwiYSI6ImNqZHB1ZDh4YzEwZHEyeG1rcjc0NmFsNzIifQ.i3YebmNDByns1c1ixZE0bA'
-                }).addTo(mymap);
-
-                var element = document.getElementById('mapbox');
-                var full_screen = false;
-                var normal_height = $("#projmap").height();
-                new ResizeSensor(element, function() {
-                    var window_width = $(window).width();
-                    var element_width =  element.clientWidth;
-                    if ((element_width / window_width) >= 0.80)
-                    {
-                        $("#projmap").height($(window).height()-80);
-                        mymap.invalidateSize();
-                        //console.log('Changed to ' + element.clientWidth);
-                        full_screen = true;
-                    }
-                    else
-                    {
-                        if (full_screen)
-                        {
-                            $("#projmap").height(normal_height);
-                            mymap.invalidateSize();
-                            //console.log('Back to ' + normal_height);
-                            //console.log('Changed to ' + element.clientWidth);
-                            full_screen = false;
-                        }
-                    }
-                });
-
-                $.getJSON("{{ request.route_url('form_download_gpspoints',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}", function( data ) {
-                    var markers = [];
-                    data.points.forEach(function(entry)
-                    {
-                        var latlng = L.latLng({ lat: entry.lati, lng: entry.long });
-                        var marker = L.marker(latlng).addTo(mymap);
-                        //marker.bindPopup("<b>" + entry.key + "</b>");
-                        markers.push(marker);
-                    });
-                    var group = new L.featureGroup(markers);
-                    mymap.fitBounds(group.getBounds());
-                });
-            }
-
-            {% if formDetails.form_geopoint != None and formDetails.submissions > 0 and withgps > 0 %}
-                {% if active_tab == 'map' or active_tab == None %}
-                    load_map();
-                {% else %}
-                    $(".ibox").on('ibox-collapsed',function(){
-                        var id = $(this).attr('id');
-                        if (id === "maptab") {
-                            if (typeof mymap === 'undefined') {
-                                load_map();
-                            }
-                        }
-                    });
-                {% endif %}
-            {% endif %}
-
-            $(".collaborator-list").select2({
-                dropdownParent: $('#member_form')
+                {% endblock odk_scripts %}
             });
+        </script>
+    {% else %}
+        {% block form_scripts_other %}
 
-            $(".group-list").select2({
-                dropdownParent: $('#group_form')
-            });
-
-            var elem = document.querySelector('.js-switch');
-            var overwrite_switch = new Switchery(elem, { color: '#1AB394' });
-
-            $('.remove_form').click(function () {
-                var action_url = $( this ).attr('urn');
-                swal({
-                        title: "{{ _('Are you sure?') }}",
-                        text: "{{ _('All the data in this form will be deleted!') }}",
-                        type: "warning",
-                        showCancelButton: true,
-                        confirmButtonColor: "#DD6B55",
-                        confirmButtonText: "{{ _('Yes, delete this form!') }}",
-                        cancelButtonText: "{{ _('Oops!, cancel!') }}",
-                        closeOnConfirm: true,
-                        closeOnCancel: true },
-                    function (isConfirm) {
-                        if (isConfirm) {
-                            var form = document.createElement('form');
-                            form.setAttribute('method', 'post');
-                            form.setAttribute('action', action_url);
-                            form.style.display = 'hidden';
-
-                            var i = document.createElement("input"); //input element, text
-                            i.setAttribute('type',"text");
-                            i.setAttribute('name',"csrf_token");
-                            i.setAttribute('value','{{ request.session.get_csrf_token() }}');
-                            form.appendChild(i);
-
-                            document.body.appendChild(form);
-                            form.submit();
-                        }
-                    });
-            });
-
-
-            $(".file-item").on("taphold", function()
-                {
-                    var action_url = $( this ).attr('urn');
-                    swal({
-                            title: "{{ _('Are you sure?') }}",
-                            type: "warning",
-                            showCancelButton: true,
-                            confirmButtonColor: "#DD6B55",
-                            confirmButtonText: "{{ _('Yes, remove it!') }}",
-                            cancelButtonText: "{{ _('Oops!, cancel!') }}",
-                            closeOnConfirm: true,
-                            closeOnCancel: true },
-                        function (isConfirm) {
-                            if (isConfirm) {
-                                var form = document.createElement('form');
-                                form.setAttribute('method', 'post');
-                                form.setAttribute('action', action_url);
-                                form.style.display = 'hidden';
-
-                                var i = document.createElement("input"); //input element, text
-                                i.setAttribute('type',"text");
-                                i.setAttribute('name',"csrf_token");
-                                i.setAttribute('value','{{ request.session.get_csrf_token() }}');
-                                form.appendChild(i);
-
-                                document.body.appendChild(form);
-                                form.submit();
-                            }
-                        });
-                });
-
-            var assistant_item = $(".assistant-item");
-
-            assistant_item.click(function() {
-                var assistant_name = $( this ).attr('data-assistant-name');
-                var assistant_role = $( this ).attr('data-assistant-role');
-                var action_url = $( this ).attr('urn');
-                $("#edit_assistant_form").prop('action',action_url)
-                $("#rolewho").text("{{ _('Changing the role of') }} " + assistant_name);
-
-                var role_submmit = $( "#role_submmit" );
-                var role_clean = $( "#role_clean" );
-                var role_both = $( "#role_both" );
-                if (assistant_role === "1")
-                    role_submmit.prop( "checked", true );
-                if (assistant_role === "2")
-                    role_clean.prop( "checked", true );
-                if (assistant_role === "3")
-                    role_both.prop( "checked", true );
-
-            });
-
-            assistant_item.on("taphold", function()
-                {
-                    var action_url = $( this ).attr('data-assistant-remove-url');
-                    swal({
-                            title: "{{ _('Are you sure?') }}",
-                            type: "warning",
-                            showCancelButton: true,
-                            confirmButtonColor: "#DD6B55",
-                            confirmButtonText: "{{ _('Yes, remove it!') }}",
-                            cancelButtonText: "{{ _('Oops!, cancel!') }}",
-                            closeOnConfirm: true,
-                            closeOnCancel: true },
-                        function (isConfirm) {
-                            if (isConfirm) {
-                                var form = document.createElement('form');
-                                form.setAttribute('method', 'post');
-                                form.setAttribute('action', action_url);
-                                form.style.display = 'hidden';
-
-                                var i = document.createElement("input"); //input element, text
-                                i.setAttribute('type',"text");
-                                i.setAttribute('name',"csrf_token");
-                                i.setAttribute('value','{{ request.session.get_csrf_token() }}');
-                                form.appendChild(i);
-
-                                document.body.appendChild(form);
-                                form.submit();
-                            }
-                        });
-                });
-
-            var group_item = $(".group-item");
-
-            group_item.click(function() {
-                var group_name = $( this ).attr('data-group-name');
-                var group_role = $( this ).attr('data-group-role');
-                var action_url = $( this ).attr('urn');
-                $("#edit_group_form").prop('action',action_url)
-                $("#grprolewho").text("{{ _('Changing the role of') }} " + group_name);
-
-                var role_submmit = $( "#grp_role_submmit" );
-                var role_clean = $( "#grp_role_clean" );
-                var role_both = $( "#grp_role_both" );
-                if (group_role === "1")
-                    role_submmit.prop( "checked", true );
-                if (group_role === "2")
-                    role_clean.prop( "checked", true );
-                if (group_role === "3")
-                    role_both.prop( "checked", true );
-
-            });
-
-            group_item.on("taphold", function()
-                {
-                    var action_url = $( this ).attr('data-group-remove-url');
-                    swal({
-                            title: "{{ _('Are you sure?') }}",
-                            type: "warning",
-                            showCancelButton: true,
-                            confirmButtonColor: "#DD6B55",
-                            confirmButtonText: "{{ _('Yes, remove it!') }}",
-                            cancelButtonText: "{{ _('Oops!, cancel!') }}",
-                            closeOnConfirm: true,
-                            closeOnCancel: true },
-                        function (isConfirm) {
-                            if (isConfirm) {
-                                var form = document.createElement('form');
-                                form.setAttribute('method', 'post');
-                                form.setAttribute('action', action_url);
-                                form.style.display = 'hidden';
-
-                                var i = document.createElement("input"); //input element, text
-                                i.setAttribute('type',"text");
-                                i.setAttribute('name',"csrf_token");
-                                i.setAttribute('value','{{ request.session.get_csrf_token() }}');
-                                form.appendChild(i);
-
-                                document.body.appendChild(form);
-                                form.submit();
-                            }
-                        });
-                });
-
-
-        });
-    </script>
+        {% endblock form_scripts_other %}
+    {% endif %}
 
 
 {% endblock scripts %}

@@ -24,13 +24,13 @@
         </div>
         <div class="ibox-content">
             <div class="feed-activity-list">
-                {% for form in forms %}
-{#                    {% if form.form_incversion == 0 %}#}
-                        {% include 'assistant/snippets/project_form_odk_item.jinja2' %}
-{#                    {% else %}#}
-{#                        {% include 'dashboard/projects/snippets/project_subversion_item.jinja2' %}#}
-{#                    {% endif %}#}
-                {% endfor %}
+                {% block index_form_list %}
+                    {% for form in forms %}
+                        {% if form.form_type == 1 %}
+                            {% include 'assistant/snippets/project_form_odk_item.jinja2' %}
+                        {% endif %}
+                    {% endfor %}
+                {% endblock index_form_list %}
             </div>
         </div>
     </div>

@@ -160,6 +160,7 @@ class Odkform(Base):
     form_geopoint = Column(UnicodeText)
     form_hexcolor = Column(Unicode(60))
     form_reptask = Column(Unicode(64))
+    form_type = Column(INTEGER, server_default=text("'1'"))
     extras = Column(UnicodeText)
     tags = Column(UnicodeText)
 

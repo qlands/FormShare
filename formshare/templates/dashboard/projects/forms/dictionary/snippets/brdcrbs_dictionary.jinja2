@@ -1,5 +1,5 @@
 <div class="col-sm-12">
-    <h2>{{ _('Import data from FormShare 1.0 or ODK BriefCase') }}</h2>
+    <h2>{{ _('Repository dictionary') }}</h2>
     <ol class="breadcrumb">
         <li class="breadcrumb-item">
             <a href="{{ request.route_url("dashboard",userid=activeUser.login) }}">{{ _('Dashboard') }}</a>
@@ -14,7 +14,7 @@
             <a href="{{ request.route_url("form_details",userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}">{{ formDetails.form_name }}</a>
         </li>
         <li class="breadcrumb-item active">
-            <strong>Import</strong>
+            <strong>{{ _('Dictionary') }}</strong>
         </li>
     </ol>
 </div>

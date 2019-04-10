@@ -20,7 +20,7 @@
                 <div class="col-md-12">
                     <ul class="tag-list" style="padding: 0">
                         {% block repo_tab_tools %}
-                            <li><a href=""><i class="fas fa-book"></i> {{ _('Edit dictionary') }}</a></li>
+                            <li><a href="{{ request.route_url('editDictionary', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fas fa-book"></i> {{ _('Edit dictionary') }}</a></li>
                             <li><a href=""><i class="fas fa-trash text-danger"></i> {{ _('Delete all submited data') }}</a></li>
                         {% endblock repo_tab_tools %}
                         {% block repo_tab_tools_extra %}

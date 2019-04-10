@@ -32,7 +32,11 @@ class JSONList(AssistantView):
 
 
 class JSONCompare(AssistantView):
-    def process_view(self):        
+    def __init__(self, request):
+        AssistantView.__init__(self, request)
+        self.checkCrossPost = False
+
+    def process_view(self):
         form_id = self.request.matchdict['formid']
         submission_id = self.request.matchdict['submissionid']
         permissions = get_assistant_permissions_on_a_form(self.request, self.userID, self.projectID, self.assistantID,

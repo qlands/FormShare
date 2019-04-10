@@ -41,12 +41,13 @@ MarkupSafe==1.0
 mysql-connector==2.1.4
 mysql-connector-python==8.0.12
 nose==1.3.7
-odata-generator==1.0
 ofs==0.4.3
+openpyxl==2.5.11
 packaging==18.0
 paginate==0.5.6
 Pairtree==0.8.1
 PasteDeploy==1.5.2
+pika==0.13.1
 Pillow==5.3.0
 pkg-resources==0.0.0
 plaster==1.0
@@ -68,13 +69,14 @@ python-dateutil==2.7.3
 python-editor==1.0.3
 pytz==2018.5
 PyUtilib==5.4.1
--e git+https://github.com/XLSForm/pyxform.git@f00ec761c989c7f074d757d0b7f03577dda2927d#egg=pyxform
+-e git+https://github.com/XLSForm/pyxform.git@e07f731a37f60b45c278cdca7bed0d1df1b59ed0#egg=pyxform
 PyYAML==3.12
 pyzmq==17.1.2
 qrcode==6.0
 redis==2.10.6
 repoze.lru==0.7
 requests==2.19.1
+rutter==0.2
 simplejson==3.16.0
 simplekml==1.3.1
 six==1.11.0
@@ -82,7 +84,6 @@ snowballstemmer==1.2.1
 Sphinx==1.8.1
 sphinxcontrib-websupport==1.1.0
 SQLAlchemy==1.2.12
-stream-framework==1.4.0
 traceback2==1.4.0
 transaction==2.2.1
 translationstring==1.3

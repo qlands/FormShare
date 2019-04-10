@@ -1,0 +1,120 @@
+{% extends 'dashboard/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block titlesection %}Import data{% endblock titlesection %}
+
+{% block css %}
+    {{ super() }}
+    {% cssresource request,'formshare','select2' %}
+    {% cssresource request,'formshare','switchery' %}
+{% endblock css %}
+
+{% block topScripts %}
+    {{ super() }}
+    {% jsresource request,'formshare','select2' %}
+    {% jsresource request,'formshare','switchery' %}
+{% endblock topScripts %}
+
+{% block breadcrumbs %}
+    {% include 'dashboard/projects/forms/import_data/snippets/brdcrbs_import.jinja2' %}
+{% endblock breadcrumbs %}
+
+{% block mainsection %}
+    {{ form.display_errors(errors) }}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="ibox">
+                <div class="ibox-title">
+                    <h5>Import data</h5>
+                    <div class="ibox-tools">
+                        <a class="collapse-link" style="margin-right: 10px">
+                            <i class="fa fa-chevron-up"></i>
+                        </a>
+                        <a class="fullscreen-link">
+                            <i class="fa fa-expand"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <form role="form" method="post" enctype="multipart/form-data" action="{{ request.url }}">
+                         {{ form.secure_form(request) }}
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">{{ _('Source type') }}</label>
+                            <div class="col-sm-10">
+                                <select class="form-control m-b" name="import_type">
+                                    <option value="1">FormShare 1.0 (JSON / Zip)</option>
+                                    <option value="2">ODK BriefCase (XML / Zip)</option>
+                                </select>
+{#                                <span class="form-text m-b-none">{{ _('Use these') }} <a style="color: #1c84c6">{{ _('guidelines') }}</a> {{ _('to help you import your data') }}</span>#}
+                            </div>
+                        </div>
+                        <div class="hr-line-dashed"></div>
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">{{ _('Assistant') }}</label>
+                            <div class="col-sm-10">
+                                <select id="assistants" name="assistant" class="assistants form-control" required="">
+                                        <option></option>
+                                        {% for assitant in assistants %}
+                                            <option value="{{ assitant.assistant }}@{{ assitant.project }}">{{ assitant.name }}</option>
+                                        {% endfor %}
+                                </select>
+                                <span class="form-text m-b-none">{{ _('Select an assistant who could help you fixing any issues with your data') }}</span>
+                            </div>
+                        </div>
+                        <div class="hr-line-dashed"></div>
+                        <div class="form-group row">
+                            <label class="col-sm-2 col-form-label">{{ _('Data file') }}</label>
+                            <div class="col-sm-10">
+                                <div class="custom-file">
+                                    <input oninput="this.setCustomValidity('')" oninvalid="this.setCustomValidity('{{ _('You need to select a file') }}')" id="file" name="file" type="file" class="custom-file-input" required="">
+                                    <label for="file" class="custom-file-label">{{ _('Choose file...') }}</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="hr-line-dashed"></div>
+                        <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Ignore XForm ID check (False by default)') }}</label>
+                            <div class="col-sm-10"><input type="checkbox" name="ignore_xform" class="js-switch"/><span class="form-text text-danger m-b-none">{% block not_check_comment %}{{ _('Warning! Formshare checks by default if the XForm ID of the data that you are importing is "')}}<b>{{formDetails.form_name}}</b>{{_('". You can decide to ignore this check at your own risk but you might end with inconsistent data.') }}{% endblock not_check_comment %}</span></div>
+                        </div>
+                            <div class="hr-line-dashed"></div>
+                        <div class="form-group row">
+                            <div class="col-sm-4 col-sm-offset-2">
+                                <button class="btn btn-primary btn-sm" type="submit">{{ _('Import data') }}</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock mainsection %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function() {
+
+            $(".assistants").select2({
+                placeholder: "Select an assistant",
+                allowClear: true
+            });
+
+            $(document).ready(function() {
+                var elem = document.querySelector('.js-switch');
+                var switchery = new Switchery(elem, { color: '#ff0000' });
+            });
+
+            $('.custom-file-input').on('change', function() {
+                let fileName = $(this).val().split('\\').pop();
+                $(this).next('.custom-file-label').addClass("selected").html(fileName);
+            });
+
+            $('#update_form_btn').click(function () {
+                $("#file").val("");
+                $('.custom-file-input').next('.custom-file-label').addClass("selected").html("{{ _('Choose file...') }}");
+            });
+
+        });
+    </script>
+
+
+{% endblock scripts %}

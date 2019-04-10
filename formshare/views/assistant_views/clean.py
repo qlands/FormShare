@@ -10,6 +10,10 @@ log = logging.getLogger(__name__)
 
 
 class CleanInterface(AssistantView):
+    def __init__(self, request):
+        AssistantView.__init__(self, request)
+        self.checkCrossPost = False
+
     def process_view(self):
         
         form_id = self.request.matchdict['formid']
@@ -107,6 +111,10 @@ class CleanInterface(AssistantView):
         
 
 class DataRequest(AssistantView):
+    def __init__(self, request):
+        AssistantView.__init__(self, request)
+        self.checkCrossPost = False
+
     def process_view(self):
         form_id = self.request.matchdict['formid']        
         table_name = self.request.matchdict['tablename']
@@ -148,6 +156,10 @@ class DataRequest(AssistantView):
         
 
 class PerformAction(AssistantView):
+    def __init__(self, request):
+        AssistantView.__init__(self, request)
+        self.checkCrossPost = False
+        
     def process_view(self):
 
         form_id = self.request.matchdict['formid']

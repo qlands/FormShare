@@ -59,13 +59,15 @@
                     </a>
                 </li>
             </ul>
-            <ul class="nav navbar-top-links navbar-right">
-                <li>
-                    <a href="{{ request.route_url('register') }}">
-                        <i class="fas fa-user-plus"></i> {{ _('Sign up') }}
-                    </a>
-                </li>
-            </ul>
+            {% if request.registry.settings['auth.register_users_via_web'] == "true" %}
+                <ul class="nav navbar-top-links navbar-right">
+                    <li>
+                        <a href="{{ request.route_url('register') }}">
+                            <i class="fas fa-user-plus"></i> {{ _('Sign up') }}
+                        </a>
+                    </li>
+                </ul>
+            {% endif %}
         </div>
     </nav>
 

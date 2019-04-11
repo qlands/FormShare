@@ -159,7 +159,7 @@ class PerformAction(AssistantView):
     def __init__(self, request):
         AssistantView.__init__(self, request)
         self.checkCrossPost = False
-        
+
     def process_view(self):
 
         form_id = self.request.matchdict['formid']

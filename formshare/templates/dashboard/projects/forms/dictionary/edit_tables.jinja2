@@ -1,0 +1,206 @@
+{% extends 'dashboard/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block titlesection %}Import data{% endblock titlesection %}
+
+{% block css %}
+    {{ super() }}
+    {% cssresource request,'formshare','shuffle' %}
+
+{% endblock css %}
+
+{% block topScripts %}
+    {{ super() }}
+    {% jsresource request,'formshare','shuffle' %}
+{% endblock topScripts %}
+
+{% block breadcrumbs %}
+    {% include 'dashboard/projects/forms/dictionary/snippets/brdcrbs_tables.jinja2' %}
+{% endblock breadcrumbs %}
+
+{% block mainsection %}
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="wrapper wrapper-content">
+                <div class="ibox">
+                    <div class="ibox-content">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="m-b-md">
+                                    <h2>{{ _('Tables in') }} "{{ formDetails.form_name }}"</h2>
+                                </div>
+
+                            </div>
+                        </div>
+                        <h3>{{ _('Table nomenclature:') }}</h3>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="feed-activity-list">
+                                    <div>
+                                        <a class="float-left">
+                                            <div class="rounded-circle" style="margin-right: 10px; background-color: #0a6aa1; width: 38px; height: 38px; display: inline-block; vertical-align: middle" ><span style="color: white; position: relative; float: left; top: 50%; left: 50%; transform: translate(-50%, -50%);"><i class="fas fa-table fa-2x"></i></span></div>
+                                        </a>
+                                        <div class="media-body">
+                                            <div style="margin-top: 10px"><i class="fas fa-arrow-right"></i> {{ _('Data tables: Tables that contain the submmited data.') }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="feed-activity-list">
+                                    <div>
+                                        <a class="float-left">
+                                            <div class="rounded-circle" style="margin-right: 10px; background-color: #008000; width: 38px; height: 38px; display: inline-block; vertical-align: middle" ><span style="color: white; position: relative; float: left; top: 50%; left: 50%; transform: translate(-50%, -50%);"><i class="fas fa-table fa-2x"></i></span></div>
+                                        </a>
+                                        <div class="media-body">
+                                            <div style="margin-top: 10px"><i class="fas fa-arrow-right"></i> {{ _("Milti-select tables: Each multi-select variable has it's own table. Here each option is stored in a separate row.") }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="feed-activity-list">
+                                    <div>
+                                        <a class="float-left">
+                                            <div class="rounded-circle" style="margin-right: 10px; background-color: #FFA500; width: 38px; height: 38px; display: inline-block; vertical-align: middle" ><span style="color: white; position: relative; float: left; top: 50%; left: 50%; transform: translate(-50%, -50%);"><i class="fas fa-table fa-2x"></i></span></div>
+                                        </a>
+                                        <div class="media-body">
+                                            <div style="margin-top: 10px"><i class="fas fa-arrow-right"></i> {{ _("Lookup tables: Contain the description of categorical variables.") }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row m-t-sm">
+                            <div class="col-lg-12">
+                                <div class="row">
+                                    <div class="col">
+                                        <p class="mb-1">{{ _('Filter by table type') }}:</p>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col">
+                                        <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                                            <label class="btn btn-outline-primary active">
+                                                <input type="radio" name="shuffle-filter" value="all" checked="checked"/>{{ _('All') }}
+                                            </label>
+                                            <label class="btn btn-outline-primary">
+                                                <input type="radio" name="shuffle-filter" value="data"/>{{ _('Data tables') }}
+                                            </label>
+                                            <label class="btn btn-outline-primary">
+                                                <input type="radio" name="shuffle-filter" value="multi"/>{{ _('Multi-select tables') }}
+                                            </label>
+                                            <label class="btn btn-outline-primary">
+                                                <input type="radio" name="shuffle-filter" value="lookup"/>{{ _('Lookup tables') }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col">
+                                        <p class="mb-1">{{ _('Search') }}:</p>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col">
+                                        <input class="textfield filter__search js-shuffle-search" type="search" id="filters-search-input" />
+                                    </div>
+                                </div>
+
+
+                                <div class="feed-activity-list">
+                                    <div class="row my-shuffle">
+                                        {% for table in tables %}
+                                            {% include 'dashboard/projects/forms/dictionary/snippets/table_item.jinja2' %}
+                                        {% endfor %}
+
+                                        <div class="col-1 my-sizer-element" style="max-width: 1px; max-height: 1px"></div>
+
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include 'dashboard/projects/forms/dictionary/snippets/change_table_name.jinja2' %}
+{% endblock mainsection %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        var Shuffle = window.Shuffle;
+        var jQuery = window.jQuery;
+        var myShuffle = new Shuffle(document.querySelector('.my-shuffle'), {
+            itemSelector: '.feed-item',
+            sizer: '.my-sizer-element',
+            buffer: 1,
+        });
+        jQuery('input[name="shuffle-filter"]').on('change', function (evt) {
+            var input = evt.currentTarget;
+            if (input.checked) {
+                myShuffle.filter(input.value);
+            }
+        });
+
+        jQuery('.js-shuffle-search').on('keyup', function (evt) {
+            var input = evt.currentTarget;
+            var searchText = input.value.toLowerCase();
+
+            myShuffle.filter(function (element, shuffle) {
+
+                // If there is a current filter applied, ignore elements that don't match it.
+                if (shuffle.group !== Shuffle.ALL_ITEMS) {
+                    // Get the item's groups.
+                    var groups = JSON.parse(element.getAttribute('data-groups'));
+                    var isElementInCurrentGroup = groups.indexOf(shuffle.group) !== -1;
+
+                    // Only search elements in the current group
+                    if (!isElementInCurrentGroup) {
+                        return false;
+                    }
+                }
+
+                var titleText = element.getAttribute('data-title').toLowerCase().trim();
+                return titleText.indexOf(searchText) !== -1;
+            });
+
+        });
+
+        function post_table_change() {
+            var table_name = $("#table_name").val();
+            var table_desc = $("#table_desc").val();
+
+            $.post("{{ request.url }}",
+                {
+                    table_name: table_name,
+                    table_desc: table_desc,
+                    csrf_token: "{{ request.session.get_csrf_token() }}"
+                },
+                function (data, status) {
+                    if ((data.status === "changed") && (status === "success"))
+                    {
+                        $("#desc_" + table_name).text(table_desc);
+                        $("#edit_table_desc").modal('hide');
+                    }
+                });
+        }
+
+        $(document).ready(function() {
+            var assistant_item = $(".table-item");
+            assistant_item.click(function () {
+                var table_name = $(this).attr('data-table-name');
+                var table_desc = $(this).attr('data-table-desc');
+                $("#table_name").val(table_name);
+                $("#table_desc").val(table_desc);
+            });
+        });
+
+
+    </script>
+{% endblock scripts %}

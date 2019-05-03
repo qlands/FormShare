@@ -65,6 +65,14 @@ def create_resources(apppath, config):
     r.add_css_resource('formshare', 'codemirror-ambiance',
                        'css/plugins/codemirror/ambiance.css', 'codemirror')
 
+    r.add_js_resource('formshare', 'shuffle',
+                      'js/plugins/shuffle/shuffle.js', None)
+
+    r.add_css_resource('formshare', 'shuffle',
+                       'css/plugins/shuffle/test.css', None)
+    # r.add_css_resource('formshare', 'shuffle-style',
+    #                    'css/plugins/shuffle/shuffle-styles.css', 'shuffle')
+
     # ------------------------------Collaborators, assistants and groups --------------------------------------
     r.add_css_resource('formshare', 'select2', 'css/plugins/select2/select2.min.css', 'bootstrap')
     r.add_js_resource('formshare', 'select2', 'js/plugins/select2/select2.full.min.js', None)

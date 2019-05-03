@@ -47,7 +47,7 @@ __all__ = ['generate_form_list', 'generate_manifest', 'get_form_list',
            'get_tables_from_form', 'get_fields_from_table', 'get_table_desc', 'is_field_key', 'get_request_data',
            'update_data', 'upload_odk_form', 'update_form_title', 'retrieve_form_file',
            'get_odk_path', 'store_file_in_directory', 'update_odk_form', 'import_external_data', 'store_json_file',
-           'check_jxform_file', 'get_missing_support_files']
+           'check_jxform_file', 'get_missing_support_files', 'update_table_desc']
 
 _GPS_types = ['add location prompt', 'geopoint', 'gps', 'location', 'q geopoint', 'q location']
 
@@ -1362,13 +1362,73 @@ def get_tables_from_form(request, project, form):
     result = []
     if tables:
         for table in tables:
-            result.append({'name': table.get('name'), 'desc': table.get('desc')})
+            fields = []
+            sfields = []
+            num_sensitive = 0
+            for field in table.getchildren():
+                if field.tag == "field":
+                    desc = field.get('name', '')
+                    if desc == "":
+                        desc = request.translate("Without description")
+                    fields.append({'name': field.get('name'), 'desc': desc})
+                    sfields.append(field.get('name') + "-" + desc)
+                    sensitive = field.get('sensitive', 'false')
+                    if sensitive == 'true':
+                        num_sensitive = num_sensitive + 1
+            if table.get('name').find('_msel_') >= 0:
+                multi = True
+            else:
+                multi = False
+            result.append({'name': table.get('name'), 'desc': table.get('desc'), 'fields': fields, 'lookup': False,
+                           'multi': multi, 'sfields': ",".join(sfields), 'numsensitive': num_sensitive})
     # Append all lookup tables
     tables = element_lkp_tables.findall(".//table")
     if tables:
         for table in tables:
-            result.append({'name': table.get('name'), 'desc': table.get('desc')})
+            fields = []
+            sfields = []
+            num_sensitive = 0
+            for field in table.getchildren():
+                if field.tag == "field":
+                    desc = field.get('name', '')
+                    if desc == "":
+                        desc = request.translate("Without description")
+                    fields.append({'name': field.get('name'), 'desc': desc})
+                    sfields.append(field.get('name') + "-" + desc)
+                    sensitive = field.get('sensitive', 'false')
+                    if sensitive == 'true':
+                        num_sensitive = num_sensitive + 1
+            result.append({'name': table.get('name'), 'desc': table.get('desc'), 'fields': fields, 'lookup': True,
+                           'multi': False, 'sfields': ",".join(sfields), 'numsensitive': num_sensitive})
+
     return result
+
+
+def update_table_desc(request, project, form, table_name, description):
+    odk_dir = get_odk_path(request)
+    form_directory = get_form_directory(request, project, form)
+    create_file = os.path.join(odk_dir, *['forms', form_directory, 'repository', 'create.xml'])
+    if os.path.exists(create_file):
+        tree = etree.parse(create_file)
+        root = tree.getroot()
+        table = root.find(".//table[@name='" + table_name + "']")
+        if table is not None:
+            table.set("desc", description)
+        else:
+            log.error("updateTables. Cannot find table " + table_name)
+            return False
+
+        try:
+            # Crete a backup the first time the file is edited
+            if not os.path.exists(create_file + ".bk"):
+                shutil.copy(create_file, create_file + ".bk")
+            tree.write(create_file, pretty_print=True, xml_declaration=True, encoding="utf-8")
+            return True
+        except Exception as e:
+            log.error("updateTables. Error updating create XML. Error:" + str(e))
+        return False
+    else:
+        return False
 
 
 def get_fields_from_table(request, project, form, table_name, current_fields):

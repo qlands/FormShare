@@ -11,5 +11,3 @@
 - Submission plugin interfaces
 - Import from BriefCase
 - Clean data JSON API
-
-

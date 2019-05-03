@@ -1,2 +1,6 @@
 sudo npm install -g diff2html
 sudo npm install -g diff2html-cli
+
+rabbitmqctl add_user formshare formshare
+rabbitmqctl add_vhost formshare
+rabbitmqctl set_permissions -p formshare formshare ".*" ".*" ".*"

@@ -1,29 +1,18 @@
-<div class="ibox">
-    <div class="ibox-title">
-        {% block table_item_title %}
-            <h5>Table code - Table desc</h5>
-            <div class="ibox-tools">
-                {% block table_item_tools %}
-                    {% if projectDetails.access_type < 4 %}
-                        <a href="" style="margin-right: 10px">
-                            <i class="fa fa-pencil text-warning" title="{{ _('Edit') }}"></i>
-                        </a>
-                    {% endif %}
-                    <a class="collapse-link" style="margin-right: 10px">
-                        <i class="fa fa-chevron-up"></i>
-                    </a>
-                    <a class="fullscreen-link">
-                        <i class="fa fa-expand"></i>
-                    </a>
-                {% endblock table_item_tools %}
+<div class="feed-item col-md-3" data-groups='["{% if table.lookup == True %}lookup{% else %}{% if table.multi == True %}multi{% else %}data{% endif %}{% endif %}"]' data-title="{{ table.name }}-{{ table.desc }}-{{ table.sfields }}">
+    <div class="feed-element" style="margin-top: 10px">
+        <a class="float-left">
+            <div class="rounded-circle" style="margin-right: 10px; background-color: {% if table.lookup == True %}#FFA500{% else %}{% if table.multi == True %}#008000{% else %}#0a6aa1{% endif %}{% endif %}; width: 38px; height: 38px; display: inline-block; vertical-align: middle" ><span style="color: white; position: relative; float: left; top: 50%; left: 50%; transform: translate(-50%, -50%);"><i class="fas fa-table fa-2x"></i></span></div>
+        </a>
+        <div class="media-body ">
+            {{ table.name }} - <span id="desc_{{ table.name }}">{{ table.desc }}</span><br>
+            <small class="text-muted">{{ _('Fields') }}: {{ table.fields|length }} - <span class="text-danger">{{ table.numsensitive }} {{ _('sensitive') }}</span></small>
+            <div class="actions">
+                {% block field_item_processing_actions %}
+                    <a data-table-name="{{ table.name }}" data-table-desc="{{  table.desc }}" data-toggle="modal" data-target="#edit_table_desc" class="btn btn-xs btn-white table-item"><i class="fas fa-pencil-alt"></i> {{ _('Edit description') }}</a>
+                    <a class="btn btn-xs btn-white"><i class="fas fa-columns"></i> {{ _('View / Edit fields') }} </a>
+                {% endblock field_item_processing_actions %}
             </div>
-        {% endblock table_item_title %}
+        </div>
     </div>
-    <div class="ibox-content">
-        {% block table_item_content %}
-            <div class="feed-activity-list">
-                {% include 'dashboard/projects/forms/dictionary/snippets/field_item.jinja2' %}
-            </div>
-        {% endblock table_item_content %}
-    </div>
+
 </div>

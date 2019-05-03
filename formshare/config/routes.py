@@ -20,7 +20,7 @@ from ..views.form import FormDetails, AddNewForm, EditForm, DeleteForm, AddFileT
 from ..views.odk import ODKFormList, ODKManifest, ODKMediaFile, ODKPushData, ODKSubmission, ODKXMLForm
 from ..views.repository import GenerateRepository, SeparateTable, NewSeparationGroup, EditSeparationGroup, \
     DeleteSeparationGroup, RepositoryExist
-from ..views.repository_dictionary import EditDictionary
+from ..views.repository_dictionary import EditDictionaryTables
 from ..views.assistant_views.forms import AssistantForms, ChangeMyAssistantPassword, GetQRCode
 from ..views.assistant_views.jsonlogs import JSONList, JSONCompare, JSONCheckout, JSONCancelCheckout, \
     JSONGetSubmission, JSONCheckin, JSONViewRevision, JSONCancelRevision, JSONPushRevision, JSONDisregard, \
@@ -335,9 +335,9 @@ def load_routes(config):
                             '/{tablename}/group/{groupid}/delete',
                             DeleteSeparationGroup, None))
 
-    routes.append(add_route('editDictionary',
-                            '/user/{userid}/project/{projcode}/form/{formid}/dictionary',
-                            EditDictionary, 'dashboard/projects/forms/dictionary/edit_dictionary.jinja2'))
+    routes.append(add_route('editDictTables',
+                            '/user/{userid}/project/{projcode}/form/{formid}/dictionary/tables',
+                            EditDictionaryTables, 'dashboard/projects/forms/dictionary/edit_tables.jinja2'))
 
     # Assistant access
 

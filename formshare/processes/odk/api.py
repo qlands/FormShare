@@ -869,8 +869,8 @@ def move_media_files(odk_dir, xform_directory, src_submission, trg_submission):
                     e))
 
 
-def store_json_file(request, submission_id, temp_json_file, json_file, odk_dir, xform_directory, schema, user,
-                    project, form, assistant):
+def store_json_file(request, submission_id, temp_json_file, json_file, ordered_json_file, odk_dir, xform_directory,
+                    schema, user, project, form, assistant):
     if schema is not None:
         if schema != "":
             # Add the controlling fields to the JSON file
@@ -901,12 +901,13 @@ def store_json_file(request, submission_id, temp_json_file, json_file, odk_dir, 
             # this will help later on if we want to compare between JSONs
             args = ["jq", "-S", ".", temp_json_file]
 
-            final = open(json_file, "w")
+            final = open(ordered_json_file, "w")
             p = Popen(args, stdout=final, stderr=PIPE)
             stdout, stderr = p.communicate()
             final.close()
             if p.returncode == 0:
                 try:
+                    shutil.copyfile(temp_json_file, json_file)
                     os.remove(temp_json_file)
                 except Exception as e:
                     log.error(
@@ -1059,6 +1060,7 @@ def convert_xml_to_json(odk_dir, xml_file, xform_directory, schema, xml_form_fil
                         request):
     xml_to_json = os.path.join(request.registry.settings['odktools.path'], *["XMLtoJSON", "xmltojson"])
     temp_json_file = xml_file.replace(".xml", ".tmp.json")
+    ordered_json_file = xml_file.replace(".xml", ".ordered.json")
     json_file = xml_file.replace(".xml", ".json")
     submission_id = os.path.basename(xml_file)
     submission_id = submission_id.replace(".xml", "")
@@ -1068,8 +1070,8 @@ def convert_xml_to_json(odk_dir, xml_file, xform_directory, schema, xml_form_fil
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()
     if p.returncode == 0:
-        stored, message = store_json_file(request, submission_id, temp_json_file, json_file, odk_dir, xform_directory,
-                                          schema, user, project, form, assistant)
+        stored, message = store_json_file(request, submission_id, temp_json_file, json_file, ordered_json_file,
+                                          odk_dir, xform_directory, schema, user, project, form, assistant)
         return stored, message
     else:
         log.error("XMLToJSON error. Converting " + xml_file + "  to " + json_file + ". Error: " + stdout.decode() +
@@ -1189,8 +1191,8 @@ def get_html_from_diff(request, project, form, submission, revision):
 def generate_diff(request, project, form, json_file_a, json_file_b):
     odk_dir = get_odk_path(request)
     form_directory = get_form_directory(request, project, form)
-    file_a = os.path.join(odk_dir, *['forms', form_directory, 'submissions', json_file_a + '.json'])
-    file_b = os.path.join(odk_dir, *['forms', form_directory, 'submissions', json_file_b + '.json'])
+    file_a = os.path.join(odk_dir, *['forms', form_directory, 'submissions', json_file_a + '.ordered.json'])
+    file_b = os.path.join(odk_dir, *['forms', form_directory, 'submissions', json_file_b + '.ordered.json'])
 
     diff_id = str(uuid.uuid4())
     temp_dir = os.path.join(odk_dir, *["tmp", diff_id])

@@ -12,6 +12,7 @@ from formshare.processes.elasticsearch.repository_index import create_dataset_in
 from formshare.processes.elasticsearch.record_index import create_record_index, add_record
 from formshare.processes.sse.messaging import send_task_status_to_form
 import gettext
+import shutil
 
 gettext.bindtextdomain('formshare', 'formshare:locate')
 gettext.textdomain('formshare')
@@ -42,9 +43,9 @@ def add_json_log(engine, project, form, submission, json_file, log_file, status,
     return True, ""
 
 
-def store_json_file(engine, submission_id, temp_json_file, json_file, odk_dir, xform_directory, schema, user,
-                    project, form, assistant, project_code, geopoint_variable, project_of_assistant, settings,
-                    ignore_xform_check=False):
+def store_json_file(engine, submission_id, temp_json_file, json_file, ordered_json_file, odk_dir, xform_directory,
+                    schema, user, project, form, assistant, project_code, geopoint_variable, project_of_assistant,
+                    settings, ignore_xform_check=False):
     mysql_user = settings['mysql.user']
     mysql_password = settings['mysql.password']
     mysql_host = settings['mysql.host']
@@ -77,11 +78,11 @@ def store_json_file(engine, submission_id, temp_json_file, json_file, odk_dir, x
         json_string = json.dumps(submission_data, indent=4, ensure_ascii=False)
         outfile.write(json_string)
 
+    shutil.copyfile(temp_json_file, json_file)
     # Second we pass the temporal JSON to jQ to order its elements
     # this will help later on if we want to compare between JSONs
     args = ["jq", "-S", ".", temp_json_file]
-
-    final = open(json_file, "w")
+    final = open(ordered_json_file, "w")
     md5sum = md5(open(json_file, 'rb').read()).hexdigest()
     p = Popen(args, stdout=final, stderr=PIPE)
     stdout, stderr = p.communicate()
@@ -183,9 +184,10 @@ def import_json_files(user, project, form, odk_dir, form_directory, schema, assi
                 send_task_status_to_form(settings, task_id, _("75% processed"))
                 send_75 = False
         file_name = os.path.basename(file_to_import)
+        ordered_file = file_name.replace(".json", ".ordered.json")
         submission_id = os.path.splitext(os.path.basename(file_to_import))[0]
         json_file = os.path.join(odk_dir, *['forms', form_directory, "submissions", file_name])
-        store_json_file(engine, submission_id, file_to_import, json_file, odk_dir, form_directory, schema,
+        store_json_file(engine, submission_id, file_to_import, json_file, ordered_file, odk_dir, form_directory, schema,
                         user, project, form, assistant, project_code, geopoint_variable, project_of_assistant, settings,
                         ignore_xform_check)
         index = index + 1

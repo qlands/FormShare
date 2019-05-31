@@ -1,6 +1,7 @@
 from formshare.views.classes import AssistantView
-from formshare.processes.db import get_assistant_forms, get_project_forms, get_number_of_submissions_by_assistant,\
-    get_project_details, get_project_from_assistant, change_assistant_password, get_assistant_password
+from formshare.processes.db import get_assistant_forms_for_cleaning, get_project_forms, \
+    get_number_of_submissions_by_assistant, get_project_details, get_project_from_assistant, change_assistant_password, \
+    get_assistant_password
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from formshare.config.auth import check_assistant_login
 import json
@@ -14,12 +15,14 @@ import uuid
 
 class AssistantForms(AssistantView):
     def process_view(self):
-        assistant_forms = get_assistant_forms(self.request, self.projectID, self.project_assistant, self.assistant.login)
+        assistant_forms = get_assistant_forms_for_cleaning(self.request, self.projectID, self.project_assistant,
+                                                           self.assistant.login)
         project_forms = get_project_forms(self.request, self.userID, self.projectID)
         forms = []
         for prj_form in project_forms:
             for ass_form in assistant_forms:
                 if prj_form['form_id'] == ass_form['form_id']:
+                    prj_form['privileges'] = ass_form['privileges']
                     forms.append(prj_form)
         for form in forms:
             submissions, last, in_database, \

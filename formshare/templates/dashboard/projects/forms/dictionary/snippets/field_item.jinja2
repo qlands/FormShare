@@ -1,0 +1,23 @@
+<div id="feed_item_{{ field.name }}" class="feed-item col-md-3" data-groups='["{% if field.sensitive == 'true' %}sensi{% else %}nosensi{% endif %}"]' data-title="{{ field.name }}-{{ field.desc }}">
+    <div id="field_item_{{ field.name }}">
+        <div class="feed-element" style="margin-top: 10px">
+            <a class="float-left">
+                <div class="rounded-circle" style="margin-right: 10px; background-color: {% if field.sensitive == 'true' %}#FF0000{% else %}#008000{% endif %}; width: 38px; height: 38px; display: inline-block; vertical-align: middle" ><span style="color: white; position: relative; float: left; top: 50%; left: 50%; transform: translate(-50%, -50%);"><i class="{% if field.key == 'false' and field.rlookup == 'false' %}fas fa-columns{% else %}{% if field.key == 'true' %}fas fa-star{% else %}fas fa-link{% endif %}{% endif %} fa-2x"></i></span></div>
+            </a>
+            <div class="media-body ">
+                {{ field.name }} - <span id="desc_{{ field.name }}">{{ field.desc }}</span><br>
+                <small class="text-muted">{% if field.sensitive == 'true' %}<span class="text-danger">{{ _('Sensitive') }} - Protection type: {{ field.protection }}</span>{% else %}{{ _('Not sensitive') }}{% endif %}</small>
+                <div class="actions">
+                    {% block field_item_processing_actions %}
+                        <a id="btn_edit_{{ field.name }}" data-field-name="{{ field.name }}" data-field-desc="{{ field.desc }}" data-toggle="modal" data-target="#edit_field_desc" class="btn btn-xs btn-white field-item"><i class="fas fa-pencil-alt"></i> {{ _('Edit description') }}</a>
+                        {% if field.sensitive == 'true' %}
+                            <a onclick="post_not_sensitive_change('{{ field.name }}');" class="btn btn-xs btn-white set-not-sensi"><i class="far fa-eye"></i> {{ _('Set as not sensible') }} </a>
+                        {% else %}
+                            <a data-field-type="{% if field.key == 'false' and field.rlookup == 'false' %}normal{% else %}{% if field.key == 'true' %}key{% else %}lookup{% endif %}{% endif %}" data-field-name="{{ field.name }}" data-field-protection="{{ field.protection }}" data-toggle="modal" data-target="#set_as_sensible" class="btn btn-xs btn-white field-item-sensitive"><i class="far fa-eye-slash"></i> {{ _('Set as sensible') }}</a>
+                        {% endif %}
+                    {% endblock field_item_processing_actions %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

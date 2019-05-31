@@ -20,7 +20,7 @@ from ..views.form import FormDetails, AddNewForm, EditForm, DeleteForm, AddFileT
 from ..views.odk import ODKFormList, ODKManifest, ODKMediaFile, ODKPushData, ODKSubmission, ODKXMLForm
 from ..views.repository import GenerateRepository, SeparateTable, NewSeparationGroup, EditSeparationGroup, \
     DeleteSeparationGroup, RepositoryExist
-from ..views.repository_dictionary import EditDictionaryTables
+from ..views.repository_dictionary import EditDictionaryTables, EditDictionaryFields
 from ..views.assistant_views.forms import AssistantForms, ChangeMyAssistantPassword, GetQRCode
 from ..views.assistant_views.jsonlogs import JSONList, JSONCompare, JSONCheckout, JSONCancelCheckout, \
     JSONGetSubmission, JSONCheckin, JSONViewRevision, JSONCancelRevision, JSONPushRevision, JSONDisregard, \
@@ -29,6 +29,7 @@ from ..views.assistant_views.clean import CleanInterface, PerformAction, DataReq
 from ..views.sse import SSEventStream
 from ..views.products import DownloadPrivateProduct, DownloadPublicProduct, DownloadPrivateProductByAPI, \
     PublishProduct, UnPublishProduct, DeleteProduct
+from ..views.repository_submissions import ManageSubmissions, GetFormSubmissions, DeleteFormSubmission
 
 route_list = []
 
@@ -338,6 +339,21 @@ def load_routes(config):
     routes.append(add_route('editDictTables',
                             '/user/{userid}/project/{projcode}/form/{formid}/dictionary/tables',
                             EditDictionaryTables, 'dashboard/projects/forms/dictionary/edit_tables.jinja2'))
+
+    routes.append(add_route('editDictFields',
+                            '/user/{userid}/project/{projcode}/form/{formid}/dictionary/table/{tableid}/fields',
+                            EditDictionaryFields, 'dashboard/projects/forms/dictionary/edit_fields.jinja2'))
+
+    routes.append(add_route('manageSubmissions',
+                            '/user/{userid}/project/{projcode}/form/{formid}/submissions',
+                            ManageSubmissions, 'dashboard/projects/forms/submissions/edit_submissions.jinja2'))
+
+    routes.append(add_route('getFormSubmissions',
+                            '/user/{userid}/project/{projcode}/form/{formid}/submissions/get',
+                            GetFormSubmissions, 'string'))
+    routes.append(add_route('deleteFormSubmission',
+                            '/user/{userid}/project/{projcode}/form/{formid}/submissions/delete',
+                            DeleteFormSubmission, 'json'))
 
     # Assistant access
 

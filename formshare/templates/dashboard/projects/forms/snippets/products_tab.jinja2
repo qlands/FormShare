@@ -1,0 +1,35 @@
+<div class="ibox">
+    <div class="ibox-title">
+        {% block links_tab_title %}
+            <h5>{{ _('Form products') }}</h5>
+            <div class="ibox-tools">
+                {% block links_tab_tools %}
+                    <a class="collapse-link">
+                        <i class="fa fa-chevron-up" style="margin-right: 10px"></i>
+                    </a>
+                    <a class="fullscreen-link">
+                        <i class="fa fa-expand"></i>
+                    </a>
+                {% endblock links_tab_tools %}
+            </div>
+        {% endblock links_tab_title %}
+    </div>
+    <div class="ibox-content">
+        {% block links_tab_content %}
+            <div class="row">
+                <div class="col-md-12">
+                    <ul class="tag-list" style="padding: 0">
+                        {% block form_products %}
+                            <li><a style="line-height: 1.5;" href="{{ request.route_url('form_download_xlsx_data',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="far fa-file-excel"></i> {{ _('Export data in Excel format') }}</a></li>
+                            <li><a style="line-height: 1.5;" href="{{ request.route_url('form_download_media',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fas fa-images"></i> {{ _('Export submitted media') }}</a></li>
+                            <li><a style="line-height: 1.5;" href="{{ request.route_url('form_download_repo_csv',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fas fa-file-csv"></i> {{ _('Export data in CSV format') }}</a></li>
+                            {% if formDetails.submissions > 0 and formDetails.form_geopoint != None and withgps > 0 %}
+                                <li><a style="line-height: 1.5;" href="{{ request.route_url('form_download_kml',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fas fa-globe-americas"></i> {{ _('Export KML') }}</a></li>
+                            {% endif %}
+                        {% endblock form_products %}
+                    </ul>
+                </div>
+            </div>
+        {% endblock links_tab_content %}
+    </div>
+</div>

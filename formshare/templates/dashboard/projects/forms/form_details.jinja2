@@ -57,19 +57,22 @@
         <div class="row">
             <div class="col-lg-3">
                 <div class="wrapper wrapper-content project-manager">
-                    {% include 'dashboard/projects/forms/snippets/info_tab.jinja2' %}
-                    {% include 'dashboard/projects/forms/snippets/links_tab.jinja2' %}
-{#                    {% if formDetails.form_schema != None %}#}
-{#                        {% include 'dashboard/projects/forms/snippets/repository_tab.jinja2' %}#}
-{#                    {% endif %}#}
-                    {% include 'dashboard/projects/forms/snippets/files_tab.jinja2' %}
-                    {% include 'dashboard/projects/forms/snippets/assistants_tab.jinja2' %}
-                    {% include 'dashboard/projects/forms/snippets/groups_tab.jinja2' %}
-                    <div class="text-center m-t-md">
-                        {% if projectDetails.access_type < 4 %}
-                            <a href="{{ request.route_url('form_edit',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" class="btn btn-xs btn-warning">Edit form</a>
+                    {% block form_tabs %}
+                        {% include 'dashboard/projects/forms/snippets/info_tab.jinja2' %}
+                        {% include 'dashboard/projects/forms/snippets/links_tab.jinja2' %}
+                        {% if formDetails.form_schema != None %}
+                            {% block form_tabs_with_repository %}
+                                {% include 'dashboard/projects/forms/snippets/repository_tab.jinja2' %}
+                                {% include 'dashboard/projects/forms/snippets/products_tab.jinja2' %}
+                            {% endblock form_tabs_with_repository %}
                         {% endif %}
-                    </div>
+                        {% include 'dashboard/projects/forms/snippets/files_tab.jinja2' %}
+                        {% include 'dashboard/projects/forms/snippets/assistants_tab.jinja2' %}
+                        {% include 'dashboard/projects/forms/snippets/groups_tab.jinja2' %}
+                    {% endblock form_tabs %}
+                    {% block form_tabs_extra %}
+
+                    {% endblock form_tabs_extra %}
                 </div>
             </div>
             <div class="col-lg-9">

@@ -2,6 +2,7 @@ from .meta import metadata
 import json
 from sqlalchemy import inspect
 from future.utils import iteritems
+import pprint
 
 __all__ = [
     'initialize_schema', 'add_column_to_schema', 'map_to_schema', 'map_from_schema']
@@ -98,16 +99,21 @@ def map_from_schema(data):
                                 for key, value in iteritems(jsondata):
                                     mapped_data[key] = value
             else:
-                for tupleItem in data:
-                    for c in inspect(tupleItem).mapper.column_attrs:
-                        if c.key != "extras":
-                            mapped_data[c.key] = getattr(tupleItem, c.key)
-                        else:
-                            if getattr(tupleItem, c.key) is not None:
-                                jsondata = json.loads(getattr(tupleItem, c.key))
-                                if bool(jsondata):
-                                    for key, value in iteritems(jsondata):
-                                        mapped_data[key] = value
+                # noinspection PyProtectedMember
+                dict_result = data._asdict()  # This is not private
+                for key, value in dict_result.items():
+                    if value.__class__.__module__ == 'formshare.models.formshare':
+                        for c in inspect(value).mapper.column_attrs:
+                            if c.key != "extras":
+                                mapped_data[c.key] = getattr(value, c.key)
+                            else:
+                                if getattr(value, c.key) is not None:
+                                    jsondata = json.loads(getattr(value, c.key))
+                                    if bool(jsondata):
+                                        for key2, value2 in iteritems(jsondata):
+                                            mapped_data[key2] = value2
+                    else:
+                        mapped_data[key] = value
 
         return mapped_data
     else:
@@ -125,16 +131,21 @@ def map_from_schema(data):
                                 for key, value in iteritems(jsondata):
                                     temp[key] = value
             else:
-                for tupleItem in row:
-                    for c in inspect(tupleItem).mapper.column_attrs:
-                        if c.key != "extras":
-                            temp[c.key] = getattr(tupleItem, c.key)
-                        else:
-                            if getattr(tupleItem, c.key) is not None:
-                                jsondata = json.loads(getattr(tupleItem, c.key))
-                                if bool(jsondata):
-                                    for key, value in iteritems(jsondata):
-                                        temp[key] = value
+                # noinspection PyProtectedMember
+                dict_result = row._asdict()  # This is not private
+                for key, value in dict_result.items():
+                    if value.__class__.__module__ == 'formshare.models.formshare':
+                        for c in inspect(value).mapper.column_attrs:
+                            if c.key != "extras":
+                                temp[c.key] = getattr(value, c.key)
+                            else:
+                                if getattr(value, c.key) is not None:
+                                    jsondata = json.loads(getattr(value, c.key))
+                                    if bool(jsondata):
+                                        for key2, value2 in iteritems(jsondata):
+                                            temp[key2] = value2
+                    else:
+                        temp[key] = value
 
             mapped_data.append(temp)
         return mapped_data

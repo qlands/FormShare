@@ -1,0 +1,28 @@
+Installation
+
+After downloading the Guriddo jqGrid create a directory in your web server (by  example guriddo)
+Copy the content of the package to this directory.
+
+To run the demo(s) access the following directory.
+Suppose you created a directory guriddo in your webserer root
+
+To start Guriddo jqGrid JS Bootstrap demo type
+
+http://myserver/guriddo/bootstrap/
+
+To start Guriddo jqGrid JS demo type
+
+http://myserver/guriddo/jqgridjs/
+
+To star Guriddo PivotGrid JS type
+
+http://myserver/guriddo/pivotgridjs/
+
+To start Guriddo Tree Grid JS demo type
+
+http://myserver/guriddo/treegridjs/
+
+Some example requiere internet connection to obtain remoute data.
+Be a sure you have a internet connection.
+
+Enjoy

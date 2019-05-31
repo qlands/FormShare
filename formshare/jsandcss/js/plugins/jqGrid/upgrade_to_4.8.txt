@@ -1,0 +1,11 @@
+This is a upgrade guide to version 4.8.
+
+1. The ui.jqgrid.css file should be replaced with the last one.
+2. Language files (grid.locale-xx.js) should be replaced with the last one. If this is not performed a error will
+appear and grid will not be build.
+3. The method  GridUnload - i.e  $("#grid").jqGrid('GridUnload') does not have effect.
+Replace the old with the new one $.jgrid.gridUnload('#jqGridId'); where jqGridId is the id of the grid
+4. The method  GridDestroy - i.e  $("#grid").jqGrid('GridDestroy') does not have effect.
+Replace the old with the new one $.jgrid.gridDestroy('#jqGridId'); where jqGridId is the id of the grid
+5. The method  jqGridImport - i.e  $("#grid").jqGrid('jqGridImport',options) does not have effect.
+Replace the old with the new one $.jgrid.jqGridImport('#jqGridId', options); where jqGridId is the id of the grid

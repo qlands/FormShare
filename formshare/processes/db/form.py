@@ -22,7 +22,8 @@ __all__ = ['get_form_details', 'assistant_has_form', 'get_assistant_forms', 'get
            'get_form_groups', 'update_group_privileges', 'remove_group_from_form', 'get_project_forms',
            'get_number_of_submissions_in_database', 'get_by_details', 'get_form_geopoint', 'get_primary_key',
            'get_number_of_submissions_by_assistant', 'get_media_files', 'set_form_status', 'get_form_primary_key',
-           'get_form_survey_file', 'get_project_form_colors', 'reset_form_repository']
+           'get_form_survey_file', 'get_project_form_colors', 'reset_form_repository',
+           'get_assistant_forms_for_cleaning']
 
 log = logging.getLogger(__name__)
 
@@ -264,6 +265,40 @@ def get_assistant_forms(request, requested_project, assistant_project, assistant
             Formgrpacces.group_id == group.group_id).filter(
             or_(Formgrpacces.group_privileges == 1, Formgrpacces.group_privileges == 3)).filter(
             Odkform.form_accsub == 1).all()
+        group_forms = map_from_schema(res)
+
+        # Append only new forms accessible by the groups of the assistant
+        for aForm in group_forms:
+            found = False
+            for cform in forms:
+                if cform["project_id"] == aForm['project_id'] and cform["form_id"] == aForm['form_id']:
+                    found = True
+                    break
+            if not found:
+                forms.append(aForm)
+
+    return forms
+
+
+def get_assistant_forms_for_cleaning(request, requested_project, assistant_project, assistant):
+    # Get all the forms that the user can submit data to and are active
+    assistant_forms = request.dbsession.query(Odkform, Formacces.coll_privileges.label("privileges")).\
+        filter(Odkform.project_id == Formacces.form_project).filter(
+        Odkform.form_id == Formacces.form_id).filter(Formacces.project_id == assistant_project).filter(
+        Formacces.coll_id == assistant).filter(Formacces.form_project == requested_project).\
+        filter(Odkform.form_accsub == 1).all()
+
+    forms = map_from_schema(assistant_forms)
+
+    # Select the groups that user belongs to
+    groups = request.dbsession.query(Collingroup).filter(Collingroup.project_id == requested_project).filter(
+        Collingroup.enum_project == assistant_project).filter(Collingroup.coll_id == assistant).all()
+
+    for group in groups:
+        res = request.dbsession.query(Odkform, Formgrpacces.group_privileges.label("privileges")).\
+            filter(Odkform.project_id == Formgrpacces.form_project).filter(
+            Odkform.form_id == Formgrpacces.form_id).filter(Formgrpacces.project_id == group.project_id).filter(
+            Formgrpacces.group_id == group.group_id).filter(Odkform.form_accsub == 1).all()
         group_forms = map_from_schema(res)
 
         # Append only new forms accessible by the groups of the assistant

@@ -1,0 +1,30 @@
+<div class="modal inmodal" id="edit_field_desc" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content animated fadeIn">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <h4 class="modal-title">{{ _('Edit field description') }}</h4>
+            </div>
+            {% block edit_field_desc_form %}
+                <input type="hidden" id="field_name" name="field_name" value="">
+                {% block edit_field_desc_form_fields %}
+                    <div class="form-group">
+                        <label class="col-sm-2 col-form-label">{{ _('Description:') }}</label>
+                        <div class="col-sm-12">
+                            <input style="width: 100%" type="text" id="field_desc" name="field_desc">
+                        </div>
+                    </div>
+                {% endblock edit_field_desc_form_fields %}
+                {% block edit_field_desc_form_fields_extra %}
+
+                {% endblock edit_field_desc_form_fields_extra %}
+                {% block edit_field_desc_form_fields_actions %}
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
+                        <button type="button" onclick="post_field_change();" class="btn btn-primary">{{ _('Change description') }}</button>
+                    </div>
+                {% endblock edit_field_desc_form_fields_actions %}
+            {% endblock edit_field_desc_form %}
+        </div>
+    </div>
+</div>

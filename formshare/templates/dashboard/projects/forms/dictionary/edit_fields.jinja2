@@ -1,0 +1,286 @@
+{% extends 'dashboard/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block titlesection %}{{ _('Dictionary fields') }}{% endblock titlesection %}
+
+{% block css %}
+    {{ super() }}
+    {% cssresource request,'formshare','shuffle' %}
+
+{% endblock css %}
+
+{% block topScripts %}
+    {{ super() }}
+    {% jsresource request,'formshare','shuffle' %}
+{% endblock topScripts %}
+
+{% block breadcrumbs %}
+    {% include 'dashboard/projects/forms/dictionary/snippets/brdcrbs_fields.jinja2' %}
+{% endblock breadcrumbs %}
+
+{% block mainsection %}
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="wrapper wrapper-content">
+                <div class="ibox">
+                    <div class="ibox-content">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="m-b-md">
+                                    <h2>{{ _('Fields in') }} "{{ table_desc }}"</h2>
+                                </div>
+
+                            </div>
+                        </div>
+                        <h3>{{ _('Field nomenclature and protection:') }}</h3>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="feed-activity-list">
+                                    <div>
+                                        <a class="float-left">
+                                            <div class="rounded-circle" style="margin-right: 10px; background-color: green; width: 38px; height: 38px; display: inline-block; vertical-align: middle" ><span style="color: white; position: relative; float: left; top: 50%; left: 50%; transform: translate(-50%, -50%);"><i class="fas fa-columns fa-2x"></i></span></div>
+                                        </a>
+                                        <div class="media-body">
+                                            <div style="margin-top: 10px"><i class="fas fa-arrow-right"></i> {{ _('Normal fields. You can exclude them.') }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="feed-activity-list">
+                                    <div>
+                                        <a class="float-left">
+                                            <div class="rounded-circle" style="margin-right: 10px; background-color: green; width: 38px; height: 38px; display: inline-block; vertical-align: middle" ><span style="color: white; position: relative; float: left; top: 50%; left: 50%; transform: translate(-50%, -50%);"><i class="fas fa-star fa-2x"></i></span></div>
+                                        </a>
+                                        <div class="media-body">
+                                            <div style="margin-top: 10px"><i class="fas fa-arrow-right"></i> {{ _("Key fields. You can recode them.") }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="feed-activity-list">
+                                    <div>
+                                        <a class="float-left">
+                                            <div class="rounded-circle" style="margin-right: 10px; background-color: green; width: 38px; height: 38px; display: inline-block; vertical-align: middle" ><span style="color: white; position: relative; float: left; top: 50%; left: 50%; transform: translate(-50%, -50%);"><i class="fas fa-link fa-2x"></i></span></div>
+                                        </a>
+                                        <div class="media-body">
+                                            <div style="margin-top: 10px"><i class="fas fa-arrow-right"></i> {{ _("Categorical fields. You can exclude them or unlink them.") }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <hr>
+                        <div class="row m-t-sm">
+                            <div class="col-lg-12">
+                                <div class="row">
+                                    <div class="col">
+                                        <p class="mb-1">{{ _('Filter by sesitivity') }}:</p>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col">
+                                        <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                                            <label class="btn btn-outline-primary active">
+                                                <input type="radio" name="shuffle-filter" value="all" checked="checked"/>{{ _('All') }}
+                                            </label>
+                                            <label class="btn btn-outline-primary">
+                                                <input type="radio" name="shuffle-filter" value="sensi"/>{{ _('Sensitive') }}
+                                            </label>
+                                            <label class="btn btn-outline-primary">
+                                                <input type="radio" name="shuffle-filter" value="nosensi"/>{{ _('Not sensitive') }}
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col">
+                                        <p class="mb-1">{{ _('Search') }}:</p>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col">
+                                        <input class="textfield filter__search js-shuffle-search" type="search" id="filters-search-input" />
+                                    </div>
+                                </div>
+
+
+                                <div class="feed-activity-list">
+                                    <div class="row my-shuffle">
+                                        {% for field in fields %}
+                                            {% include 'dashboard/projects/forms/dictionary/snippets/field_item.jinja2' %}
+                                        {% endfor %}
+
+                                        <div class="col-1 my-sizer-element" style="max-width: 1px; max-height: 1px"></div>
+
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include 'dashboard/projects/forms/dictionary/snippets/change_field_name.jinja2' %}
+    {% include 'dashboard/projects/forms/dictionary/snippets/set_field_as_sensitive.jinja2' %}
+{% endblock mainsection %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        var Shuffle = window.Shuffle;
+        var jQuery = window.jQuery;
+        var myShuffle = new Shuffle(document.querySelector('.my-shuffle'), {
+            itemSelector: '.feed-item',
+            sizer: '.my-sizer-element',
+            buffer: 1,
+        });
+        jQuery('input[name="shuffle-filter"]').on('change', function (evt) {
+            var input = evt.currentTarget;
+            if (input.checked) {
+                myShuffle.filter(input.value);
+            }
+        });
+
+        jQuery('.js-shuffle-search').on('keyup', function (evt) {
+            var input = evt.currentTarget;
+            var searchText = input.value.toLowerCase();
+
+            myShuffle.filter(function (element, shuffle) {
+
+                // If there is a current filter applied, ignore elements that don't match it.
+                if (shuffle.group !== Shuffle.ALL_ITEMS) {
+                    // Get the item's groups.
+                    var groups = JSON.parse(element.getAttribute('data-groups'));
+                    var isElementInCurrentGroup = groups.indexOf(shuffle.group) !== -1;
+
+                    // Only search elements in the current group
+                    if (!isElementInCurrentGroup) {
+                        return false;
+                    }
+                }
+
+                var titleText = element.getAttribute('data-title').toLowerCase().trim();
+                return titleText.indexOf(searchText) !== -1;
+            });
+
+        });
+
+        function post_field_change() {
+            var field_name = $("#field_name").val();
+            var field_desc = $("#field_desc").val();
+
+            $.post("{{ request.url }}",
+                {
+                    post_type: 'change_desc',
+                    field_name: field_name,
+                    field_desc: field_desc,
+                    csrf_token: "{{ request.session.get_csrf_token() }}"
+                },
+                function (data, status) {
+                    if ((data.status === "changed") && (status === "success"))
+                    {
+                        $("#desc_" + field_name).text(field_desc);
+                        $("#btn_edit_" + field_name).attr("data-field-desc",field_desc);
+                        $("#edit_field_desc").modal('hide');
+                    }
+                });
+        }
+
+        function post_sensitive_change() {
+            var field_name = $("#field_name").val();
+            var field_protection = $("#protection").val();
+
+            $.post("{{ request.url }}",
+                {
+                    post_type: 'change_as_sensitive',
+                    field_name: field_name,
+                    field_protection: field_protection,
+                    csrf_token: "{{ request.session.get_csrf_token() }}"
+                },
+                function (data, status) {
+                    if ((data.status === "changed") && (status === "success"))
+                    {
+                        $("#set_as_sensible").modal('hide');
+                        $("#feed_item_" + field_name).attr("data-groups",'["sensi"]');
+                        $('#field_item_' + field_name).load('{{ request.url }} #field_item_' + field_name,function(){
+                            field_item_buttons();
+                        });
+                    }
+                });
+        }
+
+        function post_not_sensitive_change(field_name) {
+            $.post("{{ request.url }}",
+                {
+                    post_type: 'change_as_not_sensitive',
+                    field_name: field_name,
+                    csrf_token: "{{ request.session.get_csrf_token() }}"
+                },
+                function (data, status) {
+                    if ((data.status === "changed") && (status === "success"))
+                    {
+                        $("#feed_item_" + field_name).attr("data-groups",'["nosensi"]');
+                        $('#field_item_' + field_name).load('{{ request.url }} #field_item_' + field_name,function(){
+                            field_item_buttons();
+                        });
+                    }
+                });
+        }
+
+        function field_item_buttons() {
+            var assistant_item = $(".field-item");
+            assistant_item.click(function () {
+                var field_name = $(this).attr('data-field-name');
+                var field_desc = $(this).attr('data-field-desc');
+                $("#field_name").val(field_name);
+                $("#field_desc").val(field_desc);
+            });
+
+            var sensitive_item = $(".field-item-sensitive");
+            sensitive_item.click(function () {
+                var field_name = $(this).attr('data-field-name');
+                var field_type = $(this).attr('data-field-type');
+                $("#field_name").val(field_name);
+                if (field_type === "normal")
+                {
+                    $('#protection')
+                        .find('option')
+                        .remove()
+                        .end()
+                        .append('<option value="exclude">{{ _('Exclude it') }}</option>')
+                        .val('exclude')
+                    ;
+                }
+                if (field_type === "key")
+                {
+                    $('#protection')
+                        .find('option')
+                        .remove()
+                        .end()
+                        .append('<option value="recode">{{ _('Recode it') }}</option>')
+                        .val('recode')
+                    ;
+                }
+                if (field_type === "lookup")
+                {
+                    $('#protection')
+                        .find('option')
+                        .remove()
+                        .end()
+                        .append('<option value="exclude">{{ _('Exclude it') }}</option>')
+                        .append('<option value="unlink">{{ _('Unlink it') }}</option>')
+                        .val('exclude')
+                    ;
+                }
+            });
+
+        }
+        field_item_buttons();
+
+    </script>
+{% endblock scripts %}

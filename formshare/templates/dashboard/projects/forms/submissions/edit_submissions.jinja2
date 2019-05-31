@@ -1,0 +1,92 @@
+{% extends 'dashboard/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block titlesection %}{{ _('Manage submissions') }}{% endblock titlesection %}
+
+{% block css %}
+    {{ super() }}
+    {% cssresource request,'formshare','jqgrid_bootstrap' %}
+
+{% endblock css %}
+
+{% block topScripts %}
+    {{ super() }}
+    {% jsresource request,'formshare','jqgrid' %}
+{% endblock topScripts %}
+
+{% block breadcrumbs %}
+    {% include 'dashboard/projects/forms/submissions/snippets/brdcrbs_submissions.jinja2' %}
+{% endblock breadcrumbs %}
+
+{% block mainsection %}
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="wrapper wrapper-content">
+                <div class="ibox">
+                    <div class="ibox-content">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="m-b-md">
+                                    <h2>{{ _('Submissions in') }} "{{ formDetails.form_name }}"</h2>
+                                </div>
+
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <table style="max-width: 500px" id="jqGrid"></table>
+                                <div id="jqGridPager"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock mainsection %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function () {
+            $("#jqGrid").jqGrid({
+                url: "{{ request.route_url('getFormSubmissions', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}",
+                mtype: "POST",
+                postData: {csrf_token: '{{ request.session.get_csrf_token() }}'},
+                styleUI : 'Bootstrap4',
+                iconSet: 'fontAwesome',
+                datatype: "jsonp",
+                colModel: [
+                    {% for field in fields %}
+                        {label: '{{ field.desc }}', name: '{{ field.name }}' {% if field.name == 'rowuuid' %}, key: true{% endif %}, editable: true},
+                    {% endfor %}
+                ],
+                viewrecords: true,
+                height: 'auto',
+                rowNum: 20,
+                pager: "#jqGridPager",
+                shrinkToFit: false,
+                autowidth: true,
+                editurl: "{{ request.route_url('deleteFormSubmission', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}",
+            });
+
+            $('#jqGrid').navGrid('#jqGridPager',
+                // the buttons to appear on the toolbar of the grid
+                { edit: false, add: false, del: true, search: true, refresh: false, view: false, position: "left", cloneToTop: false },
+                // options for the Delete Dailog
+                {},
+                {},
+                {
+                    errorTextFormat: function (data) {
+                        return 'Error: ' + data.responseText
+                    },
+                    onclickSubmit: function () {
+                    return {csrf_token: '{{ request.session.get_csrf_token() }}'};
+                }
+                });
+
+        });
+
+    </script>
+{% endblock scripts %}

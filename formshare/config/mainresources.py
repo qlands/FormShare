@@ -70,8 +70,11 @@ def create_resources(apppath, config):
 
     r.add_css_resource('formshare', 'shuffle',
                        'css/plugins/shuffle/test.css', None)
-    # r.add_css_resource('formshare', 'shuffle-style',
-    #                    'css/plugins/shuffle/shuffle-styles.css', 'shuffle')
+
+    r.add_js_resource('formshare', 'jqgrid_locale_en', 'js/plugins/jqGrid/js/trirand/i18n/grid.locale-en.js', None)
+    r.add_js_resource('formshare', 'jqgrid', 'js/plugins/jqGrid/js/trirand/jquery.jqGrid.min.js', 'jqgrid_locale_en')
+
+    r.add_css_resource('formshare', 'jqgrid_bootstrap', 'js/plugins/jqGrid/css/trirand/ui.jqgrid-bootstrap4.css', None)
 
     # ------------------------------Collaborators, assistants and groups --------------------------------------
     r.add_css_resource('formshare', 'select2', 'css/plugins/select2/select2.min.css', 'bootstrap')

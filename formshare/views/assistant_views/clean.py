@@ -1,6 +1,6 @@
 from formshare.views.classes import AssistantView
 from formshare.processes.odk.processes import get_assistant_permissions_on_a_form
-from formshare.processes.odk.api import get_tables_from_form, get_fields_from_table, get_request_data, update_data, \
+from formshare.processes.submission.api import get_tables_from_form, get_fields_from_table, get_request_data, update_data, \
     is_field_key
 from pyramid.httpexceptions import HTTPNotFound, HTTPFound
 from formshare.processes.db import get_form_data

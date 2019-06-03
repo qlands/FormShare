@@ -925,7 +925,7 @@ def store_json_file(request, submission_id, temp_json_file, json_file, ordered_j
                     log_file = os.path.join(odk_dir, *['forms', xform_directory, 'submissions', 'logs',
                                                        os.path.basename(log_file_name)])
                     imported_file = os.path.join(odk_dir,
-                                                 *['forms', xform_directory, 'submissions', 'logs', 'imported.log'])
+                                                 *['forms', xform_directory, 'submissions', 'logs', 'imported.sqlite'])
                     uuid_file = os.path.join(odk_dir,
                                              *['forms', xform_directory, 'submissions', 'logs', uuid_file_name])
                     maps_directory = os.path.join(odk_dir, *['forms', xform_directory, 'submissions', 'maps'])
@@ -971,12 +971,13 @@ def store_json_file(request, submission_id, temp_json_file, json_file, ordered_j
                             add_dataset(request.registry.settings, user, project_code, form, submission_id,
                                         submission_data)
                             # Add the inserted records in the record index
-                            create_record_index(request.registry.settings)
+                            create_record_index(request.registry.settings, user, project_code, form)
                             with open(uuid_file) as f:
                                 lines = f.readlines()
                                 for line in lines:
                                     parts = line.split(",")
-                                    add_record(request.registry.settings, schema, parts[0], parts[1])
+                                    add_record(request.registry.settings, user, project_code, form, schema, parts[0],
+                                               parts[1])
 
                         return 0, ""
                     else:
@@ -1312,7 +1313,7 @@ def push_revision(request, user, project, form, submission):
     mysql_host = request.registry.settings['mysql.host']
     mysql_port = request.registry.settings['mysql.port']
     log_file = os.path.join(odk_dir, *['forms', form_directory, 'submissions', 'logs', submission + ".xml"])
-    imported_file = os.path.join(odk_dir, *['forms', form_directory, 'submissions', 'logs', 'imported.log'])
+    imported_file = os.path.join(odk_dir, *['forms', form_directory, 'submissions', 'logs', 'imported.sqlite'])
     maps_directory = os.path.join(odk_dir, *['forms', form_directory, 'submissions', 'maps'])
     manifest_file = os.path.join(odk_dir, *['forms', form_directory, 'repository', 'manifest.xml'])
     args = []

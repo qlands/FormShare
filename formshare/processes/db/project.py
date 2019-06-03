@@ -11,7 +11,7 @@ import dateutil.parser
 __all__ = [
     'get_project_id_from_name', 'get_user_projects', 'get_active_project', 'add_project', 'modify_project',
     'delete_project', 'is_collaborator', 'add_file_to_project', 'get_project_files', 'remove_file_from_project',
-    'get_project_code_from_id', 'get_project_details', 'set_project_as_active']
+    'get_project_code_from_id', 'get_project_details', 'set_project_as_active', 'get_project_owner']
 
 log = logging.getLogger(__name__)
 

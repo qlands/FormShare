@@ -43,7 +43,7 @@ def add_json_log(engine, project, form, submission, json_file, log_file, status,
     return True, ""
 
 
-def store_json_file(engine, submission_id, temp_json_file, json_file, ordered_json_file, odk_dir, xform_directory,
+def store_json_file(engine, submission_id, temp_json_file, json_file, odk_dir, xform_directory,
                     schema, user, project, form, assistant, project_code, geopoint_variable, project_of_assistant,
                     settings, ignore_xform_check=False):
     mysql_user = settings['mysql.user']
@@ -79,6 +79,7 @@ def store_json_file(engine, submission_id, temp_json_file, json_file, ordered_js
         outfile.write(json_string)
 
     shutil.copyfile(temp_json_file, json_file)
+    ordered_json_file = json_file.replace(".json", ".ordered.json")
     # Second we pass the temporal JSON to jQ to order its elements
     # this will help later on if we want to compare between JSONs
     args = ["jq", "-S", ".", temp_json_file]
@@ -98,10 +99,15 @@ def store_json_file(engine, submission_id, temp_json_file, json_file, ordered_js
         # Third we try to move the JSON data into the database
         log_file_name = os.path.splitext(json_file)[0] + ".xml"
         uuid_file_name = os.path.splitext(json_file)[0] + ".log"
+
+        media_path = os.path.join(odk_dir, *['forms', xform_directory, "submissions",
+                                             os.path.splitext(json_file)[0], 'diffs'])
+        os.makedirs(media_path)
+
         log_file = os.path.join(odk_dir, *['forms', xform_directory, 'submissions', 'logs',
                                            os.path.basename(log_file_name)])
         imported_file = os.path.join(odk_dir,
-                                     *['forms', xform_directory, 'submissions', 'logs', 'imported.log'])
+                                     *['forms', xform_directory, 'submissions', 'logs', 'imported.sqlite'])
         uuid_file = os.path.join(odk_dir,
                                  *['forms', xform_directory, 'submissions', 'logs', uuid_file_name])
         maps_directory = os.path.join(odk_dir, *['forms', xform_directory, 'submissions', 'maps'])
@@ -132,12 +138,12 @@ def store_json_file(engine, submission_id, temp_json_file, json_file, ordered_js
                 create_dataset_index(settings, user, project_code, form)
                 add_dataset(settings, user, project_code, form, submission_id, submission_data)
                 # Add the inserted records in the record index
-                create_record_index(settings)
+                create_record_index(settings, user, project_code, form)
                 with open(uuid_file) as f:
                     lines = f.readlines()
                     for line in lines:
                         parts = line.split(",")
-                        add_record(settings, schema, parts[0], parts[1])
+                        add_record(settings, user, project_code, form, schema, parts[0], parts[1])
 
             return 0, ""
         else:
@@ -184,10 +190,9 @@ def import_json_files(user, project, form, odk_dir, form_directory, schema, assi
                 send_task_status_to_form(settings, task_id, _("75% processed"))
                 send_75 = False
         file_name = os.path.basename(file_to_import)
-        ordered_file = file_name.replace(".json", ".ordered.json")
         submission_id = os.path.splitext(os.path.basename(file_to_import))[0]
         json_file = os.path.join(odk_dir, *['forms', form_directory, "submissions", file_name])
-        store_json_file(engine, submission_id, file_to_import, json_file, ordered_file, odk_dir, form_directory, schema,
+        store_json_file(engine, submission_id, file_to_import, json_file, odk_dir, form_directory, schema,
                         user, project, form, assistant, project_code, geopoint_variable, project_of_assistant, settings,
                         ignore_xform_check)
         index = index + 1

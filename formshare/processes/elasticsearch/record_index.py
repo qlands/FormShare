@@ -82,7 +82,11 @@ def create_connection(settings):
         return None
 
 
-def create_record_index(settings):
+def get_index_name(user, project, form):
+    return "formshare_records_" + user.lower() + "_" + project.lower() + "_" + form.lower()
+
+
+def create_record_index(settings, user, project, form):
     try:
         number_of_shards = int(settings['elasticsearch.records.number_of_shards'])
     except KeyError:
@@ -93,14 +97,10 @@ def create_record_index(settings):
     except KeyError:
         number_of_replicas = 1
 
-    try:
-        index_name = settings['elasticsearch.records.index_name']
-    except KeyError:
-        index_name = "formshare_records"
-
     connection = create_connection(settings)
     if connection is not None:
         try:
+            index_name = get_index_name(user, project, form)
             connection.indices.create(index_name,
                                       body=_get_record_index_definition(number_of_shards, number_of_replicas))
         except RequestError as e:
@@ -115,14 +115,46 @@ def create_record_index(settings):
         raise RequestError("Cannot connect to ElasticSearch")
 
 
-def add_record(settings, schema, table, record_uuid):
-    try:
-        index_name = settings['elasticsearch.records.index_name']
-    except KeyError:
-        index_name = "formshare_records"
-
+def delete_record_index(settings, user, project, form):
     connection = create_connection(settings)
     if connection is not None:
+        try:
+            index_name = get_index_name(user, project, form)
+            connection.indices.delete(index_name, ignore=[400, 404])
+        except RequestError as e:
+            if e.status_code == 400:
+                if e.error.find('already_exists') >= 0:
+                    pass
+                else:
+                    raise e
+            else:
+                raise e
+    else:
+        raise RequestError("Cannot connect to ElasticSearch")
+
+
+def delete_from_record_index(settings, user, project, form, record_uuid):
+    connection = create_connection(settings)
+    if connection is not None:
+        try:
+            index_name = get_index_name(user, project, form)
+            connection.delete(index=index_name, doc_type='record', id=record_uuid)
+        except RequestError as e:
+            if e.status_code == 400:
+                if e.error.find('already_exists') >= 0:
+                    pass
+                else:
+                    raise e
+            else:
+                raise e
+    else:
+        raise RequestError("Cannot connect to ElasticSearch")
+
+
+def add_record(settings, user, project, form, schema, table, record_uuid):
+    connection = create_connection(settings)
+    if connection is not None:
+        index_name = get_index_name(user, project, form)
         data_dict = {'schema': schema, 'table': table}
         connection.index(index=index_name, doc_type='record', id=record_uuid, body=data_dict)
     else:

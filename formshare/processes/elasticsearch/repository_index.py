@@ -209,6 +209,24 @@ def create_dataset_index(settings, user, project, form):
         raise RequestError("Cannot connect to ElasticSearch")
 
 
+def delete_from_dataset_index(settings, user, project, form, submission):
+    connection = create_connection(settings)
+    if connection is not None:
+        try:
+            index_name = get_index_name(user, project, form)
+            connection.delete(index=index_name, doc_type='dataset', id=submission)
+        except RequestError as e:
+            if e.status_code == 400:
+                if e.error.find('already_exists') >= 0:
+                    pass
+                else:
+                    raise e
+            else:
+                raise e
+    else:
+        raise RequestError("Cannot connect to ElasticSearch")
+
+
 def delete_dataset_index(settings, user, project, form):
     connection = create_connection(settings)
     if connection is not None:

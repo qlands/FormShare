@@ -7,6 +7,7 @@ from formshare.processes.db import get_form_schema, get_form_directory, get_proj
 from formshare.processes.odk import get_odk_path
 from formshare.processes.elasticsearch.repository_index import get_datasets_from_form, get_datasets_from_project
 from formshare.processes.color_hash import ColorHash
+from formshare.models.formshare import Submission, Jsonlog
 import logging
 from sqlalchemy import exc
 from decimal import Decimal
@@ -15,11 +16,14 @@ from lxml import etree
 import datetime
 import re
 import paginate
+from sqlalchemy import create_engine
+from formshare.processes.elasticsearch.repository_index import delete_dataset_index, delete_from_dataset_index
+from formshare.processes.elasticsearch.record_index import delete_record_index, delete_from_record_index
 
 __all__ = ['get_submission_media_files', 'json_to_csv', 'get_gps_points_from_form',
            'get_gps_points_from_project', 'get_tables_from_form', 'update_table_desc', 'update_field_desc',
            'update_field_sensitive', 'get_fields_from_table', 'get_table_desc', 'is_field_key', 'get_request_data',
-           'update_data', 'get_request_data_jqgrid']
+           'update_data', 'get_request_data_jqgrid', 'delete_submission', 'delete_all_submission']
 
 log = logging.getLogger(__name__)
 
@@ -403,21 +407,21 @@ def get_request_data(request, project, form, table_name, draw, fields, start, le
 
 
 def get_request_data_jqgrid(request, project, form, table_name, fields, current_page, length, table_order,
-                            order_direction, search_value):
+                            order_direction, search_field, search_string, search_operator):
     schema = get_form_schema(request, project, form)
     sql_fields = ','.join(fields)
-    not_null_fields_array = []
-    for a_field in fields:
-        not_null_fields_array.append("IFNULL(" + a_field + ",'')")
-    not_null_fields = ','.join(not_null_fields_array)
 
-    if search_value == "":
+    if search_field is None or search_string == "":
         sql = "SELECT " + sql_fields + " FROM " + schema + "." + table_name
         where_clause = ''
     else:
         sql = "SELECT " + sql_fields + " FROM " + schema + "." + table_name
-        sql = sql + " WHERE LOWER(CONCAT(" + not_null_fields + ")) like '%" + search_value.lower() + "%'"
-        where_clause = " WHERE LOWER(CONCAT(" + not_null_fields + ")) like '%" + search_value.lower() + "%'"
+        if search_operator == 'like':
+            sql = sql + " WHERE LOWER(" + search_field + ") like '%" + search_string.lower() + "%'"
+            where_clause = " WHERE LOWER(" + search_field + ") like '%" + search_string.lower() + "%'"
+        else:
+            sql = sql + " WHERE LOWER(" + search_field + ") not like '%" + search_string.lower() + "%'"
+            where_clause = " WHERE LOWER(" + search_field + ") not like '%" + search_string.lower() + "%'"
 
     count_sql = "SELECT count(*) as total FROM " + schema + "." + table_name + where_clause
     records = request.dbsession.execute(count_sql).fetchone()
@@ -425,7 +429,10 @@ def get_request_data_jqgrid(request, project, form, table_name, fields, current_
 
     collection = list(range(total))
     page = paginate.Page(collection, current_page, length)
-    start = page.first_item
+    if page.first_item is not None:
+        start = page.first_item-1
+    else:
+        start = 0
 
     if table_order is not None:
         sql = sql + " ORDER BY " + table_order + " " + order_direction
@@ -489,4 +496,111 @@ def update_data(request, project, form, table_name, row_uuid, field, value):
         return {"fieldErrors": [{'name': field, 'status': 'Unknown error'}]}
 
 
+def delete_submission(request, user, project, form, row_uuid, project_code):
+    schema = get_form_schema(request, project, form)
+    sql = "SELECT surveyid FROM " + schema + ".maintable WHERE rowuuid = '" + row_uuid + "'"
+    records = request.dbsession.execute(sql).fetchone()
+    submission_id = records.surveyid
+    try:
+        odk_dir = get_odk_path(request)
+        form_directory = get_form_directory(request, project, form)
 
+        # Remove the submissions from the submission DB created by ODK Tools
+        paths = ['forms', form_directory, 'submissions', "logs", "imported.sqlite"]
+        imported_db = os.path.join(odk_dir, *paths)
+        sqlite_engine = 'sqlite:///{}'.format(imported_db)
+        engine = create_engine(sqlite_engine)
+        try:
+            engine.execute("DELETE FROM submissions WHERE submission_id ='{}'".format(submission_id))
+        except Exception as e:
+            log.error("Error {} removing submission {} from {}").format(str(e), submission_id, imported_db)
+        engine.dispose()
+
+        # Remove the submission from the database
+        request.dbsession.query(Submission).filter(Submission.project_id == project).\
+            filter(Submission.form_id == form).filter(Submission.submission_id == submission_id).delete()
+        mark_changed(request.dbsession)
+
+        # Try to remove all associated files
+        try:
+            paths = ['forms', form_directory, 'submissions', submission_id]
+            submissions_dir = os.path.join(odk_dir, *paths)
+            shutil.rmtree(submissions_dir)
+        except Exception as e:
+            log.error("Error deleting submission directory for id {}. Error: {}".format(submission_id, str(e)))
+        try:
+            paths = ['forms', form_directory, 'submissions', submission_id + ".xml"]
+            xml_file = os.path.join(odk_dir, *paths)
+            os.remove(xml_file)
+        except Exception as e:
+            log.error("Error deleting submission xml file for id {}. Error: {}".format(submission_id, str(e)))
+        try:
+            paths = ['forms', form_directory, 'submissions', submission_id + ".json"]
+            json_file = os.path.join(odk_dir, *paths)
+            os.remove(json_file)
+        except Exception as e:
+            log.error("Error deleting submission json file for id {}. Error: {}".format(submission_id, str(e)))
+        try:
+            paths = ['forms', form_directory, 'submissions', submission_id + ".ordered.json"]
+            json_file = os.path.join(odk_dir, *paths)
+            os.remove(json_file)
+        except Exception as e:
+            log.error("Error deleting ordered submission json file for id {}. Error: {}".format(submission_id, str(e)))
+        try:
+            paths = ['forms', form_directory, 'submissions', submission_id + ".log"]
+            log_file = os.path.join(odk_dir, *paths)
+
+            with open(log_file) as f:
+                lines = f.readlines()
+                for line in lines:
+                    parts = line.split(",")
+                    delete_from_record_index(request.registry.settings, user, project_code, form, schema, parts[1])
+
+            os.remove(log_file)
+        except Exception as e:
+            log.error("Error deleting submission row logging file for id {}. Error: {}".format(submission_id, str(e)))
+
+        delete_from_dataset_index(request.registry.settings, user, project_code, form, submission_id)
+
+        # Finally remove the submission from the repository database
+        sql = "DELETE FROM " + schema + ".maintable WHERE rowuuid = '" + row_uuid + "'"
+        request.dbsession.execute(sql)
+        mark_changed(request.dbsession)
+        return True
+    except Exception as e:
+        log.error("Unable to remove submission {} using rowuuid {}. Error {}".format(submission_id, row_uuid, str(e)))
+    return False
+
+
+def delete_all_submission(request, user, project, form, project_code):
+    schema = get_form_schema(request, project, form)
+    try:
+        request.dbsession.query(Submission).filter(Submission.project_id == project).\
+            filter(Submission.form_id == form).delete()
+        request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project). \
+            filter(Jsonlog.form_id == form).delete()
+        mark_changed(request.dbsession)
+
+        odk_dir = get_odk_path(request)
+        form_directory = get_form_directory(request, project, form)
+        paths = ['forms', form_directory, 'submissions']
+        submissions_dir = os.path.join(odk_dir, *paths)
+        shutil.rmtree(submissions_dir)
+        paths = ['forms', form_directory, 'submissions']
+        os.makedirs(os.path.join(odk_dir, *paths))
+        paths = ['forms', form_directory, 'submissions', 'logs']
+        os.makedirs(os.path.join(odk_dir, *paths))
+        paths = ['forms', form_directory, 'submissions', 'maps']
+        os.makedirs(os.path.join(odk_dir, *paths))
+
+        sql = "DELETE FROM " + schema + ".maintable"
+        request.dbsession.execute(sql)
+        mark_changed(request.dbsession)
+
+        delete_dataset_index(request.registry.settings, user, project_code, form)
+        delete_record_index(request.registry.settings, user, project_code, form)
+
+        return True, ""
+    except Exception as e:
+        log.error("Unable to remove submissions. Error {}".format(str(e)))
+        return False, str(e)

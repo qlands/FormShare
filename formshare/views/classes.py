@@ -281,7 +281,7 @@ class PrivateView(object):
         self.classResult["userDetails"] = get_user_details(self.request, self.userID)
 
     def add_error(self, message):
-        self.request.session.flash(message, queue='error')
+        self.request.session.flash("{}|error".format(message))
 
 
 class DashboardView(PrivateView):

@@ -29,7 +29,8 @@ from ..views.assistant_views.clean import CleanInterface, PerformAction, DataReq
 from ..views.sse import SSEventStream
 from ..views.products import DownloadPrivateProduct, DownloadPublicProduct, DownloadPrivateProductByAPI, \
     PublishProduct, UnPublishProduct, DeleteProduct
-from ..views.repository_submissions import ManageSubmissions, GetFormSubmissions, DeleteFormSubmission
+from ..views.repository_submissions import ManageSubmissions, GetFormSubmissions, DeleteFormSubmission, \
+    DeleteAllSubmissions
 
 route_list = []
 
@@ -354,6 +355,9 @@ def load_routes(config):
     routes.append(add_route('deleteFormSubmission',
                             '/user/{userid}/project/{projcode}/form/{formid}/submissions/delete',
                             DeleteFormSubmission, 'json'))
+    routes.append(add_route('deleteAllSubmissions',
+                            '/user/{userid}/project/{projcode}/form/{formid}/submissions/deleteall',
+                            DeleteAllSubmissions, None))
 
     # Assistant access
 

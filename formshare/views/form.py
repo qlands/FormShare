@@ -11,6 +11,7 @@ import os
 from hashlib import md5
 import logging
 from formshare.processes.elasticsearch.repository_index import delete_dataset_index, get_number_of_datasets_with_gps
+from formshare.processes.elasticsearch.record_index import delete_record_index
 from pyramid.response import FileResponse
 from formshare.processes.submission.api import get_submission_media_files, json_to_csv, get_gps_points_from_form
 from formshare.processes.odk.api import get_odk_path, upload_odk_form, update_form_title, retrieve_form_file, \
@@ -297,6 +298,7 @@ class DeleteForm(PrivateView):
                 deleted, message = delete_form(self.request, project_id, form_id)
                 if deleted:
                     delete_dataset_index(self.request.registry.settings, user_id, project_code, form_id)
+                    delete_record_index(self.request.registry.settings, user_id, project_code, form_id)
                     try:
                         shutil.rmtree(form_directory)
                     except Exception as e:

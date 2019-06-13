@@ -27,7 +27,12 @@ class BuildDataBaseError(Exception):
         return 'Error building database'
 
 
-def build_database(settings, cnf_file, create_file, insert_file, audit_file, schema, task_id):
+def get_odk_path(settings):
+    repository_path = settings['repository.path']
+    return os.path.join(repository_path, *["odk"])
+
+
+def build_database(settings, cnf_file, create_file, insert_file, schema, form_directory, task_id):
     error = False
     error_message = ""
 
@@ -80,20 +85,44 @@ def build_database(settings, cnf_file, create_file, insert_file, audit_file, sch
                 error = True
 
     if not error:
-        with open(audit_file) as input_file:
-            proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)
-            output, error = proc.communicate()
-            if proc.returncode != 0:
-                error_message = "Error loading lookup tables \n"
-                error_message = error_message + "File: " + audit_file + "\n"
-                error_message = error_message + "Error: \n"
-                if error is not None:
-                    error_message = error_message + error.decode() + "\n"
-                error_message = error_message + "Output: \n"
-                if output is not None:
-                    error_message = error_message + output.decode() + "\n"
-                log.error(error_message)
-                error = True
+        odk_dir = get_odk_path(settings)
+        create_audit_triggers = os.path.join(settings['odktools.path'],
+                                             *["utilities", "createAuditTriggers", "createaudittriggers"])
+        audit_path = os.path.join(odk_dir, *["forms", form_directory, "repository"])
+        mysql_host = settings['mysql.host']
+        mysql_port = settings['mysql.port']
+        mysql_user = settings['mysql.user']
+        mysql_password = settings['mysql.password']
+        args = [create_audit_triggers, "-H " + mysql_host, "-P " + mysql_port,
+                "-u " + mysql_user,
+                "-p " + mysql_password,
+                "-s " + schema,
+                "-o " + audit_path]
+        p = Popen(args, stdout=PIPE, stderr=PIPE)
+        stdout, stderr = p.communicate()
+        if p.returncode == 0:
+            audit_file = os.path.join(odk_dir, *["forms", form_directory, "repository", "mysql_create_audit.sql"])
+            send_task_status_to_form(settings, task_id, _("Inserting lookup values..."))
+            args = ["mysql", "--defaults-file=" + cnf_file, schema]
+            with open(audit_file) as input_file:
+                proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)
+                output, error = proc.communicate()
+                if proc.returncode != 0:
+                    error_message = "Error loading audit triggers \n"
+                    error_message = error_message + "File: " + audit_file + "\n"
+                    error_message = error_message + "Error: \n"
+                    if error is not None:
+                        error_message = error_message + error.decode() + "\n"
+                    error_message = error_message + "Output: \n"
+                    if output is not None:
+                        error_message = error_message + output.decode() + "\n"
+                    log.error(error_message)
+                    error = True
+        else:
+            error = True
+            error_message = "Error while creating audit triggers: " + stdout.decode() + " - " + stderr.decode() \
+                            + " - " + " ".join(args)
+            log.error(error_message)
 
     if error:
         raise BuildDataBaseError(error_message)
@@ -114,9 +143,9 @@ def update_form(db_session, project, form, form_data):
 
 @celeryApp.task(base=CeleryTask)
 def create_mysql_repository(settings, user, project_id, project_code, form, odk_dir, form_directory, schema,
-                            primary_key, cnf_file, create_file, insert_file, audit_file):
+                            primary_key, cnf_file, create_file, insert_file):
     task_id = create_mysql_repository.request.id
-    build_database(settings, cnf_file, create_file, insert_file, audit_file, schema, task_id)
+    build_database(settings, cnf_file, create_file, insert_file, schema, form_directory, task_id)
 
     session_factory = get_session_factory(get_engine(settings))
 

@@ -794,24 +794,6 @@ def create_repository(request, project, form, odk_dir, xform_directory, primary_
             schema = "P" + project[-12:] + "_D" + str(uuid.uuid4())[-12:]
             create_file = os.path.join(odk_dir, *["forms", xform_directory, "repository", "create.sql"])
             insert_file = os.path.join(odk_dir, *["forms", xform_directory, "repository", "insert.sql"])
-            audit_file = os.path.join(odk_dir, *["forms", xform_directory, "repository", "audit.sql"])
-
-            audit = open(audit_file, "w")
-            audit.write("CREATE TABLE IF NOT EXISTS audit_log (\n")
-            audit.write("audit_id VARCHAR(64) NOT NULL,\n")
-            audit.write("audit_date DATETIME NULL ,\n")
-            audit.write("audit_action VARCHAR(6) NULL ,\n")
-            audit.write("audit_user VARCHAR(120) NULL ,\n")
-            audit.write("audit_table VARCHAR(120) NULL ,\n")
-            audit.write("audit_column VARCHAR(120) NULL ,\n")
-            audit.write("audit_uuid VARCHAR(64) NULL ,\n")
-            audit.write("audit_oldvalue TEXT NULL ,\n")
-            audit.write("audit_newvalue TEXT NULL ,\n")
-            audit.write("audit_insdeldata TEXT NULL ,\n")
-            audit.write("PRIMARY KEY (audit_id) )\n")
-            audit.write(" ENGINE = InnoDB CHARSET=utf8;\n")
-            audit.write("\n")
-            audit.close()
 
             formshare_create_repository = True
             cnf_file = request.registry.settings['mysql.cnf']
@@ -819,11 +801,11 @@ def create_repository(request, project, form, odk_dir, xform_directory, primary_
                 if formshare_create_repository:
                     formshare_create_repository = a_plugin.before_creating_repository(request, project, form, cnf_file,
                                                                                       create_file, insert_file,
-                                                                                      audit_file, schema)
+                                                                                      schema)
             if formshare_create_repository:
                 # Calls the Celery task
                 task = create_database_repository(request, project, form, odk_dir, xform_directory, schema,
-                                                  primary_key, cnf_file, create_file, insert_file, audit_file)
+                                                  primary_key, cnf_file, create_file, insert_file)
                 form_data = {'form_reptask': task}
                 update_form(request, project, form, form_data)
                 for a_plugin in plugin.PluginImplementations(plugin.IRepository):
@@ -833,7 +815,7 @@ def create_repository(request, project, form, odk_dir, xform_directory, primary_
             custom_task = None
             for a_plugin in plugin.PluginImplementations(plugin.IRepository):
                 custom_task = a_plugin.custom_repository_process(request, project, form, cnf_file, create_file,
-                                                                 insert_file, audit_file, schema, primary_key)
+                                                                 insert_file, schema, primary_key)
                 custom_repository_process = True
                 break  # Only one plugin implementing custom_repository_process will be called
             if custom_repository_process:

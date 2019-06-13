@@ -554,7 +554,7 @@ def delete_submission(request, user, project, form, row_uuid, project_code):
                 lines = f.readlines()
                 for line in lines:
                     parts = line.split(",")
-                    delete_from_record_index(request.registry.settings, user, project_code, form, schema, parts[1])
+                    delete_from_record_index(request.registry.settings, user, project_code, form, parts[1])
 
             os.remove(log_file)
         except Exception as e:

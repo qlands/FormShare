@@ -379,8 +379,7 @@ class IRepository(Interface):
         Please note that there is no "After creating repository", this is because the creation of the repository
         is runs in a background as a Celery task.
     """
-    def before_creating_repository(self, request, project, form, cnf_file, create_file, insert_file, audit_file,
-                                   schema):
+    def before_creating_repository(self, request, project, form, cnf_file, create_file, insert_file, schema):
         """
         Called before creating a repository so plugins can perform extra actions or overwrite the process
         :param request: Pyramid request object
@@ -406,7 +405,7 @@ class IRepository(Interface):
         """
         raise NotImplementedError("on_creating_repository must be implemented in subclasses")
 
-    def custom_repository_process(self, request, project, form, cnf_file, create_file, insert_file, audit_file, schema,
+    def custom_repository_process(self, request, project, form, cnf_file, create_file, insert_file, schema,
                                   primary_key):
         """
         Called after FormShare tells Celery to create the repository if before_creating_repository == True. You can

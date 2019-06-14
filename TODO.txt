@@ -1,13 +1,12 @@
 - Check access levels (Admin, Editor, Member)
-- Audit log (Record changes, View changes)
+- Audit log (View changes)
 - New create repository
 - Manage separation files
 - Messaging, Watch and Follow
 - Search engine
-- Pagination and filter in submission logs
+- Pagination and filter in submission logs (Endless scroll)
 - Submission plugin interfaces. To extend the submission with plugins
 - Import from BriefCase (XML import)
 - Clean data JSON API
-- Change edit data JS from datatables to JQGrid
 - Export raw submissions in XML format
 - Export raw submissions in JSON format

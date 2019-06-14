@@ -436,7 +436,7 @@ def load_routes(config):
                   'assistant/clean/clean_data.jinja2'))
     routes.append(
         add_route('request', '/user/{userid}/project/{projcode}/assistantaccess/form/{formid}/{tablename}/request',
-                  DataRequest, 'json'))
+                  DataRequest, 'string'))
     routes.append(
         add_route('action', '/user/{userid}/project/{projcode}/assistantaccess/form/{formid}/{tablename}/action',
                   PerformAction, 'json'))

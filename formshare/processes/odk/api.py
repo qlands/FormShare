@@ -388,7 +388,11 @@ def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
                     form_data['form_pubby'] = user_id
                     form_data['form_hexcolor'] = ColorHash(form_id).hex
                     if geopoint is not None:
-                        form_data['form_geopoint'] = '/'.join(parent_array) + "/" + geopoint
+                        form_geopoint = '/'.join(parent_array) + "/" + geopoint
+                        if form_geopoint[0] == "/":
+                            form_geopoint = form_geopoint[1:]
+
+                        form_data['form_geopoint'] = form_geopoint
                     if message != "":
                         form_data['form_reqfiles'] = message
 
@@ -540,7 +544,10 @@ def update_odk_form(request, project_id, for_form_id, odk_dir, form_data):
                             form_data['form_xmlfile'] = final_xml
                             form_data['form_jsonfile'] = final_survey
                             if geopoint is not None:
-                                form_data['form_geopoint'] = "/".join(parent_array) + "/" + geopoint
+                                form_geopoint = '/'.join(parent_array) + "/" + geopoint
+                                if form_geopoint[0] == "/":
+                                    form_geopoint = form_geopoint[1:]
+                                form_data['form_geopoint'] = form_geopoint
                             if message != "":
                                 form_data['form_reqfiles'] = message
 

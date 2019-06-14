@@ -40,7 +40,7 @@ class ManageSubmissions(PrivateView):
             if form_data['submissions'] <= 0:
                 raise HTTPNotFound
 
-            fields, checked = get_fields_from_table(self.request, project_id, form_id, 'maintable', [], True)
+            fields, checked = get_fields_from_table(self.request, project_id, form_id, 'maintable', [])
             return {'projectDetails': project_details, 'formid': form_id, 'formDetails': form_data, 'userid': user_id,
                     'fields': fields}
         else:
@@ -87,7 +87,7 @@ class GetFormSubmissions(PrivateView):
             search_string = request_data.get('searchString', '')
             search_operator = request_data.get('searchOper', None)
 
-            fields, checked = get_fields_from_table(self.request, project_id, form_id, 'maintable', [], True)
+            fields, checked = get_fields_from_table(self.request, project_id, form_id, 'maintable', [])
             field_names = []
             for field in fields:
                 field_names.append(field['name'])

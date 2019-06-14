@@ -18,7 +18,7 @@
                 {% block wrapper %}
                     <div id="page-wrapper" class="gray-bg">
                         {% block pagewrapper %}
-                            <div class="container">
+
                             {% block pageheader %}
                                 {% include 'assistant/snippets/header.jinja2' %}
                             {% endblock pageheader %}
@@ -40,9 +40,9 @@
                                 </div>
                             {% endblock mainsection %}
                             {% block footer %}
-{#                                {% include 'dashboard/snippets/footer.jinja2' %}#}
+                                {% include 'dashboard/snippets/footer.jinja2' %}
                             {% endblock footer %}
-                            </div>
+
                         {% endblock pagewrapper %}
                     </div>
                 {% endblock wrapper %}

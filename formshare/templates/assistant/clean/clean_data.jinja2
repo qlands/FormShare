@@ -10,7 +10,8 @@
     {% if table == None %}
         {% cssresource request,'formshare','select2' %}
     {% else %}
-        {% cssresource request,'formshare','datatableseditor' %}
+        {% cssresource request,'formshare','select2' %}
+        {% cssresource request,'formshare','jqgrid_bootstrap' %}
     {% endif %}
     <style>
         input { height: 30px !important; }
@@ -22,7 +23,8 @@
     {% if table == None %}
         {% jsresource request,'formshare','select2' %}
     {% else %}
-        {% jsresource request,'formshare','datatableseditor' %}
+        {% jsresource request,'formshare','select2' %}
+        {% jsresource request,'formshare','jqgrid' %}
     {% endif %}
 {% endblock topScripts %}
 
@@ -82,40 +84,8 @@
             </div>
             {% if table != None %}
                 <hr>
-                <table id="example" class="display" cellspacing="0" width="100%">
-                    <thead>
-                    <tr>
-                        {% if checked == 0 %}
-                            {% for field in fields -%}
-                                <th title="{{ field.desc }}">{{ field.desc|truncate(30, True) }}</th>
-                            {% endfor -%}
-                        {% else %}
-                            {% for field in fields -%}
-                                {% if field.checked -%}
-                                    <th title="{{ field.desc }}">{{ field.desc|truncate(30, True) }}</th>
-                                {% endif -%}
-                            {% endfor %}
-                        {% endif %}
-                        <th>Unique Row ID</th>
-                    </tr>
-                    </thead>
-                    <tfoot>
-                    <tr>
-                        {% if checked == 0 %}
-                            {% for field in fields -%}
-                                <th title="{{ field.desc }}">{{ field.desc|truncate(30, True) }}</th>
-                            {% endfor -%}
-                        {% else %}
-                            {% for field in fields -%}
-                                {% if field.checked -%}
-                                    <th title="{{ field.desc }}">{{ field.desc|truncate(30, True) }}</th>
-                                {% endif -%}
-                            {% endfor -%}
-                        {% endif %}
-                        <th>Unique Row ID</th>
-                    </tr>
-                    </tfoot>
-                </table>
+                <table style="max-width: 500px" id="jqGrid"></table>
+                <div id="jqGridPager"></div>
             {% else %}
                 Please load a table
             {% endif %}
@@ -137,66 +107,111 @@
         );
         {% if table != None %}
             //Construct the editor
-            editor = new $.fn.dataTable.Editor( {
-                ajax: {
-                    url: "{{ request.route_url('action',userid=userid,projcode=projcode,formid=formid,tablename=table) }}",
-                    data: function ( d ) {
-                        d.csrf_token = "{{ token }}";
-                        d.currfields = "{{ strFields }}"
-                    }
-                },
-                table: "#example",
-                fields: [
-                    {% if checked == 0 %}
-                        {% for field in fields -%}
-                            {label: "{{ field.name }}",name: "{{ field.name }}"},
-                        {% endfor -%}
-                    {% else %}
-                        {% for field in fields -%}
-                            {% if field.checked -%}
-                                {label: "{{ field.name }}",name: "{{ field.name }}"},
-                            {% endif -%}
-                        {% endfor -%}
-                    {% endif %}
-                    { label: "Unique Row ID",name:"rowuuid"}
-                ]
-            } );
 
-            // Activate an inline edit on click of a table cell
-            $('#example').on( 'click', 'tbody td:not()', function (e) {
-                editor.inline( this );
-            } );
+            $(document).ready(function () {
+                let pulled_data = [];
+                $("#jqGrid").jqGrid({
+                    url: "{{ request.route_url('request',userid=userid,projcode=projcode,formid=formid,tablename=table) }}",
+                    mtype: "POST",
+                    postData: {csrf_token: '{{ request.session.get_csrf_token() }}'},
+                    styleUI : 'Bootstrap4',
+                    iconSet: 'fontAwesome',
+                    datatype: "jsonp",
+                    loadComplete: function(data) {
+                        pulled_data = data.rows;
+                    },
+                    colModel: [
+                        {% if checked == 0 %}
+                            {% for field in fields -%}
+                                {% if field.name != "rowuuid" %}
+                                    {label: '{{ field.desc }}', name: '{{ field.name }}' , key: false, editable: {{ field.editable }},
+                                        {% if field.rlookup == 'true' %}
+                                            formatter:'select',
+                                            edittype:'select',
+                                            editoptions : {
+                                                value: {{ field.lookupvalues }}
+                                            }
+                                        {% endif %}
+                                    },
+                                {% endif %}
+                            {% endfor -%}
+                        {% else %}
+                            {% for field in fields -%}
+                                {% if field.checked -%}
+                                    {% if field.name != "rowuuid" %}
+                                        {label: '{{ field.desc }}', name: '{{ field.name }}' , key: false, editable: {{ field.editable }},
+                                            {% if field.rlookup == 'true' %}
+                                                formatter:'select',
+                                                edittype:'select',
+                                                editoptions : {
+                                                    value: {{ field.lookupvalues }}
+                                                }
+                                            {% endif %}
+                                        },
+                                    {% endif %}
+                                {% endif -%}
+                            {% endfor -%}
+                        {% endif %}
+                        {label: 'Row unique ID', name: 'rowuuid', key: true, editable: false}
+                    ],
+                    viewrecords: true,
+                    height: 'auto',
+                    rowNum: 10,
+                    pager: "#jqGridPager",
+                    shrinkToFit: false,
+                    autowidth: true,
+                    editurl: "{{ request.route_url('action',userid=userid,projcode=projcode,formid=formid,tablename=table) }}"
+                });
 
-            //Construct the datatable
-            $('#example').DataTable( {
-                "processing": true,
-                "serverSide": true,
-                "scrollX": true,
-                "ajax": {
-                    'url':"{{ request.route_url('request',userid=userid,projcode=projcode,formid=formid,tablename=table) }}",
-                    'type':"POST",
-                    data: function ( d ) {
-                        d.csrf_token = "{{ token }}"
-                    }
-                },
-                "columns": [
-                    {% if checked == 0 %}
-                        {% for field in fields -%}
-                            { "data": "{{ field.name }}","name": "{{ field.name }}" },
-                        {% endfor -%}
-                    {% else %}
-                        {% for field in fields -%}
-                            {% if field.checked -%}
-                                { "data": "{{ field.name }}","name": "{{ field.name }}" },
-                            {% endif -%}
-                        {% endfor -%}
-                    {% endif %}
-                    { "data": "rowuuid" }
-                ],
-                "columnDefs": [
-                    {"className": "dt-center", "targets": "_all"}
-                ]
-            } );
+
+                $('#jqGrid').navGrid('#jqGridPager',
+                    // the buttons to appear on the toolbar of the grid
+                    { edit: true, add: false, del: false, search: true, refresh: false, view: false, position: "left", cloneToTop: false },
+                    {
+                        width: 'auto',
+                        height: 400,
+                        dataheight: 300,
+                        onclickSubmit: function () {
+                            return {csrf_token: '{{ request.session.get_csrf_token() }}'};
+                        },
+                        serializeEditData: function(postedData) {
+                            let rowuuid = postedData.id;
+                            for (let row in pulled_data) {
+                                if (pulled_data[row]['rowuuid'] === rowuuid)
+                                {
+                                    let section = pulled_data[row];
+                                    Object.keys(section).forEach(function (key) {
+                                        if (postedData[key]) {
+                                            let current_value = section[key];
+                                            if (current_value != null) {
+                                                if (current_value == postedData[key]) {
+                                                    delete postedData[key];
+                                                }
+                                            }
+                                            else {
+                                                if (postedData[key] === '')
+                                                {
+                                                    delete postedData[key]
+                                                }
+                                            }
+                                        }
+                                        else {
+                                            delete postedData[key]
+                                        }
+                                    });
+                                }
+                            }
+                            return postedData;
+                        }
+                    },
+                    {},
+                    {},
+                    {
+                        caption: "{{ _('Search...') }}",
+                        sopt: ['like','notlike'],
+                        odata: [{ oper:'like', text:"{{ _('like') }}"}, { oper:'notlike', text:"{{ _('not like') }}"}],
+                    });
+            });
         {% endif %}
     </script>
 {% endblock scripts -%}

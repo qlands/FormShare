@@ -15,10 +15,12 @@ from zope.sqlalchemy import mark_changed
 from lxml import etree
 import datetime
 import re
+import json
 import paginate
 from sqlalchemy import create_engine
 from formshare.processes.elasticsearch.repository_index import delete_dataset_index, delete_from_dataset_index
 from formshare.processes.elasticsearch.record_index import delete_record_index, delete_from_record_index
+from webhelpers2.html import literal
 
 __all__ = ['get_submission_media_files', 'json_to_csv', 'get_gps_points_from_form',
            'get_gps_points_from_project', 'get_tables_from_form', 'update_table_desc', 'update_field_desc',
@@ -279,7 +281,25 @@ def update_field_sensitive(request, project, form, table_name, field_name, sensi
         return False
 
 
-def get_fields_from_table(request, project, form, table_name, current_fields, with_rowuuid=False):
+def field_is_editable(field_name):
+    read_only_fields = ['surveyid', 'originid', '_submitted_by',
+                        '_submitted_date', '_geopoint', 'instanceid', 'rowuuid']
+    if field_name in read_only_fields:
+        return "false"
+    return "true"
+
+
+def get_lookup_values(request, project, form, rtable, rfield):
+    schema = get_form_schema(request, project, form)
+    sql = "SELECT " + rfield + "," + rfield.replace("_cod", "_des") + " FROM " + schema + "." + rtable
+    records = request.dbsession.execute(sql).fetchall()
+    res_dict = {'': ''}
+    for record in records:
+        res_dict[record[0]] = record[1]
+    return literal(json.dumps(res_dict))
+
+
+def get_fields_from_table(request, project, form, table_name, current_fields):
     odk_dir = get_odk_path(request)
     form_directory = get_form_directory(request, project, form)
     create_file = os.path.join(odk_dir, *['forms', form_directory, 'repository', 'create.xml'])
@@ -291,21 +311,32 @@ def get_fields_from_table(request, project, form, table_name, current_fields, wi
     if table is not None:
         for field in table.getchildren():
             if field.tag == "field":
-                if field.get('name') != 'rowuuid' or with_rowuuid:
-                    found = False
-                    for cfield in current_fields:
-                        if field.get('name') == cfield:
-                            found = True
-                            checked = checked + 1
-                    desc = field.get('desc')
-                    if desc == "" or desc == 'Without label':
-                        desc = field.get('name') + " - Without description"
-                    result.append({'name': field.get('name'), 'desc': desc,
-                                   'type': field.get('type'), 'size': field.get('size'),
-                                   'decsize': field.get('decsize'), 'checked': found,
-                                   'sensitive': field.get('sensitive'), 'protection': field.get('protection', 'None'),
-                                   'key': field.get('key', 'false'), 'rlookup': field.get('rlookup', 'false'),
-                                   'rtable': field.get('rtable', 'None')})
+                found = False
+                if len(current_fields) != 0:
+                    if "rowuuid" not in current_fields:
+                        current_fields.append("rowuuid")
+                for cfield in current_fields:
+                    if field.get('name') == cfield:
+                        found = True
+                        checked = checked + 1
+                desc = field.get('desc')
+                if desc == "" or desc == 'Without label':
+                    desc = field.get('name') + " - Without description"
+                if field.get('key', 'false') == "true":
+                    editable = "false"
+                else:
+                    editable = field_is_editable(field.get('name'))
+                data = {'name': field.get('name'), 'desc': desc,
+                        'type': field.get('type'), 'size': field.get('size'),
+                        'decsize': field.get('decsize'), 'checked': found,
+                        'sensitive': field.get('sensitive'), 'protection': field.get('protection', 'None'),
+                        'key': field.get('key', 'false'), 'rlookup': field.get('rlookup', 'false'),
+                        'rtable': field.get('rtable', 'None'), 'rfield': field.get('rfield', 'None'),
+                        'editable': editable}
+
+                if data["rlookup"] == "true":
+                    data["lookupvalues"] = get_lookup_values(request, project, form, data["rtable"], data["rfield"])
+                result.append(data)
             else:
                 break
     return result, checked
@@ -461,7 +492,6 @@ def get_request_data_jqgrid(request, project, form, table_name, fields, current_
                                     a_record[field] = str(record[field])
                                 else:
                                     a_record[field] = record[field]
-
                 except Exception as e:
                     a_record[field] = "AJAX Data error. Report this error to support_for_cabi@qlands.com"
                     log.error("AJAX Error in field " + field + ". Error: " + str(e))
@@ -471,11 +501,16 @@ def get_request_data_jqgrid(request, project, form, table_name, fields, current_
     return result
 
 
-def update_data(request, project, form, table_name, row_uuid, field, value):
+def update_data(request, user, project, form, table_name, row_uuid, field, value):
     schema = get_form_schema(request, project, form)
     sql = "UPDATE " + schema + "." + table_name + " SET " + field + " = '" + value + "'"
     sql = sql + " WHERE rowuuid = '" + row_uuid + "'"
+    sql = sql.replace("''", "null")
+    log.error("*****************777")
+    log.error(sql)
+    log.error("*****************777")
     try:
+        request.dbsession.execute("SET @odktools_current_user = '" + user + "'")
         request.dbsession.execute(sql)
         mark_changed(request.dbsession)
         res = {"data": {field: value}}

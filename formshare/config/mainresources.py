@@ -89,13 +89,3 @@ def create_resources(apppath, config):
     r.add_css_resource('formshare', 'simplemde', 'js/plugins/simplemde/simplemde.min.css', 'bootstrap')
     r.add_js_resource('formshare', 'simplemde', 'js/plugins/simplemde/simplemde.min.js', None)
     r.add_js_resource('formshare', 'showdown', 'js/plugins/showdown/showdown.js', None)
-
-    # --------------------------------------CLEAN---------------------------
-    r.add_css_resource('formshare', 'datatables', 'js/plugins/datatables/DataTables-1.10.16/css/jquery.dataTables.css',
-                       'select2')
-    r.add_css_resource('formshare', 'datatableseditor',
-                       'js/plugins/datatables/Editor-2018-02-26-1.7.2/css/editor.dataTables.css', 'datatables')
-    r.add_js_resource('formshare', 'datatables', 'js/plugins/datatables/DataTables-1.10.16/js/jquery.dataTables.js',
-                      'select2')
-    r.add_js_resource('formshare', 'datatableseditor',
-                      'js/plugins/datatables/Editor-2018-02-26-1.7.2/js/dataTables.editor.js', 'datatables')

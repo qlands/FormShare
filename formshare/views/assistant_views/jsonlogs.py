@@ -1,7 +1,8 @@
 from formshare.views.classes import AssistantView
 from formshare.processes.odk.processes import get_assistant_permissions_on_a_form, get_errors_by_assistant, \
     get_submission_error_details, get_submission_details, checkout_submission, cancel_checkout, cancel_revision, \
-    fix_revision, fail_revision, disregard_revision, cancel_disregard_revision, get_error_description_from_file
+    fix_revision, fail_revision, disregard_revision, cancel_disregard_revision, get_error_description_from_file, \
+    get_number_of_errors_by_assistant
 from formshare.processes.odk.api import generate_diff, get_submission_file, store_new_version, get_html_from_diff, \
     restore_from_revision, push_revision
 from pyramid.httpexceptions import HTTPNotFound, HTTPFound
@@ -11,22 +12,51 @@ import uuid
 import json
 from formshare.processes.db import get_form_data, get_project_from_assistant
 import logging
+import paginate
 log = logging.getLogger(__name__)
 
 
 class JSONList(AssistantView):
     def process_view(self):
         form_id = self.request.matchdict['formid']
+        project_code = self.request.matchdict['projcode']
         permissions = get_assistant_permissions_on_a_form(self.request, self.userID, self.projectID, self.assistantID,
                                                           form_id)
         form_data = get_form_data(self.request, self.projectID, form_id)
         if permissions["enum_cansubmit"] == 1 or permissions["enum_canclean"] == 1:
+            current_page = int(self.request.params.get("page", "1"))
             if permissions["enum_canclean"] == 1:
-                errors = get_errors_by_assistant(self.request, self.userID, self.projectID, form_id, None)
+                number_of_errors = get_number_of_errors_by_assistant(self.request, self.projectID, form_id, None)
+
             else:
-                errors = get_errors_by_assistant(self.request, self.userID, self.projectID, form_id, self.assistantID)
+                number_of_errors = get_number_of_errors_by_assistant(self.request, self.projectID, form_id,
+                                                                     self.assistantID)
+            page_size = 6
+            item_collection = range(number_of_errors)
+            page = paginate.Page(item_collection, current_page, page_size)
+
+            all_pages = []
+            if page.last_page > 1:
+                for a in range(1, page.last_page+1):
+                    next_page = False
+                    if a == current_page + 1:
+                        next_page = True
+                    all_pages.append({"page": a, 'next': next_page,
+                                      'url': self.request.route_url('errorlist', userid=self.userID,
+                                                                    projcode=project_code, formid=form_id,
+                                                                    _query={'page': a})})
+            if page.first_item is not None:
+                start = page.first_item - 1
+            else:
+                start = 0
+            if permissions["enum_canclean"] == 1:
+                errors = get_errors_by_assistant(self.request, self.userID, self.projectID, form_id, None, start,
+                                                 page_size)
+            else:
+                errors = get_errors_by_assistant(self.request, self.userID, self.projectID, form_id,
+                                                 self.assistantID, start, page_size)
             return {'errors': errors, 'canclean': permissions["enum_canclean"], 'formid': form_id,
-                    'formData': form_data}
+                    'formData': form_data, 'allPages': all_pages}
         else:
             raise HTTPNotFound()
 

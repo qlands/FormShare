@@ -160,14 +160,27 @@
                     pager: "#jqGridPager",
                     shrinkToFit: false,
                     autowidth: true,
-                    editurl: "{{ request.route_url('action',userid=userid,projcode=projcode,formid=formid,tablename=table) }}"
+                    editurl: "{{ request.route_url('action',userid=userid,projcode=projcode,formid=formid,tablename=table) }}",
                 });
 
 
                 $('#jqGrid').navGrid('#jqGridPager',
                     // the buttons to appear on the toolbar of the grid
-                    { edit: true, add: false, del: false, search: true, refresh: false, view: false, position: "left", cloneToTop: false },
+                    { edit: true, add: false, del: false, search: true, refresh: false, view: false, position: "left", cloneToTop: false,
+                        edittitle: "{{ _('Edit selected row') }}",
+                        searchtitle: "{{ _('Find records') }}",
+                        alertcap: "{{ _('Warning') }}",
+                        alerttext: "{{ _('Please, select row') }}"
+                    },
                     {
+                        editCaption: "{{ _('Edit Record') }}",
+                        bSubmit: "{{ _('Submit') }}",
+                        bCancel: "{{ _('Cancel') }}",
+                        bClose: "{{ _('Close') }}",
+                        saveData: "{{ _('Data has been changed! Save changes?') }}",
+                        bYes : "{{ _('Yes') }}",
+                        bNo : "{{ _('No') }}",
+                        bExit : "{{ _('Cancel') }}",
                         width: 'auto',
                         height: 400,
                         dataheight: 300,

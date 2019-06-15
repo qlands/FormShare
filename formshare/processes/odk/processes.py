@@ -14,6 +14,7 @@ from formshare.processes.db.assistant import get_project_from_assistant
 from sqlalchemy import and_, func
 from sqlalchemy.sql import label
 import logging
+from sqlalchemy.event import listen
 
 log = logging.getLogger(__name__)
 
@@ -125,22 +126,52 @@ def get_submission_error_details(request, project, form, submission):
         return None
 
 
-def get_errors_by_assistant(request, user, project, form, assistant):
-    result = []
-
+def get_number_of_errors_by_assistant(request, project, form, assistant):
     if assistant is None:
         res = request.dbsession.query(Jsonlog, Collaborator). \
             filter(Jsonlog.enum_project == Collaborator.project_id). \
             filter(Jsonlog.coll_id == Collaborator.coll_id). \
             filter(Jsonlog.project_id == project). \
-            filter(Jsonlog.form_id == form).order_by(Jsonlog.log_dtime.desc()).all()
+            filter(Jsonlog.form_id == form).order_by(Jsonlog.log_dtime.desc()).count()
+        return res
     else:
         res = request.dbsession.query(Jsonlog, Collaborator). \
             filter(Jsonlog.enum_project == Collaborator.project_id). \
             filter(Jsonlog.coll_id == Collaborator.coll_id). \
             filter(Jsonlog.project_id == project). \
             filter(Jsonlog.coll_id == assistant). \
+            filter(Jsonlog.form_id == form).order_by(Jsonlog.log_dtime.desc()).count()
+        return res
+
+
+def apply_limit(start, page_size):
+    def wrapped(query):
+        query = query.limit(page_size)
+        query = query.offset(start)
+        return query
+    return wrapped
+
+
+def get_errors_by_assistant(request, user, project, form, assistant, start, page_size):
+    result = []
+
+    if assistant is None:
+        query = request.dbsession.query(Jsonlog, Collaborator). \
+            filter(Jsonlog.enum_project == Collaborator.project_id). \
+            filter(Jsonlog.coll_id == Collaborator.coll_id). \
+            filter(Jsonlog.project_id == project). \
+            filter(Jsonlog.form_id == form).order_by(Jsonlog.log_dtime.desc())
+        listen(query, 'before_compile', apply_limit(start, page_size), retval=True)
+        res = query.all()
+    else:
+        query = request.dbsession.query(Jsonlog, Collaborator). \
+            filter(Jsonlog.enum_project == Collaborator.project_id). \
+            filter(Jsonlog.coll_id == Collaborator.coll_id). \
+            filter(Jsonlog.project_id == project). \
+            filter(Jsonlog.coll_id == assistant). \
             filter(Jsonlog.form_id == form).order_by(Jsonlog.log_dtime.desc()).all()
+        listen(query, 'before_compile', apply_limit(start, page_size), retval=True)
+        res = query.all()
 
     json_errors = map_from_schema(res)
     for error in json_errors:

@@ -131,7 +131,12 @@
 
             $('#jqGrid').navGrid('#jqGridPager',
                 // the buttons to appear on the toolbar of the grid
-                { edit: false, add: false, {% if formDetails.form_accsub == 0 %}del: true,{% else %}del: false,{% endif %} search: true, refresh: false, view: false, position: "left", cloneToTop: false },
+                { edit: false, add: false, {% if formDetails.form_accsub == 0 %}del: true,{% else %}del: false,{% endif %} search: true, refresh: false, view: false, position: "left", cloneToTop: false,
+                    deltitle: "{{ _('Delete selected row') }}",
+                    searchtitle: "{{ _('Find records') }}",
+                    alertcap: "{{ _('Warning') }}",
+                    alerttext: "{{ _('Please, select row') }}"
+                },
                 {},
                 {},
                 {

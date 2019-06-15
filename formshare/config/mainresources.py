@@ -89,3 +89,4 @@ def create_resources(apppath, config):
     r.add_css_resource('formshare', 'simplemde', 'js/plugins/simplemde/simplemde.min.css', 'bootstrap')
     r.add_js_resource('formshare', 'simplemde', 'js/plugins/simplemde/simplemde.min.js', None)
     r.add_js_resource('formshare', 'showdown', 'js/plugins/showdown/showdown.js', None)
+    r.add_js_resource('formshare', 'ias', 'js/plugins/ias/jquery-ias.min.js', None)

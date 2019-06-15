@@ -22,6 +22,7 @@
     {{ super() }}
     {% jsresource request,'formshare','clipboard' %}
     {% jsresource request,'formshare','showdown' %}
+    {% jsresource request,'formshare','ias' %}
 {% endblock topScripts %}
 
 {% block breadcrumbs %}
@@ -43,6 +44,13 @@
             </div>
         </div>
         <div class="ibox-content">
+             {{ _('Filter') }}: <div class="btn-group">
+                                <button class="btn btn-white" type="button">{{ _('All') }}</button>
+                                <button class="btn btn-primary" type="button">{{ _('Fixed') }}</button>
+                                <button class="btn btn-danger" type="button">{{ _('With error') }}</button>
+                                <button class="btn btn-warning" type="button">{{ _('Disregarded') }}</button>
+                                <button class="btn btn-info" type="button">{{ _('Checked out') }}</button>
+                            </div>
             <div class="clients-list">
                 <div class="row">
                     <div class="col-lg-12">
@@ -71,11 +79,22 @@
                             </div>
                             <hr class="hr-line-solid">
                         </div>
-                        {% for error in errors %}
-                            {% set error_count = loop.index %}
-                            {% include 'assistant/jsonlogs/snippets/error_item.jinja2' %}
-                        {% endfor %}
+                        <div id="posts">
+                            {% for error in errors %}
+                                {% set error_count = loop.index %}
+                                {% include 'assistant/jsonlogs/snippets/error_item.jinja2' %}
+                            {% endfor %}
+                        </div>
                     </div>
+                </div>
+                <div id="pagination">
+                    {% for page in allPages %}
+                        {% if page.next == False %}
+                            <a href="{{ page.url }}">{{ page.page }}</a>
+                        {% else %}
+                            <a href="{{ page.url }}" class="next">{{ page.page }}</a>
+                        {% endif %}
+                    {% endfor %}
                 </div>
             </div>
         </div>
@@ -103,6 +122,22 @@
 {% block scripts %}
     {{ super() }}
     <script>
+
+        var ias = jQuery.ias({
+            container:  '#posts',
+            item:       '.post',
+            pagination: '#pagination',
+            next:       '.next'
+        });
+
+        ias.extension(new IASSpinnerExtension());
+
+        // Add a link after page 2 which has to be clicked to load the next page
+        //ias.extension(new IASTriggerExtension({offset: 2}));
+
+        // Add a text when there are no more pages left to load
+        ias.extension(new IASNoneLeftExtension({text: "{{ _('You reached the end') }}"}));
+
         $(document).ready(function() {
             new ClipboardJS('.clipboard');
 

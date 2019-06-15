@@ -4,7 +4,7 @@
 - Manage separation files
 - Messaging, Watch and Follow
 - Search engine
-- Pagination and filter in submission logs (Endless scroll)
+- Filter in submission logs
 - Submission plugin interfaces. To extend the submission with plugins
 - Import from BriefCase (XML import)
 - Clean data JSON API

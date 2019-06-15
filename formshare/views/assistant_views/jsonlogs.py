@@ -25,38 +25,56 @@ class JSONList(AssistantView):
         form_data = get_form_data(self.request, self.projectID, form_id)
         if permissions["enum_cansubmit"] == 1 or permissions["enum_canclean"] == 1:
             current_page = int(self.request.params.get("page", "1"))
+            status = self.request.params.get("status", "all")
+            status_code = None
+            if status == "fixed":
+                status_code = 0
+            if status == "error":
+                status_code = 1
+            if status == "checkout":
+                status_code = 2
+            if status == "disregarded":
+                status_code = 4
+
             if permissions["enum_canclean"] == 1:
-                number_of_errors = get_number_of_errors_by_assistant(self.request, self.projectID, form_id, None)
+                number_of_errors = get_number_of_errors_by_assistant(self.request, self.projectID, form_id, None,
+                                                                     status_code)
 
             else:
                 number_of_errors = get_number_of_errors_by_assistant(self.request, self.projectID, form_id,
-                                                                     self.assistantID)
+                                                                     self.assistantID, status_code)
             page_size = 6
             item_collection = range(number_of_errors)
             page = paginate.Page(item_collection, current_page, page_size)
 
             all_pages = []
-            if page.last_page > 1:
-                for a in range(1, page.last_page+1):
-                    next_page = False
-                    if a == current_page + 1:
-                        next_page = True
-                    all_pages.append({"page": a, 'next': next_page,
-                                      'url': self.request.route_url('errorlist', userid=self.userID,
-                                                                    projcode=project_code, formid=form_id,
-                                                                    _query={'page': a})})
+            page_params = {}
+            if status != "all":
+                page_params['status'] = status
+
+            if page.last_page is not None:
+                if page.last_page > 1:
+                    for a in range(1, page.last_page+1):
+                        next_page = False
+                        if a == current_page + 1:
+                            next_page = True
+                        page_params['page'] = a
+                        all_pages.append({"page": a, 'next': next_page,
+                                          'url': self.request.route_url('errorlist', userid=self.userID,
+                                                                        projcode=project_code, formid=form_id,
+                                                                        _query=page_params)})
             if page.first_item is not None:
                 start = page.first_item - 1
             else:
                 start = 0
             if permissions["enum_canclean"] == 1:
                 errors = get_errors_by_assistant(self.request, self.userID, self.projectID, form_id, None, start,
-                                                 page_size)
+                                                 page_size, status_code)
             else:
                 errors = get_errors_by_assistant(self.request, self.userID, self.projectID, form_id,
-                                                 self.assistantID, start, page_size)
+                                                 self.assistantID, start, page_size, status_code)
             return {'errors': errors, 'canclean': permissions["enum_canclean"], 'formid': form_id,
-                    'formData': form_data, 'allPages': all_pages}
+                    'formData': form_data, 'allPages': all_pages, 'status': status}
         else:
             raise HTTPNotFound()
 

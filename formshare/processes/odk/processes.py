@@ -126,22 +126,39 @@ def get_submission_error_details(request, project, form, submission):
         return None
 
 
-def get_number_of_errors_by_assistant(request, project, form, assistant):
+def get_number_of_errors_by_assistant(request, project, form, assistant, with_status):
     if assistant is None:
-        res = request.dbsession.query(Jsonlog, Collaborator). \
-            filter(Jsonlog.enum_project == Collaborator.project_id). \
-            filter(Jsonlog.coll_id == Collaborator.coll_id). \
-            filter(Jsonlog.project_id == project). \
-            filter(Jsonlog.form_id == form).order_by(Jsonlog.log_dtime.desc()).count()
-        return res
+        if with_status is None:
+            res = request.dbsession.query(Jsonlog, Collaborator). \
+                filter(Jsonlog.enum_project == Collaborator.project_id). \
+                filter(Jsonlog.coll_id == Collaborator.coll_id). \
+                filter(Jsonlog.project_id == project). \
+                filter(Jsonlog.form_id == form).order_by(Jsonlog.log_dtime.desc()).count()
+            return res
+        else:
+            res = request.dbsession.query(Jsonlog, Collaborator). \
+                filter(Jsonlog.enum_project == Collaborator.project_id). \
+                filter(Jsonlog.coll_id == Collaborator.coll_id). \
+                filter(Jsonlog.project_id == project).filter(Jsonlog.form_id == form).\
+                filter(Jsonlog.status == with_status).order_by(Jsonlog.log_dtime.desc()).count()
+            return res
     else:
-        res = request.dbsession.query(Jsonlog, Collaborator). \
-            filter(Jsonlog.enum_project == Collaborator.project_id). \
-            filter(Jsonlog.coll_id == Collaborator.coll_id). \
-            filter(Jsonlog.project_id == project). \
-            filter(Jsonlog.coll_id == assistant). \
-            filter(Jsonlog.form_id == form).order_by(Jsonlog.log_dtime.desc()).count()
-        return res
+        if with_status is None:
+            res = request.dbsession.query(Jsonlog, Collaborator). \
+                filter(Jsonlog.enum_project == Collaborator.project_id). \
+                filter(Jsonlog.coll_id == Collaborator.coll_id). \
+                filter(Jsonlog.project_id == project). \
+                filter(Jsonlog.coll_id == assistant). \
+                filter(Jsonlog.form_id == form).order_by(Jsonlog.log_dtime.desc()).count()
+            return res
+        else:
+            res = request.dbsession.query(Jsonlog, Collaborator). \
+                filter(Jsonlog.enum_project == Collaborator.project_id). \
+                filter(Jsonlog.coll_id == Collaborator.coll_id). \
+                filter(Jsonlog.project_id == project). \
+                filter(Jsonlog.coll_id == assistant).filter(Jsonlog.form_id == form).\
+                filter(Jsonlog.status == with_status).order_by(Jsonlog.log_dtime.desc()).count()
+            return res
 
 
 def apply_limit(start, page_size):
@@ -152,24 +169,38 @@ def apply_limit(start, page_size):
     return wrapped
 
 
-def get_errors_by_assistant(request, user, project, form, assistant, start, page_size):
+def get_errors_by_assistant(request, user, project, form, assistant, start, page_size, with_status):
     result = []
-
     if assistant is None:
-        query = request.dbsession.query(Jsonlog, Collaborator). \
-            filter(Jsonlog.enum_project == Collaborator.project_id). \
-            filter(Jsonlog.coll_id == Collaborator.coll_id). \
-            filter(Jsonlog.project_id == project). \
-            filter(Jsonlog.form_id == form).order_by(Jsonlog.log_dtime.desc())
+        if with_status is None:
+            query = request.dbsession.query(Jsonlog, Collaborator). \
+                filter(Jsonlog.enum_project == Collaborator.project_id). \
+                filter(Jsonlog.coll_id == Collaborator.coll_id). \
+                filter(Jsonlog.project_id == project). \
+                filter(Jsonlog.form_id == form).order_by(Jsonlog.log_dtime.desc())
+        else:
+            query = request.dbsession.query(Jsonlog, Collaborator). \
+                filter(Jsonlog.enum_project == Collaborator.project_id). \
+                filter(Jsonlog.coll_id == Collaborator.coll_id). \
+                filter(Jsonlog.project_id == project).filter(Jsonlog.form_id == form).\
+                filter(Jsonlog.status == with_status).order_by(Jsonlog.log_dtime.desc())
         listen(query, 'before_compile', apply_limit(start, page_size), retval=True)
         res = query.all()
     else:
-        query = request.dbsession.query(Jsonlog, Collaborator). \
-            filter(Jsonlog.enum_project == Collaborator.project_id). \
-            filter(Jsonlog.coll_id == Collaborator.coll_id). \
-            filter(Jsonlog.project_id == project). \
-            filter(Jsonlog.coll_id == assistant). \
-            filter(Jsonlog.form_id == form).order_by(Jsonlog.log_dtime.desc()).all()
+        if with_status is None:
+            query = request.dbsession.query(Jsonlog, Collaborator). \
+                filter(Jsonlog.enum_project == Collaborator.project_id). \
+                filter(Jsonlog.coll_id == Collaborator.coll_id). \
+                filter(Jsonlog.project_id == project). \
+                filter(Jsonlog.coll_id == assistant). \
+                filter(Jsonlog.form_id == form).order_by(Jsonlog.log_dtime.desc()).all()
+        else:
+            query = request.dbsession.query(Jsonlog, Collaborator). \
+                filter(Jsonlog.enum_project == Collaborator.project_id). \
+                filter(Jsonlog.coll_id == Collaborator.coll_id). \
+                filter(Jsonlog.project_id == project). \
+                filter(Jsonlog.coll_id == assistant).filter(Jsonlog.form_id == form).\
+                filter(Jsonlog.status == with_status).order_by(Jsonlog.log_dtime.desc()).all()
         listen(query, 'before_compile', apply_limit(start, page_size), retval=True)
         res = query.all()
 

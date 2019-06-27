@@ -175,7 +175,7 @@ class PrivateView(object):
     def __call__(self):
         error = self.request.session.pop_flash(queue='error')
         if len(error) > 0:
-            self.errors.append(error[0])
+            self.errors.append(error[0].replace("|error", ""))
 
         # login_data = authenticated_userid(self.request)
         policy = self.get_policy('main')
@@ -281,7 +281,7 @@ class PrivateView(object):
         self.classResult["userDetails"] = get_user_details(self.request, self.userID)
 
     def add_error(self, message):
-        self.request.session.flash("{}|error".format(message))
+        self.request.session.flash("{}|error".format(message),queue='error')
 
 
 class DashboardView(PrivateView):

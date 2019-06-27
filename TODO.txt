@@ -1,7 +1,6 @@
 - Check access levels (Admin, Editor, Member)
 - Audit log (View changes)
 - New create repository
-- Manage separation files
 - Messaging, Watch and Follow
 - Search engine
 - Submission plugin interfaces. To extend the submission with plugins
@@ -9,3 +8,15 @@
 - Clean data JSON API
 - Export raw submissions in XML format
 - Export raw submissions in JSON format
+- Implement anonymize of fields
+- Change edit dictionary to "Anonymize data"
+- Separate products in public and private
+- Don't allow creation of public products if no sensitive fields exists
+- Handle sharing of private products with token keys.
+    - Token management and API
+    - Token extension. After token, before token
+- Change clean data to data curation
+- Offline data collection
+- Plugins:
+    - OData
+    - Data-CI

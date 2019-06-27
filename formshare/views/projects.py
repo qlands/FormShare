@@ -20,7 +20,6 @@ from formshare.processes.elasticsearch.repository_index import get_dataset_stats
 from formshare.processes.submission.api import get_gps_points_from_project
 import re
 from pyramid.response import FileResponse
-from hashlib import md5
 
 
 class ProjectStoredFileView(ProjectsView):

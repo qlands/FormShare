@@ -218,13 +218,8 @@ def check_jxform_file(request, json_file, external_file=None):
             log.info("Checking JXForm returned 0 with no addition messages: {}".format(str(e)))
             return 0, ""
     else:
-        print("*************************111")
-        print(p.returncode)
-        print(stdout)
-        print("--------------------")
-        print(stderr)
-        print("*************************111")
         if p.returncode == 23:
+            log.error(". Error: " + "-" + stderr.decode() + " while checking PyXForm. Command line: " + " ".join(args))
             root = etree.fromstring(stdout)
             duplicated_tables = root.findall(".//duplicatedTable")
             message = request.translate("FormShare checks a little bit more your ODK for inconsistencies.") + "\n"
@@ -245,7 +240,23 @@ def check_jxform_file(request, json_file, external_file=None):
                     "Please note that FormShare only allows basic Latin letters, digits 0-9, dollar and underscore "
                     "in repeat, group and variable names.")
             return 23, message
+        if p.returncode == 24:
+            log.error(". Error: " + "-" + stderr.decode() + " while checking PyXForm. Command line: " + " ".join(args))
+            root = etree.fromstring(stdout)
+            invalid_names = root.findall(".//invalidName")
+            message = request.translate("FormShare checks a little bit more your ODK for inconsistencies.") + "\n"
+            message = message + request.translate(
+                "The following variables are have invalid names:") + "\n"
+            if invalid_names:
+                for a_name in invalid_names:
+                    variable_name = a_name.get("name")
+                    message = message + "\t" + variable_name + " \n"
+
+                message = message + "\n" + request.translate(
+                    "Please change those names and try again.")
+            return 24, message
         if p.returncode == 22:
+            log.error(". Error: " + "-" + stderr.decode() + " while checking PyXForm. Command line: " + " ".join(args))
             root = etree.fromstring(stdout)
             duplicated_tables = root.findall(".//duplicatedItem")
             message = request.translate("FormShare checks a little bit more your ODK for inconsistencies.") + "\n"
@@ -260,6 +271,7 @@ def check_jxform_file(request, json_file, external_file=None):
                     "in repeat, group and variable names.")
             return 22, message
         if p.returncode == 9:
+            log.error(". Error: " + "-" + stderr.decode() + " while checking PyXForm. Command line: " + " ".join(args))
             root = etree.fromstring(stdout)
             duplicated_items = root.findall(".//duplicatedItem")
             message = request.translate("FormShare checks a little bit more your ODK for inconsistencies.") + "\n"
@@ -273,12 +285,50 @@ def check_jxform_file(request, json_file, external_file=None):
                         "Option {} in variable {}".format(duplicated_option, variable_name)) + "\n"
             return 9, message
         if p.returncode == 16:
+            log.error(". Error: " + "-" + stderr.decode() + " while checking PyXForm. Command line: " + " ".join(args))
             message = request.translate("FormShare checks a little bit more your ODK for inconsistencies.") + "\n"
             message = message + request.translate("The ODK you just submitted has a search statement in the appearance "
                                                   "column with a syntax that is not recognised by FormShare. Please "
                                                   "go to https://github.com/qlands/FormShare an raise an issue so the"
                                                   "technical team can inspect your ODK and find a solution.") + "\n"
             return 9, message
+
+        if p.returncode == 2:
+            log.error(". Error: " + "-" + stderr.decode() + " while checking PyXForm. Command line: " + " ".join(args))
+            message = request.translate("\nFormShare manage your data in a better way but by doing so it has more "
+                                        "restrictions.") + "\n"
+            message = message + request.translate("The following tables have more than 64 selects: ") + "\n"
+            root = etree.fromstring(stdout)
+            tables_with_errors = root.findall(".//table")
+            for a_table in tables_with_errors:
+                table_name = a_table.get("name")
+                num_selects = a_table.get("selects")
+                message = message + table_name + request.translate(" with ") + num_selects + request.translate(
+                    " selects ")
+            message = message + "\n\n"
+            message = message + request.translate('Some information on this restriction and how to correct it:\n\n')
+            message = message + request.translate('We tent to organize our ODK forms in sections with '
+                                                  'questions around a topic. '
+                                                  'For example: "livestock inputs" or "crops sales".\n\n')
+            message = message + request.translate('These sections have type = "begin/end group". We also organize '
+                                                  'questions that must be repeated in sections with '
+                                                  'type = "begin/end repeat."\n\n')
+            message = message + request.translate('FormShare store repeats as separate tables '
+                                                  '(like different Excel sheets) however groups are not. '
+                                                  'FormShare store all items (questions, notes, calculations, etc.) '
+                                                  'outside repeats into a table called "maintable". Thus "maintable" '
+                                                  'usually end up with several items and if your ODK form have many '
+                                                  'selects then the "maintable" could potentially have more than 64 '
+                                                  'selects. FormShare can only handle 64 selects per table.\n\n')
+            message = message + request.translate('You can bypass this restriction by creating groups of items inside '
+                                                  'repeats BUT WITH repeat_count = 1. A repeat with repeat_count = 1 '
+                                                  'will behave in the same way as a group but FormShare will create '
+                                                  'a new table for it to store all its items. Eventually if you '
+                                                  'export the data to Excel your items will be organized in '
+                                                  'different sheets each representing a table.\n\n')
+            message = message + request.translate('Please edit your ODK XLSX/XLS file, group several items inside '
+                                                  'repeats with repeat_count = 1 and try to upload the form again.')
+            return 2, message
 
         log.error(". Error: " + "-" + stderr.decode() + " while checking PyXForm. Command line: " + " ".join(args))
         return p.returncode, stderr.decode()
@@ -307,139 +357,140 @@ def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
     paths = ['tmp', uid, parts[0]+'.xml']
     xml_file = os.path.join(odk_dir, *paths)
 
-    # try:
-    if file_name.find('.xls') == -1 and file_name.find('.xlsx') == -1 and file_name.find('.xlsm') == -1:
-        return False, request.translate('Invalid file type')
+    try:
+        if file_name.find('.xls') == -1 and file_name.find('.xlsx') == -1 and file_name.find('.xlsm') == -1:
+            return False, request.translate('Invalid file type')
 
-    xls2xform.xls2xform_convert(file_name, xml_file)
+        xls2xform.xls2xform_convert(file_name, xml_file)
 
-    warnings = []
-    json_dict = parse_file_to_json(file_name, warnings=warnings)
-    paths = ['tmp', uid, parts[0] + ".srv"]
-    survey_file = os.path.join(odk_dir, *paths)
-    with open(survey_file, "w", ) as outfile:
-        json_string = json.dumps(json_dict, indent=4, ensure_ascii=False)
-        outfile.write(json_string)
+        warnings = []
+        json_dict = parse_file_to_json(file_name, warnings=warnings)
+        paths = ['tmp', uid, parts[0] + ".srv"]
+        survey_file = os.path.join(odk_dir, *paths)
+        with open(survey_file, "w", ) as outfile:
+            json_string = json.dumps(json_dict, indent=4, ensure_ascii=False)
+            outfile.write(json_string)
 
-    # Check if the conversion created itemsets.csv
-    output_dir = os.path.split(xml_file)[0]
-    itemsets_csv = os.path.join(output_dir, "itemsets.csv")
-    if not os.path.isfile(itemsets_csv):
-        itemsets_csv = None
+        # Check if the conversion created itemsets.csv
+        output_dir = os.path.split(xml_file)[0]
+        itemsets_csv = os.path.join(output_dir, "itemsets.csv")
+        if not os.path.isfile(itemsets_csv):
+            itemsets_csv = None
 
-    tree = etree.parse(xml_file)
-    root = tree.getroot()
-    nsmap = root.nsmap[None]
-    h_nsmap = root.nsmap['h']
-    eid = root.findall(".//{" + nsmap + "}" + parts[0])
-    if eid:
-        form_id = eid[0].get("id")
-        if re.match(r'^[A-Za-z0-9_]+$', form_id):
-            form_title = root.findall(".//{" + h_nsmap + "}title")
-            if not form_exists(request, project_id, form_id):
-                error, message = check_jxform_file(request, survey_file, itemsets_csv)
-                if error == 0:
-                    paths = ['forms', form_directory, 'media']
-                    if not os.path.exists(os.path.join(odk_dir, *paths)):
-                        os.makedirs(os.path.join(odk_dir, *paths))
+        tree = etree.parse(xml_file)
+        root = tree.getroot()
+        nsmap = root.nsmap[None]
+        h_nsmap = root.nsmap['h']
+        eid = root.findall(".//{" + nsmap + "}" + parts[0])
+        if eid:
+            form_id = eid[0].get("id")
+            if re.match(r'^[A-Za-z0-9_]+$', form_id):
+                form_title = root.findall(".//{" + h_nsmap + "}title")
+                if not form_exists(request, project_id, form_id):
+                    error, message = check_jxform_file(request, survey_file, itemsets_csv)
+                    if error == 0:
+                        paths = ['forms', form_directory, 'media']
+                        if not os.path.exists(os.path.join(odk_dir, *paths)):
+                            os.makedirs(os.path.join(odk_dir, *paths))
 
-                        paths = ['forms', form_directory, 'submissions']
-                        os.makedirs(os.path.join(odk_dir, *paths))
+                            paths = ['forms', form_directory, 'submissions']
+                            os.makedirs(os.path.join(odk_dir, *paths))
 
-                        paths = ['forms', form_directory, 'submissions', 'logs']
-                        os.makedirs(os.path.join(odk_dir, *paths))
+                            paths = ['forms', form_directory, 'submissions', 'logs']
+                            os.makedirs(os.path.join(odk_dir, *paths))
 
-                        paths = ['forms', form_directory, 'submissions', 'maps']
-                        os.makedirs(os.path.join(odk_dir, *paths))
+                            paths = ['forms', form_directory, 'submissions', 'maps']
+                            os.makedirs(os.path.join(odk_dir, *paths))
 
-                        paths = ['forms', form_directory, 'repository']
-                        os.makedirs(os.path.join(odk_dir, *paths))
-                        paths = ['forms', form_directory, 'repository', 'temp']
-                        os.makedirs(os.path.join(odk_dir, *paths))
+                            paths = ['forms', form_directory, 'repository']
+                            os.makedirs(os.path.join(odk_dir, *paths))
+                            paths = ['forms', form_directory, 'repository', 'temp']
+                            os.makedirs(os.path.join(odk_dir, *paths))
 
-                    xls_file_fame = os.path.basename(file_name)
-                    xml_file_name = os.path.basename(xml_file)
-                    survey_file_name = os.path.basename(survey_file)
-                    paths = ['forms', form_directory, xls_file_fame]
-                    final_xls = os.path.join(odk_dir, *paths)
-                    paths = ['forms', form_directory, xml_file_name]
-                    final_xml = os.path.join(odk_dir, *paths)
-                    paths = ['forms', form_directory, survey_file_name]
-                    final_survey = os.path.join(odk_dir, *paths)
-                    shutil.copyfile(file_name, final_xls)
-                    shutil.copyfile(xml_file, final_xml)
-                    shutil.copyfile(survey_file, final_survey)
-                    parent_array = []
-                    try:
-                        geopoint = get_geopoint_variable_from_json(json_dict, parent_array)
-                    except Exception as e:
-                        geopoint = None
-                        log.warning("Unable to extract GeoPoint from file {}. Error: {}".format(final_survey, str(e)))
-                    form_data['project_id'] = project_id
-                    form_data['form_id'] = form_id
-                    form_data['form_name'] = form_title[0].text
-                    form_data['form_cdate'] = datetime.datetime.now()
-                    form_data['form_directory'] = form_directory
-                    form_data['form_accsub'] = 1
-                    form_data['form_testing'] = 1
-                    form_data['form_xlsfile'] = final_xls
-                    form_data['form_xmlfile'] = final_xml
-                    form_data['form_jsonfile'] = final_survey
-                    form_data['form_pubby'] = user_id
-                    form_data['form_hexcolor'] = ColorHash(form_id).hex
-                    if geopoint is not None:
-                        form_geopoint = '/'.join(parent_array) + "/" + geopoint
-                        if form_geopoint[0] == "/":
-                            form_geopoint = form_geopoint[1:]
+                        xls_file_fame = os.path.basename(file_name)
+                        xml_file_name = os.path.basename(xml_file)
+                        survey_file_name = os.path.basename(survey_file)
+                        paths = ['forms', form_directory, xls_file_fame]
+                        final_xls = os.path.join(odk_dir, *paths)
+                        paths = ['forms', form_directory, xml_file_name]
+                        final_xml = os.path.join(odk_dir, *paths)
+                        paths = ['forms', form_directory, survey_file_name]
+                        final_survey = os.path.join(odk_dir, *paths)
+                        shutil.copyfile(file_name, final_xls)
+                        shutil.copyfile(xml_file, final_xml)
+                        shutil.copyfile(survey_file, final_survey)
+                        parent_array = []
+                        try:
+                            geopoint = get_geopoint_variable_from_json(json_dict, parent_array)
+                        except Exception as e:
+                            geopoint = None
+                            log.warning(
+                                "Unable to extract GeoPoint from file {}. Error: {}".format(final_survey, str(e)))
+                        form_data['project_id'] = project_id
+                        form_data['form_id'] = form_id
+                        form_data['form_name'] = form_title[0].text
+                        form_data['form_cdate'] = datetime.datetime.now()
+                        form_data['form_directory'] = form_directory
+                        form_data['form_accsub'] = 1
+                        form_data['form_testing'] = 1
+                        form_data['form_xlsfile'] = final_xls
+                        form_data['form_xmlfile'] = final_xml
+                        form_data['form_jsonfile'] = final_survey
+                        form_data['form_pubby'] = user_id
+                        form_data['form_hexcolor'] = ColorHash(form_id).hex
+                        if geopoint is not None:
+                            form_geopoint = '/'.join(parent_array) + "/" + geopoint
+                            if form_geopoint[0] == "/":
+                                form_geopoint = form_geopoint[1:]
 
-                        form_data['form_geopoint'] = form_geopoint
-                    if message != "":
-                        form_data['form_reqfiles'] = message
+                            form_data['form_geopoint'] = form_geopoint
+                        if message != "":
+                            form_data['form_reqfiles'] = message
 
-                    added, message = add_new_form(request, form_data)
-                    if not added:
-                        return added, message
+                        added, message = add_new_form(request, form_data)
+                        if not added:
+                            return added, message
 
-                    # If we have itemsets.csv add it as media files
-                    if itemsets_csv is not None:
-                        with open(itemsets_csv, "rb", ) as itemset_file:
-                            md5sum = md5(itemset_file.read()).hexdigest()
-                            added, message = add_file_to_form(request, project_id, form_id, 'itemsets.csv',
-                                                              True, md5sum)
-                            if added:
-                                itemset_file.seek(0)
-                                bucket_id = project_id + form_id
-                                bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
-                                store_file(request, bucket_id, 'itemsets.csv', itemset_file)
+                        # If we have itemsets.csv add it as media files
+                        if itemsets_csv is not None:
+                            with open(itemsets_csv, "rb", ) as itemset_file:
+                                md5sum = md5(itemset_file.read()).hexdigest()
+                                added, message = add_file_to_form(request, project_id, form_id, 'itemsets.csv',
+                                                                  True, md5sum)
+                                if added:
+                                    itemset_file.seek(0)
+                                    bucket_id = project_id + form_id
+                                    bucket_id = md5(bucket_id.encode('utf-8')).hexdigest()
+                                    store_file(request, bucket_id, 'itemsets.csv', itemset_file)
 
-                    paths = ['forms', form_directory, parts[0]+".json"]
-                    json_file = os.path.join(odk_dir, *paths)
+                        paths = ['forms', form_directory, parts[0]+".json"]
+                        json_file = os.path.join(odk_dir, *paths)
 
-                    metadata = {"formID": form_id, "name": form_title[0].text, "majorMinorVersion": "",
-                                "version": datetime.datetime.now().strftime("%Y%m%d"),
-                                "hash": 'md5:' + md5(open(final_xml, 'rb').read()).hexdigest(),
-                                "descriptionText": form_title[0].text}
+                        metadata = {"formID": form_id, "name": form_title[0].text, "majorMinorVersion": "",
+                                    "version": datetime.datetime.now().strftime("%Y%m%d"),
+                                    "hash": 'md5:' + md5(open(final_xml, 'rb').read()).hexdigest(),
+                                    "descriptionText": form_title[0].text}
 
-                    with open(json_file, "w",) as outfile:
-                        json_string = json.dumps(metadata, indent=4, ensure_ascii=False)
-                        outfile.write(json_string)
-                    return True, form_id
+                        with open(json_file, "w",) as outfile:
+                            json_string = json.dumps(metadata, indent=4, ensure_ascii=False)
+                            outfile.write(json_string)
+                        return True, form_id
+                    else:
+                        return False, message
                 else:
-                    return False, message
+                    return False, request.translate("The form already exists in this project")
             else:
-                return False, request.translate("The form already exists in this project")
+                return False, request.translate(
+                    "The form ID has especial characters. FormShare only allows letters, numbers and underscores(_)")
         else:
             return False, request.translate(
-                "The form ID has especial characters. FormShare only allows letters, numbers and underscores(_)")
-    else:
-        return False, request.translate(
-            "Cannot find XForm ID. Please send this form to support_formshare@qlands.com")
-    # except PyXFormError as e:
-    #     log.error("Error {} while adding form {} in project {}".format(str(e), input_file_name, project_id))
-    #     return False, str(e)
-    # except Exception as e:
-    #     log.error("Error {} while adding form {} in project {}".format(str(e), input_file_name, project_id))
-    #     return False, str(e)
+                "Cannot find XForm ID. Please send this form to support_formshare@qlands.com")
+    except PyXFormError as e:
+        log.error("Error {} while adding form {} in project {}".format(str(e), input_file_name, project_id))
+        return False, str(e).replace("'", '').replace('"', "").replace("\n", "")
+    except Exception as e:
+        log.error("Error {} while adding form {} in project {}".format(str(e), input_file_name, project_id))
+        return False, str(e).replace("'", '').replace('"', "").replace("\n", "")
 
 
 def update_odk_form(request, project_id, for_form_id, odk_dir, form_data):
@@ -762,9 +813,6 @@ def create_repository(request, project, form, odk_dir, xform_directory, primary_
                 "-m " + os.path.join(odk_dir, *["forms", xform_directory, "repository", "metadata.sql"]),
                 "-f " + os.path.join(odk_dir, *["forms", xform_directory, "repository", "manifest.xml"])]
 
-        if separation_file is not None:
-            args.append("-s " + os.path.join(odk_dir, *["forms", xform_directory, "repository", separation_file]))
-        args.append("-S " + os.path.join(odk_dir, *["forms", xform_directory, "repository", "separation.xml"]))
         if other_languages is not None:
             args.append("-l '" + other_languages + "'")
         if default_language is not None:
@@ -936,6 +984,16 @@ def store_json_file(request, submission_id, temp_json_file, json_file, ordered_j
                     args.append("-U " + uuid_file)
                     args.append("-O m")
                     args.append("-w")
+
+                    json_file_name = os.path.basename(json_file)
+                    json_file_base = os.path.splitext(json_file_name)[0]
+                    submission_files = os.path.join(odk_dir,
+                                                    *['forms', xform_directory, 'submissions', json_file_base, '*.osm'])
+                    files = glob.glob(submission_files)
+                    if files:
+                        for file in files:
+                            args.append(file)
+
                     p = Popen(args, stdout=PIPE, stderr=PIPE)
                     stdout, stderr = p.communicate()
                     # An error 2 is an SQL error that goes to the logs

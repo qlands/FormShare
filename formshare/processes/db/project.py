@@ -145,6 +145,7 @@ def get_active_project(request, user):
 
 
 def add_project(request, user, project_data):
+    _ = request.translate
     res = request.dbsession.query(Project).filter(Project.project_id == Userproject.project_id).filter(
         Userproject.user_id == user).filter(Userproject.access_type == 1).filter(
         Project.project_code == project_data["project_code"]).first()
@@ -168,7 +169,7 @@ def add_project(request, user, project_data):
             except IntegrityError:
                 request.dbsession.rollback()
                 log.error("Duplicated access for user {} in project {}".format(user, mapped_data["project_id"]))
-                return False, request.translate("Error allocating access")
+                return False, _("Error allocating access")
             except Exception as e:
                 request.dbsession.rollback()
                 log.error("Error {} while allocating access for user {} in project {}".format(str(e), user,
@@ -178,16 +179,17 @@ def add_project(request, user, project_data):
             return True, project_data['project_id']
         except IntegrityError:
             log.error("Duplicated project {}".format(mapped_data["project_id"]))
-            return False, request.translate("The project already exist")
+            return False, _("The project already exist")
         except Exception as e:
             log.error("Error {} while inserting project {}".format(str(e), mapped_data["project_id"]))
             return False, str(e)
     else:
-        return False, request.translate("A project with name '{}' already exists in your account").format(
+        return False, _("A project with name '{}' already exists in your account").format(
             project_data["project_code"])
 
 
 def modify_project(request, user, project, project_data):
+    _ = request.translate
     res = request.dbsession.query(Project).filter(Project.project_id == Userproject.project_id).filter(
         Userproject.user_id == user).filter(Userproject.access_type == 1).filter(
         Project.project_code == project_data["project_code"]).filter(Project.project_id != project).first()
@@ -202,11 +204,12 @@ def modify_project(request, user, project, project_data):
             return False, str(e)
         return True, ""
     else:
-        return False, request.translate("A project with name '{}' already exists in your account").format(
+        return False, _("A project with name '{}' already exists in your account").format(
             project_data["project_code"])
 
 
 def delete_project(request, user, project):
+    _ = request.translate
     try:
         request.dbsession.query(Project).filter(Project.project_id == project).delete()
         request.dbsession.flush()
@@ -223,7 +226,7 @@ def delete_project(request, user, project):
     except IntegrityError as e:
         request.dbsession.rollback()
         log.error("Error {} while deleting project {}".format(str(e), project))
-        return False, request.translate(
+        return False, _(
             "If you have forms with submissions. First you need to delete such forms")
     except Exception as e:
         request.dbsession.rollback()
@@ -247,6 +250,7 @@ def set_project_as_active(request, user, project):
 
 
 def add_file_to_project(request, project, file_name, overwrite=False):
+    _ = request.translate
     res = request.dbsession.query(ProjectFile).filter(ProjectFile.project_id == project).filter(
         ProjectFile.file_name == file_name).first()
     if res is None:
@@ -264,7 +268,7 @@ def add_file_to_project(request, project, file_name, overwrite=False):
         return True, new_file_id
     else:
         if not overwrite:
-            return False, request.translate("The file {} already exist".format(file_name))
+            return False, _("The file {} already exist").format(file_name)
         else:
             return True, res.file_id
 

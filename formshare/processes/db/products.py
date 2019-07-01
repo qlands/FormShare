@@ -34,6 +34,7 @@ def add_product_instance(request, user, project, form, product, task, output_fil
 
 
 def delete_product(request, project, form, product, output):
+    _ = request.translate
     res = request.dbsession.query(Product).filter(Product.project_id == project).filter(Product.form_id == form)\
         .filter(Product.product_id == product).filter(Product.output_id == output).one()
     if res is not None:
@@ -59,9 +60,9 @@ def delete_product(request, project, form, product, output):
                                                                                                     output))
                 return False, str(e)
         else:
-            return False, request.translate("Unable to delete product file")
+            return False, _("Unable to delete product file")
     else:
-        return False, request.translate('Output does not exists')
+        return False, _('Output does not exists')
 
 
 def get_form_used_products(request, project, form):

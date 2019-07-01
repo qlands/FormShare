@@ -196,6 +196,7 @@ def import_external_data(request, user, project, form, odk_dir, form_directory, 
 
 
 def check_jxform_file(request, json_file, external_file=None):
+    _ = request.translate
     jxform_to_mysql = os.path.join(request.registry.settings['odktools.path'], *["JXFormToMysql", "jxformtomysql"])
     args = [jxform_to_mysql, "-j " + json_file, "-t maintable", "-v dummy",
             "-e " + os.path.join(os.path.dirname(json_file), *['tmp']), "-o m", "-K"]
@@ -222,21 +223,22 @@ def check_jxform_file(request, json_file, external_file=None):
             log.error(". Error: " + "-" + stderr.decode() + " while checking PyXForm. Command line: " + " ".join(args))
             root = etree.fromstring(stdout)
             duplicated_tables = root.findall(".//duplicatedTable")
-            message = request.translate("FormShare checks a little bit more your ODK for inconsistencies.") + "\n"
-            message = message + request.translate(
-                "The following variables are duplicated within repeats or groups in the ODK you just submitted:") + "\n"
+            message = _("FormShare checks a little bit more your ODK for inconsistencies.") + "\n"
+            message = message + _(
+                "The following variables are duplicated within repeats or outside repeats "
+                "in the ODK you just submitted:") + "\n"
             if duplicated_tables:
                 for a_table in duplicated_tables:
                     table_name = a_table.get("tableName")
                     if table_name == "maintable":
-                        table_name = request.translate("Outside any repeat")
-                    message = message + "\t" + request.translate("In repeat/group: {}".format(table_name)) + ": \n"
+                        table_name = _("Outside any repeat")
+                    message = message + "\t" + _("In repeat: {}").format(table_name) + ": \n"
                     duplicated_fields = a_table.findall(".//duplicatedField")
                     if duplicated_fields:
                         for a_field in duplicated_fields:
                             field_name = a_field.get("fieldName")
-                            message = message + "\t\t" + request.translate("Variable: {}".format(field_name)) + "\n"
-                message = message + "\n" + request.translate(
+                            message = message + "\t\t" + _("Variable: {}").format(field_name) + "\n"
+                message = message + "\n" + _(
                     "Please note that FormShare only allows basic Latin letters, digits 0-9, dollar and underscore "
                     "in repeat, group and variable names.")
             return 23, message
@@ -244,29 +246,29 @@ def check_jxform_file(request, json_file, external_file=None):
             log.error(". Error: " + "-" + stderr.decode() + " while checking PyXForm. Command line: " + " ".join(args))
             root = etree.fromstring(stdout)
             invalid_names = root.findall(".//invalidName")
-            message = request.translate("FormShare checks a little bit more your ODK for inconsistencies.") + "\n"
-            message = message + request.translate(
+            message = _("FormShare checks a little bit more your ODK for inconsistencies.") + "\n"
+            message = message + _(
                 "The following variables are have invalid names:") + "\n"
             if invalid_names:
                 for a_name in invalid_names:
                     variable_name = a_name.get("name")
                     message = message + "\t" + variable_name + " \n"
 
-                message = message + "\n" + request.translate(
+                message = message + "\n" + _(
                     "Please change those names and try again.")
             return 24, message
         if p.returncode == 22:
             log.error(". Error: " + "-" + stderr.decode() + " while checking PyXForm. Command line: " + " ".join(args))
             root = etree.fromstring(stdout)
             duplicated_tables = root.findall(".//duplicatedItem")
-            message = request.translate("FormShare checks a little bit more your ODK for inconsistencies.") + "\n"
-            message = message + request.translate(
-                "The following repeats or groups are duplicated in the ODK you just submitted:") + "\n"
+            message = _("FormShare checks a little bit more your ODK for inconsistencies.") + "\n"
+            message = message + _(
+                "The following repeats are duplicated in the ODK you just submitted:") + "\n"
             if duplicated_tables:
                 for a_table in duplicated_tables:
                     table_name = a_table.get("tableName")
-                    message = message + "\t" + request.translate("Repeat or group: {}".format(table_name)) + "\n"
-                message = message + "\n" + request.translate(
+                    message = message + "\t" + _("Repeat: {}").format(table_name) + "\n"
+                message = message + "\n" + _(
                     "Please note that FormShare only allows basic Latin letters, digits 0-9, dollar and underscore "
                     "in repeat, group and variable names.")
             return 22, message
@@ -274,60 +276,55 @@ def check_jxform_file(request, json_file, external_file=None):
             log.error(". Error: " + "-" + stderr.decode() + " while checking PyXForm. Command line: " + " ".join(args))
             root = etree.fromstring(stdout)
             duplicated_items = root.findall(".//duplicatedItem")
-            message = request.translate("FormShare checks a little bit more your ODK for inconsistencies.") + "\n"
-            message = message + request.translate(
+            message = _("FormShare checks a little bit more your ODK for inconsistencies.") + "\n"
+            message = message + _(
                 "The following options are duplicated in the ODK you just submitted:") + "\n"
             if duplicated_items:
                 for a_item in duplicated_items:
                     variable_name = a_item.get("variableName")
                     duplicated_option = a_item.get("duplicatedValue")
-                    message = message + "\t" + request.translate(
-                        "Option {} in variable {}".format(duplicated_option, variable_name)) + "\n"
+                    message = message + "\t" + _("Option {} in variable {}").\
+                        format(duplicated_option, variable_name) + "\n"
             return 9, message
         if p.returncode == 16:
             log.error(". Error: " + "-" + stderr.decode() + " while checking PyXForm. Command line: " + " ".join(args))
-            message = request.translate("FormShare checks a little bit more your ODK for inconsistencies.") + "\n"
-            message = message + request.translate("The ODK you just submitted has a search statement in the appearance "
-                                                  "column with a syntax that is not recognised by FormShare. Please "
-                                                  "go to https://github.com/qlands/FormShare an raise an issue so the"
-                                                  "technical team can inspect your ODK and find a solution.") + "\n"
+            message = _("FormShare checks a little bit more your ODK for inconsistencies.") + "\n"
+            message = message + _("The ODK you just submitted has a search statement in the appearance "
+                                  "column with a syntax that is not recognized by FormShare. Please "
+                                  "go to {} an raise an issue so the technical team can inspect your ODK and "
+                                  "find a solution.").format("https://github.com/qlands/FormShare") + "\n"
             return 9, message
 
         if p.returncode == 2:
             log.error(". Error: " + "-" + stderr.decode() + " while checking PyXForm. Command line: " + " ".join(args))
-            message = request.translate("\nFormShare manage your data in a better way but by doing so it has more "
-                                        "restrictions.") + "\n"
-            message = message + request.translate("The following tables have more than 64 selects: ") + "\n"
+            message = "\n" + _("FormShare manage your data in a better way but by doing so it has more "
+                               "restrictions.") + "\n"
+            message = message + _("The following tables have more than 64 selects: ") + "\n"
             root = etree.fromstring(stdout)
             tables_with_errors = root.findall(".//table")
             for a_table in tables_with_errors:
                 table_name = a_table.get("name")
                 num_selects = a_table.get("selects")
-                message = message + table_name + request.translate(" with ") + num_selects + request.translate(
-                    " selects ")
+                message = message + table_name + _(" with ") + num_selects + _(" selects")
             message = message + "\n\n"
-            message = message + request.translate('Some information on this restriction and how to correct it:\n\n')
-            message = message + request.translate('We tent to organize our ODK forms in sections with '
-                                                  'questions around a topic. '
-                                                  'For example: "livestock inputs" or "crops sales".\n\n')
-            message = message + request.translate('These sections have type = "begin/end group". We also organize '
-                                                  'questions that must be repeated in sections with '
-                                                  'type = "begin/end repeat."\n\n')
-            message = message + request.translate('FormShare store repeats as separate tables '
-                                                  '(like different Excel sheets) however groups are not. '
-                                                  'FormShare store all items (questions, notes, calculations, etc.) '
-                                                  'outside repeats into a table called "maintable". Thus "maintable" '
-                                                  'usually end up with several items and if your ODK form have many '
-                                                  'selects then the "maintable" could potentially have more than 64 '
-                                                  'selects. FormShare can only handle 64 selects per table.\n\n')
-            message = message + request.translate('You can bypass this restriction by creating groups of items inside '
-                                                  'repeats BUT WITH repeat_count = 1. A repeat with repeat_count = 1 '
-                                                  'will behave in the same way as a group but FormShare will create '
-                                                  'a new table for it to store all its items. Eventually if you '
-                                                  'export the data to Excel your items will be organized in '
-                                                  'different sheets each representing a table.\n\n')
-            message = message + request.translate('Please edit your ODK XLSX/XLS file, group several items inside '
-                                                  'repeats with repeat_count = 1 and try to upload the form again.')
+            message = message + _('Some information on this restriction and how to correct it:') + "\n\n"
+            message = message + _('We tent to organize our ODK forms in sections with questions around a topic. '
+                                  'For example: "livestock inputs" or "crops sales".') + "\n\n"
+            message = message + _('These sections have type = "begin/end group". We also organize questions that '
+                                  'must be repeated in sections with type = "begin/end repeat."') + "\n\n"
+            message = message + _('FormShare store repeats as separate tables (like different Excel sheets) however '
+                                  'groups are not. FormShare store all items (questions, notes, calculations, etc.) '
+                                  'outside repeats into a table called "maintable". Thus "maintable" usually end up '
+                                  'with several items and if your ODK form have many selects then the "maintable" '
+                                  'could potentially have more than 64 selects. FormShare can only handle 64 selects '
+                                  'per table.') + "\n\n"
+            message = message + _('You can bypass this restriction by creating groups of items inside repeats '
+                                  'BUT WITH repeat_count = 1. A repeat with repeat_count = 1 will behave in the same '
+                                  'way as a group but FormShare will create a new table for it to store all its items. '
+                                  'Eventually if you export the data to Excel your items will be organized in '
+                                  'different sheets each representing a table.') + "\n\n"
+            message = message + _('Please edit your ODK XLSX/XLS file, group several items inside repeats with '
+                                  'repeat_count = 1 and try to upload the form again.')
             return 2, message
 
         log.error(". Error: " + "-" + stderr.decode() + " while checking PyXForm. Command line: " + " ".join(args))
@@ -335,6 +332,7 @@ def check_jxform_file(request, json_file, external_file=None):
 
 
 def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
+    _ = request.translate
     uid = str(uuid.uuid4())
     form_directory = uid
     paths = ['tmp', uid]
@@ -359,7 +357,7 @@ def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
 
     try:
         if file_name.find('.xls') == -1 and file_name.find('.xlsx') == -1 and file_name.find('.xlsm') == -1:
-            return False, request.translate('Invalid file type')
+            return False, _('Invalid file type')
 
         xls2xform.xls2xform_convert(file_name, xml_file)
 
@@ -478,13 +476,13 @@ def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
                     else:
                         return False, message
                 else:
-                    return False, request.translate("The form already exists in this project")
+                    return False, _("The form already exists in this project")
             else:
-                return False, request.translate(
+                return False, _(
                     "The form ID has especial characters. FormShare only allows letters, numbers and underscores(_)")
         else:
-            return False, request.translate(
-                "Cannot find XForm ID. Please send this form to support_formshare@qlands.com")
+            return False, _("Cannot find XForm ID. Please post this ODK form in an issue on ") \
+                   + "https://github.com/qlands/FormShare"
     except PyXFormError as e:
         log.error("Error {} while adding form {} in project {}".format(str(e), input_file_name, project_id))
         return False, str(e).replace("'", '').replace('"', "").replace("\n", "")
@@ -494,6 +492,7 @@ def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
 
 
 def update_odk_form(request, project_id, for_form_id, odk_dir, form_data):
+    _ = request.translate
     uid = str(uuid.uuid4())
     paths = ['tmp', uid]
     os.makedirs(os.path.join(odk_dir, *paths))
@@ -518,7 +517,7 @@ def update_odk_form(request, project_id, for_form_id, odk_dir, form_data):
 
     try:
         if file_name.find('.xls') == -1 and file_name.find('.xlsx') == -1 and file_name.find('.xlsm') == -1:
-            return False, request.translate('Invalid file type')
+            return False, _('Invalid file type')
 
         xls2xform.xls2xform_convert(file_name, xml_file)
 
@@ -639,16 +638,16 @@ def update_odk_form(request, project_id, for_form_id, odk_dir, form_data):
                         else:
                             return False, message
                     else:
-                        return False, request.translate("The form does not exists in this project")
+                        return False, _("The form does not exists in this project")
                 else:
-                    return False, request.translate('The "form_id" of the current form does not match the "form_id" of '
-                                                    'the one you uploaded. You cannot update a form with another form')
+                    return False, _('The "form_id" of the current form does not match the "form_id" of the one you '
+                                    'uploaded. You cannot update a form with another form')
             else:
-                return False, request.translate(
+                return False, _(
                     "The form ID has especial characters. FormShare only allows letters, numbers and underscores(_)")
         else:
-            return False, request.translate(
-                "Cannot find XForm ID. Please send this form to support_formshare@qlands.com")
+            return False, _(
+                "Cannot find XForm ID. Please post the form as an issue on ") + "https://github.com/qlands/FormShare"
     except PyXFormError as e:
         log.error("Error {} while adding form {} in project {}".format(str(e), input_file_name, project_id))
         return False, str(e)
@@ -798,7 +797,7 @@ class ChangeDir:
         os.chdir(self.savedPath)
 
 
-def create_repository(request, project, form, odk_dir, xform_directory, primary_key, separation_file=None,
+def create_repository(request, project, form, odk_dir, xform_directory, primary_key,
                       default_language=None, other_languages=None, yes_no_strings=None):
     jxform_to_mysql = os.path.join(request.registry.settings['odktools.path'], *["JXFormToMysql", "jxformtomysql"])
 
@@ -993,7 +992,7 @@ def store_json_file(request, submission_id, temp_json_file, json_file, ordered_j
                     if files:
                         for file in files:
                             args.append(file)
-
+                    log.error(" ".join(args))
                     p = Popen(args, stdout=PIPE, stderr=PIPE)
                     stdout, stderr = p.communicate()
                     # An error 2 is an SQL error that goes to the logs

@@ -60,6 +60,7 @@ def get_gps_points_from_form(request, user, project, form, query_from=None, quer
 
 
 def get_submission_media_files(request, project, form):
+    _ = request.translate
     uid = str(uuid.uuid4())
     form_directory = get_form_directory(request, project, form)
     odk_dir = get_odk_path(request)
@@ -85,10 +86,11 @@ def get_submission_media_files(request, project, form):
             shutil.make_archive(zip_file, 'zip', tmp_dir)
             return True, zip_file + ".zip"
 
-    return False, request.translate("There are no media files to download")
+    return False, _("There are no media files to download")
 
 
 def json_to_csv(request, project, form):
+    _ = request.translate
     uid = str(uuid.uuid4())
     form_directory = get_form_directory(request, project, form)
     odk_dir = get_odk_path(request)
@@ -136,10 +138,11 @@ def json_to_csv(request, project, form):
         else:
             return False, stderr
     else:
-        return False, request.translate("There are not submissions to download")
+        return False, _("There are not submissions to download")
 
 
 def get_tables_from_form(request, project, form):
+    _ = request.translate
     odk_dir = get_odk_path(request)
     form_directory = get_form_directory(request, project, form)
     create_file = os.path.join(odk_dir, *['forms', form_directory, 'repository', 'create.xml'])
@@ -159,7 +162,7 @@ def get_tables_from_form(request, project, form):
                 if field.tag == "field":
                     desc = field.get('name', '')
                     if desc == "":
-                        desc = request.translate("Without description")
+                        desc = _("Without description")
                     fields.append({'name': field.get('name'), 'desc': desc})
                     sfields.append(field.get('name') + "-" + desc)
                     sensitive = field.get('sensitive', 'false')
@@ -182,7 +185,7 @@ def get_tables_from_form(request, project, form):
                 if field.tag == "field":
                     desc = field.get('name', '')
                     if desc == "":
-                        desc = request.translate("Without description")
+                        desc = _("Without description")
                     fields.append({'name': field.get('name'), 'desc': desc})
                     sfields.append(field.get('name') + "-" + desc)
                     sensitive = field.get('sensitive', 'false')
@@ -380,6 +383,7 @@ def is_field_key(request, project, form, table_name, field_name):
 
 def get_request_data(request, project, form, table_name, draw, fields, start, length, order_index, order_direction,
                      search_value):
+    _ = request.translate
     schema = get_form_schema(request, project, form)
     sql_fields = ','.join(fields)
     not_null_fields_array = []
@@ -426,7 +430,8 @@ def get_request_data(request, project, form, table_name, draw, fields, start, le
                                     else:
                                         a_record[field] = record[field][-12:]
                 except Exception as e:
-                    a_record[field] = "AJAX Data error. Report this error to support_for_cabi@qlands.com"
+                    a_record[field] = _("AJAX Data error. Report this error as an issue on ") \
+                                      + "https://github.com/qlands/FormShare"
                     log.error("AJAX Error in field " + field + ". Error: " + str(e))
             data.append(a_record)
 
@@ -439,6 +444,7 @@ def get_request_data(request, project, form, table_name, draw, fields, start, le
 
 def get_request_data_jqgrid(request, project, form, table_name, fields, current_page, length, table_order,
                             order_direction, search_field, search_string, search_operator):
+    _ = request.translate
     schema = get_form_schema(request, project, form)
     sql_fields = ','.join(fields)
 
@@ -493,7 +499,8 @@ def get_request_data_jqgrid(request, project, form, table_name, fields, current_
                                 else:
                                     a_record[field] = record[field]
                 except Exception as e:
-                    a_record[field] = "AJAX Data error. Report this error to support_for_cabi@qlands.com"
+                    a_record[field] = _("AJAX Data error. Report this error as an issue on ") \
+                                      + "https://github.com/qlands/FormShare"
                     log.error("AJAX Error in field " + field + ". Error: " + str(e))
             data.append(a_record)
 
@@ -502,6 +509,7 @@ def get_request_data_jqgrid(request, project, form, table_name, fields, current_
 
 
 def update_data(request, user, project, form, table_name, row_uuid, field, value):
+    _ = request.translate
     schema = get_form_schema(request, project, form)
     sql = "UPDATE " + schema + "." + table_name + " SET " + field + " = '" + value + "'"
     sql = sql + " WHERE rowuuid = '" + row_uuid + "'"
@@ -522,10 +530,11 @@ def update_data(request, user, project, form, table_name, row_uuid, field, value
             if len(m1) == 6:
                 lookup = get_table_desc(request, project, form, m1[4])
                 return {"fieldErrors": [{'name': field,
-                                         'status': 'Cannot update value. Check the valid values in lookup table "' +
-                                                   lookup + '"'}]}
+                                         'status': _('Cannot update value. Check the valid values in '
+                                                     'lookup table') + '"' + lookup + '"'}]}
         return {
-            "fieldErrors": [{'name': field, 'status': 'Cannot update value. Check the valid values in lookup table'}]}
+            "fieldErrors": [{'name': field, 'status': _('Cannot update value. Check the valid '
+                                                        'values in lookup table')}]}
     except Exception as ex:
         log.error(str(ex))
         return {"fieldErrors": [{'name': field, 'status': 'Unknown error'}]}

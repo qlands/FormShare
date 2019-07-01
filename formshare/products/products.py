@@ -60,26 +60,28 @@ def stop_task(request, user, project, form, task):
 
 
 def get_product_description(request, product):
+    _ = request.translate
     if product == "fs1import":
-        return request.translate('Import data')
+        return _('Import data')
     if product == "repository":
-        return request.translate('Build repository')
+        return _('Build repository')
     if product == "xlsx_export":
-        return request.translate('Excel')
+        return _('Excel')
     if product == "media_export":
-        return request.translate('Media')
+        return _('Media')
     if product == "kml_export":
-        return request.translate('KML')
+        return _('KML')
     if product == "csv_export":
-        return request.translate('CSV')
-    return request.translate("Without description")
+        return _('CSV')
+    return _("Without description")
 
 
 def get_form_products(request, project, form):
+    _ = request.translate
     result = []
     used_products = get_form_used_products(request, project, form)
     for a_product in used_products:
-        a_product['desc'] = request.translate('Without description')
+        a_product['desc'] = _('Without description')
 
     for a_product in used_products:
         product_info = get_product(a_product['code'])

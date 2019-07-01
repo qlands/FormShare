@@ -79,7 +79,7 @@
                             {% block project_details_assistant_content %}
                                 {% if projectData.access_type < 4 %}
                                     {% if assistants|length > 0 %}
-                                        <small>{{ _('Click/Tab and hold to remove assistants') }}</small>
+                                        <small>{{ _('Click / Tap and hold to remove assistants') }}</small>
                                     {% else %}
                                         <small class="text-danger"><b>{{ _('This project has no assistants. Use the + button to add one') }}</b></small>
                                     {% endif %}
@@ -132,7 +132,7 @@
                             {% block project_details_groups_content %}
                                 {% if projectData.access_type < 4 %}
                                     {% if groups|length > 0 %}
-                                        <small>{{ _('Click/Tab and hold to remove groups') }}</small>
+                                        <small>{{ _('Click / Tap and hold to remove groups') }}</small>
                                     {% else %}
                                         <small class="text-warning"><b>{{ _('This project has no groups. Use the + button to add them') }}</b></small>
                                     {% endif %}
@@ -181,7 +181,7 @@
                                     <div class="col-md-12">
                                         {% if projectData.access_type < 4 %}
                                             {% if files|length > 0 %}
-                                                <small>{{ _('Click/Tab and hold to remove files') }}</small>
+                                                <small>{{ _('Click / Tap and hold to remove files') }}</small>
                                             {% else %}
                                                 <small>{{ _('No attached files. Use the + button to add files') }}</small>
                                             {% endif %}

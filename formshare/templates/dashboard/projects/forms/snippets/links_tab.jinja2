@@ -18,7 +18,7 @@
         {% block links_tab_content %}
             <div class="row">
                 <div class="col-md-12">
-                    <small>{{ _('Click/Tab and hold to copy') }}</small>
+                    <small>{{ _('Click / Tap and hold to copy') }}</small>
                     <ul class="tag-list" style="padding: 0">
                         <li><a href="{{ request.route_url('form_download_xlsx',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fab fa-wpforms"></i> {{ _('Download ODK form') }}</a></li>
                         {% if formDetails.form_schema != None %}

@@ -18,8 +18,8 @@ class BuildFileError(Exception):
     """
 
     def __str__(self):
-        return _('Unknown error while creating the XLSX. Sorry about this. '
-                 'Please report this error to support_for_ilri@qlands.com')
+        return _('Unknown error while creating the XLSX. Sorry about this. Please report this error as an issue on ') \
+               + "https://github.com/qlands/FormShare"
 
 
 class SheetNameError(Exception):
@@ -35,7 +35,7 @@ class SheetNameError(Exception):
 
 
 @celeryApp.task(base=CeleryTask)
-def build_xlsx(settings, odk_dir, form_directory, form_schema, xlsx_file, include_sensitive):
+def build_xlsx(settings, odk_dir, form_directory, form_schema, form_id, xlsx_file, include_sensitive):
 
     mysql_user = settings['mysql.user']
     mysql_password = settings['mysql.password']
@@ -60,6 +60,10 @@ def build_xlsx(settings, odk_dir, form_directory, form_schema, xlsx_file, includ
 
     if include_sensitive:
         args.append("-i")
+
+    args.append("-f " + form_id)
+
+    log.error(" ".join(args))
 
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()

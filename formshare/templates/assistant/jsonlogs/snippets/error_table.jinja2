@@ -25,41 +25,41 @@
             {% endif %}
             {% if error.lastentry != None %}
                 {% if error.lastentry.log_action == 5 %}
-                    <br/>{{ error.lastentry.enum_name }} canceled checkout<br/>
+                    <br/>{{ error.lastentry.enum_name }} {{ _('canceled check-out') }}<br/>
                     <span title="{{ _('Canceled date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
                 {% endif %}
                 {% if error.lastentry.log_action == 6 %}
-                    <br/> {{ error.lastentry.enum_name }} canceled revision <a href="{{ request.route_url('viewrevision', pname=pname,formid=formid,submissionid=error.log_id,revisionid=error.lastentry.log_commit) }}">{{ error.lastentry.log_commit }}</a><br/>
+                    <br/> {{ error.lastentry.enum_name }} {{ _('canceled revision') }} <a href="{{ request.route_url('viewrevision', pname=pname,formid=formid,submissionid=error.log_id,revisionid=error.lastentry.log_commit) }}">{{ error.lastentry.log_commit }}</a><br/>
                     <span title="{{ _('Canceled date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
                 {% endif %}
                 {% if error.lastentry.log_action == 7 %}
-                    <br/> {{ error.lastentry.enum_name }} pushed revision <a href="{{ request.route_url('viewrevision', pname=pname,formid=formid,submissionid=error.log_id,revisionid=error.lastentry.log_commit,_query={'pushed': true}) }}">{{ error.lastentry.log_commit }}</a> but failed<br/>
+                    <br/> {{ error.lastentry.enum_name }} {{ _('pushed revision') }} <a href="{{ request.route_url('viewrevision', pname=pname,formid=formid,submissionid=error.log_id,revisionid=error.lastentry.log_commit,_query={'pushed': true}) }}">{{ error.lastentry.log_commit }}</a> but failed<br/>
                     <span title="{{ _('Failed date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
                 {% endif %}
                 {% if error.lastentry.log_action == 8 %}
-                    <br/>{{ error.lastentry.enum_name }} canceled disregard<br/>
+                    <br/>{{ error.lastentry.enum_name }} {{ _('canceled disregard') }}<br/>
                     <span title="{{ _('Canceled date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
                 {% endif %}
             {% endif %}
         {% endif %}
         {% if error.status == 2 %}
             Checked out by {{ error.lastentry.enum_name }}<br/>
-            <span title="{{ _('Checkout date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
+            <span title="{{ _('Check-out date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
         {% endif %}
         {% if error.status == 3 %}
-            {{ error.lastentry.enum_name }} checked in revision ID: <a href="{{ request.route_url('viewrevision', pname=pname,formid=formid,submissionid=error.log_id,revisionid=error.lastentry.log_commit) }}">{{ error.lastentry.log_commit }}</a><span class="label label-important" title="{{ _('To be pushed to the repository') }}">{{ _('To be pushed') }}</span> <br/>
-            <span title="{{ _('Checkin date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
+            {{ error.lastentry.enum_name }} {{ _('checked in revision ID') }}: <a href="{{ request.route_url('viewrevision', pname=pname,formid=formid,submissionid=error.log_id,revisionid=error.lastentry.log_commit) }}">{{ error.lastentry.log_commit }}</a><span class="label label-important" title="{{ _('To be pushed to the repository') }}">{{ _('To be pushed') }}</span> <br/>
+            <span title="{{ _('Check-in date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
         {% endif %}
         {% if error.status == 5 %}
-            {{ error.lastentry.enum_name }} canceled checkout<br/>
+            {{ error.lastentry.enum_name }} {{ _('canceled check-out') }}<br/>
             <span title="{{ _('Canceled date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
         {% endif %}
         {% if error.lastentry.log_action == 4 %}
-            <b style="color: orange">Disregarded</b> by {{ error.lastentry.enum_name }}<br/>
+            <b style="color: orange">{{ _('Disregarded') }}</b> by {{ error.lastentry.enum_name }}<br/>
             <span title="{{ _('Disregarded date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
         {% endif %}
         {% if error.status == 0 %}
-            <b style="color: green">Fixed</b> by {{ error.lastentry.enum_name }} in revision <a href="{{ request.route_url('viewrevision', pname=pname,formid=formid,submissionid=error.log_id,revisionid=error.lastentry.log_commit,_query={'pushed': true}) }}">{{ error.lastentry.log_commit }}</a><br/>
+            <b style="color: green">{{ _('Fixed') }}</b> by {{ error.lastentry.enum_name }} {{ _('in revision') }} <a href="{{ request.route_url('viewrevision', pname=pname,formid=formid,submissionid=error.log_id,revisionid=error.lastentry.log_commit,_query={'pushed': true}) }}">{{ error.lastentry.log_commit }}</a><br/>
             <span title="{{ _('Fixed date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
         {% endif %}
 
@@ -69,13 +69,13 @@
             {% if error.status != 0 %}
                 {% if error.status == 1 and not disregard %}
                     <a class="btn btn-default btn-sm action-buttons" href="{{ request.route_url('comparejsons',pname=pname,formid=formid,submissionid=error.log_id) }}" title="{{ _('Compare submission') }}"><i style="color: orange" class="fa fa-random"></i></a>
-                    <a class="btn btn-primary btn-sm action-buttons" onclick="ShowConfirmModal('{{ request.route_url('checkoutjson', pname=pname,formid=formid,submissionid=error.log_id) }}','Are you sure that you want to checkout this submission?');" title="{{ _('Check out file') }}"><i class="fa fa-arrow-right"></i></a>
+                    <a class="btn btn-primary btn-sm action-buttons" onclick="ShowConfirmModal('{{ request.route_url('checkoutjson', pname=pname,formid=formid,submissionid=error.log_id) }}','Are you sure that you want to check-out this submission?');" title="{{ _('Check out file') }}"><i class="fa fa-arrow-right"></i></a>
                     <a class="btn btn-danger btn-sm action-buttons" href="{{ request.route_url('disregard',pname=pname,formid=formid,submissionid=error.log_id) }}" title="{{ _('Disregard error') }}"><i class="fa fa-ban"></i></a>
                 {% endif %}
                 {% if error.status == 2 %}
                     <a class="btn btn-default btn-sm action-buttons" href="{{ request.route_url('comparejsons',pname=pname,formid=formid,submissionid=error.log_id) }}" title="{{ _('Compare submission') }}"><i style="color: orange" class="fa fa-random"></i></a>
                     {% if error.lastentry.enum_id == activecoll.enum %}
-                        <a class="btn btn-warning btn-sm action-buttons" href="{{ request.route_url('checkinjson',pname=pname,formid=formid,submissionid=error.log_id) }}" title="{{ _('Check in new version') }}"><i class="fa fa-arrow-left"></i></a>
+                        <a class="btn btn-warning btn-sm action-buttons" href="{{ request.route_url('checkinjson',pname=pname,formid=formid,submissionid=error.log_id) }}" title="{{ _('Check-in new version') }}"><i class="fa fa-arrow-left"></i></a>
                         <a class="btn btn-default btn-sm action-buttons" href="{{ request.route_url('getsubmission', pname=pname,formid=formid,submissionid=error.log_id) }}" title="{{ _('Download current version') }}"><i class="fa fa-download"></i></a>
                         <a class="btn btn-primary btn-sm action-buttons" href="https://jsoneditoronline.org/" target="_blank" title="{{ _('Open JSON editor') }}"><i class="fa fa-edit"></i></a>
                         <a class="btn btn-default btn-sm action-buttons" onclick="ShowConfirmModal('{{ request.route_url('cancelcheckout', pname=pname,formid=formid,submissionid=error.log_id) }}','Are you sure that you want to cancel the check-out of this submission?');" title="{{ _('Cancel check-out') }}"><i style="color: red" class="fa fa-ban"></i></a>

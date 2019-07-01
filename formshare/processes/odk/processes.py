@@ -11,7 +11,7 @@ import re
 from formshare.config.encdecdata import decode_data
 from formshare.processes.db.form import get_assistant_forms
 from formshare.processes.db.assistant import get_project_from_assistant
-from sqlalchemy import and_, func
+from sqlalchemy import func
 from sqlalchemy.sql import label
 import logging
 from sqlalchemy.event import listen
@@ -405,16 +405,14 @@ def get_table_items(request, project, form, table_name, just_main=False):
 
     sql = "SELECT sepsection.section_id,sepsection.section_name,sepsection.section_desc," \
           "sepsection.section_order, sepitems.item_name,sepitems.item_desc," \
-          "IFNULL(sepitems.item_order,0) as item_order, sepitems.item_notdisplay " \
-          "FROM sepsection " \
-          "LEFT JOIN sepitems " \
-          "ON sepitems.section_project = sepsection.project_id " \
-          "AND sepitems.section_form = sepsection.form_id " \
-          "AND sepitems.section_table = sepsection.table_name " \
-          "AND sepitems.section_id = sepsection.section_id " \
-          "WHERE sepsection.project_id = '" + project + "' " \
-          "AND sepsection.form_id = '" + form + "' " \
-          "AND sepsection.table_name = '" + table_name + "' "
+          "IFNULL(sepitems.item_order,0) as item_order, sepitems.item_notdisplay FROM sepsection " \
+          "LEFT JOIN sepitems ON sepitems.section_project = sepsection.project_id AND " \
+          "sepitems.section_form = sepsection.form_id AND " \
+          "sepitems.section_table = sepsection.table_name AND " \
+          "sepitems.section_id = sepsection.section_id WHERE " \
+          "sepsection.project_id = '" + project + "' AND " \
+          "sepsection.form_id = '" + form + "' AND " \
+          "sepsection.table_name = '" + table_name + "' "
     if just_main:
         sql = sql + "AND sepsection.section_name = 'main' "
     else:
@@ -456,6 +454,7 @@ def is_separation_ok(request, project, form, table_name):
 
 
 def save_separation_order(request, project, form, table_name, order, order2):
+    _ = request.translate
     # Delete all items that are not in main
     request.dbsession.query(Sepitem).filter(Sepitem.project_id == project).filter(Sepitem.form_id == form).filter(
         Sepitem.table_name == table_name).delete()
@@ -490,7 +489,7 @@ def save_separation_order(request, project, form, table_name, order, order2):
                                        item_order=pos)
                     request.dbsession.add(new_item)
         if item["type"] == "question":
-            return False, request.translate("One item is outside a group!")
+            return False, _("One item is outside a group!")
 
     for item in order2:
         if item["type"] == "group":
@@ -504,7 +503,7 @@ def save_separation_order(request, project, form, table_name, order, order2):
                                        item_order=pos)
                     request.dbsession.add(new_item)
         if item["type"] == "question":
-            return False, request.translate("One item is outside a group!")
+            return False, _("One item is outside a group!")
 
     try:
         request.dbsession.flush()
@@ -629,6 +628,7 @@ def set_group_desc(request, project, form, table_name, section_id, section_desc)
 
 
 def add_group(request, project, form, table_name, section_name, section_desc):
+    _ = request.translate
     exist = request.dbsession.query(Sepsection).filter(Sepsection.project_id == project).filter(
         Sepsection.form_id == form).filter(Sepsection.table_name == table_name).filter(
         Sepsection.section_name == section_name).first()
@@ -650,7 +650,7 @@ def add_group(request, project, form, table_name, section_name, section_desc):
         request.dbsession.add(new_section)
         return True, ""
     else:
-        return False, request.translate("Section name ") + section_name + request.translate(" already exist")
+        return False, _("Section name ") + section_name + _(" already exist")
 
 
 def get_stage_info_from_form(request, project, form):

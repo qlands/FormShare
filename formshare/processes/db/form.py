@@ -490,6 +490,7 @@ def get_media_files(request, project, form):
 
 
 def add_file_to_form(request, project, form, file_name, overwrite=False, md5sum=None):
+    _ = request.translate
     res = request.dbsession.query(MediaFile).filter(MediaFile.project_id == project).filter(
         MediaFile.form_id == form).filter(MediaFile.file_name == file_name).first()
     if res is None:
@@ -512,7 +513,7 @@ def add_file_to_form(request, project, form, file_name, overwrite=False, md5sum=
         return True, new_file_id
     else:
         if not overwrite:
-            return False, request.translate("The file {} already exist".format(file_name))
+            return False, _("The file {} already exist").format(file_name)
         else:
             try:
                 request.dbsession.query(MediaFile).filter(MediaFile.project_id == project).filter(

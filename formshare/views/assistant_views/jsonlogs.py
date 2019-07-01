@@ -106,8 +106,8 @@ class JSONCompare(AssistantView):
                                                             comp_code)
                                 if error != 0:
                                     self.errors.append(self._("An error occurred while comparing the files. "
-                                                              "Sorry for this. Please send the below error message to "
-                                                              "support_for_ilri@qlands.com"))
+                                                              "Sorry for this. Please post the below error "
+                                                              "as an issue in ") + "https://github.com/qlands/FormShare")
                                     self.errors.append(diff)
                                     diff = None
                                 else:
@@ -470,8 +470,9 @@ class JSONCompareSubmissions(AssistantView):
 
             error, diff = generate_diff(self.request, self.projectID, form_id, submission_a, submission_b)
             if error != 0:
-                self.errors.append(self._("An error ocurred while comparing the files. Sorry for this. "
-                                          "Please send the below error message to support_for_ilri@qlands.com"))
+                self.errors.append(self._("An error occurred while comparing the files. "
+                                          "Sorry for this. Please post the below error "
+                                          "as an issue in ") + "https://github.com/qlands/FormShare")
                 self.errors.append(diff)
                 diff = None
             else:

@@ -51,6 +51,8 @@ def delete_group(request, project, group):
 
 
 def add_group(request, project, group_data):
+    _ = request.translate
+
     mapped_data = map_to_schema(Collgroup, group_data)
     group_id = str(uuid.uuid4())
     group_id = group_id[-12:]
@@ -71,17 +73,19 @@ def add_group(request, project, group_data):
         except IntegrityError:
             request.dbsession.rollback()
             log.error("The group code {} already exists in project {}".format(group_id, project))
-            return False, request.translate("The group is already part of this project")
+            return False, _("The group is already part of this project")
         except Exception as e:
             request.dbsession.rollback()
             log.error("Error {} while adding group {} in project {}".format(str(e), group_data['group_desc'],
                                                                             project))
             return False, str(e)
     else:
-        return False, request.translate("Such group already exists in this project")
+        return False, _("Such group already exists in this project")
 
 
 def modify_group(request, project, group, group_data):
+    _ = request.translate
+
     mapped_data = map_to_schema(Collgroup, group_data)
     group_desc = " ".join(group_data['group_desc'].split())
     res = request.dbsession.query(Collgroup).filter(Collgroup.project_id == project).filter(
@@ -95,17 +99,18 @@ def modify_group(request, project, group, group_data):
             return True, ''
         except IntegrityError:
             request.dbsession.rollback()
-            return False, request.translate("The group is already part of this project")
+            return False, _("The group is already part of this project")
         except Exception as e:
             request.dbsession.rollback()
             log.error("Error {} while editing collaborator {} in project {}".format(str(e),
                                                                                     group_data['group_desc'], project))
             return False, str(e)
     else:
-        return False, request.translate("Such group already exists in this project")
+        return False, _("Such group already exists in this project")
 
 
 def add_assistant_to_group(request, project, group, assistant_project, assistant):
+    _ = request.translate
     new_member = Collingroup(project_id=project, group_id=group, enum_project=assistant_project, coll_id=assistant,
                              coll_privileges=1, join_date=datetime.datetime.now())
     try:
@@ -115,7 +120,7 @@ def add_assistant_to_group(request, project, group, assistant_project, assistant
     except IntegrityError:
         request.dbsession.rollback()
         log.error("The group member {} already exists in group {} of project {}".format(assistant, group, project))
-        return False, request.translate("The member is already part of this group")
+        return False, _("The member is already part of this group")
     except Exception as e:
         request.dbsession.rollback()
         log.error(
@@ -125,6 +130,7 @@ def add_assistant_to_group(request, project, group, assistant_project, assistant
 
 
 def remove_assistant_from_group(request, project, group, assistant_project, assistant):
+    _ = request.translate
     try:
         request.dbsession.query(Collingroup).filter(Collingroup.project_id == project).filter(
             Collingroup.group_id == group).filter(Collingroup.enum_project == assistant_project).filter(
@@ -134,7 +140,7 @@ def remove_assistant_from_group(request, project, group, assistant_project, assi
     except IntegrityError:
         request.dbsession.rollback()
         log.error("Cannot remove member {} from group {} of project {}".format(assistant, group, project))
-        return False, request.translate("Cannot remove the member")
+        return False, _("Cannot remove the member")
     except Exception as e:
         request.dbsession.rollback()
         log.error(

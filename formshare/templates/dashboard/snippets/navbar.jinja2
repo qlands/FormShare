@@ -22,7 +22,7 @@
                                     {% if activeUser != None %}
                                         <li><a class="dropdown-item" href="{{ request.route_url('profile',userid=activeUser.login) }}">{{ _('Profile') }}</a></li>
                                     {% else %}
-                                        <li><a class="dropdown-item" href="{{ request.route_url('login') }}">{{ _('Login') }}</a></li>
+                                        <li><a class="dropdown-item" href="{{ request.route_url('login') }}">{{ _('Sign in') }}</a></li>
                                     {% endif %}
                                     {% block nav_profile_links_extra %}
 

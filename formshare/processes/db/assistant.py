@@ -120,6 +120,9 @@ def delete_assistant(request, project, assistant):
 
 
 def add_assistant(request, project, assistant_data):
+
+    _ = request.translate
+
     mapped_data = map_to_schema(Collaborator, assistant_data)
     mapped_data['coll_cdate'] = datetime.datetime.now()
     mapped_data['coll_active'] = 1
@@ -132,7 +135,7 @@ def add_assistant(request, project, assistant_data):
         return True, ""
     except IntegrityError:
         request.dbsession.rollback()
-        return False, request.translate("The assistant is already part of this project")
+        return False, _("The assistant is already part of this project")
     except Exception as e:
         request.dbsession.rollback()
         log.error(
@@ -142,6 +145,8 @@ def add_assistant(request, project, assistant_data):
 
 
 def modify_assistant(request, project, assistant, assistant_data):
+
+    _ = request.translate
     mapped_data = map_to_schema(Collaborator, assistant_data)
     try:
         request.dbsession.query(Collaborator).filter(Collaborator.project_id == project).filter(
@@ -150,7 +155,7 @@ def modify_assistant(request, project, assistant, assistant_data):
         return True, ''
     except IntegrityError:
         request.dbsession.rollback()
-        return False, request.translate("The assistant is already part of this project")
+        return False, _("The assistant is already part of this project")
     except Exception as e:
         request.dbsession.rollback()
         log.error(

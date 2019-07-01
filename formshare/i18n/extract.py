@@ -2,10 +2,10 @@ from jinja2.ext import babel_extract as extract_jinja2
 import formshare.config.jinja_extensions as je
 
 jinja_extensions = '''
-                    jinja2.ext.do, jinja2.ext.i18n,                    
-                    formshare.config.jinja_extensions.JSResourceExtension,
-                    formshare.config.jinja_extensions.CSSResourceExtension,
-                    formshare.config.jinja_extensions.extendThis,
+                    jinja2.ext.do,jinja2.ext.i18n,                    
+                    formshare.config.jinja_extensions:JSResourceExtension,
+                    formshare.config.jinja_extensions:CSSResourceExtension,
+                    formshare.config.jinja_extensions:ExtendThis,
                    '''
 
 

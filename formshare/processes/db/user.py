@@ -63,6 +63,7 @@ def get_user_stats(request, user):
 
 
 def register_user(request, user_data):
+    _ = request.translate
     user_data.pop('user_password2', None)
     mapped_data = map_to_schema(User, user_data)
     email_valid = validators.email(mapped_data["user_email"])
@@ -77,17 +78,17 @@ def register_user(request, user_data):
             except IntegrityError:
                 request.dbsession.rollback()
                 log.error("Duplicated user {}".format(mapped_data["user_id"]))
-                return False, request.translate("Username is already taken")
+                return False, _("Username is already taken")
             except Exception as e:
                 request.dbsession.rollback()
                 log.error("Error {} when inserting user {}".format(str(e), mapped_data["user_id"]))
                 return False, str(e)
         else:
             log.error("Duplicated user with email {}".format(mapped_data["user_email"]))
-            return False, request.translate("Email already taken")
+            return False, _("Email already taken")
     else:
         log.error("Email {} is not valid".format(mapped_data["user_email"]))
-        return False, request.translate("Email is invalid")
+        return False, _("Email is invalid")
 
 
 def user_exists(request, user):

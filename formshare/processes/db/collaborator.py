@@ -65,6 +65,7 @@ def set_collaborator_role(request, project, collaborator, role):
 
 
 def add_collaborator_to_project(request, project, collaborator):
+    _ = request.translate
     new_collaborator = Userproject(user_id=collaborator, project_id=project, access_type=4,
                                    access_date=datetime.datetime.now(), project_active=1)
     try:
@@ -73,7 +74,7 @@ def add_collaborator_to_project(request, project, collaborator):
         return True, ""
     except IntegrityError:
         request.dbsession.rollback()
-        return False, request.translate("The collaborator is already part of this project")
+        return False, _("The collaborator is already part of this project")
     except Exception as e:
         request.dbsession.rollback()
         log.error(

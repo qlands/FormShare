@@ -7,6 +7,10 @@ import uuid
 from subprocess import Popen, PIPE, check_call
 import glob
 from formshare.processes.sse.messaging import send_task_status_to_form
+import json
+from pandas.io.json import json_normalize
+from collections import OrderedDict
+import pandas as pd
 
 log = logging.getLogger(__name__)
 gettext.bindtextdomain('formshare', 'formshare:locate')
@@ -41,6 +45,25 @@ class MySQLDenormalizeError(Exception):
         return _('Error calling MySQLDenormalize')
 
 
+def flatten_json(y):
+    out = {}
+
+    def flatten(x, name=''):
+        if type(x) is dict:
+            for a in x:
+                flatten(x[a], name + a + '_')
+        elif type(x) is list:
+            i = 1
+            for a in x:
+                flatten(a, name + str(i) + '_')
+                i += 1
+        else:
+            out[name[:-1]] = x
+
+    flatten(y)
+    return out
+
+
 @celeryApp.task(base=CeleryTask)
 def build_csv(settings, form_directory, form_schema, csv_file):
     task_id = build_csv.request.id
@@ -65,7 +88,7 @@ def build_csv(settings, form_directory, form_schema, csv_file):
             "-u " + settings['mysql.user'], "-p " + settings['mysql.password'], "-s " + form_schema, "-t maintable",
             "-m " + maps_path, "-o " + out_path, "-T " + temp_path, "-i"]
 
-    send_task_status_to_form(settings, task_id, "Denormalizing database")
+    send_task_status_to_form(settings, task_id, _("Denormalizing database"))
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()
     if p.returncode == 0:
@@ -73,28 +96,16 @@ def build_csv(settings, form_directory, form_schema, csv_file):
         out_path = os.path.join(out_path, *paths)
         files = glob.glob(out_path)
         if files:
-            # Join The files with JQ
-            args = ["jq", "-s", "."]
+            dataframe_array = []
             for file in files:
-                args.append(file)
-            send_task_status_to_form(settings, task_id, "Joining JSON files")
-            p = Popen(args, stdout=PIPE, stderr=PIPE)
-            stdout, stderr = p.communicate()
-            if p.returncode == 0:
-                uid = str(uuid.uuid4())
-                paths = ['tmp', uid + ".json"]
-                json_file = os.path.join(settings['repository.path'], *paths)
-                file = open(json_file, "w")
-                file.write(stdout.decode())
-                file.close()
-                # Convert the file to CSV
-                args = ["json2csv", json_file, csv_file]
-                send_task_status_to_form(settings, task_id, "Building CSV")
-                check_call(args)
-
-            else:
-                log.error("JQ error: " + stderr.decode('utf-8') + "-" + stdout.decode('utf-8') + ":" + " ".join(args))
-                raise JQError("JQ error: " + stderr.decode('utf-8') + "-" + stdout.decode('utf-8'))
+                with open(file) as json_file:
+                    data = json.load(json_file)
+                flat = flatten_json(data)
+                with_order = OrderedDict(flat)
+                temp = json_normalize(with_order)
+                dataframe_array.append(temp)
+            join = pd.concat(dataframe_array, sort=False)
+            join.to_csv(csv_file)
 
         else:
             raise EmptyFileError(_('The ODK form does not contain any submissions'))

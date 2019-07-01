@@ -129,7 +129,7 @@ class GenerateRepository(PrivateView):
                                 root = etree.fromstring(message)
                                 xml_duplicates = root.findall(".//variable")
                                 error_message = self._("The ODK has the following variables duplicated within "
-                                                       "the same repeat or outside a repeat: <br/>")
+                                                       "the same repeat or outside a repeat:") + "<br/>"
                                 if xml_duplicates:
                                     for aDuplicate in xml_duplicates:
                                         error_message = error_message + aDuplicate.text + "<br/>"
@@ -206,7 +206,7 @@ class GenerateRepository(PrivateView):
                                         yes_no_strings = None
                                     result_code, message = create_repository(self.request, project_id, form_id,
                                                                              odk_path, form_data["directory"],
-                                                                             primary_key, separation_file,
+                                                                             primary_key,
                                                                              default_language, other_languages,
                                                                              yes_no_strings)
                                     # -------------------------------------------------Stage 2 reply
@@ -336,7 +336,7 @@ class GenerateRepository(PrivateView):
 
                             result_code, message = create_repository(self.request, project_id, form_id, odk_path,
                                                                      form_data["directory"], primary_key,
-                                                                     separation_file, default_language, other_languages,
+                                                                     default_language, other_languages,
                                                                      yes_no_strings)
 
                             # -----------------------------------------------------------------------------Stage3 reply
@@ -461,7 +461,7 @@ class GenerateRepository(PrivateView):
                             yes_no_strings = None
 
                         result_code, message = create_repository(self.request, project_id, form_id, odk_path,
-                                                                 form_data["directory"], primary_key, separation_file,
+                                                                 form_data["directory"], primary_key,
                                                                  default_language, other_languages, yes_no_strings)
 
                         # --------------------------------------------------------------------------Stage 4 reply
@@ -585,7 +585,7 @@ class GenerateRepository(PrivateView):
                             yes_no_strings = None
 
                         result_code, message = create_repository(self.request, project_id, form_id, odk_path,
-                                                                 form_data["directory"], primary_key, separation_file,
+                                                                 form_data["directory"], primary_key,
                                                                  default_language, other_languages, yes_no_strings)
 
                         # ---------------------------------Stage5 Reply- -----------------------------------------------
@@ -709,7 +709,7 @@ class GenerateRepository(PrivateView):
                             yes_no_strings = None
 
                         result_code, message = create_repository(self.request, project_id, form_id, odk_path,
-                                                                 form_data["directory"], primary_key, separation_file,
+                                                                 form_data["directory"], primary_key,
                                                                  default_language, other_languages, yes_no_strings)
 
                         # ----------------------------------------Stage 6 Reply----------------------------

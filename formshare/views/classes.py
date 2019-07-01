@@ -435,17 +435,16 @@ class APIView(object):
         if self.api_key is not None:
             self.user = get_user_by_api_key(self.request, self.api_key)
             if self.user is None:
-                response = Response(status=401, body={'error': self.request.translate("This API key does not "
-                                                                                      "exist or is inactive.")})
+                response = Response(status=401, body={'error': self._("This API key does not exist or is inactive.")})
                 return response
 
             if self.request.method == "POST":
                 self.body = self.request.params.get('Body', None)
                 if self.body is None:
-                    response = Response(status=401, body={'error': self.request.translate("Body non-existent")})
+                    response = Response(status=401, body={'error': self._("Body non-existent")})
                     return response
         else:
-            response = Response(status=401, body={'error': self.request.translate("You need to specify an API key")})
+            response = Response(status=401, body={'error': self._("You need to specify an API key")})
             return response
 
         return self.process_view()

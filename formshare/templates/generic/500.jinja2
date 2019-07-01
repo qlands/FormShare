@@ -14,12 +14,12 @@
         <h3 class="font-bold">{{ _('Internal Server Error') }}</h3>
 
         <div class="error-desc">
-            {% block 500_message %}
-                {{ _('The server encountered an unexpected error and was not able to complete your request. Please send the error information to ') }} formshare_support@qlands.com
+            {% block b_500_message %}
+                {{ _('The server encountered an unexpected error and was not able to complete your request. Please report the error as an issue on ') }} https://github.com/qlands/FormShare
                 <textarea>The error goes here</textarea>
                 {{ _('We apologize for the inconvenience') }}.<br/>
                 {{ ('You can go back to main page:') }} <br/><a href="index.html" class="btn btn-primary m-t">{{ _('Home') }}</a>
-            {% endblock 500_message %}
+            {% endblock b_500_message %}
         </div>
     </div>
     {% jsresource request,'formshare','bootstrap' %}

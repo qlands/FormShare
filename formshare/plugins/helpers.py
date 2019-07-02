@@ -68,25 +68,27 @@ def humanize_date(date):
 
 
 @core_helper
-def readble_date(date):
+def readble_date(date, locale='en'):
     """
     Returns a readable date"
     :param date: Datetime
+    :param locale: Locale code
     :return: A readable date
     """
     ar = arrow.get(date)
-    return ar.format('dddd Do of MMMM, YYYY')
+    return ar.format('dddd Do of MMMM, YYYY', locale=locale)
 
 
 @core_helper
-def readble_date_with_time(date):
+def readble_date_with_time(date, locale='en'):
     """
     Returns a readable date"
     :param date: Datetime
+    :param locale: Locale code
     :return: A readable date with time
     """
     ar = arrow.get(date)
-    return ar.format('dddd Do of MMMM, YYYY. HH:mm:ss')
+    return ar.format('dddd Do of MMMM, YYYY. HH:mm:ss', locale=locale)
 
 
 @core_helper

@@ -31,6 +31,19 @@
 {#                            {% include 'dashboard/snippets/header_notifications.jinja2' %}#}
                         {% endif %}
                     {% endblock header_notifications %}
+
+                    {% block header_language %}
+                    <li>
+                        <div>
+                            Language:
+                            <select id="language">
+                                <option id="en" value="en">English</option>
+                                <option id="es" value="es">Español</option>
+                            </select>
+                        </div>
+                    </li>
+                    {% endblock header_language %}
+
                     {% block header_logout %}
                         {% if activeUser != None %}
                             <li>

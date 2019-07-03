@@ -15,7 +15,7 @@ def generate_media_zip_file(request, user, project, form, odk_dir, form_director
     repo_dir = request.registry.settings['repository.path']
     media_file = os.path.join(repo_dir, *paths)
 
-    task = build_media_zip.apply_async((settings, odk_dir, form_directory, form_schema, media_file, primary_key),
-                                       countdown=2)
+    task = build_media_zip.apply_async((settings, odk_dir, form_directory, form_schema, media_file, primary_key,
+                                        request.locale_name), countdown=2)
     register_product_instance(request, user, project, form, 'media_export', task.id, media_file,
                               'application/zip', False)

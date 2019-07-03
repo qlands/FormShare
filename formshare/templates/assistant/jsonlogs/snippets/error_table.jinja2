@@ -1,5 +1,5 @@
 <tr>
-    <td width="70%"><span title="{{ error.log_id }}">...-{{ error.log_short }}</span> <button class="btn btn-mini btn-default clipboard" data-clipboard-text="{{ error.log_id }}" title="Copy submission to clipboard"><i class="fa fa-clipboard"></i></button><br/>by {{ error.enum_name }}<br/>
+    <td width="70%"><span title="{{ error.log_id }}">...-{{ error.log_short }}</span> <button class="btn btn-mini btn-default clipboard" data-clipboard-text="{{ error.log_id }}" title="{{ _('Copy submission to clipboard') }}"><i class="fa fa-clipboard"></i></button><br/>by {{ error.enum_name }}<br/>
         <span title="{{ _('Submission date') }}" class="date" style="font-size: 10px; color: lightgray">{{  error.log_dtime }}</span>
         {% if error.lastentry.log_notes != None %}
             <textarea hidden id="notes-{{ error.log_short }}">{{ error.lastentry.log_notes }}</textarea>

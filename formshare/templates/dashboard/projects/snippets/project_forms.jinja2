@@ -20,9 +20,9 @@
                 <div class="row">
                     {% block project_forms_content_heading %}
                         <div class="col-md-8">
-                            Total: {{ forms|length }}
+                            {{ _('Total') }}: {{ forms|length }}
                             {% if forms|length > 0 %}
-                                <br/>Active: {{ activeforms }}. Inactive: {{ inactiveforms }}
+                                <br/>{{ _('Active') }}: {{ activeforms }}. {{ _('Inactive') }}: {{ inactiveforms }}
                             {% endif %}
                         </div>
                         <div class="col-md-4">

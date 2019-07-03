@@ -44,9 +44,9 @@
         <div class="ibox-content">
             {% if diff != None %}
                 {% if pushed != 'True' %}
-                    <h3>The following are the changes staged in revision {{ revisionid }} to be committed into the repository</h3>
+                    <h3>{{ _('The following are the changes staged in revision') }} {{ revisionid }} {{ _('to be committed into the repository') }}</h3>
                 {% else %}
-                    <h3>The following are the changes staged in revision {{ revisionid }} that were pushed into the repository</h3>
+                    <h3>{{ _('The following are the changes staged in revision') }} {{ revisionid }} {{ _('that were pushed into the repository') }}</h3>
                 {% endif %}
                 <hr>
                 <div id="diff">
@@ -57,7 +57,7 @@
         <span class="d2h-icon-wrapper"><svg aria-hidden="true" class="d2h-icon" height="16" version="1.1" viewBox="0 0 12 16" width="12">
         <path d="M6 5H2v-1h4v1zM2 8h7v-1H2v1z m0 2h7v-1H2v1z m0 2h7v-1H2v1z m10-7.5v9.5c0 0.55-0.45 1-1 1H1c-0.55 0-1-0.45-1-1V2c0-0.55 0.45-1 1-1h7.5l3.5 3.5z m-1 0.5L8 2H1v12h10V5z"></path>
     </svg></span>
-        <span class="d2h-file-name">Inital version → {{ revisionid }}</span>
+        <span class="d2h-file-name">{{ _('Initial version') }} → {{ revisionid }}</span>
         </span>
                             </div>
                             {{ diff }}

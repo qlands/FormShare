@@ -53,9 +53,9 @@
                 </div>
             {% endif %}
             {% if error_summary|length == 0 %}
-                You are comparing submission <b>{{ submissiona }}</b> made on {{ data.log_dtime }} by {{ data.enum_name }}.
+                {{ _('You are comparing submission') }} <b>{{ submissiona }}</b> {{ _('made on') }} {{ data.log_dtime }} {{ _('by') }} {{ data.enum_name }}.
                 <hr>
-                Against submission <b>{{ submissionb }}</b> made on {{ compData.submission_dtime }} by {{ compData.enum_name }} {% if compData.submission_status == 0 %} which <b>is stored</b> in the repository. {% else %} which <b>is NOT stored</b> in the repository. {% endif %}
+                {{ _('Against submission') }} <b>{{ submissionb }}</b> {{ _('made on') }} {{ compData.submission_dtime }} {{ _('by') }} {{ compData.enum_name }} {% if compData.submission_status == 0 %} {{ _('which') }} <b>{{ _('is stored') }}</b> {{ _('in the repository') }}. {% else %} {{ _('which') }} <b>{{ _('is NOT stored') }}</b> {{ _('in the repository') }}. {% endif %}
                 <hr>
                 <div id="diff">
                     <div class="d2h-wrapper">

@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-07-01 17:02-0600\n"
-"PO-Revision-Date: 2019-07-01 17:39-0600\n"
+"POT-Creation-Date: 2019-07-02 23:36-0600\n"
+"PO-Revision-Date: 2019-07-02 23:42-0600\n"
 "Last-Translator: Carlos Quiros <cquiros@qlands.com>\n"
 "Language: es\n"
 "Language-Team: English <kde-i18n-doc@kde.org>\n"
@@ -157,18 +157,18 @@ msgid ""
 " an raise an issue so the technical team can inspect your ODK and find a "
 "solution."
 msgstr ""
-"El ODK que usted acaba de subir tiene un estatuto de busqueda en la columna"
-" \"apperance\"  con una sintaxis que no es reconocida por FormShare Por favor"
-" vaya a {} y reporte el problema para que el grupo de técnicos inspeccione su"
-" ODK y le de una solución."
+"El ODK que usted acaba de subir tiene un estatuto de busqueda en la "
+"columna \"apperance\"  con una sintaxis que no es reconocida por "
+"FormShare Por favor vaya a {} y reporte el problema para que el grupo de "
+"técnicos inspeccione su ODK y le de una solución."
 
 #: formshare/processes/odk/api.py:300
 msgid ""
 "FormShare manage your data in a better way but by doing so it has more "
 "restrictions."
 msgstr ""
-"Formshare maneja sus datos de una mejor forma sin embargo posee más"
-" restricciones."
+"Formshare maneja sus datos de una mejor forma sin embargo posee más "
+"restricciones."
 
 #: formshare/processes/odk/api.py:302
 msgid "The following tables have more than 64 selects: "
@@ -192,9 +192,9 @@ msgid ""
 "We tent to organize our ODK forms in sections with questions around a "
 "topic. For example: \"livestock inputs\" or \"crops sales\"."
 msgstr ""
-"Usualmente organizamos nuestros formularios ODK en secciones con preguntas"
-" relacionadas a algo. Por ejemplo: \"alimentación animal\" o \"ventas por"
-" cultivos\""
+"Usualmente organizamos nuestros formularios ODK en secciones con "
+"preguntas relacionadas a algo. Por ejemplo: \"alimentación animal\" o "
+"\"ventas por cultivos\""
 
 #: formshare/processes/odk/api.py:313
 msgid ""
@@ -202,9 +202,9 @@ msgid ""
 "questions that must be repeated in sections with type = \"begin/end "
 "repeat.\""
 msgstr ""
-"Estas secciones poseen en ODK type = \"begin/end group\". También organizamos"
-" las preguntas que se tienen que repetir en secciones con \"begin/end "
-"repeat.\""
+"Estas secciones poseen en ODK type = \"begin/end group\". También "
+"organizamos las preguntas que se tienen que repetir en secciones con "
+"\"begin/end repeat.\""
 
 #: formshare/processes/odk/api.py:315
 msgid ""
@@ -215,14 +215,14 @@ msgid ""
 " have many selects then the \"maintable\" could potentially have more "
 "than 64 selects. FormShare can only handle 64 selects per table."
 msgstr ""
-"FormShare almacena repeats en tablas separadas (como las hojas en un Excel)"
-" sin embargo los grupos (groups) no. FormShare almacena todos los elementos"
-" (preguntas, notas, cálculos, etc.) fuera de repeats dentro de una tabla"
-" llamada \"maintable\". Por esta razón \"maintable\" usualmente posee muchos"
-" elementos y si su formulario ODK posee muchas opciones de selección"
-" (selects) entonces la tabla \"maintable\" podría llegar a tener más de 64"
-" opciones de selección. FormShare solo puede manejar 64 opciones de selección"
-" por tabla."
+"FormShare almacena repeats en tablas separadas (como las hojas en un "
+"Excel) sin embargo los grupos (groups) no. FormShare almacena todos los "
+"elementos (preguntas, notas, cálculos, etc.) fuera de repeats dentro de "
+"una tabla llamada \"maintable\". Por esta razón \"maintable\" usualmente "
+"posee muchos elementos y si su formulario ODK posee muchas opciones de "
+"selección (selects) entonces la tabla \"maintable\" podría llegar a tener"
+" más de 64 opciones de selección. FormShare solo puede manejar 64 "
+"opciones de selección por tabla."
 
 #: formshare/processes/odk/api.py:321
 msgid ""
@@ -233,20 +233,20 @@ msgid ""
 " your items will be organized in different sheets each representing a "
 "table."
 msgstr ""
-"Usted puede sobrepasar ésta restricción creando grupos de elementos dentro de"
-" repeats PERO CON repeat_count = 1. Un repeat con repeat_count = 1 se va ha"
-" comportar de la misma forma de un grupo pero FormShare creará una tabla para"
-" almacenar todos sus elementos, Eventualmente si usted exportara los datos a"
-" Excel los elementos de su formulario estarán organizados en diferentes"
-" páginas cada una representando una tabla."
+"Usted puede sobrepasar ésta restricción creando grupos de elementos "
+"dentro de repeats PERO CON repeat_count = 1. Un repeat con repeat_count ="
+" 1 se va ha comportar de la misma forma de un grupo pero FormShare creará"
+" una tabla para almacenar todos sus elementos, Eventualmente si usted "
+"exportara los datos a Excel los elementos de su formulario estarán "
+"organizados en diferentes páginas cada una representando una tabla."
 
 #: formshare/processes/odk/api.py:326
 msgid ""
 "Please edit your ODK XLSX/XLS file, group several items inside repeats "
 "with repeat_count = 1 and try to upload the form again."
 msgstr ""
-"Por favor edite su archivo XLSX/XLS, agrupe varios elementos dentro de"
-" repeats CON repeat_count = 1 e intente subir de nuevo el formulario."
+"Por favor edite su archivo XLSX/XLS, agrupe varios elementos dentro de "
+"repeats CON repeat_count = 1 e intente subir de nuevo el formulario."
 
 #: formshare/processes/odk/api.py:360 formshare/processes/odk/api.py:520
 msgid "Invalid file type"
@@ -261,14 +261,14 @@ msgid ""
 "The form ID has especial characters. FormShare only allows letters, "
 "numbers and underscores(_)"
 msgstr ""
-"El identificador del formulario posee caracteres inválidos. FormShare solo"
-" permite letras, números y guion bajo"
+"El identificador del formulario posee caracteres inválidos. FormShare "
+"solo permite letras, números y guion bajo"
 
 #: formshare/processes/odk/api.py:484
 msgid "Cannot find XForm ID. Please post this ODK form in an issue on "
 msgstr ""
-"No se pudo encontrar el identificador del formulario. Por favor reporte este"
-" problema en"
+"No se pudo encontrar el identificador del formulario. Por favor reporte "
+"este problema en"
 
 #: formshare/processes/odk/api.py:641
 msgid "The form does not exists in this project"
@@ -279,15 +279,15 @@ msgid ""
 "The \"form_id\" of the current form does not match the \"form_id\" of the"
 " one you uploaded. You cannot update a form with another form"
 msgstr ""
-"El identificador del formulario no calza con el identificador del formulario"
-" que acaba de subir. Usted no puede actualizar un formulario con otro"
-" completamente distinto"
+"El identificador del formulario no calza con el identificador del "
+"formulario que acaba de subir. Usted no puede actualizar un formulario "
+"con otro completamente distinto"
 
 #: formshare/processes/odk/api.py:649
 msgid "Cannot find XForm ID. Please post the form as an issue on "
 msgstr ""
-"No se pudo encontrar el identificador del formulario. Por favor reporte este"
-" problema en"
+"No se pudo encontrar el identificador del formulario. Por favor reporte "
+"este problema en"
 
 #: formshare/processes/odk/processes.py:492
 #: formshare/processes/odk/processes.py:506
@@ -302,31 +302,31 @@ msgstr "Nombre de sección"
 msgid " already exist"
 msgstr "ya existe"
 
-#: formshare/processes/submission/api.py:89
+#: formshare/processes/submission/api.py:105
 msgid "There are no media files to download"
 msgstr "No hay multimedios para descargar"
 
-#: formshare/processes/submission/api.py:141
+#: formshare/processes/submission/api.py:157
 msgid "There are not submissions to download"
 msgstr "No hay envíos para descargar"
 
-#: formshare/processes/submission/api.py:165
-#: formshare/processes/submission/api.py:188 formshare/products/products.py:76
+#: formshare/processes/submission/api.py:181
+#: formshare/processes/submission/api.py:204 formshare/products/products.py:76
 #: formshare/products/products.py:84
 msgid "Without description"
 msgstr "Sin descripción"
 
-#: formshare/processes/submission/api.py:433
-#: formshare/processes/submission/api.py:502
+#: formshare/processes/submission/api.py:449
+#: formshare/processes/submission/api.py:518
 msgid "AJAX Data error. Report this error as an issue on "
 msgstr "Error interno en AJAX. Reporte éste problema en"
 
-#: formshare/processes/submission/api.py:533
-#: formshare/processes/submission/api.py:536
+#: formshare/processes/submission/api.py:549
+#: formshare/processes/submission/api.py:552
 msgid "Cannot update value. Check the valid values in lookup table"
 msgstr ""
-"No se pudo actualizar el valor. Revise si el valor está en la tabla de"
-" búsqueda asociada"
+"No se pudo actualizar el valor. Revise si el valor está en la tabla de "
+"búsqueda asociada"
 
 #: formshare/products/products.py:65
 #: formshare/templates/dashboard/projects/forms/import_data/import_form.jinja2:4
@@ -354,56 +354,65 @@ msgstr "KML"
 msgid "CSV"
 msgstr "CSV"
 
-#: formshare/products/export/csv/celery_task.py:27
-#: formshare/products/export/csv/celery_task.py:111
-msgid "The ODK form does not contain any submissions"
-msgstr "Este formulario ODK no contiene envíos"
-
-#: formshare/products/export/csv/celery_task.py:36
-msgid "Error calling JQ"
-msgstr "Error al llamar el programa JQ."
-
-#: formshare/products/export/csv/celery_task.py:45
-msgid "Error calling MySQLDenormalize"
-msgstr "Error interno al llamar el programa MySQLDenormalize"
-
-#: formshare/products/export/csv/celery_task.py:91
+#: formshare/products/export/csv/celery_task.py:105
 msgid "Denormalizing database"
 msgstr "Convirtiendo la base de datos a JSON"
 
-#: formshare/products/export/kml/celery_task.py:21
-#: formshare/products/export/kml/celery_task.py:62
-msgid "The ODK form does not contain any submissions with GPS coordinates"
-msgstr "Este formulario ODK no contiene ningún envío con coordenadas GPS"
+#: formshare/products/export/csv/celery_task.py:114
+msgid "Calculating the number of columns"
+msgstr "Calculando el número de columnas"
 
-#: formshare/products/export/kml/celery_task.py:46
-#: formshare/products/export/media/celery_task.py:52
-#: formshare/products/fs1import/celery_task.py:182
+#: formshare/products/export/csv/celery_task.py:151
+msgid "Flattening the JSON files"
+msgstr "Aplanando los archivos JSON"
+
+#: formshare/products/export/csv/celery_task.py:162
+msgid "Concatenating submissions"
+msgstr "Uniendo los envíos"
+
+#: formshare/products/export/csv/celery_task.py:165
+msgid "Saving CSV"
+msgstr "Salvando el CSV"
+
+#: formshare/products/export/csv/celery_task.py:169
+msgid "Error while creating the dummy JSON file"
+msgstr "Error al crear el archivo de datos temporal JSON"
+
+#: formshare/products/export/csv/celery_task.py:172
+msgid "The ODK form does not contain any submissions"
+msgstr "Este formulario ODK no contiene envíos"
+
+#: formshare/products/export/kml/celery_task.py:51
+#: formshare/products/export/media/celery_task.py:57
+#: formshare/products/fs1import/celery_task.py:187
 msgid "25% processed"
 msgstr "25% procesado"
 
-#: formshare/products/export/kml/celery_task.py:50
-#: formshare/products/export/media/celery_task.py:56
-#: formshare/products/fs1import/celery_task.py:186
+#: formshare/products/export/kml/celery_task.py:55
+#: formshare/products/export/media/celery_task.py:61
+#: formshare/products/fs1import/celery_task.py:191
 msgid "50% processed"
 msgstr "50% procesado"
 
-#: formshare/products/export/kml/celery_task.py:54
-#: formshare/products/export/media/celery_task.py:60
-#: formshare/products/fs1import/celery_task.py:190
+#: formshare/products/export/kml/celery_task.py:59
+#: formshare/products/export/media/celery_task.py:65
+#: formshare/products/fs1import/celery_task.py:195
 msgid "75% processed"
 msgstr "75% procesado"
 
-#: formshare/products/export/media/celery_task.py:26
-#: formshare/products/export/media/celery_task.py:93
-msgid "The ODK form does not contain any media"
-msgstr "Este formulario ODK no contiene multimedios"
+#: formshare/products/export/kml/celery_task.py:73
+msgid "The ODK form does not contain any submissions with GPS coordinates"
+msgstr "Este formulario ODK no contiene ningún envío con coordenadas GPS"
 
-#: formshare/products/export/media/celery_task.py:90
+#: formshare/products/export/media/celery_task.py:95
 msgid "Creating zip file"
 msgstr "Creando archivo Zip"
 
-#: formshare/products/export/xlsx/celery_task.py:21
+#: formshare/products/export/media/celery_task.py:98
+msgid "The ODK form does not contain any media"
+msgstr "Este formulario ODK no contiene multimedios"
+
+#: formshare/products/export/xlsx/celery_task.py:17
 msgid ""
 "Unknown error while creating the XLSX. Sorry about this. Please report "
 "this error as an issue on "
@@ -411,7 +420,7 @@ msgstr ""
 "Error desconocido al crear el archivo XLSX. Lamentamos este problema. Por"
 " favor reporte este error en"
 
-#: formshare/products/export/xlsx/celery_task.py:31
+#: formshare/products/export/xlsx/celery_task.py:27
 msgid ""
 "A worksheet name has been repeated. Excel only allow 30 characters in the"
 " worksheet name. You can fix this by editing the dictionary and change "
@@ -422,12 +431,12 @@ msgstr ""
 "editando el diccionario y cambiando las descripciones de las tablas a un "
 "máximo  de 30 caracteres."
 
-#: formshare/products/repository/celery_task.py:52
+#: formshare/products/repository/celery_task.py:49
 msgid "Creating new tables..."
 msgstr "Creado las tablas"
 
-#: formshare/products/repository/celery_task.py:71
-#: formshare/products/repository/celery_task.py:105
+#: formshare/products/repository/celery_task.py:68
+#: formshare/products/repository/celery_task.py:102
 msgid "Inserting lookup values..."
 msgstr "Insertando los datos en las tablas de vistas"
 
@@ -472,16 +481,22 @@ msgstr "Formularios del asistente"
 msgid "Forms that you assists with in project "
 msgstr "Formularios a los que usted asiste en el proyecto"
 
+#: formshare/templates/assistant/clean/clean_data.jinja2:179
+#: formshare/templates/assistant/index.jinja2:41
+#: formshare/templates/assistant/index.jinja2:51
+#: formshare/templates/assistant/jsonlogs/loglist.jinja2:114
+#: formshare/templates/dashboard/projects/forms/snippets/product_error.jinja2:6
+#: formshare/templates/dashboard/projects/forms/snippets/product_error.jinja2:14
+msgid "Close"
+msgstr "Cerrar"
+
 #: formshare/templates/assistant/index.jinja2:42
 msgid "QR Code"
 msgstr "Imagen QR"
 
-#: formshare/templates/assistant/clean/clean_data.jinja2:179
-#: formshare/templates/assistant/index.jinja2:51
-#: formshare/templates/assistant/jsonlogs/loglist.jinja2:114
-#: formshare/templates/dashboard/projects/forms/snippets/product_error.jinja2:14
-msgid "Close"
-msgstr "Cerrar"
+#: formshare/templates/assistant/index.jinja2:43
+msgid "Use this QR Code to configure ODK collect"
+msgstr "Use ésta imagen QR para configurar ODK Collect"
 
 #: formshare/templates/assistant/page.jinja2:60
 #: formshare/templates/assistant/page.jinja2:89
@@ -491,6 +506,11 @@ msgstr "Cerrar"
 msgid "Change password"
 msgstr "Cambiar la palabra de acceso"
 
+#: formshare/templates/assistant/page.jinja2:61
+#: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:106
+msgid "Change password of"
+msgstr "Cambiar la palabra clave de"
+
 #: formshare/templates/assistant/page.jinja2:68
 msgid "Old password"
 msgstr "Antigua palabra de acceso"
@@ -498,6 +518,7 @@ msgstr "Antigua palabra de acceso"
 #: formshare/templates/assistant/page.jinja2:74
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:114
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2:29
+#: formshare/templates/generic/assistant_login.jinja2:18
 #: formshare/templates/generic/login.jinja2:40
 #: formshare/templates/generic/register.jinja2:22
 msgid "Password"
@@ -522,6 +543,8 @@ msgstr "Confirmación"
 #: formshare/templates/dashboard/projects/forms/snippets/edit_assistant.jinja2:31
 #: formshare/templates/dashboard/projects/forms/snippets/edit_group.jinja2:29
 #: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:123
+#: formshare/templates/dashboard/projects/forms/snippets/product_item.jinja2:13
+#: formshare/templates/dashboard/projects/forms/snippets/product_item.jinja2:15
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:30
 #: formshare/templates/dashboard/projects/forms/snippets/upload_file.jinja2:29
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:24
@@ -545,10 +568,22 @@ msgstr "Limpiar"
 msgid "Table"
 msgstr "Tabla"
 
+#: formshare/templates/assistant/clean/clean_data.jinja2:62
+msgid "Load table"
+msgstr "Cargar tabla"
+
 #: formshare/templates/assistant/clean/clean_data.jinja2:71
 #: formshare/templates/dashboard/projects/forms/dictionary/snippets/table_item.jinja2:8
 msgid "Fields"
 msgstr "Campos"
+
+#: formshare/templates/assistant/clean/clean_data.jinja2:79
+msgid "Load fields"
+msgstr "Cargar campos"
+
+#: formshare/templates/assistant/clean/clean_data.jinja2:90
+msgid "Please load a table"
+msgstr "Por favor cargue una tabla"
 
 #: formshare/templates/assistant/clean/clean_data.jinja2:170
 msgid "Edit selected row"
@@ -662,6 +697,29 @@ msgstr "Archivo JSON"
 msgid "Compare revisions "
 msgstr "Compare versiones"
 
+#: formshare/templates/assistant/jsonlogs/compare.jinja2:48
+#: formshare/templates/assistant/jsonlogs/compare_submissions.jinja2:56
+msgid "You are comparing submission"
+msgstr "Usted esta comparando el envió"
+
+#: formshare/templates/assistant/jsonlogs/compare.jinja2:48
+#: formshare/templates/assistant/jsonlogs/compare_submissions.jinja2:56
+#: formshare/templates/assistant/jsonlogs/compare_submissions.jinja2:58
+msgid "made on"
+msgstr "hecho el"
+
+#: formshare/templates/assistant/jsonlogs/compare.jinja2:48
+#: formshare/templates/assistant/jsonlogs/compare_submissions.jinja2:56
+#: formshare/templates/assistant/jsonlogs/compare_submissions.jinja2:58
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:13
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:68
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:72
+#: formshare/templates/assistant/snippets/project_form_odk_item.jinja2:11
+#: formshare/templates/dashboard/projects/snippets/project_details.jinja2:261
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:14
+msgid "by"
+msgstr "por"
+
 #: formshare/templates/assistant/jsonlogs/compare.jinja2:51
 #: formshare/templates/assistant/jsonlogs/compare_submissions.jinja2:47
 msgid "The form contains invalid entries:"
@@ -691,6 +749,26 @@ msgstr "Comparar envío"
 #: formshare/templates/assistant/jsonlogs/review.jinja2:5
 msgid "Compare two submissions"
 msgstr "Comparar dos envíos"
+
+#: formshare/templates/assistant/jsonlogs/compare_submissions.jinja2:58
+msgid "Against submission"
+msgstr "Contra el envió"
+
+#: formshare/templates/assistant/jsonlogs/compare_submissions.jinja2:58
+msgid "which"
+msgstr "el cual"
+
+#: formshare/templates/assistant/jsonlogs/compare_submissions.jinja2:58
+msgid "is stored"
+msgstr "esta almacenado"
+
+#: formshare/templates/assistant/jsonlogs/compare_submissions.jinja2:58
+msgid "in the repository"
+msgstr "en el repositorio"
+
+#: formshare/templates/assistant/jsonlogs/compare_submissions.jinja2:58
+msgid "is NOT stored"
+msgstr "NO esta almacenado"
 
 #: formshare/templates/assistant/jsonlogs/disregard.jinja2:5
 #: formshare/templates/assistant/jsonlogs/disregard.jinja2:26
@@ -746,11 +824,14 @@ msgid "Error"
 msgstr "Error"
 
 #: formshare/templates/assistant/jsonlogs/loglist.jinja2:71
+#: formshare/templates/dashboard/projects/assistant_groups/group_list.jinja2:63
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:74
 msgid "Status"
 msgstr "Estado"
 
 #: formshare/templates/assistant/jsonlogs/loglist.jinja2:76
+#: formshare/templates/dashboard/projects/assistant_groups/group_list.jinja2:68
+#: formshare/templates/dashboard/projects/assistant_groups/members/member_list.jinja2:62
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:79
 msgid "Actions"
 msgstr "Acciones"
@@ -778,6 +859,24 @@ msgstr "Si, continue"
 msgid "Oops, cancel!"
 msgstr "Opps, cancelar!"
 
+#: formshare/templates/assistant/jsonlogs/review.jinja2:47
+#: formshare/templates/assistant/jsonlogs/review.jinja2:49
+msgid "The following are the changes staged in revision"
+msgstr "Los siguientes son los cambios preparados en revisión"
+
+#: formshare/templates/assistant/jsonlogs/review.jinja2:47
+msgid "to be committed into the repository"
+msgstr "para ser ingresados dentro del repositorio"
+
+#: formshare/templates/assistant/jsonlogs/review.jinja2:49
+msgid "that were pushed into the repository"
+msgstr "que fueron ingresados al repositorio"
+
+#: formshare/templates/assistant/jsonlogs/review.jinja2:60
+#| msgid "Inital version"
+msgid "Initial version"
+msgstr "Versión inicial"
+
 #: formshare/templates/assistant/jsonlogs/snippets/brdcrbs_cancel_disregard.jinja2:8
 #: formshare/templates/assistant/jsonlogs/snippets/brdcrbs_checkin.jinja2:8
 #: formshare/templates/assistant/jsonlogs/snippets/brdcrbs_compare.jinja2:8
@@ -804,6 +903,11 @@ msgstr "Errores en"
 #: formshare/templates/assistant/jsonlogs/snippets/brdcrbs_review.jinja2:11
 msgid "View revision"
 msgstr "Ver revisión"
+
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:13
+#: formshare/templates/assistant/jsonlogs/snippets/error_table.jinja2:2
+msgid "Copy submission to clipboard"
+msgstr "Copiar el envió al portapapeles"
 
 #: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:38
 #: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:64
@@ -842,6 +946,10 @@ msgstr "Fecha de error"
 #: formshare/templates/assistant/jsonlogs/snippets/error_table.jinja2:40
 msgid "canceled disregard"
 msgstr "Cancelar ignorar"
+
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:56
+msgid "Checked out by"
+msgstr "En revisión por"
 
 #: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:57
 #: formshare/templates/assistant/jsonlogs/snippets/error_table.jinja2:47
@@ -981,7 +1089,7 @@ msgid "Change my password"
 msgstr "Cambiar mi palabra clave"
 
 #: formshare/templates/assistant/snippets/header.jinja2:51
-#: formshare/templates/dashboard/snippets/header.jinja2:38
+#: formshare/templates/dashboard/snippets/header.jinja2:51
 msgid "Sign out"
 msgstr "Desconectar"
 
@@ -995,22 +1103,44 @@ msgstr "Subido el"
 msgid "Last submission"
 msgstr "Ultimo envío"
 
-#: formshare/templates/assistant/snippets/project_form_odk_item.jinja2:11
-#: formshare/templates/dashboard/projects/snippets/project_details.jinja2:261
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:14
-msgid "by"
-msgstr "por"
-
 #: formshare/templates/assistant/snippets/project_form_odk_item.jinja2:13
 #: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:38
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:16
 #: formshare/templates/dashboard/projects/snippets/project_item.jinja2:16
 msgid "Without submissions"
 msgstr "Sin envíos"
+
+#: formshare/templates/assistant/snippets/project_form_odk_item.jinja2:20
+#: formshare/templates/assistant/snippets/project_form_odk_item.jinja2:24
+#: formshare/templates/assistant/snippets/project_form_odk_item.jinja2:26
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:24
+msgid "in database"
+msgstr "en la base de datos"
+
+#: formshare/templates/assistant/snippets/project_form_odk_item.jinja2:20
+#: formshare/templates/assistant/snippets/project_form_odk_item.jinja2:24
+#: formshare/templates/assistant/snippets/project_form_odk_item.jinja2:26
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:24
+msgid "in error logs"
+msgstr "en el registro de errores"
+
+#: formshare/templates/assistant/snippets/project_form_odk_item.jinja2:20
+#: formshare/templates/assistant/snippets/project_form_odk_item.jinja2:24
+#: formshare/templates/assistant/snippets/project_form_odk_item.jinja2:26
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:24
+msgid "with errors"
+msgstr "con error"
 
 #: formshare/templates/assistant/snippets/project_form_odk_item.jinja2:24
 #: formshare/templates/assistant/snippets/project_form_odk_item.jinja2:26
 msgid "My submissions"
 msgstr "Mis envíos"
+
+#: formshare/templates/assistant/snippets/project_form_odk_item.jinja2:24
+#: formshare/templates/assistant/snippets/project_form_odk_item.jinja2:26
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:24
+msgid "submissions"
+msgstr "envíos"
 
 #: formshare/templates/assistant/snippets/project_form_odk_item.jinja2:31
 msgid "Show configuration QR"
@@ -1141,6 +1271,7 @@ msgid "Edit Profile"
 msgstr "Editar perfil"
 
 #: formshare/templates/dashboard/profile/profile_edit.jinja2:33
+#: formshare/templates/dashboard/projects/assistant_groups/members/member_list.jinja2:52
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:59
 #: formshare/templates/dashboard/projects/forms/snippets/edit_form.jinja2:5
 #: formshare/templates/dashboard/projects/snippets/project_form.jinja2:10
@@ -1192,18 +1323,86 @@ msgstr "Editar mi perfil"
 msgid "Collaborations"
 msgstr "Colaboraciones"
 
+#: formshare/templates/dashboard/profile/snippets/profile_head.jinja2:23
+#: formshare/templates/dashboard/projects/assistant_groups/members/member_list.jinja2:57
+msgid "Joined"
+msgstr "Se unió el"
+
+#: formshare/templates/dashboard/profile/snippets/profile_head.jinja2:28
+msgid "API key"
+msgstr "Llave API"
+
 #: formshare/templates/dashboard/profile/snippets/profile_head.jinja2:29
 #: formshare/templates/dashboard/projects/snippets/project_details.jinja2:35
 msgid "Copy to clipboard"
 msgstr "Copiar al portapapeles"
 
+#: formshare/templates/dashboard/profile/snippets/profile_head.jinja2:33
+#: formshare/templates/dashboard/projects/collaborators/collaborator_list.jinja2:4
+#: formshare/templates/dashboard/projects/collaborators/collaborator_list.jinja2:35
+#: formshare/templates/dashboard/projects/collaborators/snippets/brdcrbs_colbrtsadd.jinja2:14
+#: formshare/templates/dashboard/projects/collaborators/snippets/brdcrbs_colbrtslist.jinja2:14
+#: formshare/templates/dashboard/snippets/navbar.jinja2:60
+msgid "Collaborators"
+msgstr "Colaboradores"
+
+#: formshare/templates/dashboard/profile/snippets/profile_head.jinja2:41
+#: formshare/templates/dashboard/projects/assistant_groups/members/snippets/brdcrbs_memlist.jinja2:8
+#: formshare/templates/dashboard/projects/assistant_groups/snippets/brdcrbs_groupadd.jinja2:8
+#: formshare/templates/dashboard/projects/assistant_groups/snippets/brdcrbs_groupedit.jinja2:8
+#: formshare/templates/dashboard/projects/assistant_groups/snippets/brdcrbs_grplist.jinja2:8
+#: formshare/templates/dashboard/projects/assistants/snippets/brdcrbs_assistadd.jinja2:8
+#: formshare/templates/dashboard/projects/assistants/snippets/brdcrbs_assistedit.jinja2:8
+#: formshare/templates/dashboard/projects/assistants/snippets/brdcrbs_assistlist.jinja2:8
+#: formshare/templates/dashboard/projects/collaborators/snippets/brdcrbs_colbrtsadd.jinja2:8
+#: formshare/templates/dashboard/projects/collaborators/snippets/brdcrbs_colbrtslist.jinja2:8
+#: formshare/templates/dashboard/projects/forms/dictionary/snippets/brdcrbs_fields.jinja2:8
+#: formshare/templates/dashboard/projects/forms/dictionary/snippets/brdcrbs_tables.jinja2:8
+#: formshare/templates/dashboard/projects/forms/import_data/snippets/brdcrbs_import.jinja2:8
+#: formshare/templates/dashboard/projects/forms/snippets/brdcrbs_frmdtls.jinja2:8
+#: formshare/templates/dashboard/projects/forms/snippets/brdcrbs_frmedit.jinja2:8
+#: formshare/templates/dashboard/projects/forms/submissions/snippets/brdcrbs_submissions.jinja2:8
+#: formshare/templates/dashboard/projects/project_list.jinja2:4
+#: formshare/templates/dashboard/projects/repository/snippets/brdcrbs_edit_group.jinja2:8
+#: formshare/templates/dashboard/projects/repository/snippets/brdcrbs_new_group.jinja2:8
+#: formshare/templates/dashboard/projects/repository/snippets/brdcrbs_repository.jinja2:8
+#: formshare/templates/dashboard/projects/repository/snippets/brdcrbs_separation.jinja2:8
+#: formshare/templates/dashboard/projects/snippets/brdcrbs_prjadd.jinja2:8
+#: formshare/templates/dashboard/projects/snippets/brdcrbs_prjdtls.jinja2:8
+#: formshare/templates/dashboard/projects/snippets/brdcrbs_prjedit.jinja2:8
+#: formshare/templates/dashboard/projects/snippets/brdcrbs_prjlist.jinja2:8
+#: formshare/templates/dashboard/projects/snippets/project_tab.jinja2:4
+#: formshare/templates/dashboard/snippets/navbar.jinja2:51
+msgid "Projects"
+msgstr "Proyectos"
+
+#: formshare/templates/dashboard/profile/snippets/profile_head.jinja2:45
+msgid "Last project"
+msgstr "Ultimo proyecto"
+
 #: formshare/templates/dashboard/profile/snippets/profile_head.jinja2:46
 msgid "without projects"
 msgstr "sin proyectos"
 
+#: formshare/templates/dashboard/profile/snippets/profile_head.jinja2:49
+#: formshare/templates/dashboard/projects/forms/snippets/brdcrbs_frmdtls.jinja2:2
+#: formshare/templates/dashboard/projects/snippets/no_forms_tab.jinja2:3
+#: formshare/templates/dashboard/projects/snippets/project_details.jinja2:232
+#: formshare/templates/dashboard/projects/snippets/project_forms.jinja2:4
+msgid "Forms"
+msgstr "Formularios"
+
 #: formshare/templates/dashboard/profile/snippets/social_tab.jinja2:4
 msgid "Social links"
 msgstr "Vínculos sociales"
+
+#: formshare/templates/dashboard/profile/snippets/social_tab.jinja2:27
+#: formshare/templates/dashboard/profile/snippets/social_tab.jinja2:29
+#: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:64
+#: formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2:16
+#: formshare/templates/generic/register.jinja2:16
+msgid "Email"
+msgstr "Correo electrónico"
 
 #: formshare/templates/dashboard/profile/snippets/timeline_tab.jinja2:4
 msgid "Activity"
@@ -1253,38 +1452,10 @@ msgstr "Está seguro de que quiere borrar"
 
 #: formshare/templates/dashboard/projects/project_edit.jinja2:4
 #: formshare/templates/dashboard/projects/snippets/brdcrbs_prjedit.jinja2:2
+#: formshare/templates/dashboard/projects/snippets/project_details.jinja2:202
 #: formshare/templates/dashboard/projects/snippets/project_form_edit.jinja2:12
 msgid "Edit project"
 msgstr "Editar proyecto"
-
-#: formshare/templates/dashboard/projects/assistant_groups/members/snippets/brdcrbs_memlist.jinja2:8
-#: formshare/templates/dashboard/projects/assistant_groups/snippets/brdcrbs_groupadd.jinja2:8
-#: formshare/templates/dashboard/projects/assistant_groups/snippets/brdcrbs_groupedit.jinja2:8
-#: formshare/templates/dashboard/projects/assistant_groups/snippets/brdcrbs_grplist.jinja2:8
-#: formshare/templates/dashboard/projects/assistants/snippets/brdcrbs_assistadd.jinja2:8
-#: formshare/templates/dashboard/projects/assistants/snippets/brdcrbs_assistedit.jinja2:8
-#: formshare/templates/dashboard/projects/assistants/snippets/brdcrbs_assistlist.jinja2:8
-#: formshare/templates/dashboard/projects/collaborators/snippets/brdcrbs_colbrtsadd.jinja2:8
-#: formshare/templates/dashboard/projects/collaborators/snippets/brdcrbs_colbrtslist.jinja2:8
-#: formshare/templates/dashboard/projects/forms/dictionary/snippets/brdcrbs_fields.jinja2:8
-#: formshare/templates/dashboard/projects/forms/dictionary/snippets/brdcrbs_tables.jinja2:8
-#: formshare/templates/dashboard/projects/forms/import_data/snippets/brdcrbs_import.jinja2:8
-#: formshare/templates/dashboard/projects/forms/snippets/brdcrbs_frmdtls.jinja2:8
-#: formshare/templates/dashboard/projects/forms/snippets/brdcrbs_frmedit.jinja2:8
-#: formshare/templates/dashboard/projects/forms/submissions/snippets/brdcrbs_submissions.jinja2:8
-#: formshare/templates/dashboard/projects/project_list.jinja2:4
-#: formshare/templates/dashboard/projects/repository/snippets/brdcrbs_edit_group.jinja2:8
-#: formshare/templates/dashboard/projects/repository/snippets/brdcrbs_new_group.jinja2:8
-#: formshare/templates/dashboard/projects/repository/snippets/brdcrbs_repository.jinja2:8
-#: formshare/templates/dashboard/projects/repository/snippets/brdcrbs_separation.jinja2:8
-#: formshare/templates/dashboard/projects/snippets/brdcrbs_prjadd.jinja2:8
-#: formshare/templates/dashboard/projects/snippets/brdcrbs_prjdtls.jinja2:8
-#: formshare/templates/dashboard/projects/snippets/brdcrbs_prjedit.jinja2:8
-#: formshare/templates/dashboard/projects/snippets/brdcrbs_prjlist.jinja2:8
-#: formshare/templates/dashboard/projects/snippets/project_tab.jinja2:4
-#: formshare/templates/dashboard/snippets/navbar.jinja2:51
-msgid "Projects"
-msgstr "Proyectos"
 
 #: formshare/templates/dashboard/projects/project_list.jinja2:44
 #: formshare/templates/dashboard/projects/snippets/project_tab.jinja2:8
@@ -1330,6 +1501,11 @@ msgstr ""
 #: formshare/templates/dashboard/projects/forms/snippets/add_group.jinja2:37
 msgid "Add group"
 msgstr "Añadir grupo"
+
+#: formshare/templates/dashboard/projects/assistant_groups/group_list.jinja2:58
+#: formshare/templates/dashboard/projects/assistant_groups/snippets/group_form.jinja2:5
+msgid "Description"
+msgstr "Descripción"
 
 #: formshare/templates/dashboard/projects/assistant_groups/members/member_list.jinja2:31
 #: formshare/templates/dashboard/projects/assistant_groups/members/snippets/brdcrbs_memlist.jinja2:17
@@ -1393,10 +1569,6 @@ msgstr "Editar"
 msgid "Group list"
 msgstr "Listado de grupos"
 
-#: formshare/templates/dashboard/projects/assistant_groups/snippets/group_form.jinja2:5
-msgid "Description"
-msgstr "Descripción"
-
 #: formshare/templates/dashboard/projects/assistant_groups/snippets/group_form_edit.jinja2:4
 #: formshare/templates/dashboard/projects/assistant_groups/snippets/group_item.jinja2:15
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form_edit.jinja2:10
@@ -1404,6 +1576,8 @@ msgstr "Descripción"
 #: formshare/templates/dashboard/projects/forms/snippets/edit_form.jinja2:17
 #: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:34
 #: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:12
+#: formshare/templates/dashboard/projects/snippets/project_forms.jinja2:25
+#: formshare/templates/dashboard/snippets/navbar.jinja2:55
 msgid "Active"
 msgstr "Activo"
 
@@ -1415,6 +1589,7 @@ msgstr "Modificar grupo"
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_item.jinja2:27
 #: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:34
 #: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:12
+#: formshare/templates/dashboard/projects/snippets/project_forms.jinja2:25
 msgid "Inactive"
 msgstr "Inactivo"
 
@@ -1425,6 +1600,8 @@ msgstr "Miembros"
 #: formshare/templates/dashboard/projects/assistant_groups/snippets/group_item.jinja2:27
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_item.jinja2:40
 #: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:45
+#: formshare/templates/dashboard/projects/forms/snippets/product_item.jinja2:60
+#: formshare/templates/dashboard/projects/forms/snippets/product_item.jinja2:65
 #: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:64
 #: formshare/templates/dashboard/projects/snippets/project_item.jinja2:27
 msgid "Delete"
@@ -1457,12 +1634,6 @@ msgstr "Asistentes"
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:34
 msgid "Assistants help you collect and clean data."
 msgstr "Los asistentes le ayudan a recolectar y limpiar datos"
-
-#: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:64
-#: formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2:16
-#: formshare/templates/generic/register.jinja2:16
-msgid "Email"
-msgstr "Correo electrónico"
 
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:69
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2:22
@@ -1516,14 +1687,6 @@ msgstr "Compartido"
 #: formshare/templates/dashboard/projects/assistants/snippets/brdcrbs_assistlist.jinja2:2
 msgid "Assistant list"
 msgstr "Listado de asistentes"
-
-#: formshare/templates/dashboard/projects/collaborators/collaborator_list.jinja2:4
-#: formshare/templates/dashboard/projects/collaborators/collaborator_list.jinja2:35
-#: formshare/templates/dashboard/projects/collaborators/snippets/brdcrbs_colbrtsadd.jinja2:14
-#: formshare/templates/dashboard/projects/collaborators/snippets/brdcrbs_colbrtslist.jinja2:14
-#: formshare/templates/dashboard/snippets/navbar.jinja2:60
-msgid "Collaborators"
-msgstr "Colaboradores"
 
 #: formshare/templates/dashboard/projects/collaborators/collaborator_list.jinja2:37
 msgid "Collaborators can have different roles: "
@@ -1584,6 +1747,10 @@ msgstr "Cambiar role de"
 #: formshare/templates/dashboard/projects/collaborators/snippets/brdcrbs_colbrtslist.jinja2:2
 msgid "Collaborator list"
 msgstr "Listado de colaboradores"
+
+#: formshare/templates/dashboard/projects/forms/form_details.jinja2:85
+msgid "Form details"
+msgstr "Detalles del formulario"
 
 #: formshare/templates/dashboard/projects/forms/form_details.jinja2:172
 msgid "Stop the generation of the repository"
@@ -1865,6 +2032,10 @@ msgstr ""
 "\". Usted puede decidir ignorar esta verificación bajo su propio riesgo "
 "ya que podría generar inconsistencias en sus datos "
 
+#: formshare/templates/dashboard/projects/forms/import_data/import_form.jinja2:97
+msgid "Select an assistant"
+msgstr "Seleccione un asistente"
+
 #: formshare/templates/dashboard/projects/forms/import_data/snippets/brdcrbs_import.jinja2:2
 msgid "Import data from FormShare 1.0 or ODK BriefCase"
 msgstr "Importar datos de FormShare 1.0 o ODK BriefCase"
@@ -1955,13 +2126,6 @@ msgstr ""
 "Los asistentes le ayudan a recolectar y limpiar datos. Añada uno haciendo"
 " clic en el botón +"
 
-#: formshare/templates/dashboard/projects/forms/snippets/brdcrbs_frmdtls.jinja2:2
-#: formshare/templates/dashboard/projects/snippets/no_forms_tab.jinja2:3
-#: formshare/templates/dashboard/projects/snippets/project_details.jinja2:232
-#: formshare/templates/dashboard/projects/snippets/project_forms.jinja2:4
-msgid "Forms"
-msgstr "Formularios"
-
 #: formshare/templates/dashboard/projects/forms/snippets/edit_assistant.jinja2:7
 #: formshare/templates/dashboard/projects/forms/snippets/edit_group.jinja2:7
 msgid "Change privilege"
@@ -2038,6 +2202,30 @@ msgstr "Por"
 #: formshare/templates/dashboard/projects/forms/submissions/snippets/brdcrbs_submissions.jinja2:17
 msgid "Submissions"
 msgstr "Envíos"
+
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:65
+msgid "In database"
+msgstr "En la base de datos"
+
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:68
+msgid "Curate data"
+msgstr "Curar datos"
+
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:73
+msgid "In logs"
+msgstr "En el registro de errores"
+
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:76
+msgid "View logs"
+msgstr "Ver registro"
+
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:81
+msgid "With errors"
+msgstr "Con errores"
+
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:84
+msgid "Manage errors"
+msgstr "Administrar errores"
 
 #: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:96
 msgid ""
@@ -2234,6 +2422,27 @@ msgstr "para verlo"
 #: formshare/templates/dashboard/projects/forms/snippets/product_item.jinja2:38
 msgid "download"
 msgstr "descarga"
+
+#: formshare/templates/dashboard/projects/forms/snippets/product_item.jinja2:38
+msgid "last"
+msgstr "la última vez"
+
+#: formshare/templates/dashboard/projects/forms/snippets/product_item.jinja2:45
+#: formshare/templates/dashboard/projects/forms/snippets/product_item.jinja2:53
+msgid "Download"
+msgstr "Descargar"
+
+#: formshare/templates/dashboard/projects/forms/snippets/product_item.jinja2:47
+msgid "Unpublish"
+msgstr "No publicar"
+
+#: formshare/templates/dashboard/projects/forms/snippets/product_item.jinja2:54
+msgid "API Download"
+msgstr "Descargar usando API"
+
+#: formshare/templates/dashboard/projects/forms/snippets/product_item.jinja2:55
+msgid "Publish"
+msgstr "Publicar"
 
 #: formshare/templates/dashboard/projects/forms/snippets/products_tab.jinja2:4
 msgid "Form products"
@@ -2587,6 +2796,10 @@ msgstr "Haga clic / toque y mantenga presionado para eliminar archivos"
 msgid "No attached files. Use the + button to add files"
 msgstr "No hay archivos atados. Use el botón +  para añadir archivos"
 
+#: formshare/templates/dashboard/projects/snippets/project_details.jinja2:202
+msgid "Delete project"
+msgstr "Borrar proyecto"
+
 #: formshare/templates/dashboard/projects/snippets/project_details.jinja2:236
 msgid "Total submissions"
 msgstr "Total de envíos"
@@ -2628,14 +2841,6 @@ msgstr "Añadir proyecto"
 msgid "With repository"
 msgstr "Con repositorio"
 
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:24
-msgid "in database"
-msgstr "en la base de datos"
-
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:24
-msgid "in error logs"
-msgstr "en el registro de errores"
-
 #: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:31
 msgid "Downloads"
 msgstr "Descargas"
@@ -2669,17 +2874,25 @@ msgstr "Marcar como activo"
 msgid "Set as inactive"
 msgstr "Marcar como inactivo"
 
+#: formshare/templates/dashboard/projects/snippets/project_forms.jinja2:23
+msgid "Total"
+msgstr "Total"
+
 #: formshare/templates/dashboard/projects/snippets/project_item.jinja2:13
 msgid "submission"
 msgstr "envíos"
 
 #: formshare/templates/dashboard/projects/snippets/project_item.jinja2:13
 msgid "within"
-msgstr "dentro"
+msgstr "entre"
 
 #: formshare/templates/dashboard/projects/snippets/project_item.jinja2:13
 msgid "form"
 msgstr "formulario"
+
+#: formshare/templates/dashboard/projects/snippets/project_item.jinja2:14
+msgid "Last submission by"
+msgstr "Ultimo envío por"
 
 #: formshare/templates/dashboard/snippets/footer.jinja2:4
 msgid "Version"
@@ -2691,9 +2904,15 @@ msgstr "Versión"
 msgid "Welcome to FormShare"
 msgstr "Bienvenido a FormShare"
 
-#: formshare/templates/dashboard/snippets/header.jinja2:111
+#: formshare/templates/dashboard/snippets/header.jinja2:38
+#: formshare/templates/landing/snippets/header.jinja2:74
+msgid "Language"
+msgstr "Lenguaje"
+
+#: formshare/templates/dashboard/snippets/header.jinja2:124
 #: formshare/templates/dashboard/snippets/header_home.jinja2:57
 #: formshare/templates/dashboard/snippets/navbar.jinja2:25
+#: formshare/templates/generic/assistant_login.jinja2:22
 #: formshare/templates/generic/login.jinja2:4
 #: formshare/templates/generic/login.jinja2:28
 #: formshare/templates/generic/login.jinja2:45
@@ -2702,7 +2921,7 @@ msgstr "Bienvenido a FormShare"
 msgid "Sign in"
 msgstr "Ingresar"
 
-#: formshare/templates/dashboard/snippets/header.jinja2:118
+#: formshare/templates/dashboard/snippets/header.jinja2:131
 #: formshare/templates/dashboard/snippets/header_home.jinja2:64
 #: formshare/templates/generic/login.jinja2:52
 #: formshare/templates/landing/snippets/header.jinja2:66
@@ -2746,8 +2965,8 @@ msgid ""
 "The server encountered an unexpected error and was not able to complete "
 "your request. Please report the error as an issue on "
 msgstr ""
-"Se ha generado un error no esperado y FormShare no puede completar su pedido."
-" Por favor reporte el error en"
+"Se ha generado un error no esperado y FormShare no puede completar su "
+"pedido. Por favor reporte el error en"
 
 #: formshare/templates/generic/500.jinja2:20
 msgid "We apologize for the inconvenience"
@@ -2757,6 +2976,10 @@ msgstr "Pedimos disculpas por las molestias"
 #: formshare/templates/generic/assistant_login.jinja2:7
 msgid "Assistant Sign in"
 msgstr "Ingreso para los asistentes"
+
+#: formshare/templates/generic/assistant_login.jinja2:15
+msgid "Assistant ID"
+msgstr "Identificador del asistente"
 
 #: formshare/templates/generic/login.jinja2:37
 msgid "Username or email address"
@@ -3324,5 +3547,17 @@ msgstr ""
 #~ " be organized in different sheets "
 #~ "each representing a table.\n"
 #~ "\n"
+#~ msgstr ""
+
+#~ msgid "Error calling JQ"
+#~ msgstr "Error al llamar el programa JQ."
+
+#~ msgid "Error creating dummy file"
+#~ msgstr "Error al crear el archivos de datos JSON temporal"
+
+#~ msgid "Error calling MySQLDenormalize"
+#~ msgstr "Error interno al llamar el programa MySQLDenormalize"
+
+#~ msgid "MySQLDenormalize Error:) "
 #~ msgstr ""
 

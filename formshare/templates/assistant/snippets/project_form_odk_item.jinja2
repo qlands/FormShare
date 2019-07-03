@@ -5,10 +5,10 @@
     <div class="media-body ">
         <div class="row">
             <div class="col-md-12">
-                <span class="float-right">{{ _('Uploaded on') }} {{ request.h.readble_date(form.form_cdate) }}</span>
+                <span class="float-right">{{ _('Uploaded on') }} {{ request.h.readble_date(form.form_cdate, request.locale_name) }}</span>
                 <strong>{{ form.form_name }}</strong><br/>
                 {% if form.last != None %}
-                    <span class="text-muted">{{ _('Last submission') }}: {{ request.h.readble_date_with_time(form.last) }} {{ _('by') }} <span class="text-info">{{ form.bydetails.coll_name }}</span></span><br/>
+                    <span class="text-muted">{{ _('Last submission') }}: {{ request.h.readble_date_with_time(form.last, request.locale_name) }} {{ _('by') }} <span class="text-info">{{ form.bydetails.coll_name }}</span></span><br/>
                 {% else %}
                     <span class="text-muted">{{ _('Without submissions') }}</span>
                 {% endif %}
@@ -17,13 +17,13 @@
                         <div class="progress-bar progress-bar-striped progress-bar-animated progress-bar-warning" style="width: {{ form.submissions*100/form.form_target }}%" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
                     </div>
                 {% endif %}
-                Total: {{ form.submissions }} {% if form.form_target > 0 %}of {{ form.form_target }} {% endif %} submissions. {% if form.privileges == 2 or form.privileges == 3 %} {% if form.form_schema != None %} <strong><a href="{{ request.route_url('clean',userid=userid,projcode=projcode,formid=form.form_id) }}" class="text-success">{{ form.indb }} in database.</a> <a href="{{ request.route_url('errorlist',userid=userid,projcode=projcode,formid=form.form_id) }}" class="text-warning">{{ form.inlogs }} in error logs.</a>  <a href="{{ request.route_url('errorlist',userid=userid,projcode=projcode,formid=form.form_id) }}" class="text-danger">{{ form.inerror }} with errors</a>  </strong>{% endif %}{% endif %}
+                Total: {{ form.submissions }} {% if form.form_target > 0 %}of {{ form.form_target }} {% endif %} submissions. {% if form.privileges == 2 or form.privileges == 3 %} {% if form.form_schema != None %} <strong><a href="{{ request.route_url('clean',userid=userid,projcode=projcode,formid=form.form_id) }}" class="text-success">{{ form.indb }} {{ _('in database') }}.</a> <a href="{{ request.route_url('errorlist',userid=userid,projcode=projcode,formid=form.form_id) }}" class="text-warning">{{ form.inlogs }} {{ _('in error logs') }}.</a>  <a href="{{ request.route_url('errorlist',userid=userid,projcode=projcode,formid=form.form_id) }}" class="text-danger">{{ form.inerror }} {{ _('with errors') }}</a>  </strong>{% endif %}{% endif %}
                 <br style="margin-top: 5px" />
                 {% if form.privileges == 1 or form.privileges == 3 %}
                     {% if form.privileges == 3 %}
-                        {{ _('My submissions') }}: {{ form.assistant_data.submissions }} submissions. {% if form.form_schema != None %}: <strong><a href="{{ request.route_url('clean',userid=userid,projcode=projcode,formid=form.form_id) }}" class="text-success">{{ form.assistant_data.indb }} in database.</a> <a href="{{ request.route_url('errorlist',userid=userid,projcode=projcode,formid=form.form_id) }}" class="text-warning">{{ form.assistant_data.inlogs }} in error logs.</a>  <a href="{{ request.route_url('errorlist',userid=userid,projcode=projcode,formid=form.form_id) }}" class="text-danger">{{ form.assistant_data.inerror }} with errors</a>  </strong>{% endif %}
+                        {{ _('My submissions') }}: {{ form.assistant_data.submissions }} {{ _('submissions') }}. {% if form.form_schema != None %}: <strong><a href="{{ request.route_url('clean',userid=userid,projcode=projcode,formid=form.form_id) }}" class="text-success">{{ form.assistant_data.indb }} {{ _('in database') }}.</a> <a href="{{ request.route_url('errorlist',userid=userid,projcode=projcode,formid=form.form_id) }}" class="text-warning">{{ form.assistant_data.inlogs }} {{ _('in error logs') }}.</a>  <a href="{{ request.route_url('errorlist',userid=userid,projcode=projcode,formid=form.form_id) }}" class="text-danger">{{ form.assistant_data.inerror }} {{ _('with errors') }}</a>  </strong>{% endif %}
                     {% else %}
-                        {{ _('My submissions') }}: {{ form.assistant_data.submissions }} submissions. {% if form.form_schema != None %}: <strong><span class="text-success">{{ form.assistant_data.indb }} in database.</span> <span class="text-warning">{{ form.assistant_data.inlogs }} in error logs.</span>  <span class="text-danger">{{ form.assistant_data.inerror }} with errors</span>  </strong>{% endif %}
+                        {{ _('My submissions') }}: {{ form.assistant_data.submissions }} {{ _('submissions') }}. {% if form.form_schema != None %}: <strong><span class="text-success">{{ form.assistant_data.indb }} {{ _('in database') }}.</span> <span class="text-warning">{{ form.assistant_data.inlogs }} {{ _('in error logs') }}.</span>  <span class="text-danger">{{ form.assistant_data.inerror }} {{ _('with errors') }}</span>  </strong>{% endif %}
                     {% endif %}
                 {% endif %}
                 <div class="actions">

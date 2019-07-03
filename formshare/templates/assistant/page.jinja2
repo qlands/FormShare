@@ -58,7 +58,7 @@
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
                     <h4 class="modal-title">{{ _('Change password') }}</h4>
-                    <small id="password_who" class="font-bold">Change password of {{ activeAssistant.fullName }}</small>
+                    <small id="password_who" class="font-bold">{{ _('Change password of') }} {{ activeAssistant.fullName }}</small>
                 </div>
                 <form class="m-t" id="change_form" role="form" method="post" action="{{ request.route_url('assistant_change_my_pass', userid=userid, projcode=projcode,_query={'next': request.url}) }}">
                     {{ form.secure_form(request) }}

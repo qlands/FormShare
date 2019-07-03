@@ -3,13 +3,9 @@ from formshare.config.celery_class import CeleryTask
 import logging
 from subprocess import Popen, PIPE
 import os
-import gettext
 import uuid
 
 log = logging.getLogger(__name__)
-gettext.bindtextdomain('formshare', 'formshare:locate')
-gettext.textdomain('formshare')
-_ = gettext.gettext
 
 
 class BuildFileError(Exception):
@@ -56,22 +52,18 @@ def build_xlsx(settings, odk_dir, form_directory, form_schema, form_id, xlsx_fil
     os.makedirs(temp_dir)
 
     args = [mysql_to_xlsx, "-H " + mysql_host, "-P " + mysql_port, "-u " + mysql_user, "-p " + mysql_password,
-            "-s " + form_schema, "-x " + create_xml, "-o " + xlsx_file, "-T " + temp_dir]
+            "-s " + form_schema, "-x " + create_xml, "-o " + xlsx_file, "-T " + temp_dir, "-f " + form_id]
 
     if include_sensitive:
         args.append("-i")
-
-    args.append("-f " + form_id)
-
-    log.error(" ".join(args))
 
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()
     if p.returncode == 0:
         return True, xlsx_file
     else:
-        log.error("MySQLToXLSX Error: " + stderr + "-" + stdout + ". Args: " + " ".join(args))
-        error = stdout + stderr
+        log.error("MySQLToXLSX Error: " + stderr.decode() + "-" + stdout.decode() + ". Args: " + " ".join(args))
+        error = stdout.decode() + stderr.decode()
         if error.find("Worksheet name is already in use") >= 0:
             raise SheetNameError()
         else:

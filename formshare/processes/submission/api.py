@@ -38,13 +38,21 @@ def get_gps_points_from_project(request, user, project, project_id, query_from=N
         if '_geopoint' in dataset.keys():
             parts = dataset['_geopoint'].split(" ")
             if len(parts) >= 2:
-                if dataset["_xform_id_string"] not in colors.keys():
-                    color = ColorHash(dataset["_xform_id_string"]).hex
-                else:
-                    color = colors[dataset["_xform_id_string"]]
-                data.append(
-                    {'key': dataset["_xform_id_string"], 'lati': parts[0], 'long': parts[1],
-                     'options': {'iconShape': 'circle-dot', 'borderWidth': 5, 'borderColor': color}})
+                try:
+                    float(parts[0])
+                    try:
+                        float(parts[1])
+                        if dataset["_xform_id_string"] not in colors.keys():
+                            color = ColorHash(dataset["_xform_id_string"]).hex
+                        else:
+                            color = colors[dataset["_xform_id_string"]]
+                        data.append(
+                            {'key': dataset["_xform_id_string"], 'lati': parts[0], 'long': parts[1],
+                             'options': {'iconShape': 'circle-dot', 'borderWidth': 5, 'borderColor': color}})
+                    except Exception as e:
+                        log.error(str(e) + " in " + dataset["_xform_id_string"])
+                except Exception as e:
+                    log.error(str(e) + " in " + dataset["_xform_id_string"])
     return True, {'points': data}
 
 
@@ -55,7 +63,15 @@ def get_gps_points_from_form(request, user, project, form, query_from=None, quer
         if '_geopoint' in dataset.keys():
             parts = dataset['_geopoint'].split(" ")
             if len(parts) >= 2:
-                data.append({'key': dataset["_submission_id"], 'lati': parts[0], 'long': parts[1]})
+                try:
+                    float(parts[0])
+                    try:
+                        float(parts[1])
+                        data.append({'key': dataset["_submission_id"], 'lati': parts[0], 'long': parts[1]})
+                    except Exception as e:
+                        log.error(str(e) + " in " + dataset["_xform_id_string"])
+                except Exception as e:
+                    log.error(str(e) + " in " + dataset["_xform_id_string"])
     return True, {'points': data}
 
 

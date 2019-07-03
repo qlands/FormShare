@@ -45,7 +45,7 @@
             </div>
         </div>
         <div class="ibox-content">
-            You are comparing submission <b>{{ submissionid }}</b> made on {{ data.log_dtime }} by {{ data.enum_name }}.
+            {{ _('You are comparing submission') }} <b>{{ submissionid }}</b> {{ _('made on') }} {{ data.log_dtime }} {{ _('by') }} {{ data.enum_name }}.
             {% if error_summary|length > 0 %}
                 <div class="error-explanation alert alert-error">
                     <p>{{ _('The form contains invalid entries:') }}</p>

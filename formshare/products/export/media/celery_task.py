@@ -12,9 +12,6 @@ import shutil
 from formshare.processes.sse.messaging import send_task_status_to_form
 
 log = logging.getLogger(__name__)
-gettext.bindtextdomain('formshare', 'formshare:locate')
-gettext.textdomain('formshare')
-_ = gettext.gettext
 
 
 class EmptyFileError(Exception):
@@ -23,11 +20,19 @@ class EmptyFileError(Exception):
     """
 
     def __str__(self):
-        return _('The ODK form does not contain any media')
+        return 'The ODK form does not contain any media'
 
 
 @celeryApp.task(base=CeleryTask)
-def build_media_zip(settings, odk_dir, form_directory, form_schema, zip_file, primary_key):
+def build_media_zip(settings, odk_dir, form_directory, form_schema, zip_file, primary_key, locale):
+    parts = __file__.split('/products/')
+    this_file_path = parts[0] + "/locale"
+    es = gettext.translation('formshare',
+                             localedir=this_file_path,
+                             languages=[locale])
+    es.install()
+    _ = es.gettext
+
     task_id = build_media_zip.request.id
     created = False
     engine = get_engine(settings)

@@ -59,7 +59,7 @@
                             </select>
                         </div>
                         <div>
-                            <button type="submit" name="loadtable" class="btn btn-primary">Load table</button>
+                            <button type="submit" name="loadtable" class="btn btn-primary">{{ _('Load table') }}</button>
                         </div>
                     </form>
                 </div>
@@ -76,7 +76,7 @@
                                 </select>
                             </div>
                             <div>
-                                <button type="submit" name="loadfields" class="btn btn-primary">Load fields</button>
+                                <button type="submit" name="loadfields" class="btn btn-primary">{{ _('Load fields') }}</button>
                             </div>
                         </form>
                     {% endif %}
@@ -87,7 +87,7 @@
                 <table style="max-width: 500px" id="jqGrid"></table>
                 <div id="jqGridPager"></div>
             {% else %}
-                Please load a table
+                {{ _('Please load a table') }}
             {% endif %}
         </div>
     </div>

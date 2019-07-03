@@ -31,7 +31,6 @@ requires = [
     'alembic',
     'gunicorn',
     'gevent',
-    'ago',
     'lxml',
     'celery',
     'inflect',

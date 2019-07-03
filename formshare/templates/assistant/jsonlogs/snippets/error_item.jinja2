@@ -10,7 +10,7 @@
     <div class="row">
         <div class="col-md-3">
             <div class="text-center">
-                <span title="{{ error.log_id }}">...-{{ error.log_short }}</span> <button class="btn btn-white btn-bitbucket clipboard" data-clipboard-text="{{ error.log_id }}" title="Copy submission to clipboard"><i class="far fa-copy"></i></button><br/>by {{ error.enum_name }}<br/>
+                <span title="{{ error.log_id }}">...-{{ error.log_short }}</span> <button class="btn btn-white btn-bitbucket clipboard" data-clipboard-text="{{ error.log_id }}" title="{{ _('Copy submission to clipboard') }}"><i class="far fa-copy"></i></button><br/>{{ _('by') }} {{ error.enum_name }}<br/>
                 {{ error.log_dtime }}
             </div>
         </div>
@@ -53,7 +53,7 @@
                     {% endif %}
                 {% endif %}
                 {% if error.status == 2 %}
-                    Checked out by {{ error.lastentry.enum_name }}<br/>
+                    {{ _('Checked out by') }} {{ error.lastentry.enum_name }}<br/>
                     <span title="{{ _('Check-out date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
                 {% endif %}
                 {% if error.status == 3 %}
@@ -65,11 +65,11 @@
                     <span title="{{ _('Canceled date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
                 {% endif %}
                 {% if error.lastentry.log_action == 4 %}
-                    <b style="color: orange">{{ _('Disregarded') }}</b> by {{ error.lastentry.enum_name }}<br/>
+                    <b style="color: orange">{{ _('Disregarded') }}</b> {{ _('by') }} {{ error.lastentry.enum_name }}<br/>
                     <span title="{{ _('Disregarded date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
                 {% endif %}
                 {% if error.status == 0 %}
-                    <b style="color: green">{{ _('Fixed') }}</b> by {{ error.lastentry.enum_name }} {{ _('in revision') }} <a href="{{ request.route_url('viewrevision', userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id,revisionid=error.lastentry.log_commit,_query={'pushed': true}) }}">{{ error.lastentry.log_commit }}</a><br/>
+                    <b style="color: green">{{ _('Fixed') }}</b> {{ _('by') }} {{ error.lastentry.enum_name }} {{ _('in revision') }} <a href="{{ request.route_url('viewrevision', userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id,revisionid=error.lastentry.log_commit,_query={'pushed': true}) }}">{{ error.lastentry.log_commit }}</a><br/>
                     <span title="{{ _('Fixed date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
                 {% endif %}
             </div>

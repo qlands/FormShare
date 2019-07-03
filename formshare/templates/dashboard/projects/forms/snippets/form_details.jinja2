@@ -7,11 +7,11 @@
             </dl>
             <dl class="row mb-0">
                 <div class="col-sm-4 text-sm-right"><dt>{{ _('Created') }}:</dt> </div>
-                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date(formDetails.form_cdate) }}</dd></div>
+                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date(formDetails.form_cdate, request.locale_name) }}</dd></div>
             </dl>
             <dl class="row mb-0">
                 <div class="col-sm-4 text-sm-right"><dt>{{ _('Last updated') }}:</dt> </div>
-                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date(formDetails.form_cdate) }}</dd></div>
+                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date(formDetails.form_cdate, request.locale_name) }}</dd></div>
             </dl>
             <dl class="row mb-0">
                 <div class="col-sm-4 text-sm-right"><dt>{{ _('Assistants') }}:</dt> </div>
@@ -31,7 +31,7 @@
                 </div>
                 {% if formDetails.submissions > 0 %}
                     <div class="col-sm-8 text-sm-left">
-                        <dd class="mb-1">{{ request.h.readble_date_with_time(formDetails.last) }}</dd>
+                        <dd class="mb-1">{{ request.h.readble_date_with_time(formDetails.last, request.locale_name) }}</dd>
                     </div>
                 {% else %}
                     <div class="col-sm-8 text-sm-left">
@@ -62,26 +62,26 @@
             {% block form_details_submissions_db %}
                 <dl class="row mb-0">
                     <div class="col-sm-4 text-sm-right">
-                        <dt>In database:</dt>
+                        <dt>{{ _('In database') }}:</dt>
                     </div>
                     <div class="col-sm-8 text-sm-left">
-                        <dd class="mb-1">{{ formDetails.indb }} {% if formDetails.indb > 0 %}<a target="_blank" href="{{ request.route_url('clean', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}">[Clean data]</a>{% endif %}</dd>
+                        <dd class="mb-1">{{ formDetails.indb }} {% if formDetails.indb > 0 %}<a target="_blank" href="{{ request.route_url('clean', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}">[{{ _('Curate data') }}]</a>{% endif %}</dd>
                     </div>
                 </dl>
                 <dl class="row mb-0">
                     <div class="col-sm-4 text-sm-right">
-                        <dt>In logs:</dt>
+                        <dt>{{ _('In logs') }}:</dt>
                     </div>
                     <div class="col-sm-8 text-sm-left">
-                        <dd class="mb-1">{{ formDetails.inlogs }} {% if formDetails.inlogs > 0 %}<a target="_blank" href="{{ request.route_url('errorlist', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}">[View logs]</a>{% endif %}</dd>
+                        <dd class="mb-1">{{ formDetails.inlogs }} {% if formDetails.inlogs > 0 %}<a target="_blank" href="{{ request.route_url('errorlist', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}">[{{ _('View logs') }}]</a>{% endif %}</dd>
                     </div>
                 </dl>
                 <dl class="row mb-0">
                     <div class="col-sm-4 text-sm-right">
-                        <dt>With errors:</dt>
+                        <dt>{{ _('With errors') }}:</dt>
                     </div>
                     <div class="col-sm-8 text-sm-left">
-                        <dd class="mb-1" {% if formDetails.inerror > 0 %}style="color: red"{% endif %}>{{ formDetails.inerror }} {% if formDetails.inerror > 0 %}<a style="color: red" target="_blank" href="{{ request.route_url('errorlist', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}">[Manage errors]</a>{% endif %}</dd>
+                        <dd class="mb-1" {% if formDetails.inerror > 0 %}style="color: red"{% endif %}>{{ formDetails.inerror }} {% if formDetails.inerror > 0 %}<a style="color: red" target="_blank" href="{{ request.route_url('errorlist', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}">[{{ _('Manage errors') }}]</a>{% endif %}</dd>
                     </div>
                 </dl>
             {% endblock form_details_submissions_db %}

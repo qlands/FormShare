@@ -5,7 +5,7 @@ Consists of functions to typically be used within templates, but also
 available to Controllers. This module is available to templates as 'request.h'.
 """
 
-from ago import human
+import timeago
 import arrow
 import inflect
 import formshare.plugins as p
@@ -58,13 +58,14 @@ def core_helper(f, name=None):
 
 
 @core_helper
-def humanize_date(date):
+def humanize_date(date, locale='en'):
     """
     This humanize a date.
     :param date: Datetime
+    :param locale: Locale code
     :return: A human readble date like "days ago"
     """
-    return human(date, precision=1)
+    return timeago.format(date, None, locale) #human(date, precision=1)
 
 
 @core_helper

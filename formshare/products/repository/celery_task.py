@@ -13,9 +13,6 @@ from formshare.processes.sse.messaging import send_task_status_to_form
 import gettext
 
 log = logging.getLogger(__name__)
-gettext.bindtextdomain('formshare', 'formshare:locate')
-gettext.textdomain('formshare')
-_ = gettext.gettext
 
 
 class BuildDataBaseError(Exception):
@@ -32,7 +29,7 @@ def get_odk_path(settings):
     return os.path.join(repository_path, *["odk"])
 
 
-def build_database(settings, cnf_file, create_file, insert_file, schema, form_directory, task_id):
+def build_database(settings, cnf_file, create_file, insert_file, schema, form_directory, task_id, _):
     error = False
     error_message = ""
 
@@ -143,9 +140,17 @@ def update_form(db_session, project, form, form_data):
 
 @celeryApp.task(base=CeleryTask)
 def create_mysql_repository(settings, user, project_id, project_code, form, odk_dir, form_directory, schema,
-                            primary_key, cnf_file, create_file, insert_file):
+                            primary_key, cnf_file, create_file, insert_file, locale):
+    parts = __file__.split('/products/')
+    this_file_path = parts[0] + "/locale"
+    es = gettext.translation('formshare',
+                             localedir=this_file_path,
+                             languages=[locale])
+    es.install()
+    _ = es.gettext
+
     task_id = create_mysql_repository.request.id
-    build_database(settings, cnf_file, create_file, insert_file, schema, form_directory, task_id)
+    build_database(settings, cnf_file, create_file, insert_file, schema, form_directory, task_id, _)
 
     session_factory = get_session_factory(get_engine(settings))
 

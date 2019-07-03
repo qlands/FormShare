@@ -14,9 +14,6 @@ from formshare.processes.sse.messaging import send_task_status_to_form
 import gettext
 import shutil
 
-gettext.bindtextdomain('formshare', 'formshare:locate')
-gettext.textdomain('formshare')
-_ = gettext.gettext
 log = logging.getLogger(__name__)
 
 
@@ -160,7 +157,15 @@ def store_json_file(engine, submission_id, temp_json_file, json_file, odk_dir, x
 
 @celeryApp.task(base=CeleryTask)
 def import_json_files(user, project, form, odk_dir, form_directory, schema, assistant, path_to_files, project_code,
-                      geopoint_variable, project_of_assistant, settings, ignore_xform_check=False):
+                      geopoint_variable, project_of_assistant, settings, locale, ignore_xform_check=False):
+    parts = __file__.split('/products/')
+    this_file_path = parts[0] + "/locale"
+    es = gettext.translation('formshare',
+                             localedir=this_file_path,
+                             languages=[locale])
+    es.install()
+    _ = es.gettext
+
     task_id = import_json_files.request.id
     engine = create_engine(settings['sqlalchemy.url'])
     list_of_files = path_to_files + '/**/*.json'

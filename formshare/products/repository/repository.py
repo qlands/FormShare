@@ -14,6 +14,6 @@ def create_database_repository(request, project, form, odk_dir, form_directory, 
 
     task = create_mysql_repository.apply_async((settings, user_id, project, project_code, form, odk_dir,
                                                 form_directory, schema, primary_key,
-                                                cnf_file, create_file, insert_file), countdown=2)
+                                                cnf_file, create_file, insert_file, request.locale_name), countdown=2)
     register_product_instance(request, user_id, project, form, 'repository', task.id, None, None, True)
     return task.id

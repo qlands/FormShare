@@ -199,7 +199,7 @@
                 {% endblock project_details_files_section %}
                 <div class="text-center m-t-md" style="margin-bottom: 20px">
                     {% block project_details_files_bottom %}
-                        {% if projectData.access_type < 4 %}<a href="{{ request.route_url('project_edit',userid=projectData.owner,projcode=projectData.project_code,_query={'next':request.url}) }}" class="btn btn-xs btn-warning">Edit project</a>{% endif %} {% if projectData.access_type == 1 %} <a id="delete_project" style="color: white" class="btn btn-xs btn-danger">Remove project</a> {% endif %}
+                        {% if projectData.access_type < 4 %}<a href="{{ request.route_url('project_edit',userid=projectData.owner,projcode=projectData.project_code,_query={'next':request.url}) }}" class="btn btn-xs btn-warning">{{ _('Edit project') }}</a>{% endif %} {% if projectData.access_type == 1 %} <a id="delete_project" style="color: white" class="btn btn-xs btn-danger">{{ _('Delete project') }}</a> {% endif %}
                     {% endblock project_details_files_bottom %}
                 </div>
             </div>
@@ -238,7 +238,7 @@
                                         </dl>
                                         <dl class="row mb-0">
                                             <div class="col-sm-4 text-sm-right"><dt>{{ _('Created') }}:</dt> </div>
-                                            <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date(projectData.project_cdate) }}</dd></div>
+                                            <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date(projectData.project_cdate, request.locale_name) }}</dd></div>
                                         </dl>
                                     {% endblock project_stats_numbers %}
                                 </div>
@@ -249,7 +249,7 @@
                                                 <dt>{{ _('Last Updated') }}:</dt>
                                             </div>
                                             <div class="col-sm-8 text-sm-left">
-                                                <dd class="mb-1">{{ request.h.readble_date(projectData.project_cdate) }}</dd>
+                                                <dd class="mb-1">{{ request.h.readble_date(projectData.project_cdate, request.locale_name) }}</dd>
                                             </div>
                                         </dl>
                                         <dl class="row mb-0">
@@ -258,7 +258,7 @@
                                             </div>
                                             <div class="col-sm-8 text-sm-left">
                                                 {% if submissions > 0 %}
-                                                    <dd class="mb-1">{{ request.h.readble_date_with_time(last) }} {{ _('by') }} <a class="text-info">{{ bydetails.coll_name }}</a></dd>
+                                                    <dd class="mb-1">{{ request.h.readble_date_with_time(last, request.locale_name) }} {{ _('by') }} <a class="text-info">{{ bydetails.coll_name }}</a></dd>
                                                 {% else %}
                                                     <dd class="mb-1"></dd>
                                                 {% endif %}

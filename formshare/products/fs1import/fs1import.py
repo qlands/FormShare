@@ -12,5 +12,6 @@ def formshare_one_import_json(request, user, project, form, odk_dir, form_direct
 
     task = import_json_files.apply_async((user, project, form, odk_dir, form_directory, schema, assistant,
                                           path_to_files, project_code, geopoint_variable,
-                                          project_of_assistant, settings, ignore_xform_check), countdown=2)
+                                          project_of_assistant, settings, request.locale_name, ignore_xform_check),
+                                         countdown=2)
     register_product_instance(request, user, project, form, 'fs1import', task.id, None, None, True)

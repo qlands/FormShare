@@ -7,9 +7,6 @@ import simplekml
 from formshare.processes.sse.messaging import send_task_status_to_form
 
 log = logging.getLogger(__name__)
-gettext.bindtextdomain('formshare', 'formshare:locate')
-gettext.textdomain('formshare')
-_ = gettext.gettext
 
 
 class EmptyFileError(Exception):
@@ -18,11 +15,19 @@ class EmptyFileError(Exception):
     """
 
     def __str__(self):
-        return _('The ODK form does not contain any submissions with GPS coordinates')
+        return 'The ODK form does not contain any submissions with GPS coordinates'
 
 
 @celeryApp.task(base=CeleryTask)
-def build_kml(settings, form_schema, kml_file, primary_key):
+def build_kml(settings, form_schema, kml_file, primary_key, locale):
+    parts = __file__.split('/products/')
+    this_file_path = parts[0] + "/locale"
+    es = gettext.translation('formshare',
+                             localedir=this_file_path,
+                             languages=[locale])
+    es.install()
+    _ = es.gettext
+
     task_id = build_kml.request.id
     engine = get_engine(settings)
     sql = "SELECT count(surveyid) as total FROM " + form_schema + ".maintable WHERE _geopoint IS NOT NULL"
@@ -56,7 +61,13 @@ def build_kml(settings, form_schema, kml_file, primary_key):
             geo_point = submission['_geopoint']
             parts = geo_point.split(" ")
             if len(parts) >= 2:
-                kml.newpoint(name=submission[primary_key], coords=[(float(parts[1]), float(parts[0]))])
+                try:
+                    key = submission[primary_key]
+                    if not type(key) == str:
+                        key = str(key)
+                    kml.newpoint(name=key, coords=[(float(parts[1]), float(parts[0]))])
+                except Exception as e:
+                    log.error("Cannot process point for {}. Error {}".format(submission[primary_key], str(e)))
         kml.save(kml_file)
     else:
         raise EmptyFileError(_('The ODK form does not contain any submissions with GPS coordinates'))

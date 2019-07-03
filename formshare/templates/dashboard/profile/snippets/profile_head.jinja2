@@ -20,17 +20,17 @@
     {% block profile_user_stats %}
         <div class="col-md-3">
             <dl class="row mb-0">
-                <div class="col-sm-4 text-sm-right"><dt>Joined:</dt> </div>
-                <div class="col-sm-8 text-sm-left"><dd class="mb-1">  {{ request.h.humanize_date(userDetails.user_cdate) }}</dd> </div>
+                <div class="col-sm-4 text-sm-right"><dt>{{ _('Joined') }}:</dt> </div>
+                <div class="col-sm-8 text-sm-left"><dd class="mb-1">  {{ request.h.humanize_date(userDetails.user_cdate, request.locale_name) }}</dd> </div>
             </dl>
             {% if viewingSelfAccount %}
                 <dl class="row mb-0">
-                    <div class="col-sm-4 text-sm-right"><dt>API key:</dt> </div>
+                    <div class="col-sm-4 text-sm-right"><dt>{{ _('API key') }}:</dt> </div>
                     <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ userDetails.user_apikey }} <button class="btn btn-xs btn-default clipboard" data-clipboard-text="{{ userDetails.user_apikey }}"><i class="far fa-clipboard" title="{{ _('Copy to clipboard') }}"></i></button></dd></div>
                 </dl>
             {% endif %}
             <dl class="row mb-0">
-                <div class="col-sm-4 text-sm-right"><dt>Collaborators:</dt> </div>
+                <div class="col-sm-4 text-sm-right"><dt>{{ _('Collaborators') }}:</dt> </div>
                 <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ userDetails.user_stats.collaborators|length }}</dd></div>
             </dl>
         </div>
@@ -38,15 +38,15 @@
     {% block profile_project_stats %}
         <div class="col-md-3">
             <dl class="row mb-0">
-                <div class="col-sm-4 text-sm-right"><dt>Projects:</dt> </div>
+                <div class="col-sm-4 text-sm-right"><dt>{{ _('Projects') }}:</dt> </div>
                 <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ userDetails.user_stats.num_projects }}</dd></div>
             </dl>
             <dl class="row mb-0">
-                <div class="col-sm-4 text-sm-right"><dt>Last project:</dt> </div>
-                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {% if userDetails.user_stats.last_project != None  %}{{ request.h.humanize_date(userDetails.user_stats.last_project) }}{% else %}{{ _('without projects') }}{% endif %}</dd></div>
+                <div class="col-sm-4 text-sm-right"><dt>{{ _('Last project') }}:</dt> </div>
+                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {% if userDetails.user_stats.last_project != None  %}{{ request.h.humanize_date(userDetails.user_stats.last_project, request.locale_name) }}{% else %}{{ _('without projects') }}{% endif %}</dd></div>
             </dl>
             <dl class="row mb-0">
-                <div class="col-sm-4 text-sm-right"><dt>Forms:</dt> </div>
+                <div class="col-sm-4 text-sm-right"><dt>{{ _('Forms') }}:</dt> </div>
                 <div class="col-sm-8 text-sm-left"><dd class="mb-1">  {{ userDetails.user_stats.num_forms }}</dd> </div>
             </dl>
         </div>

@@ -106,7 +106,8 @@
             <script>
                 $(document).ready(function() {
                     var selectedLanguage = readCookie('_LOCALE_');
-                    $('#language').val(selectedLanguage);
+                    if (selectedLanguage != null)
+                        $('#language').val(selectedLanguage);
                     $("#language").bind('change', function() {
                         //on change set cookie and...
                         setCookie('_LOCALE_', this.value, 365);

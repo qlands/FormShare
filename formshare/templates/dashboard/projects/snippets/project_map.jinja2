@@ -22,12 +22,12 @@
                 {% else %}
                     {% if forms|length > 0 %}
                         {% if submissions == 0 %}
-                            Nothing to show. Waiting for submissions
+                            {{ _('Nothing to show. Waiting for submissions') }}
                         {% else %}
-                            Nothing to show. Waiting for submissions with GPS data
+                            {{ _('Nothing to show. Waiting for submissions with GPS data') }}
                         {% endif %}
                     {% else %}
-                        Nothing to show. This project has not forms
+                        {{ _('Nothing to show. This project has not forms') }}
                     {% endif %}
                 {% endif %}
             </div>

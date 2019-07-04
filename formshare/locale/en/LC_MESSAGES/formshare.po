@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-07-02 23:36-0600\n"
+"POT-Creation-Date: 2019-07-03 17:52-0600\n"
 "PO-Revision-Date: 2017-11-15 22:40-0600\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -1939,6 +1939,7 @@ msgstr ""
 #: formshare/templates/dashboard/projects/forms/import_data/import_form.jinja2:70
 #: formshare/templates/dashboard/projects/forms/import_data/import_form.jinja2:113
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:17
+#: formshare/templates/dashboard/projects/forms/snippets/upload_form_js.jinja2:15
 msgid "Choose file..."
 msgstr ""
 
@@ -2211,6 +2212,14 @@ msgstr ""
 msgid "Map"
 msgstr ""
 
+#: formshare/templates/dashboard/projects/forms/snippets/form_map.jinja2:28
+msgid "No map is available at the moment. Waiting for submissions"
+msgstr ""
+
+#: formshare/templates/dashboard/projects/forms/snippets/form_map.jinja2:30
+msgid "Waiting for submissions with GPS data"
+msgstr ""
+
 #: formshare/templates/dashboard/projects/forms/snippets/form_tasks.jinja2:5
 msgid "Products & tasks"
 msgstr ""
@@ -2443,6 +2452,10 @@ msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:7
 msgid "Upload form"
+msgstr ""
+
+#: formshare/templates/dashboard/projects/forms/snippets/upload_form_js.jinja2:5
+msgid "One moment please..."
 msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/submissions/edit_submissions.jinja2:30
@@ -2801,6 +2814,18 @@ msgstr ""
 
 #: formshare/templates/dashboard/projects/snippets/project_item.jinja2:14
 msgid "Last submission by"
+msgstr ""
+
+#: formshare/templates/dashboard/projects/snippets/project_map.jinja2:25
+msgid "Nothing to show. Waiting for submissions"
+msgstr ""
+
+#: formshare/templates/dashboard/projects/snippets/project_map.jinja2:27
+msgid "Nothing to show. Waiting for submissions with GPS data"
+msgstr ""
+
+#: formshare/templates/dashboard/projects/snippets/project_map.jinja2:30
+msgid "Nothing to show. This project has not forms"
 msgstr ""
 
 #: formshare/templates/dashboard/snippets/footer.jinja2:4

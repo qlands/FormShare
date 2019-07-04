@@ -25,9 +25,9 @@
                         This form is not georeferenced
                     {% else %}
                         {% if formDetails.submissions == 0 %}
-                            No map is available at the moment. Waiting for submissions
+                            {{ _('No map is available at the moment. Waiting for submissions') }}
                         {% else %}
-                            Waiting for submissions with GPS data
+                            {{ _('Waiting for submissions with GPS data') }}
                         {% endif %}
                     {% endif %}
                 {% endif %}

@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-07-03 17:52-0600\n"
-"PO-Revision-Date: 2019-07-03 18:00-0600\n"
+"POT-Creation-Date: 2019-07-04 07:11-0600\n"
+"PO-Revision-Date: 2019-07-04 07:12-0600\n"
 "Last-Translator: Carlos Quiros <cquiros@qlands.com>\n"
 "Language: es\n"
 "Language-Team: English <kde-i18n-doc@kde.org>\n"
@@ -2915,7 +2915,6 @@ msgid "Nothing to show. Waiting for submissions with GPS data"
 msgstr "Nada por mostrar. Esperado envíos con datos geográficos"
 
 #: formshare/templates/dashboard/projects/snippets/project_map.jinja2:30
-#| msgid "This project has no forms."
 msgid "Nothing to show. This project has not forms"
 msgstr "Nada por mostrar. Este proyecto no tiene formularios"
 
@@ -3042,6 +3041,148 @@ msgstr "Cree una cuenta"
 #: formshare/templates/generic/register.jinja2:36
 msgid "Already have an account?"
 msgstr "Ya tiene cuenta?"
+
+#: formshare/templates/landing/snippets/contact.jinja2:6
+msgid "Contact us"
+msgstr "Contáctenos"
+
+#: formshare/templates/landing/snippets/contact.jinja2:7
+msgid "If you have questions, please drop us an email or a Github issue"
+msgstr ""
+"Si tiene preguntas, por favor envíenos un correo o reporte el problema en"
+" Github "
+
+#: formshare/templates/landing/snippets/contact.jinja2:16
+msgid "Phone"
+msgstr "Teléfono"
+
+#: formshare/templates/landing/snippets/contact.jinja2:21
+msgid ""
+"This service is free for now however this could change in the future and "
+"you might need to pay a fee and accept a Terms of Service and Privacy "
+"policy"
+msgstr ""
+"Este servicio es gratis por el momento, sin embargo podría cambiar en el"
+"  futuro. Usted tendría que pagar un costo y aceptar políticas de "
+"servicio y confidencialidad"
+
+#: formshare/templates/landing/snippets/contact.jinja2:27
+msgid "Send us mail"
+msgstr "Envíenos un correo"
+
+#: formshare/templates/landing/snippets/contact.jinja2:29
+msgid "Or follow us on social platform"
+msgstr "O síguenos en plataformas sociales "
+
+#: formshare/templates/landing/snippets/contact.jinja2:41
+msgid "Registered in Costa Rica under number"
+msgstr "Registrada en Costa Rica bajo el código"
+
+#: formshare/templates/landing/snippets/features2.jinja2:5
+msgid "Centralize"
+msgstr "Centraliza"
+
+#: formshare/templates/landing/snippets/features2.jinja2:5
+msgid "data"
+msgstr "datos"
+
+#: formshare/templates/landing/snippets/features2.jinja2:5
+msgid "Decentralize"
+msgstr "Descentraliza"
+
+#: formshare/templates/landing/snippets/features2.jinja2:5
+msgid "knowledge"
+msgstr "el conocimiento"
+
+#: formshare/templates/landing/snippets/features2.jinja2:12
+msgid "Centralize data"
+msgstr "Centraliza datos"
+
+#: formshare/templates/landing/snippets/features2.jinja2:13
+msgid ""
+"Store your data in a consistent way inside a relational database without "
+"duplicates or inconsistencies"
+msgstr ""
+"Almacena tus datos en forma consistente en una base de datos relacional "
+"sin duplicaciones o inconsistencias"
+
+#: formshare/templates/landing/snippets/features2.jinja2:17
+msgid "Complete mobile support"
+msgstr "Soporte móvil completo"
+
+#: formshare/templates/landing/snippets/features2.jinja2:18
+msgid "FormShare supports data collection technologies like"
+msgstr "FormShare soporta tecnologías de recolección de datos como"
+
+#: formshare/templates/landing/snippets/features2.jinja2:27
+msgid "Decentralize data access"
+msgstr "Descentraliza el acceso a los datos"
+
+#: formshare/templates/landing/snippets/features2.jinja2:28
+msgid ""
+"Create collaborations around data and allow access anywhere using common "
+"tools like Excel, STATA or R"
+msgstr ""
+"Cree colaboraciones al rededor de los datos y provea acceso desde "
+"cualquier lugar usando programas como Excel, STATA o R"
+
+#: formshare/templates/landing/snippets/features2.jinja2:32
+msgid "Track changes"
+msgstr "Revisor de cambios"
+
+#: formshare/templates/landing/snippets/features2.jinja2:33
+msgid ""
+"Browse through your data online and track and manage the changes made on "
+"it"
+msgstr ""
+"De un vistazo a sus datos en linea y revise y administre los cambios "
+"hechos"
+
+#: formshare/templates/landing/snippets/pricing.jinja2:6
+msgid "Free access"
+msgstr "De acceso libre"
+
+#: formshare/templates/landing/snippets/pricing.jinja2:7
+msgid "This is a free* service provided by"
+msgstr "Este es un servicio libre* dado por"
+
+#: formshare/templates/landing/snippets/pricing.jinja2:112
+msgid ""
+"This could change in the future depending on the storage and processing "
+"demand."
+msgstr ""
+"Esto podría cambiar en el futuro dependiendo de la demanda en "
+"almacenamiento y procesamiento"
+
+#: formshare/templates/landing/snippets/slider.jinja2:10
+msgid "Welcome to"
+msgstr "Bienvenido a"
+
+#: formshare/templates/landing/snippets/slider.jinja2:11
+msgid "The data management platform for mobile data collection"
+msgstr "La plataforma de manejo de datos para aplicaciones móviles"
+
+#: formshare/templates/landing/snippets/slider.jinja2:21
+msgid "Built with"
+msgstr "Construido con"
+
+#: formshare/templates/landing/snippets/slider.jinja2:21
+msgid "Open source"
+msgstr "Software libre"
+
+#: formshare/templates/landing/snippets/slider.jinja2:22
+msgid "FormShare combines technologies like"
+msgstr "FormShare combina tecnologías como"
+
+#: formshare/templates/landing/snippets/slider.jinja2:22
+msgid "to give you the best experience collecting and managing mobile data"
+msgstr ""
+"para darle la mejor experiencia recolectando y administrando datos desde "
+"aplicaciones móviles"
+
+#: formshare/templates/landing/snippets/slider.jinja2:36
+msgid "Next"
+msgstr "Siguiente"
 
 #: formshare/views/assistant_groups.py:76
 msgid "The group was added to this project"
@@ -3584,5 +3725,8 @@ msgstr ""
 #~ msgstr "Error interno al llamar el programa MySQLDenormalize"
 
 #~ msgid "MySQLDenormalize Error:) "
+#~ msgstr ""
+
+#~ msgid "ForShare supports data collection technologies like"
 #~ msgstr ""
 

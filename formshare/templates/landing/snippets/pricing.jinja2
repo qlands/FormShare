@@ -3,12 +3,12 @@
         <div class="row m-b-lg">
             <div class="col-lg-12 text-center">
                 <div class="navy-line"></div>
-                <h1>Pricing</h1>
-{#                <p>Donec sed odio dui. Etiam porta sem malesuada magna mollis euismod.</p>#}
+                <h1>{{ _('Free access') }}</h1>
+                <p>{{ _('This is a free* service provided by') }} QLands Technology Consultants S.A. </p>
             </div>
         </div>
-        <div class="row">
-            <div class="col-lg-4 wow zoomIn">
+{#        <div class="row">#}
+{#            <div class="col-lg-4 wow zoomIn">#}
 {#                <ul class="pricing-plan list-unstyled">#}
 {#                    <li class="pricing-title">#}
 {#                        Basic#}
@@ -38,44 +38,44 @@
 {#                        <a class="btn btn-primary btn-xs" href="#">Signup</a>#}
 {#                    </li>#}
 {#                </ul>#}
-            </div>
-
-            <div class="col-lg-4 wow zoomIn">
-                <ul class="pricing-plan list-unstyled selected">
-                    <li class="pricing-title">
-                        Tryout version
-                    </li>
-                    <li class="pricing-desc">
-                        The current version is a tryout while we sort some legal aspects and policies and costing.
-                    </li>
-                    <li class="pricing-price">
-                        <span>Free</span>
-                    </li>
-                    <li>
-                        Unlimited projects
-                    </li>
-                    <li>
-                        Unlimited ODK forms
-                    </li>
-                    <li>
-                        RDMS repository
-                    </li>
-                    <li>
-                        Web data cleaning
-                    </li>
-                    <li>
-                        OData access
-                    </li>
-                    <li>
-                        <strong>Support via Github issues</strong>
-                    </li>
-                    <li class="plan-action">
-                        <a class="btn btn-primary btn-xs" href="{{ request.route_url('register') }}">Sign up</a>
-                    </li>
-                </ul>
-            </div>
-
-            <div class="col-lg-4 wow zoomIn">
+{#            </div>#}
+{##}
+{#            <div class="col-lg-4 wow zoomIn">#}
+{#                <ul class="pricing-plan list-unstyled selected">#}
+{#                    <li class="pricing-title">#}
+{#                        Tryout version#}
+{#                    </li>#}
+{#                    <li class="pricing-desc">#}
+{#                        The current version is a tryout while we sort some legal aspects and policies and costing.#}
+{#                    </li>#}
+{#                    <li class="pricing-price">#}
+{#                        <span>Free</span>#}
+{#                    </li>#}
+{#                    <li>#}
+{#                        Unlimited projects#}
+{#                    </li>#}
+{#                    <li>#}
+{#                        Unlimited ODK forms#}
+{#                    </li>#}
+{#                    <li>#}
+{#                        RDMS repository#}
+{#                    </li>#}
+{#                    <li>#}
+{#                        Web data cleaning#}
+{#                    </li>#}
+{#                    <li>#}
+{#                        OData access#}
+{#                    </li>#}
+{#                    <li>#}
+{#                        <strong>Support via Github issues</strong>#}
+{#                    </li>#}
+{#                    <li class="plan-action">#}
+{#                        <a class="btn btn-primary btn-xs" href="{{ request.route_url('register') }}">Sign up</a>#}
+{#                    </li>#}
+{#                </ul>#}
+{#            </div>#}
+{##}
+{#            <div class="col-lg-4 wow zoomIn">#}
 {#                <ul class="pricing-plan list-unstyled">#}
 {#                    <li class="pricing-title">#}
 {#                        Premium#}
@@ -105,11 +105,11 @@
 {#                        <a class="btn btn-primary btn-xs" href="#">Signup</a>#}
 {#                    </li>#}
 {#                </ul>#}
-            </div>
-        </div>
+{#            </div>#}
+{#        </div>#}
         <div class="row m-t-lg">
             <div class="col-lg-12 text-center m-t-lg">
-                <p>*The tryout version is for testing purposes only and not for production. Data might be erased at any time.</p>
+                <p>* {{ _('This could change in the future depending on the storage and processing demand.') }}.</p>
             </div>
         </div>
     </div>

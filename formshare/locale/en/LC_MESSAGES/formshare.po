@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-07-03 17:52-0600\n"
+"POT-Creation-Date: 2019-07-04 07:11-0600\n"
 "PO-Revision-Date: 2017-11-15 22:40-0600\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -2946,6 +2946,133 @@ msgstr ""
 msgid "Already have an account?"
 msgstr ""
 
+#: formshare/templates/landing/snippets/contact.jinja2:6
+msgid "Contact us"
+msgstr ""
+
+#: formshare/templates/landing/snippets/contact.jinja2:7
+msgid "If you have questions, please drop us an email or a Github issue"
+msgstr ""
+
+#: formshare/templates/landing/snippets/contact.jinja2:16
+msgid "Phone"
+msgstr ""
+
+#: formshare/templates/landing/snippets/contact.jinja2:21
+msgid ""
+"This service is free for now however this could change in the future and "
+"you might need to pay a fee and accept a Terms of Service and Privacy "
+"policy"
+msgstr ""
+
+#: formshare/templates/landing/snippets/contact.jinja2:27
+msgid "Send us mail"
+msgstr ""
+
+#: formshare/templates/landing/snippets/contact.jinja2:29
+msgid "Or follow us on social platform"
+msgstr ""
+
+#: formshare/templates/landing/snippets/contact.jinja2:41
+msgid "Registered in Costa Rica under number"
+msgstr ""
+
+#: formshare/templates/landing/snippets/features2.jinja2:5
+msgid "Centralize"
+msgstr ""
+
+#: formshare/templates/landing/snippets/features2.jinja2:5
+msgid "data"
+msgstr ""
+
+#: formshare/templates/landing/snippets/features2.jinja2:5
+msgid "Decentralize"
+msgstr ""
+
+#: formshare/templates/landing/snippets/features2.jinja2:5
+msgid "knowledge"
+msgstr ""
+
+#: formshare/templates/landing/snippets/features2.jinja2:12
+msgid "Centralize data"
+msgstr ""
+
+#: formshare/templates/landing/snippets/features2.jinja2:13
+msgid ""
+"Store your data in a consistent way inside a relational database without "
+"duplicates or inconsistencies"
+msgstr ""
+
+#: formshare/templates/landing/snippets/features2.jinja2:17
+msgid "Complete mobile support"
+msgstr ""
+
+#: formshare/templates/landing/snippets/features2.jinja2:18
+msgid "FormShare supports data collection technologies like"
+msgstr ""
+
+#: formshare/templates/landing/snippets/features2.jinja2:27
+msgid "Decentralize data access"
+msgstr ""
+
+#: formshare/templates/landing/snippets/features2.jinja2:28
+msgid ""
+"Create collaborations around data and allow access anywhere using common "
+"tools like Excel, STATA or R"
+msgstr ""
+
+#: formshare/templates/landing/snippets/features2.jinja2:32
+msgid "Track changes"
+msgstr ""
+
+#: formshare/templates/landing/snippets/features2.jinja2:33
+msgid ""
+"Browse through your data online and track and manage the changes made on "
+"it"
+msgstr ""
+
+#: formshare/templates/landing/snippets/pricing.jinja2:6
+msgid "Free access"
+msgstr ""
+
+#: formshare/templates/landing/snippets/pricing.jinja2:7
+msgid "This is a free* service provided by"
+msgstr ""
+
+#: formshare/templates/landing/snippets/pricing.jinja2:112
+msgid ""
+"This could change in the future depending on the storage and processing "
+"demand."
+msgstr ""
+
+#: formshare/templates/landing/snippets/slider.jinja2:10
+msgid "Welcome to"
+msgstr ""
+
+#: formshare/templates/landing/snippets/slider.jinja2:11
+msgid "The data management platform for mobile data collection"
+msgstr ""
+
+#: formshare/templates/landing/snippets/slider.jinja2:21
+msgid "Built with"
+msgstr ""
+
+#: formshare/templates/landing/snippets/slider.jinja2:21
+msgid "Open source"
+msgstr ""
+
+#: formshare/templates/landing/snippets/slider.jinja2:22
+msgid "FormShare combines technologies like"
+msgstr ""
+
+#: formshare/templates/landing/snippets/slider.jinja2:22
+msgid "to give you the best experience collecting and managing mobile data"
+msgstr ""
+
+#: formshare/templates/landing/snippets/slider.jinja2:36
+msgid "Next"
+msgstr ""
+
 #: formshare/views/assistant_groups.py:76
 msgid "The group was added to this project"
 msgstr ""
@@ -3515,5 +3642,8 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "Inital version"
+#~ msgstr ""
+
+#~ msgid "ForShare supports data collection technologies like"
 #~ msgstr ""
 

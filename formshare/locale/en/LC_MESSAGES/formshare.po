@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-07-04 07:11-0600\n"
+"POT-Creation-Date: 2019-07-04 23:14-0600\n"
 "PO-Revision-Date: 2017-11-15 22:40-0600\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -208,35 +208,39 @@ msgid ""
 "with repeat_count = 1 and try to upload the form again."
 msgstr ""
 
-#: formshare/processes/odk/api.py:360 formshare/processes/odk/api.py:520
+#: formshare/processes/odk/api.py:346 formshare/processes/odk/api.py:509
+msgid "No file was attached"
+msgstr ""
+
+#: formshare/processes/odk/api.py:364 formshare/processes/odk/api.py:528
 msgid "Invalid file type"
 msgstr ""
 
-#: formshare/processes/odk/api.py:479
+#: formshare/processes/odk/api.py:483
 msgid "The form already exists in this project"
 msgstr ""
 
-#: formshare/processes/odk/api.py:481 formshare/processes/odk/api.py:646
+#: formshare/processes/odk/api.py:485 formshare/processes/odk/api.py:654
 msgid ""
 "The form ID has especial characters. FormShare only allows letters, "
 "numbers and underscores(_)"
 msgstr ""
 
-#: formshare/processes/odk/api.py:484
+#: formshare/processes/odk/api.py:488
 msgid "Cannot find XForm ID. Please post this ODK form in an issue on "
 msgstr ""
 
-#: formshare/processes/odk/api.py:641
+#: formshare/processes/odk/api.py:649
 msgid "The form does not exists in this project"
 msgstr ""
 
-#: formshare/processes/odk/api.py:643
+#: formshare/processes/odk/api.py:651
 msgid ""
 "The \"form_id\" of the current form does not match the \"form_id\" of the"
 " one you uploaded. You cannot update a form with another form"
 msgstr ""
 
-#: formshare/processes/odk/api.py:649
+#: formshare/processes/odk/api.py:657
 msgid "Cannot find XForm ID. Please post the form as an issue on "
 msgstr ""
 
@@ -499,7 +503,7 @@ msgstr ""
 #: formshare/templates/assistant/clean/clean_data.jinja2:5
 #: formshare/templates/assistant/clean/snippets/brdcrbs_clean.jinja2:8
 #: formshare/templates/dashboard/projects/forms/snippets/links_tab.jinja2:26
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:56
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:32
 msgid "Clean data"
 msgstr ""
 
@@ -1244,7 +1248,7 @@ msgstr ""
 #: formshare/templates/dashboard/projects/snippets/brdcrbs_prjedit.jinja2:14
 #: formshare/templates/dashboard/projects/snippets/project_details.jinja2:14
 #: formshare/templates/dashboard/projects/snippets/project_details.jinja2:46
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:62
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:38
 #: formshare/templates/dashboard/projects/snippets/project_item.jinja2:24
 msgid "Edit"
 msgstr ""
@@ -1542,7 +1546,7 @@ msgstr ""
 #: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:45
 #: formshare/templates/dashboard/projects/forms/snippets/product_item.jinja2:60
 #: formshare/templates/dashboard/projects/forms/snippets/product_item.jinja2:65
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:64
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:40
 #: formshare/templates/dashboard/projects/snippets/project_item.jinja2:27
 msgid "Delete"
 msgstr ""
@@ -2269,12 +2273,16 @@ msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:41
 #: formshare/templates/dashboard/projects/repository/create_repository.jinja2:201
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:40
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:29
 msgid "Create repository"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:42
 msgid "Update ODK form"
+msgstr ""
+
+#: formshare/templates/dashboard/projects/forms/snippets/links_tab.jinja2:4
+msgid "Form links & downloads"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/snippets/links_tab.jinja2:4
@@ -2291,17 +2299,15 @@ msgid "Download ODK form"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/snippets/links_tab.jinja2:27
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:57
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:33
 msgid "Clean error logs"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/snippets/links_tab.jinja2:31
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:34
 msgid "Download data in CSV format"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/snippets/links_tab.jinja2:32
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:35
 msgid "Download submitted media"
 msgstr ""
 
@@ -2371,26 +2377,22 @@ msgid "Publish"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/snippets/products_tab.jinja2:4
-msgid "Form products"
+msgid "Form data downloads"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/snippets/products_tab.jinja2:23
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:46
 msgid "Export data in Excel format"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/snippets/products_tab.jinja2:24
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:47
 msgid "Export submitted media"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/snippets/products_tab.jinja2:25
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:48
 msgid "Export data in CSV format"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/snippets/products_tab.jinja2:27
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:50
 msgid "Export KML"
 msgstr ""
 
@@ -2763,37 +2765,37 @@ msgstr ""
 msgid "With repository"
 msgstr ""
 
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:31
-msgid "Downloads"
-msgstr ""
-
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:43
-msgid "Exports"
-msgstr ""
-
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:61
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:37
 msgid "Activate form"
 msgstr ""
 
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:61
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:37
 msgid "Are you sure that you want to activate this form"
 msgstr ""
 
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:61
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:37
 msgid "Deactivate form"
 msgstr ""
 
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:61
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:37
 msgid "Are you sure that you want to deactivate this form"
 msgstr ""
 
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:61
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:37
 #: formshare/templates/dashboard/projects/snippets/project_item.jinja2:22
 msgid "Set as active"
 msgstr ""
 
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:61
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:37
 msgid "Set as inactive"
+msgstr ""
+
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:42
+msgid "Update form and more..."
+msgstr ""
+
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:42
+msgid "Data downloads and more..."
 msgstr ""
 
 #: formshare/templates/dashboard/projects/snippets/project_forms.jinja2:23
@@ -3645,5 +3647,14 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "ForShare supports data collection technologies like"
+#~ msgstr ""
+
+#~ msgid "Form products"
+#~ msgstr ""
+
+#~ msgid "Downloads"
+#~ msgstr ""
+
+#~ msgid "Exports"
 #~ msgstr ""
 

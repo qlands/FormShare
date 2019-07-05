@@ -128,9 +128,6 @@ class AddNewForm(PrivateView):
                 next_page = self.request.params.get('next') or self.request.route_url('project_details',
                                                                                       userid=project_details['owner'],
                                                                                       projcode=project_code)
-                print("***************44")
-                print(message)
-                print("***************44")
                 self.add_error(self._('Unable to upload the form: ') + message)
                 return HTTPFound(next_page)
 

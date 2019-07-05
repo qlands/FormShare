@@ -19,9 +19,6 @@ class EmptyFileError(Exception):
         Exception raised when there is an error while creating the repository.
     """
 
-    def __str__(self):
-        return 'The ODK form does not contain any media'
-
 
 @celeryApp.task(base=CeleryTask)
 def build_media_zip(settings, odk_dir, form_directory, form_schema, zip_file, primary_key, locale):

@@ -4,6 +4,7 @@ import logging
 from subprocess import Popen, PIPE
 import os
 import uuid
+import gettext
 
 log = logging.getLogger(__name__)
 
@@ -13,25 +14,22 @@ class BuildFileError(Exception):
         Exception raised when there is an error while creating the repository.
     """
 
-    def __str__(self):
-        return _('Unknown error while creating the XLSX. Sorry about this. Please report this error as an issue on ') \
-               + "https://github.com/qlands/FormShare"
-
 
 class SheetNameError(Exception):
     """
         Exception raised when there is an error while creating the repository.
     """
 
-    def __str__(self):
-        return _(
-                'A worksheet name has been repeated. Excel only allow 30 characters in the worksheet name. '
-                'You can fix this by editing the dictionary and change the description of the tables to a maximum of '
-                '30 characters.')
-
 
 @celeryApp.task(base=CeleryTask)
-def build_xlsx(settings, odk_dir, form_directory, form_schema, form_id, xlsx_file, include_sensitive):
+def build_xlsx(settings, odk_dir, form_directory, form_schema, form_id, xlsx_file, include_sensitive, locale):
+    parts = __file__.split('/products/')
+    this_file_path = parts[0] + "/locale"
+    es = gettext.translation('formshare',
+                             localedir=this_file_path,
+                             languages=[locale])
+    es.install()
+    _ = es.gettext
 
     mysql_user = settings['mysql.user']
     mysql_password = settings['mysql.password']
@@ -65,6 +63,10 @@ def build_xlsx(settings, odk_dir, form_directory, form_schema, form_id, xlsx_fil
         log.error("MySQLToXLSX Error: " + stderr.decode() + "-" + stdout.decode() + ". Args: " + " ".join(args))
         error = stdout.decode() + stderr.decode()
         if error.find("Worksheet name is already in use") >= 0:
-            raise SheetNameError()
+            raise SheetNameError(_(
+                'A worksheet name has been repeated. Excel only allow 30 characters in the worksheet name. '
+                'You can fix this by editing the dictionary and change the description of the tables to a maximum of '
+                '30 characters.'))
         else:
-            raise BuildFileError()
+            raise BuildFileError(_("Unknown error while creating the XLSX. Sorry about this. "
+                                   "Please report this error as an issue on https://github.com/qlands/FormShare"))

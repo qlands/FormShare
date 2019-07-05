@@ -53,7 +53,7 @@
 
 {% block mainsection %}
     {% if formDetails.form_type == 1 %}
-        {{ form.display_errors(errors) }}
+        {{ form.display_errors(errors,True) }}
         <div class="row">
             <div class="col-lg-3">
                 <div class="wrapper wrapper-content project-manager">

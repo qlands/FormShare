@@ -20,9 +20,6 @@ class BuildDataBaseError(Exception):
         Exception raised when there is an error while creating the repository.
     """
 
-    def __str__(self):
-        return 'Error building database'
-
 
 def get_odk_path(settings):
     repository_path = settings['repository.path']

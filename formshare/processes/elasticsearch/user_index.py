@@ -1,6 +1,6 @@
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import RequestError
-import pprint
+
 
 class UserExistError(Exception):
     """

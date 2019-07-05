@@ -103,7 +103,7 @@
     {% if formDetails.form_schema == None and formDetails.form_reptask != None and taskdata.rescode > 0 %}
         <div class="row">
             <div class="col-lg-12">
-                <h4 class="text-center text-danger">{{ _('This form is still in testing stage. Your last attempt to generate its repository reported an error. You can report this as an issue at ') }} <a href="https://github.com/qlands/FormShare/issues" target="_blank">https://github.com/qlands/FormShare/issues</a>. {{ _('Access the error log ') }} <a href="#" target="_blank">{{ _('here') }}</a>. {{ _('Please remember to attach your ODK Form file and error log when creating an issue') }}</h4>
+                <h4 class="text-center text-danger">{{ _('This form is still in testing stage. Your last attempt to generate its repository reported an error. You can report this as an issue at ') }} <a href="https://github.com/qlands/FormShare/issues" target="_blank">https://github.com/qlands/FormShare/issues</a>. {{ _('Access the error log ') }} <a style="color: blue" data-toggle="modal" data-target="#product_error" data-task-id="{{ formDetails.form_reptask }}" class="error_link">{{ _('here') }}</a> . {{ _('Please remember to attach your ODK Form file and error log when creating an issue') }}</h4>
                 <h4 class="text-center">{{ _('Correct the problem, upload the new version and')}} <a href="{{ request.route_url('createrepository',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" style="color: #026AA8 !important;">{{ _('try again') }}</a></h4>
             </div>
         </div>

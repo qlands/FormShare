@@ -14,9 +14,6 @@ class EmptyFileError(Exception):
         Exception raised when there is an error while creating the repository.
     """
 
-    def __str__(self):
-        return 'The ODK form does not contain any submissions with GPS coordinates'
-
 
 @celeryApp.task(base=CeleryTask)
 def build_kml(settings, form_schema, kml_file, primary_key, locale):

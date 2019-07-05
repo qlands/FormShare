@@ -20,26 +20,17 @@ class EmptyFileError(Exception):
         Exception raised when there is an error while creating the CSV.
     """
 
-    def __str__(self):
-        return 'The ODK form does not contain any submissions'
-
 
 class DummyError(Exception):
     """
         Exception raised when there is an error while creating the CSV.
     """
 
-    def __str__(self):
-        return 'Error creating dummy file'
-
 
 class MySQLDenormalizeError(Exception):
     """
         Exception raised when there is an error while creating the CSV.
     """
-
-    def __str__(self):
-        return 'Error calling MySQLDenormalize'
 
 
 def flatten_json(y):

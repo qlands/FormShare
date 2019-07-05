@@ -338,8 +338,12 @@ def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
     paths = ['tmp', uid]
     os.makedirs(os.path.join(odk_dir, *paths))
 
-    input_file = request.POST['xlsx'].file
-    input_file_name = request.POST['xlsx'].filename.lower()
+    try:
+        input_file = request.POST['xlsx'].file
+        input_file_name = request.POST['xlsx'].filename.lower()
+    except Exception as e:
+        log.error("The post xlsx elements is empty. Error {}".format(str(e)))
+        return False, _('No file was attached')
 
     paths = ['tmp', uid, input_file_name]
     file_name = os.path.join(odk_dir, *paths)
@@ -497,8 +501,12 @@ def update_odk_form(request, project_id, for_form_id, odk_dir, form_data):
     paths = ['tmp', uid]
     os.makedirs(os.path.join(odk_dir, *paths))
 
-    input_file = request.POST['xlsx'].file
-    input_file_name = request.POST['xlsx'].filename.lower()
+    try:
+        input_file = request.POST['xlsx'].file
+        input_file_name = request.POST['xlsx'].filename.lower()
+    except Exception as e:
+        log.error("The post xlsx elements is empty. Error {}".format(str(e)))
+        return False, _('No file was attached')
 
     paths = ['tmp', uid, input_file_name]
     file_name = os.path.join(odk_dir, *paths)

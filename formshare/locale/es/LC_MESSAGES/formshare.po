@@ -9,7 +9,7 @@ msgstr ""
 "Project-Id-Version: formshare 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2019-07-04 07:11-0600\n"
-"PO-Revision-Date: 2019-07-04 07:12-0600\n"
+"PO-Revision-Date: 2019-07-04 21:31-0600\n"
 "Last-Translator: Carlos Quiros <cquiros@qlands.com>\n"
 "Language: es\n"
 "Language-Team: English <kde-i18n-doc@kde.org>\n"
@@ -504,16 +504,16 @@ msgstr "Use ésta imagen QR para configurar ODK Collect"
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:131
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_item.jinja2:38
 msgid "Change password"
-msgstr "Cambiar la palabra de acceso"
+msgstr "Cambiar la contraseña"
 
 #: formshare/templates/assistant/page.jinja2:61
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:106
 msgid "Change password of"
-msgstr "Cambiar la palabra clave de"
+msgstr "Cambiar la contraseña de"
 
 #: formshare/templates/assistant/page.jinja2:68
 msgid "Old password"
-msgstr "Antigua palabra de acceso"
+msgstr "Antigua contraseña"
 
 #: formshare/templates/assistant/page.jinja2:74
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:114
@@ -522,7 +522,7 @@ msgstr "Antigua palabra de acceso"
 #: formshare/templates/generic/login.jinja2:40
 #: formshare/templates/generic/register.jinja2:22
 msgid "Password"
-msgstr "Palabra de acceso"
+msgstr "Contraseña"
 
 #: formshare/templates/assistant/page.jinja2:81
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:121
@@ -1085,7 +1085,7 @@ msgstr "Mi perfil"
 
 #: formshare/templates/assistant/snippets/header.jinja2:16
 msgid "Change my password"
-msgstr "Cambiar mi palabra clave"
+msgstr "Cambiar mi contraseña"
 
 #: formshare/templates/assistant/snippets/header.jinja2:51
 #: formshare/templates/dashboard/snippets/header.jinja2:51
@@ -1641,7 +1641,7 @@ msgstr "Número de teléfono"
 
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:178
 msgid "Changing password for"
-msgstr "Cambiar la palabra clave de"
+msgstr "Cambiar contraseña de"
 
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2:5
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form_edit.jinja2:4
@@ -1661,7 +1661,7 @@ msgstr "Nombre completo"
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2:35
 #: formshare/templates/generic/register.jinja2:25
 msgid "Password confirmation"
-msgstr "Confirmación de la palabra clave"
+msgstr "Confirmación de la contraseña"
 
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2:42
 msgid "Share among projects"
@@ -3223,12 +3223,12 @@ msgstr "El asistente fue añadido a este proyecto"
 #: formshare/views/assistant_views/forms.py:73 formshare/views/assistants.py:89
 #: formshare/views/assistants.py:241 formshare/views/basic_views.py:240
 msgid "The password cannot be empty"
-msgstr "La palabra clave no puede ser vacía"
+msgstr "La contraseña no puede ser vacía"
 
 #: formshare/views/assistant_views/forms.py:70 formshare/views/assistants.py:91
 #: formshare/views/assistants.py:238 formshare/views/basic_views.py:236
 msgid "The password and its confirmation are not the same"
-msgstr "La palabra clave y su confirmación no son iguales"
+msgstr "La contraseña y su confirmación no son iguales"
 
 #: formshare/views/assistants.py:93
 msgid "You need to specify an user name"
@@ -3248,16 +3248,16 @@ msgstr "No se pudo borrar el asistente:"
 
 #: formshare/views/assistants.py:232
 msgid "The password was changed successfully"
-msgstr "La palabra clave fue cambiada satisfactoriamente"
+msgstr "La contraseña fue cambiada satisfactoriamente"
 
 #: formshare/views/assistant_views/forms.py:64
 #: formshare/views/assistants.py:235
 msgid "Unable to change the password: "
-msgstr "No se pudo cambiar la palabra clave:"
+msgstr "No se pudo cambiar la contraseña:"
 
 #: formshare/views/basic_views.py:72 formshare/views/basic_views.py:74
 msgid "The user account does not exists or the password is invalid"
-msgstr "La cuenta del usuario no existe o la palabra clave no es válida"
+msgstr "La cuenta del usuario no existe o la contraseña no es válida"
 
 #: formshare/views/basic_views.py:131
 msgid "Invalid credentials"
@@ -3502,7 +3502,7 @@ msgstr "Usted necesita indicar su correo electrónico"
 
 #: formshare/views/assistant_views/forms.py:67
 msgid "The old password is not correct"
-msgstr "La antigua palabra de acceso es incorrecta"
+msgstr "La antigua contraseña es incorrecta"
 
 #: formshare/views/assistant_views/jsonlogs.py:108
 #: formshare/views/assistant_views/jsonlogs.py:473

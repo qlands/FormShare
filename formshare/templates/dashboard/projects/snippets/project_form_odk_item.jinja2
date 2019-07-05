@@ -26,32 +26,8 @@
                     {% block form_item_actions %}
                         <a class="btn btn-xs btn-white" href="{{ request.route_url('form_download_xlsx',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id) }}"><i class="fab fa-wpforms"></i> {{ _('Download ODK form') }}</a>
                         {% if form.form_schema == None %}
-                            {% if form.submissions > 0  %}
-                                <div id="btn-group-{{ form.form_id }}" class="btn-group">
-                                    <button data-toggle="dropdown" class="btn btn-default btn-xs dropdown-toggle">{{ _('Downloads') }}</button>
-                                    <ul id="dropdown-menu-{{ form.form_id }}" class="dropdown-menu">
-                                        {% block download_types_norepo %}
-                                            <li><a class="dropdown-item" href="{{ request.route_url('form_download_csv',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id, _query={'next': request.url}) }}">{{ _('Download data in CSV format') }}</a></li>
-                                            <li><a class="dropdown-item" href="{{ request.route_url('form_download_media',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id, _query={'next': request.url}) }}">{{ _('Download submitted media') }}</a></li>
-                                        {% endblock download_types_norepo %}
-                                    </ul>
-                                </div>
-                            {% endif %}
                             <a href="{{ request.route_url('createrepository',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id) }}" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-database"></i> {{ _('Create repository') }} </a>
                         {% else %}
-                            <div id="btn-group-{{ form.form_id }}" class="btn-group">
-                                <button data-toggle="dropdown" class="btn btn-default btn-xs dropdown-toggle">{{ _('Exports') }}</button>
-                                <ul id="dropdown-menu-{{ form.form_id }}" class="dropdown-menu">
-                                    {% block download_types_repo %}
-                                        <li><a class="dropdown-item" href="{{ request.route_url('form_download_xlsx_data',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next':request.url}) }}"><i class="far fa-file-excel"></i> {{ _('Export data in Excel format') }}</a></li>
-                                        <li><a class="dropdown-item" href="{{ request.route_url('form_download_media',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next':request.url}) }}"><i class="fas fa-images"></i> {{ _('Export submitted media') }}</a></li>
-                                        <li><a class="dropdown-item" href="{{ request.route_url('form_download_repo_csv',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next':request.url}) }}"><i class="fas fa-file-csv"></i> {{ _('Export data in CSV format') }}</a></li>
-                                        {% if form.submissions > 0 and form.form_geopoint != None and withgps > 0 %}
-                                            <li><a style="line-height: 1.5;" href="{{ request.route_url('form_download_kml',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id) }}"><i class="fas fa-globe-americas"></i> {{ _('Export KML') }}</a></li>
-                                        {% endif %}
-                                    {% endblock download_types_repo %}
-                                </ul>
-                            </div>
                             {% block form_item_links %}
                                 <a class="btn btn-xs btn-white" target="_blank" href="{{ request.route_url('clean', userid=projectData.owner, projcode=projectData.project_code,formid=form.form_id) }}"><i class="fa fa-pencil"></i> {{ _('Clean data') }}</a>
                                 <a class="btn btn-xs btn-white" target="_blank" href="{{ request.route_url('errorlist', userid=projectData.owner, projcode=projectData.project_code,formid=form.form_id) }}"><i class="fa fa-bug"></i> {{ _('Clean error logs') }}</a>
@@ -63,6 +39,7 @@
                             {% if projectData.access_type == 1 or form.pubby.user_id == activeUser.id %}
                                 <a urn="{{ request.route_url('delete_form', userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next': request.url}) }}" class="btn btn-xs btn-white remove_form"><i style="color: red" class="far fa-trash-alt"></i> {{ _('Delete') }}</a>
                             {% endif %}
+                            <a href="{{ request.route_url('form_details',userid=userid,projcode=projectData.project_code,formid=form.form_id) }}" class="btn btn-xs btn-white"><i class="fas fa-gift"></i> {% if form.form_schema == None %}{{ _('Update form and more...') }}{% else %}{{ _('Data downloads and more...') }}{% endif %}</a>
                         {% endblock form_item_maintance %}
                     {% endblock %}
                 </div>

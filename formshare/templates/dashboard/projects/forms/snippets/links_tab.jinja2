@@ -1,7 +1,7 @@
 <div class="ibox">
     <div class="ibox-title">
         {% block links_tab_title %}
-            <h5>{{ _('Form links') }}</h5>
+            <h5>{% if formDetails.form_schema == None %}{{ _('Form links & downloads') }}{% else %}{{ _('Form links') }}{% endif %}</h5>
             <div class="ibox-tools">
                 {% block links_tab_tools %}
                     <a class="collapse-link">

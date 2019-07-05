@@ -94,6 +94,7 @@ def build_csv(settings, form_directory, form_schema, csv_file, locale):
             "-m " + maps_path, "-o " + out_path, "-T " + temp_path, "-i"]
 
     send_task_status_to_form(settings, task_id, _("Denormalizing database"))
+    log.error(" ".join(args))
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()
     if p.returncode == 0:

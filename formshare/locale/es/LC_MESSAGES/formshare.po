@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-07-05 12:50-0600\n"
-"PO-Revision-Date: 2019-07-05 12:52-0600\n"
+"POT-Creation-Date: 2019-07-08 10:31-0600\n"
+"PO-Revision-Date: 2019-07-08 10:36-0600\n"
 "Last-Translator: Carlos Quiros <cquiros@qlands.com>\n"
 "Language: es\n"
 "Language-Team: English <kde-i18n-doc@kde.org>\n"
@@ -51,11 +51,11 @@ msgstr "El colaborador ya es parte de éste proyecto"
 msgid "The file {} already exist"
 msgstr "El archivo {} ya existe"
 
-#: formshare/processes/db/products.py:63
+#: formshare/processes/db/products.py:69
 msgid "Unable to delete product file"
 msgstr "No se pudo borrar el producto:"
 
-#: formshare/processes/db/products.py:65
+#: formshare/processes/db/products.py:71
 msgid "Output does not exists"
 msgstr "La salida no existe"
 
@@ -316,74 +316,98 @@ msgid "There are not submissions to download"
 msgstr "No hay envíos para descargar"
 
 #: formshare/processes/submission/api.py:181
-#: formshare/processes/submission/api.py:204 formshare/products/products.py:76
-#: formshare/products/products.py:84
+#: formshare/processes/submission/api.py:204 formshare/products/products.py:82
+#: formshare/products/products.py:90
 msgid "Without description"
 msgstr "Sin descripción"
 
-#: formshare/processes/submission/api.py:449
-#: formshare/processes/submission/api.py:518
+#: formshare/processes/submission/api.py:324
+#: formshare/templates/dashboard/projects/forms/dictionary/edit_fields.jinja2:255
+#: formshare/templates/dashboard/projects/forms/dictionary/edit_fields.jinja2:275
+msgid "Exclude it"
+msgstr "Exclúyelo"
+
+#: formshare/processes/submission/api.py:326
+#: formshare/templates/dashboard/projects/forms/dictionary/edit_fields.jinja2:265
+msgid "Recode it"
+msgstr "Re-codifíquelo"
+
+#: formshare/processes/submission/api.py:328
+msgid "Unlink it"
+msgstr "Desconéctelo"
+
+#: formshare/processes/submission/api.py:461
+#: formshare/processes/submission/api.py:530
 msgid "AJAX Data error. Report this error as an issue on "
 msgstr "Error interno en AJAX. Reporte éste problema en"
 
-#: formshare/processes/submission/api.py:549
-#: formshare/processes/submission/api.py:552
+#: formshare/processes/submission/api.py:561
+#: formshare/processes/submission/api.py:564
 msgid "Cannot update value. Check the valid values in lookup table"
 msgstr ""
 "No se pudo actualizar el valor. Revise si el valor está en la tabla de "
 "búsqueda asociada"
 
-#: formshare/products/products.py:65
+#: formshare/products/products.py:67
 #: formshare/templates/dashboard/projects/forms/import_data/import_form.jinja2:4
 #: formshare/templates/dashboard/projects/forms/import_data/import_form.jinja2:81
 msgid "Import data"
 msgstr "Importar datos"
 
-#: formshare/products/products.py:67
+#: formshare/products/products.py:69
 msgid "Build repository"
 msgstr "Crear repositorio"
 
-#: formshare/products/products.py:69
-msgid "Excel"
-msgstr "Excel"
-
 #: formshare/products/products.py:71
+msgid "Publishable Excel"
+msgstr "Excel publicable"
+
+#: formshare/products/products.py:73
+msgid "Unpublishable Excel"
+msgstr "Excel no publicable"
+
+#: formshare/products/products.py:75
 msgid "Media"
 msgstr "Medios"
 
-#: formshare/products/products.py:73
+#: formshare/products/products.py:77
 msgid "KML"
 msgstr "KML"
 
-#: formshare/products/products.py:75
-msgid "CSV"
-msgstr "CSV"
+#: formshare/products/products.py:79
+msgid "Publishable CSV"
+msgstr "CSV publicable"
 
-#: formshare/products/export/csv/celery_task.py:96
+#: formshare/products/products.py:81
+#| msgid "Unpublish"
+msgid "Unpublishable CSV"
+msgstr "CSV no publicable"
+
+#: formshare/products/export/csv/celery_task.py:170
 msgid "Denormalizing database"
 msgstr "Convirtiendo la base de datos a JSON"
 
-#: formshare/products/export/csv/celery_task.py:105
+#: formshare/products/export/csv/celery_task.py:179
 msgid "Calculating the number of columns"
 msgstr "Calculando el número de columnas"
 
-#: formshare/products/export/csv/celery_task.py:142
+#: formshare/products/export/csv/celery_task.py:228
 msgid "Flattening the JSON files"
 msgstr "Aplanando los archivos JSON"
 
-#: formshare/products/export/csv/celery_task.py:153
+#: formshare/products/export/csv/celery_task.py:241
 msgid "Concatenating submissions"
 msgstr "Uniendo los envíos"
 
-#: formshare/products/export/csv/celery_task.py:156
+#: formshare/products/export/csv/celery_task.py:244
 msgid "Saving CSV"
 msgstr "Salvando el CSV"
 
-#: formshare/products/export/csv/celery_task.py:160
+#: formshare/products/export/csv/celery_task.py:248
 msgid "Error while creating the dummy JSON file"
 msgstr "Error al crear el archivo de datos temporal JSON"
 
-#: formshare/products/export/csv/celery_task.py:163
+#: formshare/products/export/csv/celery_task.py:251
 msgid "The ODK form does not contain any submissions"
 msgstr "Este formulario ODK no contiene envíos"
 
@@ -417,7 +441,7 @@ msgstr "Creando archivo Zip"
 msgid "The ODK form does not contain any media"
 msgstr "Este formulario ODK no contiene multimedios"
 
-#: formshare/products/export/xlsx/celery_task.py:66
+#: formshare/products/export/xlsx/celery_task.py:64
 msgid ""
 "A worksheet name has been repeated. Excel only allow 30 characters in the"
 " worksheet name. You can fix this by editing the dictionary and change "
@@ -428,9 +452,9 @@ msgstr ""
 "editando el diccionario y cambiando las descripciones de las tablas a un "
 "máximo  de 30 caracteres."
 
-#: formshare/products/export/xlsx/celery_task.py:71
-#| msgid "" "Unknown error while creating the XLSX. Sorry about this. Please
-#| report " "this error as an issue on "
+# | msgid "" "Unknown error while creating the XLSX. Sorry about this. Please
+# | report " "this error as an issue on "
+#: formshare/products/export/xlsx/celery_task.py:69
 msgid ""
 "Unknown error while creating the XLSX. Sorry about this. Please report "
 "this error as an issue on https://github.com/qlands/FormShare"
@@ -1606,8 +1630,8 @@ msgstr "Miembros"
 #: formshare/templates/dashboard/projects/assistant_groups/snippets/group_item.jinja2:27
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_item.jinja2:40
 #: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:45
-#: formshare/templates/dashboard/projects/forms/snippets/product_item.jinja2:60
-#: formshare/templates/dashboard/projects/forms/snippets/product_item.jinja2:65
+#: formshare/templates/dashboard/projects/forms/snippets/product_item.jinja2:62
+#: formshare/templates/dashboard/projects/forms/snippets/product_item.jinja2:67
 #: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:40
 #: formshare/templates/dashboard/projects/snippets/project_item.jinja2:27
 msgid "Delete"
@@ -1870,19 +1894,6 @@ msgstr "No sensitivo"
 msgid "Search"
 msgstr "Buscar"
 
-#: formshare/templates/dashboard/projects/forms/dictionary/edit_fields.jinja2:255
-#: formshare/templates/dashboard/projects/forms/dictionary/edit_fields.jinja2:275
-msgid "Exclude it"
-msgstr "Exclúyelo"
-
-#: formshare/templates/dashboard/projects/forms/dictionary/edit_fields.jinja2:265
-msgid "Recode it"
-msgstr "Re-codifíquelo"
-
-#: formshare/templates/dashboard/projects/forms/dictionary/edit_fields.jinja2:276
-msgid "Unlink it"
-msgstr "Desconéctelo"
-
 #: formshare/templates/dashboard/projects/forms/dictionary/edit_tables.jinja2:4
 #: formshare/templates/dashboard/projects/forms/dictionary/snippets/brdcrbs_fields.jinja2:17
 #: formshare/templates/dashboard/projects/forms/dictionary/snippets/brdcrbs_tables.jinja2:17
@@ -1959,6 +1970,10 @@ msgstr "Cambiar descripción"
 msgid "Edit table description"
 msgstr "Editar la descripción de la tabla"
 
+#: formshare/templates/dashboard/projects/forms/dictionary/snippets/field_item.jinja2:9
+msgid "Protection type"
+msgstr "Tipo de protección"
+
 #: formshare/templates/dashboard/projects/forms/dictionary/snippets/field_item.jinja2:12
 #: formshare/templates/dashboard/projects/forms/dictionary/snippets/table_item.jinja2:11
 msgid "Edit description"
@@ -1984,8 +1999,8 @@ msgstr "Tipo de protección:"
 msgid "Set as sensitive"
 msgstr "Marcar como sensitivo"
 
+# | msgid "Fields"
 #: formshare/templates/dashboard/projects/forms/dictionary/snippets/table_item.jinja2:8
-#| msgid "Fields"
 msgid "field"
 msgstr "campo"
 
@@ -2458,7 +2473,7 @@ msgstr "No publicar"
 msgid "API Download"
 msgstr "Descargar usando API"
 
-#: formshare/templates/dashboard/projects/forms/snippets/product_item.jinja2:55
+#: formshare/templates/dashboard/projects/forms/snippets/product_item.jinja2:56
 msgid "Publish"
 msgstr "Publicar"
 
@@ -2467,18 +2482,30 @@ msgid "Form data downloads"
 msgstr "Descargas de datos"
 
 #: formshare/templates/dashboard/projects/forms/snippets/products_tab.jinja2:23
-msgid "Export data in Excel format"
-msgstr "Exportar datos en formato Excel"
+#| msgid "Export data in Excel format"
+msgid "Export data in publishable Excel format"
+msgstr "Exportar datos en formato Excel publicable"
 
 #: formshare/templates/dashboard/projects/forms/snippets/products_tab.jinja2:24
+#| msgid "Export data in Excel format"
+msgid "Export data in unpublishable Excel format"
+msgstr "Exportar datos en formato Excel no publicable"
+
+#: formshare/templates/dashboard/projects/forms/snippets/products_tab.jinja2:25
 msgid "Export submitted media"
 msgstr "Descargar los multimedios enviados"
 
-#: formshare/templates/dashboard/projects/forms/snippets/products_tab.jinja2:25
-msgid "Export data in CSV format"
-msgstr "Descargar datos en formato CSV"
+#: formshare/templates/dashboard/projects/forms/snippets/products_tab.jinja2:26
+#| msgid "Export data in Excel format"
+msgid "Export data in publishable CSV format"
+msgstr "Exportar datos en formato CSV publicable"
 
 #: formshare/templates/dashboard/projects/forms/snippets/products_tab.jinja2:27
+#| msgid "Export data in Excel format"
+msgid "Export data in unpublishable CSV format"
+msgstr "Exportar datos en formato CSV no publicable"
+
+#: formshare/templates/dashboard/projects/forms/snippets/products_tab.jinja2:29
 msgid "Export KML"
 msgstr "Exportar KML"
 
@@ -2486,8 +2513,8 @@ msgstr "Exportar KML"
 msgid "Repository tools"
 msgstr "Utilidades del repositorio"
 
+# | msgid "Centralize data"
 #: formshare/templates/dashboard/projects/forms/snippets/repository_tab.jinja2:23
-#| msgid "Centralize data"
 msgid "Anonymize data"
 msgstr "Anonimizar datos"
 
@@ -3366,11 +3393,11 @@ msgstr "El grupo fue añadido satisfactoriamente"
 msgid "The group was removed successfully"
 msgstr "El grupo fue eliminado satisfactoriamente"
 
-#: formshare/views/form.py:1266 formshare/views/form.py:1326
+#: formshare/views/form.py:1345 formshare/views/form.py:1405
 msgid "The process was stopped successfully"
 msgstr "El proceso fue detenido satisfactoriamente"
 
-#: formshare/views/form.py:1270 formshare/views/form.py:1330
+#: formshare/views/form.py:1349 formshare/views/form.py:1409
 msgid "FormShare was not able to stop the process"
 msgstr "FormShare no pudo detener el proceso"
 
@@ -3751,4 +3778,13 @@ msgstr ""
 
 #~ msgid "Edit dictionary"
 #~ msgstr "Editar el diccionario"
+
+#~ msgid "Excel"
+#~ msgstr "Excel"
+
+#~ msgid "CSV"
+#~ msgstr "CSV"
+
+#~ msgid "Export data in CSV format"
+#~ msgstr "Descargar datos en formato CSV"
 

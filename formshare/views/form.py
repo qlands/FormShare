@@ -19,7 +19,7 @@ from formshare.processes.odk.api import get_odk_path, upload_odk_form, update_fo
 from formshare.products import stop_task
 from formshare.products import get_form_products
 import shutil
-from formshare.products.export.xlsx import generate_xlsx_file
+from formshare.products.export.xlsx import generate_public_xlsx_file, generate_private_xlsx_file
 from formshare.products.export.media import generate_media_zip_file
 from formshare.products.export.kml import generate_kml_file
 from formshare.products.export.csv import generate_public_csv_file, generate_private_csv_file
@@ -935,7 +935,7 @@ class DownloadCSVData(PrivateView):
             return HTTPFound(location=next_page)
 
 
-class DownloadXLSData(PrivateView):
+class DownloadPublicXLSData(PrivateView):
     def __init__(self, request):
         PrivateView.__init__(self, request)
         self.checkCrossPost = False
@@ -967,12 +967,54 @@ class DownloadXLSData(PrivateView):
 
         odk_dir = get_odk_path(self.request)
         form_directory = get_form_directory(self.request, project_id, form_id)
-        generate_xlsx_file(self.request, self.userID, project_id, form_id, odk_dir, form_directory,
-                           form_data['form_schema'], True)
+        generate_public_xlsx_file(self.request, self.userID, project_id, form_id, odk_dir, form_directory,
+                                  form_data['form_schema'])
 
         next_page = self.request.route_url('form_details', userid=user_id,
                                            projcode=project_code, formid=form_id,
-                                           _query={'tab': 'task', 'product': 'xlsx_export'})
+                                           _query={'tab': 'task', 'product': 'xlsx_public_export'})
+        self.returnRawViewResult = True
+        return HTTPFound(location=next_page)
+
+
+class DownloadPrivateXLSData(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.checkCrossPost = False
+        self.returnRawViewResult = True
+
+    def process_view(self):
+        user_id = self.request.matchdict['userid']
+        project_code = self.request.matchdict['projcode']
+        form_id = self.request.matchdict['formid']
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+
+        if project_details["access_type"] >= 4:
+            raise HTTPNotFound
+
+        odk_dir = get_odk_path(self.request)
+        form_directory = get_form_directory(self.request, project_id, form_id)
+        generate_private_xlsx_file(self.request, self.userID, project_id, form_id, odk_dir, form_directory,
+                                  form_data['form_schema'])
+
+        next_page = self.request.route_url('form_details', userid=user_id,
+                                           projcode=project_code, formid=form_id,
+                                           _query={'tab': 'task', 'product': 'xlsx_private_export'})
         self.returnRawViewResult = True
         return HTTPFound(location=next_page)
 

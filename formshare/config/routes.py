@@ -15,9 +15,9 @@ from ..views.assistant_groups import GroupListView, AddGroupView, EditGroupView,
     RemoveMember
 from ..views.form import FormDetails, AddNewForm, EditForm, DeleteForm, AddFileToForm, RemoveFileFromForm, \
     FormStoredFile, AddAssistant, EditAssistant, RemoveAssistant, AddGroupToForm, EditFormGroup, RemoveGroupForm, \
-    DownloadCSVData, DownloadXLSX, DownloadSubmissionFiles, DownloadGPSPoints, DownloadXLSData, UploadNewVersion, \
-    ActivateForm, DeActivateForm, ImportData, DownloadKML, StopTask, StopRepository, DownloadPublicCSV, \
-    DownloadPrivateCSV
+    DownloadCSVData, DownloadXLSX, DownloadSubmissionFiles, DownloadGPSPoints, DownloadPublicXLSData, \
+    UploadNewVersion, ActivateForm, DeActivateForm, ImportData, DownloadKML, StopTask, StopRepository, \
+    DownloadPublicCSV, DownloadPrivateCSV, DownloadPrivateXLSData
 from ..views.odk import ODKFormList, ODKManifest, ODKMediaFile, ODKPushData, ODKSubmission, ODKXMLForm
 from ..views.repository import GenerateRepository, SeparateTable, NewSeparationGroup, EditSeparationGroup, \
     DeleteSeparationGroup, RepositoryExist
@@ -278,9 +278,15 @@ def load_routes(config):
 
     routes.append(
         add_route(
-            'form_download_xlsx_data',
-            '/user/{userid}/project/{projcode}/form/{formid}/generate/xlsx',
-            DownloadXLSData, None))
+            'form_download_public_xlsx_data',
+            '/user/{userid}/project/{projcode}/form/{formid}/generate/public_xlsx',
+            DownloadPublicXLSData, None))
+
+    routes.append(
+        add_route(
+            'form_download_private_xlsx_data',
+            '/user/{userid}/project/{projcode}/form/{formid}/generate/private_xlsx',
+            DownloadPrivateXLSData, None))
 
     routes.append(
         add_route(

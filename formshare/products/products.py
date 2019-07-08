@@ -67,8 +67,10 @@ def get_product_description(request, product):
         return _('Import data')
     if product == "repository":
         return _('Build repository')
-    if product == "xlsx_export":
-        return _('Excel')
+    if product == "xlsx_public_export":
+        return _('Publishable Excel')
+    if product == "xlsx_private_export":
+        return _('Unpublishable Excel')
     if product == "media_export":
         return _('Media')
     if product == "kml_export":

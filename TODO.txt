@@ -1,6 +1,4 @@
-- Implement anonymize of fields
-- Separate products in public and private
-- Don't allow creation of public products if no sensitive fields exists
+- Warn if no sensitive fields exists when publishing products
 - Manage subversions
 - Check access levels (Admin, Editor, Member)
 - Audit log (View changes)
@@ -14,7 +12,6 @@
 - Handle sharing of private products with token keys.
     - Token management and API
     - Token extension. After token, before token
-- Change data curation to clean data
 - Offline data collection
 - Plugins:
     - OData

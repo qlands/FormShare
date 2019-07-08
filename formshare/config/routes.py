@@ -16,7 +16,8 @@ from ..views.assistant_groups import GroupListView, AddGroupView, EditGroupView,
 from ..views.form import FormDetails, AddNewForm, EditForm, DeleteForm, AddFileToForm, RemoveFileFromForm, \
     FormStoredFile, AddAssistant, EditAssistant, RemoveAssistant, AddGroupToForm, EditFormGroup, RemoveGroupForm, \
     DownloadCSVData, DownloadXLSX, DownloadSubmissionFiles, DownloadGPSPoints, DownloadXLSData, UploadNewVersion, \
-    ActivateForm, DeActivateForm, ImportData, DownloadKML, StopTask, StopRepository, DownloadCSV
+    ActivateForm, DeActivateForm, ImportData, DownloadKML, StopTask, StopRepository, DownloadPublicCSV, \
+    DownloadPrivateCSV
 from ..views.odk import ODKFormList, ODKManifest, ODKMediaFile, ODKPushData, ODKSubmission, ODKXMLForm
 from ..views.repository import GenerateRepository, SeparateTable, NewSeparationGroup, EditSeparationGroup, \
     DeleteSeparationGroup, RepositoryExist
@@ -307,9 +308,15 @@ def load_routes(config):
 
     routes.append(
         add_route(
-            'form_download_repo_csv',
-            '/user/{userid}/project/{projcode}/form/{formid}/generate/repo_csv',
-            DownloadCSV, None))
+            'form_download_repo_public_csv',
+            '/user/{userid}/project/{projcode}/form/{formid}/generate/repo_public_csv',
+            DownloadPublicCSV, None))
+
+    routes.append(
+        add_route(
+            'form_download_repo_private_csv',
+            '/user/{userid}/project/{projcode}/form/{formid}/generate/repo_private_csv',
+            DownloadPrivateCSV, None))
 
     # Repository
 

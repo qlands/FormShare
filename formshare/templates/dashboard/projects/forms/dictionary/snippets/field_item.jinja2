@@ -6,7 +6,7 @@
             </a>
             <div class="media-body ">
                 {{ field.name }} - <span id="desc_{{ field.name }}">{{ field.desc }}</span><br>
-                <small class="text-muted">{% if field.sensitive == 'true' %}<span class="text-danger">{{ _('Sensitive') }} - Protection type: {{ field.protection }}</span>{% else %}{{ _('Not sensitive') }}{% endif %}</small>
+                <p class="text-muted">{% if field.sensitive == 'true' %}<span class="text-danger">{{ _('Sensitive') }} - {{ _('Protection type') }}: {{ field.protection_desc }}</span>{% else %}{{ _('Not sensitive') }}{% endif %}</p>
                 <div class="actions">
                     {% block field_item_processing_actions %}
                         <a id="btn_edit_{{ field.name }}" data-field-name="{{ field.name }}" data-field-desc="{{ field.desc }}" data-toggle="modal" data-target="#edit_field_desc" class="btn btn-xs btn-white field-item"><i class="fas fa-pencil-alt"></i> {{ _('Edit description') }}</a>

@@ -207,6 +207,7 @@ class Product(Base):
     last_download = Column(DateTime)
     downloads = Column(INTEGER, server_default=text("'0'"))
     created_by = Column(ForeignKey('fsuser.user_id', ondelete='CASCADE'), nullable=False, index=True)
+    publishable = Column(INTEGER, server_default=text("'0'"))
 
     odkform = relationship('Odkform')
     fsuser = relationship('User', primaryjoin='Product.created_by == User.user_id')

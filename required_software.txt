@@ -1,6 +1,9 @@
 sudo npm install -g diff2html
 sudo npm install -g diff2html-cli
-
+sudo sudo apt install mongodb
 rabbitmqctl add_user formshare formshare
 rabbitmqctl add_vhost formshare
 rabbitmqctl set_permissions -p formshare formshare ".*" ".*" ".*"
+
+import nltk
+nltk.download(["wordnet", "wordnet_ic","sentiwordnet"])

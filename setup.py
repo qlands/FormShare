@@ -42,7 +42,8 @@ requires = [
     'Pillow',
     'qrcode',
     'bs4',
-    'pika'
+    'pika',
+    'pattern'
 ]
 
 postgresql_requires = ['psycopg2']
@@ -83,7 +84,8 @@ setup(
         ],
         'console_scripts': [
             'create_superuser = formshare.scripts.createsuperuser:main',
-            'configure_celery = formshare.scripts.configurecelery:main'
+            'configure_celery = formshare.scripts.configurecelery:main',
+            'download_nltk_packages = formshare.scripts.download_nltk_packages:main'
         ],
     },
 )

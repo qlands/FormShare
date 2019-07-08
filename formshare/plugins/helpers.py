@@ -7,7 +7,8 @@ available to Controllers. This module is available to templates as 'request.h'.
 
 import timeago
 import arrow
-import inflect
+from pattern.es import pluralize as pluralize_es
+from pattern.en import pluralize as pluralize_en
 import formshare.plugins as p
 import urllib
 import hashlib
@@ -65,7 +66,7 @@ def humanize_date(date, locale='en'):
     :param locale: Locale code
     :return: A human readble date like "days ago"
     """
-    return timeago.format(date, None, locale) #human(date, precision=1)
+    return timeago.format(date, None, locale)
 
 
 @core_helper
@@ -115,12 +116,12 @@ def simple_date_usa(date):
 
 
 @core_helper
-def pluralize(request, noun, size):
+def pluralize(noun, size, locale='en'):
     """
     The function calls connected plugins to expand the pluralize capabilities of FormShare
-    :param request: Pyramid request
     :param noun: Noun
     :param size: Size
+    :param locale: Locale code
     :return: the plural of a noun based on the locale and size
     """
     if size == 1:
@@ -128,17 +129,14 @@ def pluralize(request, noun, size):
 
     plural = noun
 
-    language = "en"
-    if request.locale_name.find('en') >= 0:
-        language = "en"
-
-    if language == "en":
-        pl = inflect.engine()
-        plural = pl.plural(noun)
+    if locale == "en":
+        plural = pluralize_en(noun)
+    if locale == "es":
+        plural = pluralize_es(noun)
 
     # Call connected plugins to see if they have extended or overwrite FormShare pluralize function
     for plugin in p.PluginImplementations(p.IPluralize):
-        res = plugin.pluralize(noun, request.locale_name)
+        res = plugin.pluralize(noun, locale)
         if res != "":
             plural = res
     # Will return English pluralization if none of the above happens
@@ -160,6 +158,7 @@ def get_gravatar_url(email, size=45):
     gravatar_url += urllib.parse.urlencode({'d': default, 's': str(size)})
     return gravatar_url
 
+
 @core_helper
 def is_valid_email(email):
     """
@@ -169,6 +168,7 @@ def is_valid_email(email):
     """
     return validators.email(email)
 
+
 @core_helper
 def is_valid_url(url):
     """
@@ -177,6 +177,7 @@ def is_valid_url(url):
     :return: True of valid otherwise False
     """
     return validators.url(url)
+
 
 @core_helper
 def get_icon_from_mime_type(mime_type):

@@ -176,7 +176,7 @@ class PublishProduct(PrivateView):
                 set_output_public_state(self.request, project_id, form_id, product_id, output_id, True, self.userID)
                 next_page = self.request.route_url('form_details', userid=user_id,
                                                    projcode=project_code, formid=form_id,
-                                                   _query={'tab': 'task', 'product': 'xlsx_export'})
+                                                   _query={'tab': 'task', 'product': product_id})
                 return HTTPFound(location=next_page)
             else:
                 raise HTTPNotFound

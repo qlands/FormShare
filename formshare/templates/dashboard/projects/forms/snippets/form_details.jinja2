@@ -65,7 +65,7 @@
                         <dt>{{ _('In database') }}:</dt>
                     </div>
                     <div class="col-sm-8 text-sm-left">
-                        <dd class="mb-1">{{ formDetails.indb }} {% if formDetails.indb > 0 %}<a target="_blank" href="{{ request.route_url('clean', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}">[{{ _('Curate data') }}]</a>{% endif %}</dd>
+                        <dd class="mb-1">{{ formDetails.indb }} {% if formDetails.indb > 0 %}<a target="_blank" href="{{ request.route_url('clean', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}">[{{ _('Clean data') }}]</a>{% endif %}</dd>
                     </div>
                 </dl>
                 <dl class="row mb-0">

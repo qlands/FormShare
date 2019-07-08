@@ -13,16 +13,22 @@ __all__ = [
 log = logging.getLogger(__name__)
 
 
-def add_product_instance(request, user, project, form, product, task, output_file, file_mime, process_only=False):
+def add_product_instance(request, user, project, form, product, task, output_file, file_mime, process_only=False,
+                         publishable=False):
     if not process_only:
         process_only_int = 0
     else:
         process_only_int = 1
         output_file = None
         file_mime = None
+    if publishable:
+        publishable = 1
+    else:
+        publishable = 0
     new_instance = Product(project_id=project, form_id=form, product_id=product, output_file=output_file,
                            output_mimetype=file_mime, celery_taskid=task, datetime_added=datetime.datetime.now(),
-                           created_by=user, output_id=task[-12:], process_only=process_only_int)
+                           created_by=user, output_id=task[-12:], process_only=process_only_int,
+                           publishable=publishable)
     try:
         request.dbsession.add(new_instance)
         request.dbsession.flush()

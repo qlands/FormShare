@@ -10,7 +10,7 @@
     <div class="col-md-4">
         {% block project_item_submissions %}
             {% if project.total_submissions > 0 %}
-                {{ project.total_submissions }} {{ request.h.pluralize(request,_('submission'),project.total_submissions) }} {{ _('within') }} {{ project.total_forms }} {{ request.h.pluralize(request,_('form'),project.total_forms) }}<br/>
+                {{ project.total_submissions }} {{ request.h.pluralize(_('submission'),project.total_submissions,request.locale_name) }} {{ _('within') }} {{ project.total_forms }} {{ request.h.pluralize(_('form'),project.total_forms,request.locale_name) }}<br/>
                 <small>{{ _('Last submission by') }} <a style="color: #0a6aa1">{{ project.last_submission_by_details.coll_name }}</a> in form <a href="{{ request.route_url('form_details',userid=project.owner,projcode=project.project_code,formid=project.last_submission_form) }}" style="color: #337ab7;">"{{ project.last_submission_form_details.form_name }}"</a> {{ request.h.humanize_date(project.last_submission, request.locale_name) }}</small>
             {% else %}
                 {{ _('Without submissions') }}

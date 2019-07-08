@@ -4,7 +4,7 @@ import uuid
 import os
 
 
-def generate_xlsx_file(request, user, project, form, odk_dir, form_directory, form_schema, include_sensitive=False):
+def generate_xlsx_file(request, user, project, form, odk_dir, form_directory, form_schema, protect_sensitive):
     settings = {}
     for key, value in request.registry.settings.items():
         if isinstance(value, str):
@@ -16,6 +16,6 @@ def generate_xlsx_file(request, user, project, form, odk_dir, form_directory, fo
     xlsx_file = os.path.join(repo_dir, *paths)
 
     task = build_xlsx.apply_async((settings, odk_dir, form_directory, form_schema, form, xlsx_file,
-                                   include_sensitive, request.locale_name),countdown=2)
+                                   protect_sensitive, request.locale_name), countdown=2)
     register_product_instance(request, user, project, form, 'xlsx_export', task.id, xlsx_file,
                               'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', False)

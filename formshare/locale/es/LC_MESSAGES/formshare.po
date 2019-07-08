@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-07-04 23:14-0600\n"
-"PO-Revision-Date: 2019-07-04 23:17-0600\n"
+"POT-Creation-Date: 2019-07-05 12:50-0600\n"
+"PO-Revision-Date: 2019-07-05 12:52-0600\n"
 "Last-Translator: Carlos Quiros <cquiros@qlands.com>\n"
 "Language: es\n"
 "Language-Team: English <kde-i18n-doc@kde.org>\n"
@@ -17,7 +17,7 @@ msgstr ""
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Generated-By: Babel 2.6.0\n"
+"Generated-By: Babel 2.7.0\n"
 "X-Generator: Lokalize 2.0\n"
 
 #: formshare/processes/db/assistant.py:138
@@ -248,8 +248,8 @@ msgstr ""
 "Por favor edite su archivo XLSX/XLS, agrupe varios elementos dentro de "
 "repeats CON repeat_count = 1 e intente subir de nuevo el formulario."
 
+# | msgid "The role was changed"
 #: formshare/processes/odk/api.py:346 formshare/processes/odk/api.py:509
-#| msgid "The role was changed"
 msgid "No file was attached"
 msgstr "No adjuntó ningún archivo"
 
@@ -359,73 +359,65 @@ msgstr "KML"
 msgid "CSV"
 msgstr "CSV"
 
-#: formshare/products/export/csv/celery_task.py:105
+#: formshare/products/export/csv/celery_task.py:96
 msgid "Denormalizing database"
 msgstr "Convirtiendo la base de datos a JSON"
 
-#: formshare/products/export/csv/celery_task.py:114
+#: formshare/products/export/csv/celery_task.py:105
 msgid "Calculating the number of columns"
 msgstr "Calculando el número de columnas"
 
-#: formshare/products/export/csv/celery_task.py:151
+#: formshare/products/export/csv/celery_task.py:142
 msgid "Flattening the JSON files"
 msgstr "Aplanando los archivos JSON"
 
-#: formshare/products/export/csv/celery_task.py:162
+#: formshare/products/export/csv/celery_task.py:153
 msgid "Concatenating submissions"
 msgstr "Uniendo los envíos"
 
-#: formshare/products/export/csv/celery_task.py:165
+#: formshare/products/export/csv/celery_task.py:156
 msgid "Saving CSV"
 msgstr "Salvando el CSV"
 
-#: formshare/products/export/csv/celery_task.py:169
+#: formshare/products/export/csv/celery_task.py:160
 msgid "Error while creating the dummy JSON file"
 msgstr "Error al crear el archivo de datos temporal JSON"
 
-#: formshare/products/export/csv/celery_task.py:172
+#: formshare/products/export/csv/celery_task.py:163
 msgid "The ODK form does not contain any submissions"
 msgstr "Este formulario ODK no contiene envíos"
 
-#: formshare/products/export/kml/celery_task.py:51
-#: formshare/products/export/media/celery_task.py:57
+#: formshare/products/export/kml/celery_task.py:48
+#: formshare/products/export/media/celery_task.py:54
 #: formshare/products/fs1import/celery_task.py:187
 msgid "25% processed"
 msgstr "25% procesado"
 
-#: formshare/products/export/kml/celery_task.py:55
-#: formshare/products/export/media/celery_task.py:61
+#: formshare/products/export/kml/celery_task.py:52
+#: formshare/products/export/media/celery_task.py:58
 #: formshare/products/fs1import/celery_task.py:191
 msgid "50% processed"
 msgstr "50% procesado"
 
-#: formshare/products/export/kml/celery_task.py:59
-#: formshare/products/export/media/celery_task.py:65
+#: formshare/products/export/kml/celery_task.py:56
+#: formshare/products/export/media/celery_task.py:62
 #: formshare/products/fs1import/celery_task.py:195
 msgid "75% processed"
 msgstr "75% procesado"
 
-#: formshare/products/export/kml/celery_task.py:73
+#: formshare/products/export/kml/celery_task.py:70
 msgid "The ODK form does not contain any submissions with GPS coordinates"
 msgstr "Este formulario ODK no contiene ningún envío con coordenadas GPS"
 
-#: formshare/products/export/media/celery_task.py:95
+#: formshare/products/export/media/celery_task.py:92
 msgid "Creating zip file"
 msgstr "Creando archivo Zip"
 
-#: formshare/products/export/media/celery_task.py:98
+#: formshare/products/export/media/celery_task.py:95
 msgid "The ODK form does not contain any media"
 msgstr "Este formulario ODK no contiene multimedios"
 
-#: formshare/products/export/xlsx/celery_task.py:17
-msgid ""
-"Unknown error while creating the XLSX. Sorry about this. Please report "
-"this error as an issue on "
-msgstr ""
-"Error desconocido al crear el archivo XLSX. Lamentamos este problema. Por"
-" favor reporte este error en"
-
-#: formshare/products/export/xlsx/celery_task.py:27
+#: formshare/products/export/xlsx/celery_task.py:66
 msgid ""
 "A worksheet name has been repeated. Excel only allow 30 characters in the"
 " worksheet name. You can fix this by editing the dictionary and change "
@@ -436,12 +428,22 @@ msgstr ""
 "editando el diccionario y cambiando las descripciones de las tablas a un "
 "máximo  de 30 caracteres."
 
-#: formshare/products/repository/celery_task.py:49
+#: formshare/products/export/xlsx/celery_task.py:71
+#| msgid "" "Unknown error while creating the XLSX. Sorry about this. Please
+#| report " "this error as an issue on "
+msgid ""
+"Unknown error while creating the XLSX. Sorry about this. Please report "
+"this error as an issue on https://github.com/qlands/FormShare"
+msgstr ""
+"Error desconocido al crear el archivo XLSX. Lamentamos este problema. Por"
+" favor reporte este error en https://github.com/qlands/FormShare"
+
+#: formshare/products/repository/celery_task.py:46
 msgid "Creating new tables..."
 msgstr "Creado las tablas"
 
-#: formshare/products/repository/celery_task.py:68
-#: formshare/products/repository/celery_task.py:102
+#: formshare/products/repository/celery_task.py:65
+#: formshare/products/repository/celery_task.py:99
 msgid "Inserting lookup values..."
 msgstr "Insertando los datos en las tablas de vistas"
 
@@ -560,6 +562,7 @@ msgstr "Cancelar"
 
 #: formshare/templates/assistant/clean/clean_data.jinja2:5
 #: formshare/templates/assistant/clean/snippets/brdcrbs_clean.jinja2:8
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:68
 #: formshare/templates/dashboard/projects/forms/snippets/links_tab.jinja2:26
 #: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:32
 msgid "Clean data"
@@ -578,7 +581,6 @@ msgid "Load table"
 msgstr "Cargar tabla"
 
 #: formshare/templates/assistant/clean/clean_data.jinja2:71
-#: formshare/templates/dashboard/projects/forms/dictionary/snippets/table_item.jinja2:8
 msgid "Fields"
 msgstr "Campos"
 
@@ -1983,6 +1985,11 @@ msgid "Set as sensitive"
 msgstr "Marcar como sensitivo"
 
 #: formshare/templates/dashboard/projects/forms/dictionary/snippets/table_item.jinja2:8
+#| msgid "Fields"
+msgid "field"
+msgstr "campo"
+
+#: formshare/templates/dashboard/projects/forms/dictionary/snippets/table_item.jinja2:8
 msgid "sensitive"
 msgstr "sensitivo"
 
@@ -2211,10 +2218,6 @@ msgstr "Envíos"
 #: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:65
 msgid "In database"
 msgstr "En la base de datos"
-
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:68
-msgid "Curate data"
-msgstr "Curar datos"
 
 #: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:73
 msgid "In logs"
@@ -2484,8 +2487,9 @@ msgid "Repository tools"
 msgstr "Utilidades del repositorio"
 
 #: formshare/templates/dashboard/projects/forms/snippets/repository_tab.jinja2:23
-msgid "Edit dictionary"
-msgstr "Editar el diccionario"
+#| msgid "Centralize data"
+msgid "Anonymize data"
+msgstr "Anonimizar datos"
 
 #: formshare/templates/dashboard/projects/forms/snippets/repository_tab.jinja2:25
 #: formshare/templates/dashboard/projects/forms/submissions/edit_submissions.jinja2:4
@@ -3210,7 +3214,7 @@ msgstr "El grupo fue eliminado satisfactoriamente"
 msgid "Unable to delete the group: "
 msgstr "No se pudo borrar el grupo:"
 
-#: formshare/views/assistant_groups.py:234 formshare/views/form.py:621
+#: formshare/views/assistant_groups.py:234 formshare/views/form.py:618
 msgid "The assistant was added successfully"
 msgstr "El asistente fue añadido satisfactoriamente"
 
@@ -3310,63 +3314,63 @@ msgstr "No se pudo borrar el colaborador:"
 msgid "The form was added successfully"
 msgstr "El formulario fue añadido satisfactoriamente"
 
-#: formshare/views/form.py:134 formshare/views/form.py:191
+#: formshare/views/form.py:131 formshare/views/form.py:188
 msgid "Unable to upload the form: "
 msgstr "No se pudo añadir el formulario:"
 
-#: formshare/views/form.py:186
+#: formshare/views/form.py:183
 msgid "The ODK form was successfully updated"
 msgstr "El formulario ODK fue actualizado satisfactoriamente"
 
-#: formshare/views/form.py:250
+#: formshare/views/form.py:247
 msgid "The form was edited successfully"
 msgstr "El formulario fue editando satisfactoriamente"
 
-#: formshare/views/form.py:314
+#: formshare/views/form.py:311
 msgid "The form was deleted successfully"
 msgstr "El formulario fue eliminado satisfactoriamente"
 
-#: formshare/views/form.py:367
+#: formshare/views/form.py:364
 msgid "The form was activated successfully"
 msgstr "El formulario fue activado satisfactoriamente"
 
-#: formshare/views/form.py:418
+#: formshare/views/form.py:415
 msgid "The form was deactivated successfully"
 msgstr "El formulario fue desactivado satisfactoriamente"
 
-#: formshare/views/form.py:486 formshare/views/projects.py:361
+#: formshare/views/form.py:483 formshare/views/projects.py:361
 msgid "The file was uploaded successfully"
 msgstr "El archivo fue subido satisfactoriamente"
 
-#: formshare/views/form.py:488 formshare/views/projects.py:363
+#: formshare/views/form.py:485 formshare/views/projects.py:363
 msgid "The files were uploaded successfully"
 msgstr "Los archivos fueron subidos satisfactoriamente"
 
-#: formshare/views/form.py:540 formshare/views/projects.py:406
+#: formshare/views/form.py:537 formshare/views/projects.py:406
 msgid "The files was removed successfully"
 msgstr "Los archivos fueron eliminados satisfactoriamente"
 
-#: formshare/views/form.py:685 formshare/views/form.py:842
+#: formshare/views/form.py:682 formshare/views/form.py:839
 msgid "The role was changed successfully"
 msgstr "El role fue cambiado satisfactoriamente"
 
-#: formshare/views/form.py:735
+#: formshare/views/form.py:732
 msgid "The assistant was removed successfully"
 msgstr "El asistente fue eliminado satisfactoriamente"
 
-#: formshare/views/form.py:786
+#: formshare/views/form.py:783
 msgid "The group was added successfully"
 msgstr "El grupo fue añadido satisfactoriamente"
 
-#: formshare/views/form.py:890
+#: formshare/views/form.py:887
 msgid "The group was removed successfully"
 msgstr "El grupo fue eliminado satisfactoriamente"
 
-#: formshare/views/form.py:1269 formshare/views/form.py:1329
+#: formshare/views/form.py:1266 formshare/views/form.py:1326
 msgid "The process was stopped successfully"
 msgstr "El proceso fue detenido satisfactoriamente"
 
-#: formshare/views/form.py:1273 formshare/views/form.py:1333
+#: formshare/views/form.py:1270 formshare/views/form.py:1330
 msgid "FormShare was not able to stop the process"
 msgstr "FormShare no pudo detener el proceso"
 
@@ -3741,4 +3745,10 @@ msgstr ""
 
 #~ msgid "Exports"
 #~ msgstr "Exportaciones"
+
+#~ msgid "Curate data"
+#~ msgstr "Curar datos"
+
+#~ msgid "Edit dictionary"
+#~ msgstr "Editar el diccionario"
 

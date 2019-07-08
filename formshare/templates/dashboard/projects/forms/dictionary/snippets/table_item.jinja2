@@ -5,7 +5,7 @@
         </a>
         <div class="media-body ">
             {{ table.name }} - <span id="desc_{{ table.name }}">{{ table.desc }}</span><br>
-            <small class="text-muted">{{ _('Fields') }}: {{ table.fields|length }} - <span class="text-danger">{{ table.numsensitive }} {{ _('sensitive') }}</span></small>
+            <p class="text-muted">{{ table.fields|length }} {{ request.h.pluralize(_('field'),table.fields|length,request.locale_name) }} - <span class="text-danger">{{ table.numsensitive }} {{ request.h.pluralize(_('sensitive'),table.numsensitive,request.locale_name) }}</span></p>
             <div class="actions">
                 {% block field_item_processing_actions %}
                     <a data-table-name="{{ table.name }}" data-table-desc="{{  table.desc }}" data-toggle="modal" data-target="#edit_table_desc" class="btn btn-xs btn-white table-item"><i class="fas fa-pencil-alt"></i> {{ _('Edit description') }}</a>

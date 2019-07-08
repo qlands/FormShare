@@ -318,6 +318,17 @@ def get_lookup_values(request, project, form, rtable, rfield):
     return literal(json.dumps(res_dict))
 
 
+def get_protection_desc(request, protection_code):
+    _ = request.translate
+    if protection_code == "exclude":
+        return _('Exclude it')
+    if protection_code == "recode":
+        return _('Recode it')
+    if protection_code == "unlink":
+        return _('Unlink it')
+    return ""
+
+
 def get_fields_from_table(request, project, form, table_name, current_fields):
     odk_dir = get_odk_path(request)
     form_directory = get_form_directory(request, project, form)
@@ -349,6 +360,7 @@ def get_fields_from_table(request, project, form, table_name, current_fields):
                         'type': field.get('type'), 'size': field.get('size'),
                         'decsize': field.get('decsize'), 'checked': found,
                         'sensitive': field.get('sensitive'), 'protection': field.get('protection', 'None'),
+                        'protection_desc': get_protection_desc(request, field.get('protection', 'None')),
                         'key': field.get('key', 'false'), 'rlookup': field.get('rlookup', 'false'),
                         'rtable': field.get('rtable', 'None'), 'rfield': field.get('rfield', 'None'),
                         'editable': editable}

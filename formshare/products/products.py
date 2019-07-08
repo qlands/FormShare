@@ -36,14 +36,16 @@ def add_product(product, from_plugin=False):
         raise Exception("Product code {} is already in use".format(product["code"]))
 
 
-def register_product_instance(request, user, project, form, product, task, output_file, file_mime, process_only=False):
+def register_product_instance(request, user, project, form, product, task, output_file, file_mime, process_only=False,
+                              publishable=False):
     if product_found(product):
         repo_dir = request.registry.settings['repository.path']
         paths = ['products']
         products_dir = os.path.join(repo_dir, *paths)
         if not os.path.exists(products_dir):
             os.makedirs(products_dir)
-        add_product_instance(request, user, project, form, product, task, output_file, file_mime, process_only)
+        add_product_instance(request, user, project, form, product, task, output_file, file_mime, process_only,
+                             publishable)
 
 
 def get_products():
@@ -71,8 +73,10 @@ def get_product_description(request, product):
         return _('Media')
     if product == "kml_export":
         return _('KML')
-    if product == "csv_export":
-        return _('CSV')
+    if product == "csv_public_export":
+        return _('Publishable CSV')
+    if product == "csv_private_export":
+        return _('Unpublishable CSV')
     return _("Without description")
 
 

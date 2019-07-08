@@ -22,7 +22,7 @@ class SheetNameError(Exception):
 
 
 @celeryApp.task(base=CeleryTask)
-def build_xlsx(settings, odk_dir, form_directory, form_schema, form_id, xlsx_file, include_sensitive, locale):
+def build_xlsx(settings, odk_dir, form_directory, form_schema, form_id, xlsx_file, protect_sensitive, locale):
     parts = __file__.split('/products/')
     this_file_path = parts[0] + "/locale"
     es = gettext.translation('formshare',
@@ -51,9 +51,6 @@ def build_xlsx(settings, odk_dir, form_directory, form_schema, form_id, xlsx_fil
 
     args = [mysql_to_xlsx, "-H " + mysql_host, "-P " + mysql_port, "-u " + mysql_user, "-p " + mysql_password,
             "-s " + form_schema, "-x " + create_xml, "-o " + xlsx_file, "-T " + temp_dir, "-f " + form_id]
-
-    if include_sensitive:
-        args.append("-i")
 
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()

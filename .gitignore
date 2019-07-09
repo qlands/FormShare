@@ -112,3 +112,8 @@ celery_app.py
 # Thumbs
 Thumbs.db
 Thumbs.db:encryptable
+
+# Settings
+development.ini
+production.ini
+alembic.ini

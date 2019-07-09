@@ -118,4 +118,4 @@ development.ini
 production.ini
 alembic.ini
 formshare.ini
-mysql.cnf
+mysql.cnfmysql.cnf

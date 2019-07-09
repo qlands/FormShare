@@ -5,8 +5,8 @@ from jinja2 import Environment, FileSystemLoader
 
 def usage(argv):
     cmd = os.path.basename(argv[0])
-    print('usage: %s <config_uri> <path_to_formshare> \n'
-          "(example: %s ./development.ini)" % (cmd, cmd))
+    print('usage: %s <path_to_ini_file> <path_to_formshare> \n'
+          "(example: %s ./development.ini .)" % (cmd, cmd))
     sys.exit(1)
 
 
@@ -26,7 +26,7 @@ def main(argv=sys.argv):
         'FORMSHARE_INI_FILE': formshare_ini_file
     }
 
-    rendered_template = template_environment.get_template('celery_app_template.py').render(context)
+    rendered_template = template_environment.get_template('celery_app_template.jinja2').render(context)
 
     with open(formshare_celery_app, 'w') as f:
         f.write(rendered_template)

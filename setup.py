@@ -85,6 +85,7 @@ setup(
         'console_scripts': [
             'create_superuser = formshare.scripts.createsuperuser:main',
             'configure_celery = formshare.scripts.configurecelery:main',
+            'configure_mysql = formshare.scripts.configuremysql:main',
             'download_nltk_packages = formshare.scripts.download_nltk_packages:main'
         ],
     },

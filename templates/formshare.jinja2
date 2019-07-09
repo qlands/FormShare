@@ -1,0 +1,196 @@
+###
+# app configuration
+# https://docs.pylonsproject.org/projects/pyramid/en/latest/narr/environment.html
+###
+
+[app:formshare]
+use = egg:formshare
+
+pyramid.reload_templates = true
+pyramid.debug_authorization = false
+pyramid.debug_notfound = false
+pyramid.debug_routematch = false
+pyramid.default_locale_name = en
+pyramid.includes =
+    pyramid_debugtoolbar
+
+###
+# Database connection
+###
+#For MySQL
+sqlalchemy.url = mysql+mysqlconnector://user_name:user_password@localhost/formshare?charset=utf8
+
+#For PostgreSQL
+#sqlalchemy.url = postgresql://user_name:user_password@localhost/formshare
+
+#For Microsoft SQL Server
+#Note that you need the official Microsoft ODBC driver for Linux. See https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server?view=sql-server-2017
+#sqlalchemy.url = mssql+pyodbc://user_name:user_password@localhost:1433/formshare?driver=/path/to/libmsodbcsql-XX.X.so.0.X
+
+###
+# Security settings. You must change this parameters for every installation of FormShare. Each password must be different
+# Use https://passwordsgenerator.net/ to generate strong 16 and 32 strong passwords
+# Use https://www.browserling.com/tools/random-hex to generate a 32 hex string
+###
+auth.main.secret = *A 17 char pass**
+auth.main.cookie = formshare_main_auth_tkt
+auth.assistant.secret = *A 17 char pass**
+auth.assistant.cookie = formshare_assistant_auth_tkt
+auth.secret = *A 17 char pass**
+aes.key = ***A 32 char strong password****
+auth.opaque = *****A 32 char hex string*******
+auth.realm = formshare@mycompany.com
+
+###
+# Authorization settings
+###
+auth.register_users_via_api = false
+auth.register_users_via_web = true
+auth.share_projects_among_users = false
+auth.allow_guest_access = false
+auth.allow_edit_profile_name = true
+auth.allow_user_change_password = true
+
+###
+# FormShare Plugins
+###
+#formshare.plugins = aPlugin
+
+###
+# Celery configuration
+# Change if necessary. The RabbitMQ server should be the same as the one hosting FormShare
+###
+celery.broker = amqp://formshare:formshare@localhost:5672/formshare
+celery.backend = rpc://formshare:formshare@localhost:5672/formshare
+celery.taskname = fstask
+
+###
+# ElasticSearch configuration
+###
+elasticfeeds.feed_index = formshare_feeds
+elasticfeeds.network_index = formshare_network
+#elasticfeeds.host = localhost
+#elasticfeeds.port = 9200
+#elasticfeeds.url_prefix = None
+#elasticfeeds.use_ssl = False
+#elasticfeeds.number_of_shards_in_feeds = 5
+#elasticfeeds.number_of_replicas_in_feeds = 1
+#elasticfeeds.number_of_shards_in_network = 5
+#elasticfeeds.number_of_replicas_in_network = 1
+#elasticfeeds.max_link_size = 10000
+
+elasticsearch.user.index_name = formshare_users
+#elasticsearch.user.number_of_shards = 5
+#elasticsearch.user.number_of_replicas = 1
+#elasticsearch.user.host = localhost
+#elasticsearch.user.port = 9200
+#elasticsearch.user.url_prefix = None
+#elasticsearch.user.use_ssl = False
+
+#elasticsearch.repository.number_of_shards = 5
+#elasticsearch.repository.number_of_replicas = 1
+#elasticsearch.repository.host = localhost
+#elasticsearch.repository.port = 9200
+#elasticsearch.repository.url_prefix = None
+#elasticsearch.repository.use_ssl = False
+
+elasticsearch.records.index_name = formshare_records
+#elasticsearch.records.number_of_shards = 5
+#elasticsearch.records.number_of_replicas = 1
+#elasticsearch.records.host = localhost
+#elasticsearch.records.port = 9200
+#elasticsearch.records.url_prefix = None
+#elasticsearch.records.use_ssl = False
+
+###
+# Repository configuration
+###
+repository.path = /path/to/a/directory
+odktools.path = /path/to/odktools
+mysql.cnf = %(here)s/mysql.cnf
+mysql.host = localhost
+mysql.port = 3306
+mysql.user = user_name
+mysql.password = user_password
+
+###
+# Mail server configuration
+###
+mail.server = mail.my_company.com
+mail.port = 587
+mail.login = user_name
+mail.password = user_password
+mail.starttls = false
+mail.from = noreply@my_company.com
+
+# By default, the toolbar only appears for clients from IP addresses
+# '127.0.0.1' and '::1'.
+# debugtoolbar.hosts = 127.0.0.1 ::1
+
+###
+# WSGI server configuration
+###
+[composite:main]
+use = egg:rutter#urlmap
+/ = formshare
+
+[server:main]
+use = egg:gunicorn
+host = localhost
+port = 5900
+workers = 1
+worker_class = gevent
+
+###
+# Logging configuration
+# https://docs.pylonsproject.org/projects/pyramid/en/latest/narr/logging.html
+###
+[loggers]
+keys = root, formshare, sqlalchemy
+
+[handlers]
+keys = console
+
+[formatters]
+keys = generic
+
+[logger_root]
+level = WARN
+handlers = console
+
+[logger_formshare]
+level = WARN
+handlers =
+qualname = formshare
+
+[logger_sqlalchemy]
+level = WARN
+handlers =
+qualname = sqlalchemy.engine
+# "level = INFO" logs SQL queries.
+# "level = DEBUG" logs SQL queries and results.
+# "level = WARN" logs neither.  (Recommended for production systems.)
+
+[stream_framework]
+level = WARN
+handlers =
+qualname = stream_framework
+
+[logger_celery]
+level = WARN
+handlers =
+qualname = celery
+
+[logger_elasticsearch]
+level = WARN
+handlers =
+qualname = elasticsearch
+
+[handler_console]
+class = StreamHandler
+args = (sys.stderr,)
+level = NOTSET
+formatter = generic
+
+[formatter_generic]
+format = %(asctime)s %(levelname)-5.5s [%(name)s:%(lineno)s][%(threadName)s] %(message)s

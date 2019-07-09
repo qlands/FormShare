@@ -16,6 +16,9 @@ from elasticfeeds.activity import Actor, Object, Activity
 from formshare.processes.elasticsearch.user_index import get_user_index_manager
 import validators
 import re
+import logging
+from formshare.processes.email.send_email import send_email
+log = logging.getLogger(__name__)
 
 
 class HomeView(PublicView):
@@ -48,6 +51,13 @@ class LoginView(PublicView):
             if not safe:
                 raise HTTPNotFound()
             data = variable_decode(self.request.POST)
+
+            user = data['user']
+            if user != "":
+                log.error("Suspicious boot login from IP: {}. Agent: {}".format(self.request.remote_addr,
+                                                                                self.request.user_agent))
+                raise HTTPNotFound()
+            data.pop('user')
             login = data['email']
             passwd = data['passwd']
             user = get_user_data(login, self.request)
@@ -69,14 +79,37 @@ class LoginView(PublicView):
                         self.returnRawViewResult = True
                         return HTTPFound(location=next_page, headers=headers)
                 else:
+                    log.error("Logging into account {} provided an invalid password".format(login))
                     self.errors.append(self._("The user account does not exists or the password is invalid"))
             else:
+                log.error("User account {} does not exist".format(login))
                 self.errors.append(self._("The user account does not exists or the password is invalid"))
         return {'next': next_page}
 
 
 class RefreshSessionView(PublicView):
     def process_view(self):
+        return {}
+
+
+class RecoverPasswordView(PublicView):
+    def process_view(self):
+        if self.request.method == 'POST':
+            safe = check_csrf_token(self.request, raises=False)
+            if not safe:
+                raise HTTPNotFound()
+            data = variable_decode(self.request.POST)
+            login = data['email']
+            user = data['user']
+            if user != "":
+                log.error("Suspicious boot password recovery from IP: {}. Agent: {}".format(self.request.remote_addr,
+                                                                                            self.request.user_agent))
+                raise HTTPNotFound()
+            user = get_user_data(login, self.request)
+            if user is not None:
+                send_email(self.request, user.email, "ricotodo", user.userData)
+                self.returnRawViewResult = True
+                return HTTPFound(location=self.request.route_url('login'))
         return {}
 
 
@@ -128,9 +161,15 @@ class AssistantLoginView(PublicView):
                         self.returnRawViewResult = True
                         return HTTPFound(location=next_page, headers=headers)
                 else:
-                    self.errors.append(self._("Invalid credentials"))
+                    log.error(
+                        "Logging into assistant account {} for FormShare account {} in project {} "
+                        "provided an invalid password".format(login, user_id, project_code))
+                    self.errors.append(self._("The user account does not exists or the password is invalid"))
             else:
-                self.errors.append(self._("The user account does not exists"))
+                log.error(
+                    "Assistant account {} for FormShare account {} in project {} "
+                    "does not exists".format(login, user_id, project_code))
+                self.errors.append(self._("The user account does not exists or the password is invalid"))
         return {'next': next_page, 'userid': user_id, 'projcode': project_code}
 
 
@@ -170,10 +209,18 @@ class RegisterView(PublicView):
             if not safe:
                 raise HTTPNotFound()
             data = variable_decode(self.request.POST)
+
+            user = data['user_address']
+            if user != "Costa Rica":
+                log.error("Suspicious boot register from IP: {}. Agent: {}".format(self.request.remote_addr,
+                                                                                   self.request.user_agent))
+                raise HTTPNotFound()
+            data.pop('user_address')
+
             if validators.email(data["user_email"]):
                 if data["user_password"] != "":
                     data["user_password"] = data["user_password"].lower()
-                    if re.match(r'^[A-Za-z0-9-\._]+$', data['user_id']):
+                    if re.match(r'^[A-Za-z0-9._]+$', data['user_id']):
                         if data["user_password"] == data["user_password2"]:
                             data["user_cdate"] = datetime.datetime.now()
                             data["user_apikey"] = str(uuid.uuid4())
@@ -182,7 +229,8 @@ class RegisterView(PublicView):
                             # Load connected plugins and check if they modify the registration of an user
                             continue_registration = True
                             for plugin in p.PluginImplementations(p.IAuthorize):
-                                data, continue_with_registration, error_message = plugin.before_register(self.request, data)
+                                data, continue_with_registration, error_message = plugin.before_register(self.request,
+                                                                                                         data)
                                 if not continue_with_registration:
                                     self.errors.append(error_message)
                                     continue_registration = False
@@ -233,11 +281,17 @@ class RegisterView(PublicView):
                                         self.returnRawViewResult = True
                                         return HTTPFound(next_page)
                         else:
+                            log.error("Password {} and confirmation {} are not the same".format(
+                                data["user_password"], data["user_passwor2"]))
                             self.errors.append(self._("The password and its confirmation are not the same"))
                     else:
-                        self.errors.append(self._("The user id has invalid characters. Only _ - and . are allowed"))
+                        log.error("Registering user {} has invalid characters".format(data['user_id']))
+                        self.errors.append(self._("The user id has invalid characters. Only underscore "
+                                                  "and dot are allowed"))
                 else:
+                    log.error("Registering user {} has empty password".format(data['user_id']))
                     self.errors.append(self._("The password cannot be empty"))
             else:
+                log.error("Invalid email {}".format(data["user_email"]))
                 self.errors.append(self._("Invalid email"))
         return {'next': next, 'userdata': data}

@@ -1,0 +1,17 @@
+{% block email_body %}
+    {% block email_hello %}
+        {{ _('Hello from FormShare') }}
+        https://formshare.qlands.com
+    {% endblock email_hello %}
+    {% block email_message %}
+        {{ _('You have received this email because you requested us on') }} {{ recovery_date }} {{ _('to send you your password') }}.
+
+        {{ _('Your password is') }}: {{ current_password }}
+
+        {{ _('If you did not requested us to send you your password then someone or something is trying to get into our account. Please change your password immediately!') }}
+    {% endblock email_message %}
+    {% block email_goodbye %}
+        {{ _('Regards') }},
+        {{ _('The FormShare team') }}
+    {% endblock email_goodbye %}
+{% endblock email_body %}

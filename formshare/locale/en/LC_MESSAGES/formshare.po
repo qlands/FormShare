@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-07-08 10:31-0600\n"
+"POT-Creation-Date: 2019-07-08 22:48-0600\n"
 "PO-Revision-Date: 2017-11-15 22:40-0600\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -73,16 +73,16 @@ msgstr ""
 msgid "If you have forms with submissions. First you need to delete such forms"
 msgstr ""
 
-#: formshare/processes/db/user.py:81
+#: formshare/processes/db/user.py:82
 msgid "Username is already taken"
 msgstr ""
 
-#: formshare/processes/db/user.py:88
-msgid "Email already taken"
+#: formshare/processes/db/user.py:89 formshare/processes/db/user.py:92
+msgid "Email is invalid"
 msgstr ""
 
-#: formshare/processes/db/user.py:91
-msgid "Email is invalid"
+#: formshare/processes/email/send_email.py:28
+msgid "FormShare - Password request"
 msgstr ""
 
 #: formshare/processes/odk/api.py:226 formshare/processes/odk/api.py:249
@@ -470,6 +470,7 @@ msgstr ""
 
 #: formshare/templates/assistant/page.jinja2:60
 #: formshare/templates/assistant/page.jinja2:89
+#: formshare/templates/dashboard/profile/profile_edit.jinja2:84
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:105
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:131
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_item.jinja2:38
@@ -482,6 +483,7 @@ msgid "Change password of"
 msgstr ""
 
 #: formshare/templates/assistant/page.jinja2:68
+#: formshare/templates/dashboard/profile/profile_edit.jinja2:65
 msgid "Old password"
 msgstr ""
 
@@ -489,12 +491,13 @@ msgstr ""
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:114
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2:29
 #: formshare/templates/generic/assistant_login.jinja2:18
-#: formshare/templates/generic/login.jinja2:40
-#: formshare/templates/generic/register.jinja2:22
+#: formshare/templates/generic/login.jinja2:41
+#: formshare/templates/generic/register.jinja2:25
 msgid "Password"
 msgstr ""
 
 #: formshare/templates/assistant/page.jinja2:81
+#: formshare/templates/dashboard/profile/profile_edit.jinja2:75
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:121
 msgid "Confirmation"
 msgstr ""
@@ -1255,6 +1258,10 @@ msgstr ""
 msgid "Save changes"
 msgstr ""
 
+#: formshare/templates/dashboard/profile/profile_edit.jinja2:70
+msgid "New password"
+msgstr ""
+
 #: formshare/templates/dashboard/profile/snippets/about_tab.jinja2:4
 msgid "About"
 msgstr ""
@@ -1369,7 +1376,7 @@ msgstr ""
 #: formshare/templates/dashboard/profile/snippets/social_tab.jinja2:29
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:64
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2:16
-#: formshare/templates/generic/register.jinja2:16
+#: formshare/templates/generic/register.jinja2:19
 msgid "Email"
 msgstr ""
 
@@ -1613,7 +1620,7 @@ msgstr ""
 
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2:5
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form_edit.jinja2:4
-#: formshare/templates/generic/register.jinja2:19
+#: formshare/templates/generic/register.jinja2:22
 msgid "User name"
 msgstr ""
 
@@ -1622,12 +1629,12 @@ msgid "The user name must be unique and cannot be changed afterwards"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2:10
-#: formshare/templates/generic/register.jinja2:13
+#: formshare/templates/generic/register.jinja2:16
 msgid "Full name"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2:35
-#: formshare/templates/generic/register.jinja2:25
+#: formshare/templates/generic/register.jinja2:28
 msgid "Password confirmation"
 msgstr ""
 
@@ -2858,6 +2865,7 @@ msgstr ""
 
 #: formshare/templates/dashboard/snippets/header.jinja2:20
 #: formshare/templates/generic/login.jinja2:25
+#: formshare/templates/generic/recover_password.jinja2:7
 #: formshare/templates/landing/index.jinja2:4
 msgid "Welcome to FormShare"
 msgstr ""
@@ -2873,15 +2881,15 @@ msgstr ""
 #: formshare/templates/generic/assistant_login.jinja2:22
 #: formshare/templates/generic/login.jinja2:4
 #: formshare/templates/generic/login.jinja2:28
-#: formshare/templates/generic/login.jinja2:45
-#: formshare/templates/generic/register.jinja2:37
+#: formshare/templates/generic/login.jinja2:46
+#: formshare/templates/generic/register.jinja2:40
 #: formshare/templates/landing/snippets/header.jinja2:58
 msgid "Sign in"
 msgstr ""
 
 #: formshare/templates/dashboard/snippets/header.jinja2:131
 #: formshare/templates/dashboard/snippets/header_home.jinja2:64
-#: formshare/templates/generic/login.jinja2:52
+#: formshare/templates/generic/login.jinja2:53
 #: formshare/templates/landing/snippets/header.jinja2:66
 msgid "Sign up"
 msgstr ""
@@ -2892,6 +2900,37 @@ msgstr ""
 
 #: formshare/templates/dashboard/snippets/navbar.jinja2:32
 msgid "Logout"
+msgstr ""
+
+#: formshare/templates/email/recover_email.jinja2:3
+msgid "Hello from FormShare"
+msgstr ""
+
+#: formshare/templates/email/recover_email.jinja2:7
+msgid "You have received this email because you requested us on"
+msgstr ""
+
+#: formshare/templates/email/recover_email.jinja2:7
+msgid "to send you your password"
+msgstr ""
+
+#: formshare/templates/email/recover_email.jinja2:9
+msgid "Your password is"
+msgstr ""
+
+#: formshare/templates/email/recover_email.jinja2:11
+msgid ""
+"If you did not requested us to send you your password then someone or "
+"something is trying to get into our account. Please change your password "
+"immediately!"
+msgstr ""
+
+#: formshare/templates/email/recover_email.jinja2:14
+msgid "Regards"
+msgstr ""
+
+#: formshare/templates/email/recover_email.jinja2:15
+msgid "The FormShare team"
 msgstr ""
 
 #: formshare/templates/generic/404.jinja2:3
@@ -2935,12 +2974,35 @@ msgstr ""
 msgid "Assistant ID"
 msgstr ""
 
-#: formshare/templates/generic/login.jinja2:37
+#: formshare/templates/generic/login.jinja2:36
+#: formshare/templates/generic/recover_password.jinja2:19
+msgid "Username"
+msgstr ""
+
+#: formshare/templates/generic/login.jinja2:38
+#: formshare/templates/generic/recover_password.jinja2:18
 msgid "Username or email address"
 msgstr ""
 
-#: formshare/templates/generic/login.jinja2:51
+#: formshare/templates/generic/login.jinja2:50
+msgid "Forgot password?"
+msgstr ""
+
+#: formshare/templates/generic/login.jinja2:52
 msgid "You don't have an account?"
+msgstr ""
+
+#: formshare/templates/generic/recover_password.jinja2:4
+#: formshare/templates/generic/recover_password.jinja2:11
+msgid "Recover my password"
+msgstr ""
+
+#: formshare/templates/generic/recover_password.jinja2:24
+msgid "Recover"
+msgstr ""
+
+#: formshare/templates/generic/recover_password.jinja2:29
+msgid "We will send you and email with your password"
 msgstr ""
 
 #: formshare/templates/generic/refresh.jinja2:3
@@ -2962,11 +3024,15 @@ msgstr ""
 msgid "Join FormShare"
 msgstr ""
 
-#: formshare/templates/generic/register.jinja2:31
+#: formshare/templates/generic/register.jinja2:13
+msgid "Address"
+msgstr ""
+
+#: formshare/templates/generic/register.jinja2:34
 msgid "Create an account"
 msgstr ""
 
-#: formshare/templates/generic/register.jinja2:36
+#: formshare/templates/generic/register.jinja2:39
 msgid "Already have an account?"
 msgstr ""
 
@@ -3134,12 +3200,12 @@ msgid "The assistant was added to this project"
 msgstr ""
 
 #: formshare/views/assistant_views/forms.py:73 formshare/views/assistants.py:89
-#: formshare/views/assistants.py:241 formshare/views/basic_views.py:240
+#: formshare/views/assistants.py:241 formshare/views/basic_views.py:293
 msgid "The password cannot be empty"
 msgstr ""
 
 #: formshare/views/assistant_views/forms.py:70 formshare/views/assistants.py:91
-#: formshare/views/assistants.py:238 formshare/views/basic_views.py:236
+#: formshare/views/assistants.py:238 formshare/views/basic_views.py:286
 msgid "The password and its confirmation are not the same"
 msgstr ""
 
@@ -3168,23 +3234,16 @@ msgstr ""
 msgid "Unable to change the password: "
 msgstr ""
 
-#: formshare/views/basic_views.py:72 formshare/views/basic_views.py:74
+#: formshare/views/basic_views.py:83 formshare/views/basic_views.py:86
+#: formshare/views/basic_views.py:167 formshare/views/basic_views.py:172
 msgid "The user account does not exists or the password is invalid"
 msgstr ""
 
-#: formshare/views/basic_views.py:131
-msgid "Invalid credentials"
+#: formshare/views/basic_views.py:289
+msgid "The user id has invalid characters. Only underscore and dot are allowed"
 msgstr ""
 
-#: formshare/views/basic_views.py:133
-msgid "The user account does not exists"
-msgstr ""
-
-#: formshare/views/basic_views.py:238
-msgid "The user id has invalid characters. Only _ - and . are allowed"
-msgstr ""
-
-#: formshare/views/basic_views.py:242
+#: formshare/views/basic_views.py:296
 msgid "Invalid email"
 msgstr ""
 
@@ -3288,12 +3347,28 @@ msgstr ""
 msgid "Unable to delete the product"
 msgstr ""
 
-#: formshare/views/profile.py:35
+#: formshare/views/profile.py:39
 msgid "The profile has been updated"
 msgstr ""
 
-#: formshare/views/profile.py:41
+#: formshare/views/profile.py:45
 msgid "The name cannot be empty"
+msgstr ""
+
+#: formshare/views/profile.py:61
+msgid "The old password is incorrect"
+msgstr ""
+
+#: formshare/views/profile.py:63
+msgid "The new password and its confirmation are not the same"
+msgstr ""
+
+#: formshare/views/profile.py:65
+msgid "You need to specify a new password"
+msgstr ""
+
+#: formshare/views/profile.py:67
+msgid "You need to specify the old password"
 msgstr ""
 
 #: formshare/views/projects.py:155
@@ -3702,5 +3777,20 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "Export data in CSV format"
+#~ msgstr ""
+
+#~ msgid "Email already taken"
+#~ msgstr ""
+
+#~ msgid "Invalid credentials"
+#~ msgstr ""
+
+#~ msgid "The user account does not exists"
+#~ msgstr ""
+
+#~ msgid "The user id has invalid characters. Only _ - and . are allowed"
+#~ msgstr ""
+
+#~ msgid "Formshare - Password request"
 #~ msgstr ""
 

@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-07-08 10:31-0600\n"
-"PO-Revision-Date: 2019-07-08 10:36-0600\n"
+"POT-Creation-Date: 2019-07-08 22:48-0600\n"
+"PO-Revision-Date: 2019-07-08 22:55-0600\n"
 "Last-Translator: Carlos Quiros <cquiros@qlands.com>\n"
 "Language: es\n"
 "Language-Team: English <kde-i18n-doc@kde.org>\n"
@@ -77,17 +77,18 @@ msgstr ""
 "Si usted tiene formularios con envíos. Primero tendría que borrar los "
 "formularios"
 
-#: formshare/processes/db/user.py:81
+#: formshare/processes/db/user.py:82
 msgid "Username is already taken"
 msgstr "Este usuario ya ha esta siendo utilizado"
 
-#: formshare/processes/db/user.py:88
-msgid "Email already taken"
-msgstr "El correo electrónico ya esta siendo utilizado"
-
-#: formshare/processes/db/user.py:91
+#: formshare/processes/db/user.py:89 formshare/processes/db/user.py:92
 msgid "Email is invalid"
 msgstr "El correo electrónico es inválido"
+
+#: formshare/processes/email/send_email.py:28
+#| msgid "Formshare - Password request"
+msgid "FormShare - Password request"
+msgstr "FormShare - Solicitud de contraseña"
 
 #: formshare/processes/odk/api.py:226 formshare/processes/odk/api.py:249
 #: formshare/processes/odk/api.py:264 formshare/processes/odk/api.py:279
@@ -378,8 +379,8 @@ msgstr "KML"
 msgid "Publishable CSV"
 msgstr "CSV publicable"
 
+# | msgid "Unpublish"
 #: formshare/products/products.py:81
-#| msgid "Unpublish"
 msgid "Unpublishable CSV"
 msgstr "CSV no publicable"
 
@@ -531,6 +532,7 @@ msgstr "Use ésta imagen QR para configurar ODK Collect"
 
 #: formshare/templates/assistant/page.jinja2:60
 #: formshare/templates/assistant/page.jinja2:89
+#: formshare/templates/dashboard/profile/profile_edit.jinja2:84
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:105
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:131
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_item.jinja2:38
@@ -543,6 +545,7 @@ msgid "Change password of"
 msgstr "Cambiar la contraseña de"
 
 #: formshare/templates/assistant/page.jinja2:68
+#: formshare/templates/dashboard/profile/profile_edit.jinja2:65
 msgid "Old password"
 msgstr "Antigua contraseña"
 
@@ -550,12 +553,13 @@ msgstr "Antigua contraseña"
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:114
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2:29
 #: formshare/templates/generic/assistant_login.jinja2:18
-#: formshare/templates/generic/login.jinja2:40
-#: formshare/templates/generic/register.jinja2:22
+#: formshare/templates/generic/login.jinja2:41
+#: formshare/templates/generic/register.jinja2:25
 msgid "Password"
 msgstr "Contraseña"
 
 #: formshare/templates/assistant/page.jinja2:81
+#: formshare/templates/dashboard/profile/profile_edit.jinja2:75
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:121
 msgid "Confirmation"
 msgstr "Confirmación"
@@ -1316,6 +1320,11 @@ msgstr "Biografía "
 msgid "Save changes"
 msgstr "Salvar cambios"
 
+# | msgid "Change password"
+#: formshare/templates/dashboard/profile/profile_edit.jinja2:70
+msgid "New password"
+msgstr "Nueva contraseña"
+
 #: formshare/templates/dashboard/profile/snippets/about_tab.jinja2:4
 msgid "About"
 msgstr "Acerca de"
@@ -1430,7 +1439,7 @@ msgstr "Vínculos sociales"
 #: formshare/templates/dashboard/profile/snippets/social_tab.jinja2:29
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:64
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2:16
-#: formshare/templates/generic/register.jinja2:16
+#: formshare/templates/generic/register.jinja2:19
 msgid "Email"
 msgstr "Correo electrónico"
 
@@ -1676,7 +1685,7 @@ msgstr "Cambiar contraseña de"
 
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2:5
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form_edit.jinja2:4
-#: formshare/templates/generic/register.jinja2:19
+#: formshare/templates/generic/register.jinja2:22
 msgid "User name"
 msgstr "Nombre del usuario"
 
@@ -1685,12 +1694,12 @@ msgid "The user name must be unique and cannot be changed afterwards"
 msgstr "El nombre del usuario debe ser único y no se puede cambiar luego"
 
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2:10
-#: formshare/templates/generic/register.jinja2:13
+#: formshare/templates/generic/register.jinja2:16
 msgid "Full name"
 msgstr "Nombre completo"
 
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2:35
-#: formshare/templates/generic/register.jinja2:25
+#: formshare/templates/generic/register.jinja2:28
 msgid "Password confirmation"
 msgstr "Confirmación de la contraseña"
 
@@ -2481,13 +2490,13 @@ msgstr "Publicar"
 msgid "Form data downloads"
 msgstr "Descargas de datos"
 
+# | msgid "Export data in Excel format"
 #: formshare/templates/dashboard/projects/forms/snippets/products_tab.jinja2:23
-#| msgid "Export data in Excel format"
 msgid "Export data in publishable Excel format"
 msgstr "Exportar datos en formato Excel publicable"
 
+# | msgid "Export data in Excel format"
 #: formshare/templates/dashboard/projects/forms/snippets/products_tab.jinja2:24
-#| msgid "Export data in Excel format"
 msgid "Export data in unpublishable Excel format"
 msgstr "Exportar datos en formato Excel no publicable"
 
@@ -2495,13 +2504,13 @@ msgstr "Exportar datos en formato Excel no publicable"
 msgid "Export submitted media"
 msgstr "Descargar los multimedios enviados"
 
+# | msgid "Export data in Excel format"
 #: formshare/templates/dashboard/projects/forms/snippets/products_tab.jinja2:26
-#| msgid "Export data in Excel format"
 msgid "Export data in publishable CSV format"
 msgstr "Exportar datos en formato CSV publicable"
 
+# | msgid "Export data in Excel format"
 #: formshare/templates/dashboard/projects/forms/snippets/products_tab.jinja2:27
-#| msgid "Export data in Excel format"
 msgid "Export data in unpublishable CSV format"
 msgstr "Exportar datos en formato CSV no publicable"
 
@@ -2958,6 +2967,7 @@ msgstr "Versión"
 
 #: formshare/templates/dashboard/snippets/header.jinja2:20
 #: formshare/templates/generic/login.jinja2:25
+#: formshare/templates/generic/recover_password.jinja2:7
 #: formshare/templates/landing/index.jinja2:4
 msgid "Welcome to FormShare"
 msgstr "Bienvenido a FormShare"
@@ -2973,15 +2983,15 @@ msgstr "Lenguaje"
 #: formshare/templates/generic/assistant_login.jinja2:22
 #: formshare/templates/generic/login.jinja2:4
 #: formshare/templates/generic/login.jinja2:28
-#: formshare/templates/generic/login.jinja2:45
-#: formshare/templates/generic/register.jinja2:37
+#: formshare/templates/generic/login.jinja2:46
+#: formshare/templates/generic/register.jinja2:40
 #: formshare/templates/landing/snippets/header.jinja2:58
 msgid "Sign in"
 msgstr "Ingresar"
 
 #: formshare/templates/dashboard/snippets/header.jinja2:131
 #: formshare/templates/dashboard/snippets/header_home.jinja2:64
-#: formshare/templates/generic/login.jinja2:52
+#: formshare/templates/generic/login.jinja2:53
 #: formshare/templates/landing/snippets/header.jinja2:66
 msgid "Sign up"
 msgstr "Registrarse"
@@ -2993,6 +3003,43 @@ msgstr "Huésped"
 #: formshare/templates/dashboard/snippets/navbar.jinja2:32
 msgid "Logout"
 msgstr "Salir"
+
+# | msgid "Welcome to FormShare"
+#: formshare/templates/email/recover_email.jinja2:3
+msgid "Hello from FormShare"
+msgstr "Hola de FormShare"
+
+#: formshare/templates/email/recover_email.jinja2:7
+msgid "You have received this email because you requested us on"
+msgstr "Usted ha recibido éste correo electrónico porque usted nos solicito en"
+
+#: formshare/templates/email/recover_email.jinja2:7
+msgid "to send you your password"
+msgstr "que le enviáramos su contraseña"
+
+# | msgid "Old password"
+#: formshare/templates/email/recover_email.jinja2:9
+msgid "Your password is"
+msgstr "Tu contraseña es"
+
+#: formshare/templates/email/recover_email.jinja2:11
+msgid ""
+"If you did not requested us to send you your password then someone or "
+"something is trying to get into our account. Please change your password "
+"immediately!"
+msgstr ""
+"Si usted no nos solicitó que le enviáramos su contraseña entonces podría ser"
+" que alguien o algo está tratando de ingresar a su cuenta. Por favor cambie"
+" su contraseña inmediatamente!"
+
+# | msgid "Disregarded"
+#: formshare/templates/email/recover_email.jinja2:14
+msgid "Regards"
+msgstr "Gracias"
+
+#: formshare/templates/email/recover_email.jinja2:15
+msgid "The FormShare team"
+msgstr "El equipo de FormShare"
 
 #: formshare/templates/generic/404.jinja2:3
 msgid "Page not found"
@@ -3039,13 +3086,40 @@ msgstr "Ingreso para los asistentes"
 msgid "Assistant ID"
 msgstr "Identificador del asistente"
 
-#: formshare/templates/generic/login.jinja2:37
+# | msgid "User name"
+#: formshare/templates/generic/login.jinja2:36
+#: formshare/templates/generic/recover_password.jinja2:19
+msgid "Username"
+msgstr "Usuario"
+
+#: formshare/templates/generic/login.jinja2:38
+#: formshare/templates/generic/recover_password.jinja2:18
 msgid "Username or email address"
 msgstr "Usuario o correo electrónico"
 
-#: formshare/templates/generic/login.jinja2:51
+# | msgid "Change password"
+#: formshare/templates/generic/login.jinja2:50
+msgid "Forgot password?"
+msgstr "Olvidó su contraseña?"
+
+#: formshare/templates/generic/login.jinja2:52
 msgid "You don't have an account?"
 msgstr "No posee una cuenta?"
+
+# | msgid "Change my password"
+#: formshare/templates/generic/recover_password.jinja2:4
+#: formshare/templates/generic/recover_password.jinja2:11
+msgid "Recover my password"
+msgstr "Recuperar mi contraseña"
+
+# | msgid "Remove"
+#: formshare/templates/generic/recover_password.jinja2:24
+msgid "Recover"
+msgstr "Recuperar"
+
+#: formshare/templates/generic/recover_password.jinja2:29
+msgid "We will send you and email with your password"
+msgstr "Le enviaremos un correo electrónico con su contraseña"
 
 #: formshare/templates/generic/refresh.jinja2:3
 msgid "Session timeout"
@@ -3068,11 +3142,15 @@ msgstr ""
 msgid "Join FormShare"
 msgstr "Únete a FormShare"
 
-#: formshare/templates/generic/register.jinja2:31
+#: formshare/templates/generic/register.jinja2:13
+msgid "Address"
+msgstr "Dirección"
+
+#: formshare/templates/generic/register.jinja2:34
 msgid "Create an account"
 msgstr "Cree una cuenta"
 
-#: formshare/templates/generic/register.jinja2:36
+#: formshare/templates/generic/register.jinja2:39
 msgid "Already have an account?"
 msgstr "Ya tiene cuenta?"
 
@@ -3255,12 +3333,12 @@ msgid "The assistant was added to this project"
 msgstr "El asistente fue añadido a este proyecto"
 
 #: formshare/views/assistant_views/forms.py:73 formshare/views/assistants.py:89
-#: formshare/views/assistants.py:241 formshare/views/basic_views.py:240
+#: formshare/views/assistants.py:241 formshare/views/basic_views.py:293
 msgid "The password cannot be empty"
 msgstr "La contraseña no puede ser vacía"
 
 #: formshare/views/assistant_views/forms.py:70 formshare/views/assistants.py:91
-#: formshare/views/assistants.py:238 formshare/views/basic_views.py:236
+#: formshare/views/assistants.py:238 formshare/views/basic_views.py:286
 msgid "The password and its confirmation are not the same"
 msgstr "La contraseña y su confirmación no son iguales"
 
@@ -3289,23 +3367,19 @@ msgstr "La contraseña fue cambiada satisfactoriamente"
 msgid "Unable to change the password: "
 msgstr "No se pudo cambiar la contraseña:"
 
-#: formshare/views/basic_views.py:72 formshare/views/basic_views.py:74
+#: formshare/views/basic_views.py:83 formshare/views/basic_views.py:86
+#: formshare/views/basic_views.py:167 formshare/views/basic_views.py:172
 msgid "The user account does not exists or the password is invalid"
 msgstr "La cuenta del usuario no existe o la contraseña no es válida"
 
-#: formshare/views/basic_views.py:131
-msgid "Invalid credentials"
-msgstr "Credenciales inválidos"
+# | msgid "The user id has invalid characters. Only _ - and . are allowed"
+#: formshare/views/basic_views.py:289
+msgid "The user id has invalid characters. Only underscore and dot are allowed"
+msgstr ""
+"El usuario posee caracteres inválidos. Solo guion bajo y punto son "
+"permitidos"
 
-#: formshare/views/basic_views.py:133
-msgid "The user account does not exists"
-msgstr "La cuenta de usuario no existe"
-
-#: formshare/views/basic_views.py:238
-msgid "The user id has invalid characters. Only _ - and . are allowed"
-msgstr "El usuario posee caracteres inválidos. Solo _ , - y . son permitidos"
-
-#: formshare/views/basic_views.py:242
+#: formshare/views/basic_views.py:296
 msgid "Invalid email"
 msgstr "Correo electrónico inválido"
 
@@ -3409,13 +3483,33 @@ msgstr "El producto fue eliminado satisfactoriamente"
 msgid "Unable to delete the product"
 msgstr "No se pudo borrar el producto:"
 
-#: formshare/views/profile.py:35
+#: formshare/views/profile.py:39
 msgid "The profile has been updated"
 msgstr "El perfil se ha actualizado"
 
-#: formshare/views/profile.py:41
+#: formshare/views/profile.py:45
 msgid "The name cannot be empty"
 msgstr "El nombre no puede ser vacío"
+
+# | msgid "The old password is not correct"
+#: formshare/views/profile.py:61
+msgid "The old password is incorrect"
+msgstr "La antigua contraseña es incorrecta"
+
+# | msgid "The password and its confirmation are not the same"
+#: formshare/views/profile.py:63
+msgid "The new password and its confirmation are not the same"
+msgstr "La contraseña y su confirmación no son iguales"
+
+# | msgid "You need to specify a name"
+#: formshare/views/profile.py:65
+msgid "You need to specify a new password"
+msgstr "Usted necesita indicar una nueva contraseña"
+
+# | msgid "You need to specify an assistant"
+#: formshare/views/profile.py:67
+msgid "You need to specify the old password"
+msgstr "Usted necesita indicar la contraseña anterior"
 
 #: formshare/views/projects.py:155
 msgid "The project has been created"
@@ -3787,4 +3881,13 @@ msgstr ""
 
 #~ msgid "Export data in CSV format"
 #~ msgstr "Descargar datos en formato CSV"
+
+#~ msgid "Email already taken"
+#~ msgstr "El correo electrónico ya esta siendo utilizado"
+
+#~ msgid "Invalid credentials"
+#~ msgstr "Credenciales inválidos"
+
+#~ msgid "The user account does not exists"
+#~ msgstr "La cuenta de usuario no existe"
 

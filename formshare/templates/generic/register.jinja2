@@ -9,8 +9,11 @@
 {% block loginform %}
     <form class="m-t" role="form" method="post" action="{{ request.url }}">
         {{ form.secure_form(request) }}
+
+        <input id="user_address" type="text" class="form-control" name="user_address" placeholder="{{ _('Address') }}" required="">
+
         <div class="form-group">
-            <input type="text" class="form-control" name="user_name" value="{{ userdata.user_name }}" placeholder="{{ _('Full name') }}" required="">
+            <input id="user_name" type="text" class="form-control" name="user_name" value="{{ userdata.user_name }}" placeholder="{{ _('Full name') }}" required="">
         </div>
         <div class="form-group">
             <input type="email" class="form-control" name="user_email" value="{{ userdata.user_email }}" placeholder="{{ _('Email') }}" required="">
@@ -36,3 +39,12 @@
     <p class="text-muted text-center"><small>{{ _('Already have an account?') }}</small></p>
     <a class="btn btn-sm btn-white btn-block" href="{{ request.route_url('login') }}">{{ _('Sign in') }}</a>
 {% endblock %}
+
+{% block scripts %}
+    <script>
+        $(document).ready(function() {
+            $("#user_address").css({top: -50, left: -50, position:'absolute'});
+            $("#user_address").val("Costa Rica");
+        });
+    </script>
+{% endblock scripts %}

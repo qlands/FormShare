@@ -4,7 +4,8 @@ import logging
 import validators
 
 __all__ = [
-    'register_user', 'user_exists', 'get_user_details', 'update_profile', 'get_user_name', 'get_user_by_api_key'
+    'register_user', 'user_exists', 'get_user_details', 'update_profile', 'get_user_name', 'get_user_by_api_key',
+    'update_password'
 ]
 
 log = logging.getLogger(__name__)
@@ -85,7 +86,7 @@ def register_user(request, user_data):
                 return False, str(e)
         else:
             log.error("Duplicated user with email {}".format(mapped_data["user_email"]))
-            return False, _("Email already taken")
+            return False, _("Email is invalid")
     else:
         log.error("Email {} is not valid".format(mapped_data["user_email"]))
         return False, _("Email is invalid")
@@ -123,7 +124,7 @@ def update_profile(request, user, profile_data):
         return True, ""
     except Exception as e:
         request.dbsession.rollback()
-        log.error("Error {} when updating user user {}".format(str(e), user))
+        log.error("Error {} when updating user {}".format(str(e), user))
         return False, str(e)
 
 
@@ -134,3 +135,14 @@ def get_user_by_api_key(request, api_key):
         result["user_stats"] = get_user_stats(request, result['user_id'])
         return result
     return None
+
+
+def update_password(request, user, password):
+    try:
+        request.dbsession.query(User).filter(User.user_id == user).update({'user_password': password})
+        request.dbsession.flush()
+        return True, ""
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error("Error {} when changing password for user {}".format(str(e), user))
+        return False, str(e)

@@ -47,6 +47,15 @@
                 </ul>
                 <ul class="nav navbar-top-links navbar-right">
                     <li>
+                        <div>
+                            {{ _('Language') }}:
+                            <select id="language">
+                                <option id="en" value="en">English</option>
+                                <option id="es" value="es">Español</option>
+                            </select>
+                        </div>
+                    </li>
+                    <li>
                         <a href="{{ request.route_url('assistant_logout', userid=userid, projcode=projcode) }}">
                             <i class="fas fa-sign-out-alt"></i> {{ _('Sign out') }}
                         </a>

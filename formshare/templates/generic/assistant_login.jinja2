@@ -8,6 +8,13 @@
 {% endblock logingheadmsg %}
 
 {% block loginform %}
+    <div>
+        {{ _('Language') }}:
+        <select id="language">
+            <option id="en" value="en">English</option>
+            <option id="es" value="es">Español</option>
+        </select>
+    </div>
     <form class="m-t" role="form" method="post" action="{{ request.url }}">
         {{ form.secure_form(request) }}
         {% block loginform_fields %}
@@ -27,3 +34,42 @@
 {% block login_tools %}
 
 {% endblock login_tools %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function() {
+            var selectedLanguage = readCookie('_LOCALE_');
+            if (selectedLanguage != null)
+                $('#language').val(selectedLanguage);
+            $("#language").bind('change', function() {
+                //on change set cookie and...
+                setCookie('_LOCALE_', this.value, 365);
+                location.reload();
+            });
+        });
+
+        function setCookie(cookieName, cookieValue, nDays) {
+            var today = new Date();
+            var expire = new Date();
+
+            if (nDays==null || nDays==0)
+                nDays=1;
+
+            expire.setTime(today.getTime() + 3600000*24*nDays);
+            document.cookie = cookieName+"="+escape(cookieValue) + ";expires="+expire.toGMTString() + ";path=/";
+        }
+
+        function readCookie(name) {
+            var nameEQ = name + "=";
+            var ca = document.cookie.split(';');
+            for(var i = 0; i < ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+    </script>
+
+{% endblock scripts %}

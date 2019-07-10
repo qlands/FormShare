@@ -14,7 +14,7 @@
                     </div>
                 {% endblock update_form_warning_message %}
             </div>
-            <form role="form" method="post" enctype="multipart/form-data" action="{{ request.route_url('update_form',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formid) }}">
+            <form id="form_update_form" role="form" method="post" enctype="multipart/form-data" action="{{ request.route_url('update_form',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formid) }}">
                 {% block update_form_form %}
                     {{ form.secure_form(request) }}
                     {% block update_form_form_fields %}

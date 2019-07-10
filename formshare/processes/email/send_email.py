@@ -5,6 +5,8 @@ from email.utils import formatdate
 from formshare.config.jinja_extensions import jinjaEnv, ExtendThis
 from jinja2 import ext
 import logging
+from formshare.plugins.helpers import readble_date
+import datetime
 log = logging.getLogger(__name__)
 
 
@@ -21,13 +23,14 @@ def send_email(request, mail_to, current_password, user_dict):
         return False
     if email_from == "":
         return False
+    date_string = readble_date(datetime.datetime.now(), request.locale_name)
     msg = MIMEMultipart()
     msg['From'] = email_from
     msg['To'] = mail_to
     msg['Date'] = formatdate(localtime=True)
     msg['Subject'] = _("FormShare - Password request")
     text = render_template('email/recover_email.jinja2',
-                           {'recovery_date': formatdate(localtime=True), 'current_password': current_password,
+                           {'recovery_date': date_string, 'current_password': current_password,
                             'user_dict': user_dict, '_': _})
     msg.attach(MIMEText(text.encode('utf-8'), 'plain', 'utf-8'))
     server = request.registry.settings.get('mail.server', None)

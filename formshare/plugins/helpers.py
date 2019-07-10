@@ -78,6 +78,8 @@ def readble_date(date, locale='en'):
     :return: A readable date
     """
     ar = arrow.get(date)
+    if locale == 'es':
+        return ar.format('dddd d', locale=locale) + " de " + ar.format('MMMM, YYYY', locale=locale)
     return ar.format('dddd Do of MMMM, YYYY', locale=locale)
 
 
@@ -90,6 +92,8 @@ def readble_date_with_time(date, locale='en'):
     :return: A readable date with time
     """
     ar = arrow.get(date)
+    if locale == 'es':
+        return ar.format('dddd d', locale=locale) + " de " + ar.format('MMMM, YYYY. HH:mm:ss', locale=locale)
     return ar.format('dddd Do of MMMM, YYYY. HH:mm:ss', locale=locale)
 
 

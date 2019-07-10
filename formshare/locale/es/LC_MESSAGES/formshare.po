@@ -8,17 +8,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-07-08 22:48-0600\n"
-"PO-Revision-Date: 2019-07-08 22:55-0600\n"
+"POT-Creation-Date: 2019-07-09 18:17-0600\n"
+"PO-Revision-Date: 2019-07-09 14:55-0600\n"
 "Last-Translator: Carlos Quiros <cquiros@qlands.com>\n"
 "Language: es\n"
 "Language-Team: English <kde-i18n-doc@kde.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.7.0\n"
-"X-Generator: Lokalize 2.0\n"
 
 #: formshare/processes/db/assistant.py:138
 #: formshare/processes/db/assistant.py:158
@@ -85,8 +84,8 @@ msgstr "Este usuario ya ha esta siendo utilizado"
 msgid "Email is invalid"
 msgstr "El correo electrónico es inválido"
 
-#: formshare/processes/email/send_email.py:28
-#| msgid "Formshare - Password request"
+# | msgid "Formshare - Password request"
+#: formshare/processes/email/send_email.py:31
 msgid "FormShare - Password request"
 msgstr "FormShare - Solicitud de contraseña"
 
@@ -173,8 +172,7 @@ msgstr ""
 
 #: formshare/processes/odk/api.py:302
 msgid "The following tables have more than 64 selects: "
-msgstr ""
-"Las siguientes tablas tienen mas de 64 opciones de selección (selects):"
+msgstr "Las siguientes tablas tienen mas de 64 opciones de selección (selects):"
 
 #: formshare/processes/odk/api.py:308
 msgid " with "
@@ -530,8 +528,8 @@ msgstr "Imagen QR"
 msgid "Use this QR Code to configure ODK collect"
 msgstr "Use ésta imagen QR para configurar ODK Collect"
 
-#: formshare/templates/assistant/page.jinja2:60
-#: formshare/templates/assistant/page.jinja2:89
+#: formshare/templates/assistant/page.jinja2:96
+#: formshare/templates/assistant/page.jinja2:125
 #: formshare/templates/dashboard/profile/profile_edit.jinja2:84
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:105
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:131
@@ -539,26 +537,26 @@ msgstr "Use ésta imagen QR para configurar ODK Collect"
 msgid "Change password"
 msgstr "Cambiar la contraseña"
 
-#: formshare/templates/assistant/page.jinja2:61
+#: formshare/templates/assistant/page.jinja2:97
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:106
 msgid "Change password of"
 msgstr "Cambiar la contraseña de"
 
-#: formshare/templates/assistant/page.jinja2:68
+#: formshare/templates/assistant/page.jinja2:104
 #: formshare/templates/dashboard/profile/profile_edit.jinja2:65
 msgid "Old password"
 msgstr "Antigua contraseña"
 
-#: formshare/templates/assistant/page.jinja2:74
+#: formshare/templates/assistant/page.jinja2:110
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:114
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2:29
-#: formshare/templates/generic/assistant_login.jinja2:18
+#: formshare/templates/generic/assistant_login.jinja2:25
 #: formshare/templates/generic/login.jinja2:41
 #: formshare/templates/generic/register.jinja2:25
 msgid "Password"
 msgstr "Contraseña"
 
-#: formshare/templates/assistant/page.jinja2:81
+#: formshare/templates/assistant/page.jinja2:117
 #: formshare/templates/dashboard/profile/profile_edit.jinja2:75
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:121
 msgid "Confirmation"
@@ -566,7 +564,7 @@ msgstr "Confirmación"
 
 #: formshare/templates/assistant/clean/clean_data.jinja2:178
 #: formshare/templates/assistant/clean/clean_data.jinja2:183
-#: formshare/templates/assistant/page.jinja2:88
+#: formshare/templates/assistant/page.jinja2:124
 #: formshare/templates/dashboard/projects/assistant_groups/members/member_list.jinja2:104
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:130
 #: formshare/templates/dashboard/projects/collaborators/collaborator_list.jinja2:102
@@ -1123,6 +1121,13 @@ msgid "Change my password"
 msgstr "Cambiar mi contraseña"
 
 #: formshare/templates/assistant/snippets/header.jinja2:51
+#: formshare/templates/dashboard/snippets/header.jinja2:38
+#: formshare/templates/generic/assistant_login.jinja2:12
+#: formshare/templates/landing/snippets/header.jinja2:74
+msgid "Language"
+msgstr "Lenguaje"
+
+#: formshare/templates/assistant/snippets/header.jinja2:60
 #: formshare/templates/dashboard/snippets/header.jinja2:51
 msgid "Sign out"
 msgstr "Desconectar"
@@ -1932,8 +1937,7 @@ msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/dictionary/edit_tables.jinja2:68
 msgid "Lookup tables: Contain the description of categorical variables."
-msgstr ""
-"Tablas de búsqueda: Contienen la descripción de las variables categóricas"
+msgstr "Tablas de búsqueda: Contienen la descripción de las variables categóricas"
 
 #: formshare/templates/dashboard/projects/forms/dictionary/edit_tables.jinja2:79
 msgid "Filter by table type"
@@ -2543,8 +2547,7 @@ msgstr "Subir nueva versión"
 
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:13
 msgid "Warning: Uploading a new version will remove any test data"
-msgstr ""
-"Advertencia: Al subir una nueva versión usted borrará los datos de prueba"
+msgstr "Advertencia: Al subir una nueva versión usted borrará los datos de prueba"
 
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:24
 msgid "Choose file"
@@ -2972,15 +2975,10 @@ msgstr "Versión"
 msgid "Welcome to FormShare"
 msgstr "Bienvenido a FormShare"
 
-#: formshare/templates/dashboard/snippets/header.jinja2:38
-#: formshare/templates/landing/snippets/header.jinja2:74
-msgid "Language"
-msgstr "Lenguaje"
-
 #: formshare/templates/dashboard/snippets/header.jinja2:124
 #: formshare/templates/dashboard/snippets/header_home.jinja2:57
 #: formshare/templates/dashboard/snippets/navbar.jinja2:25
-#: formshare/templates/generic/assistant_login.jinja2:22
+#: formshare/templates/generic/assistant_login.jinja2:29
 #: formshare/templates/generic/login.jinja2:4
 #: formshare/templates/generic/login.jinja2:28
 #: formshare/templates/generic/login.jinja2:46
@@ -3007,11 +3005,11 @@ msgstr "Salir"
 # | msgid "Welcome to FormShare"
 #: formshare/templates/email/recover_email.jinja2:3
 msgid "Hello from FormShare"
-msgstr "Hola de FormShare"
+msgstr "Hola desde FormShare"
 
 #: formshare/templates/email/recover_email.jinja2:7
 msgid "You have received this email because you requested us on"
-msgstr "Usted ha recibido éste correo electrónico porque usted nos solicito en"
+msgstr "Usted ha recibido éste correo electrónico porque usted nos solicito el"
 
 #: formshare/templates/email/recover_email.jinja2:7
 msgid "to send you your password"
@@ -3028,9 +3026,9 @@ msgid ""
 "something is trying to get into our account. Please change your password "
 "immediately!"
 msgstr ""
-"Si usted no nos solicitó que le enviáramos su contraseña entonces podría ser"
-" que alguien o algo está tratando de ingresar a su cuenta. Por favor cambie"
-" su contraseña inmediatamente!"
+"Si usted no nos solicitó que le enviáramos su contraseña entonces podría "
+"ser que alguien o algo está tratando de ingresar a su cuenta. Por favor "
+"cambie su contraseña inmediatamente!"
 
 # | msgid "Disregarded"
 #: formshare/templates/email/recover_email.jinja2:14
@@ -3082,7 +3080,7 @@ msgstr "Pedimos disculpas por las molestias"
 msgid "Assistant Sign in"
 msgstr "Ingreso para los asistentes"
 
-#: formshare/templates/generic/assistant_login.jinja2:15
+#: formshare/templates/generic/assistant_login.jinja2:22
 msgid "Assistant ID"
 msgstr "Identificador del asistente"
 
@@ -3517,8 +3515,7 @@ msgstr "El proyecto ha sido creado"
 
 #: formshare/views/projects.py:161
 msgid "The project has invalid characters. Only underscore (_) is allowed"
-msgstr ""
-"El proyecto tiene caracteres inválidos. Sólo guion bajo (_) es permitido"
+msgstr "El proyecto tiene caracteres inválidos. Sólo guion bajo (_) es permitido"
 
 #: formshare/views/projects.py:163
 msgid "The project code cannot be empty"

@@ -7,7 +7,7 @@
                     <h4 class="modal-title">{{ _('Upload form') }}</h4>
                 {% endblock upload_form_header %}
             </div>
-            <form role="form" method="post" enctype="multipart/form-data" action="{{ action_url }}">
+            <form id="form_upload_form" role="form" method="post" enctype="multipart/form-data" action="{{ action_url }}">
                 {% block upload_form_form %}
                     {{ form.secure_form(request) }}
                     <div class="modal-body">

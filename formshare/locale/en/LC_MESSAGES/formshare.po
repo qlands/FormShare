@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-07-08 22:48-0600\n"
+"POT-Creation-Date: 2019-07-09 18:17-0600\n"
 "PO-Revision-Date: 2017-11-15 22:40-0600\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -81,7 +81,7 @@ msgstr ""
 msgid "Email is invalid"
 msgstr ""
 
-#: formshare/processes/email/send_email.py:28
+#: formshare/processes/email/send_email.py:31
 msgid "FormShare - Password request"
 msgstr ""
 
@@ -468,8 +468,8 @@ msgstr ""
 msgid "Use this QR Code to configure ODK collect"
 msgstr ""
 
-#: formshare/templates/assistant/page.jinja2:60
-#: formshare/templates/assistant/page.jinja2:89
+#: formshare/templates/assistant/page.jinja2:96
+#: formshare/templates/assistant/page.jinja2:125
 #: formshare/templates/dashboard/profile/profile_edit.jinja2:84
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:105
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:131
@@ -477,26 +477,26 @@ msgstr ""
 msgid "Change password"
 msgstr ""
 
-#: formshare/templates/assistant/page.jinja2:61
+#: formshare/templates/assistant/page.jinja2:97
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:106
 msgid "Change password of"
 msgstr ""
 
-#: formshare/templates/assistant/page.jinja2:68
+#: formshare/templates/assistant/page.jinja2:104
 #: formshare/templates/dashboard/profile/profile_edit.jinja2:65
 msgid "Old password"
 msgstr ""
 
-#: formshare/templates/assistant/page.jinja2:74
+#: formshare/templates/assistant/page.jinja2:110
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:114
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2:29
-#: formshare/templates/generic/assistant_login.jinja2:18
+#: formshare/templates/generic/assistant_login.jinja2:25
 #: formshare/templates/generic/login.jinja2:41
 #: formshare/templates/generic/register.jinja2:25
 msgid "Password"
 msgstr ""
 
-#: formshare/templates/assistant/page.jinja2:81
+#: formshare/templates/assistant/page.jinja2:117
 #: formshare/templates/dashboard/profile/profile_edit.jinja2:75
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:121
 msgid "Confirmation"
@@ -504,7 +504,7 @@ msgstr ""
 
 #: formshare/templates/assistant/clean/clean_data.jinja2:178
 #: formshare/templates/assistant/clean/clean_data.jinja2:183
-#: formshare/templates/assistant/page.jinja2:88
+#: formshare/templates/assistant/page.jinja2:124
 #: formshare/templates/dashboard/projects/assistant_groups/members/member_list.jinja2:104
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:130
 #: formshare/templates/dashboard/projects/collaborators/collaborator_list.jinja2:102
@@ -1061,6 +1061,13 @@ msgid "Change my password"
 msgstr ""
 
 #: formshare/templates/assistant/snippets/header.jinja2:51
+#: formshare/templates/dashboard/snippets/header.jinja2:38
+#: formshare/templates/generic/assistant_login.jinja2:12
+#: formshare/templates/landing/snippets/header.jinja2:74
+msgid "Language"
+msgstr ""
+
+#: formshare/templates/assistant/snippets/header.jinja2:60
 #: formshare/templates/dashboard/snippets/header.jinja2:51
 msgid "Sign out"
 msgstr ""
@@ -2870,15 +2877,10 @@ msgstr ""
 msgid "Welcome to FormShare"
 msgstr ""
 
-#: formshare/templates/dashboard/snippets/header.jinja2:38
-#: formshare/templates/landing/snippets/header.jinja2:74
-msgid "Language"
-msgstr ""
-
 #: formshare/templates/dashboard/snippets/header.jinja2:124
 #: formshare/templates/dashboard/snippets/header_home.jinja2:57
 #: formshare/templates/dashboard/snippets/navbar.jinja2:25
-#: formshare/templates/generic/assistant_login.jinja2:22
+#: formshare/templates/generic/assistant_login.jinja2:29
 #: formshare/templates/generic/login.jinja2:4
 #: formshare/templates/generic/login.jinja2:28
 #: formshare/templates/generic/login.jinja2:46
@@ -2970,7 +2972,7 @@ msgstr ""
 msgid "Assistant Sign in"
 msgstr ""
 
-#: formshare/templates/generic/assistant_login.jinja2:15
+#: formshare/templates/generic/assistant_login.jinja2:22
 msgid "Assistant ID"
 msgstr ""
 

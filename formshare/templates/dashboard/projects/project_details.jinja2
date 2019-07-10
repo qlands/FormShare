@@ -68,6 +68,29 @@
     {% jsresource request,'formshare','inspinia' %}
     <script>
         $(document).ready(function() {
+            let xform_upload_started = false;
+            let file_upload_started = false;
+            $('#upload_project_file_form').submit(function() {
+                $(this).find("button[type='submit']").prop('disabled',true);
+                file_upload_started = true;
+            });
+            $('#upload_file').on('hidden.bs.modal', function () {
+                if (file_upload_started)
+                    location.reload();
+            });
+
+            $('#form_upload_form').submit(function() {
+                $(this).find("button[type='submit']").prop('disabled',true);
+                xform_upload_started = true;
+            });
+
+            $('#upload_form').on('hidden.bs.modal', function () {
+                if (xform_upload_started)
+                    location.reload();
+            });
+
+
+
             {% include 'dashboard/snippets/pop_flash_js.jinja2' %}
 
             {% include 'dashboard/projects/forms/snippets/upload_form_js.jinja2' %}

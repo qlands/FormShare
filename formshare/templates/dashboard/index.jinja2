@@ -100,6 +100,16 @@
     {% else %}
         <script>
             $(document).ready(function() {
+                let xform_upload_started = false;
+                $('#form_upload_form').submit(function() {
+                    $(this).find("button[type='submit']").prop('disabled',true);
+                    xform_upload_started = true;
+                });
+
+                $('#upload_form').on('hidden.bs.modal', function () {
+                    if (xform_upload_started)
+                        location.reload();
+                });
 
                 {% include 'dashboard/projects/forms/snippets/upload_form_js.jinja2' %}
 

@@ -7,7 +7,7 @@
                     <h4 class="modal-title">{{ _('Upload file') }}</h4>
                 {% endblock upload_file_header %}
             </div>
-            <form role="form" method="post" enctype="multipart/form-data" action="{{ request.route_url('form_upload',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formid) }}">
+            <form id="form_upload_file_form" role="form" method="post" enctype="multipart/form-data" action="{{ request.route_url('form_upload',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formid) }}">
                 {% block upload_file_form %}
                     {{ form.secure_form(request) }}
                     <div class="modal-body">
@@ -26,7 +26,7 @@
                     </div>
                     <div class="modal-footer">
                         {% block upload_file_form_actions %}
-                            <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
+                            <button id="cancel_file_upload" type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
                             <button type="submit" class="btn btn-primary">{{ _('Upload') }}</button>
                         {% endblock upload_file_form_actions %}
                     </div>

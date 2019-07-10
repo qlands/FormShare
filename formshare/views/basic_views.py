@@ -1,6 +1,6 @@
 from pyramid.security import remember
 from pyramid.httpexceptions import HTTPFound
-from ..config.auth import get_user_data, get_assistant_data
+from ..config.auth import get_user_data, get_assistant_data, get_formshare_user_data
 from .classes import PublicView
 from pyramid.session import check_csrf_token
 from pyramid.httpexceptions import HTTPNotFound
@@ -10,7 +10,7 @@ from ..processes.db import register_user, get_project_id_from_name, get_project_
 from ast import literal_eval
 import datetime
 import uuid
-from formshare.config.encdecdata import encode_data
+from formshare.config.encdecdata import encode_data, decode_data
 from formshare.config.elasticfeeds import get_manager
 from elasticfeeds.activity import Actor, Object, Activity
 from formshare.processes.elasticsearch.user_index import get_user_index_manager
@@ -107,7 +107,9 @@ class RecoverPasswordView(PublicView):
                 raise HTTPNotFound()
             user = get_user_data(login, self.request)
             if user is not None:
-                send_email(self.request, user.email, "ricotodo", user.userData)
+                user_data = get_formshare_user_data(self.request, user.email, True)
+                user_password = decode_data(self.request, user_data['user_password'])
+                send_email(self.request, user.email, user_password.decode(), user.userData)
                 self.returnRawViewResult = True
                 return HTTPFound(location=self.request.route_url('login'))
         return {}

@@ -48,15 +48,15 @@
                                     {% endif %}
                                 {% endblock product_item_ready_public_tools %}
                             {% else %}
-                                {% if projectDetails.access_type < 4 %}
-                                    {% block product_item_ready_private_tools %}
-                                        <a href="{{ request.route_url('download_private_product', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid=output.output_id) }}"  class="btn btn-xs btn-white"><i class="fas fa-download"></i> {{ _('Download') }} </a>
-                                        <a href="{{ request.route_url('api_download_private_product', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid=output.output_id, _query={'apikey': activeUser.apikey}) }}"  class="btn btn-xs btn-white"><i class="fas fa-code"></i> {{ _('API Download') }} </a>
-                                        {% if output.publishable == 1 %}
+                                {% block product_item_ready_private_tools %}
+                                    <a href="{{ request.route_url('download_private_product', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid=output.output_id) }}"  class="btn btn-xs btn-white"><i class="fas fa-download"></i> {{ _('Download') }} </a>
+                                    <a href="{{ request.route_url('api_download_private_product', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid=output.output_id, _query={'apikey': activeUser.apikey}) }}"  class="btn btn-xs btn-white"><i class="fas fa-code"></i> {{ _('API Download') }} </a>
+                                    {% if output.publishable == 1 %}
+                                        {% if projectDetails.access_type < 4 %}
                                             <a urn="{{ request.route_url('publish_product', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid=output.output_id) }}"  class="btn btn-xs btn-white publish-product"><i class="fas fa-unlock"></i> {{ _('Publish') }}</a>
                                         {% endif %}
-                                    {% endblock product_item_ready_private_tools %}
-                                {% endif %}
+                                    {% endif %}
+                                {% endblock product_item_ready_private_tools %}
                             {% endif %}
                             {% if projectDetails.access_type < 4 %}
                                 <a urn="{{ request.route_url('delete_product', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid=output.output_id) }}"  class="btn btn-xs btn-white delete-product"><i class="far fa-trash-alt"  style="color: red;"></i> {{ _('Delete') }}</a>

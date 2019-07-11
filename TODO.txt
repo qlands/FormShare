@@ -1,14 +1,14 @@
 - Warn if no sensitive fields exists when publishing products
 - Manage subversions
-- Check access levels (Admin, Editor, Member)
+- Check paradox errors
 - Audit log (View changes)
 - Messaging, Watch and Follow
 - Search engine
 - Submission plugin interfaces. To extend the submission with plugins
 - Import from BriefCase (XML import)
 - Clean data JSON API
-- Export raw submissions in XML format
-- Export raw submissions in JSON format
+- Export submissions in XML format
+- Export submissions in JSON format
 - Handle sharing of private products with token keys.
     - Token management and API
     - Token extension. After token, before token

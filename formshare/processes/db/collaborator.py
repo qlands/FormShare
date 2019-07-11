@@ -42,6 +42,17 @@ def remove_collaborator_from_project(request, project, collaborator):
         request.dbsession.query(Userproject).filter(Userproject.project_id == project).filter(
             Userproject.user_id == collaborator).delete()
         request.dbsession.flush()
+
+        active_project = request.dbsession.query(Userproject).filter(Userproject.user_id == collaborator).filter(
+            Userproject.project_active == 1).first()
+        if active_project is None:
+            last_project = request.dbsession.query(Userproject).filter(Userproject.user_id == collaborator).order_by(
+                Userproject.access_date.desc()).first()
+            if last_project is not None:
+                last_project_id = last_project.project_id
+                request.dbsession.query(Userproject).filter(Userproject.user_id == collaborator).\
+                    filter(Userproject.project_id == last_project_id).update({'project_active': 1})
+
         return True, ""
     except Exception as e:
         request.dbsession.rollback()
@@ -66,8 +77,14 @@ def set_collaborator_role(request, project, collaborator, role):
 
 def add_collaborator_to_project(request, project, collaborator):
     _ = request.translate
+    active_projects = request.dbsession.query(Userproject.user_id == collaborator).filter(
+        Userproject.project_active == 1).first()
+    if active_projects is not None:
+        project_active = 0
+    else:
+        project_active = 1
     new_collaborator = Userproject(user_id=collaborator, project_id=project, access_type=4,
-                                   access_date=datetime.datetime.now(), project_active=1)
+                                   access_date=datetime.datetime.now(), project_active=project_active)
     try:
         request.dbsession.add(new_collaborator)
         request.dbsession.flush()

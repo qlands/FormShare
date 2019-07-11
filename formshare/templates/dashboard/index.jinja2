@@ -289,7 +289,7 @@
                     function get_more(query_from, query_size)
                     {
 
-                        let url = new URL("{{ request.route_url('project_download_gpspoints',userid=userid,projcode=projectData.project_code) }}");
+                        let url = new URL("{{ request.route_url('project_download_gpspoints',userid=active_project_owner,projcode=projectData.project_code) }}");
                         url.searchParams.append('from', query_from);
                         url.searchParams.append('size', query_size);
 

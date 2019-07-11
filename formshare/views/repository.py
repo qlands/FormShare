@@ -59,7 +59,7 @@ class GenerateRepository(PrivateView):
                         stage = 1
                         primary_key = postdata["primarykey"]
                         if primary_key != "":
-                            result_code, message = create_repository(self.request, project_id, form_id,
+                            result_code, message = create_repository(self.request,self.user.id, project_id, form_id,
                                                                      odk_path,
                                                                      form_data["directory"], primary_key)
 
@@ -204,11 +204,10 @@ class GenerateRepository(PrivateView):
                                     yes_no_strings = yesvalue + "|" + novalue
                                     if yes_no_strings == "|":
                                         yes_no_strings = None
-                                    result_code, message = create_repository(self.request, project_id, form_id,
-                                                                             odk_path, form_data["directory"],
-                                                                             primary_key,
-                                                                             default_language, other_languages,
-                                                                             yes_no_strings)
+                                    result_code, message = create_repository(self.request, self.user.id, project_id,
+                                                                             form_id, odk_path, form_data["directory"],
+                                                                             primary_key, default_language,
+                                                                             other_languages, yes_no_strings)
                                     # -------------------------------------------------Stage 2 reply
                                     if result_code != 0:
                                         update_form_stage(self.request, project_id, form_id, stage, primary_key,
@@ -334,8 +333,8 @@ class GenerateRepository(PrivateView):
                                 other_languages = None
                                 yes_no_strings = None
 
-                            result_code, message = create_repository(self.request, project_id, form_id, odk_path,
-                                                                     form_data["directory"], primary_key,
+                            result_code, message = create_repository(self.request, self.user.id, project_id, form_id,
+                                                                     odk_path, form_data["directory"], primary_key,
                                                                      default_language, other_languages,
                                                                      yes_no_strings)
 
@@ -460,8 +459,8 @@ class GenerateRepository(PrivateView):
                             other_languages = None
                             yes_no_strings = None
 
-                        result_code, message = create_repository(self.request, project_id, form_id, odk_path,
-                                                                 form_data["directory"], primary_key,
+                        result_code, message = create_repository(self.request, self.user.id, project_id, form_id,
+                                                                 odk_path, form_data["directory"], primary_key,
                                                                  default_language, other_languages, yes_no_strings)
 
                         # --------------------------------------------------------------------------Stage 4 reply
@@ -584,8 +583,8 @@ class GenerateRepository(PrivateView):
                             other_languages = None
                             yes_no_strings = None
 
-                        result_code, message = create_repository(self.request, project_id, form_id, odk_path,
-                                                                 form_data["directory"], primary_key,
+                        result_code, message = create_repository(self.request, self.user.id, project_id, form_id,
+                                                                 odk_path, form_data["directory"], primary_key,
                                                                  default_language, other_languages, yes_no_strings)
 
                         # ---------------------------------Stage5 Reply- -----------------------------------------------
@@ -708,8 +707,8 @@ class GenerateRepository(PrivateView):
                             other_languages = None
                             yes_no_strings = None
 
-                        result_code, message = create_repository(self.request, project_id, form_id, odk_path,
-                                                                 form_data["directory"], primary_key,
+                        result_code, message = create_repository(self.request, self.user.id, project_id, form_id,
+                                                                 odk_path, form_data["directory"], primary_key,
                                                                  default_language, other_languages, yes_no_strings)
 
                         # ----------------------------------------Stage 6 Reply----------------------------

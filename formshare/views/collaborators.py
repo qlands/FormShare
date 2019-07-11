@@ -13,6 +13,9 @@ class CollaboratorsListView(PrivateView):
         user_id = self.request.matchdict['userid']
         project_code = self.request.matchdict['projcode']
         project_id = get_project_id_from_name(self.request, user_id, project_code)
+        if not self.activeProject:
+            self.returnRawViewResult = True
+            return HTTPFound(self.request.route_url('dashboard', userid=self.user.id))
         if self.activeProject['project_id'] == project_id:
             self.set_active_menu('collaborators')
         else:

@@ -4,9 +4,11 @@
             <h5>{{ _('Assigned assistant groups') }}</h5>
             <div class="ibox-tools">
                 {% block groups_tab_tools %}
-                    <a style="margin-right: 10px" data-toggle="modal" data-target="#add_group">
-                        <i class="fa fa-plus-square text-success" title="{{ _('Assign new') }}"></i>
-                    </a>
+                    {% if projectDetails.access_type < 4 %}
+                        <a style="margin-right: 10px" data-toggle="modal" data-target="#add_group">
+                            <i class="fa fa-plus-square text-success" title="{{ _('Assign new') }}"></i>
+                        </a>
+                    {% endif %}
                     <a class="collapse-link">
                         <i class="fa fa-chevron-up" style="margin-right: 10px"></i>
                     </a>

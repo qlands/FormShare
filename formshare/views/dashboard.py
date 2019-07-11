@@ -1,7 +1,7 @@
 from formshare.views.classes import DashboardView
 from pyramid.httpexceptions import HTTPNotFound
 from formshare.processes.db import is_collaborator, get_project_assistants, get_project_collaborators, \
-    get_user_details, get_project_forms, get_by_details, get_project_groups, get_project_files
+    get_user_details, get_project_forms, get_by_details, get_project_groups, get_project_files, get_project_owner
 from formshare.processes.elasticsearch.repository_index import get_dataset_stats_for_project, \
     get_number_of_datasets_with_gps_in_project
 
@@ -9,7 +9,6 @@ from formshare.processes.elasticsearch.repository_index import get_dataset_stats
 class UserDashBoardView(DashboardView):
     def process_view(self):
         user_id = self.request.matchdict['userid']
-
         project_data = {}
         if self.activeProject:
             project_found = False
@@ -34,7 +33,8 @@ class UserDashBoardView(DashboardView):
                 collaborators, more_collaborators = get_project_collaborators(self.request,
                                                                               self.activeProject['project_id'], None, 4)
             user_details = get_user_details(self.request, user_id)
-            forms = get_project_forms(self.request, user_id, self.activeProject['project_id'])
+            owner = get_project_owner(self.request, self.activeProject['project_id'])
+            forms = get_project_forms(self.request, owner, self.activeProject['project_id'])
             active_forms = 0
             inactive_forms = 0
             for form in forms:
@@ -43,18 +43,20 @@ class UserDashBoardView(DashboardView):
                 else:
                     inactive_forms = inactive_forms + 1
 
-            submissions, last, by, in_form = get_dataset_stats_for_project(self.request.registry.settings, user_id,
+            submissions, last, by, in_form = get_dataset_stats_for_project(self.request.registry.settings, owner,
                                                                            self.activeProject['project_code'])
 
             bydetails = get_by_details(self.request, user_id, self.activeProject['project_id'], by)
             return {'projectData': project_data, 'userid': user_id, 'collaborators': collaborators,
-                    'moreCollaborators': more_collaborators, 'assistants': assistants, 'moreAssistants': more_assistants,
+                    'moreCollaborators': more_collaborators, 'assistants': assistants,
+                    'moreAssistants': more_assistants,
                     'groups': get_project_groups(self.request, self.activeProject['project_id']),
-                    'files': get_project_files(self.request, self.activeProject['project_id']), 'userDetails': user_details,
-                    'forms': forms, 'activeforms': active_forms, 'inactiveforms': inactive_forms,
-                    'submissions': submissions, 'last': last, 'by': by, 'bydetails': bydetails, 'infom': in_form,
-                    'withgps': get_number_of_datasets_with_gps_in_project(self.request.registry.settings, user_id,
-                                                                          self.activeProject['project_code'])}
+                    'files': get_project_files(self.request, self.activeProject['project_id']),
+                    'userDetails': user_details, 'forms': forms, 'activeforms': active_forms,
+                    'inactiveforms': inactive_forms, 'submissions': submissions, 'last': last, 'by': by,
+                    'bydetails': bydetails, 'infom': in_form, 'active_project_owner': owner,
+                    'withgps': get_number_of_datasets_with_gps_in_project(self.request.registry.settings,
+                                                                          owner, self.activeProject['project_code'])}
         else:
             return {'projectData': None, 'userid': user_id, 'collaborators': [],
                     'moreCollaborators': 0, 'assistants': [], 'moreAssistants': 0,
@@ -62,4 +64,4 @@ class UserDashBoardView(DashboardView):
                     'files': [], 'userDetails': None,
                     'forms': [], 'activeforms': 0, 'inactiveforms': 0,
                     'submissions': 0, 'last': None, 'by': None, 'bydetails': None, 'infom': 0,
-                    'withgps': 0}
+                    'withgps': 0, 'active_project_owner:': user_id}

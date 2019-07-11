@@ -286,7 +286,7 @@ class DeleteForm(PrivateView):
         form_data = get_form_data(self.request, project_id, form_id)
         if form_data is None:
             raise HTTPNotFound
-        if project_details["access_type"] == 1 or form_data["form_pubby"] == self.user.id:
+        if project_details["access_type"] <= 2 or form_data["form_pubby"] == self.user.id:
             if self.request.method == 'POST':
                 next_page = self.request.params.get('next') or self.request.route_url('project_details',
                                                                                       userid=user_id,
@@ -967,7 +967,7 @@ class DownloadPublicXLSData(PrivateView):
 
         odk_dir = get_odk_path(self.request)
         form_directory = get_form_directory(self.request, project_id, form_id)
-        generate_public_xlsx_file(self.request, self.userID, project_id, form_id, odk_dir, form_directory,
+        generate_public_xlsx_file(self.request, self.user.id, project_id, form_id, odk_dir, form_directory,
                                   form_data['form_schema'])
 
         next_page = self.request.route_url('form_details', userid=user_id,
@@ -1009,7 +1009,7 @@ class DownloadPrivateXLSData(PrivateView):
 
         odk_dir = get_odk_path(self.request)
         form_directory = get_form_directory(self.request, project_id, form_id)
-        generate_private_xlsx_file(self.request, self.userID, project_id, form_id, odk_dir, form_directory,
+        generate_private_xlsx_file(self.request, self.user.id, project_id, form_id, odk_dir, form_directory,
                                   form_data['form_schema'])
 
         next_page = self.request.route_url('form_details', userid=user_id,
@@ -1091,7 +1091,7 @@ class DownloadSubmissionFiles(PrivateView):
                 return HTTPFound(location=next_page)
         else:
             odk_dir = get_odk_path(self.request)
-            generate_media_zip_file(self.request, self.userID, project_id, form_id, odk_dir,
+            generate_media_zip_file(self.request, self.user.id, project_id, form_id, odk_dir,
                                     form_data['form_directory'], form_data['form_schema'], form_data['form_pkey'])
             next_page = self.request.params.get('next') or self.request.route_url('form_details', userid=user_id,
                                                                                   projcode=project_code,
@@ -1157,7 +1157,7 @@ class DownloadKML(PrivateView):
         if form_data is None:
             raise HTTPNotFound
 
-        generate_kml_file(self.request, self.userID, project_id, form_id, form_data['form_schema'],
+        generate_kml_file(self.request, self.user.id, project_id, form_id, form_data['form_schema'],
                           form_data['form_pkey'])
         next_page = self.request.params.get('next') or self.request.route_url('form_details', userid=user_id,
                                                                               projcode=project_code,
@@ -1193,7 +1193,7 @@ class DownloadPublicCSV(PrivateView):
         if form_data is None:
             raise HTTPNotFound
 
-        generate_public_csv_file(self.request, self.userID, project_id, form_id, form_data['form_schema'],
+        generate_public_csv_file(self.request, self.user.id, project_id, form_id, form_data['form_schema'],
                                  form_data['form_directory'])
 
         next_page = self.request.params.get('next') or self.request.route_url('form_details', userid=user_id,
@@ -1229,8 +1229,7 @@ class DownloadPrivateCSV(PrivateView):
         form_data = get_form_data(self.request, project_id, form_id)
         if form_data is None:
             raise HTTPNotFound
-
-        generate_private_csv_file(self.request, self.userID, project_id, form_id, form_data['form_schema'],
+        generate_private_csv_file(self.request, self.user.id, project_id, form_id, form_data['form_schema'],
                                   form_data['form_directory'])
 
         next_page = self.request.params.get('next') or self.request.route_url('form_details', userid=user_id,
@@ -1340,7 +1339,7 @@ class StopTask(PrivateView):
                                                                                       formid=form_id,
                                                                                       _query={'tab': 'task',
                                                                                               'product': product_id})
-                stopped, message = stop_task(self.request, self.userID, project_id, form_id, task_id)
+                stopped, message = stop_task(self.request, self.user.id, project_id, form_id, task_id)
                 if stopped:
                     self.request.session.flash(self._('The process was stopped successfully'))
                     self.returnRawViewResult = True
@@ -1399,7 +1398,7 @@ class StopRepository(PrivateView):
                                                                                       formid=form_id,
                                                                                       _query={'tab': 'task',
                                                                                               'product': product_id})
-                stopped, message = stop_task(self.request, self.userID, project_id, form_id, task_id)
+                stopped, message = stop_task(self.request, self.user.id, project_id, form_id, task_id)
                 if stopped:
                     reset_form_repository(self.request, project_id, form_id)
                     self.request.session.flash(self._('The process was stopped successfully'))

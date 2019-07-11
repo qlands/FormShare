@@ -173,7 +173,7 @@ class PublishProduct(PrivateView):
 
         if self.request.method == 'POST':
             if output_exists(self.request, project_id, form_id, product_id, output_id):
-                set_output_public_state(self.request, project_id, form_id, product_id, output_id, True, self.userID)
+                set_output_public_state(self.request, project_id, form_id, product_id, output_id, True, self.user.id)
                 next_page = self.request.route_url('form_details', userid=user_id,
                                                    projcode=project_code, formid=form_id,
                                                    _query={'tab': 'task', 'product': product_id})
@@ -214,7 +214,7 @@ class UnPublishProduct(PrivateView):
 
         if self.request.method == 'POST':
             if output_exists(self.request, project_id, form_id, product_id, output_id):
-                set_output_public_state(self.request, project_id, form_id, product_id, output_id, False, self.userID)
+                set_output_public_state(self.request, project_id, form_id, product_id, output_id, False, self.user.id)
                 next_page = self.request.route_url('form_details', userid=user_id,
                                                    projcode=project_code, formid=form_id,
                                                    _query={'tab': 'task', 'product': product_id})

@@ -1,6 +1,6 @@
 <div style="border-bottom: 0px;" class="feed-element {% if form.form_accsub ==0 %}form-inactive {% else %}form-active {% endif %}" >
     {% block form_item_incon %}
-        <a href="{{ request.route_url('form_details',userid=userid,projcode=projectData.project_code,formid=form.form_id) }}" class="float-left">
+        <a href="{{ request.route_url('form_details',userid=projectData.owner,projcode=projectData.project_code,formid=form.form_id) }}" class="float-left">
             <div class="rounded-circle" style="margin-right: 10px; background-color: {{ form._xid_color }}; width: 38px; height: 38px; display: inline-block; vertical-align: middle" ><span style="color: white; position: relative; float: left; top: 50%; left: 50%; transform: translate(-50%, -50%);">ODK</span></div>
         </a>
     {% endblock form_item_incon %}
@@ -9,7 +9,7 @@
             <div class="col-md-12">
                 {% block form_item_content %}
                     <span class="float-right">{{ _('Uploaded on') }} {{ request.h.readble_date(form.form_cdate,request.locale_name) }}</span>
-                    <strong><a href="{{ request.route_url('form_details',userid=userid,projcode=projectData.project_code,formid=form.form_id) }}">{{ form.form_name }}</a></strong> {% if form.form_schema != None %} <span class="badge badge-primary">{{ _('With repository') }}</span>{% else %}<span class="badge badge-warning" title="{{ _('Data is not stored in a database') }}">{{ _('In testing') }}</span>{% endif %} {% if form.form_accsub ==0 %}<span class="label label-danger">{{ _('Inactive') }}</span>{% else %}<span class="label label-primary">{{ _('Active') }}</span>{% endif %} {% if form.form_geopoint != None %}<span class="label label-default">{{ _('Georeferenced') }}</span>{% endif %}<br>
+                    <strong><a href="{{ request.route_url('form_details',userid=projectData.owner,projcode=projectData.project_code,formid=form.form_id) }}">{{ form.form_name }}</a></strong> {% if form.form_schema != None %} <span class="badge badge-primary">{{ _('With repository') }}</span>{% else %}<span class="badge badge-warning" title="{{ _('Data is not stored in a database') }}">{{ _('In testing') }}</span>{% endif %} {% if form.form_accsub ==0 %}<span class="label label-danger">{{ _('Inactive') }}</span>{% else %}<span class="label label-primary">{{ _('Active') }}</span>{% endif %} {% if form.form_geopoint != None %}<span class="label label-default">{{ _('Georeferenced') }}</span>{% endif %}<br>
                     {% if form.submissions > 0  %}
                         <span class="text-muted">{{ _('Last submission') }}: {{ request.h.readble_date_with_time(form.last,request.locale_name) }} {{ _('by') }} <a class="text-info">{{ form.bydetails.coll_name }}</a></span><br>
                     {% else %}
@@ -34,12 +34,14 @@
                             {% endblock form_item_links %}
                         {% endif %}
                         {% block form_item_maintance %}
-                            <a {% if form.form_accsub ==0 %} data-title="{{ _('Activate form') }}" data-message="{{ _('Are you sure that you want to activate this form') }}" urn="{{ request.route_url('activate_form', userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next': request.url}) }}"{% else %}data-title="{{ _('Deactivate form') }}" data-message="{{ _('Are you sure that you want to deactivate this form') }}" urn="{{ request.route_url('deactivate_form', userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next': request.url}) }}"{% endif %} class="btn btn-xs btn-white change-status"><i {% if form.form_accsub ==0 %}class="fas fa-check"{% else %}class="fas fa-ban"{% endif %}></i> {% if form.form_accsub ==0 %}{{ _('Set as active') }}{% else %}{{ _('Set as inactive') }}{% endif %}</a>
-                            <a class="btn btn-xs btn-white" href="{{ request.route_url('form_edit',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next': request.url}) }}" ><i class="fa fa-pencil text-warning"></i> {{ _('Edit') }}</a>
-                            {% if projectData.access_type == 1 or form.pubby.user_id == activeUser.id %}
+                            {% if projectData.access_type < 4 %}
+                                <a {% if form.form_accsub ==0 %} data-title="{{ _('Activate form') }}" data-message="{{ _('Are you sure that you want to activate this form') }}" urn="{{ request.route_url('activate_form', userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next': request.url}) }}"{% else %}data-title="{{ _('Deactivate form') }}" data-message="{{ _('Are you sure that you want to deactivate this form') }}" urn="{{ request.route_url('deactivate_form', userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next': request.url}) }}"{% endif %} class="btn btn-xs btn-white change-status"><i {% if form.form_accsub ==0 %}class="fas fa-check"{% else %}class="fas fa-ban"{% endif %}></i> {% if form.form_accsub ==0 %}{{ _('Set as active') }}{% else %}{{ _('Set as inactive') }}{% endif %}</a>
+                                <a class="btn btn-xs btn-white" href="{{ request.route_url('form_edit',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next': request.url}) }}" ><i class="fa fa-pencil text-warning"></i> {{ _('Edit') }}</a>
+                            {% endif %}
+                            {% if projectData.access_type <= 2 or form.pubby.user_id == activeUser.id %}
                                 <a urn="{{ request.route_url('delete_form', userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next': request.url}) }}" class="btn btn-xs btn-white remove_form"><i style="color: red" class="far fa-trash-alt"></i> {{ _('Delete') }}</a>
                             {% endif %}
-                            <a href="{{ request.route_url('form_details',userid=userid,projcode=projectData.project_code,formid=form.form_id) }}" class="btn btn-xs btn-white"><i class="fas fa-gift"></i> {% if form.form_schema == None %}{{ _('Update form and more...') }}{% else %}{{ _('Data downloads and more...') }}{% endif %}</a>
+                            <a href="{{ request.route_url('form_details',userid=projectData.owner,projcode=projectData.project_code,formid=form.form_id) }}" class="btn btn-xs btn-white"><i class="fas fa-gift"></i> {% if form.form_schema == None %}{{ _('Update form and more...') }}{% else %}{{ _('Data downloads and more...') }}{% endif %}</a>
                         {% endblock form_item_maintance %}
                     {% endblock %}
                 </div>

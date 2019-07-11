@@ -805,7 +805,7 @@ class ChangeDir:
         os.chdir(self.savedPath)
 
 
-def create_repository(request, project, form, odk_dir, xform_directory, primary_key,
+def create_repository(request, user, project, form, odk_dir, xform_directory, primary_key,
                       default_language=None, other_languages=None, yes_no_strings=None):
     jxform_to_mysql = os.path.join(request.registry.settings['odktools.path'], *["JXFormToMysql", "jxformtomysql"])
 
@@ -866,7 +866,7 @@ def create_repository(request, project, form, odk_dir, xform_directory, primary_
                                                                                       schema)
             if formshare_create_repository:
                 # Calls the Celery task
-                task = create_database_repository(request, project, form, odk_dir, xform_directory, schema,
+                task = create_database_repository(request, user, project, form, odk_dir, xform_directory, schema,
                                                   primary_key, cnf_file, create_file, insert_file)
                 form_data = {'form_reptask': task}
                 update_form(request, project, form, form_data)

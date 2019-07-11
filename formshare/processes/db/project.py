@@ -137,10 +137,31 @@ def get_active_project(request, user):
         Userproject.user_id == user).filter(Userproject.project_active == 1).first()
     mapped_data = map_from_schema(res)
     user_projects = get_user_projects(request, user, user, True)
-    for project in user_projects:
-        if project['project_id'] == mapped_data['project_id']:
-            mapped_data['access_type'] = project['access_type']
-            mapped_data['owner'] = project['owner']
+    if res is not None:
+        for project in user_projects:
+            if project['project_id'] == mapped_data['project_id']:
+                mapped_data['access_type'] = project['access_type']
+                mapped_data['owner'] = project['owner']
+    else:
+        if len(user_projects) > 0:
+            last_project = request.dbsession.query(Userproject).filter(Userproject.user_id == user).order_by(
+                Userproject.access_date.desc()).first()
+            if last_project is not None:
+                last_project_id = last_project.project_id
+                request.dbsession.query(Userproject).filter(Userproject.user_id == user). \
+                    filter(Userproject.project_id == last_project_id).update({'project_active': 1})
+                request.dbsession.flush()
+
+                res = request.dbsession.query(Project, Userproject).filter(
+                    Project.project_id == Userproject.project_id).filter(
+                    Userproject.user_id == user).filter(Userproject.project_active == 1).first()
+                mapped_data = map_from_schema(res)
+                if res is not None:
+                    for project in user_projects:
+                        if project['project_id'] == mapped_data['project_id']:
+                            mapped_data['access_type'] = project['access_type']
+                            mapped_data['owner'] = project['owner']
+
     return mapped_data
 
 

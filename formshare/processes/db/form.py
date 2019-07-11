@@ -189,6 +189,7 @@ def get_project_forms(request, user, project):
     for form in parent_forms:
         e_form = etree.Element(form['form_id'])
         e_form.set("haschildren", "False")
+        e_form.set("project_id", form['project_id'])
         root.append(e_form)
 
     # Get all children forms in ascending order
@@ -199,13 +200,15 @@ def get_project_forms(request, user, project):
         form_id = root.findall(".//" + form['parent_form'])
         if form_id:
             form_id[0].set("haschildren", "True")
-            form_id[0].append(etree.Element(form['form_id']))
+            child = etree.Element(form['form_id'])
+            child.set("project_id", form['project_id'])
+            form_id[0].append(child)
 
     # Get all the form ids in order
     form_order = []
     for tag in root.iter():
         if tag.tag != "root":
-            form_order.append({'id': tag.tag, 'haschildren': tag.get("haschildren")})
+            form_order.append({'id': tag.tag, 'haschildren': tag.get("haschildren"), 'project_id': tag.get('project_id')})
 
     # Get all the forms in order
     all_forms = parent_forms + child_forms
@@ -225,23 +228,23 @@ def get_project_forms(request, user, project):
         else:
             form['_xid_color'] = form['form_hexcolor']
         if form['form_schema'] is None:
-            project_code = get_project_code_from_id(request, user, project)
+            project_code = get_project_code_from_id(request, user, form['project_id'])
             submissions, last, by = get_number_of_submissions(request, user, project_code, form['form_id'])
             form["submissions"] = submissions
             form["last"] = last
             form["by"] = by
-            form["bydetails"] = get_by_details(request, user, project, by)
+            form["bydetails"] = get_by_details(request, user, form['project_id'], by)
             form["indb"] = 0
             form["inlogs"] = 0
         else:
             submissions, last, in_database, in_logs, \
-                in_error, by = get_number_of_submissions_in_database(request, project, form['form_id'])
+                in_error, by = get_number_of_submissions_in_database(request, form['project_id'], form['form_id'])
             form["submissions"] = submissions
             form["last"] = last
             form["indb"] = in_database
             form["inlogs"] = in_logs
             form["inerror"] = in_error
-            form["bydetails"] = get_by_details(request, user, project, by)
+            form["bydetails"] = get_by_details(request, user, form['project_id'], by)
 
     return forms
 

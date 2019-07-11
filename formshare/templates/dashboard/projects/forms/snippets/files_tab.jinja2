@@ -4,9 +4,11 @@
             <h5>{{ _('Form files') }}</h5>
             <div class="ibox-tools">
                 {% block files_tab_tools %}
-                    <a id="add_file" data-toggle="modal" data-target="#upload_file" style="margin-right: 10px">
-                        <i class="fa fa-plus-square text-success" title="{{ _('Add new file') }}"></i>
-                    </a>
+                    {% if projectDetails.access_type < 4 %}
+                        <a id="add_file" data-toggle="modal" data-target="#upload_file" style="margin-right: 10px">
+                            <i class="fa fa-plus-square text-success" title="{{ _('Add new file') }}"></i>
+                        </a>
+                    {% endif %}
                     <a class="collapse-link" style="margin-right: 10px">
                         <i class="fa fa-chevron-up"></i>
                     </a>

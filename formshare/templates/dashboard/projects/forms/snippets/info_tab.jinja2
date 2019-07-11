@@ -41,7 +41,7 @@
                             <a href="{{ request.route_url('createrepository',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-database"></i> {{ _('Create repository') }} </a>
                             <a id="update_form_btn" class="btn btn-xs btn-white" data-toggle="modal" data-target="#update_form"><i class="fas fa-file-upload"></i> {{ _('Update ODK form') }} </a>
                         {% endif %}
-                        {% if projectDetails.access_type == 1 or formDetails.pubby.user_id == activeUser.id %}
+                        {% if projectDetails.access_type <= 2 or formDetails.pubby.user_id == activeUser.id %}
                             <a urn="{{ request.route_url('delete_form', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" class="btn btn-xs btn-white remove_form"><i style="color: red" class="far fa-trash-alt"></i> {{ _('Delete') }}</a>
                         {% endif %}
                     {% endblock info_tab_content_actions %}

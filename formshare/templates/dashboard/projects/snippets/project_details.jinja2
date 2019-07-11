@@ -278,7 +278,7 @@
                                                     {% if moreCollaborators > 0 %}
                                                         <a href="{{ request.route_url('collaborators',userid=userid,projcode=projectData.project_code) }}"><div class="rounded-circle" title="{{ _('Plus') }} {{ moreCollaborators }} {{ request.h.pluralize(_('other'), moreCollaborators,request.locale_name) }}" style="background-color: #1ab394; width: 32px; height: 32px; display: inline-block; vertical-align: middle" ><span style="font-size: 20px; margin-left: 3px; color: white">+{{ moreCollaborators }}</span></div></a>
                                                     {% endif %}
-                                                    {% if projectData.access_type < 4 %}
+                                                    {% if projectData.access_type < 3 %}
                                                         <a href="{{ request.route_url('collaborators',userid=userid,projcode=projectData.project_code) }}"><div class="rounded-circle" title="Add" style="background-color: #026AA8; width: 32px; height: 32px; display: inline-block; vertical-align: middle" ><span style="font-size: 20px; margin-left: 10px; color: white">+</span></div></a>
                                                     {% endif %}
                                                 </dd>

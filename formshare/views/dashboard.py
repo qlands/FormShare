@@ -58,6 +58,8 @@ class UserDashBoardView(DashboardView):
                     'withgps': get_number_of_datasets_with_gps_in_project(self.request.registry.settings,
                                                                           owner, self.activeProject['project_code'])}
         else:
+            if user_id != self.user.id:
+                raise HTTPNotFound()
             return {'projectData': None, 'userid': user_id, 'collaborators': [],
                     'moreCollaborators': 0, 'assistants': [], 'moreAssistants': 0,
                     'groups': [],

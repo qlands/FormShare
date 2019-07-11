@@ -28,12 +28,16 @@ class ProjectStoredFileView(ProjectsView):
         project_code = self.request.matchdict['projcode']
         file_name = self.request.matchdict['filename']
         project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
         if project_id is not None:
             project_found = False
             for project in self.user_projects:
                 if project["project_id"] == project_id:
                     project_found = True
+                    project_details = project
             if project_found:
+                if project_details["access_type"] > 4:
+                    raise HTTPNotFound
                 stream = get_stream(self.request, project_id, file_name)
                 if stream is not None:
                     self.returnRawViewResult = True
@@ -49,7 +53,9 @@ class ProjectStoredFileView(ProjectsView):
 
 class ProjectListView(ProjectsView):
     def process_view(self):
-        # self.request.h.setActiveMenu("projects")
+        user_id = self.request.matchdict['userid']
+        if user_id != self.user.login:
+            raise HTTPNotFound()
         return {}
 
 
@@ -72,6 +78,9 @@ class ProjectDetailsView(ProjectsView):
             if not project_found:
                 raise HTTPNotFound
         else:
+            raise HTTPNotFound
+
+        if project_data["access_type"] > 4:
             raise HTTPNotFound
 
         assistants, more_assistants = get_project_assistants(self.request, project_id, 8)
@@ -234,14 +243,19 @@ class ActivateProjectView(ProjectsView):
         user_id = self.request.matchdict['userid']
         project_code = self.request.matchdict['projcode']
         project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
         if project_id is not None:
             project_found = False
             for project in self.user_projects:
                 if project["project_id"] == project_id:
                     project_found = True
+                    project_details = project
             if not project_found:
                 raise HTTPNotFound
         else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         if self.request.method == 'POST':
@@ -430,14 +444,19 @@ class DownloadProjectGPSPoints(ProjectsView):
         if query_size is None:
             query_size = 10000
         project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
         if project_id is not None:
             project_found = False
             for project in self.user_projects:
                 if project["project_id"] == project_id:
                     project_found = True
+                    project_details = project
             if not project_found:
                 raise HTTPNotFound
         else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] > 4:
             raise HTTPNotFound
 
         created, data = get_gps_points_from_project(self.request, user_id, project_code, project_id, query_from,
@@ -451,14 +470,19 @@ class GetProjectQRCode(ProjectsView):
         project_code = self.request.matchdict['projcode']
 
         project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
         if project_id is not None:
             project_found = False
             for project in self.user_projects:
                 if project["project_id"] == project_id:
                     project_found = True
+                    project_details = project
             if not project_found:
                 raise HTTPNotFound
         else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] > 4:
             raise HTTPNotFound
 
         url = self.request.route_url('project_details', userid=self.userID,

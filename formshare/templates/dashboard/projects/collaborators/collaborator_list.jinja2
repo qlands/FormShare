@@ -163,7 +163,7 @@
 
             $(".js-example-data-ajax").select2({
                 ajax: {
-                    url: "{{ request.route_url('api_select2_users') }}",
+                    url: "{{ request.route_url('api_select2_users',userid=userid) }}",
                     dataType: 'json',
                     delay: 250,
                     data: function (params) {

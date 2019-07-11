@@ -546,7 +546,7 @@
                         var overwrite_switch = new Switchery(elem, { color: '#1AB394' });
                     {% endif %}
 
-                    {% if projectDetails.access_type <= 2 %}
+                    {% if projectDetails.access_type < 4 %}
                         $('.remove_form').click(function () {
                             var action_url = $( this ).attr('urn');
                             swal({

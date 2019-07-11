@@ -1221,4 +1221,21 @@ class RepositoryExist(PrivateView):
         user_id = self.request.matchdict['userid']
         project_code = self.request.matchdict['projcode']
         form_id = self.request.matchdict['formid']
+
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] >= 4:
+            raise HTTPNotFound
+
         return {'userid': user_id, 'projcode': project_code, 'formid': form_id}

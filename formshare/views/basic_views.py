@@ -111,7 +111,7 @@ class RecoverPasswordView(PublicView):
                 user_password = decode_data(self.request, user_data['user_password'])
                 send_email(self.request, user.email, user_password.decode(), user.userData)
                 self.returnRawViewResult = True
-                return HTTPFound(location=self.request.route_url('login'))
+            return HTTPFound(location=self.request.route_url('login'))
         return {}
 
 

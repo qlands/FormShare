@@ -168,7 +168,7 @@ class PublishProduct(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 5:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         if self.request.method == 'POST':
@@ -209,7 +209,7 @@ class UnPublishProduct(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 5:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         if self.request.method == 'POST':
@@ -250,7 +250,7 @@ class DeleteProduct(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 5:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         if self.request.method == 'POST':

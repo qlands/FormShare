@@ -1,9 +1,9 @@
-from formshare.views.classes import PublicView
+from formshare.views.classes import PrivateView
 from formshare.processes.elasticsearch.user_index import get_user_index_manager
 import paginate
 
 
-class APIUserSearchSelect2(PublicView):
+class APIUserSearchSelect2(PrivateView):
     def process_view(self):
         index_manager = get_user_index_manager(self.request)
         q = self.request.params.get('q')
@@ -11,7 +11,7 @@ class APIUserSearchSelect2(PublicView):
         if current_page is None:
             current_page = 1
         query_size = 10
-
+        self.returnRawViewResult = True
         if q is not None:
             q = q.lower()
             query_result, total = index_manager.query_user(q, 0, query_size)

@@ -121,10 +121,7 @@ def get_user_projects(request, user, logged_user, private=False):
         project['last_submission_form_details'] = get_form_data(request, project['project_id'], form)
         project['total_forms'] = get_forms_number(request, project['project_id'])
         if private:
-            if project['access_type'] == 1:
-                project['owner'] = user
-            else:
-                project['owner'] = get_project_owner(request, project['project_id'])
+            project['owner'] = get_project_owner(request, project['project_id'])
         else:
             project['owner'] = get_project_owner(request, project['project_id'])
             project['access_type'] = 5

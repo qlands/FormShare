@@ -46,6 +46,9 @@ class FormDetails(PrivateView):
         else:
             raise HTTPNotFound
 
+        if project_details["access_type"] > 4:
+            raise HTTPNotFound
+
         form_data = get_form_details(self.request, user_id, project_id, form_id)
         if form_data is not None:
             form_files = get_form_files(self.request, project_id, form_id)
@@ -557,6 +560,21 @@ class FormStoredFile(PrivateView):
         file_name = self.request.matchdict['filename']
         project_id = get_project_id_from_name(self.request, user_id, project_code)
 
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] > 4:
+            raise HTTPNotFound
+
         form_data = get_form_data(self.request, project_id, form_id)
         if form_data is None:
             raise HTTPNotFound
@@ -909,14 +927,19 @@ class DownloadCSVData(PrivateView):
         project_code = self.request.matchdict['projcode']
         form_id = self.request.matchdict['formid']
         project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
         if project_id is not None:
             project_found = False
             for project in self.user_projects:
                 if project["project_id"] == project_id:
                     project_found = True
+                    project_details = project
             if not project_found:
                 raise HTTPNotFound
         else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] > 4:
             raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)
@@ -1010,7 +1033,7 @@ class DownloadPrivateXLSData(PrivateView):
         odk_dir = get_odk_path(self.request)
         form_directory = get_form_directory(self.request, project_id, form_id)
         generate_private_xlsx_file(self.request, self.user.id, project_id, form_id, odk_dir, form_directory,
-                                  form_data['form_schema'])
+                                   form_data['form_schema'])
 
         next_page = self.request.route_url('form_details', userid=user_id,
                                            projcode=project_code, formid=form_id,
@@ -1031,14 +1054,19 @@ class DownloadXLSX(PrivateView):
         project_code = self.request.matchdict['projcode']
         form_id = self.request.matchdict['formid']
         project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
         if project_id is not None:
             project_found = False
             for project in self.user_projects:
                 if project["project_id"] == project_id:
                     project_found = True
+                    project_details = project
             if not project_found:
                 raise HTTPNotFound
         else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] > 4:
             raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)
@@ -1063,14 +1091,19 @@ class DownloadSubmissionFiles(PrivateView):
         project_code = self.request.matchdict['projcode']
         form_id = self.request.matchdict['formid']
         project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
         if project_id is not None:
             project_found = False
             for project in self.user_projects:
                 if project["project_id"] == project_id:
                     project_found = True
+                    project_details = project
             if not project_found:
                 raise HTTPNotFound
         else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] > 4:
             raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)
@@ -1113,14 +1146,19 @@ class DownloadGPSPoints(PrivateView):
         project_code = self.request.matchdict['projcode']
         form_id = self.request.matchdict['formid']
         project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
         if project_id is not None:
             project_found = False
             for project in self.user_projects:
                 if project["project_id"] == project_id:
                     project_found = True
+                    project_details = project
             if not project_found:
                 raise HTTPNotFound
         else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] > 4:
             raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)
@@ -1143,14 +1181,19 @@ class DownloadKML(PrivateView):
         project_code = self.request.matchdict['projcode']
         form_id = self.request.matchdict['formid']
         project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
         if project_id is not None:
             project_found = False
             for project in self.user_projects:
                 if project["project_id"] == project_id:
                     project_found = True
+                    project_details = project
             if not project_found:
                 raise HTTPNotFound
         else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)
@@ -1179,14 +1222,19 @@ class DownloadPublicCSV(PrivateView):
         project_code = self.request.matchdict['projcode']
         form_id = self.request.matchdict['formid']
         project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
         if project_id is not None:
             project_found = False
             for project in self.user_projects:
                 if project["project_id"] == project_id:
                     project_found = True
+                    project_details = project
             if not project_found:
                 raise HTTPNotFound
         else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)
@@ -1216,14 +1264,19 @@ class DownloadPrivateCSV(PrivateView):
         project_code = self.request.matchdict['projcode']
         form_id = self.request.matchdict['formid']
         project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
         if project_id is not None:
             project_found = False
             for project in self.user_projects:
                 if project["project_id"] == project_id:
                     project_found = True
+                    project_details = project
             if not project_found:
                 raise HTTPNotFound
         else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)

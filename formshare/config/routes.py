@@ -456,7 +456,7 @@ def load_routes(config):
                   PerformAction, 'json'))
 
     # API
-    routes.append(add_route('api_select2_users', '/api/select2_user', APIUserSearchSelect2, 'json'))
+    routes.append(add_route('api_select2_users', '/user/{userid}/api/select2_user', APIUserSearchSelect2, 'json'))
 
     # ODK Forms
     routes.append(add_route('odkformlist', '/user/{userid}/project/{projcode}/formList', ODKFormList, None))

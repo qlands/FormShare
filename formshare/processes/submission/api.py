@@ -106,6 +106,7 @@ def get_submission_media_files(request, project, form):
 
 
 def json_to_csv(request, project, form):
+    # TODO: We need to integrate the new code
     _ = request.translate
     uid = str(uuid.uuid4())
     form_directory = get_form_directory(request, project, form)

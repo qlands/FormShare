@@ -15,10 +15,10 @@
 
         <div class="error-desc">
             {% block b_500_message %}
-                {{ _('The server encountered an unexpected error and was not able to complete your request. Please report the error as an issue on ') }} https://github.com/qlands/FormShare
-                <textarea>The error goes here</textarea>
-                {{ _('We apologize for the inconvenience') }}.<br/>
-                {{ ('You can go back to main page:') }} <br/><a href="index.html" class="btn btn-primary m-t">{{ _('Home') }}</a>
+                {{ _('The server encountered an unexpected error and was not able to complete your request.') }}<br/><br/>
+                {{ _('If the problem persists, please report the issue at:') }} https://github.com/qlands/FormShare <br/><br/>
+                {{ _('We apologize for the inconvenience') }}<br/>
+                <a href="{{ request.route_url('home') }}" class="btn btn-primary m-t">{{ _('Go back to the home page') }}</a>
             {% endblock b_500_message %}
         </div>
     </div>

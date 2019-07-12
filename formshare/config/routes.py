@@ -1,7 +1,7 @@
 from ..plugins.utilities import add_route
 import formshare.plugins as p
 from ..views.basic_views import NotFoundView, HomeView, log_out_view, LoginView, RegisterView, \
-    AssistantLoginView, assistant_log_out_view, RefreshSessionView, RecoverPasswordView
+    AssistantLoginView, assistant_log_out_view, RefreshSessionView, RecoverPasswordView, ErrorView
 from ..views.dashboard import UserDashBoardView
 from ..views.projects import AddProjectView, ProjectListView, ProjectDetailsView, ProjectStoredFileView, \
     EditProjectView, DeleteProjectView, AddFileToProject, RemoveFileFromProject, DownloadProjectGPSPoints, \
@@ -471,6 +471,7 @@ def load_routes(config):
 
     # Add the not found route
     config.add_notfound_view(NotFoundView, renderer='generic/404.jinja2')
+    config.add_view(ErrorView, context=Exception, renderer='generic/500.jinja2')
 
     # Call connected plugins to add any routes after FormShare
     for plugin in p.PluginImplementations(p.IRoutes):

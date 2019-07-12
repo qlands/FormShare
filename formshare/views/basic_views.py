@@ -17,7 +17,9 @@ from formshare.processes.elasticsearch.user_index import get_user_index_manager
 import validators
 import re
 import logging
-from formshare.processes.email.send_email import send_email
+import traceback
+from formshare.processes.email.send_email import send_error_to_technical_team
+from formshare.processes.email.send_email import send_password_email
 log = logging.getLogger(__name__)
 
 
@@ -29,6 +31,32 @@ class HomeView(PublicView):
 class NotFoundView(PublicView):
     def process_view(self):
         self.request.response.status = 404
+        return {}
+
+
+class ErrorView(PublicView):
+    def process_view(self):
+        user = None
+        policy = get_policy(self.request, 'main')
+        login_data = policy.authenticated_userid(self.request)
+        if login_data is not None:
+            login_data = literal_eval(login_data)
+            if login_data["group"] == "mainApp":
+                user = login_data["login"]
+        if user is None:
+            policy = get_policy(self.request, 'assistant')
+            login_data = policy.authenticated_userid(self.request)
+            if login_data is not None:
+                login_data = literal_eval(login_data)
+                if login_data["group"] == "collaborator":
+                    user = login_data["login"]
+
+        log.error(
+            "Server Error in URL {}.\nAccount: {}\nError: \n{}".format(self.request.url, user, traceback.format_exc()))
+        send_error_to_technical_team(self.request,
+                                     "Server Error in URL {}.\nAccount: {}\nError: \n{}".format(
+                                         self.request.url, user, traceback.format_exc()))
+        self.request.response.status = 500
         return {}
 
 
@@ -109,7 +137,7 @@ class RecoverPasswordView(PublicView):
             if user is not None:
                 user_data = get_formshare_user_data(self.request, user.email, True)
                 user_password = decode_data(self.request, user_data['user_password'])
-                send_email(self.request, user.email, user_password.decode(), user.userData)
+                send_password_email(self.request, user.email, user_password.decode(), user.userData)
                 self.returnRawViewResult = True
             return HTTPFound(location=self.request.route_url('login'))
         return {}

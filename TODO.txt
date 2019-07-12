@@ -1,6 +1,5 @@
 - Warn if no sensitive fields exists when publishing products
 - Manage subversions
-- Check paradox errors
 - Audit log (View changes)
 - Messaging, Watch and Follow
 - Search engine

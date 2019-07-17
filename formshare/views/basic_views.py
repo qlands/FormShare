@@ -312,7 +312,7 @@ class RegisterView(PublicView):
                                         return HTTPFound(next_page)
                         else:
                             log.error("Password {} and confirmation {} are not the same".format(
-                                data["user_password"], data["user_passwor2"]))
+                                data["user_password"], data["user_password2"]))
                             self.errors.append(self._("The password and its confirmation are not the same"))
                     else:
                         log.error("Registering user {} has invalid characters".format(data['user_id']))

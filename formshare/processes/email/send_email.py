@@ -33,37 +33,7 @@ def send_email(request, email_from, email_to, subject, message, reply_to=None):
         ),
         countdown=2,
     )
-
     return True
-    # server = request.registry.settings.get('mail.server', None)
-    # if server is not None:
-    #     if server != "":
-    #         try:
-    #             port = request.registry.settings.get('mail.port', '587')
-    #             if port != "":
-    #                 port = int(port)
-    #                 smtp = smtplib.SMTP(server, port)
-    #                 login = request.registry.settings.get('mail.login', None)
-    #                 if login is not None:
-    #                     if login != "":
-    #                         password = request.registry.settings.get('mail.password', None)
-    #                         if password is not None:
-    #                             if password != "":
-    #                                 start_tls = request.registry.settings.get('mail.starttls', 'false')
-    #                                 if start_tls == 'true':
-    #                                     smtp.ehlo()
-    #                                     smtp.starttls()
-    #                                     smtp.ehlo()
-    #                                 smtp.login(login, password)
-    #                                 smtp.sendmail(email_from, email_to, message.as_string())
-    #                                 smtp.close()
-    #                                 return True
-    #
-    #             return False
-    #         except Exception as e:
-    #             log.error("Error {} while sending email".format(str(e)))
-    #             return False
-    # return False
 
 
 def send_password_email(request, email_to, current_password, user_dict):

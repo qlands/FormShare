@@ -94,6 +94,7 @@ __all__ = [
     "store_json_file",
     "check_jxform_file",
     "get_missing_support_files",
+    "create_repository"
 ]
 
 _GPS_types = [

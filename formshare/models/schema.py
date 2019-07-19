@@ -2,7 +2,6 @@ from .meta import metadata
 import json
 from sqlalchemy import inspect
 from future.utils import iteritems
-import pprint
 
 __all__ = [
     "initialize_schema",

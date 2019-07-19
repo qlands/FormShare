@@ -434,7 +434,6 @@ class IRepository(Interface):
         :param cnf_file: MySQL CNF file
         :param create_file: Repository create SQL file
         :param insert_file: Repository insert SQL file
-        :param audit_file: Repository audit SQL file
         :param schema: Schema to create
         :return: True if FormShare should continue creating the repository, otherwise return False
         """
@@ -476,7 +475,6 @@ class IRepository(Interface):
         :param cnf_file: MySQL CNF file
         :param create_file: Repository create SQL file
         :param insert_file: Repository insert SQL file
-        :param audit_file: Repository audit SQL file
         :param schema: Schema to create
         :param primary_key: Primary key that should be used
         :return: Celery task ID

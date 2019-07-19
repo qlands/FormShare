@@ -60,9 +60,9 @@ class GenerateRepository(PrivateView):
                 get = True
                 list_array = []
                 result_code = -1
-                stage, primary_key, deflanguage, languages, yesvalue, novalue, other_languages, yes_no_strings, default_language, separation_file = get_stage_info_from_form(
-                    self.request, project_id, form_id
-                )
+                stage, primary_key, deflanguage, languages, \
+                    yesvalue, novalue, other_languages, yes_no_strings, default_language, \
+                    separation_file = get_stage_info_from_form(self.request, project_id, form_id)
 
                 has_tables_to_separate, sep_tables = get_tables_to_separate(
                     self.request, project_id, form_id

@@ -4,8 +4,7 @@ from formshare.processes.submission.api import (
     get_tables_from_form,
     get_fields_from_table,
     get_request_data_jqgrid,
-    update_data,
-    is_field_key,
+    update_data
 )
 from pyramid.httpexceptions import HTTPNotFound, HTTPFound
 from formshare.processes.db import get_form_data

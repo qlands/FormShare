@@ -37,14 +37,14 @@ class MySQLDenormalizeError(Exception):
 def flatten_json(y):
     out = OrderedDict()
 
-    def flatten(x, name=''):
+    def flatten(x, name=""):
         if type(x) is OrderedDict:
             for a in x:
-                flatten(x[a], name + a + '_')
+                flatten(x[a], name + a + "_")
         elif type(x) is list:
             i = 1
             for a in x:
-                flatten(a, name + str(i) + '_')
+                flatten(a, name + str(i) + "_")
                 i += 1
         else:
             out[name[:-1]] = x
@@ -64,7 +64,9 @@ def gather_array_sizes(data, array_dict):
 
 
 @celeryApp.task(base=CeleryTask)
-def build_csv(settings, form_directory, form_schema, csv_file, protect_sensitive, locale):
+def build_csv(
+    settings, form_directory, form_schema, csv_file, protect_sensitive, locale
+):
     task_id = build_csv.request.id
     tables = {}
     keys = []
@@ -72,30 +74,48 @@ def build_csv(settings, form_directory, form_schema, csv_file, protect_sensitive
 
     def protect_field(table_name, field_name, field_value):
         for a_key in keys:
-            if a_key['name'] == field_name:
+            if a_key["name"] == field_name:
                 for a_value in replace_values:
-                    if a_value['table'] == 'all' and a_value['field'] == field_name \
-                            and a_value['value'] == field_value:
-                        return a_value['new_value']
+                    if (
+                        a_value["table"] == "all"
+                        and a_value["field"] == field_name
+                        and a_value["value"] == field_value
+                    ):
+                        return a_value["new_value"]
                 unique_id = str(uuid.uuid4())
                 replace_values.append(
-                    {'table': 'all', 'field': field_name, 'value': field_value, 'new_value': unique_id})
+                    {
+                        "table": "all",
+                        "field": field_name,
+                        "value": field_value,
+                        "new_value": unique_id,
+                    }
+                )
                 return unique_id
         from_table = table_name
         if from_table == "":
             from_table = "maintable"
         fields = tables.get(from_table, [])
         for a_field in fields:
-            if a_field['name'] == field_name:
-                if a_field['protection'] == 'exclude':
+            if a_field["name"] == field_name:
+                if a_field["protection"] == "exclude":
                     return "exclude"
                 for a_value in replace_values:
-                    if a_value['table'] == from_table and a_value['field'] == field_name \
-                            and a_value['value'] == field_value:
-                        return a_value['new_value']
+                    if (
+                        a_value["table"] == from_table
+                        and a_value["field"] == field_name
+                        and a_value["value"] == field_value
+                    ):
+                        return a_value["new_value"]
                 unique_id = str(uuid.uuid4())
                 replace_values.append(
-                    {'table': from_table, 'field': field_name, 'value': field_value, 'new_value': unique_id})
+                    {
+                        "table": from_table,
+                        "field": field_name,
+                        "value": field_value,
+                        "new_value": unique_id,
+                    }
+                )
                 return unique_id
         return field_value
 
@@ -103,28 +123,33 @@ def build_csv(settings, form_directory, form_schema, csv_file, protect_sensitive
         for a_key, a_value in OrderedDict(json_data).items():
             if type(a_value) is list:
                 for an_item in a_value:
-                    if a_key != "_attachments" and a_key != "_notes" and a_key != '_tags' and a_key != '_geolocation':
+                    if (
+                        a_key != "_attachments"
+                        and a_key != "_notes"
+                        and a_key != "_tags"
+                        and a_key != "_geolocation"
+                    ):
                         protect_sensitive_fields(an_item, a_key)
-            if a_key == '_geolocation':
+            if a_key == "_geolocation":
                 json_data.pop(a_key)
             else:
                 new_value = protect_field(table_name, a_key, a_value)
-                if new_value == 'exclude':
+                if new_value == "exclude":
                     json_data.pop(a_key)
                 else:
                     json_data[a_key] = new_value
 
     def get_sensitive_fields(root, table_name):
         for child in root.iterchildren():
-            if child.tag == 'table':
-                a_table = child.get('name')
+            if child.tag == "table":
+                a_table = child.get("name")
                 tables[a_table] = []
                 get_sensitive_fields(child, a_table)
             else:
-                if child.get('sensitive', 'false') == 'true':
-                    is_key = child.get('key', 'false')
-                    is_lookup = child.get('rlookup', 'false')
-                    if is_key == 'true':
+                if child.get("sensitive", "false") == "true":
+                    is_key = child.get("key", "false")
+                    is_lookup = child.get("rlookup", "false")
+                    if is_key == "true":
                         is_key = True
                     else:
                         is_key = False
@@ -133,39 +158,50 @@ def build_csv(settings, form_directory, form_schema, csv_file, protect_sensitive
                     else:
                         is_lookup = False
                     if not is_key:
-                        tables[table_name].append({'name': child.get('name'),
-                                                   'protection': child.get('protection', 'exclude', ),
-                                                   'lookup': is_lookup})
+                        tables[table_name].append(
+                            {
+                                "name": child.get("name"),
+                                "protection": child.get("protection", "exclude"),
+                                "lookup": is_lookup,
+                            }
+                        )
                     else:
-                        keys.append({'name': child.get('name')})
+                        keys.append({"name": child.get("name")})
 
-    parts = __file__.split('/products/')
+    parts = __file__.split("/products/")
     this_file_path = parts[0] + "/locale"
-    es = gettext.translation('formshare',
-                             localedir=this_file_path,
-                             languages=[locale])
+    es = gettext.translation("formshare", localedir=this_file_path, languages=[locale])
     es.install()
     _ = es.gettext
 
-    paths = ['odk', 'forms', form_directory, "submissions", 'maps']
-    maps_path = os.path.join(settings['repository.path'], *paths)
+    paths = ["odk", "forms", form_directory, "submissions", "maps"]
+    maps_path = os.path.join(settings["repository.path"], *paths)
 
     paths = ["utilities", "MySQLDenormalize", "mysqldenormalize"]
-    mysql_denormalize = os.path.join(settings['odktools.path'], *paths)
+    mysql_denormalize = os.path.join(settings["odktools.path"], *paths)
 
     uid = str(uuid.uuid4())
-    paths = ['tmp', uid]
-    temp_path = os.path.join(settings['repository.path'], *paths)
+    paths = ["tmp", uid]
+    temp_path = os.path.join(settings["repository.path"], *paths)
     os.makedirs(temp_path)
 
     uid = str(uuid.uuid4())
-    paths = ['tmp', uid]
-    out_path = os.path.join(settings['repository.path'], *paths)
+    paths = ["tmp", uid]
+    out_path = os.path.join(settings["repository.path"], *paths)
     os.makedirs(out_path)
 
-    args = [mysql_denormalize, "-H " + settings['mysql.host'], "-P " + settings['mysql.port'],
-            "-u " + settings['mysql.user'], "-p " + settings['mysql.password'], "-s " + form_schema, "-t maintable",
-            "-m " + maps_path, "-o " + out_path, "-T " + temp_path]
+    args = [
+        mysql_denormalize,
+        "-H " + settings["mysql.host"],
+        "-P " + settings["mysql.port"],
+        "-u " + settings["mysql.user"],
+        "-p " + settings["mysql.password"],
+        "-s " + form_schema,
+        "-t maintable",
+        "-m " + maps_path,
+        "-o " + out_path,
+        "-T " + temp_path,
+    ]
 
     send_task_status_to_form(settings, task_id, _("Denormalizing database"))
     p = Popen(args, stdout=PIPE, stderr=PIPE)
@@ -176,7 +212,9 @@ def build_csv(settings, form_directory, form_schema, csv_file, protect_sensitive
         out_path2 = os.path.join(out_path, *paths)
         files = glob.glob(out_path2)
         if files:
-            send_task_status_to_form(settings, task_id, _("Calculating the number of columns"))
+            send_task_status_to_form(
+                settings, task_id, _("Calculating the number of columns")
+            )
             array_dict = {}
             for aFile in files:
                 with open(aFile) as json_file:
@@ -187,13 +225,17 @@ def build_csv(settings, form_directory, form_schema, csv_file, protect_sensitive
                 array_sizes.append(key + ":" + str(value))
 
             paths = ["utilities", "createDummyJSON", "createdummyjson"]
-            create_dummy_json = os.path.join(settings['odktools.path'], *paths)
+            create_dummy_json = os.path.join(settings["odktools.path"], *paths)
 
-            manifest_file = os.path.join(settings['repository.path'], *["odk", "forms", form_directory,
-                                                                        "repository", "manifest.xml"])
+            manifest_file = os.path.join(
+                settings["repository.path"],
+                *["odk", "forms", form_directory, "repository", "manifest.xml"]
+            )
 
-            create_xml_file = os.path.join(settings['repository.path'], *["odk", "forms", form_directory,
-                                                                          "repository", "create.xml"])
+            create_xml_file = os.path.join(
+                settings["repository.path"],
+                *["odk", "forms", form_directory, "repository", "create.xml"]
+            )
 
             if protect_sensitive:
                 tree = etree.parse(create_xml_file)
@@ -225,12 +267,14 @@ def build_csv(settings, form_directory, form_schema, csv_file, protect_sensitive
                     cols.append(col.replace(".", ""))
                 temp.columns = cols
                 dataframe_array.append(temp)
-                send_task_status_to_form(settings, task_id, _("Flattening the JSON files"))
+                send_task_status_to_form(
+                    settings, task_id, _("Flattening the JSON files")
+                )
                 for file in files:
                     with open(file) as json_file:
                         data = json.load(json_file, object_pairs_hook=OrderedDict)
                     replace_values = []
-                    protect_sensitive_fields(data, '')
+                    protect_sensitive_fields(data, "")
                     flat = flatten_json(data)
                     temp = json_normalize(flat)
                     cols = []
@@ -238,19 +282,31 @@ def build_csv(settings, form_directory, form_schema, csv_file, protect_sensitive
                         cols.append(col.replace(".", ""))
                     temp.columns = cols
                     dataframe_array.append(temp)
-                send_task_status_to_form(settings, task_id, _("Concatenating submissions"))
+                send_task_status_to_form(
+                    settings, task_id, _("Concatenating submissions")
+                )
                 join = pd.concat(dataframe_array, sort=False)
                 join = join.iloc[1:]
                 send_task_status_to_form(settings, task_id, _("Saving CSV"))
-                join.to_csv(csv_file, index=False, encoding='utf-8')
+                join.to_csv(csv_file, index=False, encoding="utf-8")
 
             else:
-                raise DummyError(_('Error while creating the dummy JSON file'))
+                raise DummyError(_("Error while creating the dummy JSON file"))
 
         else:
-            raise EmptyFileError(_('The ODK form does not contain any submissions'))
+            raise EmptyFileError(_("The ODK form does not contain any submissions"))
     else:
-        log.error("MySQLDenormalize Error: " + stderr.decode('utf-8') + "-" + stdout.decode('utf-8') + ":"
-                  + " ".join(args))
-        raise MySQLDenormalizeError("MySQLDenormalize Error: " + stderr.decode('utf-8') + "-"
-                                    + stdout.decode('utf-8'))
+        log.error(
+            "MySQLDenormalize Error: "
+            + stderr.decode("utf-8")
+            + "-"
+            + stdout.decode("utf-8")
+            + ":"
+            + " ".join(args)
+        )
+        raise MySQLDenormalizeError(
+            "MySQLDenormalize Error: "
+            + stderr.decode("utf-8")
+            + "-"
+            + stdout.decode("utf-8")
+        )

@@ -8,7 +8,7 @@ class UserExistError(Exception):
     """
 
     def __str__(self):
-        return 'Link object already exists in network'
+        return "Link object already exists in network"
 
 
 class UserNotExistError(Exception):
@@ -17,7 +17,7 @@ class UserNotExistError(Exception):
     """
 
     def __str__(self):
-        return 'Link object already exists in network'
+        return "Link object already exists in network"
 
 
 def _get_user_index_definition(number_of_shards, number_of_replicas):
@@ -40,31 +40,19 @@ def _get_user_index_definition(number_of_shards, number_of_replicas):
         "settings": {
             "index": {
                 "number_of_shards": number_of_shards,
-                "number_of_replicas": number_of_replicas
+                "number_of_replicas": number_of_replicas,
             }
         },
         "mappings": {
             "user": {
                 "properties": {
-                    "user_id": {
-                        "type": "keyword",
-                        "copy_to": "all_data"
-                    },
-                    "user_email": {
-                        "type": "text",
-                        "copy_to": "all_data"
-                    },
-                    "user_name": {
-                        "type": "text",
-                        "copy_to": "all_data"
-                    },
-                    "all_data": {
-                        "type": "text",
-                        "analyzer": "standard"
-                    }
+                    "user_id": {"type": "keyword", "copy_to": "all_data"},
+                    "user_email": {"type": "text", "copy_to": "all_data"},
+                    "user_name": {"type": "text", "copy_to": "all_data"},
+                    "all_data": {"type": "text", "analyzer": "standard"},
                 }
             }
-        }
+        },
     }
     return _json
 
@@ -75,17 +63,7 @@ def _get_user_search_dict(user_id):
     :param user_id: The user to search if it exists
     :return: A dict that will be passes to ES
     """
-    _dict = {
-        "query": {
-            "bool": {
-                "must": {
-                    "term": {
-                        "user_id": user_id
-                    }
-                }
-            }
-        }
-    }
+    _dict = {"query": {"bool": {"must": {"term": {"user_id": user_id}}}}}
     return _dict
 
 
@@ -101,21 +79,22 @@ class UserIndexManager(object):
     """
     The Manager class handles all activity feed operations.
     """
+
     def create_connection(self):
         """
         Creates a connection to ElasticSearch and pings it.
         :return: A tested (pinged) connection to ElasticSearch
         """
         if not isinstance(self.port, int):
-            raise ValueError('Port must be an integer')
+            raise ValueError("Port must be an integer")
         if not isinstance(self.host, str):
-            raise ValueError('Host must be string')
+            raise ValueError("Host must be string")
         if self.url_prefix is not None:
             if not isinstance(self.url_prefix, str):
-                raise ValueError('URL prefix must be string')
+                raise ValueError("URL prefix must be string")
         if not isinstance(self.use_ssl, bool):
-            raise ValueError('Use SSL must be boolean')
-        cnt_params = {'host': self.host, 'port': self.port}
+            raise ValueError("Use SSL must be boolean")
+        cnt_params = {"host": self.host, "port": self.port}
         if self.url_prefix is not None:
             cnt_params["url_prefix"] = self.url_prefix
         if self.use_ssl:
@@ -135,28 +114,28 @@ class UserIndexManager(object):
         """
 
         try:
-            self.host = settings['elasticsearch.user.host']
+            self.host = settings["elasticsearch.user.host"]
         except KeyError:
             self.host = "localhost"
 
         try:
-            self.port = int(settings['elasticsearch.user.port'])
+            self.port = int(settings["elasticsearch.user.port"])
         except KeyError:
             self.port = 9200
 
         try:
-            self.index_name = settings['elasticsearch.user.index_name']
+            self.index_name = settings["elasticsearch.user.index_name"]
         except KeyError:
-            self.index_name = 'formshare_users'
+            self.index_name = "formshare_users"
 
         try:
-            self.url_prefix = settings['elasticsearch.user.url_prefix']
+            self.url_prefix = settings["elasticsearch.user.url_prefix"]
         except KeyError:
             self.url_prefix = None
 
         try:
-            use_ssl = settings['elasticsearch.user.use_ssl']
-            if use_ssl == 'True':
+            use_ssl = settings["elasticsearch.user.use_ssl"]
+            if use_ssl == "True":
                 self.use_ssl = True
             else:
                 self.use_ssl = False
@@ -164,23 +143,27 @@ class UserIndexManager(object):
             self.use_ssl = False
 
         try:
-            number_of_shards = int(settings['elasticsearch.user.number_of_shards'])
+            number_of_shards = int(settings["elasticsearch.user.number_of_shards"])
         except KeyError:
             number_of_shards = 5
 
         try:
-            number_of_replicas = int(settings['elasticsearch.user.number_of_replicas'])
+            number_of_replicas = int(settings["elasticsearch.user.number_of_replicas"])
         except KeyError:
             number_of_replicas = 1
 
         connection = self.create_connection()
         if connection is not None:
             try:
-                connection.indices.create(self.index_name,
-                                          body=_get_user_index_definition(number_of_shards, number_of_replicas))
+                connection.indices.create(
+                    self.index_name,
+                    body=_get_user_index_definition(
+                        number_of_shards, number_of_replicas
+                    ),
+                )
             except RequestError as e:
                 if e.status_code == 400:
-                    if e.error.find('already_exists') >= 0:
+                    if e.error.find("already_exists") >= 0:
                         pass
                     else:
                         raise e
@@ -198,8 +181,10 @@ class UserIndexManager(object):
         """
         connection = self.create_connection()
         if connection is not None:
-            res = connection.search(index=self.index_name, body=_get_user_search_dict(user_id))
-            if res['hits']['total'] > 0:
+            res = connection.search(
+                index=self.index_name, body=_get_user_search_dict(user_id)
+            )
+            if res["hits"]["total"] > 0:
                 return True
         else:
             raise RequestError("Cannot connect to ElasticSearch")
@@ -216,7 +201,9 @@ class UserIndexManager(object):
         if not self.user_exists(user_id):
             connection = self.create_connection()
             if connection is not None:
-                connection.index(index=self.index_name, doc_type='user', id=user_id, body=data_dict)
+                connection.index(
+                    index=self.index_name, doc_type="user", id=user_id, body=data_dict
+                )
             else:
                 raise RequestError("Cannot connect to ElasticSearch")
         else:
@@ -232,7 +219,11 @@ class UserIndexManager(object):
         if self.user_exists(user_id):
             connection = self.create_connection()
             if connection is not None:
-                connection.delete_by_query(index=self.index_name, doc_type='user', body=_get_user_search_dict(user_id))
+                connection.delete_by_query(
+                    index=self.index_name,
+                    doc_type="user",
+                    body=_get_user_search_dict(user_id),
+                )
                 return True
             else:
                 raise RequestError("Cannot connect to ElasticSearch")
@@ -241,11 +232,7 @@ class UserIndexManager(object):
 
     def query_user(self, q, query_from, query_size):
         query = q.replace("*", "")
-        query_dict = {
-            "query": {
-                "wildcard": {"all_data": "*" + query + "*"}
-            }
-        }
+        query_dict = {"query": {"wildcard": {"all_data": "*" + query + "*"}}}
         if query_from is not None:
             query_dict["from"] = query_from
         if query_size is not None:
@@ -258,10 +245,10 @@ class UserIndexManager(object):
             # print("**********************88")
             # pprint.pprint(es_result)
             # print("**********************88")
-            if es_result['hits']['total'] > 0:
-                total = es_result['hits']['total']
-                for hit in es_result['hits']['hits']:
-                    result.append(hit['_source'])
+            if es_result["hits"]["total"] > 0:
+                total = es_result["hits"]["total"]
+                for hit in es_result["hits"]["hits"]:
+                    result.append(hit["_source"])
                 return result, total
         else:
             raise RequestError("Cannot connect to ElasticSearch")

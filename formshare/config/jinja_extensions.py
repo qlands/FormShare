@@ -30,17 +30,24 @@ def render_resource(request, library_name, resource_type, resource_id):
         resources = r.need(library_name, resource_id, resource_type)
         resources_to_include = []
         for resource in resources:
-            if not request.activeResources.resource_in_request(library_name, resource["resourceID"], resource_type):
-                request.activeResources.add_resource(library_name, resource["resourceID"], resource_type)
+            if not request.activeResources.resource_in_request(
+                library_name, resource["resourceID"], resource_type
+            ):
+                request.activeResources.add_resource(
+                    library_name, resource["resourceID"], resource_type
+                )
                 resources_to_include.append(
-                    jinjaEnv.from_string(html).render(file=request.application_url + '/' + resource["filePath"]))
+                    jinjaEnv.from_string(html).render(
+                        file=request.application_url + "/" + resource["filePath"]
+                    )
+                )
         return literal("\n".join(resources_to_include))
     else:
         return ""
 
 
 class ExtendThis(ext.Extension):
-    tags = ['extend_me']
+    tags = ["extend_me"]
 
     def __init__(self, environment):
         ext.Extension.__init__(self, environment)
@@ -57,16 +64,16 @@ class ExtendThis(ext.Extension):
         template_path = parser.filename
 
         # We need to have a list of template paths to look for
-        if not hasattr(self, 'searchpath'):
+        if not hasattr(self, "searchpath"):
             return node
 
         # First we remove the templates path from the file
         # so to have the just the template file or a template file in a subdirectory of templates
         for searchpath in self.searchpath:
-            template_file = template_file.replace(searchpath, '')
+            template_file = template_file.replace(searchpath, "")
 
         # Here we get the template path of the file
-        template_path = template_path.replace(template_file, '')
+        template_path = template_path.replace(template_file, "")
 
         # Find the position of the template's path in the list of paths
         index = -1
@@ -79,14 +86,14 @@ class ExtendThis(ext.Extension):
 
         # index is the position of the this template's path
         # so we search down stream for the template in other paths
-        file_to_extend = ''
-        for pos in range(index+1, len(self.searchpath)):
+        file_to_extend = ""
+        for pos in range(index + 1, len(self.searchpath)):
             if os.path.exists(self.searchpath[pos] + template_file):
                 file_to_extend = self.searchpath[pos] + template_file
                 break
 
         # If the file to extend from exits then set it as a template
-        if file_to_extend == '':
+        if file_to_extend == "":
             return node
         else:
             node.template = nodes.Const(file_to_extend)
@@ -112,10 +119,10 @@ class BaseExtension(ext.Extension):
         # get arguments
         args = []
         kwargs = []
-        while not stream.current.test_any('block_end'):
+        while not stream.current.test_any("block_end"):
             if args or kwargs:
-                stream.expect('comma')
-            if stream.current.test('name') and stream.look().test('assign'):
+                stream.expect("comma")
+            if stream.current.test("name") and stream.look().test("assign"):
                 key = nodes.Const(next(stream).value)
                 stream.skip()
                 value = parser.parse_expression()
@@ -124,16 +131,15 @@ class BaseExtension(ext.Extension):
                 args.append(parser.parse_expression())
 
         def make_call_node(*kw):
-            return self.call_method('_call', args=[
-                nodes.List(args),
-                nodes.Dict(kwargs),
-            ], kwargs=kw)
+            return self.call_method(
+                "_call", args=[nodes.List(args), nodes.Dict(kwargs)], kwargs=kw
+            )
 
         return nodes.Output([make_call_node()]).set_lineno(tag.lineno)
 
 
 class JSResourceExtension(BaseExtension):
-    tags = ['jsresource']
+    tags = ["jsresource"]
 
     @classmethod
     def _call(cls, args, kwargs):
@@ -143,7 +149,7 @@ class JSResourceExtension(BaseExtension):
 
 
 class CSSResourceExtension(BaseExtension):
-    tags = ['cssresource']
+    tags = ["cssresource"]
 
     @classmethod
     def _call(cls, args, kwargs):
@@ -166,12 +172,12 @@ def regularise_html(html):
 
     if html is None:
         return
-    html = re.sub('\n', ' ', html)
-    matches = re.findall('(<[^>]*>|%[^%]\([^)]*\)\w|[^<%]+|%)', html)
+    html = re.sub("\n", " ", html)
+    matches = re.findall("(<[^>]*>|%[^%]\([^)]*\)\w|[^<%]+|%)", html)
     for i in range(len(matches)):
         match = matches[i]
-        if match.startswith('<') or match.startswith('%'):
+        if match.startswith("<") or match.startswith("%"):
             continue
-        matches[i] = re.sub('\s{2,}', ' ', match)
-    html = ''.join(matches)
+        matches[i] = re.sub("\s{2,}", " ", match)
+    html = "".join(matches)
     return html

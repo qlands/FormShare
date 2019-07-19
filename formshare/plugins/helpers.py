@@ -21,6 +21,7 @@ class HelperAttributeDict(dict):
     :Copyright (C) 2007 Open Knowledge Foundation
     :license: AGPL V3.
     """
+
     def __init__(self, *args, **kwargs):
         super(HelperAttributeDict, self).__init__(*args, **kwargs)
         self.__dict__ = self
@@ -29,7 +30,9 @@ class HelperAttributeDict(dict):
         try:
             value = super(HelperAttributeDict, self).__getitem__(key)
         except KeyError:
-            raise Exception('Helper function \'{key}\' has not been defined.'.format(key=key))
+            raise Exception(
+                "Helper function '{key}' has not been defined.".format(key=key)
+            )
         return value
 
 
@@ -47,6 +50,7 @@ def core_helper(f, name=None):
         :license: AGPL V3, see LICENSE for more details.
 
     """
+
     def _get_name(func_or_class):
         # Handles both methods and class instances.
         try:
@@ -59,7 +63,7 @@ def core_helper(f, name=None):
 
 
 @core_helper
-def humanize_date(date, locale='en'):
+def humanize_date(date, locale="en"):
     """
     This humanize a date.
     :param date: Datetime
@@ -70,7 +74,7 @@ def humanize_date(date, locale='en'):
 
 
 @core_helper
-def readble_date(date, locale='en'):
+def readble_date(date, locale="en"):
     """
     Returns a readable date"
     :param date: Datetime
@@ -78,13 +82,17 @@ def readble_date(date, locale='en'):
     :return: A readable date
     """
     ar = arrow.get(date)
-    if locale == 'es':
-        return ar.format('dddd d', locale=locale) + " de " + ar.format('MMMM, YYYY', locale=locale)
-    return ar.format('dddd Do of MMMM, YYYY', locale=locale)
+    if locale == "es":
+        return (
+            ar.format("dddd d", locale=locale)
+            + " de "
+            + ar.format("MMMM, YYYY", locale=locale)
+        )
+    return ar.format("dddd Do of MMMM, YYYY", locale=locale)
 
 
 @core_helper
-def readble_date_with_time(date, locale='en'):
+def readble_date_with_time(date, locale="en"):
     """
     Returns a readable date"
     :param date: Datetime
@@ -92,9 +100,13 @@ def readble_date_with_time(date, locale='en'):
     :return: A readable date with time
     """
     ar = arrow.get(date)
-    if locale == 'es':
-        return ar.format('dddd d', locale=locale) + " de " + ar.format('MMMM, YYYY. HH:mm:ss', locale=locale)
-    return ar.format('dddd Do of MMMM, YYYY. HH:mm:ss', locale=locale)
+    if locale == "es":
+        return (
+            ar.format("dddd d", locale=locale)
+            + " de "
+            + ar.format("MMMM, YYYY. HH:mm:ss", locale=locale)
+        )
+    return ar.format("dddd Do of MMMM, YYYY. HH:mm:ss", locale=locale)
 
 
 @core_helper
@@ -105,7 +117,7 @@ def simple_date(date):
     :return: A readable date
     """
     ar = arrow.get(date)
-    return ar.format('DD/MM/YYYY')
+    return ar.format("DD/MM/YYYY")
 
 
 @core_helper
@@ -116,11 +128,11 @@ def simple_date_usa(date):
     :return: A readable date
     """
     ar = arrow.get(date)
-    return ar.format('MM/DD/YYYY')
+    return ar.format("MM/DD/YYYY")
 
 
 @core_helper
-def pluralize(noun, size, locale='en'):
+def pluralize(noun, size, locale="en"):
     """
     The function calls connected plugins to expand the pluralize capabilities of FormShare
     :param noun: Noun
@@ -156,10 +168,14 @@ def get_gravatar_url(email, size=45):
     :param size: Size of the image
     :return: Gravatar URL
     """
-    encoded_email = email.encode('utf-8')
+    encoded_email = email.encode("utf-8")
     default = "identicon"
-    gravatar_url = "https://www.gravatar.com/avatar/" + hashlib.md5(encoded_email.lower()).hexdigest() + "?"
-    gravatar_url += urllib.parse.urlencode({'d': default, 's': str(size)})
+    gravatar_url = (
+        "https://www.gravatar.com/avatar/"
+        + hashlib.md5(encoded_email.lower()).hexdigest()
+        + "?"
+    )
+    gravatar_url += urllib.parse.urlencode({"d": default, "s": str(size)})
     return gravatar_url
 
 

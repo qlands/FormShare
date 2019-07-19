@@ -21,12 +21,12 @@ class EmptyFileError(Exception):
 
 
 @celeryApp.task(base=CeleryTask)
-def build_media_zip(settings, odk_dir, form_directory, form_schema, zip_file, primary_key, locale):
-    parts = __file__.split('/products/')
+def build_media_zip(
+    settings, odk_dir, form_directory, form_schema, zip_file, primary_key, locale
+):
+    parts = __file__.split("/products/")
     this_file_path = parts[0] + "/locale"
-    es = gettext.translation('formshare',
-                             localedir=this_file_path,
-                             languages=[locale])
+    es = gettext.translation("formshare", localedir=this_file_path, languages=[locale])
     es.install()
     _ = es.gettext
 
@@ -40,7 +40,7 @@ def build_media_zip(settings, odk_dir, form_directory, form_schema, zip_file, pr
     sql = "SELECT surveyid," + primary_key + " FROM " + form_schema + ".maintable"
     submissions = engine.execute(sql).fetchall()
     uid = str(uuid.uuid4())
-    repo_dir = settings['repository.path']
+    repo_dir = settings["repository.path"]
     index = 0
     send_25 = True
     send_50 = True
@@ -63,9 +63,11 @@ def build_media_zip(settings, odk_dir, form_directory, form_schema, zip_file, pr
                 send_75 = False
         key_value = submission[primary_key]
 
-        if isinstance(key_value, datetime.datetime) or \
-                isinstance(key_value, datetime.date) or \
-                isinstance(key_value, datetime.time):
+        if (
+            isinstance(key_value, datetime.datetime)
+            or isinstance(key_value, datetime.date)
+            or isinstance(key_value, datetime.time)
+        ):
             key_value = key_value.isoformat().replace("T", " ")
         else:
             if isinstance(key_value, float):
@@ -77,19 +79,23 @@ def build_media_zip(settings, odk_dir, form_directory, form_schema, zip_file, pr
                     if isinstance(key_value, datetime.timedelta):
                         key_value = str(key_value)
 
-        key_value = key_value.replace("/", "_")  # Replace invalid character for directory
-        tmp_dir = os.path.join(repo_dir, *['tmp', uid, key_value])
+        key_value = key_value.replace(
+            "/", "_"
+        )  # Replace invalid character for directory
+        tmp_dir = os.path.join(repo_dir, *["tmp", uid, key_value])
         os.makedirs(tmp_dir)
         submission_id = submission.surveyid
-        submissions_path = os.path.join(odk_dir, *['forms', form_directory, "submissions", submission_id, '*.*'])
+        submissions_path = os.path.join(
+            odk_dir, *["forms", form_directory, "submissions", submission_id, "*.*"]
+        )
         files = glob.glob(submissions_path)
         if files:
             for file in files:
                 shutil.copy(file, tmp_dir)
                 created = True
     if created:
-        tmp_dir = os.path.join(repo_dir, *['tmp', uid])
+        tmp_dir = os.path.join(repo_dir, *["tmp", uid])
         send_task_status_to_form(settings, task_id, _("Creating zip file"))
-        shutil.make_archive(zip_file.replace(".zip", ""), 'zip', tmp_dir)
+        shutil.make_archive(zip_file.replace(".zip", ""), "zip", tmp_dir)
     else:
-        raise EmptyFileError(_('The ODK form does not contain any media'))
+        raise EmptyFileError(_("The ODK form does not contain any media"))

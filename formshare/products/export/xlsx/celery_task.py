@@ -22,22 +22,29 @@ class SheetNameError(Exception):
 
 
 @celeryApp.task(base=CeleryTask)
-def build_xlsx(settings, odk_dir, form_directory, form_schema, form_id, xlsx_file, protect_sensitive, locale):
-    parts = __file__.split('/products/')
+def build_xlsx(
+    settings,
+    odk_dir,
+    form_directory,
+    form_schema,
+    form_id,
+    xlsx_file,
+    protect_sensitive,
+    locale,
+):
+    parts = __file__.split("/products/")
     this_file_path = parts[0] + "/locale"
-    es = gettext.translation('formshare',
-                             localedir=this_file_path,
-                             languages=[locale])
+    es = gettext.translation("formshare", localedir=this_file_path, languages=[locale])
     es.install()
     _ = es.gettext
 
-    mysql_user = settings['mysql.user']
-    mysql_password = settings['mysql.password']
-    mysql_host = settings['mysql.host']
-    mysql_port = settings['mysql.port']
-    odk_tools_dir = settings['odktools.path']
+    mysql_user = settings["mysql.user"]
+    mysql_password = settings["mysql.password"]
+    mysql_host = settings["mysql.host"]
+    mysql_port = settings["mysql.port"]
+    odk_tools_dir = settings["odktools.path"]
 
-    paths = ['forms', form_directory, "repository", "create.xml"]
+    paths = ["forms", form_directory, "repository", "create.xml"]
     create_xml = os.path.join(odk_dir, *paths)
 
     paths = [odk_tools_dir, "utilities", "MySQLToXLSX", "mysqltoxlsx"]
@@ -45,12 +52,22 @@ def build_xlsx(settings, odk_dir, form_directory, form_schema, form_id, xlsx_fil
 
     uid = str(uuid.uuid4())
 
-    paths = ['tmp', uid]
+    paths = ["tmp", uid]
     temp_dir = os.path.join(odk_dir, *paths)
     os.makedirs(temp_dir)
 
-    args = [mysql_to_xlsx, "-H " + mysql_host, "-P " + mysql_port, "-u " + mysql_user, "-p " + mysql_password,
-            "-s " + form_schema, "-x " + create_xml, "-o " + xlsx_file, "-T " + temp_dir, "-f " + form_id]
+    args = [
+        mysql_to_xlsx,
+        "-H " + mysql_host,
+        "-P " + mysql_port,
+        "-u " + mysql_user,
+        "-p " + mysql_password,
+        "-s " + form_schema,
+        "-x " + create_xml,
+        "-o " + xlsx_file,
+        "-T " + temp_dir,
+        "-f " + form_id,
+    ]
     if protect_sensitive:
         args.append("-c")
     p = Popen(args, stdout=PIPE, stderr=PIPE)
@@ -58,13 +75,27 @@ def build_xlsx(settings, odk_dir, form_directory, form_schema, form_id, xlsx_fil
     if p.returncode == 0:
         return True, xlsx_file
     else:
-        log.error("MySQLToXLSX Error: " + stderr.decode() + "-" + stdout.decode() + ". Args: " + " ".join(args))
+        log.error(
+            "MySQLToXLSX Error: "
+            + stderr.decode()
+            + "-"
+            + stdout.decode()
+            + ". Args: "
+            + " ".join(args)
+        )
         error = stdout.decode() + stderr.decode()
         if error.find("Worksheet name is already in use") >= 0:
-            raise SheetNameError(_(
-                'A worksheet name has been repeated. Excel only allow 30 characters in the worksheet name. '
-                'You can fix this by editing the dictionary and change the description of the tables to a maximum of '
-                '30 characters.'))
+            raise SheetNameError(
+                _(
+                    "A worksheet name has been repeated. Excel only allow 30 characters in the worksheet name. "
+                    "You can fix this by editing the dictionary and change the description of the tables to a maximum of "
+                    "30 characters."
+                )
+            )
         else:
-            raise BuildFileError(_("Unknown error while creating the XLSX. Sorry about this. "
-                                   "Please report this error as an issue on https://github.com/qlands/FormShare"))
+            raise BuildFileError(
+                _(
+                    "Unknown error while creating the XLSX. Sorry about this. "
+                    "Please report this error as an issue on https://github.com/qlands/FormShare"
+                )
+            )

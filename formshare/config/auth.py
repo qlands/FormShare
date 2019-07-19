@@ -13,14 +13,18 @@ class User(object):
     """
     This class represents a user in the system
     """
+
     def __init__(self, user_data):
         default = "identicon"
         size = 45
         self.id = user_data["user_id"]
         self.email = user_data["user_email"]
-        gravatar_url = "https://www.gravatar.com/avatar/" + hashlib.md5(
-            self.email.lower().encode('utf8')).hexdigest() + "?"
-        gravatar_url += urllib.parse.urlencode({'d': default, 's': str(size)})
+        gravatar_url = (
+            "https://www.gravatar.com/avatar/"
+            + hashlib.md5(self.email.lower().encode("utf8")).hexdigest()
+            + "?"
+        )
+        gravatar_url += urllib.parse.urlencode({"d": default, "s": str(size)})
         self.userData = user_data
         self.login = user_data["user_id"]
         self.name = user_data["user_name"]
@@ -35,7 +39,9 @@ class User(object):
         # Load connected plugins and check if they modify the password authentication
         plugin_result = None
         for plugin in PluginImplementations(IAuthorize):
-            plugin_result = plugin.on_authenticate_password(request, self.login, password)
+            plugin_result = plugin.on_authenticate_password(
+                request, self.login, password
+            )
             break  # Only one plugging will be called to extend authenticate_user
         if plugin_result is None:
             return check_login(self.login, password, request)
@@ -44,15 +50,23 @@ class User(object):
 
     def get_gravatar_url(self, size):
         default = "identicon"
-        gravatar_url = "https://www.gravatar.com/avatar/" + hashlib.md5(self.email.lower()).hexdigest() + "?"
-        gravatar_url += urllib.parse.urlencode({'d': default, 's': str(size)})
+        gravatar_url = (
+            "https://www.gravatar.com/avatar/"
+            + hashlib.md5(self.email.lower()).hexdigest()
+            + "?"
+        )
+        gravatar_url += urllib.parse.urlencode({"d": default, "s": str(size)})
         return gravatar_url
 
     def update_gravatar_url(self):
         default = "identicon"
         size = 45
-        gravatar_url = "https://www.gravatar.com/avatar/" + hashlib.md5(self.email.lower()).hexdigest() + "?"
-        gravatar_url += urllib.parse.urlencode({'d': default, 's': str(size)})
+        gravatar_url = (
+            "https://www.gravatar.com/avatar/"
+            + hashlib.md5(self.email.lower()).hexdigest()
+            + "?"
+        )
+        gravatar_url += urllib.parse.urlencode({"d": default, "s": str(size)})
         self.gravatarURL = gravatar_url
 
 
@@ -63,9 +77,12 @@ class Assistant(object):
         self.email = assistant_data["coll_email"]
         if self.email is not None:
             if validators.email(self.email):
-                gravatar_url = "https://www.gravatar.com/avatar/" + hashlib.md5(
-                    self.email.lower().encode('utf8')).hexdigest() + "?"
-                gravatar_url += urllib.parse.urlencode({'d': default, 's': str(size)})
+                gravatar_url = (
+                    "https://www.gravatar.com/avatar/"
+                    + hashlib.md5(self.email.lower().encode("utf8")).hexdigest()
+                    + "?"
+                )
+                gravatar_url += urllib.parse.urlencode({"d": default, "s": str(size)})
                 self.gravatarURL = gravatar_url
             else:
                 self.gravatarURL = ""
@@ -84,8 +101,12 @@ class Assistant(object):
         if self.email is not None:
             if validators.email(self.email):
                 default = "identicon"
-                gravatar_url = "https://www.gravatar.com/avatar/" + hashlib.md5(self.email.lower()).hexdigest() + "?"
-                gravatar_url += urllib.parse.urlencode({'d': default, 's': str(size)})
+                gravatar_url = (
+                    "https://www.gravatar.com/avatar/"
+                    + hashlib.md5(self.email.lower()).hexdigest()
+                    + "?"
+                )
+                gravatar_url += urllib.parse.urlencode({"d": default, "s": str(size)})
                 return gravatar_url
             else:
                 return ""
@@ -95,11 +116,19 @@ class Assistant(object):
 
 def get_formshare_user_data(request, user, is_email):
     if is_email:
-        return map_from_schema(request.dbsession.query(userModel).filter(userModel.user_email == user).filter(
-            userModel.user_active == 1).first())
+        return map_from_schema(
+            request.dbsession.query(userModel)
+            .filter(userModel.user_email == user)
+            .filter(userModel.user_active == 1)
+            .first()
+        )
     else:
-        return map_from_schema(request.dbsession.query(userModel).filter(userModel.user_id == user).filter(
-            userModel.user_active == 1).first())
+        return map_from_schema(
+            request.dbsession.query(userModel)
+            .filter(userModel.user_id == user)
+            .filter(userModel.user_active == 1)
+            .first()
+        )
 
 
 def get_user_data(user, request):
@@ -108,7 +137,9 @@ def get_user_data(user, request):
     plugin_result = None
     plugin_result_dict = {}
     for plugin in PluginImplementations(IAuthorize):
-        plugin_result, plugin_result_dict = plugin.on_authenticate_user(request, user, email_valid)
+        plugin_result, plugin_result_dict = plugin.on_authenticate_user(
+            request, user, email_valid
+        )
         break  # Only one plugging will be called to extend authenticate_user
     if plugin_result is not None:
         if plugin_result:
@@ -130,8 +161,12 @@ def get_user_data(user, request):
 
 def get_assistant_data(project, assistant, request):
     result = map_from_schema(
-        request.dbsession.query(collaboratorModel).filter(collaboratorModel.project_id == project).filter(
-            collaboratorModel.coll_id == assistant).filter(collaboratorModel.coll_active == 1).first())
+        request.dbsession.query(collaboratorModel)
+        .filter(collaboratorModel.project_id == project)
+        .filter(collaboratorModel.coll_id == assistant)
+        .filter(collaboratorModel.coll_active == 1)
+        .first()
+    )
     if result:
         result["coll_password"] = ""  # Remove the password form the result
         return Assistant(result, project)
@@ -139,8 +174,12 @@ def get_assistant_data(project, assistant, request):
 
 
 def check_login(user, password, request):
-    result = request.dbsession.query(userModel).filter(userModel.user_id == user).filter(
-        userModel.user_active == 1).first()
+    result = (
+        request.dbsession.query(userModel)
+        .filter(userModel.user_id == user)
+        .filter(userModel.user_active == 1)
+        .first()
+    )
     if result is None:
         return False
     else:
@@ -152,8 +191,13 @@ def check_login(user, password, request):
 
 
 def check_assistant_login(project, assistant, password, request):
-    result = request.dbsession.query(collaboratorModel).filter(collaboratorModel.project_id == project).filter(
-        collaboratorModel.coll_id == assistant).filter(collaboratorModel.coll_active == 1).first()
+    result = (
+        request.dbsession.query(collaboratorModel)
+        .filter(collaboratorModel.project_id == project)
+        .filter(collaboratorModel.coll_id == assistant)
+        .filter(collaboratorModel.coll_active == 1)
+        .first()
+    )
     if result is None:
         return False
     else:

@@ -4,19 +4,19 @@ This file declares the PCA interfaces available in FormShare and their methods.
 
 
 __all__ = [
-    'Interface',
-    'IRoutes',
-    'IConfig',
-    'IResource',
-    'IPluginObserver',
-    'IPluralize',
-    'ISchema',
-    'IDatabase',
-    'IAuthorize',
-    'ITemplateHelpers',
-    'IProduct',
-    'IImportExternalData',
-    'IRepository'
+    "Interface",
+    "IRoutes",
+    "IConfig",
+    "IResource",
+    "IPluginObserver",
+    "IPluralize",
+    "ISchema",
+    "IDatabase",
+    "IAuthorize",
+    "ITemplateHelpers",
+    "IProduct",
+    "IImportExternalData",
+    "IRepository",
 ]
 
 
@@ -31,6 +31,7 @@ class Interface(_pca_Interface):
         :license: AGPL V3, see LICENSE for more details.
 
      """
+
     @classmethod
     def provided_by(cls, instance):
         return cls.implemented_by(instance.__class__)
@@ -50,6 +51,7 @@ class IRoutes(Interface):
     Plugin into the creation of routes.
 
     """
+
     def before_mapping(self, config):
         """
         Called before the mapping of routes made by FormShare.
@@ -123,6 +125,7 @@ class IPluralize(Interface):
     """
         Allows to hook into the pluralization function so plugins can extend the pluralization of FormShare
     """
+
     def pluralize(self, noun, locale):
         """
             Called the packages are created
@@ -219,7 +222,9 @@ class IAuthorize(Interface):
         dashboard will be loaded
 
         """
-        raise NotImplementedError("on_authenticate_user must be implemented in subclasses")
+        raise NotImplementedError(
+            "on_authenticate_user must be implemented in subclasses"
+        )
 
     def on_authenticate_user(self, request, user_id, user_is_email):
         """
@@ -236,7 +241,9 @@ class IAuthorize(Interface):
                         user_name : With the full name of the userID authenticating
                         user_about : With the bio data of the userID authenticating or None
                 """
-        raise NotImplementedError("on_authenticate_user must be implemented in subclasses")
+        raise NotImplementedError(
+            "on_authenticate_user must be implemented in subclasses"
+        )
 
     def on_authenticate_password(self, request, user_id, password):
         """
@@ -249,7 +256,9 @@ class IAuthorize(Interface):
                         False if the password is incorrect.
                         Otherwise true
                         """
-        raise NotImplementedError("on_authenticate_password must be implemented in subclasses")
+        raise NotImplementedError(
+            "on_authenticate_password must be implemented in subclasses"
+        )
 
 
 class ITemplateHelpers(Interface):
@@ -260,6 +269,7 @@ class ITemplateHelpers(Interface):
     template helper functions, which custom templates can then access via the
     ``request.h`` variable.
     """
+
     def get_helpers(self):
         """
         Return a dict mapping names to helper functions.
@@ -280,6 +290,7 @@ class IProduct(Interface):
     """
         Allows to hook into FormShare's Celery task manager.
     """
+
     def register_products(self, config):
         """
             Called by the host application so plugins can add new products with Celery as task manager
@@ -298,9 +309,13 @@ class IProduct(Interface):
         :param product_code: Product code
         :return: String/None. The description of the product otherwise None MUST be returned
         """
-        raise NotImplementedError("get_product_description must be implemented in subclasses")
+        raise NotImplementedError(
+            "get_product_description must be implemented in subclasses"
+        )
 
-    def before_download_private_product(self, request, project, form, product, output, file_name, mime_type):
+    def before_download_private_product(
+        self, request, project, form, product, output, file_name, mime_type
+    ):
         """
         Called before the a product gets downloaded. Must return true to indicate that the download should proceed.
         :param request: Pyramid request object
@@ -312,9 +327,13 @@ class IProduct(Interface):
         :param mime_type: Mime type of the file name
         :return: True / False
         """
-        raise NotImplementedError("before_download_private_product must be implemented in subclasses")
+        raise NotImplementedError(
+            "before_download_private_product must be implemented in subclasses"
+        )
 
-    def before_download_public_product(self, request, project, form, product, output, file_name, mime_type):
+    def before_download_public_product(
+        self, request, project, form, product, output, file_name, mime_type
+    ):
         """
         Called before the a product gets downloaded. Must return true to indicate that the download should proceed.
         :param request: Pyramid request object
@@ -326,9 +345,13 @@ class IProduct(Interface):
         :param mime_type: Mime type of the file name
         :return: True / False
         """
-        raise NotImplementedError("before_download_public_product must be implemented in subclasses")
+        raise NotImplementedError(
+            "before_download_public_product must be implemented in subclasses"
+        )
 
-    def before_download_product_by_api(self, request, project, form, product, output, file_name, mime_type):
+    def before_download_product_by_api(
+        self, request, project, form, product, output, file_name, mime_type
+    ):
         """
         Called before the a product gets downloaded. Must return true to indicate that the download should proceed.
         :param request: Pyramid request object
@@ -340,16 +363,34 @@ class IProduct(Interface):
         :param mime_type: Mime type of the file name
         :return: True / False
         """
-        raise NotImplementedError("before_download_public_product must be implemented in subclasses")
+        raise NotImplementedError(
+            "before_download_public_product must be implemented in subclasses"
+        )
 
 
 class IImportExternalData(Interface):
     """
         Allows to create new data imports
     """
-    def import_external_data(self, request, user, project, form, odk_dir, form_directory, schema, assistant, temp_dir,
-                             project_code, geopoint_variable, project_of_assistant, import_type, post_data,
-                             ignore_xform):
+
+    def import_external_data(
+        self,
+        request,
+        user,
+        project,
+        form,
+        odk_dir,
+        form_directory,
+        schema,
+        assistant,
+        temp_dir,
+        project_code,
+        geopoint_variable,
+        project_of_assistant,
+        import_type,
+        post_data,
+        ignore_xform,
+    ):
         """
         Called by the host application so plugins can import new types of data into FormShare. You should do this as a
         product and use Celery to not hang a request in case the import process several files
@@ -370,7 +411,9 @@ class IImportExternalData(Interface):
         :param ignore_xform: Whether to ignore the ignore_xform ID while importing
         :return: None
         """
-        raise NotImplementedError("import_external_data must be implemented in subclasses")
+        raise NotImplementedError(
+            "import_external_data must be implemented in subclasses"
+        )
 
 
 class IRepository(Interface):
@@ -379,7 +422,10 @@ class IRepository(Interface):
         Please note that there is no "After creating repository", this is because the creation of the repository
         is runs in a background as a Celery task.
     """
-    def before_creating_repository(self, request, project, form, cnf_file, create_file, insert_file, schema):
+
+    def before_creating_repository(
+        self, request, project, form, cnf_file, create_file, insert_file, schema
+    ):
         """
         Called before creating a repository so plugins can perform extra actions or overwrite the process
         :param request: Pyramid request object
@@ -392,7 +438,9 @@ class IRepository(Interface):
         :param schema: Schema to create
         :return: True if FormShare should continue creating the repository, otherwise return False
         """
-        raise NotImplementedError("before_creating_repository must be implemented in subclasses")
+        raise NotImplementedError(
+            "before_creating_repository must be implemented in subclasses"
+        )
 
     def on_creating_repository(self, request, project, form, task_id):
         """
@@ -403,10 +451,21 @@ class IRepository(Interface):
         :param task_id: Celery task ID creating the repository
         :return: None
         """
-        raise NotImplementedError("on_creating_repository must be implemented in subclasses")
+        raise NotImplementedError(
+            "on_creating_repository must be implemented in subclasses"
+        )
 
-    def custom_repository_process(self, request, project, form, cnf_file, create_file, insert_file, schema,
-                                  primary_key):
+    def custom_repository_process(
+        self,
+        request,
+        project,
+        form,
+        cnf_file,
+        create_file,
+        insert_file,
+        schema,
+        primary_key,
+    ):
         """
         Called after FormShare tells Celery to create the repository if before_creating_repository == True. You can
         use this to create your own version of the repository. You MUST use Celery to not block the request. The
@@ -422,7 +481,9 @@ class IRepository(Interface):
         :param primary_key: Primary key that should be used
         :return: Celery task ID
         """
-        raise NotImplementedError("custom_repository_process must be implemented in subclasses")
+        raise NotImplementedError(
+            "custom_repository_process must be implemented in subclasses"
+        )
 
 
 class IPluginObserver(Interface):

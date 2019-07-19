@@ -25,7 +25,8 @@ import sys
 
 PY2 = sys.version_info[0] <= 2
 
-__all__ = ['ColorHash']
+__all__ = ["ColorHash"]
+
 
 def crc32_hash(obj):
     """Generate a hash for ``obj``.
@@ -38,8 +39,8 @@ def crc32_hash(obj):
     if PY2:
         bs = str(obj)
     else:
-        bs = str(obj).encode('utf-8')
-    return crc32(bs) & 0xffffffff
+        bs = str(obj).encode("utf-8")
+    return crc32(bs) & 0xFFFFFFFF
 
 
 def hsl2rgb(hsl):
@@ -86,14 +87,19 @@ def rgb2hex(rgb):
     '#ff0000'
     """
     try:
-        return '#%02x%02x%02x' % rgb
+        return "#%02x%02x%02x" % rgb
     except TypeError:
         raise ValueError(rgb)
 
 
-def color_hash(obj, hashfunc=crc32_hash,
-               lightness=(0.35, 0.5, 0.65), saturation=(0.35, 0.5, 0.65),
-               min_h=None, max_h=None):
+def color_hash(
+    obj,
+    hashfunc=crc32_hash,
+    lightness=(0.35, 0.5, 0.65),
+    saturation=(0.35, 0.5, 0.65),
+    min_h=None,
+    max_h=None,
+):
     """Calculate the color for the given object.
 
     Args:
@@ -123,7 +129,7 @@ def color_hash(obj, hashfunc=crc32_hash,
         max_h = 360
 
     hash = hashfunc(obj)
-    h = (hash % 359)
+    h = hash % 359
     if min_h is not None and max_h is not None:
         h = (h / 1000) * (max_h - min_h) + min_h
     hash //= 360

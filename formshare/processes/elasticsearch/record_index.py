@@ -22,21 +22,17 @@ def _get_record_index_definition(number_of_shards, number_of_replicas):
         "settings": {
             "index": {
                 "number_of_shards": number_of_shards,
-                "number_of_replicas": number_of_replicas
+                "number_of_replicas": number_of_replicas,
             }
         },
         "mappings": {
             "record": {
                 "properties": {
-                    "schema": {
-                        "type": "keyword"
-                    },
-                    "table": {
-                        "type": "keyword"
-                    }
+                    "schema": {"type": "keyword"},
+                    "table": {"type": "keyword"},
                 }
             }
-        }
+        },
     }
     return _json
 
@@ -47,30 +43,30 @@ def create_connection(settings):
     :return: A tested (pinged) connection to ElasticSearch
     """
     try:
-        host = settings['elasticsearch.records.host']
+        host = settings["elasticsearch.records.host"]
     except KeyError:
         host = "localhost"
 
     try:
-        port = int(settings['elasticsearch.records.port'])
+        port = int(settings["elasticsearch.records.port"])
     except KeyError:
         port = 9200
 
     try:
-        url_prefix = settings['elasticsearch.records.url_prefix']
+        url_prefix = settings["elasticsearch.records.url_prefix"]
     except KeyError:
         url_prefix = None
 
     try:
-        use_ssl = settings['elasticsearch.records.use_ssl']
-        if use_ssl == 'True':
+        use_ssl = settings["elasticsearch.records.use_ssl"]
+        if use_ssl == "True":
             use_ssl = True
         else:
             use_ssl = False
     except KeyError:
         use_ssl = False
 
-    cnt_params = {'host': host, 'port': port}
+    cnt_params = {"host": host, "port": port}
     if url_prefix is not None:
         cnt_params["url_prefix"] = url_prefix
     if use_ssl:
@@ -83,17 +79,19 @@ def create_connection(settings):
 
 
 def get_index_name(user, project, form):
-    return "formshare_records_" + user.lower() + "_" + project.lower() + "_" + form.lower()
+    return (
+        "formshare_records_" + user.lower() + "_" + project.lower() + "_" + form.lower()
+    )
 
 
 def create_record_index(settings, user, project, form):
     try:
-        number_of_shards = int(settings['elasticsearch.records.number_of_shards'])
+        number_of_shards = int(settings["elasticsearch.records.number_of_shards"])
     except KeyError:
         number_of_shards = 5
 
     try:
-        number_of_replicas = int(settings['elasticsearch.records.number_of_replicas'])
+        number_of_replicas = int(settings["elasticsearch.records.number_of_replicas"])
     except KeyError:
         number_of_replicas = 1
 
@@ -101,11 +99,13 @@ def create_record_index(settings, user, project, form):
     if connection is not None:
         try:
             index_name = get_index_name(user, project, form)
-            connection.indices.create(index_name,
-                                      body=_get_record_index_definition(number_of_shards, number_of_replicas))
+            connection.indices.create(
+                index_name,
+                body=_get_record_index_definition(number_of_shards, number_of_replicas),
+            )
         except RequestError as e:
             if e.status_code == 400:
-                if e.error.find('already_exists') >= 0:
+                if e.error.find("already_exists") >= 0:
                     pass
                 else:
                     raise e
@@ -123,7 +123,7 @@ def delete_record_index(settings, user, project, form):
             connection.indices.delete(index_name, ignore=[400, 404])
         except RequestError as e:
             if e.status_code == 400:
-                if e.error.find('already_exists') >= 0:
+                if e.error.find("already_exists") >= 0:
                     pass
                 else:
                     raise e
@@ -138,10 +138,10 @@ def delete_from_record_index(settings, user, project, form, record_uuid):
     if connection is not None:
         try:
             index_name = get_index_name(user, project, form)
-            connection.delete(index=index_name, doc_type='record', id=record_uuid)
+            connection.delete(index=index_name, doc_type="record", id=record_uuid)
         except RequestError as e:
             if e.status_code == 400:
-                if e.error.find('already_exists') >= 0:
+                if e.error.find("already_exists") >= 0:
                     pass
                 else:
                     raise e
@@ -155,7 +155,9 @@ def add_record(settings, user, project, form, schema, table, record_uuid):
     connection = create_connection(settings)
     if connection is not None:
         index_name = get_index_name(user, project, form)
-        data_dict = {'schema': schema, 'table': table}
-        connection.index(index=index_name, doc_type='record', id=record_uuid, body=data_dict)
+        data_dict = {"schema": schema, "table": table}
+        connection.index(
+            index=index_name, doc_type="record", id=record_uuid, body=data_dict
+        )
     else:
         raise RequestError("Cannot connect to ElasticSearch")

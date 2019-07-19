@@ -1,41 +1,83 @@
-from ...models import map_to_schema, User, map_from_schema, Userproject, Odkform, Project
+from ...models import (
+    map_to_schema,
+    User,
+    map_from_schema,
+    Userproject,
+    Odkform,
+    Project,
+)
 from sqlalchemy.exc import IntegrityError
 import logging
 import validators
 
 __all__ = [
-    'register_user', 'user_exists', 'get_user_details', 'update_profile', 'get_user_name', 'get_user_by_api_key',
-    'update_password'
+    "register_user",
+    "user_exists",
+    "get_user_details",
+    "update_profile",
+    "get_user_name",
+    "get_user_by_api_key",
+    "update_password",
 ]
 
 log = logging.getLogger("formshare")
 
 
 def get_user_stats(request, user):
-    res = {'num_projects': request.dbsession.query(Userproject).filter(Userproject.user_id == user).filter(
-        Userproject.project_accepted == 1).count(),
-           'num_forms': request.dbsession.query(Odkform).filter(Odkform.project_id == Userproject.project_id).filter(
-               Userproject.user_id == user).filter(Userproject.project_accepted == 1).count()}
+    res = {
+        "num_projects": request.dbsession.query(Userproject)
+        .filter(Userproject.user_id == user)
+        .filter(Userproject.project_accepted == 1)
+        .count(),
+        "num_forms": request.dbsession.query(Odkform)
+        .filter(Odkform.project_id == Userproject.project_id)
+        .filter(Userproject.user_id == user)
+        .filter(Userproject.project_accepted == 1)
+        .count(),
+    }
 
-    last_project = request.dbsession.query(Project.project_cdate).filter(
-        Project.project_id == Userproject.project_id).filter(Userproject.user_id == user).order_by(
-        Project.project_cdate.desc()).first()
+    last_project = (
+        request.dbsession.query(Project.project_cdate)
+        .filter(Project.project_id == Userproject.project_id)
+        .filter(Userproject.user_id == user)
+        .order_by(Project.project_cdate.desc())
+        .first()
+    )
     if last_project is not None:
         res["last_project"] = last_project.project_cdate
     else:
         res["last_project"] = None
 
-    my_projects = request.dbsession.query(Userproject.project_id).filter(Userproject.user_id == user).filter(
-        Userproject.access_type == 1)
-    my_collaborators = map_from_schema(request.dbsession.query(User).filter(Userproject.user_id == User.user_id).filter(
-        Userproject.access_type != 1).filter(Userproject.project_accepted == 1).filter(
-        Userproject.project_id.in_(my_projects)).distinct(User.user_id).all())
+    my_projects = (
+        request.dbsession.query(Userproject.project_id)
+        .filter(Userproject.user_id == user)
+        .filter(Userproject.access_type == 1)
+    )
+    my_collaborators = map_from_schema(
+        request.dbsession.query(User)
+        .filter(Userproject.user_id == User.user_id)
+        .filter(Userproject.access_type != 1)
+        .filter(Userproject.project_accepted == 1)
+        .filter(Userproject.project_id.in_(my_projects))
+        .distinct(User.user_id)
+        .all()
+    )
 
-    not_my_projects = request.dbsession.query(Userproject.project_id).filter(Userproject.user_id == user).filter(
-        Userproject.access_type != 1).filter(Userproject.project_accepted == 1)
-    collaborators = map_from_schema(request.dbsession.query(User).filter(Userproject.user_id == User.user_id).filter(
-        Userproject.access_type == 1).filter(Userproject.project_accepted == 1).filter(
-        Userproject.project_id.in_(not_my_projects)).distinct(User.user_id).all())
+    not_my_projects = (
+        request.dbsession.query(Userproject.project_id)
+        .filter(Userproject.user_id == user)
+        .filter(Userproject.access_type != 1)
+        .filter(Userproject.project_accepted == 1)
+    )
+    collaborators = map_from_schema(
+        request.dbsession.query(User)
+        .filter(Userproject.user_id == User.user_id)
+        .filter(Userproject.access_type == 1)
+        .filter(Userproject.project_accepted == 1)
+        .filter(Userproject.project_id.in_(not_my_projects))
+        .distinct(User.user_id)
+        .all()
+    )
 
     if len(my_collaborators) > 0:
         total_collaborators = my_collaborators
@@ -68,11 +110,15 @@ def get_user_stats(request, user):
 
 def register_user(request, user_data):
     _ = request.translate
-    user_data.pop('user_password2', None)
+    user_data.pop("user_password2", None)
     mapped_data = map_to_schema(User, user_data)
     email_valid = validators.email(mapped_data["user_email"])
     if email_valid:
-        res = request.dbsession.query(User).filter(User.user_email == mapped_data["user_email"]).first()
+        res = (
+            request.dbsession.query(User)
+            .filter(User.user_email == mapped_data["user_email"])
+            .first()
+        )
         if res is None:
             new_user = User(**mapped_data)
             try:
@@ -85,7 +131,11 @@ def register_user(request, user_data):
                 return False, _("Username is already taken")
             except Exception as e:
                 request.dbsession.rollback()
-                log.error("Error {} when inserting user {}".format(str(e), mapped_data["user_id"]))
+                log.error(
+                    "Error {} when inserting user {}".format(
+                        str(e), mapped_data["user_id"]
+                    )
+                )
                 return False, str(e)
         else:
             log.error("Duplicated user with email {}".format(mapped_data["user_email"]))
@@ -96,14 +146,24 @@ def register_user(request, user_data):
 
 
 def user_exists(request, user):
-    res = request.dbsession.query(User).filter(User.user_id == user).filter(User.user_active == 1).first()
+    res = (
+        request.dbsession.query(User)
+        .filter(User.user_id == user)
+        .filter(User.user_active == 1)
+        .first()
+    )
     if res is None:
         return False
     return True
 
 
 def get_user_details(request, user):
-    res = request.dbsession.query(User).filter(User.user_id == user).filter(User.user_active == 1).first()
+    res = (
+        request.dbsession.query(User)
+        .filter(User.user_id == user)
+        .filter(User.user_active == 1)
+        .first()
+    )
     if res is not None:
         result = map_from_schema(res)
         result["user_stats"] = get_user_stats(request, user)
@@ -112,7 +172,12 @@ def get_user_details(request, user):
 
 
 def get_user_name(request, user):
-    res = request.dbsession.query(User).filter(User.user_id == user).filter(User.user_active == 1).first()
+    res = (
+        request.dbsession.query(User)
+        .filter(User.user_id == user)
+        .filter(User.user_active == 1)
+        .first()
+    )
     if res is not None:
         return res.user_name
     else:
@@ -132,17 +197,24 @@ def update_profile(request, user, profile_data):
 
 
 def get_user_by_api_key(request, api_key):
-    res = request.dbsession.query(User).filter(User.user_apikey == api_key).filter(User.user_active == 1).first()
+    res = (
+        request.dbsession.query(User)
+        .filter(User.user_apikey == api_key)
+        .filter(User.user_active == 1)
+        .first()
+    )
     if res is not None:
         result = map_from_schema(res)
-        result["user_stats"] = get_user_stats(request, result['user_id'])
+        result["user_stats"] = get_user_stats(request, result["user_id"])
         return result
     return None
 
 
 def update_password(request, user, password):
     try:
-        request.dbsession.query(User).filter(User.user_id == user).update({'user_password': password})
+        request.dbsession.query(User).filter(User.user_id == user).update(
+            {"user_password": password}
+        )
         request.dbsession.flush()
         return True, ""
     except Exception as e:

@@ -1,12 +1,12 @@
 from jinja2.ext import babel_extract as extract_jinja2
 import formshare.config.jinja_extensions as je
 
-jinja_extensions = '''
+jinja_extensions = """
                     jinja2.ext.do,jinja2.ext.i18n,                    
                     formshare.config.jinja_extensions:JSResourceExtension,
                     formshare.config.jinja_extensions:CSSResourceExtension,
                     formshare.config.jinja_extensions:ExtendThis,
-                   '''
+                   """
 
 
 def jinja2_cleaner(fileobj, *args, **kw):
@@ -25,7 +25,7 @@ def jinja2_cleaner(fileobj, *args, **kw):
     :return:
     """
 
-    kw['options']['extensions'] = jinja_extensions
+    kw["options"]["extensions"] = jinja_extensions
 
     raw_extract = extract_jinja2(fileobj, *args, **kw)
 

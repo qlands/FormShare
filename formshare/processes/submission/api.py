@@ -3,9 +3,16 @@ import os
 import shutil
 import glob
 from subprocess import Popen, PIPE, check_call, CalledProcessError
-from formshare.processes.db import get_form_schema, get_form_directory, get_project_form_colors
+from formshare.processes.db import (
+    get_form_schema,
+    get_form_directory,
+    get_project_form_colors,
+)
 from formshare.processes.odk import get_odk_path
-from formshare.processes.elasticsearch.repository_index import get_datasets_from_form, get_datasets_from_project
+from formshare.processes.elasticsearch.repository_index import (
+    get_datasets_from_form,
+    get_datasets_from_project,
+)
 from formshare.processes.color_hash import ColorHash
 from formshare.models.formshare import Submission, Jsonlog
 import logging
@@ -18,25 +25,49 @@ import re
 import json
 import paginate
 from sqlalchemy import create_engine
-from formshare.processes.elasticsearch.repository_index import delete_dataset_index, delete_from_dataset_index
-from formshare.processes.elasticsearch.record_index import delete_record_index, delete_from_record_index
+from formshare.processes.elasticsearch.repository_index import (
+    delete_dataset_index,
+    delete_from_dataset_index,
+)
+from formshare.processes.elasticsearch.record_index import (
+    delete_record_index,
+    delete_from_record_index,
+)
 from webhelpers2.html import literal
 
-__all__ = ['get_submission_media_files', 'json_to_csv', 'get_gps_points_from_form',
-           'get_gps_points_from_project', 'get_tables_from_form', 'update_table_desc', 'update_field_desc',
-           'update_field_sensitive', 'get_fields_from_table', 'get_table_desc', 'is_field_key', 'get_request_data',
-           'update_data', 'get_request_data_jqgrid', 'delete_submission', 'delete_all_submission']
+__all__ = [
+    "get_submission_media_files",
+    "json_to_csv",
+    "get_gps_points_from_form",
+    "get_gps_points_from_project",
+    "get_tables_from_form",
+    "update_table_desc",
+    "update_field_desc",
+    "update_field_sensitive",
+    "get_fields_from_table",
+    "get_table_desc",
+    "is_field_key",
+    "get_request_data",
+    "update_data",
+    "get_request_data_jqgrid",
+    "delete_submission",
+    "delete_all_submission",
+]
 
 log = logging.getLogger("formshare")
 
 
-def get_gps_points_from_project(request, user, project, project_id, query_from=None, query_size=None):
-    total, datasets = get_datasets_from_project(request.registry.settings, user, project, query_from, query_size)
+def get_gps_points_from_project(
+    request, user, project, project_id, query_from=None, query_size=None
+):
+    total, datasets = get_datasets_from_project(
+        request.registry.settings, user, project, query_from, query_size
+    )
     data = []
     colors = get_project_form_colors(request, project_id)
     for dataset in datasets:
-        if '_geopoint' in dataset.keys():
-            parts = dataset['_geopoint'].split(" ")
+        if "_geopoint" in dataset.keys():
+            parts = dataset["_geopoint"].split(" ")
             if len(parts) >= 2:
                 try:
                     float(parts[0])
@@ -47,32 +78,51 @@ def get_gps_points_from_project(request, user, project, project_id, query_from=N
                         else:
                             color = colors[dataset["_xform_id_string"]]
                         data.append(
-                            {'key': dataset["_xform_id_string"], 'lati': parts[0], 'long': parts[1],
-                             'options': {'iconShape': 'circle-dot', 'borderWidth': 5, 'borderColor': color}})
+                            {
+                                "key": dataset["_xform_id_string"],
+                                "lati": parts[0],
+                                "long": parts[1],
+                                "options": {
+                                    "iconShape": "circle-dot",
+                                    "borderWidth": 5,
+                                    "borderColor": color,
+                                },
+                            }
+                        )
                     except Exception as e:
                         log.error(str(e) + " in " + dataset["_xform_id_string"])
                 except Exception as e:
                     log.error(str(e) + " in " + dataset["_xform_id_string"])
-    return True, {'points': data}
+    return True, {"points": data}
 
 
-def get_gps_points_from_form(request, user, project, form, query_from=None, query_size=None):
-    total, datasets = get_datasets_from_form(request.registry.settings, user, project, form, query_from, query_size)
+def get_gps_points_from_form(
+    request, user, project, form, query_from=None, query_size=None
+):
+    total, datasets = get_datasets_from_form(
+        request.registry.settings, user, project, form, query_from, query_size
+    )
     data = []
     for dataset in datasets:
-        if '_geopoint' in dataset.keys():
-            parts = dataset['_geopoint'].split(" ")
+        if "_geopoint" in dataset.keys():
+            parts = dataset["_geopoint"].split(" ")
             if len(parts) >= 2:
                 try:
                     float(parts[0])
                     try:
                         float(parts[1])
-                        data.append({'key': dataset["_submission_id"], 'lati': parts[0], 'long': parts[1]})
+                        data.append(
+                            {
+                                "key": dataset["_submission_id"],
+                                "lati": parts[0],
+                                "long": parts[1],
+                            }
+                        )
                     except Exception as e:
                         log.error(str(e) + " in " + dataset["_xform_id_string"])
                 except Exception as e:
                     log.error(str(e) + " in " + dataset["_xform_id_string"])
-    return True, {'points': data}
+    return True, {"points": data}
 
 
 def get_submission_media_files(request, project, form):
@@ -81,25 +131,28 @@ def get_submission_media_files(request, project, form):
     form_directory = get_form_directory(request, project, form)
     odk_dir = get_odk_path(request)
 
-    submissions_path = os.path.join(odk_dir, *['forms', form_directory, "submissions", '*.json'])
+    submissions_path = os.path.join(
+        odk_dir, *["forms", form_directory, "submissions", "*.json"]
+    )
     submissions = glob.glob(submissions_path)
     if submissions:
         created = False
         for submission in submissions:
             submission_id = os.path.basename(submission).replace(".json", "")
-            tmp_dir = os.path.join(odk_dir, *['tmp', uid, submission_id])
+            tmp_dir = os.path.join(odk_dir, *["tmp", uid, submission_id])
             os.makedirs(tmp_dir)
-            submissions_path = os.path.join(odk_dir,
-                                            *['forms', form_directory, "submissions", submission_id, '*.*'])
+            submissions_path = os.path.join(
+                odk_dir, *["forms", form_directory, "submissions", submission_id, "*.*"]
+            )
             files = glob.glob(submissions_path)
             if files:
                 for file in files:
                     shutil.copy(file, tmp_dir)
                     created = True
         if created:
-            tmp_dir = os.path.join(odk_dir, *['tmp', uid])
-            zip_file = os.path.join(odk_dir, *['tmp', uid])
-            shutil.make_archive(zip_file, 'zip', tmp_dir)
+            tmp_dir = os.path.join(odk_dir, *["tmp", uid])
+            zip_file = os.path.join(odk_dir, *["tmp", uid])
+            shutil.make_archive(zip_file, "zip", tmp_dir)
             return True, zip_file + ".zip"
 
     return False, _("There are no media files to download")
@@ -112,17 +165,17 @@ def json_to_csv(request, project, form):
     form_directory = get_form_directory(request, project, form)
     odk_dir = get_odk_path(request)
     # Create temporary directory
-    tmp_dir = os.path.join(odk_dir, *['tmp', uid])
+    tmp_dir = os.path.join(odk_dir, *["tmp", uid])
     os.makedirs(tmp_dir)
     # Copy all submissions to the temporary directory
-    paths = ['forms', form_directory, "submissions", "*.json"]
+    paths = ["forms", form_directory, "submissions", "*.json"]
     path = os.path.join(odk_dir, *paths)
     files = glob.glob(path)
     if files:
         for aFile in files:
             shutil.copy(aFile, tmp_dir)
     # Get all submissions
-    paths = ['tmp', uid, "*.json"]
+    paths = ["tmp", uid, "*.json"]
     path = os.path.join(odk_dir, *paths)
     files = glob.glob(path)
     if files:
@@ -134,13 +187,13 @@ def json_to_csv(request, project, form):
         stdout, stderr = p.communicate()
         if p.returncode == 0:
             uid = str(uuid.uuid4())
-            paths = ['tmp', uid + ".json"]
+            paths = ["tmp", uid + ".json"]
             json_file = os.path.join(odk_dir, *paths)
             file = open(json_file, "w")
             file.write(stdout.decode())
             file.close()
             # Convert the file to CSV
-            paths = ['tmp', uid + ".csv"]
+            paths = ["tmp", uid + ".csv"]
             csv_file = os.path.join(odk_dir, *paths)
             args = ["json2csv", json_file, csv_file]
             try:
@@ -162,7 +215,9 @@ def get_tables_from_form(request, project, form):
     _ = request.translate
     odk_dir = get_odk_path(request)
     form_directory = get_form_directory(request, project, form)
-    create_file = os.path.join(odk_dir, *['forms', form_directory, 'repository', 'create.xml'])
+    create_file = os.path.join(
+        odk_dir, *["forms", form_directory, "repository", "create.xml"]
+    )
     tree = etree.parse(create_file)
     root = tree.getroot()
     element_lkp_tables = root.find(".//lkptables")
@@ -177,20 +232,29 @@ def get_tables_from_form(request, project, form):
             num_sensitive = 0
             for field in table.getchildren():
                 if field.tag == "field":
-                    desc = field.get('name', '')
+                    desc = field.get("name", "")
                     if desc == "":
                         desc = _("Without description")
-                    fields.append({'name': field.get('name'), 'desc': desc})
-                    sfields.append(field.get('name') + "-" + desc)
-                    sensitive = field.get('sensitive', 'false')
-                    if sensitive == 'true':
+                    fields.append({"name": field.get("name"), "desc": desc})
+                    sfields.append(field.get("name") + "-" + desc)
+                    sensitive = field.get("sensitive", "false")
+                    if sensitive == "true":
                         num_sensitive = num_sensitive + 1
-            if table.get('name').find('_msel_') >= 0:
+            if table.get("name").find("_msel_") >= 0:
                 multi = True
             else:
                 multi = False
-            result.append({'name': table.get('name'), 'desc': table.get('desc'), 'fields': fields, 'lookup': False,
-                           'multi': multi, 'sfields': ",".join(sfields), 'numsensitive': num_sensitive})
+            result.append(
+                {
+                    "name": table.get("name"),
+                    "desc": table.get("desc"),
+                    "fields": fields,
+                    "lookup": False,
+                    "multi": multi,
+                    "sfields": ",".join(sfields),
+                    "numsensitive": num_sensitive,
+                }
+            )
     # Append all lookup tables
     tables = element_lkp_tables.findall(".//table")
     if tables:
@@ -200,16 +264,25 @@ def get_tables_from_form(request, project, form):
             num_sensitive = 0
             for field in table.getchildren():
                 if field.tag == "field":
-                    desc = field.get('name', '')
+                    desc = field.get("name", "")
                     if desc == "":
                         desc = _("Without description")
-                    fields.append({'name': field.get('name'), 'desc': desc})
-                    sfields.append(field.get('name') + "-" + desc)
-                    sensitive = field.get('sensitive', 'false')
-                    if sensitive == 'true':
+                    fields.append({"name": field.get("name"), "desc": desc})
+                    sfields.append(field.get("name") + "-" + desc)
+                    sensitive = field.get("sensitive", "false")
+                    if sensitive == "true":
                         num_sensitive = num_sensitive + 1
-            result.append({'name': table.get('name'), 'desc': table.get('desc'), 'fields': fields, 'lookup': True,
-                           'multi': False, 'sfields': ",".join(sfields), 'numsensitive': num_sensitive})
+            result.append(
+                {
+                    "name": table.get("name"),
+                    "desc": table.get("desc"),
+                    "fields": fields,
+                    "lookup": True,
+                    "multi": False,
+                    "sfields": ",".join(sfields),
+                    "numsensitive": num_sensitive,
+                }
+            )
 
     return result
 
@@ -217,7 +290,9 @@ def get_tables_from_form(request, project, form):
 def update_table_desc(request, project, form, table_name, description):
     odk_dir = get_odk_path(request)
     form_directory = get_form_directory(request, project, form)
-    create_file = os.path.join(odk_dir, *['forms', form_directory, 'repository', 'create.xml'])
+    create_file = os.path.join(
+        odk_dir, *["forms", form_directory, "repository", "create.xml"]
+    )
     if os.path.exists(create_file):
         tree = etree.parse(create_file)
         root = tree.getroot()
@@ -232,7 +307,9 @@ def update_table_desc(request, project, form, table_name, description):
             # Crete a backup the first time the file is edited
             if not os.path.exists(create_file + ".bk"):
                 shutil.copy(create_file, create_file + ".bk")
-            tree.write(create_file, pretty_print=True, xml_declaration=True, encoding="utf-8")
+            tree.write(
+                create_file, pretty_print=True, xml_declaration=True, encoding="utf-8"
+            )
             return True
         except Exception as e:
             log.error("updateTables. Error updating create XML. Error:" + str(e))
@@ -244,7 +321,9 @@ def update_table_desc(request, project, form, table_name, description):
 def update_field_desc(request, project, form, table_name, field_name, description):
     odk_dir = get_odk_path(request)
     form_directory = get_form_directory(request, project, form)
-    create_file = os.path.join(odk_dir, *['forms', form_directory, 'repository', 'create.xml'])
+    create_file = os.path.join(
+        odk_dir, *["forms", form_directory, "repository", "create.xml"]
+    )
     if os.path.exists(create_file):
         tree = etree.parse(create_file)
         root = tree.getroot()
@@ -257,7 +336,12 @@ def update_field_desc(request, project, form, table_name, field_name, descriptio
                 # Crete a backup the first time the file is edited
                 if not os.path.exists(create_file + ".bk"):
                     shutil.copy(create_file, create_file + ".bk")
-                tree.write(create_file, pretty_print=True, xml_declaration=True, encoding="utf-8")
+                tree.write(
+                    create_file,
+                    pretty_print=True,
+                    xml_declaration=True,
+                    encoding="utf-8",
+                )
                 return True
             except Exception as e:
                 log.error("updateField. Error updating create XML. Error:" + str(e))
@@ -268,7 +352,9 @@ def update_field_desc(request, project, form, table_name, field_name, descriptio
         return False
 
 
-def update_field_sensitive(request, project, form, table_name, field_name, sensitive, protection="None"):
+def update_field_sensitive(
+    request, project, form, table_name, field_name, sensitive, protection="None"
+):
     if sensitive:
         sensitive = "true"
     else:
@@ -276,7 +362,9 @@ def update_field_sensitive(request, project, form, table_name, field_name, sensi
         protection = "None"
     odk_dir = get_odk_path(request)
     form_directory = get_form_directory(request, project, form)
-    create_file = os.path.join(odk_dir, *['forms', form_directory, 'repository', 'create.xml'])
+    create_file = os.path.join(
+        odk_dir, *["forms", form_directory, "repository", "create.xml"]
+    )
     if os.path.exists(create_file):
         tree = etree.parse(create_file)
         root = tree.getroot()
@@ -290,7 +378,12 @@ def update_field_sensitive(request, project, form, table_name, field_name, sensi
                 # Crete a backup the first time the file is edited
                 if not os.path.exists(create_file + ".bk"):
                     shutil.copy(create_file, create_file + ".bk")
-                tree.write(create_file, pretty_print=True, xml_declaration=True, encoding="utf-8")
+                tree.write(
+                    create_file,
+                    pretty_print=True,
+                    xml_declaration=True,
+                    encoding="utf-8",
+                )
                 return True
             except Exception as e:
                 log.error("updateField. Error updating create XML. Error:" + str(e))
@@ -302,8 +395,15 @@ def update_field_sensitive(request, project, form, table_name, field_name, sensi
 
 
 def field_is_editable(field_name):
-    read_only_fields = ['surveyid', 'originid', '_submitted_by',
-                        '_submitted_date', '_geopoint', 'instanceid', 'rowuuid']
+    read_only_fields = [
+        "surveyid",
+        "originid",
+        "_submitted_by",
+        "_submitted_date",
+        "_geopoint",
+        "instanceid",
+        "rowuuid",
+    ]
     if field_name in read_only_fields:
         return "false"
     return "true"
@@ -311,9 +411,18 @@ def field_is_editable(field_name):
 
 def get_lookup_values(request, project, form, rtable, rfield):
     schema = get_form_schema(request, project, form)
-    sql = "SELECT " + rfield + "," + rfield.replace("_cod", "_des") + " FROM " + schema + "." + rtable
+    sql = (
+        "SELECT "
+        + rfield
+        + ","
+        + rfield.replace("_cod", "_des")
+        + " FROM "
+        + schema
+        + "."
+        + rtable
+    )
     records = request.dbsession.execute(sql).fetchall()
-    res_dict = {'': ''}
+    res_dict = {"": ""}
     for record in records:
         res_dict[record[0]] = record[1]
     return literal(json.dumps(res_dict))
@@ -322,18 +431,20 @@ def get_lookup_values(request, project, form, rtable, rfield):
 def get_protection_desc(request, protection_code):
     _ = request.translate
     if protection_code == "exclude":
-        return _('Exclude it')
+        return _("Exclude it")
     if protection_code == "recode":
-        return _('Recode it')
+        return _("Recode it")
     if protection_code == "unlink":
-        return _('Unlink it')
+        return _("Unlink it")
     return ""
 
 
 def get_fields_from_table(request, project, form, table_name, current_fields):
     odk_dir = get_odk_path(request)
     form_directory = get_form_directory(request, project, form)
-    create_file = os.path.join(odk_dir, *['forms', form_directory, 'repository', 'create.xml'])
+    create_file = os.path.join(
+        odk_dir, *["forms", form_directory, "repository", "create.xml"]
+    )
     tree = etree.parse(create_file)
     root = tree.getroot()
     table = root.find(".//table[@name='" + table_name + "']")
@@ -347,27 +458,39 @@ def get_fields_from_table(request, project, form, table_name, current_fields):
                     if "rowuuid" not in current_fields:
                         current_fields.append("rowuuid")
                 for cfield in current_fields:
-                    if field.get('name') == cfield:
+                    if field.get("name") == cfield:
                         found = True
                         checked = checked + 1
-                desc = field.get('desc')
-                if desc == "" or desc == 'Without label':
-                    desc = field.get('name') + " - Without description"
-                if field.get('key', 'false') == "true":
+                desc = field.get("desc")
+                if desc == "" or desc == "Without label":
+                    desc = field.get("name") + " - Without description"
+                if field.get("key", "false") == "true":
                     editable = "false"
                 else:
-                    editable = field_is_editable(field.get('name'))
-                data = {'name': field.get('name'), 'desc': desc,
-                        'type': field.get('type'), 'size': field.get('size'),
-                        'decsize': field.get('decsize'), 'checked': found,
-                        'sensitive': field.get('sensitive'), 'protection': field.get('protection', 'None'),
-                        'protection_desc': get_protection_desc(request, field.get('protection', 'None')),
-                        'key': field.get('key', 'false'), 'rlookup': field.get('rlookup', 'false'),
-                        'rtable': field.get('rtable', 'None'), 'rfield': field.get('rfield', 'None'),
-                        'editable': editable}
+                    editable = field_is_editable(field.get("name"))
+                data = {
+                    "name": field.get("name"),
+                    "desc": desc,
+                    "type": field.get("type"),
+                    "size": field.get("size"),
+                    "decsize": field.get("decsize"),
+                    "checked": found,
+                    "sensitive": field.get("sensitive"),
+                    "protection": field.get("protection", "None"),
+                    "protection_desc": get_protection_desc(
+                        request, field.get("protection", "None")
+                    ),
+                    "key": field.get("key", "false"),
+                    "rlookup": field.get("rlookup", "false"),
+                    "rtable": field.get("rtable", "None"),
+                    "rfield": field.get("rfield", "None"),
+                    "editable": editable,
+                }
 
                 if data["rlookup"] == "true":
-                    data["lookupvalues"] = get_lookup_values(request, project, form, data["rtable"], data["rfield"])
+                    data["lookupvalues"] = get_lookup_values(
+                        request, project, form, data["rtable"], data["rfield"]
+                    )
                 result.append(data)
             else:
                 break
@@ -377,7 +500,9 @@ def get_fields_from_table(request, project, form, table_name, current_fields):
 def get_table_desc(request, project, form, table_name):
     odk_dir = get_odk_path(request)
     form_directory = get_form_directory(request, project, form)
-    create_file = os.path.join(odk_dir, *['forms', form_directory, 'repository', 'create.xml'])
+    create_file = os.path.join(
+        odk_dir, *["forms", form_directory, "repository", "create.xml"]
+    )
     tree = etree.parse(create_file)
     root = tree.getroot()
     table = root.find(".//table[@name='" + table_name + "']")
@@ -393,7 +518,9 @@ def is_field_key(request, project, form, table_name, field_name):
         return True
     odk_dir = get_odk_path(request)
     form_directory = get_form_directory(request, project, form)
-    create_file = os.path.join(odk_dir, *['forms', form_directory, 'repository', 'create.xml'])
+    create_file = os.path.join(
+        odk_dir, *["forms", form_directory, "repository", "create.xml"]
+    )
     tree = etree.parse(create_file)
     root = tree.getroot()
     table = root.find(".//table[@name='" + table_name + "']")
@@ -410,39 +537,67 @@ def is_field_key(request, project, form, table_name, field_name):
     return False
 
 
-def get_request_data(request, project, form, table_name, draw, fields, start, length, order_index, order_direction,
-                     search_value):
+def get_request_data(
+    request,
+    project,
+    form,
+    table_name,
+    draw,
+    fields,
+    start,
+    length,
+    order_index,
+    order_direction,
+    search_value,
+):
     _ = request.translate
     schema = get_form_schema(request, project, form)
-    sql_fields = ','.join(fields)
+    sql_fields = ",".join(fields)
     not_null_fields_array = []
     for a_field in fields:
         not_null_fields_array.append("IFNULL(" + a_field + ",'')")
-    not_null_fields = ','.join(not_null_fields_array)
+    not_null_fields = ",".join(not_null_fields_array)
     table_order = fields[order_index]
 
     if search_value == "":
         sql = "SELECT " + sql_fields + " FROM " + schema + "." + table_name
-        where_clause = ''
+        where_clause = ""
     else:
         sql = "SELECT " + sql_fields + " FROM " + schema + "." + table_name
-        sql = sql + " WHERE LOWER(CONCAT(" + not_null_fields + ")) like '%" + search_value.lower() + "%'"
-        where_clause = " WHERE LOWER(CONCAT(" + not_null_fields + ")) like '%" + search_value.lower() + "%'"
+        sql = (
+            sql
+            + " WHERE LOWER(CONCAT("
+            + not_null_fields
+            + ")) like '%"
+            + search_value.lower()
+            + "%'"
+        )
+        where_clause = (
+            " WHERE LOWER(CONCAT("
+            + not_null_fields
+            + ")) like '%"
+            + search_value.lower()
+            + "%'"
+        )
 
     sql = sql + " ORDER BY " + table_order + " " + order_direction
     sql = sql + " LIMIT " + str(start) + "," + str(length)
-    count_sql = "SELECT count(*) as total FROM " + schema + "." + table_name + where_clause
+    count_sql = (
+        "SELECT count(*) as total FROM " + schema + "." + table_name + where_clause
+    )
     mark_changed(request.dbsession)
     records = request.dbsession.execute(sql).fetchall()
     data = []
     if records is not None:
         for record in records:
-            a_record = {'DT_RowId': record.rowuuid}
+            a_record = {"DT_RowId": record.rowuuid}
             for field in fields:
                 try:
-                    if isinstance(record[field], datetime.datetime) or isinstance(record[field],
-                                                                                  datetime.date) or isinstance(
-                            record[field], datetime.time):
+                    if (
+                        isinstance(record[field], datetime.datetime)
+                        or isinstance(record[field], datetime.date)
+                        or isinstance(record[field], datetime.time)
+                    ):
                         a_record[field] = record[field].isoformat().replace("T", " ")
                     else:
                         if isinstance(record[field], float):
@@ -459,44 +614,91 @@ def get_request_data(request, project, form, table_name, draw, fields, start, le
                                     else:
                                         a_record[field] = record[field][-12:]
                 except Exception as e:
-                    a_record[field] = _("AJAX Data error. Report this error as an issue on ") \
-                                      + "https://github.com/qlands/FormShare"
+                    a_record[field] = (
+                        _("AJAX Data error. Report this error as an issue on ")
+                        + "https://github.com/qlands/FormShare"
+                    )
                     log.error("AJAX Error in field " + field + ". Error: " + str(e))
             data.append(a_record)
 
     records = request.dbsession.execute(count_sql).fetchone()
     total = records.total
 
-    result = {'draw': draw, 'recordsTotal': total, 'recordsFiltered': total, 'data': data}
+    result = {
+        "draw": draw,
+        "recordsTotal": total,
+        "recordsFiltered": total,
+        "data": data,
+    }
     return result
 
 
-def get_request_data_jqgrid(request, project, form, table_name, fields, current_page, length, table_order,
-                            order_direction, search_field, search_string, search_operator):
+def get_request_data_jqgrid(
+    request,
+    project,
+    form,
+    table_name,
+    fields,
+    current_page,
+    length,
+    table_order,
+    order_direction,
+    search_field,
+    search_string,
+    search_operator,
+):
     _ = request.translate
     schema = get_form_schema(request, project, form)
-    sql_fields = ','.join(fields)
+    sql_fields = ",".join(fields)
 
     if search_field is None or search_string == "":
         sql = "SELECT " + sql_fields + " FROM " + schema + "." + table_name
-        where_clause = ''
+        where_clause = ""
     else:
         sql = "SELECT " + sql_fields + " FROM " + schema + "." + table_name
-        if search_operator == 'like':
-            sql = sql + " WHERE LOWER(" + search_field + ") like '%" + search_string.lower() + "%'"
-            where_clause = " WHERE LOWER(" + search_field + ") like '%" + search_string.lower() + "%'"
+        if search_operator == "like":
+            sql = (
+                sql
+                + " WHERE LOWER("
+                + search_field
+                + ") like '%"
+                + search_string.lower()
+                + "%'"
+            )
+            where_clause = (
+                " WHERE LOWER("
+                + search_field
+                + ") like '%"
+                + search_string.lower()
+                + "%'"
+            )
         else:
-            sql = sql + " WHERE LOWER(" + search_field + ") not like '%" + search_string.lower() + "%'"
-            where_clause = " WHERE LOWER(" + search_field + ") not like '%" + search_string.lower() + "%'"
+            sql = (
+                sql
+                + " WHERE LOWER("
+                + search_field
+                + ") not like '%"
+                + search_string.lower()
+                + "%'"
+            )
+            where_clause = (
+                " WHERE LOWER("
+                + search_field
+                + ") not like '%"
+                + search_string.lower()
+                + "%'"
+            )
 
-    count_sql = "SELECT count(*) as total FROM " + schema + "." + table_name + where_clause
+    count_sql = (
+        "SELECT count(*) as total FROM " + schema + "." + table_name + where_clause
+    )
     records = request.dbsession.execute(count_sql).fetchone()
     total = records.total
 
     collection = list(range(total))
     page = paginate.Page(collection, current_page, length)
     if page.first_item is not None:
-        start = page.first_item-1
+        start = page.first_item - 1
     else:
         start = 0
 
@@ -512,9 +714,11 @@ def get_request_data_jqgrid(request, project, form, table_name, fields, current_
             a_record = {}
             for field in fields:
                 try:
-                    if isinstance(record[field], datetime.datetime) or isinstance(record[field],
-                                                                                  datetime.date) or isinstance(
-                            record[field], datetime.time):
+                    if (
+                        isinstance(record[field], datetime.datetime)
+                        or isinstance(record[field], datetime.date)
+                        or isinstance(record[field], datetime.time)
+                    ):
                         a_record[field] = record[field].isoformat().replace("T", " ")
                     else:
                         if isinstance(record[field], float):
@@ -528,12 +732,19 @@ def get_request_data_jqgrid(request, project, form, table_name, fields, current_
                                 else:
                                     a_record[field] = record[field]
                 except Exception as e:
-                    a_record[field] = _("AJAX Data error. Report this error as an issue on ") \
-                                      + "https://github.com/qlands/FormShare"
+                    a_record[field] = (
+                        _("AJAX Data error. Report this error as an issue on ")
+                        + "https://github.com/qlands/FormShare"
+                    )
                     log.error("AJAX Error in field " + field + ". Error: " + str(e))
             data.append(a_record)
 
-    result = {'records': total, 'page': current_page, 'total': page.page_count, 'rows': data}
+    result = {
+        "records": total,
+        "page": current_page,
+        "total": page.page_count,
+        "rows": data,
+    }
     return result
 
 
@@ -553,25 +764,49 @@ def update_data(request, user, project, form, table_name, row_uuid, field, value
         res = {"data": {field: value}}
         return res
     except exc.IntegrityError as e:
-        p1 = re.compile(r'`(\w+)`')
+        p1 = re.compile(r"`(\w+)`")
         m1 = p1.findall(str(e))
         if m1:
             if len(m1) == 6:
                 lookup = get_table_desc(request, project, form, m1[4])
-                return {"fieldErrors": [{'name': field,
-                                         'status': _('Cannot update value. Check the valid values in '
-                                                     'lookup table') + '"' + lookup + '"'}]}
+                return {
+                    "fieldErrors": [
+                        {
+                            "name": field,
+                            "status": _(
+                                "Cannot update value. Check the valid values in "
+                                "lookup table"
+                            )
+                            + '"'
+                            + lookup
+                            + '"',
+                        }
+                    ]
+                }
         return {
-            "fieldErrors": [{'name': field, 'status': _('Cannot update value. Check the valid '
-                                                        'values in lookup table')}]}
+            "fieldErrors": [
+                {
+                    "name": field,
+                    "status": _(
+                        "Cannot update value. Check the valid " "values in lookup table"
+                    ),
+                }
+            ]
+        }
     except Exception as ex:
         log.error(str(ex))
-        return {"fieldErrors": [{'name': field, 'status': 'Unknown error'}]}
+        return {"fieldErrors": [{"name": field, "status": "Unknown error"}]}
 
 
 def delete_submission(request, user, project, form, row_uuid, project_code):
     schema = get_form_schema(request, project, form)
-    sql = "SELECT surveyid FROM " + schema + ".maintable WHERE rowuuid = '" + row_uuid + "'"
+    sql = (
+        "SELECT surveyid FROM "
+        + schema
+        + ".maintable WHERE rowuuid = '"
+        + row_uuid
+        + "'"
+    )
     records = request.dbsession.execute(sql).fetchone()
     submission_id = records.surveyid
     try:
@@ -579,61 +814,99 @@ def delete_submission(request, user, project, form, row_uuid, project_code):
         form_directory = get_form_directory(request, project, form)
 
         # Remove the submissions from the submission DB created by ODK Tools
-        paths = ['forms', form_directory, 'submissions', "logs", "imported.sqlite"]
+        paths = ["forms", form_directory, "submissions", "logs", "imported.sqlite"]
         imported_db = os.path.join(odk_dir, *paths)
-        sqlite_engine = 'sqlite:///{}'.format(imported_db)
+        sqlite_engine = "sqlite:///{}".format(imported_db)
         engine = create_engine(sqlite_engine)
         try:
-            engine.execute("DELETE FROM submissions WHERE submission_id ='{}'".format(submission_id))
+            engine.execute(
+                "DELETE FROM submissions WHERE submission_id ='{}'".format(
+                    submission_id
+                )
+            )
         except Exception as e:
-            log.error("Error {} removing submission {} from {}").format(str(e), submission_id, imported_db)
+            log.error("Error {} removing submission {} from {}").format(
+                str(e), submission_id, imported_db
+            )
         engine.dispose()
 
         # Remove the submission from the database
-        request.dbsession.query(Submission).filter(Submission.project_id == project).\
-            filter(Submission.form_id == form).filter(Submission.submission_id == submission_id).delete()
+        request.dbsession.query(Submission).filter(
+            Submission.project_id == project
+        ).filter(Submission.form_id == form).filter(
+            Submission.submission_id == submission_id
+        ).delete()
         mark_changed(request.dbsession)
 
         # Try to remove all associated files
         try:
-            paths = ['forms', form_directory, 'submissions', submission_id]
+            paths = ["forms", form_directory, "submissions", submission_id]
             submissions_dir = os.path.join(odk_dir, *paths)
             shutil.rmtree(submissions_dir)
         except Exception as e:
-            log.error("Error deleting submission directory for id {}. Error: {}".format(submission_id, str(e)))
+            log.error(
+                "Error deleting submission directory for id {}. Error: {}".format(
+                    submission_id, str(e)
+                )
+            )
         try:
-            paths = ['forms', form_directory, 'submissions', submission_id + ".xml"]
+            paths = ["forms", form_directory, "submissions", submission_id + ".xml"]
             xml_file = os.path.join(odk_dir, *paths)
             os.remove(xml_file)
         except Exception as e:
-            log.error("Error deleting submission xml file for id {}. Error: {}".format(submission_id, str(e)))
+            log.error(
+                "Error deleting submission xml file for id {}. Error: {}".format(
+                    submission_id, str(e)
+                )
+            )
         try:
-            paths = ['forms', form_directory, 'submissions', submission_id + ".json"]
+            paths = ["forms", form_directory, "submissions", submission_id + ".json"]
             json_file = os.path.join(odk_dir, *paths)
             os.remove(json_file)
         except Exception as e:
-            log.error("Error deleting submission json file for id {}. Error: {}".format(submission_id, str(e)))
+            log.error(
+                "Error deleting submission json file for id {}. Error: {}".format(
+                    submission_id, str(e)
+                )
+            )
         try:
-            paths = ['forms', form_directory, 'submissions', submission_id + ".ordered.json"]
+            paths = [
+                "forms",
+                form_directory,
+                "submissions",
+                submission_id + ".ordered.json",
+            ]
             json_file = os.path.join(odk_dir, *paths)
             os.remove(json_file)
         except Exception as e:
-            log.error("Error deleting ordered submission json file for id {}. Error: {}".format(submission_id, str(e)))
+            log.error(
+                "Error deleting ordered submission json file for id {}. Error: {}".format(
+                    submission_id, str(e)
+                )
+            )
         try:
-            paths = ['forms', form_directory, 'submissions', submission_id + ".log"]
+            paths = ["forms", form_directory, "submissions", submission_id + ".log"]
             log_file = os.path.join(odk_dir, *paths)
 
             with open(log_file) as f:
                 lines = f.readlines()
                 for line in lines:
                     parts = line.split(",")
-                    delete_from_record_index(request.registry.settings, user, project_code, form, parts[1])
+                    delete_from_record_index(
+                        request.registry.settings, user, project_code, form, parts[1]
+                    )
 
             os.remove(log_file)
         except Exception as e:
-            log.error("Error deleting submission row logging file for id {}. Error: {}".format(submission_id, str(e)))
+            log.error(
+                "Error deleting submission row logging file for id {}. Error: {}".format(
+                    submission_id, str(e)
+                )
+            )
 
-        delete_from_dataset_index(request.registry.settings, user, project_code, form, submission_id)
+        delete_from_dataset_index(
+            request.registry.settings, user, project_code, form, submission_id
+        )
 
         # Finally remove the submission from the repository database
         sql = "DELETE FROM " + schema + ".maintable WHERE rowuuid = '" + row_uuid + "'"
@@ -641,29 +914,35 @@ def delete_submission(request, user, project, form, row_uuid, project_code):
         mark_changed(request.dbsession)
         return True
     except Exception as e:
-        log.error("Unable to remove submission {} using rowuuid {}. Error {}".format(submission_id, row_uuid, str(e)))
+        log.error(
+            "Unable to remove submission {} using rowuuid {}. Error {}".format(
+                submission_id, row_uuid, str(e)
+            )
+        )
     return False
 
 
 def delete_all_submission(request, user, project, form, project_code):
     schema = get_form_schema(request, project, form)
     try:
-        request.dbsession.query(Submission).filter(Submission.project_id == project).\
-            filter(Submission.form_id == form).delete()
-        request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project). \
-            filter(Jsonlog.form_id == form).delete()
+        request.dbsession.query(Submission).filter(
+            Submission.project_id == project
+        ).filter(Submission.form_id == form).delete()
+        request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
+            Jsonlog.form_id == form
+        ).delete()
         mark_changed(request.dbsession)
 
         odk_dir = get_odk_path(request)
         form_directory = get_form_directory(request, project, form)
-        paths = ['forms', form_directory, 'submissions']
+        paths = ["forms", form_directory, "submissions"]
         submissions_dir = os.path.join(odk_dir, *paths)
         shutil.rmtree(submissions_dir)
-        paths = ['forms', form_directory, 'submissions']
+        paths = ["forms", form_directory, "submissions"]
         os.makedirs(os.path.join(odk_dir, *paths))
-        paths = ['forms', form_directory, 'submissions', 'logs']
+        paths = ["forms", form_directory, "submissions", "logs"]
         os.makedirs(os.path.join(odk_dir, *paths))
-        paths = ['forms', form_directory, 'submissions', 'maps']
+        paths = ["forms", form_directory, "submissions", "maps"]
         os.makedirs(os.path.join(odk_dir, *paths))
 
         sql = "DELETE FROM " + schema + ".maintable"

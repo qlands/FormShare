@@ -12,8 +12,8 @@ BLOCK_SIZE = 32
 # the character used for padding--with a block cipher such as AES, the value
 # you encrypt must be a multiple of BLOCK_SIZE in length.  This character is
 # used to ensure that your value is always a multiple of BLOCK_SIZE
-PADDING = '|'
-BPADDING = b'|'
+PADDING = "|"
+BPADDING = b"|"
 
 
 def pad(s):
@@ -22,6 +22,7 @@ def pad(s):
 
 
 # encrypt with AES, encode with base64
+
 
 def encode_aes(c, s):
     # EncodeAES = lambda c, s: base64.b64encode(c.encrypt(pad(s)))
@@ -34,13 +35,13 @@ def decode_aes(c, e):
 
 
 def encode_data(request, data):
-    secret = request.registry.settings['aes.key']
+    secret = request.registry.settings["aes.key"]
     cipher = AES.new(secret)
     return encode_aes(cipher, data)
 
 
 def decode_data(request, data):
-    secret = request.registry.settings['aes.key']
+    secret = request.registry.settings["aes.key"]
     cipher = AES.new(secret)
     return decode_aes(cipher, data)
 

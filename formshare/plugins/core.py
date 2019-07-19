@@ -14,23 +14,26 @@ from pyutilib.component.core import Plugin as _pca_Plugin
 from .interfaces import IPluginObserver
 
 __all__ = [
-    'PluginImplementations', 'implements',
-    'PluginNotFoundException', 'Plugin', 'SingletonPlugin',
-    'load', 'load_all', 'unload', 'unload_all',
-    'get_plugin',
-    'plugin_loaded',
+    "PluginImplementations",
+    "implements",
+    "PluginNotFoundException",
+    "Plugin",
+    "SingletonPlugin",
+    "load",
+    "load_all",
+    "unload",
+    "unload_all",
+    "get_plugin",
+    "plugin_loaded",
 ]
 
 # Entry point group.
-PLUGINS_ENTRY_POINT_GROUP = 'formshare.plugins'
+PLUGINS_ENTRY_POINT_GROUP = "formshare.plugins"
 
 # Entry point for test plugins.
-TEST_PLUGINS_ENTRY_POINT_GROUP = 'formshare.test_plugins'
+TEST_PLUGINS_ENTRY_POINT_GROUP = "formshare.test_plugins"
 
-GROUPS = [
-    PLUGINS_ENTRY_POINT_GROUP,
-    TEST_PLUGINS_ENTRY_POINT_GROUP,
-]
+GROUPS = [PLUGINS_ENTRY_POINT_GROUP, TEST_PLUGINS_ENTRY_POINT_GROUP]
 # These lists are used to ensure that the correct extensions are enabled.
 _PLUGINS = []
 _PLUGINS_CLASS = []
@@ -83,7 +86,7 @@ def load_all(settings):
     # Clear any loaded plugins
     unload_all()
 
-    plugins = settings.get(PLUGINS_ENTRY_POINT_GROUP, '').split()
+    plugins = settings.get(PLUGINS_ENTRY_POINT_GROUP, "").split()
 
     load(*plugins)
 
@@ -100,7 +103,7 @@ def load(*plugins):
     observers = PluginImplementations(IPluginObserver)
     for plugin in plugins:
         if plugin in _PLUGINS:
-            raise Exception('Plugin `%s` already loaded' % plugin)
+            raise Exception("Plugin `%s` already loaded" % plugin)
 
         service = _get_service(plugin)
         for observer_plugin in observers:
@@ -144,7 +147,7 @@ def unload(*plugins):
             if plugin in _PLUGINS_SERVICE:
                 del _PLUGINS_SERVICE[plugin]
         else:
-            raise Exception('Cannot unload plugin `%s`' % plugin)
+            raise Exception("Cannot unload plugin `%s`" % plugin)
 
         service = _get_service(plugin)
         for observer_plugin in observers:
@@ -177,13 +180,10 @@ def _get_service(plugin_name):
     """
     if isinstance(plugin_name, str):
         for group in GROUPS:
-            iterator = iter_entry_points(
-                group=group,
-                name=plugin_name
-            )
+            iterator = iter_entry_points(group=group, name=plugin_name)
             plugin = next(iterator, None)
             if plugin:
                 return plugin.load()(name=plugin_name)
         raise PluginNotFoundException(plugin_name)
     else:
-        raise TypeError('Expected a plugin name', plugin_name)
+        raise TypeError("Expected a plugin name", plugin_name)

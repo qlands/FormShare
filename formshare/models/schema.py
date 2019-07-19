@@ -5,7 +5,11 @@ from future.utils import iteritems
 import pprint
 
 __all__ = [
-    'initialize_schema', 'add_column_to_schema', 'map_to_schema', 'map_from_schema']
+    "initialize_schema",
+    "add_column_to_schema",
+    "map_to_schema",
+    "map_from_schema",
+]
 
 _SCHEMA = []
 
@@ -14,8 +18,10 @@ def initialize_schema():
     for table in metadata.sorted_tables:
         fields = []
         for column in table.c:
-            fields.append({'name': column.name, 'storage': 'db', 'comment': column.comment})
-        _SCHEMA.append({'name': table.name, 'fields': fields})
+            fields.append(
+                {"name": column.name, "storage": "db", "comment": column.comment}
+            )
+        _SCHEMA.append({"name": table.name, "fields": fields})
 
 
 def add_column_to_schema(table_name, field_name, field_comment):
@@ -32,9 +38,15 @@ def add_column_to_schema(table_name, field_name, field_comment):
                 if field["name"] == field_name:
                     found = True
             if not found:
-                _SCHEMA[pos]["fields"].append({'name': field_name, 'storage': 'extra', 'comment': field_comment})
+                _SCHEMA[pos]["fields"].append(
+                    {"name": field_name, "storage": "extra", "comment": field_comment}
+                )
             else:
-                raise Exception("Field {} is already defined in table {}".format(table_name, field_name))
+                raise Exception(
+                    "Field {} is already defined in table {}".format(
+                        table_name, field_name
+                    )
+                )
 
 
 def get_storage_type(table_name, field_name):
@@ -74,7 +86,9 @@ def map_to_schema(model_class, data):
     if bool(extra_data):
         mapped_data["extras"] = json.dumps(extra_data)
     if not bool(mapped_data):
-        raise Exception("The mapping for table {} is empty!".format(model_class.__table__.name))
+        raise Exception(
+            "The mapping for table {} is empty!".format(model_class.__table__.name)
+        )
     return mapped_data
 
 
@@ -88,7 +102,7 @@ def map_from_schema(data):
     if type(data) is not list:
         mapped_data = {}
         if data is not None:
-            if data.__class__.__name__ != 'result':
+            if data.__class__.__name__ != "result":
                 for c in inspect(data).mapper.column_attrs:
                     if c.key != "extras":
                         mapped_data[c.key] = getattr(data, c.key)
@@ -102,7 +116,7 @@ def map_from_schema(data):
                 # noinspection PyProtectedMember
                 dict_result = data._asdict()  # This is not private
                 for key, value in dict_result.items():
-                    if value.__class__.__module__ == 'formshare.models.formshare':
+                    if value.__class__.__module__ == "formshare.models.formshare":
                         for c in inspect(value).mapper.column_attrs:
                             if c.key != "extras":
                                 mapped_data[c.key] = getattr(value, c.key)
@@ -120,7 +134,7 @@ def map_from_schema(data):
         mapped_data = []
         for row in data:
             temp = {}
-            if row.__class__.__name__ != 'result':
+            if row.__class__.__name__ != "result":
                 for c in inspect(row).mapper.column_attrs:
                     if c.key != "extras":
                         temp[c.key] = getattr(row, c.key)
@@ -134,7 +148,7 @@ def map_from_schema(data):
                 # noinspection PyProtectedMember
                 dict_result = row._asdict()  # This is not private
                 for key, value in dict_result.items():
-                    if value.__class__.__module__ == 'formshare.models.formshare':
+                    if value.__class__.__module__ == "formshare.models.formshare":
                         for c in inspect(value).mapper.column_attrs:
                             if c.key != "extras":
                                 temp[c.key] = getattr(value, c.key)

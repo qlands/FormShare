@@ -17,21 +17,29 @@ class EmptyFileError(Exception):
 
 @celeryApp.task(base=CeleryTask)
 def build_kml(settings, form_schema, kml_file, primary_key, locale):
-    parts = __file__.split('/products/')
+    parts = __file__.split("/products/")
     this_file_path = parts[0] + "/locale"
-    es = gettext.translation('formshare',
-                             localedir=this_file_path,
-                             languages=[locale])
+    es = gettext.translation("formshare", localedir=this_file_path, languages=[locale])
     es.install()
     _ = es.gettext
 
     task_id = build_kml.request.id
     engine = get_engine(settings)
-    sql = "SELECT count(surveyid) as total FROM " + form_schema + ".maintable WHERE _geopoint IS NOT NULL"
+    sql = (
+        "SELECT count(surveyid) as total FROM "
+        + form_schema
+        + ".maintable WHERE _geopoint IS NOT NULL"
+    )
     submissions = engine.execute(sql).fetchone()
     total = submissions.total
 
-    sql = "SELECT " + primary_key + ",_geopoint FROM " + form_schema + ".maintable WHERE _geopoint IS NOT NULL"
+    sql = (
+        "SELECT "
+        + primary_key
+        + ",_geopoint FROM "
+        + form_schema
+        + ".maintable WHERE _geopoint IS NOT NULL"
+    )
     submissions = engine.execute(sql).fetchall()
     index = 0
     send_25 = True
@@ -55,7 +63,7 @@ def build_kml(settings, form_schema, kml_file, primary_key, locale):
                 if send_75:
                     send_task_status_to_form(settings, task_id, _("75% processed"))
                     send_75 = False
-            geo_point = submission['_geopoint']
+            geo_point = submission["_geopoint"]
             parts = geo_point.split(" ")
             if len(parts) >= 2:
                 try:
@@ -64,7 +72,13 @@ def build_kml(settings, form_schema, kml_file, primary_key, locale):
                         key = str(key)
                     kml.newpoint(name=key, coords=[(float(parts[1]), float(parts[0]))])
                 except Exception as e:
-                    log.error("Cannot process point for {}. Error {}".format(submission[primary_key], str(e)))
+                    log.error(
+                        "Cannot process point for {}. Error {}".format(
+                            submission[primary_key], str(e)
+                        )
+                    )
         kml.save(kml_file)
     else:
-        raise EmptyFileError(_('The ODK form does not contain any submissions with GPS coordinates'))
+        raise EmptyFileError(
+            _("The ODK form does not contain any submissions with GPS coordinates")
+        )

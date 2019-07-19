@@ -6,14 +6,22 @@ from pairtree import FileNotFoundException
 import mimetypes
 import logging
 
-__all__ = ['store_file', 'get_stream', 'response_stream', 'stream_exists', 'delete_stream', 'delete_bucket']
+__all__ = [
+    "store_file",
+    "get_stream",
+    "response_stream",
+    "stream_exists",
+    "delete_stream",
+    "delete_bucket",
+]
 
 _BLOCK_SIZE = 4096 * 64  # 256K
 
 log = logging.getLogger("formshare")
 
+
 def get_storage_object(request):
-    repository_path = request.registry.settings['repository.path']
+    repository_path = request.registry.settings["repository.path"]
     if not os.path.exists(repository_path):
         os.makedirs(repository_path)
     storage_path = os.path.join(repository_path, *["storage"])
@@ -38,14 +46,20 @@ def delete_stream(request, bucket_id, file_name):
         return False
 
 
-def delete_bucket(request, bucket_id, uri_base="urn:uuid:", hashing_type="md5", shorty_length=2):
+def delete_bucket(
+    request, bucket_id, uri_base="urn:uuid:", hashing_type="md5", shorty_length=2
+):
     try:
-        repository_path = request.registry.settings['repository.path']
+        repository_path = request.registry.settings["repository.path"]
         if not os.path.exists(repository_path):
             os.makedirs(repository_path)
         storage_path = os.path.join(repository_path, *["storage"])
-        storage_object = PairtreeStorageClient(uri_base, storage_path, shorty_length=shorty_length,
-                                               hashing_type=hashing_type)
+        storage_object = PairtreeStorageClient(
+            uri_base,
+            storage_path,
+            shorty_length=shorty_length,
+            hashing_type=hashing_type,
+        )
         storage_object.delete_object(bucket_id)
     except ObjectNotFoundException:
         return
@@ -87,8 +101,8 @@ def stream_exists(request, bucket_id, file_name):
 def response_stream(stream, file_name, response):
     content_type, content_enc = mimetypes.guess_type(file_name)
     if content_type is None:
-        content_type = 'application/binary'
-    response.headers['Content-Type'] = content_type
+        content_type = "application/binary"
+    response.headers["Content-Type"] = content_type
     response.content_disposition = 'attachment; filename="' + file_name + '"'
     stream.seek(0, 2)
     file_size = stream.tell()
@@ -104,6 +118,7 @@ class FileIter(object):
     file: is a Python file pointer (or at least an object with a ``read`` method that takes a size hint).
     block_size: is an optional block size for iteration.
     """
+
     def __init__(self, file_pointer, block_size=_BLOCK_SIZE):
         self.file = file_pointer
         self.block_size = block_size
@@ -124,12 +139,9 @@ class FileIter(object):
 
 
 def _guess_type(path):
-    content_type, content_encoding = mimetypes.guess_type(
-        path,
-        strict=False
-        )
+    content_type, content_encoding = mimetypes.guess_type(path, strict=False)
     if content_type is None:
-        content_type = 'application/octet-stream'
+        content_type = "application/octet-stream"
     # str-ifying content_type is a workaround for a bug in Python 2.7.7
     # on Windows where mimetypes.guess_type returns unicode for the
     # content_type.

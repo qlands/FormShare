@@ -10,7 +10,7 @@ __all__ = ['store_file', 'get_stream', 'response_stream', 'stream_exists', 'dele
 
 _BLOCK_SIZE = 4096 * 64  # 256K
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("formshare")
 
 def get_storage_object(request):
     repository_path = request.registry.settings['repository.path']

@@ -11,7 +11,7 @@ import transaction
 from formshare.models import get_engine, get_session_factory, get_tm_session, TaskMessages, Product
 
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("formshare")
 
 
 def safe_exit(then, project_id, form_id):

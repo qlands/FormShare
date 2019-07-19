@@ -13,7 +13,7 @@ from collections import OrderedDict
 import pandas as pd
 from lxml import etree
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("formshare")
 
 
 class EmptyFileError(Exception):

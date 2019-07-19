@@ -25,13 +25,13 @@ __all__ = ['get_form_details', 'assistant_has_form', 'get_assistant_forms', 'get
            'get_form_survey_file', 'get_project_form_colors', 'reset_form_repository',
            'get_assistant_forms_for_cleaning']
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("formshare")
 
 
 def get_project_code_from_id(request, user, project_id):
     res = request.dbsession.query(Project).filter(Project.project_id == Userproject.project_id).filter(
         Userproject.user_id == user).filter(Project.project_id == project_id).filter(
-        Userproject.access_type == 1).first()
+        Userproject.access_type == 1).filter(Userproject.project_accepted == 1).first()
     if res is not None:
         return res.project_code
     return None

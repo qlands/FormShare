@@ -16,7 +16,7 @@ from sqlalchemy.sql import label
 import logging
 from sqlalchemy.event import listen
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("formshare")
 
 
 def get_assistant_name(request, project, assistant):

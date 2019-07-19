@@ -27,7 +27,7 @@ __all__ = ['get_submission_media_files', 'json_to_csv', 'get_gps_points_from_for
            'update_field_sensitive', 'get_fields_from_table', 'get_table_desc', 'is_field_key', 'get_request_data',
            'update_data', 'get_request_data_jqgrid', 'delete_submission', 'delete_all_submission']
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("formshare")
 
 
 def get_gps_points_from_project(request, user, project, project_id, query_from=None, query_size=None):

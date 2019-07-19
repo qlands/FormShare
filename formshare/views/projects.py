@@ -85,9 +85,10 @@ class ProjectDetailsView(ProjectsView):
 
         assistants, more_assistants = get_project_assistants(self.request, project_id, 8)
         if self.user is not None:
-            collaborators, more_collaborators = get_project_collaborators(self.request, project_id, self.user.login, 4)
+            collaborators, more_collaborators = get_project_collaborators(self.request, project_id, self.user.login, 4,
+                                                                          True)
         else:
-            collaborators, more_collaborators = get_project_collaborators(self.request, project_id, None, 4)
+            collaborators, more_collaborators = get_project_collaborators(self.request, project_id, None, 4, True)
         user_details = get_user_details(self.request, user_id)
         forms = get_project_forms(self.request, user_id, project_id)
         active_forms = 0
@@ -149,7 +150,7 @@ class AddProjectView(ProjectsView):
                         img.save(img_bytes, "PNG")
                         img_bytes.seek(0)
                         store_file(self.request, message, project_details['project_code']+'.png', img_bytes)
-                        modify_project(self.request, self.user.login, message,
+                        modify_project(self.request, message,
                                        {'project_code': project_details['project_code'],
                                         'project_image': project_details['project_code'] + '.png'})
 
@@ -214,7 +215,7 @@ class EditProjectView(ProjectsView):
             #  TODO: If the project becomes private then we need to unwatched it from consumers
 
             next_page = self.request.params.get('next') or self.request.url
-            modified, message = modify_project(self.request, user_id, project_id, project_details)
+            modified, message = modify_project(self.request, project_id, project_details)
             if modified:
                 # Store the notifications
                 feed_manager = get_manager(self.request)

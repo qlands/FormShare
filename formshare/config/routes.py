@@ -7,7 +7,7 @@ from ..views.projects import AddProjectView, ProjectListView, ProjectDetailsView
     EditProjectView, DeleteProjectView, AddFileToProject, RemoveFileFromProject, DownloadProjectGPSPoints, \
     ActivateProjectView, GetProjectQRCode
 from ..views.profile import UserProfileView, EditProfileView
-from ..views.collaborators import CollaboratorsListView, RemoveCollaborator
+from ..views.collaborators import CollaboratorsListView, RemoveCollaborator, AcceptCollaboration
 from ..views.assistants import AssistantsListView, AddAssistantsView, EditAssistantsView, DeleteAssistant, \
     ChangeAssistantPassword
 from ..views.api import APIUserSearchSelect2
@@ -32,6 +32,10 @@ from ..views.products import DownloadPrivateProduct, DownloadPublicProduct, Down
     PublishProduct, UnPublishProduct, DeleteProduct
 from ..views.repository_submissions import ManageSubmissions, GetFormSubmissions, DeleteFormSubmission, \
     DeleteAllSubmissions
+
+import logging
+
+log = logging.getLogger("formshare")
 
 route_list = []
 
@@ -114,6 +118,9 @@ def load_routes(config):
                             'dashboard/projects/collaborators/collaborator_list.jinja2'))
     routes.append(add_route('collaborator_remove', '/user/{userid}/project/{projcode}/collaborator/{collid}/remove',
                             RemoveCollaborator, None))
+
+    routes.append(add_route('accept_collaboration', '/user/{userid}/project/{projcode}/accept',
+                            AcceptCollaboration, 'dashboard/projects/collaborators/accept_collaboration.jinja2'))
 
     # Assistants
     routes.append(add_route('assistants', '/user/{userid}/project/{projcode}/assistants', AssistantsListView,
@@ -471,7 +478,9 @@ def load_routes(config):
 
     # Add the not found route
     config.add_notfound_view(NotFoundView, renderer='generic/404.jinja2')
-    config.add_view(ErrorView, context=Exception, renderer='generic/500.jinja2')
+
+    if log.level == logging.WARN:
+        config.add_view(ErrorView, context=Exception, renderer='generic/500.jinja2')
 
     # Call connected plugins to add any routes after FormShare
     for plugin in p.PluginImplementations(p.IRoutes):

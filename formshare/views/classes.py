@@ -23,7 +23,7 @@ from ast import literal_eval
 from formshare.processes.db import get_project_id_from_name, user_exists, get_user_details, get_active_project, \
     get_user_projects, get_project_from_assistant, get_user_by_api_key
 import logging
-log = logging.getLogger(__name__)
+log = logging.getLogger("formshare")
 
 
 class ODKView(object):

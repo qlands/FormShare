@@ -4,7 +4,7 @@
             {% block collaborator_item_desc %}
                 <div class="text-center">
                     <img class="client-avatar rounded-circle" style="width: 30px" alt="image" src="{{ request.h.get_gravatar_url(collaborator.user_email) }}">
-                    <a href="{{ request.route_url('dashboard',userid=collaborator.user_id) }}" class="client-link">{{ collaborator.user_name }}</a>
+                    <a {% if collaborator.project_accepted == 1 %}href="{{ request.route_url('dashboard',userid=collaborator.user_id) }}"{% endif %} class="client-link">{{ collaborator.user_name }}</a>
                 </div>
             {% endblock collaborator_item_desc %}
         </div>
@@ -20,6 +20,10 @@
                     {% if collaborator.access_type == 4 %}
                         <span class="badge badge-dark">{{ _('Member') }}</span>
                     {% endif %}
+                    {% if collaborator.project_accepted == 0 %}
+                        <span class="badge badge-warning">{{ _("Hasn't accepted yet") }}</span>
+                    {% endif %}
+
                 </div>
             {% endblock collaborator_item_badges %}
         </div>

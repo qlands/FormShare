@@ -9,7 +9,7 @@ __all__ = [
     'add_product', 'register_product_instance', 'product_found', 'get_products', 'stop_task', 'get_product',
     'create_product', 'add_metadata_to_product', 'get_product_directory', 'get_form_products']
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("formshare")
 
 _PRODUCTS = []
 

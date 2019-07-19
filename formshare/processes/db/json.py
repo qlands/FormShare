@@ -5,7 +5,7 @@ from sqlalchemy.exc import IntegrityError
 
 __all__ = ['add_json_log', 'update_json_status', 'add_json_history']
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("formshare")
 
 
 def add_json_log(request, project, form, submission, json_file, log_file, status, project_of_assistant, assistant):

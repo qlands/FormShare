@@ -35,7 +35,7 @@ import formshare.plugins as plugin
 from formshare.products.repository import create_database_repository
 
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("formshare")
 
 __all__ = ['generate_form_list', 'generate_manifest', 'get_form_list',
            'get_manifest', 'get_xml_form', 'get_media_file', 'get_submission_file',

@@ -25,7 +25,7 @@ from formshare.products.export.kml import generate_kml_file
 from formshare.products.export.csv import generate_public_csv_file, generate_private_csv_file
 
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("formshare")
 
 
 class FormDetails(PrivateView):

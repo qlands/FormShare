@@ -14,7 +14,7 @@ from formshare.processes.sse.messaging import send_task_status_to_form
 import gettext
 import shutil
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("formshare")
 
 
 def add_submission(engine, project, form, project_of_assistant, assistant, submission, md5sum, status):

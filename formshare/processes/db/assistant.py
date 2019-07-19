@@ -10,7 +10,7 @@ __all__ = ['get_project_assistants', 'delete_assistant', 'add_assistant', 'get_a
            'modify_assistant', 'change_assistant_password', 'get_all_assistants', 'is_assistant_active',
            'get_assistant_password', 'get_project_from_assistant', 'get_assigned_assistants']
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("formshare")
 
 
 def get_assigned_assistants(request, project, form):
@@ -42,20 +42,16 @@ def get_assigned_assistants(request, project, form):
     return assistants
 
 
-
-
-
-
-
 def get_all_assistants(request, project, user):
     res = request.dbsession.query(Project, Collaborator).filter(Project.project_id == Collaborator.project_id).filter(
         Project.project_id == Userproject.project_id).filter(Userproject.user_id == user).filter(
-        Project.project_id == project).all()
+        Userproject.project_accepted == 1).filter(Project.project_id == project).all()
     project_assistants = map_from_schema(res)
 
     res = request.dbsession.query(Project, Collaborator).filter(Project.project_id == Collaborator.project_id).filter(
         Project.project_id == Userproject.project_id).filter(Userproject.user_id == user).filter(
-        Collaborator.coll_prjshare == 1).filter(Project.project_id != project).all()
+        Userproject.project_accepted == 1).filter(Collaborator.coll_prjshare == 1).filter(
+        Project.project_id != project).all()
     other_assistants = map_from_schema(res)
 
     all_assistants = project_assistants + other_assistants
@@ -182,13 +178,15 @@ def get_project_from_assistant(request, user, requested_project, assistant):
     # Get all the assistants the user has with that name across projects
     num_assistants = request.dbsession.query(Userproject, Collaborator).filter(
         Userproject.project_id == Collaborator.project_id).filter(Userproject.user_id == user).filter(
-        Userproject.access_type <= 3).filter(Collaborator.coll_id == assistant).count()
+        Userproject.access_type <= 3).filter(Userproject.project_accepted == 1).filter(
+        Collaborator.coll_id == assistant).count()
     if num_assistants > 0:
         if num_assistants == 1:
             # If the user has just one assistant with that name then gets his data
             assistant_data = request.dbsession.query(Collaborator).filter(
                 Userproject.project_id == Collaborator.project_id).filter(Userproject.user_id == user).filter(
-                Userproject.access_type <= 3).filter(Collaborator.coll_id == assistant).first()
+                Userproject.access_type <= 3).filter(Userproject.project_accepted == 1).filter(
+                Collaborator.coll_id == assistant).first()
             # Is the assistant from the same project?
             if assistant_data.project_id == requested_project:
                 return requested_project
@@ -209,13 +207,15 @@ def is_assistant_active(request, user, project, assistant):
     # Get all the assistants the user has with that name across projects
     num_assistants = request.dbsession.query(Userproject, Collaborator).filter(
         Userproject.project_id == Collaborator.project_id).filter(Userproject.user_id == user).filter(
-        Userproject.access_type <= 3).filter(Collaborator.coll_id == assistant).count()
+        Userproject.access_type <= 3).filter(Userproject.project_accepted == 1).filter(
+        Collaborator.coll_id == assistant).count()
     if num_assistants > 0:
         if num_assistants == 1:
             # If the user has just one assistant with that name then gets his data
             assistant_data = request.dbsession.query(Collaborator).filter(
                 Userproject.project_id == Collaborator.project_id).filter(Userproject.user_id == user).filter(
-                Userproject.access_type <= 3).filter(Collaborator.coll_id == assistant).first()
+                Userproject.access_type <= 3).filter(Userproject.project_accepted == 1).filter(
+                Collaborator.coll_id == assistant).first()
             # Is the assistant from the same project?
             if assistant_data.project_id == project:
                 enum = request.dbsession.query(Collaborator).filter(

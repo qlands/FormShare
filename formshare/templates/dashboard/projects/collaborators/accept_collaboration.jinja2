@@ -1,0 +1,49 @@
+{% extends 'dashboard/index.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+
+{% block titlesection %}{{ _("Accept collaboration") }} {% endblock titlesection %}
+
+{% block css %}
+    {% cssresource request,'formshare','style' %}
+{% endblock css %}
+
+
+{% block dashheader %}
+    {% block breadcrumbs %}
+
+            <div class="row wrapper border-bottom white-bg page-heading">
+                {% include 'dashboard/projects/collaborators/snippets/brdcrbs_accept_collaboration.jinja2' %}
+            </div>
+
+    {% endblock breadcrumbs %}
+{% endblock dashheader %}
+
+{% block maincontent %}
+    <div class="ibox">
+        <div class="ibox-title">
+            <h3>{{_(' Accept collaboration') }}</h3>
+            <div class="ibox-tools">
+                <a class="fullscreen-link">
+                    <i class="fa fa-expand"></i>
+                </a>
+            </div>
+        </div>
+        <div class="ibox-content">
+            <div style="margin-top: 0px" class="middle-box text-center">
+                {{ _('You have been requested to collaborate in the project') }}<br/><h3 style="color: #026AA8">"{{ projectDetails.project_name }}"</h3>{{ _('owned by') }}<br/><h3>{{ owner }}</h3>
+                <form class="m-t" role="form" method="post" action="{{ request.url }}">
+                    {{ form.secure_form(request) }}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <button name="accept" type="submit" class="btn btn-primary block full-width m-b">{{ _('Accept collaboration') }}</button>
+                        </div>
+                        <div class="col-md-6">
+                            <button name="decline" type="submit" class="btn btn-danger block full-width m-b">{{ _('Decline collaboration') }}</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock maincontent %}

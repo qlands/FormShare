@@ -13,7 +13,7 @@ import json
 from formshare.processes.db import get_form_data, get_project_from_assistant
 import logging
 import paginate
-log = logging.getLogger(__name__)
+log = logging.getLogger("formshare")
 
 
 class JSONList(AssistantView):

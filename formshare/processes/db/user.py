@@ -8,13 +8,14 @@ __all__ = [
     'update_password'
 ]
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("formshare")
 
 
 def get_user_stats(request, user):
-    res = {'num_projects': request.dbsession.query(Userproject).filter(Userproject.user_id == user).count(),
+    res = {'num_projects': request.dbsession.query(Userproject).filter(Userproject.user_id == user).filter(
+        Userproject.project_accepted == 1).count(),
            'num_forms': request.dbsession.query(Odkform).filter(Odkform.project_id == Userproject.project_id).filter(
-               Userproject.user_id == user).count()}
+               Userproject.user_id == user).filter(Userproject.project_accepted == 1).count()}
 
     last_project = request.dbsession.query(Project.project_cdate).filter(
         Project.project_id == Userproject.project_id).filter(Userproject.user_id == user).order_by(
@@ -27,12 +28,14 @@ def get_user_stats(request, user):
     my_projects = request.dbsession.query(Userproject.project_id).filter(Userproject.user_id == user).filter(
         Userproject.access_type == 1)
     my_collaborators = map_from_schema(request.dbsession.query(User).filter(Userproject.user_id == User.user_id).filter(
-        Userproject.access_type != 1).filter(Userproject.project_id.in_(my_projects)).distinct(User.user_id).all())
+        Userproject.access_type != 1).filter(Userproject.project_accepted == 1).filter(
+        Userproject.project_id.in_(my_projects)).distinct(User.user_id).all())
 
     not_my_projects = request.dbsession.query(Userproject.project_id).filter(Userproject.user_id == user).filter(
-        Userproject.access_type != 1)
+        Userproject.access_type != 1).filter(Userproject.project_accepted == 1)
     collaborators = map_from_schema(request.dbsession.query(User).filter(Userproject.user_id == User.user_id).filter(
-        Userproject.access_type == 1).filter(Userproject.project_id.in_(not_my_projects)).distinct(User.user_id).all())
+        Userproject.access_type == 1).filter(Userproject.project_accepted == 1).filter(
+        Userproject.project_id.in_(not_my_projects)).distinct(User.user_id).all())
 
     if len(my_collaborators) > 0:
         total_collaborators = my_collaborators

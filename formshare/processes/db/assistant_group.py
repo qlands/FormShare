@@ -7,7 +7,7 @@ from sqlalchemy.exc import IntegrityError
 __all__ = ['get_project_groups', 'delete_group', 'add_group', 'get_group_data',
            'modify_group', 'get_members', 'add_assistant_to_group', 'remove_assistant_from_group']
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("formshare")
 
 
 def get_members(request, project, group):

@@ -10,7 +10,7 @@ import formshare.resources as r
 
 
 jinjaEnv = Environment()
-log = logging.getLogger(__name__)
+log = logging.getLogger("formshare")
 
 
 def initialize(path_to_templates):

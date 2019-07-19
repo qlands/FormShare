@@ -20,7 +20,7 @@ import logging
 import traceback
 from formshare.processes.email.send_email import send_error_to_technical_team
 from formshare.processes.email.send_email import send_password_email
-log = logging.getLogger(__name__)
+log = logging.getLogger("formshare")
 
 
 class HomeView(PublicView):

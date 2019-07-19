@@ -1,0 +1,18 @@
+{% block email_body %}
+    {% block email_hello %}
+        {{ _('Hello from FormShare') }}
+        https://formshare.qlands.com
+    {% endblock email_hello %}
+    {% block email_message %}
+        {{ _('You have received this email because') }} {{ requested_by }} {{ _('have requested you to collaborate with project') }} "{{ project_name }}".
+
+        {{ _('Go to the following URL to accept or decline the collaboration:') }} {{ request_url }}
+
+
+        {{ _('Please reply to')}} {{ requested_by }} {{_('if you think you got this email by mistake.') }}
+    {% endblock email_message %}
+    {% block email_goodbye %}
+        {{ _('Regards') }},
+        {{ _('The FormShare team') }}
+    {% endblock email_goodbye %}
+{% endblock email_body %}

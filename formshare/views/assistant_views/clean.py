@@ -6,7 +6,7 @@ from pyramid.httpexceptions import HTTPNotFound, HTTPFound
 from formshare.processes.db import get_form_data
 import json
 import logging
-log = logging.getLogger(__name__)
+log = logging.getLogger("formshare")
 
 
 class CleanInterface(AssistantView):

@@ -13,15 +13,25 @@ class UserDashBoardView(DashboardView):
         if self.activeProject:
             project_found = False
             for project in self.user_projects:
-                if project["project_id"] == self.activeProject['project_id']:
+                if user_id == self.user.id:
+                    if project["project_id"] == self.activeProject['project_id']:
+                        project_found = True
+                        project_data = project
+                        if self.user is not None:
+                            project_data["user_collaborates"] = is_collaborator(self.request, self.user.login,
+                                                                                self.activeProject['project_id'])
+                        else:
+                            project_data["user_collaborates"] = False
+                else:
                     project_found = True
                     project_data = project
                     if self.user is not None:
                         project_data["user_collaborates"] = is_collaborator(self.request, self.user.login,
-                                                                            self.activeProject['project_id'])
+                                                                            project["project_id"])
                     else:
                         project_data["user_collaborates"] = False
             if not project_found:
+                print("Here2! :-(")
                 raise HTTPNotFound
         
             assistants, more_assistants = get_project_assistants(self.request, self.activeProject['project_id'], 8)

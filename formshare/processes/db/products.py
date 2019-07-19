@@ -10,7 +10,7 @@ __all__ = [
     'get_form_processing_products', 'get_product_output', 'update_download_counter', 'set_output_public_state',
     'output_exists']
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("formshare")
 
 
 def add_product_instance(request, user, project, form, product, task, output_file, file_mime, process_only=False,

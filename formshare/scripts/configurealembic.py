@@ -3,7 +3,7 @@ import os
 import configparser
 from jinja2 import Environment, FileSystemLoader
 import logging
-log = logging.getLogger(__name__)
+log = logging.getLogger("formshare")
 
 
 def usage(argv):

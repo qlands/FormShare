@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-07-12 11:07-0600\n"
-"PO-Revision-Date: 2019-07-12 11:09-0600\n"
+"POT-Creation-Date: 2019-07-18 20:28-0600\n"
+"PO-Revision-Date: 2019-07-18 20:41-0600\n"
 "Last-Translator: Carlos Quiros <cquiros@qlands.com>\n"
 "Language: es\n"
 "Language-Team: English <kde-i18n-doc@kde.org>\n"
@@ -20,8 +20,8 @@ msgstr ""
 "Generated-By: Babel 2.7.0\n"
 "X-Generator: Lokalize 2.0\n"
 
-#: formshare/processes/db/assistant.py:138
-#: formshare/processes/db/assistant.py:158
+#: formshare/processes/db/assistant.py:134
+#: formshare/processes/db/assistant.py:154
 msgid "The assistant is already part of this project"
 msgstr "El asistente ya es parte de éste proyecto"
 
@@ -43,11 +43,11 @@ msgstr "El miembro ya es parte de este grupo"
 msgid "Cannot remove the member"
 msgstr "No se pudo eliminar el miembro"
 
-#: formshare/processes/db/collaborator.py:94
+#: formshare/processes/db/collaborator.py:115
 msgid "The collaborator is already part of this project"
 msgstr "El colaborador ya es parte de éste proyecto"
 
-#: formshare/processes/db/form.py:519 formshare/processes/db/project.py:289
+#: formshare/processes/db/form.py:519 formshare/processes/db/project.py:290
 msgid "The file {} already exist"
 msgstr "El archivo {} ya existe"
 
@@ -59,36 +59,40 @@ msgstr "No se pudo borrar el producto:"
 msgid "Output does not exists"
 msgstr "La salida no existe"
 
-#: formshare/processes/db/project.py:190
+#: formshare/processes/db/project.py:197
 msgid "Error allocating access"
 msgstr "Error al dar acceso"
 
-#: formshare/processes/db/project.py:200
+#: formshare/processes/db/project.py:207
 msgid "The project already exist"
 msgstr "El proyecto ha sido creado"
 
-#: formshare/processes/db/project.py:205 formshare/processes/db/project.py:225
+#: formshare/processes/db/project.py:212
 msgid "A project with name '{}' already exists in your account"
 msgstr "Un proyecto con nombre '{}' ya existe en su cuenta"
 
-#: formshare/processes/db/project.py:247
+#: formshare/processes/db/project.py:248
 msgid "If you have forms with submissions. First you need to delete such forms"
 msgstr ""
 "Si usted tiene formularios con envíos. Primero tendría que borrar los "
 "formularios"
 
-#: formshare/processes/db/user.py:82
+#: formshare/processes/db/user.py:85
 msgid "Username is already taken"
 msgstr "Este usuario ya ha esta siendo utilizado"
 
-#: formshare/processes/db/user.py:89 formshare/processes/db/user.py:92
+#: formshare/processes/db/user.py:92 formshare/processes/db/user.py:95
 msgid "Email is invalid"
 msgstr "El correo electrónico es inválido"
 
 # | msgid "Formshare - Password request"
-#: formshare/processes/email/send_email.py:63
+#: formshare/processes/email/send_email.py:71
 msgid "FormShare - Password request"
 msgstr "FormShare - Solicitud de contraseña"
+
+#: formshare/processes/email/send_email.py:97
+msgid "FormShare - Request for collaboration"
+msgstr "FormShare - Solicitud de colaboración"
 
 #: formshare/processes/odk/api.py:226 formshare/processes/odk/api.py:249
 #: formshare/processes/odk/api.py:264 formshare/processes/odk/api.py:279
@@ -483,6 +487,7 @@ msgstr "Insertando los datos en las tablas de vistas"
 #: formshare/templates/dashboard/projects/assistants/snippets/brdcrbs_assistadd.jinja2:5
 #: formshare/templates/dashboard/projects/assistants/snippets/brdcrbs_assistedit.jinja2:5
 #: formshare/templates/dashboard/projects/assistants/snippets/brdcrbs_assistlist.jinja2:5
+#: formshare/templates/dashboard/projects/collaborators/snippets/brdcrbs_accept_collaboration.jinja2:5
 #: formshare/templates/dashboard/projects/collaborators/snippets/brdcrbs_colbrtsadd.jinja2:5
 #: formshare/templates/dashboard/projects/collaborators/snippets/brdcrbs_colbrtslist.jinja2:5
 #: formshare/templates/dashboard/projects/forms/dictionary/snippets/brdcrbs_fields.jinja2:5
@@ -1594,7 +1599,7 @@ msgid "Groups"
 msgstr "Grupos"
 
 #: formshare/templates/dashboard/projects/assistant_groups/members/snippets/member_item.jinja2:19
-#: formshare/templates/dashboard/projects/collaborators/snippets/collaborator_item.jinja2:30
+#: formshare/templates/dashboard/projects/collaborators/snippets/collaborator_item.jinja2:34
 msgid "Remove"
 msgstr "Eliminar"
 
@@ -1734,6 +1739,31 @@ msgstr "Compartido"
 msgid "Assistant list"
 msgstr "Listado de asistentes"
 
+#: formshare/templates/dashboard/projects/collaborators/accept_collaboration.jinja2:5
+#: formshare/templates/dashboard/projects/collaborators/accept_collaboration.jinja2:39
+#: formshare/templates/dashboard/projects/collaborators/snippets/brdcrbs_accept_collaboration.jinja2:8
+#| msgid "Collaborations"
+msgid "Accept collaboration"
+msgstr "Aceptar la colaboración"
+
+#: formshare/templates/dashboard/projects/collaborators/accept_collaboration.jinja2:25
+#| msgid "Collaborations"
+msgid " Accept collaboration"
+msgstr "Aceptar la colaboración"
+
+#: formshare/templates/dashboard/projects/collaborators/accept_collaboration.jinja2:34
+msgid "You have been requested to collaborate in the project"
+msgstr "Se le ha solicitado su colaboración en el proyecto"
+
+#: formshare/templates/dashboard/projects/collaborators/accept_collaboration.jinja2:34
+msgid "owned by"
+msgstr "creado por"
+
+#: formshare/templates/dashboard/projects/collaborators/accept_collaboration.jinja2:42
+#| msgid "Add collaborator"
+msgid "Decline collaboration"
+msgstr "Rechazar la colaboración"
+
 #: formshare/templates/dashboard/projects/collaborators/collaborator_list.jinja2:37
 msgid "Collaborators can have different roles: "
 msgstr "Los colaborares tienen diferentes roles:"
@@ -1780,7 +1810,7 @@ msgstr "Buscar por nombre de usuario, nombre completo o correo electrónico"
 
 #: formshare/templates/dashboard/projects/collaborators/collaborator_list.jinja2:85
 #: formshare/templates/dashboard/projects/collaborators/collaborator_list.jinja2:103
-#: formshare/templates/dashboard/projects/collaborators/snippets/collaborator_item.jinja2:29
+#: formshare/templates/dashboard/projects/collaborators/snippets/collaborator_item.jinja2:33
 #: formshare/templates/dashboard/projects/forms/snippets/edit_assistant.jinja2:32
 #: formshare/templates/dashboard/projects/forms/snippets/edit_group.jinja2:30
 msgid "Change role"
@@ -1793,6 +1823,10 @@ msgstr "Cambiar role de"
 #: formshare/templates/dashboard/projects/collaborators/snippets/brdcrbs_colbrtslist.jinja2:2
 msgid "Collaborator list"
 msgstr "Listado de colaboradores"
+
+#: formshare/templates/dashboard/projects/collaborators/snippets/collaborator_item.jinja2:24
+msgid "Hasn't accepted yet"
+msgstr "No ha aceptado todavía"
 
 #: formshare/templates/dashboard/projects/forms/form_details.jinja2:87
 msgid "Form details"
@@ -3008,9 +3042,43 @@ msgid "Logout"
 msgstr "Salir"
 
 # | msgid "Welcome to FormShare"
+#: formshare/templates/email/collaborate_email.jinja2:3
 #: formshare/templates/email/recover_email.jinja2:3
 msgid "Hello from FormShare"
 msgstr "Hola desde FormShare"
+
+#: formshare/templates/email/collaborate_email.jinja2:7
+#| msgid "You have received this email because you requested us on"
+msgid "You have received this email because"
+msgstr "Usted ha recibido éste correo electrónico porque"
+
+#: formshare/templates/email/collaborate_email.jinja2:7
+msgid "have requested you to collaborate with project"
+msgstr "ha pedido su colaboración con el proyecto"
+
+#: formshare/templates/email/collaborate_email.jinja2:9
+msgid "Go to the following URL to accept or decline the collaboration:"
+msgstr "Vaya al siguiente URL para aceptar o rechazar la colaboración:"
+
+#: formshare/templates/email/collaborate_email.jinja2:12
+msgid "Please reply to"
+msgstr "Por favor responda a"
+
+#: formshare/templates/email/collaborate_email.jinja2:12
+msgid "if you think you got this email by mistake."
+msgstr ""
+"si usted considera que este correo electrónico le fue enviado por error."
+
+# | msgid "Disregarded"
+#: formshare/templates/email/collaborate_email.jinja2:15
+#: formshare/templates/email/recover_email.jinja2:14
+msgid "Regards"
+msgstr "Gracias"
+
+#: formshare/templates/email/collaborate_email.jinja2:16
+#: formshare/templates/email/recover_email.jinja2:15
+msgid "The FormShare team"
+msgstr "El equipo de FormShare"
 
 #: formshare/templates/email/recover_email.jinja2:7
 msgid "You have received this email because you requested us on"
@@ -3034,15 +3102,6 @@ msgstr ""
 "Si usted no nos solicitó que le enviáramos su contraseña entonces podría "
 "ser que alguien o algo está tratando de ingresar a su cuenta. Por favor "
 "cambie su contraseña inmediatamente!"
-
-# | msgid "Disregarded"
-#: formshare/templates/email/recover_email.jinja2:14
-msgid "Regards"
-msgstr "Gracias"
-
-#: formshare/templates/email/recover_email.jinja2:15
-msgid "The FormShare team"
-msgstr "El equipo de FormShare"
 
 #: formshare/templates/generic/404.jinja2:3
 msgid "Page not found"
@@ -3068,14 +3127,15 @@ msgstr "Error en la aplicación"
 msgid "Internal Server Error"
 msgstr "Error interno en la aplicación"
 
+# | msgid "" "The server encountered an unexpected error and was not able to
+# | complete " "your request. Please report the error as an issue on "
 #: formshare/templates/generic/500.jinja2:18
-#| msgid "" "The server encountered an unexpected error and was not able to
-#| complete " "your request. Please report the error as an issue on "
 msgid ""
 "The server encountered an unexpected error and was not able to complete "
 "your request."
 msgstr ""
-"Se ha generado un error no esperado y FormShare no puede completar su pedido."
+"Se ha generado un error no esperado y FormShare no puede completar su "
+"pedido."
 
 #: formshare/templates/generic/500.jinja2:19
 msgid "If the problem persists, please report the issue at:"
@@ -3407,21 +3467,49 @@ msgstr "El body de la llamada API no existe"
 msgid "You need to specify an API key"
 msgstr "Usted necesita indicar la llave API"
 
-#: formshare/views/collaborators.py:45
+#: formshare/views/collaborators.py:50
 msgid "The collaborator was added to this project"
 msgstr "El colaborador fue añadido al proyecto"
 
-#: formshare/views/collaborators.py:55
+#: formshare/views/collaborators.py:57
+msgid ""
+"The collaborator was added to this project. However, an email has been "
+"sent to him/her to accept the collaboration"
+msgstr ""
+"El colaborador fue añadido a este proyecto. Sin embargo, un correo"
+" electrónico se le ha enviado a el o ella para aceptar la colaboración"
+
+#: formshare/views/collaborators.py:69
 msgid "The role was changed"
 msgstr "El role fue cambiado"
 
-#: formshare/views/collaborators.py:95
+#: formshare/views/collaborators.py:109
 msgid "The collaborator was removed successfully"
 msgstr "El colaborador fue eliminado satisfactoriamente"
 
-#: formshare/views/collaborators.py:98
+#: formshare/views/collaborators.py:112
 msgid "Unable to remove the collaborator: "
 msgstr "No se pudo borrar el colaborador:"
+
+#: formshare/views/collaborators.py:140
+#| msgid "Unable to remove the collaborator: "
+msgid "You accepted the collaboration"
+msgstr "Usted aceptó la colaboración"
+
+#: formshare/views/collaborators.py:142
+#| msgid "Unable to remove the collaborator: "
+msgid "Unable to accept the collaboration: "
+msgstr "No se pudo aceptar la colaboración:"
+
+#: formshare/views/collaborators.py:146
+#| msgid "Add collaborator"
+msgid "You declined the collaboration"
+msgstr "Usted rechazó la colaboración"
+
+#: formshare/views/collaborators.py:148
+#| msgid "Unable to remove the collaborator: "
+msgid "Unable to decline the collaboration: "
+msgstr "No se pudo rechazar la colaboración:"
 
 #: formshare/views/form.py:128
 msgid "The form was added successfully"
@@ -3451,15 +3539,15 @@ msgstr "El formulario fue activado satisfactoriamente"
 msgid "The form was deactivated successfully"
 msgstr "El formulario fue desactivado satisfactoriamente"
 
-#: formshare/views/form.py:486 formshare/views/projects.py:375
+#: formshare/views/form.py:486 formshare/views/projects.py:376
 msgid "The file was uploaded successfully"
 msgstr "El archivo fue subido satisfactoriamente"
 
-#: formshare/views/form.py:488 formshare/views/projects.py:377
+#: formshare/views/form.py:488 formshare/views/projects.py:378
 msgid "The files were uploaded successfully"
 msgstr "Los archivos fueron subidos satisfactoriamente"
 
-#: formshare/views/form.py:540 formshare/views/projects.py:420
+#: formshare/views/form.py:540 formshare/views/projects.py:421
 msgid "The files was removed successfully"
 msgstr "Los archivos fueron eliminados satisfactoriamente"
 
@@ -3523,36 +3611,36 @@ msgstr "Usted necesita indicar una nueva contraseña"
 msgid "You need to specify the old password"
 msgstr "Usted necesita indicar la contraseña anterior"
 
-#: formshare/views/projects.py:164
+#: formshare/views/projects.py:165
 msgid "The project has been created"
 msgstr "El proyecto ha sido creado"
 
-#: formshare/views/projects.py:170
+#: formshare/views/projects.py:171
 msgid "The project has invalid characters. Only underscore (_) is allowed"
 msgstr ""
 "El proyecto tiene caracteres inválidos. Sólo guion bajo (_) es permitido"
 
-#: formshare/views/projects.py:172
+#: formshare/views/projects.py:173
 msgid "The project code cannot be empty"
 msgstr "El código de proyecto no puede ser vacío"
 
-#: formshare/views/projects.py:227
+#: formshare/views/projects.py:228
 msgid "The project has been modified"
 msgstr "El proyecto has sido modificado"
 
-#: formshare/views/projects.py:266
+#: formshare/views/projects.py:267
 msgid "The active project has changed"
 msgstr "El proyecto activo ha cambiado"
 
-#: formshare/views/projects.py:269
+#: formshare/views/projects.py:270
 msgid "Error activating project: "
 msgstr "Error activando el proyecto:"
 
-#: formshare/views/projects.py:317
+#: formshare/views/projects.py:318
 msgid "The project was deleted successfully"
 msgstr "El proyecto fue eliminado satisfactoriamente"
 
-#: formshare/views/projects.py:320
+#: formshare/views/projects.py:321
 msgid "Unable to delete the project: "
 msgstr "No se pudo borrar el proyecto:"
 

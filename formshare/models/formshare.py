@@ -234,6 +234,8 @@ class Userproject(Base):
     access_type = Column(INTEGER)  # 1=Owner,2=Admin,3=Editor,4=Member. Note: 5=Public access (Set internally)
     access_date = Column(DateTime)
     project_active = Column(INTEGER, server_default=text("'1'"))
+    project_accepted = Column(INTEGER, server_default=text("'1'"))
+    project_accepted_date = Column(DateTime)
 
     project = relationship('Project')
     user = relationship('User')

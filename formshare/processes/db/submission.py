@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError
 
 __all__ = ['get_submission_data', 'add_submission', 'add_submission_same_as']
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("formshare")
 
 
 def get_submission_data(request, project, form, md5sum):

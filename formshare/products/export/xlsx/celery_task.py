@@ -6,7 +6,7 @@ import os
 import uuid
 import gettext
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("formshare")
 
 
 class BuildFileError(Exception):

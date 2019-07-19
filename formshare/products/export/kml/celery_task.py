@@ -6,7 +6,7 @@ import gettext
 import simplekml
 from formshare.processes.sse.messaging import send_task_status_to_form
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("formshare")
 
 
 class EmptyFileError(Exception):

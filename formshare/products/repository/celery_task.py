@@ -12,7 +12,7 @@ from sqlalchemy.orm import configure_mappers
 from formshare.processes.sse.messaging import send_task_status_to_form
 import gettext
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("formshare")
 
 
 class BuildDataBaseError(Exception):

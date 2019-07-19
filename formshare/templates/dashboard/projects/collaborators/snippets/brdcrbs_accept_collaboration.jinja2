@@ -1,0 +1,11 @@
+<div class="col-sm-12">
+    <h2>{{ projectDetails.project_name }}</h2>
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ request.route_url("dashboard", userid=activeUser.login) }}">{{ _('Dashboard') }}</a>
+        </li>
+        <li class="breadcrumb-item active">
+            <strong>{{ _('Accept collaboration') }}</strong>
+        </li>
+    </ol>
+</div>

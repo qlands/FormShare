@@ -5,7 +5,7 @@ import uuid
 import datetime
 import logging
 
-log = logging.getLogger(__name__)
+log = logging.getLogger("formshare")
 
 
 def send_task_status_to_form(settings, task_id, status):

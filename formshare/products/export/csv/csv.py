@@ -15,8 +15,7 @@ def generate_public_csv_file(request, user, project, form, form_schema, form_dir
     repo_dir = request.registry.settings["repository.path"]
     csv_file = os.path.join(repo_dir, *paths)
     task = build_csv.apply_async(
-        (settings, form_directory, form_schema, csv_file, True, request.locale_name),
-        countdown=2,
+        (settings, form_directory, form_schema, csv_file, True, request.locale_name)
     )
     register_product_instance(
         request,
@@ -45,8 +44,7 @@ def generate_private_csv_file(
     repo_dir = request.registry.settings["repository.path"]
     csv_file = os.path.join(repo_dir, *paths)
     task = build_csv.apply_async(
-        (settings, form_directory, form_schema, csv_file, False, request.locale_name),
-        countdown=2,
+        (settings, form_directory, form_schema, csv_file, False, request.locale_name)
     )
     register_product_instance(
         request,

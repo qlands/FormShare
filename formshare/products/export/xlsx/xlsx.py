@@ -27,8 +27,7 @@ def generate_public_xlsx_file(
             xlsx_file,
             True,
             request.locale_name,
-        ),
-        countdown=2,
+        )
     )
     register_product_instance(
         request,
@@ -67,8 +66,7 @@ def generate_private_xlsx_file(
             xlsx_file,
             False,
             request.locale_name,
-        ),
-        countdown=2,
+        )
     )
     register_product_instance(
         request,

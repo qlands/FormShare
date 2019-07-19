@@ -35,8 +35,7 @@ def create_database_repository(
             create_file,
             insert_file,
             request.locale_name,
-        ),
-        countdown=2,
+        )
     )
     register_product_instance(
         request, user, project, form, "repository", task.id, None, None, True

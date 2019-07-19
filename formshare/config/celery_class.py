@@ -10,8 +10,12 @@ log = logging.getLogger("formshare")
 
 
 def send_sse_event(engine, task_id, task_name, message):
-    dont_store_array = ["formshare.processes.email.send_async_email.send_async_email"]
-    if task_name not in dont_store_array:
+    res = engine.execute(
+        "SELECT count(celery_taskid) FROM product WHERE celery_taskid = '{}'".format(
+            task_id
+        )
+    ).fetchone()
+    if res[0] == 1:
         dict_body = {"task": task_id, "status": message}
         body_string = json.dumps(dict_body)
         try:
@@ -68,3 +72,19 @@ class CeleryTask(Task):
             log.error("Error {} reporting failure for task {}".format(str(e), task_id))
         send_sse_event(engine, task_id, self.name, "failure")
         engine.dispose()
+
+    def apply_async(
+        self,
+        args=None,
+        kwargs=None,
+        task_id=None,
+        producer=None,
+        link=None,
+        link_error=None,
+        shadow=None,
+        **options
+    ):
+        options["countdown"] = 2
+        return Task.apply_async(
+            self, args, kwargs, task_id, producer, link, link_error, shadow, **options
+        )

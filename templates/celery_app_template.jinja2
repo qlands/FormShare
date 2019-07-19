@@ -11,18 +11,21 @@ import configparser
 from pkg_resources import iter_entry_points
 from formshare.config import celery_config
 import logging
+
 log = logging.getLogger(__name__)
 
-FORMSHARE_INI_FILE = '{{FORMSHARE_INI_FILE}}'
-TASKS_ENTRY_POINT_GROUP = 'formshare.tasks'
-PLUGINS_ENTRY_POINT_GROUP = 'formshare.plugins'
+FORMSHARE_INI_FILE = (
+    "{{ FORMSHARE_INI_FILE }}"
+)
+TASKS_ENTRY_POINT_GROUP = "formshare.tasks"
+PLUGINS_ENTRY_POINT_GROUP = "formshare.plugins"
 
 
 def get_ini_value(key, default=None):
     try:
         config = configparser.ConfigParser()
         config.read(FORMSHARE_INI_FILE)
-        return config.get('app:formshare', key)
+        return config.get("app:formshare", key)
     except Exception as e:
         log.info("Warning: Unable to find key {}. {}. Default used".format(key, str(e)))
         return default
@@ -30,20 +33,21 @@ def get_ini_value(key, default=None):
 
 def get_tasks():
     tasks = []
-    plugins = get_ini_value(PLUGINS_ENTRY_POINT_GROUP, '').split()
+    plugins = get_ini_value(PLUGINS_ENTRY_POINT_GROUP, "").split()
     for plugin in plugins:
         if isinstance(plugin, str):
-            iterator = iter_entry_points(
-                group=TASKS_ENTRY_POINT_GROUP,
-                name=plugin
-            )
+            iterator = iter_entry_points(group=TASKS_ENTRY_POINT_GROUP, name=plugin)
             entry_point = next(iterator, None)
             if entry_point:
                 tasks.append(entry_point.module_name)
     return tasks
 
 
-celeryApp = Celery(get_ini_value('celery.taskname'), broker=get_ini_value('celery.broker'),
-                   backend=get_ini_value('celery.backend'), include=get_tasks())
+celeryApp = Celery(
+    get_ini_value("celery.taskname"),
+    broker=get_ini_value("celery.broker"),
+    backend=get_ini_value("celery.backend"),
+    include=get_tasks(),
+)
 celeryApp.config_from_object(celery_config)
 

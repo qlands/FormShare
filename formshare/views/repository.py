@@ -60,9 +60,18 @@ class GenerateRepository(PrivateView):
                 get = True
                 list_array = []
                 result_code = -1
-                stage, primary_key, deflanguage, languages, \
-                    yesvalue, novalue, other_languages, yes_no_strings, default_language, \
-                    separation_file = get_stage_info_from_form(self.request, project_id, form_id)
+                dict_variables = get_stage_info_from_form(
+                    self.request, project_id, form_id
+                )
+                stage = dict_variables["stage"]
+                primary_key = dict_variables["primary_key"]
+                deflanguage = dict_variables["deflanguage"]
+                languages = dict_variables["languages"]
+                yesvalue = dict_variables["yesvalue"]
+                novalue = dict_variables["novalue"]
+                other_languages = dict_variables["other_languages"]
+                yes_no_strings = dict_variables["yes_no_strings"]
+                default_language = dict_variables["default_language"]
 
                 has_tables_to_separate, sep_tables = get_tables_to_separate(
                     self.request, project_id, form_id

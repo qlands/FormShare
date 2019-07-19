@@ -1077,18 +1077,18 @@ def get_stage_info_from_form(request, project, form):
     if data.form_sepfile is not None:
         separation_file = data.form_sepfile
 
-    return (
-        stage,
-        primary_key,
-        deflanguage,
-        languages,
-        yesvalue,
-        novalue,
-        other_languages,
-        yes_no_strings,
-        default_language,
-        separation_file,
-    )
+    return {
+        "stage": stage,
+        "primary_key": primary_key,
+        "deflanguage": deflanguage,
+        "languages": languages,
+        "yesvalue": yesvalue,
+        "novalue": novalue,
+        "other_languages": other_languages,
+        "yes_no_strings": yes_no_strings,
+        "default_language": default_language,
+        "separation_file": separation_file,
+    }
 
 
 def get_form_data(project, form, request):

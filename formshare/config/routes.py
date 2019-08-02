@@ -129,6 +129,8 @@ from ..views.repository_submissions import (
     GetFormSubmissions,
     DeleteFormSubmission,
     DeleteAllSubmissions,
+    GetFormAudit,
+    ReviewAudit,
 )
 
 import logging
@@ -838,9 +840,27 @@ def load_routes(config):
 
     routes.append(
         add_route(
+            "viewAudit",
+            "/user/{userid}/project/{projcode}/form/{formid}/audit",
+            ReviewAudit,
+            "dashboard/projects/forms/submissions/view_audit.jinja2",
+        )
+    )
+
+    routes.append(
+        add_route(
             "getFormSubmissions",
             "/user/{userid}/project/{projcode}/form/{formid}/submissions/get",
             GetFormSubmissions,
+            "string",
+        )
+    )
+
+    routes.append(
+        add_route(
+            "getFormAudit",
+            "/user/{userid}/project/{projcode}/form/{formid}/audit/get",
+            GetFormAudit,
             "string",
         )
     )

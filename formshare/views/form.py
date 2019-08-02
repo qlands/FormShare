@@ -42,6 +42,7 @@ from formshare.processes.submission.api import (
     get_submission_media_files,
     json_to_csv,
     get_gps_points_from_form,
+    get_tables_from_form,
 )
 from formshare.processes.odk.api import (
     get_odk_path,
@@ -118,6 +119,13 @@ class FormDetails(PrivateView):
             else:
                 task_data = {"rescode": None, "error": None}
 
+            dictionary_data = get_tables_from_form(self.request, project_id, form_id)
+            num_sensitive = 0
+            num_tables = 0
+            for a_table in dictionary_data:
+                num_tables = num_tables + 1
+                num_sensitive = num_sensitive + a_table.get("numsensitive", 0)
+
             return {
                 "projectDetails": project_details,
                 "formid": form_id,
@@ -133,6 +141,8 @@ class FormDetails(PrivateView):
                 ),
                 "missingFiles": ", ".join(missing_files),
                 "taskdata": task_data,
+                "numsensitive": num_sensitive,
+                "numtables": num_tables,
                 "products": get_form_products(self.request, project_id, form_id),
                 "processing": get_form_processing_products(
                     self.request, project_id, form_id, form_data["form_reptask"]
@@ -750,7 +760,7 @@ class AddAssistant(PrivateView):
 
         if self.request.method == "POST":
             assistant_data = self.get_post_dict()
-            if assistant_data["coll_id"] != "":
+            if assistant_data.get("coll_id", "") != "":
                 parts = assistant_data["coll_id"].split("|")
                 privilege = assistant_data["privilege"]
                 if len(parts) == 2:

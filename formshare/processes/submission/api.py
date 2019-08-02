@@ -750,6 +750,7 @@ def get_request_data_jqgrid(
 
 def update_data(request, user, project, form, table_name, row_uuid, field, value):
     _ = request.translate
+    sql_url = request.registry.settings.get("sqlalchemy.url")
     schema = get_form_schema(request, project, form)
     sql = "UPDATE " + schema + "." + table_name + " SET " + field + " = '" + value + "'"
     sql = sql + " WHERE rowuuid = '" + row_uuid + "'"
@@ -758,9 +759,10 @@ def update_data(request, user, project, form, table_name, row_uuid, field, value
     log.error(sql)
     log.error("*****************777")
     try:
-        request.dbsession.execute("SET @odktools_current_user = '" + user + "'")
-        request.dbsession.execute(sql)
-        mark_changed(request.dbsession)
+        engine = create_engine(sql_url)
+        engine.execute("SET @odktools_current_user = '" + user + "'")
+        engine.execute(sql)
+        engine.dispose()
         res = {"data": {field: value}}
         return res
     except exc.IntegrityError as e:

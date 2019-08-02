@@ -63,6 +63,61 @@ class ManageSubmissions(PrivateView):
             raise HTTPNotFound
 
 
+class ReviewAudit(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+
+    def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        project_code = self.request.matchdict["projcode"]
+        form_id = self.request.matchdict["formid"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] >= 3:
+            raise HTTPNotFound
+
+        form_data = get_form_details(self.request, user_id, project_id, form_id)
+        if form_data is not None:
+            if form_data["form_schema"] is None:
+                raise HTTPNotFound
+            if form_data["submissions"] <= 0:
+                raise HTTPNotFound
+
+            fields = [
+                {"name": "audit_date", "desc": "Date"},
+                {"name": "audit_user", "desc": "User"},
+                {"name": "audit_action", "desc": "Action"},
+                {"name": "audit_table", "desc": "Table"},
+                {"name": "audit_column", "desc": "Column"},
+                {"name": "audit_oldvalue", "desc": "Previous value"},
+                {"name": "audit_newvalue", "desc": "New value"},
+                {"name": "audit_key", "desc": "Row ID"},
+            ]
+
+            return {
+                "projectDetails": project_details,
+                "formid": form_id,
+                "formDetails": form_data,
+                "userid": user_id,
+                "fields": fields,
+            }
+        else:
+            raise HTTPNotFound
+
+
 class GetFormSubmissions(PrivateView):
     def __init__(self, request):
         PrivateView.__init__(self, request)
@@ -121,6 +176,88 @@ class GetFormSubmissions(PrivateView):
                 project_id,
                 form_id,
                 "maintable",
+                field_names,
+                int(request_data["page"]),
+                int(request_data["rows"]),
+                table_order,
+                order_direction,
+                search_field,
+                search_string,
+                search_operator,
+            )
+
+            return call_back + "(" + json.dumps(data) + ")"
+        else:
+            raise HTTPNotFound
+
+
+class GetFormAudit(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+        self.returnRawViewResult = True
+
+    def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        project_code = self.request.matchdict["projcode"]
+        form_id = self.request.matchdict["formid"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] >= 3:
+            raise HTTPNotFound
+
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is not None:
+            if form_data["form_schema"] is None:
+                raise HTTPNotFound
+            if self.request.method == "GET":
+                raise HTTPNotFound
+            request_data = self.get_post_dict()
+            call_back = self.request.params.get("callback")
+
+            search_field = request_data.get("searchField", None)
+            search_string = request_data.get("searchString", "")
+            search_operator = request_data.get("searchOper", None)
+
+            field_names = [
+                "audit_date",
+                "audit_user",
+                "audit_action",
+                "audit_table",
+                "audit_column",
+                "audit_oldvalue",
+                "audit_newvalue",
+                "audit_key",
+            ]
+
+            table_order_is_none = False
+            if request_data["sidx"] == "":
+                table_order = "audit_date"
+                table_order_is_none = True
+            else:
+                table_order = request_data["sidx"]
+
+            if not table_order_is_none:
+                order_direction = request_data["sord"]
+            else:
+                order_direction = "DESC"
+            data = get_request_data_jqgrid(
+                self.request,
+                project_id,
+                form_id,
+                "audit_log",
                 field_names,
                 int(request_data["page"]),
                 int(request_data["rows"]),

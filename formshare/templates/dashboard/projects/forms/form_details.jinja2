@@ -431,11 +431,19 @@
                                     var action_url = $(this).attr('urn');
                                     swal({
                                             title: "{{ _('Publish product') }}",
-                                            text: "{{ _('Are you sure that you want to publish this product') }}",
+                                            {% if numsensitive > 0 %}
+                                                text: "{{ _('Are you sure that you want to publish this product?') }}",
+                                            {% else %}
+                                                text: "{{ _('You dont have a single field marked as sensible!') }}\n\n{{ _('IF YOU CONTINUE YOU MIGHT BE AT RISK OF MAKING SENSIBLE DATA PUBLICLY AVAILALBLE!') }}\n\n{{('Are you sure that you want to publish this product?') }}",
+                                            {% endif %}
                                             type: "warning",
                                             showCancelButton: true,
                                             confirmButtonColor: "#DD6B55",
-                                            confirmButtonText: "{{ _('Yes, publish it') }}",
+                                            {% if numsensitive > 0 %}
+                                                confirmButtonText: "{{ _('Yes, publish it') }}",
+                                                {% else %}
+                                                    confirmButtonText: "{{ _('Yes, I WILL TAKE THE RISK! Publish it') }}",
+                                                {% endif %}
                                             cancelButtonText: "{{ _('Oops!, cancel!') }}",
                                             closeOnConfirm: true,
                                             closeOnCancel: true

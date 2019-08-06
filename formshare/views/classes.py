@@ -30,6 +30,7 @@ from formshare.processes.db import (
     get_user_by_api_key,
 )
 import logging
+from webob.headers import EnvironHeaders
 
 log = logging.getLogger("formshare")
 
@@ -136,9 +137,25 @@ class ODKView(object):
 
     def __call__(self):
         if "Authorization" in self.request.headers:
-            self.get_auth_dict()
-            self.user = self.authHeader["Digest username"]
-            return self.process_view()
+            if self.request.headers['Authorization'].find('Basic ') == -1:
+                self.get_auth_dict()
+                self.user = self.authHeader["Digest username"]
+                return self.process_view()
+            else:
+                headers = [
+                    (
+                        "WWW-Authenticate",
+                        'Digest realm="'
+                        + self.realm
+                        + '",qop="auth,auth-int",nonce="'
+                        + self.nonce
+                        + '",opaque="'
+                        + self.opaque
+                        + '"',
+                    )
+                ]
+                reponse = Response(status=401, headerlist=headers)
+                return reponse
         else:
             headers = [
                 (

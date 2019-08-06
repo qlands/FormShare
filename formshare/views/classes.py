@@ -137,7 +137,7 @@ class ODKView(object):
 
     def __call__(self):
         if "Authorization" in self.request.headers:
-            if self.request.headers['Authorization'].find('Basic ') == -1:
+            if self.request.headers["Authorization"].find("Basic ") == -1:
                 self.get_auth_dict()
                 self.user = self.authHeader["Digest username"]
                 return self.process_view()

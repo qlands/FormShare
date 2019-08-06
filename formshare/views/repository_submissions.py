@@ -93,8 +93,6 @@ class ReviewAudit(PrivateView):
         if form_data is not None:
             if form_data["form_schema"] is None:
                 raise HTTPNotFound
-            if form_data["submissions"] <= 0:
-                raise HTTPNotFound
 
             fields = [
                 {"name": "audit_date", "desc": "Date"},

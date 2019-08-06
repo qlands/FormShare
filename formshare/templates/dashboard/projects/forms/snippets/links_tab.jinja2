@@ -23,8 +23,12 @@
                         <li><a href="{{ request.route_url('form_download_xlsx',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fab fa-wpforms"></i> {{ _('Download ODK form') }}</a></li>
                         {% if formDetails.form_schema != None %}
                             {% block form_links_rep %}
-                                <li><a target="_blank" href="{{ request.route_url('clean', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}"><i class="fa fa-pencil"></i> {{ _('Clean data') }}</a></li>
-                                <li><a target="_blank" href="{{ request.route_url('errorlist', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}"><i class="fa fa-bug"></i> {{ _('Clean error logs') }}</a></li>
+                                {% if formDetails.indb > 0 %}
+                                    <li><a target="_blank" href="{{ request.route_url('clean', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}"><i class="fa fa-pencil"></i> {{ _('Clean data') }}</a></li>
+                                {% endif %}
+                                {% if formDetails.inlogs > 0 %}
+                                    <li><a target="_blank" href="{{ request.route_url('errorlist', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}"><i class="fa fa-bug"></i> {{ _('Clean error logs') }}</a></li>
+                                {% endif %}
                             {% endblock form_links_rep %}
                         {% else %}
                             {% block form_downloads_norep %}

@@ -64,7 +64,9 @@
                             {% block form_tabs_with_repository %}
                                 {% if projectDetails.access_type < 4 %}
                                     {% include 'dashboard/projects/forms/snippets/repository_tab.jinja2' %}
-                                    {% include 'dashboard/projects/forms/snippets/products_tab.jinja2' %}
+                                    {% if formDetails.indb > 0 %}
+                                        {% include 'dashboard/projects/forms/snippets/products_tab.jinja2' %}
+                                    {% endif %}
                                 {% endif %}
                             {% endblock form_tabs_with_repository %}
                         {% endif %}

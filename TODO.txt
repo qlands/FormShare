@@ -1,6 +1,6 @@
-- Create a JSON schema using the create XML file. Use it to validade data from ODK and data imports
 - Manage subversions
-- Submission plugin interfaces. To extend the submission with plugins
+- Plugin interfaces in all places.
+- Create a JSON schema using the create XML file. Use it to validade data from ODK and data imports
 - Messaging, Watch and Follow
 - Import from BriefCase (XML import)
 - Clean data JSON API (How to submit an update based on a row UUID)

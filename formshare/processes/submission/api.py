@@ -218,6 +218,8 @@ def get_tables_from_form(request, project, form):
     create_file = os.path.join(
         odk_dir, *["forms", form_directory, "repository", "create.xml"]
     )
+    if not os.path.isfile(create_file):
+        return []
     tree = etree.parse(create_file)
     root = tree.getroot()
     element_lkp_tables = root.find(".//lkptables")

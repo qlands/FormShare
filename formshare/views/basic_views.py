@@ -319,87 +319,95 @@ class RegisterView(PublicView):
                 if data["user_password"] != "":
                     if re.match(r"^[A-Za-z0-9._]+$", data["user_id"]):
                         if data["user_password"] == data["user_password2"]:
-                            data["user_cdate"] = datetime.datetime.now()
-                            data["user_apikey"] = str(uuid.uuid4())
-                            data["user_password"] = encode_data(
-                                self.request, data["user_password"]
-                            )
-                            data["user_active"] = 1
-                            # Load connected plugins and check if they modify the registration of an user
-                            continue_registration = True
-                            for plugin in p.PluginImplementations(p.IAuthorize):
-                                data, continue_with_registration, error_message = plugin.before_register(
-                                    self.request, data
+                            if len(data["user_password"]) <= 50:
+                                data["user_cdate"] = datetime.datetime.now()
+                                data["user_apikey"] = str(uuid.uuid4())
+                                data["user_password"] = encode_data(
+                                    self.request, data["user_password"]
                                 )
-                                if not continue_with_registration:
-                                    self.errors.append(error_message)
-                                    continue_registration = False
-                                break  # Only one plugging will be called to extend before_register
-                            if continue_registration:
-                                added, error_message = register_user(self.request, data)
-                                if not added:
-                                    self.errors.append(error_message)
-                                else:
-                                    # Store the notifications
-                                    feed_manager = get_manager(self.request)
-                                    # The user follows himself
-                                    feed_manager.follow(
-                                        data["user_id"], data["user_id"]
+                                data["user_active"] = 1
+                                # Load connected plugins and check if they modify the registration of an user
+                                continue_registration = True
+                                for plugin in p.PluginImplementations(p.IAuthorize):
+                                    data, continue_with_registration, error_message = plugin.before_register(
+                                        self.request, data
                                     )
-                                    # The user join FormShare
-                                    actor = Actor(data["user_id"], "person")
-                                    feed_object = Object("formshare", "platform")
-                                    activity = Activity("join", actor, feed_object)
-                                    feed_manager.add_activity_feed(activity)
-
-                                    # Add the user to the user index
-                                    user_index = get_user_index_manager(self.request)
-                                    user_index_data = data
-                                    user_index_data.pop("user_apikey")
-                                    user_index_data.pop("user_password")
-                                    user_index_data.pop("user_active")
-                                    user_index_data.pop("user_cdate")
-                                    user_index_data.pop("csrf_token")
-                                    user_index.add_user(
-                                        data["user_id"], user_index_data
-                                    )
-
-                                    # Load connected plugins so they perform actions after the registration is performed
-                                    next_page = self.request.route_url(
-                                        "dashboard", userid=data["user_id"]
-                                    )
-                                    plugin_next_page = ""
-                                    for plugin in p.PluginImplementations(p.IAuthorize):
-                                        plugin_next_page = plugin.after_register(
-                                            self.request, data
-                                        )
-                                        break  # Only one plugging will be called to extend after_register
-                                    if plugin_next_page is not None:
-                                        if plugin_next_page != "":
-                                            if plugin_next_page != next_page:
-                                                next_page = plugin_next_page
-                                    if next_page == self.request.route_url(
-                                        "dashboard", userid=data["user_id"]
-                                    ):
-                                        login_data = {
-                                            "login": data["user_id"],
-                                            "group": "mainApp",
-                                        }
-                                        headers = remember(
-                                            self.request,
-                                            str(login_data),
-                                            policies=["main"],
-                                        )
-                                        self.returnRawViewResult = True
-                                        return HTTPFound(
-                                            location=self.request.route_url(
-                                                "dashboard", userid=data["user_id"]
-                                            ),
-                                            headers=headers,
-                                        )
+                                    if not continue_with_registration:
+                                        self.errors.append(error_message)
+                                        continue_registration = False
+                                    break  # Only one plugging will be called to extend before_register
+                                if continue_registration:
+                                    added, error_message = register_user(self.request, data)
+                                    if not added:
+                                        self.errors.append(error_message)
                                     else:
-                                        self.returnRawViewResult = True
-                                        return HTTPFound(next_page)
+                                        # Store the notifications
+                                        feed_manager = get_manager(self.request)
+                                        # The user follows himself
+                                        feed_manager.follow(
+                                            data["user_id"], data["user_id"]
+                                        )
+                                        # The user join FormShare
+                                        actor = Actor(data["user_id"], "person")
+                                        feed_object = Object("formshare", "platform")
+                                        activity = Activity("join", actor, feed_object)
+                                        feed_manager.add_activity_feed(activity)
+
+                                        # Add the user to the user index
+                                        user_index = get_user_index_manager(self.request)
+                                        user_index_data = data
+                                        user_index_data.pop("user_apikey")
+                                        user_index_data.pop("user_password")
+                                        user_index_data.pop("user_active")
+                                        user_index_data.pop("user_cdate")
+                                        user_index_data.pop("csrf_token")
+                                        user_index.add_user(
+                                            data["user_id"], user_index_data
+                                        )
+
+                                        # Load connected plugins so they perform actions after the registration
+                                        # is performed
+                                        next_page = self.request.route_url(
+                                            "dashboard", userid=data["user_id"]
+                                        )
+                                        plugin_next_page = ""
+                                        for plugin in p.PluginImplementations(p.IAuthorize):
+                                            plugin_next_page = plugin.after_register(
+                                                self.request, data
+                                            )
+                                            break  # Only one plugging will be called to extend after_register
+                                        if plugin_next_page is not None:
+                                            if plugin_next_page != "":
+                                                if plugin_next_page != next_page:
+                                                    next_page = plugin_next_page
+                                        if next_page == self.request.route_url(
+                                            "dashboard", userid=data["user_id"]
+                                        ):
+                                            login_data = {
+                                                "login": data["user_id"],
+                                                "group": "mainApp",
+                                            }
+                                            headers = remember(
+                                                self.request,
+                                                str(login_data),
+                                                policies=["main"],
+                                            )
+                                            self.returnRawViewResult = True
+                                            return HTTPFound(
+                                                location=self.request.route_url(
+                                                    "dashboard", userid=data["user_id"]
+                                                ),
+                                                headers=headers,
+                                            )
+                                        else:
+                                            self.returnRawViewResult = True
+                                            return HTTPFound(next_page)
+                            else:
+                                self.errors.append(
+                                    self._(
+                                        "The password must be less than 50 characters"
+                                    )
+                                )
                         else:
                             log.error(
                                 "Password {} and confirmation {} are not the same".format(

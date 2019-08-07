@@ -317,7 +317,6 @@ class RegisterView(PublicView):
 
             if validators.email(data["user_email"]):
                 if data["user_password"] != "":
-                    data["user_password"] = data["user_password"].lower()
                     if re.match(r"^[A-Za-z0-9._]+$", data["user_id"]):
                         if data["user_password"] == data["user_password2"]:
                             data["user_cdate"] = datetime.datetime.now()

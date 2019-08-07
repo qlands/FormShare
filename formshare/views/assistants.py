@@ -9,6 +9,7 @@ from formshare.processes.db import (
     change_assistant_password,
 )
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
+import re
 
 
 class AssistantsListView(PrivateView):
@@ -83,33 +84,41 @@ class AddAssistantsView(PrivateView):
                 assistant_data["coll_prjshare"] = 0
 
             if assistant_data["coll_id"] != "":
-                if assistant_data["coll_password"] == assistant_data["coll_password2"]:
-                    assistant_data.pop("coll_password2")
-                    if assistant_data["coll_password"] != "":
-                        next_page = self.request.params.get(
-                            "next"
-                        ) or self.request.route_url(
-                            "assistants", userid=user_id, projcode=project_code
-                        )
-                        added, message = add_assistant(
-                            self.request, project_id, assistant_data
-                        )
-                        if added:
-                            self.request.session.flash(
-                                self._("The assistant was added to this project")
+                if re.match(r"^[A-Za-z0-9._]+$", assistant_data["coll_id"]):
+                    if assistant_data["coll_password"] == assistant_data["coll_password2"]:
+                        assistant_data.pop("coll_password2")
+                        if assistant_data["coll_password"] != "":
+                            next_page = self.request.params.get(
+                                "next"
+                            ) or self.request.route_url(
+                                "assistants", userid=user_id, projcode=project_code
                             )
-                            self.returnRawViewResult = True
-                            return HTTPFound(next_page)
+                            added, message = add_assistant(
+                                self.request, project_id, assistant_data
+                            )
+                            if added:
+                                self.request.session.flash(
+                                    self._("The assistant was added to this project")
+                                )
+                                self.returnRawViewResult = True
+                                return HTTPFound(next_page)
+                            else:
+                                self.errors.append(message)
                         else:
-                            self.errors.append(message)
+                            self.errors.append(self._("The password cannot be empty"))
                     else:
-                        self.errors.append(self._("The password cannot be empty"))
+                        self.errors.append(
+                            self._("The password and its confirmation are not the same")
+                        )
                 else:
                     self.errors.append(
-                        self._("The password and its confirmation are not the same")
+                        self._(
+                            "The user id has invalid characters. Only underscore "
+                            "and dot are allowed"
+                        )
                     )
             else:
-                self.errors.append(self._("You need to specify an user name"))
+                self.errors.append(self._("You need to specify an user id"))
         else:
             assistant_data = {}
         return {

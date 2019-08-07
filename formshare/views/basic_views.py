@@ -337,7 +337,9 @@ class RegisterView(PublicView):
                                         continue_registration = False
                                     break  # Only one plugging will be called to extend before_register
                                 if continue_registration:
-                                    added, error_message = register_user(self.request, data)
+                                    added, error_message = register_user(
+                                        self.request, data
+                                    )
                                     if not added:
                                         self.errors.append(error_message)
                                     else:
@@ -354,7 +356,9 @@ class RegisterView(PublicView):
                                         feed_manager.add_activity_feed(activity)
 
                                         # Add the user to the user index
-                                        user_index = get_user_index_manager(self.request)
+                                        user_index = get_user_index_manager(
+                                            self.request
+                                        )
                                         user_index_data = data
                                         user_index_data.pop("user_apikey")
                                         user_index_data.pop("user_password")
@@ -371,7 +375,9 @@ class RegisterView(PublicView):
                                             "dashboard", userid=data["user_id"]
                                         )
                                         plugin_next_page = ""
-                                        for plugin in p.PluginImplementations(p.IAuthorize):
+                                        for plugin in p.PluginImplementations(
+                                            p.IAuthorize
+                                        ):
                                             plugin_next_page = plugin.after_register(
                                                 self.request, data
                                             )

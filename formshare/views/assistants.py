@@ -85,7 +85,10 @@ class AddAssistantsView(PrivateView):
 
             if assistant_data["coll_id"] != "":
                 if re.match(r"^[A-Za-z0-9._]+$", assistant_data["coll_id"]):
-                    if assistant_data["coll_password"] == assistant_data["coll_password2"]:
+                    if (
+                        assistant_data["coll_password"]
+                        == assistant_data["coll_password2"]
+                    ):
                         assistant_data.pop("coll_password2")
                         if assistant_data["coll_password"] != "":
                             next_page = self.request.params.get(

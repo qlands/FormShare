@@ -243,7 +243,7 @@ class AddProjectView(ProjectsView):
                 else:
                     self.errors.append(
                         self._(
-                            "The project has invalid characters. Only underscore (_) is allowed"
+                            "The project code has invalid characters. Only underscore (_) is allowed"
                         )
                     )
             else:

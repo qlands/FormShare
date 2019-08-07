@@ -34,7 +34,11 @@ def send_async_email(
                 port = settings.get("mail.port", "587")
                 if port != "":
                     port = int(port)
-                    smtp = smtplib.SMTP(server, port)
+                    ssl = settings.get("mail.ssl", "false")
+                    if ssl == "false":
+                        smtp = smtplib.SMTP(server, port)
+                    else:
+                        smtp = smtplib.SMTP_SSL(server, port)
                     login = settings.get("mail.login", None)
                     if login is not None:
                         if login != "":

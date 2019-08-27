@@ -116,12 +116,14 @@ mysql.password = user_password
 ###
 # Mail server configuration
 ###
-mail.server = mail.my_company.com
-mail.port = 587
-mail.login = user_name
-mail.password = user_password
+mail.server = my.server.com
+mail.port = 465
+mail.login = noreply@me.com
+mail.password = private
 mail.starttls = false
-mail.from = noreply@my_company.com
+mail.ssl = true
+mail.from = noreply@me.com
+mail.error = formshare_support@me.com
 
 # By default, the toolbar only appears for clients from IP addresses
 # '127.0.0.1' and '::1'.

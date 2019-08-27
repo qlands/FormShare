@@ -86,14 +86,7 @@ from ..views.odk import (
     ODKSubmission,
     ODKXMLForm,
 )
-from ..views.repository import (
-    GenerateRepository,
-    SeparateTable,
-    NewSeparationGroup,
-    EditSeparationGroup,
-    DeleteSeparationGroup,
-    RepositoryExist,
-)
+from ..views.repository import GenerateRepository, RepositoryExist
 from ..views.repository_dictionary import EditDictionaryTables, EditDictionaryFields
 from ..views.assistant_views.forms import (
     AssistantForms,
@@ -132,6 +125,8 @@ from ..views.repository_submissions import (
     GetFormAudit,
     ReviewAudit,
 )
+
+from ..views.repository_merge import RepositoryMergeForm
 
 import logging
 
@@ -776,38 +771,10 @@ def load_routes(config):
 
     routes.append(
         add_route(
-            "separatetable",
-            "/user/{userid}/project/{projcode}/form/{formid}/separate/{tablename}",
-            SeparateTable,
-            "dashboard/projects/repository/separate_table.jinja2",
-        )
-    )
-
-    routes.append(
-        add_route(
-            "addgroup",
-            "/user/{userid}/project/{projcode}/form/{formid}/separate/{tablename}/group/new",
-            NewSeparationGroup,
-            "dashboard/projects/repository/create_group.jinja2",
-        )
-    )
-
-    routes.append(
-        add_route(
-            "editgroup",
-            "/user/{userid}/project/{projcode}/form/{formid}/separate/{tablename}/group/{groupid}/edit",
-            EditSeparationGroup,
-            "dashboard/projects/repository/edit_group.jinja2",
-        )
-    )
-
-    routes.append(
-        add_route(
-            "deletegroup",
-            "/user/{userid}/project/{projcode}/form/{formid}/separate"
-            "/{tablename}/group/{groupid}/delete",
-            DeleteSeparationGroup,
-            None,
+            "merge_new_version",
+            "/user/{userid}/project/{projcode}/form/{formid}/merge",
+            RepositoryMergeForm,
+            "dashboard/projects/repository/merge_new_version.jinja2",
         )
     )
 

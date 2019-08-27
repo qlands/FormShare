@@ -141,20 +141,6 @@
                                                 </div>
                                             </div>
                                         {% endif %}
-                                        {% if stage == 3 %}
-                                            Tables involved:
-                                            {% for table in sepTables %}
-                                                {% if table.separate == true %}
-                                                    <a style="color: red;" href="{{ request.route_url('separatetable', userid=userid, projcode=projcode, formid=formid,tablename=table.name,_query=qvars) }}">{{ table.name }} (needs separation)</a>
-                                                {% else %}
-                                                    <a href="{{ request.route_url('separatetable', userid=userid, projcode=projcode, formid=formid,tablename=table.name,_query=qvars) }}">{{ table.name }} (normalized)</a>
-                                                {% endif %}
-                                            {% endfor %}
-                                            <input id="primarykey" type="hidden" name="primarykey" value="{{ primaryKey }}">
-                                            <input id="defaultLanguage" type="hidden" name="defaultLanguage" value="{{ defaultLanguage }}">
-                                            <input id="otherLanguages" type="hidden" name="otherLanguages" value="{{ otherLanguages }}">
-                                            <input id="yesNoStrings" type="hidden" name="yesNoStrings" value="{{ yesNoStrings }}">
-                                        {% endif %}
                                         {% if stage == 4 %}
                                             <input id="primarykey" type="hidden" name="primarykey" value="{{ primaryKey }}">
                                             <input id="defaultLanguage" type="hidden" name="defaultLanguage" value="{{ defaultLanguage }}">

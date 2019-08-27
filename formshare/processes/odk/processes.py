@@ -1104,6 +1104,10 @@ def get_form_data(project, form, request):
         res["name"] = data.form_name
         res["directory"] = data.form_directory
         res["schema"] = data.form_schema
+        res["form_pkey"] = data.form_pkey
+        res["form_deflang"] = data.form_deflang
+        res["form_yesno"] = data.form_yesno
+        res["form_othlangs"] = data.form_othlangs
     return res
 
 

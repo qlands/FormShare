@@ -1,5 +1,5 @@
 <div class="col-sm-12">
-    <h2>{{ _('Creating repository for ') }} "{{ formData.name }}"</h2>
+    <h2>{{ _('Merging a new version of the ODK form into ') }} "{{ formData.name }}"</h2>
     <ol class="breadcrumb">
         <li class="breadcrumb-item">
             <a href="{{ request.route_url("dashboard",userid=userid) }}">{{ _('Dashboard') }}</a>
@@ -14,7 +14,7 @@
             <a href="{{ request.route_url("form_details",userid=userid, projcode=projcode, formid=formid) }}">{{ formData.name }}</a>
         </li>
         <li class="breadcrumb-item active">
-            <strong>Create repository</strong>
+            <strong>{{ _('Merge new version') }}</strong>
         </li>
     </ol>
 </div>

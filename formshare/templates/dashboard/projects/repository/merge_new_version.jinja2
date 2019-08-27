@@ -1,10 +1,15 @@
 {% extends 'dashboard/page.jinja2' %}
 {% import 'dashboard/macros/form.jinja2' as form %}
 
-{% block titlesection %}{{ _('Creating repository') }} {% endblock titlesection %}
+{% block titlesection %}{{ _('Merge new version') }} {% endblock titlesection %}
+
+{% block topScripts %}
+    {{ super() }}
+    {% jsresource request,'formshare','bs-custom-file-input' %}
+{% endblock topScripts %}
 
 {% block breadcrumbs %}
-    {% include 'dashboard/projects/repository/snippets/brdcrbs_repository.jinja2' %}
+    {% include 'dashboard/projects/repository/snippets/brdcrbs_merge.jinja2' %}
 {% endblock breadcrumbs %}
 
 {% block mainsection %}
@@ -12,7 +17,7 @@
         <div class="col-md-12">
             <div  class="ibox">
                 <div class="ibox-title">
-                    <h5>{{ _('Repository creator') }}</h5>
+                    <h5>{{ _('Merging a new version into') }} {{ formData.name }}</h5>
                     <div class="ibox-tools">
                         <a class="collapse-link" style="margin-right: 10px">
                             <i class="fa fa-chevron-up"></i>
@@ -25,181 +30,67 @@
                 <div class="ibox-content">
                     <div class="row">
                         <div class="col-md-12">
-                            {% if resCode > 1  and resCode != 14 and resCode != 15%}
-                                {% if errors|length > 0 %}
-                                    {{ form.display_errors(errors) }}
-                                {% endif %}
-                            {% endif %}
-                            {% if resCode != 0  %}
-                                {% if resCode > 1 or get == true  %}
-                                    {% if stage == 1 %}
-                                        <h2>{{ _('Lets begin') }}</h2>
-                                    {% endif %}
-                                    {% if stage == 2 %}
-                                        <h2>{{ _('Your ODK seems to be in different languages') }}</h2>
-                                        {{ _('Please give us some information about them') }}
-                                    {% endif %}
-                                    {% if stage == 3 %}
-                                        {% if hasTablesToSeparate %}
-                                            <h2>Your ODK needs normalization</h2>
-                                            When you create a repository your data will be stored in different tables in a database. This database is constructed based on the ODK XLSX file and depending on how big the ODK is, one or more tables might contain several columns. Usually, these many columns cut across several topics or themes, "normalization" means that <b>we need your help</b> in separating one or more "big tables" into smaller sections by topic or theme. <b>Each section must have less than 60 columns.</b>
-                                        {% else %}
-                                            <h2 style="color: green">Your ODK has been normalized.</h2>
-                                            You can continue the process
-                                        {% endif %}
-
-                                    {% endif %}
-                                    {% if stage == 4 %}
-                                        {% if request.method == 'POST' %}
-                                            <h2>Your ODK have duplicated options.</h2>
-                                            You need to fix the below errors in the XLSX form, upload the new version and continue the process.
-                                        {% else %}
-                                            <h2>Your had duplicated options in your ODK.</h2>
-                                            If you uploaded a new version continue the process by clicking on the "Create repository" button.
-                                        {% endif %}
-                                    {% endif %}
-                                    {% if stage == 5 %}
-                                        {% if request.method == 'POST' %}
-                                            <h2>You miss some CSVs or ZIPs support files.</h2>
-                                            You need to add all support CSV or ZIP files before continuing with the process.
-                                        {% else %}
-                                            <h2>Your <b>had</b> some missing CSVs or ZIPs.</h2>
-                                            If you attached them then continue the process by clicking on the "Create repository" button.
-                                        {% endif %}
-                                    {% endif %}
-                                    {% if stage == 6 %}
-                                        {% if resCode == 14 %}
-                                            {% if request.method == 'POST' %}
-                                                <h2>Some of your CSVs have invalid characters.</h2>
-                                                {% for error in error_summary %}
-                                                    <li>{{ error }}</li>
-                                                {% endfor %}
-                                            {% else %}
-                                                <h2>Your <b>had</b> some CSVs with invalid characters</h2>
-                                                If you corrected them then continue the process by clicking on the "Create repository" button.
-                                            {% endif %}
-                                        {% endif %}
-                                        {% if resCode == 15 %}
-                                            {% if request.method == 'POST' %}
-                                                <h2>An option in the XLSX has invalid characters.</h2>
-                                                {% for error in error_summary %}
-                                                    <li>{{ error }}</li>
-                                                {% endfor %}
-                                                You need to correct the XLSX form, upload the new version and continue the process.
-                                            {% else %}
-                                                <h2>Your <b>had</b> some CSVs with invalid characters</h2>
-                                                If you corrected them then continue the process by clicking on the "Create repository" button.
-                                            {% endif %}
-                                        {% endif %}
-                                    {% endif %}
-                                    <hr>
-                                    <form id="repform" class="dataset-form form-horizontal add-member-form" method='post'>
-                                        <input type="hidden" name="csrf_token" value="{{ request.session.get_csrf_token() }}">
-                                        <input type="hidden" name="stage" value="{{ stage }}">
-                                        {% if stage == 1 %}
-                                            <div class="form-group">
-                                                <label>{{ _('Which variable will be used as primary key') }}</label>
-                                                <input id="primarykey" name="primarykey" type="text" class="form-control">
-                                                <span style="color: #026AA8" class="form-text m-b-none">{{ _('This variable will help in controlling duplicated data') }}</span>
-                                            </div>
-                                        {% endif %}
-                                        {% if stage == 2 %}
-                                            <input id="primarykey" type="hidden" name="primarykey" value="{{ primaryKey }}">
-                                            <div class="form-group">
-                                                <label>{{ _('Default language') }}</label>
-                                                <select style="width: 300px !important;" id="deflanguage" name="deflanguage" class="form-control">
-                                                    {% for language in languages %}
-                                                        <option value="{{ language.name }}" {% if language.name == deflanguage %} selected {% endif %}>{{ language.name }}</option>
-                                                    {% endfor %}
-                                                </select>
-                                                <span style="color: #f8ac59" class="form-text m-b-none text-warning">{{ _('Please note that FormShare will store the descriptions of variables and options in the default language.') }}</span>
-                                            </div>
-                                            <div class="hr-line-dashed"></div>
-                                            <b>{{ _('Language codes') }}</b><br/>
-                                            <span>{{ _('You must give a code to each language. Use the ')}}<a target="_blank" href="https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes"> {{ _('ISO 639-1') }}</a> {{ _('as reference.') }}</span>
-                                            <br/>
-                                            <br/>
-                                            {% for language in languages %}
-                                                <div class="form-group">
-                                                    <label>{{ _('For') }} {{ language.name }}</label>
-                                                    <input class="form-control" style="width: 100px !important;" type="text" name="LNG-{{ language.name }}" value="{{ language.code }}">
-                                                </div>
-                                            {% endfor %}
-                                            <div class="hr-line-dashed"></div>
-                                            <b>{{ _('Yes and No in default language') }}</b><br/>
-                                            <span class="text-danger">{{ _('Yes and No values are widely used in forms. To minimize the size of the repository we will not store variables with Yes and No as categorical variables.') }}</span>
-                                            <br/>
-                                            <br/>
-                                            <div id="yesno">
-                                                <div class="form-group">
-                                                    <label>{{ _('What is "Yes" in the default language') }}</label>
-                                                    <input class="form-control" id="yesvalue" type="text" name="yesvalue" value="{{ yesvalue }}" class="control-medium" style="width: 100px !important;">
-                                                </div>
-                                                <div class="form-group">
-                                                    <label>{{ _('What is "No" in the default language') }}</label>
-                                                    <input class="form-control" id="novalue" type="text" name="novalue" value="{{ novalue }}" class="control-medium" style="width: 100px !important;">
-                                                </div>
-                                            </div>
-                                        {% endif %}
-                                        {% if stage == 4 %}
-                                            <input id="primarykey" type="hidden" name="primarykey" value="{{ primaryKey }}">
-                                            <input id="defaultLanguage" type="hidden" name="defaultLanguage" value="{{ defaultLanguage }}">
-                                            <input id="otherLanguages" type="hidden" name="otherLanguages" value="{{ otherLanguages }}">
-                                            <input id="yesNoStrings" type="hidden" name="yesNoStrings" value="{{ yesNoStrings }}">
-                                            <UL>
-                                                {% for aList in listArray %}
-                                                    <LI><span style="color: red">Repository table with duplicated options:</span> {{ aList.name }}
-                                                        <UL>
-                                                            <LI>Duplicated options
-                                                                <UL>
-                                                                    {% for aValue in aList['values'] %}
-                                                                        <LI>{{ aValue }}</LI>
-                                                                    {% endfor %}
-                                                                </UL>
-                                                            </LI>
-                                                            <LI>Used by the following variables
-                                                                <UL>
-                                                                    {% for aRef in aList['references'] %}
-                                                                        <LI><b>{{ aRef.variable }}</b> -- List used: {{ aRef.option }}</LI>
-                                                                    {% endfor %}
-                                                                </UL>
-                                                            </LI>
-                                                        </UL>
-                                                    </LI>
-                                                {% endfor %}
-                                            </UL>
-
-                                        {% endif %}
-                                        {% if stage == 5 %}
-                                            <input id="primarykey" type="hidden" name="primarykey" value="{{ primaryKey }}">
-                                            <input id="defaultLanguage" type="hidden" name="defaultLanguage" value="{{ defaultLanguage }}">
-                                            <input id="otherLanguages" type="hidden" name="otherLanguages" value="{{ otherLanguages }}">
-                                            <input id="yesNoStrings" type="hidden" name="yesNoStrings" value="{{ yesNoStrings }}">
-                                        {% endif %}
-                                        {% if stage == 6 %}
-                                            <input id="primarykey" type="hidden" name="primarykey" value="{{ primaryKey }}">
-                                            <input id="defaultLanguage" type="hidden" name="defaultLanguage" value="{{ defaultLanguage }}">
-                                            <input id="otherLanguages" type="hidden" name="otherLanguages" value="{{ otherLanguages }}">
-                                            <input id="yesNoStrings" type="hidden" name="yesNoStrings" value="{{ yesNoStrings }}">
-                                        {% endif %}
-                                        <div class="form-actions">
-                                            <button class="btn btn-primary"  type="submit" name="start" {% if hasTablesToSeparate == true %}disabled{% endif %}>
-                                                {{ _('Create repository') }}
-                                            </button>
-                                        </div>
-                                    </form>
+                            {% block merge_form_notes %}
+                                <h3>{{ _('Important notes:') }}</h3>
+                                <ul>
+                                    <li>{{ _('FormShare will check the new ODK form and report whether or not is possible to merge it into the repository of ') }}{{ formData.name }}. {{ _('The following changes cannot be merged:') }}
+                                        <ol>
+                                            <li>{{ _('The primary key changes in any way.') }}</li>
+                                            <li>{{ _('Changes in the structure of repeats. For example: In the current version you have repeat B inside repeat A but in the version that you want to merge you have repeat A and repeat C but repeat B is now inside C.') }}</li>
+                                            <li>{{ _('Change a string variable into integer.') }}</li>
+                                            <li>{{ _('Change a variable from select one into select multiple and viceversa.') }}</li>
+                                            <li>{{ _('Change a variable from categorical into continous and vicerversa.') }}</li>
+                                            <li>{{ _('Change the description of a option. For example is the currect version you have "1-Male" but in the new version you have "1-Man". In this case FormShare will ask you if such change should be ignored because this could be a typo fix between versions, however YOU ASSUME THE RISK.') }}</li>
+                                        </ol>
+                                    </li>
+                                    <li>{{ _('The merge will only apply incremental changes thus you will not lose data. If for example you removed a variable in a the new version such variable will always exist in the repository.') }}</li>
+                                    <li>{{ _('Changes 3,4 and 5 can be merged by giving a new name to the variable.') }}</li>
+                                    <li>{{ _('The new version of the form cannot have the same id as the one you are merging into e.g., the new form cannot have the id ') }}"{{ formid }}".</li>
+                                    <li><b><span style="color: red">{{ _('If FormShare is able to merge the new form, it will appear at testing stage. After testing you will be able to finalize/apply the merge. A backup of the database will be made.') }}</span></b></li>
+                                </ul>
+                            {% endblock merge_form_notes %}
+                        </div>
+                        <div class="col-md-12">
+                            <hr>
+                            {{ form.display_errors(errors,true) }}
+                            {% for error in merge_errors %}
+                                {% if errortype == 2 %}
+                                    <div class="alert alert-danger">
+                                        {{ error }}
+                                    </div>
                                 {% else %}
-                                    <h2 style="color: red">Oops! There has been an error while creating the repository</h2>
-                                    We would need to check your ODK. We issued an internal report to the support team and they will get back to you as soon as possible with an explanation and a solution.<br/>We are sorry for the inconvenience.
-                                    <h3>Error code: {{ resCode }}</h3>
-                                    {% for error in error_summary %}
-                                        <li>{{ error }}</li>
-                                    {% endfor %}
+                                    <div class="alert alert-warning">
+                                        {{ error }}
+                                    </div>
                                 {% endif %}
-                            {% else %}
-                                <h2 style="color: green">The repository has been created</h2>
-                                You can close this page
-                            {% endif %}
+                            {% endfor %}
+                            <div class="middle-box text-center">
+                                {% if errortype == 1 %}
+                                    {{ _('There are changes in the descriptions of certian options. You can merge such changes at') }} <b style="color: red">{{ _('YOUR OWN RISK') }} {{ _('by selecting the same file and trying again') }}</b>
+                                {% endif %}
+                                <form id="form_update_form" role="form" method="post" enctype="multipart/form-data" action="{{ request.url }}">
+                                    {% block merge_form %}
+                                        {{ form.secure_form(request) }}
+                                        {% if errortype == 1 %}
+                                            <input type="hidden" name="valuestoignore" value="{{ valuestoignore }}">
+                                            <input type="hidden" name="inputfilename" value="{{ inputfilename }}">
+                                        {% endif %}
+                                        {% block merge_form_fields %}
+                                            <div class="custom-file">
+                                                <input type="file" name="xlsx" class="custom-file-input">
+                                                <label class="custom-file-label" for="inputGroupFile01">{{ _('Choose file') }}</label>
+                                            </div>
+                                        {% endblock merge_form_fields %}
+                                        {% block merge_form_actions %}
+                                            {% if errortype != 1 %}
+                                                <button type="submit" style="margin-top: 10px" class="btn btn-primary">{{ _('Merge new version') }}</button>
+                                            {% else %}
+                                                <button type="submit" name="accept" style="margin-top: 10px" class="btn btn-primary">{{ _('Accept changes and merge new version') }}</button>
+                                            {% endif %}
+                                        {% endblock merge_form_actions %}
+                                    {% endblock merge_form %}
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -212,9 +103,10 @@
     {{ super() }}
     <script>
         $(document).ready(function() {
-            $('#repform').submit(function() {
+            $('#form_update_form').submit(function() {
                 $(this).find("button[type='submit']").prop('disabled',true);
             });
+            bsCustomFileInput.init();
         });
-        </script>
+    </script>
 {% endblock scripts %}

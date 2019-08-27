@@ -95,6 +95,7 @@ __all__ = [
     "check_jxform_file",
     "get_missing_support_files",
     "create_repository",
+    "merge_versions",
 ]
 
 _GPS_types = [
@@ -1170,6 +1171,65 @@ class ChangeDir:
         os.chdir(self.savedPath)
 
 
+def merge_versions(
+    request,
+    odk_dir,
+    xform_directory,
+    a_create,
+    a_insert,
+    b_create,
+    b_insert,
+    ignore_string=None,
+):
+    odk_tools_merge_versions = os.path.join(
+        request.registry.settings["odktools.path"],
+        *["utilities", "mergeVersions", "mergeversions"]
+    )
+    os.makedirs(os.path.join(odk_dir, *["forms", xform_directory, "merging_files"]))
+    args = [
+        odk_tools_merge_versions,
+        "-a " + a_create,
+        "-b " + b_create,
+        "-A " + a_insert,
+        "-B " + b_insert,
+        "-c "
+        + os.path.join(
+            odk_dir, *["forms", xform_directory, "merging_files", "create.xml"]
+        ),
+        "-C "
+        + os.path.join(
+            odk_dir, *["forms", xform_directory, "merging_files", "insert.xml"]
+        ),
+        "-d "
+        + os.path.join(
+            odk_dir, *["forms", xform_directory, "merging_files", "create.sql"]
+        ),
+        "-D "
+        + os.path.join(
+            odk_dir, *["forms", xform_directory, "merging_files", "insert.sql"]
+        ),
+        "-s",
+        "-o "
+        + os.path.join(
+            odk_dir, *["forms", xform_directory, "merging_files", "output.xml"]
+        ),
+        "-t m",
+    ]
+    if ignore_string is not None:
+        args.append("-i " + ignore_string)
+
+    print("*****************************101")
+    print(" ".join(args))
+    print("*****************************101")
+
+    p = Popen(args, stdout=PIPE, stderr=PIPE)
+    stdout, stderr = p.communicate()
+    if p.returncode == 0:
+        return 0, stdout.decode()
+    else:
+        return p.returncode, stdout.decode()
+
+
 def create_repository(
     request,
     user,
@@ -1181,6 +1241,9 @@ def create_repository(
     default_language=None,
     other_languages=None,
     yes_no_strings=None,
+    for_merging=False,
+    merge_create_file=None,
+    merge_insert_file=None,
 ):
     jxform_to_mysql = os.path.join(
         request.registry.settings["odktools.path"], *["JXFormToMysql", "jxformtomysql"]
@@ -1242,6 +1305,10 @@ def create_repository(
             + os.path.join(odk_dir, *["forms", xform_directory, "repository", "temp"])
         )
         args.append("-o m")
+        if for_merging:
+            args.append("-M")
+            args.append("-r " + merge_create_file)
+            args.append("-n " + merge_insert_file)
 
         # Append all media files
 
@@ -1266,19 +1333,52 @@ def create_repository(
         p = Popen(args, stdout=PIPE, stderr=PIPE)
         stdout, stderr = p.communicate()
         if p.returncode == 0:
-            schema = "P" + project[-12:] + "_D" + str(uuid.uuid4())[-12:]
-            create_file = os.path.join(
-                odk_dir, *["forms", xform_directory, "repository", "create.sql"]
-            )
-            insert_file = os.path.join(
-                odk_dir, *["forms", xform_directory, "repository", "insert.sql"]
-            )
+            if not for_merging:
+                schema = "P" + project[-12:] + "_D" + str(uuid.uuid4())[-12:]
+                create_file = os.path.join(
+                    odk_dir, *["forms", xform_directory, "repository", "create.sql"]
+                )
+                insert_file = os.path.join(
+                    odk_dir, *["forms", xform_directory, "repository", "insert.sql"]
+                )
 
-            formshare_create_repository = True
-            cnf_file = request.registry.settings["mysql.cnf"]
-            for a_plugin in plugin.PluginImplementations(plugin.IRepository):
+                formshare_create_repository = True
+                cnf_file = request.registry.settings["mysql.cnf"]
+                for a_plugin in plugin.PluginImplementations(plugin.IRepository):
+                    if formshare_create_repository:
+                        formshare_create_repository = a_plugin.before_creating_repository(
+                            request,
+                            project,
+                            form,
+                            cnf_file,
+                            create_file,
+                            insert_file,
+                            schema,
+                        )
                 if formshare_create_repository:
-                    formshare_create_repository = a_plugin.before_creating_repository(
+                    # Calls the Celery task
+                    task = create_database_repository(
+                        request,
+                        user,
+                        project,
+                        form,
+                        odk_dir,
+                        xform_directory,
+                        schema,
+                        primary_key,
+                        cnf_file,
+                        create_file,
+                        insert_file,
+                    )
+                    form_data = {"form_reptask": task}
+                    update_form(request, project, form, form_data)
+                    for a_plugin in plugin.PluginImplementations(plugin.IRepository):
+                        a_plugin.on_creating_repository(request, project, form, task)
+
+                custom_repository_process = False
+                custom_task = None
+                for a_plugin in plugin.PluginImplementations(plugin.IRepository):
+                    custom_task = a_plugin.custom_repository_process(
                         request,
                         project,
                         form,
@@ -1286,49 +1386,21 @@ def create_repository(
                         create_file,
                         insert_file,
                         schema,
+                        primary_key,
                     )
-            if formshare_create_repository:
-                # Calls the Celery task
-                task = create_database_repository(
-                    request,
-                    user,
-                    project,
-                    form,
-                    odk_dir,
-                    xform_directory,
-                    schema,
-                    primary_key,
-                    cnf_file,
-                    create_file,
-                    insert_file,
-                )
-                form_data = {"form_reptask": task}
-                update_form(request, project, form, form_data)
-                for a_plugin in plugin.PluginImplementations(plugin.IRepository):
-                    a_plugin.on_creating_repository(request, project, form, task)
+                    custom_repository_process = True
+                    break  # Only one plugin implementing custom_repository_process will be called
+                if custom_repository_process:
+                    form_data = {"form_reptask": custom_task}
+                    update_form(request, project, form, form_data)
+                    for a_plugin in plugin.PluginImplementations(plugin.IRepository):
+                        a_plugin.on_creating_repository(
+                            request, project, form, custom_task
+                        )
 
-            custom_repository_process = False
-            custom_task = None
-            for a_plugin in plugin.PluginImplementations(plugin.IRepository):
-                custom_task = a_plugin.custom_repository_process(
-                    request,
-                    project,
-                    form,
-                    cnf_file,
-                    create_file,
-                    insert_file,
-                    schema,
-                    primary_key,
-                )
-                custom_repository_process = True
-                break  # Only one plugin implementing custom_repository_process will be called
-            if custom_repository_process:
-                form_data = {"form_reptask": custom_task}
-                update_form(request, project, form, form_data)
-                for a_plugin in plugin.PluginImplementations(plugin.IRepository):
-                    a_plugin.on_creating_repository(request, project, form, custom_task)
-
-            return 0, ""
+                return 0, ""
+            else:
+                return 0, ""
         else:
             if p.returncode == 1 or p.returncode < 0:
                 return (

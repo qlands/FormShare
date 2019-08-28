@@ -26,7 +26,7 @@ def pad(s):
 
 def encode_aes(c, s):
     # EncodeAES = lambda c, s: base64.b64encode(c.encrypt(pad(s)))
-    return base64.b64encode(c.encrypt(pad(s)))
+    return base64.b64encode(c.encrypt(pad(s).encode()))
 
 
 def decode_aes(c, e):
@@ -35,17 +35,17 @@ def decode_aes(c, e):
 
 
 def encode_data(request, data):
-    secret = request.registry.settings["aes.key"]
-    cipher = AES.new(secret)
+    secret = request.registry.settings["aes.key"].encode()
+    cipher = AES.new(secret, 1)
     return encode_aes(cipher, data)
 
 
 def decode_data(request, data):
-    secret = request.registry.settings["aes.key"]
-    cipher = AES.new(secret)
+    secret = request.registry.settings["aes.key"].encode()
+    cipher = AES.new(secret, 1)
     return decode_aes(cipher, data)
 
 
 def encode_data_with_aes_key(data, key):
-    cipher = AES.new(key)
+    cipher = AES.new(key, 1)
     return encode_aes(cipher, data)

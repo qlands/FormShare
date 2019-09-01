@@ -1,0 +1,12 @@
+<input type="hidden" name="csrf_token" value="{{ request.session.get_csrf_token() }}">
+<input type="hidden" name="start_stage1" value = "">
+<div class="form-group">
+    <label>{{ _('Which variable will be used as primary key') }}</label>
+    <input id="form_pkey" name="form_pkey" type="text" class="form-control">
+    <span style="color: #026AA8" class="form-text m-b-none">{{ _('This variable will help in controlling duplicated data') }}</span>
+</div>
+<div class="form-actions">
+    <button class="btn btn-primary" type="submit">
+        {{ _('Create repository') }}
+    </button>
+</div>

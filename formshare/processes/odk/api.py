@@ -64,7 +64,7 @@ from formshare.products.fs1import.fs1import import formshare_one_import_json
 from formshare.processes.color_hash import ColorHash
 import formshare.plugins as plugin
 from formshare.products.repository import create_database_repository
-
+from formshare.processes.odk.processes import update_form_repository_info
 
 log = logging.getLogger("formshare")
 
@@ -315,6 +315,9 @@ def check_jxform_file(request, json_file, external_file=None):
         args.append(external_file)
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()
+    print("*****************************102")
+    print(" ".join(args))
+    print("*****************************102")
     if p.returncode == 0:
         try:
             root = etree.fromstring(stdout)
@@ -334,7 +337,7 @@ def check_jxform_file(request, json_file, external_file=None):
             )
             return 0, ""
     else:
-        if p.returncode == 23:
+        if p.returncode == 19:
             log.error(
                 ". Error: "
                 + "-"
@@ -382,8 +385,8 @@ def check_jxform_file(request, json_file, external_file=None):
                         "in repeat, group and variable names."
                     )
                 )
-            return 23, message
-        if p.returncode == 24:
+            return 19, message
+        if p.returncode == 20:
             log.error(
                 ". Error: "
                 + "-"
@@ -406,8 +409,46 @@ def check_jxform_file(request, json_file, external_file=None):
                     message = message + "\t" + variable_name + " \n"
 
                 message = message + "\n" + _("Please change those names and try again.")
-            return 24, message
-        if p.returncode == 22:
+            return 20, message
+        if p.returncode == 21:
+            log.error(
+                ". Error: "
+                + "-"
+                + stderr.decode()
+                + " while checking PyXForm. Command line: "
+                + " ".join(args)
+            )
+            root = etree.fromstring(stdout)
+            duplicated_tables = root.findall(".//table")
+            message = (
+                _("FormShare checks a little bit more your ODK for inconsistencies.")
+                + "\n"
+            )
+            message = message + _("The following choices are identical:") + "\n"
+            if duplicated_tables:
+                for a_table in duplicated_tables:
+                    choice_name = a_table.get("name")
+                    same_array = []
+                    duplicated_names = a_table.findall(".//duplicate")
+                    if duplicated_names:
+                        for a_name in duplicated_names:
+                            same_array.append(a_name.get("name"))
+                    message = (
+                        message
+                        + "\t"
+                        + choice_name
+                        + _(" with the following duplicates: ")
+                        + ", ".join(same_array)
+                        + " \n"
+                    )
+
+                message = (
+                    message
+                    + "\n"
+                    + _("Please remove the duplicated choices and try again.")
+                )
+            return 21, message
+        if p.returncode == 18:
             log.error(
                 ". Error: "
                 + "-"
@@ -440,7 +481,7 @@ def check_jxform_file(request, json_file, external_file=None):
                         "in repeat, group and variable names."
                     )
                 )
-            return 22, message
+            return 18, message
         if p.returncode == 9:
             log.error(
                 ". Error: "
@@ -1242,8 +1283,6 @@ def create_repository(
     other_languages=None,
     yes_no_strings=None,
     for_merging=False,
-    merge_create_file=None,
-    merge_insert_file=None,
 ):
     jxform_to_mysql = os.path.join(
         request.registry.settings["odktools.path"], *["JXFormToMysql", "jxformtomysql"]
@@ -1305,10 +1344,6 @@ def create_repository(
             + os.path.join(odk_dir, *["forms", xform_directory, "repository", "temp"])
         )
         args.append("-o m")
-        if for_merging:
-            args.append("-M")
-            args.append("-r " + merge_create_file)
-            args.append("-n " + merge_insert_file)
 
         # Append all media files
 
@@ -1325,14 +1360,25 @@ def create_repository(
         if files:
             for aFile in files:
                 args.append(aFile)
-
-        print("*****************************100")
-        print(" ".join(args))
-        print("*****************************100")
-
         p = Popen(args, stdout=PIPE, stderr=PIPE)
         stdout, stderr = p.communicate()
+        print("*****************************100")
+        print(" ".join(args))
+        print("Result:" + str(p.returncode))
+        print(stdout.decode())
+        print("*****************************100")
         if p.returncode == 0:
+            update_form_repository_info(
+                request,
+                project,
+                form,
+                {
+                    "form_pkey": primary_key,
+                    "form_deflang": default_language,
+                    "form_othlangs": other_languages,
+                    "form_yesno": yes_no_strings,
+                },
+            )
             if not for_merging:
                 schema = "P" + project[-12:] + "_D" + str(uuid.uuid4())[-12:]
                 create_file = os.path.join(

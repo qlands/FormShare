@@ -41,7 +41,9 @@ def send_password_email(request, email_to, current_password, user_dict):
     _ = request.translate
     email_from = request.registry.settings.get("mail.from", None)
     if email_from is None:
-        log.error("FormShare has no email settings in place. Email service is disabled.")
+        log.error(
+            "FormShare has no email settings in place. Email service is disabled."
+        )
         return False
     if email_from == "":
         return False
@@ -66,7 +68,9 @@ def send_error_to_technical_team(request, error_message):
     if email_from is not None and email_to is not None:
         return send_email(request, email_from, email_to, "500 Error", error_message)
     else:
-        log.error("FormShare has no email settings in place. Email service is disabled.")
+        log.error(
+            "FormShare has no email settings in place. Email service is disabled."
+        )
         return False
 
 
@@ -78,7 +82,9 @@ def send_collaboration_email(
     _ = request.translate
     email_from = request.registry.settings.get("mail.from", None)
     if email_from is None:
-        log.error("FormShare has no email settings in place. Email service is disabled.")
+        log.error(
+            "FormShare has no email settings in place. Email service is disabled."
+        )
         return False
     if email_from == "":
         return False

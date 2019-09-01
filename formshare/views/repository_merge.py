@@ -35,10 +35,7 @@ class RepositoryMergeForm(PrivateView):
     def delete_new_form(
         self, odk_path, user_id, project_code, project_id, form_id, form_directory
     ):
-        directory_path = os.path.join(
-            odk_path,
-            *["forms", form_directory]
-        )
+        directory_path = os.path.join(odk_path, *["forms", form_directory])
 
         deleted, message = delete_form(self.request, project_id, form_id)
         if deleted:
@@ -144,13 +141,13 @@ class RepositoryMergeForm(PrivateView):
                                 )
                 old_form_data.pop("id")
                 old_form_data.pop("name")
-                old_directory = old_form_data['directory']
+                old_directory = old_form_data["directory"]
                 old_form_data.pop("directory")
                 old_form_data["parent_project"] = project_id
                 old_form_data["parent_form"] = form_id
                 old_form_data["form_incversion"] = 1
                 update_form(self.request, project_id, new_form_id, old_form_data)
-                old_form_data['directory'] = old_directory
+                old_form_data["directory"] = old_directory
                 old_create_file = os.path.join(
                     odk_path,
                     *["forms", old_form_data["directory"], "repository", "create.xml"]
@@ -278,6 +275,17 @@ class RepositoryMergeForm(PrivateView):
                                                 )
                                             )
                                         )
+                                    if error_code == "RNS":
+                                        error_type = 2
+                                        table_name = a_error.get("table")
+                                        field_code = a_error.get("field")
+                                        errors.append(
+                                            self._(
+                                                'The field "{}" in table "{}" changed relationship'.format(
+                                                    field_code, table_name
+                                                )
+                                            )
+                                        )
                         except Exception as e:
                             send_error_to_technical_team(
                                 self.request,
@@ -287,8 +295,10 @@ class RepositoryMergeForm(PrivateView):
                                 ),
                             )
                             self.add_error(
-                                self._("Unknown error while merging. A message has been sent to the support team and "
-                                       "they will contact you ASAP.")
+                                self._(
+                                    "Unknown error while merging. A message has been sent to the support team and "
+                                    "they will contact you ASAP."
+                                )
                             )
 
                             self.delete_new_form(
@@ -340,5 +350,5 @@ class RepositoryMergeForm(PrivateView):
             "merge_errors": errors,
             "errortype": error_type,
             "valuestoignore": ";".join(values_to_ignore),
-            'inputfilename': input_file_name,
+            "inputfilename": input_file_name,
         }

@@ -86,7 +86,7 @@ from ..views.odk import (
     ODKSubmission,
     ODKXMLForm,
 )
-from ..views.repository import GenerateRepository, RepositoryExist
+from ..views.repository import GenerateRepository
 from ..views.repository_dictionary import EditDictionaryTables, EditDictionaryFields
 from ..views.assistant_views.forms import (
     AssistantForms,
@@ -757,15 +757,6 @@ def load_routes(config):
             "/user/{userid}/project/{projcode}/form/{formid}/repository/create",
             GenerateRepository,
             "dashboard/projects/repository/create_repository.jinja2",
-        )
-    )
-
-    routes.append(
-        add_route(
-            "repository_exists",
-            "/user/{userid}/project/{projcode}/form/{formid}/repository/exists",
-            RepositoryExist,
-            "dashboard/projects/repository/repository_exist.jinja2",
         )
     )
 

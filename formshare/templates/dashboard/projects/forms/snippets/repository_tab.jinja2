@@ -20,7 +20,7 @@
                 <div class="col-md-12">
                     <ul class="tag-list" style="padding: 0">
                         {% block repo_tab_tools %}
-{#                            <li><a href="{{ request.route_url('merge_new_version', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fas fa-code-branch"></i> {{ _('Merge new version') }}</a></li>#}
+                            <li><a href="{{ request.route_url('merge_new_version', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fas fa-code-branch"></i> {{ _('Merge new version') }}</a></li>
                             <li><a title="{{ numsensitive }} {{ request.h.pluralize(_('field'),numsensitive,request.locale_name) }} {{ _('marked as sensible among ') }}{{ numtables }} {{ request.h.pluralize(_('table'),numtables,request.locale_name) }}" href="{{ request.route_url('editDictTables', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fas fa-eye-slash"></i><span style="color: red"> {{ _('Anonymize data') }}</span></a></li>
                             {% if formDetails.submissions > 0 %}
                                 {% if projectDetails.access_type < 3 %}

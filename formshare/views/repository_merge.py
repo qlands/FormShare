@@ -167,10 +167,7 @@ class RepositoryMergeForm(PrivateView):
                     old_form_data["form_pkey"],
                     old_form_data["form_deflang"],
                     old_form_data["form_othlangs"],
-                    old_form_data["form_yesno"],
                     True,
-                    old_create_file,
-                    old_insert_file,
                 )
                 if created == 0:
                     new_create_file = os.path.join(

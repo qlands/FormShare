@@ -113,20 +113,6 @@ class GenerateRepository(PrivateView):
                         print(other_languages_string)
                         print("****************************88")
 
-                        if (
-                            postdata.get("yesvalue", "") != ""
-                            and postdata.get("novalue", "") != ""
-                        ):
-                            yes_no_string = (
-                                postdata.get("yesvalue")
-                                + "|"
-                                + postdata.get("novalue", "")
-                            )
-                        else:
-                            self.errors.append(
-                                self._("You need to indicate the yes and no values for the primary language")
-                            )
-                            run_process = False
                     if run_process:
                         odk_path = get_odk_path(self.request)
                         if stage == 1:
@@ -150,7 +136,6 @@ class GenerateRepository(PrivateView):
                                 primary_key,
                                 default_language_string,
                                 other_languages_string,
-                                yes_no_string,
                             )
                         if result_code == 0:
                             delete_dataset_index(

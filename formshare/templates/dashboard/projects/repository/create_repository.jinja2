@@ -62,21 +62,6 @@
                                                     <input class="form-control" style="width: 100px !important;" type="text" name="LNG-{{ language.name }}" value="{{ language.code }}">
                                                 </div>
                                             {% endfor %}
-                                            <div class="hr-line-dashed"></div>
-                                            <b>{{ _('Yes and No in default language') }}</b><br/>
-                                            <span class="text-danger">{{ _('Yes and No options are widely used in forms. To minimize the size of the repository we will not store variables with Yes and No as categorical variables.') }}</span>
-                                            <br/>
-                                            <br/>
-                                            <div id="yesno">
-                                                <div class="form-group">
-                                                    <label>{{ _('What is "Yes" in the default language') }}</label>
-                                                    <input class="form-control control-medium"  type="text" name="yesvalue" style="width: 100px !important;">
-                                                </div>
-                                                <div class="form-group">
-                                                    <label>{{ _('What is "No" in the default language') }}</label>
-                                                    <input class="form-control control-medium"  type="text" name="novalue" style="width: 100px !important;">
-                                                </div>
-                                            </div>
                                             <div class="form-actions">
                                                 <button class="btn btn-primary" type="submit">
                                                     {{ _('Create repository') }}

@@ -1281,7 +1281,6 @@ def create_repository(
     primary_key,
     default_language=None,
     other_languages=None,
-    yes_no_strings=None,
     for_merging=False,
 ):
     jxform_to_mysql = os.path.join(
@@ -1335,10 +1334,6 @@ def create_repository(
                 odk_dir, *["forms", xform_directory, "repository", "iso639.sql"]
             )
         )
-        if yes_no_strings == "":
-            yes_no_strings = None
-        if yes_no_strings is not None:
-            args.append("-y '" + yes_no_strings + "'")
         args.append(
             "-e "
             + os.path.join(odk_dir, *["forms", xform_directory, "repository", "temp"])
@@ -1376,7 +1371,6 @@ def create_repository(
                     "form_pkey": primary_key,
                     "form_deflang": default_language,
                     "form_othlangs": other_languages,
-                    "form_yesno": yes_no_strings,
                 },
             )
             if not for_merging:

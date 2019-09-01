@@ -178,7 +178,6 @@ class Odkform(Base):
     form_stage = Column(INTEGER)
     form_pkey = Column(Unicode(120))
     form_deflang = Column(Unicode(120))
-    form_yesno = Column(Unicode(120))
     form_othlangs = Column(UnicodeText)
     form_sepfile = Column(UnicodeText)
     form_xlsfile = Column(UnicodeText)
@@ -406,24 +405,6 @@ class Jsonlog(Base):
     project = relationship("Odkform")
 
 
-class Septable(Base):
-    __tablename__ = "septable"
-    __table_args__ = (
-        ForeignKeyConstraint(
-            ["project_id", "form_id"],
-            ["odkform.project_id", "odkform.form_id"],
-            ondelete="CASCADE",
-        ),
-    )
-
-    project_id = Column(Unicode(64), primary_key=True, nullable=False)
-    form_id = Column(Unicode(120), primary_key=True, nullable=False)
-    table_name = Column(Unicode(120), primary_key=True, nullable=False)
-    table_desc = Column(UnicodeText)
-
-    project = relationship("Odkform")
-
-
 class Submission(Base):
     __tablename__ = "submission"
     __table_args__ = (
@@ -484,67 +465,3 @@ class Jsonhistory(Base):
     collaborator = relationship("Collaborator")
     form = relationship("Jsonlog")
 
-
-class Sepsection(Base):
-    __tablename__ = "sepsection"
-    __table_args__ = (
-        ForeignKeyConstraint(
-            ["project_id", "form_id", "table_name"],
-            ["septable.project_id", "septable.form_id", "septable.table_name"],
-            ondelete="CASCADE",
-        ),
-    )
-
-    project_id = Column(Unicode(64), primary_key=True, nullable=False)
-    form_id = Column(Unicode(120), primary_key=True, nullable=False)
-    table_name = Column(Unicode(120), primary_key=True, nullable=False)
-    section_id = Column(Unicode(12), primary_key=True, nullable=False)
-    section_name = Column(Unicode(120))
-    section_desc = Column(UnicodeText)
-    section_order = Column(INTEGER)
-
-    project = relationship("Septable")
-
-
-class Sepitem(Base):
-    __tablename__ = "sepitems"
-    __table_args__ = (
-        ForeignKeyConstraint(
-            ["project_id", "form_id", "table_name"],
-            ["septable.project_id", "septable.form_id", "septable.table_name"],
-            ondelete="CASCADE",
-        ),
-        ForeignKeyConstraint(
-            ["section_project", "section_form", "section_table", "section_id"],
-            [
-                "sepsection.project_id",
-                "sepsection.form_id",
-                "sepsection.table_name",
-                "sepsection.section_id",
-            ],
-            ondelete="CASCADE",
-        ),
-        Index(
-            "fk_sepitems_sepsection1_idx",
-            "section_project",
-            "section_form",
-            "section_table",
-            "section_id",
-        ),
-    )
-
-    project_id = Column(Unicode(64), primary_key=True, nullable=False)
-    form_id = Column(Unicode(120), primary_key=True, nullable=False)
-    table_name = Column(Unicode(120), primary_key=True, nullable=False)
-    item_name = Column(Unicode(120), primary_key=True, nullable=False)
-    item_desc = Column(UnicodeText)
-    item_xmlcode = Column(UnicodeText)
-    item_notdisplay = Column(INTEGER)
-    item_order = Column(INTEGER)
-    section_project = Column(Unicode(64), nullable=False)
-    section_form = Column(Unicode(120), nullable=False)
-    section_table = Column(Unicode(120), nullable=False)
-    section_id = Column(Unicode(12), nullable=False)
-
-    project = relationship("Septable")
-    sepsection = relationship("Sepsection")

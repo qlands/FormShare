@@ -3,9 +3,6 @@ from lxml import etree
 from formshare.models import Odkform as Form
 from formshare.models import (
     Collaborator,
-    Septable,
-    Sepsection,
-    Sepitem,
     Submission,
     Jsonlog,
     Jsonhistory,
@@ -22,8 +19,6 @@ import re
 from formshare.config.encdecdata import decode_data
 from formshare.processes.db.form import get_assistant_forms
 from formshare.processes.db.assistant import get_project_from_assistant
-from sqlalchemy import func
-from sqlalchemy.sql import label
 import logging
 from sqlalchemy.event import listen
 
@@ -537,23 +532,6 @@ def update_form_repository_info(request, project, form, data):
     ).update(data)
 
 
-def update_form_stage_number(request, project, form, stage):
-    request.dbsession.query(Form).filter(Form.project_id == project).filter(
-        Form.form_id == form
-    ).update({"form_stage": stage})
-    if stage is None:
-        request.dbsession.query(Form).filter(Form.project_id == project).filter(
-            Form.form_id == form
-        ).update(
-            {
-                "form_deflang": None,
-                "form_othlangs": None,
-                "form_yesno": None,
-                "form_pkey": None,
-            }
-        )
-
-
 def get_form_data(project, form, request):
     res = {}
     data = (
@@ -569,7 +547,6 @@ def get_form_data(project, form, request):
         res["schema"] = data.form_schema
         res["form_pkey"] = data.form_pkey
         res["form_deflang"] = data.form_deflang
-        res["form_yesno"] = data.form_yesno
         res["form_othlangs"] = data.form_othlangs
         res["form_stage"] = data.form_stage
     return res

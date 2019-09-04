@@ -601,9 +601,9 @@ def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
         log.error("The post xlsx elements is empty. Error {}".format(str(e)))
         return False, _("No file was attached")
 
-    paths = ["tmp", uid, input_file_name]
+    paths = ["tmp", uid, input_file_name.lower()]
     file_name = os.path.join(odk_dir, *paths)
-    file_name = file_name.lower()
+
     input_file.seek(0)
     with open(file_name, "wb") as permanent_file:
         shutil.copyfileobj(input_file, permanent_file)

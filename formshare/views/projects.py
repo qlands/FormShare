@@ -42,6 +42,7 @@ from formshare.processes.elasticsearch.repository_index import (
 from formshare.processes.submission.api import get_gps_points_from_project
 import re
 from pyramid.response import FileResponse
+import formshare.plugins as p
 
 
 class ProjectStoredFileView(ProjectsView):
@@ -179,67 +180,83 @@ class AddProjectView(ProjectsView):
                     next_page = self.request.params.get(
                         "next"
                     ) or self.request.route_url("dashboard", userid=self.user.login)
-                    added, message = add_project(
-                        self.request, self.user.login, project_details
-                    )
-                    if added:
-                        # Generate the QR image
-                        url = self.request.route_url(
-                            "project_details",
-                            userid=self.user.login,
-                            projcode=project_details["project_code"],
-                        )
-                        odk_settings = {
-                            "admin": {
-                                "change_server": True,
-                                "change_form_metadata": False,
-                            },
-                            "general": {
-                                "change_server": True,
-                                "navigation": "buttons",
-                                "server_url": url,
-                            },
-                        }
-                        qr_json = json.dumps(odk_settings).encode()
-                        zip_json = zlib.compress(qr_json)
-                        serialization = base64.encodebytes(zip_json)
-                        serialization = serialization.decode()
-                        serialization = serialization.replace("\n", "")
-                        img = qrcode.make(serialization)
-                        img_bytes = io.BytesIO()
-                        img.save(img_bytes, "PNG")
-                        img_bytes.seek(0)
-                        store_file(
-                            self.request,
-                            message,
-                            project_details["project_code"] + ".png",
-                            img_bytes,
-                        )
-                        modify_project(
-                            self.request,
-                            message,
-                            {
-                                "project_code": project_details["project_code"],
-                                "project_image": project_details["project_code"]
-                                + ".png",
-                            },
-                        )
 
-                        # Store the notifications
-                        feed_manager = get_manager(self.request)
-                        # Notify tha the user added a project
-                        actor = Actor(self.user.login, "person")
-                        feed_object = Object(message, "project")
-                        activity = Activity("add", actor, feed_object)
-                        feed_manager.add_activity_feed(activity)
-
-                        self.request.session.flash(
-                            self._("The project has been created")
+                    continue_creation = True
+                    for plugin in p.PluginImplementations(p.IProject):
+                        data, continue_creation, error_message = plugin.before_create(
+                            self.request, self.user.login, project_details
                         )
-                        self.returnRawViewResult = True
-                        return HTTPFound(location=next_page)
-                    else:
-                        self.errors.append(message)
+                        if not continue_creation:
+                            self.errors.append(error_message)
+                        else:
+                            project_details = data
+                        break  # Only one plugging will be called to extend before_register
+
+                    if continue_creation:
+                        added, message = add_project(
+                            self.request, self.user.login, project_details
+                        )
+                        if added:
+                            for plugin in p.PluginImplementations(p.IProject):
+                                plugin.after_create(self.request, self.user.login, project_details)
+
+                            # Generate the QR image
+                            url = self.request.route_url(
+                                "project_details",
+                                userid=self.user.login,
+                                projcode=project_details["project_code"],
+                            )
+                            odk_settings = {
+                                "admin": {
+                                    "change_server": True,
+                                    "change_form_metadata": False,
+                                },
+                                "general": {
+                                    "change_server": True,
+                                    "navigation": "buttons",
+                                    "server_url": url,
+                                },
+                            }
+                            qr_json = json.dumps(odk_settings).encode()
+                            zip_json = zlib.compress(qr_json)
+                            serialization = base64.encodebytes(zip_json)
+                            serialization = serialization.decode()
+                            serialization = serialization.replace("\n", "")
+                            img = qrcode.make(serialization)
+                            img_bytes = io.BytesIO()
+                            img.save(img_bytes, "PNG")
+                            img_bytes.seek(0)
+                            store_file(
+                                self.request,
+                                message,
+                                project_details["project_code"] + ".png",
+                                img_bytes,
+                            )
+                            modify_project(
+                                self.request,
+                                message,
+                                {
+                                    "project_code": project_details["project_code"],
+                                    "project_image": project_details["project_code"]
+                                    + ".png",
+                                },
+                            )
+
+                            # Store the notifications
+                            feed_manager = get_manager(self.request)
+                            # Notify tha the user added a project
+                            actor = Actor(self.user.login, "person")
+                            feed_object = Object(message, "project")
+                            activity = Activity("add", actor, feed_object)
+                            feed_manager.add_activity_feed(activity)
+
+                            self.request.session.flash(
+                                self._("The project has been created")
+                            )
+                            self.returnRawViewResult = True
+                            return HTTPFound(location=next_page)
+                        else:
+                            self.errors.append(message)
                 else:
                     self.errors.append(
                         self._(

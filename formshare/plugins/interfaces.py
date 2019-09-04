@@ -17,6 +17,7 @@ __all__ = [
     "IProduct",
     "IImportExternalData",
     "IRepository",
+    "IProject",
 ]
 
 
@@ -181,6 +182,33 @@ class IDatabase(Interface):
         :param metadata: FormShare ORM metadata object
 
         """
+
+
+class IProject(Interface):
+    """
+        Allows to hook into the processes that create, update and delete projects
+    """
+
+    def before_create(self, request, user, project_data):
+        """
+        Called by the host application so plugins can perform actions before adding a project
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project_data: project data
+        :return: Return a modified version of project_data, true or false if the project should be added. If False then
+        a message should state why. Example: return project_data, False, "My message"
+        """
+        raise NotImplementedError("before_create must be implemented in subclasses")
+
+    def after_create(self, request, user, project_data):
+        """
+        Called by the host application so plugins can perform actions before adding a project
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project_data: project data
+        :return: None
+        """
+        raise NotImplementedError("after_create must be implemented in subclasses")
 
 
 class IAuthorize(Interface):

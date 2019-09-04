@@ -62,6 +62,7 @@
                 <h3>{{ _('Account summary') }}</h3>
             </div>
             {% include 'dashboard/snippets/account_summary.jinja2' %}
+            {% set upload_for_merging = false %}
             {% set action_url = request.route_url('form_add',userid=activeProject.owner,projcode=activeProject.project_code,_query={'next': request.url}) %}
             {% include 'dashboard/projects/forms/snippets/upload_form.jinja2' %}
         {% else %}

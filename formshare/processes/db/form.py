@@ -19,7 +19,6 @@ from sqlalchemy.exc import IntegrityError
 import uuid
 import datetime
 import mimetypes
-from lxml import etree
 from formshare.processes.db.assistant import (
     get_project_from_assistant,
     get_assistant_data,
@@ -273,6 +272,24 @@ def get_project_form_colors(request, project):
     return res
 
 
+def form_has_subversion(request, user, project, form):
+    res = (
+        request.dbsession.query(Odkform)
+        .filter(Odkform.parent_project == project)
+        .filter(Odkform.parent_form == form)
+        .first()
+    )
+    if res is not None:
+        return {
+            "child_project": res.project_id,
+            "child_form": res.form_id,
+            "child_project_code": get_project_code_from_id(request, user, project),
+            "child_data": get_form_data(request, res.project_id, res.form_id),
+        }
+    else:
+        return None
+
+
 def get_form_details(request, user, project, form):
     result = get_form_data(request, project, form)
     if result is not None:
@@ -289,6 +306,13 @@ def get_form_details(request, user, project, form):
             result["indb"] = 0
             result["inlogs"] = 0
             result["inerror"] = 0
+            result["has_sub_version"] = None
+            if result["parent_form"] is not None:
+                result["parent_form_data"] = get_form_data(
+                    request, result["parent_project"], result["parent_form"]
+                )
+            else:
+                result["parent_form_data"] = None
         else:
             submissions, last, in_database, in_logs, in_error, by = get_number_of_submissions_in_database(
                 request, project, result["form_id"]
@@ -299,6 +323,16 @@ def get_form_details(request, user, project, form):
             result["indb"] = in_database
             result["inlogs"] = in_logs
             result["inerror"] = in_error
+            result["has_sub_version"] = form_has_subversion(
+                request, user, project, form
+            )
+            if result["has_sub_version"] is None:
+                if result["parent_form"] is not None:
+                    result["parent_form_data"] = get_form_data(
+                        request, result["parent_project"], result["parent_form"]
+                    )
+                else:
+                    result["parent_form_data"] = None
         return result
     else:
         return None
@@ -314,57 +348,56 @@ def get_project_forms(request, user, project):
     res = (
         request.dbsession.query(Odkform)
         .filter(Odkform.project_id == project)
-        .filter(Odkform.form_incversion == 0)
         .order_by(Odkform.form_cdate.desc())
         .all()
     )
-    parent_forms = map_from_schema(res)
-    # We nest the forms in an element tree so child belong to parents
-    root = etree.Element("root")
-    for form in parent_forms:
-        e_form = etree.Element(form["form_id"])
-        e_form.set("haschildren", "False")
-        e_form.set("project_id", form["project_id"])
-        root.append(e_form)
-
-    # Get all children forms in ascending order
-    res = (
-        request.dbsession.query(Odkform)
-        .filter(Odkform.project_id == project)
-        .filter(Odkform.form_incversion == 1)
-        .order_by(Odkform.form_cdate.asc())
-        .all()
-    )
-    child_forms = map_from_schema(res)
-    for form in child_forms:
-        form_id = root.findall(".//" + form["parent_form"])
-        if form_id:
-            form_id[0].set("haschildren", "True")
-            child = etree.Element(form["form_id"])
-            child.set("project_id", form["project_id"])
-            form_id[0].append(child)
-
-    # Get all the form ids in order
-    form_order = []
-    for tag in root.iter():
-        if tag.tag != "root":
-            form_order.append(
-                {
-                    "id": tag.tag,
-                    "haschildren": tag.get("haschildren"),
-                    "project_id": tag.get("project_id"),
-                }
-            )
-
-    # Get all the forms in order
-    all_forms = parent_forms + child_forms
-    forms = []
-    for form in form_order:
-        for a_form in all_forms:
-            if form["id"] == a_form["form_id"]:
-                a_form["haschildren"] = form["haschildren"]
-                forms.append(a_form)
-                break
+    forms = map_from_schema(res)
+    # # We nest the forms in an element tree so child belong to parents
+    # root = etree.Element("root")
+    # for form in parent_forms:
+    #     e_form = etree.Element(form["form_id"])
+    #     e_form.set("haschildren", "False")
+    #     e_form.set("project_id", form["project_id"])
+    #     root.append(e_form)
+    #
+    # # Get all children forms in ascending order
+    # res = (
+    #     request.dbsession.query(Odkform)
+    #     .filter(Odkform.project_id == project)
+    #     .filter(Odkform.form_incversion == 1)
+    #     .order_by(Odkform.form_cdate.desc())
+    #     .all()
+    # )
+    # child_forms = map_from_schema(res)
+    # for form in child_forms:
+    #     form_id = root.findall(".//" + form["parent_form"])
+    #     if form_id:
+    #         form_id[0].set("haschildren", "True")
+    #         child = etree.Element(form["form_id"])
+    #         child.set("project_id", form["project_id"])
+    #         form_id[0].append(child)
+    #
+    # # Get all the form ids in order
+    # form_order = []
+    # for tag in root.iter():
+    #     if tag.tag != "root":
+    #         form_order.append(
+    #             {
+    #                 "id": tag.tag,
+    #                 "haschildren": tag.get("haschildren"),
+    #                 "project_id": tag.get("project_id"),
+    #             }
+    #         )
+    #
+    # # Get all the forms in order
+    # all_forms = parent_forms + child_forms
+    # forms = []
+    # for form in form_order:
+    #     for a_form in all_forms:
+    #         if form["id"] == a_form["form_id"]:
+    #             a_form["haschildren"] = form["haschildren"]
+    #             forms.append(a_form)
+    #             break
 
     for form in forms:
         form["pubby"] = get_creator_data(request, form["form_pubby"])
@@ -384,6 +417,14 @@ def get_project_forms(request, user, project):
             form["bydetails"] = get_by_details(request, user, form["project_id"], by)
             form["indb"] = 0
             form["inlogs"] = 0
+            form["has_sub_version"] = None
+            if form["parent_form"] is not None:
+                form["parent_form_data"] = get_form_data(
+                    request, form["parent_project"], form["parent_form"]
+                )
+            else:
+                form["parent_form_data"] = None
+
         else:
             submissions, last, in_database, in_logs, in_error, by = get_number_of_submissions_in_database(
                 request, form["project_id"], form["form_id"]
@@ -394,6 +435,16 @@ def get_project_forms(request, user, project):
             form["inlogs"] = in_logs
             form["inerror"] = in_error
             form["bydetails"] = get_by_details(request, user, form["project_id"], by)
+            form["has_sub_version"] = form_has_subversion(
+                request, user, form["project_id"], form["form_id"]
+            )
+            if form["has_sub_version"] is None:
+                if form["parent_form"] is not None:
+                    form["parent_form_data"] = get_form_data(
+                        request, form["parent_project"], form["parent_form"]
+                    )
+                else:
+                    form["parent_form_data"] = None
 
     return forms
 

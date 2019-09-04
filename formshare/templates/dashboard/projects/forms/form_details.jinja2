@@ -113,6 +113,11 @@
             {% include 'dashboard/projects/forms/snippets/edit_assistant.jinja2' %}
             {% include 'dashboard/projects/forms/snippets/add_group.jinja2' %}
             {% include 'dashboard/projects/forms/snippets/edit_group.jinja2' %}
+            {% set upload_for_merging = true %}
+            {% set parent_project = projectDetails.project_id %}
+            {% set parent_form = formDetails.form_id %}
+            {% set action_url = request.route_url('form_add',userid=projectDetails.owner,projcode=projectDetails.project_code) %}
+            {% include 'dashboard/projects/forms/snippets/upload_form.jinja2' %}
         {% endif %}
         {% include 'dashboard/projects/forms/snippets/product_error.jinja2' %}
     {% else %}
@@ -148,6 +153,9 @@
                     if (xform_update_started)
                         location.reload();
                 });
+                {% if projectDetails.access_type < 4 %}
+                    {% include 'dashboard/projects/forms/snippets/upload_form_js.jinja2' %}
+                {% endif %}
 
                 {% block odk_scripts %}
                     {% if formDetails.form_schema == None and formDetails.form_reptask != None and taskdata.rescode < 0%}

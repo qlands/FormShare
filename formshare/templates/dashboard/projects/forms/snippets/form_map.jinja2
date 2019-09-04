@@ -22,7 +22,7 @@
                     <div id="projmap" style="height: 600px"></div>
                 {% else %}
                     {% if formDetails.form_geopoint == None %}
-                        This form is not georeferenced
+                        {{ _('This form is not georeferenced') }}
                     {% else %}
                         {% if formDetails.submissions == 0 %}
                             {{ _('No map is available at the moment. Waiting for submissions') }}

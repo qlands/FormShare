@@ -179,7 +179,8 @@ class Odkform(Base):
     form_pkey = Column(Unicode(120))
     form_deflang = Column(Unicode(120))
     form_othlangs = Column(UnicodeText)
-    form_sepfile = Column(UnicodeText)
+    form_mergetask = Column(Unicode(64))
+    form_abletomerge = Column(INTEGER, server_default=text("'-1'"))
     form_xlsfile = Column(UnicodeText)
     form_xmlfile = Column(UnicodeText)
     form_jsonfile = Column(UnicodeText)
@@ -464,4 +465,3 @@ class Jsonhistory(Base):
 
     collaborator = relationship("Collaborator")
     form = relationship("Jsonlog")
-

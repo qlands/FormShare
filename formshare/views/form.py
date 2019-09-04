@@ -47,7 +47,6 @@ from formshare.processes.submission.api import (
 from formshare.processes.odk.api import (
     get_odk_path,
     upload_odk_form,
-    update_form_title,
     retrieve_form_file,
     update_odk_form,
     get_missing_support_files,
@@ -180,10 +179,14 @@ class AddNewForm(PrivateView):
         if self.request.method == "POST":
             self.returnRawViewResult = True
             odk_path = get_odk_path(self.request)
-
+            for_merging = False
             form_data = self.get_post_dict()
             if "form_target" not in form_data.keys():
                 form_data["form_target"] = 0
+
+            if "for_merging" in form_data.keys():
+                form_data.pop("for_merging")
+                for_merging = True
 
             form_data.pop("xlsx")
 
@@ -191,7 +194,7 @@ class AddNewForm(PrivateView):
                 form_data["form_target"] = 0
 
             uploaded, message = upload_odk_form(
-                self.request, project_id, self.user.login, odk_path, form_data
+                self.request, project_id, self.user.login, odk_path, form_data, for_merging
             )
 
             if uploaded:
@@ -204,11 +207,19 @@ class AddNewForm(PrivateView):
                 self.request.session.flash(self._("The form was added successfully"))
                 return HTTPFound(next_page)
             else:
-                next_page = self.request.params.get("next") or self.request.route_url(
-                    "project_details",
-                    userid=project_details["owner"],
-                    projcode=project_code,
-                )
+                if not for_merging:
+                    next_page = self.request.params.get("next") or self.request.route_url(
+                        "project_details",
+                        userid=project_details["owner"],
+                        projcode=project_code,
+                    )
+                else:
+                    next_page = self.request.route_url(
+                        "form_details",
+                        userid=project_details["owner"],
+                        projcode=project_code,
+                        formid=form_data['parent_form'],
+                    )
                 self.add_error(self._("Unable to upload the form: ") + message)
                 return HTTPFound(next_page)
 
@@ -317,7 +328,6 @@ class EditForm(PrivateView):
             raise HTTPNotFound
 
         if self.request.method == "POST":
-            current_form_data = get_form_data(self.request, project_id, form_id)
             form_data = self.get_post_dict()
             if "form_accsub" in form_data.keys():
                 form_data["form_accsub"] = 1
@@ -327,19 +337,11 @@ class EditForm(PrivateView):
             if form_data["form_target"] == "":
                 form_data["form_target"] = 0
 
-            form_name_changed = True
-            if current_form_data["form_name"] == form_data["form_name"]:
-                form_name_changed = False
-
             next_page = self.request.params.get("next") or self.request.route_url(
                 "form_details", userid=user_id, projcode=project_code, formid=form_id
             )
             edited, message = update_form(self.request, project_id, form_id, form_data)
             if edited:
-                if form_name_changed:
-                    update_form_title(
-                        self.request, project_id, form_id, form_data["form_name"]
-                    )
                 self.request.session.flash(self._("The form was edited successfully"))
                 self.returnRawViewResult = True
                 return HTTPFound(next_page)

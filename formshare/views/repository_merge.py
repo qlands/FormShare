@@ -107,6 +107,9 @@ class RepositoryMergeForm(PrivateView):
                 new_form_id = message
                 new_form_data = get_form_data(project_id, new_form_id, self.request)
                 old_form_data = get_form_data(project_id, form_id, self.request)
+
+                # TODO: This will not work because the old files might not apply for the new form!
+
                 # Copying the media files from the old form the to new_one
                 old_form_files = get_media_files(self.request, project_id, form_id)
                 new_form_files = get_media_files(self.request, project_id, new_form_id)

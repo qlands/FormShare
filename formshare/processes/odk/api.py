@@ -85,7 +85,6 @@ __all__ = [
     "restore_from_revision",
     "push_revision",
     "upload_odk_form",
-    "update_form_title",
     "retrieve_form_file",
     "get_odk_path",
     "store_file_in_directory",
@@ -167,32 +166,6 @@ def get_missing_support_files(request, project, form, required_files, form_files
             missing_files.append(required_file)
 
     return missing_files
-
-
-def update_form_title(request, project, form, title):
-    xml_file = get_form_xml_file(request, project, form)
-    tree = etree.parse(xml_file)
-    root = tree.getroot()
-    h_nsmap = root.nsmap["h"]
-    form_title = root.findall(".//{" + h_nsmap + "}title")
-    if form_title:
-        form_title[0].text = title
-    tree.write(xml_file, pretty_print=True, xml_declaration=True, encoding="utf-8")
-
-    form_directory = get_form_directory(request, project, form)
-    md5(open(xml_file, "rb").read()).hexdigest()
-    odk_dir = get_odk_path(request)
-    json_file = os.path.join(
-        odk_dir, *["forms", form_directory, form.lower() + ".json"]
-    )
-    with open(json_file, "r") as f:
-        json_metadata = json.load(f)
-        json_metadata["name"] = title
-        json_metadata["hash"] = "md5:" + md5(open(xml_file, "rb").read()).hexdigest()
-        json_metadata["descriptionText"] = title
-    with open(json_file, "w") as outfile:
-        json_string = json.dumps(json_metadata, indent=4, ensure_ascii=False)
-        outfile.write(json_string)
 
 
 def get_geopoint_variable_from_json(json_dict, parent_array):
@@ -628,7 +601,7 @@ def check_jxform_file(request, json_file, external_file=None):
         return p.returncode, stderr.decode()
 
 
-def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
+def upload_odk_form(request, project_id, user_id, odk_dir, form_data, for_merging=False):
     _ = request.translate
     uid = str(uuid.uuid4())
     form_directory = uid
@@ -738,6 +711,8 @@ def upload_odk_form(request, project_id, user_id, odk_dir, form_data):
                             )
                         form_data["project_id"] = project_id
                         form_data["form_id"] = form_id
+                        if for_merging:
+                            form_data["form_incversion"] = 1
                         form_data["form_name"] = form_title[0].text
                         form_data["form_cdate"] = datetime.datetime.now()
                         form_data["form_directory"] = form_directory

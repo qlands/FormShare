@@ -6,12 +6,31 @@ from pyramid.httpexceptions import HTTPNotFound, HTTPFound
 from formshare.processes.odk.api import create_repository, get_odk_path
 from lxml import etree
 from formshare.processes.elasticsearch.repository_index import delete_dataset_index
+from formshare.processes.email.send_email import send_error_to_technical_team
+import logging
+
+log = logging.getLogger("formshare")
 
 
 class GenerateRepository(PrivateView):
     def __init__(self, request):
         PrivateView.__init__(self, request)
         self.privateOnly = True
+
+    def report_critical_error(self, user, project, form, error_code, message):
+        send_error_to_technical_team(
+            self.request,
+            "Error while creating the repository for form {} in "
+            "project {}. \nAccount: {}\nError: {}\nMessage: {}\n".format(
+                form, project, user, error_code, message
+            ),
+        )
+        log.error(
+            "Error while creating the repository for form {} in "
+            "project {}. \nAccount: {}\nError: {}\nMessage: {}\n".format(
+                form, project, user, error_code, message
+            )
+        )
 
     def process_view(self):
         user_id = self.request.matchdict["userid"]
@@ -60,7 +79,6 @@ class GenerateRepository(PrivateView):
                             run_process = False
                     default_language_string = "("
                     other_languages_string = ""
-                    yes_no_string = ""
                     if "start_stage2" in postdata.keys():
                         stage = 2
                         languages_string = postdata.get("languages_string", "")
@@ -86,7 +104,9 @@ class GenerateRepository(PrivateView):
                                         + ")"
                                         + language["name"]
                                     )
-                                    language["code"] = postdata.get("LNG-" + language["name"])
+                                    language["code"] = postdata.get(
+                                        "LNG-" + language["name"]
+                                    )
                                 else:
                                     other_languages.append(
                                         "("
@@ -94,24 +114,21 @@ class GenerateRepository(PrivateView):
                                         + ")"
                                         + language["name"]
                                     )
-                                    language["code"] = postdata.get("LNG-" + language["name"])
+                                    language["code"] = postdata.get(
+                                        "LNG-" + language["name"]
+                                    )
                             else:
                                 empty_code_found = True
                                 break
                         if empty_code_found:
                             self.errors.append(
                                 self._(
-                                    "You need to indicate a ISO 639-1 for each language"
+                                    "You need to indicate a ISO 639-1 code for each language"
                                 )
                             )
                             run_process = False
                         else:
                             other_languages_string = ",".join(other_languages)
-
-                        print("****************************88")
-                        print(default_language_string)
-                        print(other_languages_string)
-                        print("****************************88")
 
                     if run_process:
                         odk_path = get_odk_path(self.request)
@@ -159,11 +176,17 @@ class GenerateRepository(PrivateView):
                         else:
                             if result_code == 1:
                                 # Internal error: Report issue
+                                self.report_critical_error(
+                                    user_id, project_id, form_id, result_code, message
+                                )
                                 stage = -1
                             if result_code == 2:
                                 # 64 or more relationships. Report issue because this was checked before
+                                self.report_critical_error(
+                                    user_id, project_id, form_id, result_code, message
+                                )
                                 stage = -1
-                            if 3 <= result_code <= 8:
+                            if 3 <= result_code <= 6:
                                 if result_code == 3:
                                     root = etree.fromstring(message)
                                     language_array = root.findall(
@@ -171,10 +194,19 @@ class GenerateRepository(PrivateView):
                                     )  # language
                                     if language_array:
                                         for aLang in language_array:
-                                            languages.append({"code": "", "name": aLang.get("name")})
+                                            languages.append(
+                                                {"code": "", "name": aLang.get("name")}
+                                            )
                                     languages_string = json.dumps(languages)
                                     stage = 2
                                 else:
+                                    self.report_critical_error(
+                                        user_id,
+                                        project_id,
+                                        form_id,
+                                        result_code,
+                                        message,
+                                    )
                                     stage = -1
 
                             if result_code == 9:
@@ -227,19 +259,33 @@ class GenerateRepository(PrivateView):
                                 stage = -1
                             if result_code == 16:
                                 # Search error. Report issue
+                                self.report_critical_error(
+                                    user_id, project_id, form_id, result_code, message
+                                )
                                 stage = -1
                             if result_code == 17:
                                 # Primary key is invalid
-                                self.errors.append(self._("The primary is invalid."))
+                                self.errors.append(
+                                    self._("The primary key is invalid.")
+                                )
                                 stage = 1
                             if result_code == 18:
                                 # Duplicate tables. Report issue because this was checked before
+                                self.report_critical_error(
+                                    user_id, project_id, form_id, result_code, message
+                                )
                                 stage = -1
                             if result_code == 19:
                                 # Duplicate fields. Report issue because this was checked before
+                                self.report_critical_error(
+                                    user_id, project_id, form_id, result_code, message
+                                )
                                 stage = -1
                             if result_code == 20:
                                 # Invalid fields. Report issue because this was checked before
+                                self.report_critical_error(
+                                    user_id, project_id, form_id, result_code, message
+                                )
                                 stage = -1
                             if result_code == 21:
                                 # Duplicated lookups

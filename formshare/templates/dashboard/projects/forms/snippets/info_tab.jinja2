@@ -29,24 +29,61 @@
                     </div>
                 {% endblock info_tab_content_with_target %}
             {% endif %}
-            <p style="margin-top: 10px" class="small font-bold">
-                {% block info_tab_content_badges %}
-                    {% if formDetails.form_schema != None %}<span class="badge badge-primary">With repository</span>{% else %}{% if formDetails.form_reptask == None or (formDetails.form_reptask != None and taskdata.rescode > 0) %}<span class="badge badge-warning" title="{{ _('Data is not stored in a database') }}">{{ _('In testing') }}</span>{% else %}<span class="badge badge-info" title="{{ _('FormShare is generating your repository. Please wait....') }}">{{ _('Generating repository...') }}</span>{% endif %}{% endif %} {% if formDetails.form_accsub == 1 %}<span class="label label-primary" title="{{ _('Accept submissions') }}">{{ _('Active') }}</span>{% else %}<span class="label label-danger" title="{{ _('Does\'t accept submissions') }}">{{ _('Inactive') }}</span>{% endif %} {% if formDetails.form_geopoint != None %}<span class="label label-default">{{ _('Georeferenced') }}</span>{% endif %}
-                {% endblock info_tab_content_badges %}
-            </p>
-            {% if projectDetails.access_type < 4 %}
-                <div class="actions">
-                    {% block info_tab_content_actions %}
-                        {% if formDetails.form_schema == None %}
-                            <a href="{{ request.route_url('createrepository',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-database"></i> {{ _('Create repository') }} </a>
-                            <a id="update_form_btn" class="btn btn-xs btn-white" data-toggle="modal" data-target="#update_form"><i class="fas fa-file-upload"></i> {{ _('Update ODK form') }} </a>
-                        {% endif %}
-                        {% if projectDetails.access_type <= 2 or formDetails.pubby.user_id == activeUser.id %}
-                            <a urn="{{ request.route_url('delete_form', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" class="btn btn-xs btn-white remove_form"><i style="color: red" class="far fa-trash-alt"></i> {{ _('Delete') }}</a>
-                        {% endif %}
-                    {% endblock info_tab_content_actions %}
+            <div class="row">
+                <div class="col-md-12">
+                    <ul class="tag-list" style="padding: 0">
+                        {% block info_tab_content_badges %}
+                            {% if formDetails.form_schema != None %}
+                                <li><a style="background-color: #1c84c6; color: white; border-radius: 25px" >With repository</a></li>
+                            {% else %}
+                                {% if formDetails.form_reptask == None or (formDetails.form_reptask != None and taskdata.rescode > 0) %}
+                                    <li title="{{ _('Data is not stored in a database') }}"><a style="background-color: #c67d09; color: white; border-radius: 25px">{{ _('In testing') }}</a></li>
+                                {% else %}
+                                    <li title="{{ _('FormShare is generating your repository. Please wait....') }}"><a style="background-color: #c67d09; color: white; border-radius: 25px">{{ _('Generating repository...') }}</a></li>
+                                {% endif %}
+                            {% endif %}
+                            {% if formDetails.form_accsub == 1 %}
+                                <li title="{{ _('Accept submissions') }}"><a style="background-color: #1c84c6; color: white; border-radius: 25px"> {{ _('Active') }}</a></li>
+                            {% else %}
+                                <li title="{{ _('Does\'t accept submissions') }}"><a style="background-color: red; color: white; border-radius: 25px">{{ _('Inactive') }}</a></li>
+                            {% endif %}
+                            {% if formDetails.form_geopoint != None %}
+                                <li><a style="border-radius: 25px">{{ _('Georeferenced') }}</a></li>
+                                {% if formDetails.has_sub_version != None %}
+                                    <li title='"{{ formDetails.has_sub_version.child_data.form_name }}" {{ _("is the sub-version of this form.") }}'><a href="{{ request.route_url('form_details',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.has_sub_version.child_form) }}" style="border-radius: 25px; background-color: #6f42c1; color: white">{{ _('With sub-version') }}</a></li>
+                                {% else %}
+                                    {% if formDetails.parent_form != None %}
+                                        <li title='{{ _('This is the sub-version of ') }}"{{ formDetails.parent_form_data.form_name }}".'><a href="{{ request.route_url('form_details',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.parent_form) }}" style="border-radius: 25px; background-color: #6f42c1; color: white">{{ _('Sub-version') }}</a></li>
+                                    {% endif %}
+                                {% endif %}
+                            {% endif %}
+                        {% endblock info_tab_content_badges %}
+                    </ul>
                 </div>
-            {% endif %}
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <ul class="tag-list" style="padding: 0">
+                        {% block info_tab_content_actions %}
+                            {% if projectDetails.access_type < 4 %}
+                                {% if formDetails.form_schema == None %}
+                                    {% if formDetails.parent_form == None %}
+                                        <li><a href="{{ request.route_url('createrepository',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-database"></i> {{ _('Create repository') }} </a></li>
+                                        <li><a id="update_form_btn" class="btn btn-xs btn-white" data-toggle="modal" data-target="#update_form"><i class="fas fa-file-upload"></i> {{ _('Update ODK form') }} </a></li>
+                                    {% else %}
+                                        <li><a class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-code-branch"></i> {{ _('Merge repository') }} </a></li>
+                                    {% endif %}
+                                {% endif %}
+                                {% if projectDetails.access_type <= 2 or formDetails.pubby.user_id == activeUser.id %}
+                                    {% if formDetails.has_sub_version == None %}
+                                        <li><a urn="{{ request.route_url('delete_form', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" class="btn btn-xs btn-white remove_form"><i style="color: red" class="far fa-trash-alt"></i> {{ _('Delete form') }}</a></li>
+                                    {% endif %}
+                                {% endif %}
+                            {% endif %}
+                        {% endblock info_tab_content_actions %}
+                    </ul>
+                </div>
+            </div>
         {% endblock info_tab_content %}
     </div>
 </div>

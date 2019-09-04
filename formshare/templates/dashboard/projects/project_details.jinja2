@@ -45,7 +45,8 @@
             {% include 'dashboard/profile/snippets/profile_head.jinja2' %}
         {% endif %}
         {% include 'dashboard/projects/snippets/project_details.jinja2' %}
-        {% set action_url = request.route_url('form_add',userid=activeProject.owner,projcode=projectData.project_code) %}
+        {% set upload_for_merging = false %}
+        {% set action_url = request.route_url('form_add',userid=projectData.owner,projcode=projectData.project_code) %}
         {% include 'dashboard/projects/forms/snippets/upload_form.jinja2' %}
         {% include 'dashboard/projects/snippets/upload_file.jinja2' %}
     {% endif %}
@@ -56,7 +57,8 @@
     {% if viewingSelfAccount %}
         {{ form.display_errors(errors,true) }}
         {% include 'dashboard/projects/snippets/project_details.jinja2' %}
-        {% set action_url = request.route_url('form_add',userid=activeProject.owner,projcode=projectData.project_code) %}
+        {% set upload_for_merging = false %}
+        {% set action_url = request.route_url('form_add',userid=projectData.owner,projcode=projectData.project_code) %}
         {% include 'dashboard/projects/forms/snippets/upload_form.jinja2' %}
         {% include 'dashboard/projects/snippets/upload_file.jinja2' %}
     {% else %}

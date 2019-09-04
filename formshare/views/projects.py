@@ -352,9 +352,6 @@ class ActivateProjectView(ProjectsView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] >= 4:
-            raise HTTPNotFound
-
         if self.request.method == "POST":
             next_page = self.request.params.get("next") or self.request.route_url(
                 "projects", userid=self.user.login

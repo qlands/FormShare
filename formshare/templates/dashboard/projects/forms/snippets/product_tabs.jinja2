@@ -6,10 +6,12 @@
                     <ul class="nav nav-tabs">
                         {% set active_product = request.params.get('product',None) %}
                         {% for product in products %}
-                            {% if active_product == None and loop.index == 1 %}
-                                {% set active_product = product.code %}
+                            {% if product.hidden == false %}
+                                {% if active_product == None and loop.index == 1 %}
+                                    {% set active_product = product.code %}
+                                {% endif %}
+                                <li><a class="nav-link {% if active_product == product.code %}active{% endif %}" href="#prd_tab_{{ product.code }}" data-toggle="tab"><i class="{{ product.icon }}"></i>{{ product.desc }}</a></li>
                             {% endif %}
-                            <li><a class="nav-link {% if active_product == product.code %}active{% endif %}" href="#prd_tab_{{ product.code }}" data-toggle="tab"><i class="{{ product.icon }}"></i>{{ product.desc }}</a></li>
                         {% endfor %}
                     </ul>
                 </div>
@@ -17,16 +19,18 @@
             <div class="panel-body">
                 <div class="tab-content">
                     {% for product in products %}
-                        {% if active_product == None and loop.index == 1 %}
-                            {% set active_product = product.code %}
-                        {% endif %}
-                        <div class="tab-pane {% if active_product == product.code %}active{% endif %}" id="prd_tab_{{ product.code }}">
-                            <div class="feed-activity-list">
-                                {% for output in product.outputs %}
-                                    {% include 'dashboard/projects/forms/snippets/product_item.jinja2' %}
-                                {% endfor %}
+                        {% if product.hidden == false %}
+                            {% if active_product == None and loop.index == 1 %}
+                                {% set active_product = product.code %}
+                            {% endif %}
+                            <div class="tab-pane {% if active_product == product.code %}active{% endif %}" id="prd_tab_{{ product.code }}">
+                                <div class="feed-activity-list">
+                                    {% for output in product.outputs %}
+                                        {% include 'dashboard/projects/forms/snippets/product_item.jinja2' %}
+                                    {% endfor %}
+                                </div>
                             </div>
-                        </div>
+                        {% endif %}
                     {% endfor %}
                 </div>
             </div>

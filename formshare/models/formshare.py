@@ -181,6 +181,7 @@ class Odkform(Base):
     form_othlangs = Column(UnicodeText)
     form_mergetask = Column(Unicode(64))
     form_abletomerge = Column(INTEGER, server_default=text("'-1'"))
+    form_mergerrors = Column(UnicodeText)
     form_xlsfile = Column(UnicodeText)
     form_xmlfile = Column(UnicodeText)
     form_jsonfile = Column(UnicodeText)

@@ -4,7 +4,11 @@
             <div class="modal-header">
                 {% block upload_form_header %}
                     <button id="cross_upload_form_button" type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                    <h4 class="modal-title">{{ _('Upload form') }}</h4>
+                    {% if not upload_for_merging %}
+                        <h4 class="modal-title">{{ _('Upload form') }}</h4>
+                    {% else %}
+                        <h4 class="modal-title">{{ _('Upload form for merging') }}</h4>
+                    {% endif %}
                 {% endblock upload_form_header %}
             </div>
             <form id="form_upload_form" role="form" method="post" enctype="multipart/form-data" action="{{ action_url }}">

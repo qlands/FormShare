@@ -190,7 +190,7 @@ class AddProjectView(ProjectsView):
                             self.errors.append(error_message)
                         else:
                             project_details = data
-                        break  # Only one plugging will be called to extend before_register
+                        break  # Only one plugging will be called to extend before_create
 
                     if continue_creation:
                         added, message = add_project(
@@ -198,7 +198,9 @@ class AddProjectView(ProjectsView):
                         )
                         if added:
                             for plugin in p.PluginImplementations(p.IProject):
-                                plugin.after_create(self.request, self.user.login, project_details)
+                                plugin.after_create(
+                                    self.request, self.user.login, project_details
+                                )
 
                             # Generate the QR image
                             url = self.request.route_url(
@@ -340,13 +342,11 @@ class ActivateProjectView(ProjectsView):
         user_id = self.request.matchdict["userid"]
         project_code = self.request.matchdict["projcode"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
         if project_id is not None:
             project_found = False
             for project in self.user_projects:
                 if project["project_id"] == project_id:
                     project_found = True
-                    project_details = project
             if not project_found:
                 raise HTTPNotFound
         else:

@@ -87,7 +87,7 @@ python-docx==0.8.10
 python-editor==1.0.4
 pytz==2019.1
 PyUtilib==5.4.1
--e git+https://github.com/qlands/pyxform.git@add_list_name_in_json#egg=pyxform
+-e git+https://github.com/qlands/pyxform.git@new_add_list_name_in_json#egg=pyxform
 PyYAML==5.1.1
 pyzmq==18.0.2
 qrcode==6.1

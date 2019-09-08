@@ -51,6 +51,8 @@ from formshare.processes.odk.api import (
     update_odk_form,
     get_missing_support_files,
     import_external_data,
+    create_repository,
+    merge_versions,
 )
 from formshare.products import stop_task
 from formshare.products import get_form_products
@@ -65,12 +67,151 @@ from formshare.products.export.csv import (
     generate_public_csv_file,
     generate_private_csv_file,
 )
-
+from formshare.processes.email.send_email import send_error_to_technical_team
+from lxml import etree
+import json
 
 log = logging.getLogger("formshare")
 
 
 class FormDetails(PrivateView):
+    def check_merge(
+        self,
+        user_id,
+        project_id,
+        new_form_id,
+        new_form_directory,
+        old_form_id,
+        old_form_directory,
+        old_form_pkey,
+        old_form_deflang,
+        old_form_othlangs,
+    ):
+        errors = []
+        odk_path = get_odk_path(self.request)
+        created, message = create_repository(
+            self.request,
+            user_id,
+            project_id,
+            new_form_id,
+            odk_path,
+            new_form_directory,
+            old_form_pkey,
+            old_form_deflang,
+            old_form_othlangs,
+            True,
+        )
+        if created == 0:
+            new_create_file = os.path.join(
+                odk_path, *["forms", new_form_directory, "repository", "create.xml"]
+            )
+            new_insert_file = os.path.join(
+                odk_path, *["forms", new_form_directory, "repository", "insert.xml"]
+            )
+
+            old_create_file = os.path.join(
+                odk_path, *["forms", old_form_directory, "repository", "create.xml"]
+            )
+
+            old_insert_file = os.path.join(
+                odk_path, *["forms", old_form_directory, "repository", "insert.xml"]
+            )
+
+            merged, output = merge_versions(
+                self.request,
+                odk_path,
+                new_form_directory,
+                new_create_file,
+                new_insert_file,
+                old_create_file,
+                old_insert_file,
+            )
+            if merged == 0:
+                form_data = {"form_abletomerge": 1}
+                update_form(self.request, project_id, new_form_id, form_data)
+                return True, ""
+            else:
+                try:
+                    root = etree.fromstring(output)
+                    xml_errors = root.findall(".//error")
+                    if xml_errors:
+                        for a_error in xml_errors:
+                            error_code = a_error.get("code")
+                            if error_code == "TNS":
+                                table_name = a_error.get("table")
+                                c_from = a_error.get("from")
+                                c_to = a_error.get("to")
+                                errors.append(
+                                    self._(
+                                        'The repeat "{}" changed parent from "{}" to "{}". '
+                                        "You must rename the repeat before merging".format(
+                                            table_name, c_from, c_to
+                                        )
+                                    )
+                                )
+                            if error_code == "TWP":
+                                table_name = a_error.get("table")
+                                c_from = a_error.get("from")
+                                errors.append(
+                                    self._(
+                                        'The parent repeat "{}" of repeat "{}" does not exist anymore.'
+                                        ' You must rename the repeat "{}" before merging'.format(
+                                            c_from, table_name, table_name
+                                        )
+                                    )
+                                )
+                            if error_code == "FNS":
+                                table_name = a_error.get("table")
+                                field_name = a_error.get("field")
+                                errors.append(
+                                    self._(
+                                        'The variable "{}" in repeat "{}" changed type. '
+                                        "You must rename the variable before merging.".format(
+                                            field_name, table_name
+                                        )
+                                    )
+                                )
+                            if error_code == "VNS":
+                                form_data = {"form_abletomerge": 1}
+                                update_form(
+                                    self.request, project_id, new_form_id, form_data
+                                )
+                                return True, ""
+                            if error_code == "RNS":
+                                table_name = a_error.get("table")
+                                field_code = a_error.get("field")
+                                errors.append(
+                                    self._(
+                                        'The variable "{}" in repeat "{}" has a different choice list name. '
+                                        'You must rename the variable before merging. '.format(
+                                            field_code, table_name
+                                        )
+                                    )
+                                )
+                except Exception as e:
+                    send_error_to_technical_team(
+                        self.request,
+                        "Error while parsing the result of a merge. "
+                        "Merging form {} into {} in project {}. \nAccount: {}\nError: \n{}".format(
+                            new_form_id, old_form_id, project_id, user_id, str(e)
+                        ),
+                    )
+                    errors.append(
+                        self._(
+                            "Unknown error while merging. A message has been sent to the support team and "
+                            "they will contact you ASAP."
+                        )
+                    )
+        else:
+            errors.append(
+                self._("Unable to build the repository files for form: ") + message
+            )
+
+        error_string = json.dumps({"errors": errors})
+        form_data = {"form_abletomerge": 0, "form_mergerrors": error_string}
+        update_form(self.request, project_id, new_form_id, form_data)
+        return False, error_string
+
     def process_view(self):
         user_id = self.request.matchdict["userid"]
         project_code = self.request.matchdict["projcode"]
@@ -110,6 +251,30 @@ class FormDetails(PrivateView):
                 )
             else:
                 missing_files = []
+            if (
+                len(missing_files) == 0
+                and form_data["form_abletomerge"] == -1
+                    and form_data["parent_form"] is not None
+            ):
+                able_to_merge, errors = self.check_merge(
+                    user_id,
+                    project_id,
+                    form_id,
+                    form_data["form_directory"],
+                    form_data["parent_form_data"]["form_id"],
+                    form_data["parent_form_data"]["form_directory"],
+                    form_data["parent_form_data"]["form_pkey"],
+                    form_data["parent_form_data"]["form_deflang"],
+                    form_data["parent_form_data"]["form_othlangs"],
+                )
+                if able_to_merge == 1:
+                    form_data["form_abletomerge"] = 1
+                else:
+                    form_data["form_abletomerge"] = 0
+                    form_data["form_mergerrors"] = errors
+            merging_errors = {"errors": []}
+            if form_data["form_abletomerge"] == 0:
+                merging_errors = json.loads(form_data["form_mergerrors"])
             if form_data["form_reptask"] is not None:
                 res_code, error = get_task_status(
                     self.request, form_data["form_reptask"]
@@ -146,6 +311,7 @@ class FormDetails(PrivateView):
                 "processing": get_form_processing_products(
                     self.request, project_id, form_id, form_data["form_reptask"]
                 ),
+                "merging_errors": merging_errors,
             }
         else:
             raise HTTPNotFound
@@ -194,7 +360,12 @@ class AddNewForm(PrivateView):
                 form_data["form_target"] = 0
 
             uploaded, message = upload_odk_form(
-                self.request, project_id, self.user.login, odk_path, form_data, for_merging
+                self.request,
+                project_id,
+                self.user.login,
+                odk_path,
+                form_data,
+                for_merging,
             )
 
             if uploaded:
@@ -208,7 +379,9 @@ class AddNewForm(PrivateView):
                 return HTTPFound(next_page)
             else:
                 if not for_merging:
-                    next_page = self.request.params.get("next") or self.request.route_url(
+                    next_page = self.request.params.get(
+                        "next"
+                    ) or self.request.route_url(
                         "project_details",
                         userid=project_details["owner"],
                         projcode=project_code,
@@ -218,7 +391,7 @@ class AddNewForm(PrivateView):
                         "form_details",
                         userid=project_details["owner"],
                         projcode=project_code,
-                        formid=form_data['parent_form'],
+                        formid=form_data["parent_form"],
                     )
                 self.add_error(self._("Unable to upload the form: ") + message)
                 return HTTPFound(next_page)

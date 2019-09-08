@@ -114,6 +114,8 @@ def get_product_description(request, product):
         return _("Publishable CSV")
     if product == "csv_private_export":
         return _("Unpublishable CSV")
+    if product == "merge_form":
+        return _("Merge Form")
     return _("Without description")
 
 

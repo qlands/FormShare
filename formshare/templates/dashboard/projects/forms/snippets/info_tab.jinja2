@@ -34,7 +34,11 @@
                     <ul class="tag-list" style="padding: 0">
                         {% block info_tab_content_badges %}
                             {% if formDetails.form_schema != None %}
-                                <li><a style="background-color: #1c84c6; color: white; border-radius: 25px" >With repository</a></li>
+                                {% if formDetails.parent_form == None %}
+                                    <li><a style="background-color: #1c84c6; color: white; border-radius: 25px" >With repository</a></li>
+                                {% else %}
+                                    <li title='{{ _("Merged into the repository of") }} "{{ formDetails.parent_form_data.form_name }}"'><a style="background-color: #1c84c6; color: white; border-radius: 25px" >Merged</a></li>
+                                {% endif %}
                             {% else %}
                                 {% if formDetails.form_reptask == None or (formDetails.form_reptask != None and taskdata.rescode > 0) %}
                                     <li title="{{ _('Data is not stored in a database') }}"><a style="background-color: #c67d09; color: white; border-radius: 25px">{{ _('In testing') }}</a></li>
@@ -49,14 +53,22 @@
                             {% endif %}
                             {% if formDetails.form_geopoint != None %}
                                 <li><a style="border-radius: 25px">{{ _('Georeferenced') }}</a></li>
-                                {% if formDetails.has_sub_version != None %}
-                                    <li title='"{{ formDetails.has_sub_version.child_data.form_name }}" {{ _("is the sub-version of this form.") }}'><a href="{{ request.route_url('form_details',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.has_sub_version.child_form) }}" style="border-radius: 25px; background-color: #6f42c1; color: white">{{ _('With sub-version') }}</a></li>
-                                {% else %}
-                                    {% if formDetails.parent_form != None %}
-                                        <li title='{{ _('This is the sub-version of ') }}"{{ formDetails.parent_form_data.form_name }}".'><a href="{{ request.route_url('form_details',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.parent_form) }}" style="border-radius: 25px; background-color: #6f42c1; color: white">{{ _('Sub-version') }}</a></li>
+                            {% endif %}
+                            {% if formDetails.has_sub_version != None %}
+                                <li title='"{{ formDetails.has_sub_version.child_data.form_name }}" {{ _("is the sub-version of this form.") }}'><a href="{{ request.route_url('form_details',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.has_sub_version.child_form) }}" style="border-radius: 25px; background-color: #6f42c1; color: white">{{ _('With sub-version') }}</a></li>
+                            {% else %}
+                                {% if formDetails.parent_form != None %}
+                                    <li title='{{ _('This is the sub-version of ') }}"{{ formDetails.parent_form_data.form_name }}".'><a href="{{ request.route_url('form_details',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.parent_form) }}" style="border-radius: 25px; background-color: #6f42c1; color: white">{{ _('Sub-version') }}</a></li>
+                                    {% if formDetails.form_abletomerge == -1 %}
+                                        <li title="{{ _('The merge check will start once all required files are uploaded') }}"><a style="border-radius: 25px; background-color: #f8ac59; color: black">{{ _('Merge check pending') }}</a></li>
+                                    {% else %}
+                                        {% if formDetails.form_abletomerge == 0 %}
+                                            <li><a title='{{ _("This form cannot be merged into the repository of") }} "{{ formDetails.parent_form_data.form_name }}"' style="border-radius: 25px; background-color: red; color: white">{{ _('Unable to merge') }}</a></li>
+                                        {% endif %}
                                     {% endif %}
                                 {% endif %}
                             {% endif %}
+
                         {% endblock info_tab_content_badges %}
                     </ul>
                 </div>
@@ -71,7 +83,13 @@
                                         <li><a href="{{ request.route_url('createrepository',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-database"></i> {{ _('Create repository') }} </a></li>
                                         <li><a id="update_form_btn" class="btn btn-xs btn-white" data-toggle="modal" data-target="#update_form"><i class="fas fa-file-upload"></i> {{ _('Update ODK form') }} </a></li>
                                     {% else %}
-                                        <li><a class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-code-branch"></i> {{ _('Merge repository') }} </a></li>
+                                        {% if formDetails.form_abletomerge == 1 %}
+                                            <li><a class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-code-branch"></i> {{ _('Merge repository') }} </a></li>
+                                        {% else %}
+                                            {% if formDetails.form_abletomerge == 0 %}
+                                                <li><a data-toggle="modal" data-target="#merge_error_modal" ><i style="color: red" class="fas fa-exclamation-triangle"></i><span style="color: red"> {{ _('See merging errors') }}</span> </a></li>
+                                            {% endif %}
+                                        {% endif %}
                                     {% endif %}
                                 {% endif %}
                                 {% if projectDetails.access_type <= 2 or formDetails.pubby.user_id == activeUser.id %}

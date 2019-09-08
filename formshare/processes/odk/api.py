@@ -601,7 +601,9 @@ def check_jxform_file(request, json_file, external_file=None):
         return p.returncode, stderr.decode()
 
 
-def upload_odk_form(request, project_id, user_id, odk_dir, form_data, for_merging=False):
+def upload_odk_form(
+    request, project_id, user_id, odk_dir, form_data, for_merging=False
+):
     _ = request.translate
     uid = str(uuid.uuid4())
     form_directory = uid

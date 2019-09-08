@@ -97,8 +97,16 @@
                     <h4 class="text-center text-warning">{{ _('This form is in testing stage. This means that you can update it at all times and submissions are for testing purposes. ') }}</h4>
                     <h4 class="text-center text-warning">{{ _('When you finished testing it you can')}} <a href="{{ request.route_url('createrepository',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" style="color: #026AA8 !important;">{{ _('create a repository for it') }}</a> {{ _('and start collecting "real" data.') }}</h4>
                 {% else %}
-                    <h4 class="text-center text-warning">{{ _('This form is in testing stage. This means that you can remove it and upload it again and its submissions are for testing purposes. ') }}</h4>
-                    <h4 class="text-center text-warning">{{ _('When you finished testing it you can')}} <a href="" style="color: #026AA8 !important;">{{ _('merge it into the repository of ') }} "{{ formDetails.parent_form_data.form_name }}"</a> {{ _('and start collecting "real" data.') }}</h4>
+                    <h4 class="text-center text-warning">{{ _('This form is in testing stage. This means that you can update it at all times and submissions are for testing purposes. ') }}</h4>
+                    {% if formDetails.form_abletomerge == 1 %}
+                        <h4 class="text-center text-warning">{{ _('When you finished testing it you can')}} <a href="" style="color: #026AA8 !important;">{{ _('merge it into the repository of ') }} "{{ formDetails.parent_form_data.form_name }}"</a> {{ _('and start collecting "real" data.') }}</h4>
+                    {% else %}
+                        {% if formDetails.form_abletomerge == 0 %}
+                            <h4 class="text-center">{{ _('However you')}} <a data-toggle="modal" data-target="#merge_error_modal" style="color: #026AA8 !important;"><b style="color: red">{{ _('cannot merge it') }}</b></a> {{ _('into the repository of') }} "{{ formDetails.parent_form_data.form_name }}"</h4>
+                        {% else %}
+                            <h4 class="text-center text-warning">{{ _('FormShare needs you to upload all required files before it pre-checks the form for merging.') }}</h4>
+                        {% endif %}
+                    {% endif %}
                 {% endif %}
             </div>
         </div>

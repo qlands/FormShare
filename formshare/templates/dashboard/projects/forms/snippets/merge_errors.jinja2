@@ -1,0 +1,20 @@
+<div class="modal inmodal" id="merge_error_modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content alert-danger animated bounceInRight">
+            <div style="text-align: center">
+                <button style="margin-top: 5px; margin-right: 7px" type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            </div>
+            <div class="modal-header" style="padding: 0px">
+                <i class="fa fa-info-circle modal-icon"></i>
+                <h4 class="modal-title">Merging error log</h4>
+                <small class="font-bold">The following errors happened while trying to merge this form.</small>
+            </div>
+            <div class="modal-body">
+                <textarea readonly style="width: 100%; min-height: 200px">{% for error in merging_errors.errors %}- {{ error }}&#13;&#13;{% endfor %}</textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-white" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>

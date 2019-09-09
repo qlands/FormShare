@@ -10,7 +10,7 @@
                 <small class="font-bold">The following errors happened while trying to merge this form.</small>
             </div>
             <div class="modal-body">
-                <textarea readonly style="width: 100%; min-height: 200px">{% for error in merging_errors.errors %}- {{ error }}&#13;&#13;{% endfor %}</textarea>
+                <textarea readonly style="width: 100%; min-height: 200px">{% for error in merging_errors.errors %}{{ error }}&#13;&#13;{% endfor %}</textarea>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-white" data-dismiss="modal">Close</button>

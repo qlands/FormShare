@@ -3,11 +3,6 @@
 
 {% block titlesection %}{{ _('Merge new version') }} {% endblock titlesection %}
 
-{% block topScripts %}
-    {{ super() }}
-    {% jsresource request,'formshare','bs-custom-file-input' %}
-{% endblock topScripts %}
-
 {% block breadcrumbs %}
     {% include 'dashboard/projects/repository/snippets/brdcrbs_merge.jinja2' %}
 {% endblock breadcrumbs %}
@@ -17,7 +12,7 @@
         <div class="col-md-12">
             <div  class="ibox">
                 <div class="ibox-title">
-                    <h5>{{ _('Merging a new version into') }} {{ formData.name }}</h5>
+                    <h5>{{ _('Merge form') }} "{{ formData.name }}" {{ _('into the repository of form') }} "{{ oldformData.name }}"</h5>
                     <div class="ibox-tools">
                         <a class="collapse-link" style="margin-right: 10px">
                             <i class="fa fa-chevron-up"></i>
@@ -31,22 +26,21 @@
                     <div class="row">
                         <div class="col-md-12">
                             {% block merge_form_notes %}
-                                <h3>{{ _('Important notes:') }}</h3>
+                                <h3>{{ _("Important notes:") }}</h3>
                                 <ul>
-                                    <li>{{ _('FormShare will check the new ODK form and report whether or not is possible to merge it into the repository of ') }}{{ formData.name }}. {{ _('The following changes cannot be merged:') }}
+                                    <li>{{ _('FormShare will perform more checks on')}} "{{ formData.name }}" {{ _('and report whether or not is possible to merge it into the repository of') }} "{{ oldformData.name }}".<br/>{{ _('The following changes cannot be merged:') }}
                                         <ol>
                                             <li>{{ _('The primary key changes in any way.') }}</li>
-                                            <li>{{ _('Changes in the structure of repeats. For example: In the current version you have repeat B inside repeat A but in the version that you want to merge you have repeat A and repeat C but repeat B is now inside C.') }}</li>
+                                            <li>{{ _('Changes in the structure of repeats. For example: In') }} "{{ oldformData.name }}" {{ _('you have repeat B inside repeat A but in ')}} "{{ formData.name }}" {{ _('you have repeat A and repeat C but repeat B is now inside C.') }}</li>
                                             <li>{{ _('Change a string variable into integer.') }}</li>
                                             <li>{{ _('Change a variable from select one into select multiple and viceversa.') }}</li>
                                             <li>{{ _('Change a variable from categorical into continous and vicerversa.') }}</li>
-                                            <li>{{ _('Change the description of a option. For example is the currect version you have "1-Male" but in the new version you have "1-Man". In this case FormShare will ask you if such change should be ignored because this could be a typo fix between versions, however YOU ASSUME THE RISK.') }}</li>
+                                            <li>{{ _('Change the description of a option. For example: In')}} "{{ oldformData.name }}" {{ _('you have "1-Male" but in') }} "{{ formData.name }}" {{_('you have "1-Man". In this case FormShare will ask you if such change should be ignored because this could be a typo fix between versions, however') }} <span style="color: red">{{ _('YOU ASSUME THE RISK.') }}</span></li>
                                         </ol>
                                     </li>
-                                    <li>{{ _('The merge will only apply incremental changes thus you will not lose data. If for example you removed a variable in a the new version such variable will always exist in the repository.') }}</li>
-                                    <li>{{ _('Changes 3,4 and 5 can be merged by giving a new name to the variable.') }}</li>
-                                    <li>{{ _('The new version of the form cannot have the same id as the one you are merging into e.g., the new form cannot have the id ') }}"{{ formid }}".</li>
-                                    <li><b><span style="color: red">{{ _('If FormShare is able to merge the new form, it will appear at testing stage. After testing you will be able to finalize/apply the merge. A backup of the database will be made.') }}</span></b></li>
+                                    <li>{{ _('The merge will only apply incremental changes thus you will not lose data. If for example you removed a variable in')}} "{{ formData.name }}" {{_('such variable will always exist in the repository of') }} "{{ oldformData.name }}"</li>
+                                    <li>{{ _('FormShare will apply the merge in a secure backup before any changes are made to the repository of') }} "{{ oldformData.name }}".</li>
+                                    <li style="color: red">{{ _('Any form using such repository will not accept changes until the merge is committed or roll-backed.') }}</li>
                                 </ul>
                             {% endblock merge_form_notes %}
                         </div>
@@ -66,21 +60,14 @@
                             {% endfor %}
                             <div class="middle-box text-center">
                                 {% if errortype == 1 %}
-                                    {{ _('There are changes in the descriptions of certian options. You can merge such changes at') }} <b style="color: red">{{ _('YOUR OWN RISK') }} {{ _('by selecting the same file and trying again') }}</b>
+                                    {{ _('There are changes in the descriptions of certian choice options. You can merge such changes at') }} <b style="color: red">{{ _('YOUR OWN RISK') }} {{ _('by trying again') }}</b>
                                 {% endif %}
                                 <form id="form_update_form" role="form" method="post" enctype="multipart/form-data" action="{{ request.url }}">
                                     {% block merge_form %}
                                         {{ form.secure_form(request) }}
                                         {% if errortype == 1 %}
                                             <input type="hidden" name="valuestoignore" value="{{ valuestoignore }}">
-                                            <input type="hidden" name="inputfilename" value="{{ inputfilename }}">
                                         {% endif %}
-                                        {% block merge_form_fields %}
-                                            <div class="custom-file">
-                                                <input type="file" name="xlsx" class="custom-file-input">
-                                                <label class="custom-file-label" for="inputGroupFile01">{{ _('Choose file') }}</label>
-                                            </div>
-                                        {% endblock merge_form_fields %}
                                         {% block merge_form_actions %}
                                             {% if errortype != 1 %}
                                                 <button type="submit" style="margin-top: 10px" class="btn btn-primary">{{ _('Merge new version') }}</button>
@@ -106,7 +93,6 @@
             $('#form_update_form').submit(function() {
                 $(this).find("button[type='submit']").prop('disabled',true);
             });
-            bsCustomFileInput.init();
         });
     </script>
 {% endblock scripts %}

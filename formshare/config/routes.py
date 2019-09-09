@@ -763,7 +763,7 @@ def load_routes(config):
     routes.append(
         add_route(
             "merge_new_version",
-            "/user/{userid}/project/{projcode}/form/{formid}/merge",
+            "/user/{userid}/project/{projcode}/form/{formid}/merge/into/{oldformid}",
             RepositoryMergeForm,
             "dashboard/projects/repository/merge_new_version.jinja2",
         )

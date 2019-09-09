@@ -549,6 +549,8 @@ def get_form_data(project, form, request):
         res["form_deflang"] = data.form_deflang
         res["form_othlangs"] = data.form_othlangs
         res["form_stage"] = data.form_stage
+        res["form_abletomerge"] = data.form_abletomerge
+        res["parent_form"] = data.parent_form
     return res
 
 

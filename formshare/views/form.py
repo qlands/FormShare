@@ -75,6 +75,21 @@ log = logging.getLogger("formshare")
 
 
 class FormDetails(PrivateView):
+    def report_critical_error(self, user, project, form, error_code, message):
+        send_error_to_technical_team(
+            self.request,
+            "Error while creating the repository for form {} in "
+            "project {}. \nAccount: {}\nError: {}\nMessage: {}\n".format(
+                form, project, user, error_code, message
+            ),
+        )
+        log.error(
+            "Error while creating the repository for form {} in "
+            "project {}. \nAccount: {}\nError: {}\nMessage: {}\n".format(
+                form, project, user, error_code, message
+            )
+        )
+
     def check_merge(
         self,
         user_id,
@@ -183,7 +198,7 @@ class FormDetails(PrivateView):
                                 errors.append(
                                     self._(
                                         'The variable "{}" in repeat "{}" has a different choice list name. '
-                                        'You must rename the variable before merging. '.format(
+                                        "You must rename the variable before merging. ".format(
                                             field_code, table_name
                                         )
                                     )
@@ -203,9 +218,201 @@ class FormDetails(PrivateView):
                         )
                     )
         else:
-            errors.append(
-                self._("Unable to build the repository files for form: ") + message
-            )
+            if created == 1:
+                # Internal error: Report issue
+                self.report_critical_error(
+                    user_id, project_id, new_form_id, created, message
+                )
+                errors.append(
+                    self._(
+                        "An unexpected error occurred while processing the merge. "
+                        "An email has been sent to the technical team and they will contact you ASAP."
+                    )
+                )
+            if created == 2:
+                # 64 or more relationships. Report issue because this was checked before
+                self.report_critical_error(
+                    user_id, project_id, new_form_id, created, message
+                )
+                errors.append(
+                    self._(
+                        "An unexpected error occurred while processing the merge. "
+                        "An email has been sent to the technical team and they will contact you ASAP."
+                    )
+                )
+            if 3 <= created <= 6:
+                self.report_critical_error(
+                    user_id, project_id, new_form_id, created, message
+                )
+                errors.append(
+                    self._(
+                        "An unexpected error occurred while processing the merge. "
+                        "An email has been sent to the technical team and they will contact you ASAP."
+                    )
+                )
+            if created == 9:
+                # Duplicated options
+                root = etree.fromstring(message)
+                xml_lists = root.findall(".//list")
+                txt_message = (
+                    self._("The following choices have duplicated values:") + "\n"
+                )
+                if xml_lists:
+                    for aList in xml_lists:
+                        txt_message = (
+                            txt_message
+                            + "- "
+                            + aList.get("name")
+                            + " "
+                            + self._("with values:")
+                        )
+                        xml_values = aList.findall(".//value")
+                        for aValue in xml_values:
+                            txt_message = txt_message + "\t" + aValue + "\n"
+                        xml_references = aList.findall(".//reference")
+                        txt_message = txt_message + "  " + self._("Used by:") + "\n"
+                        for aRef in xml_references:
+                            txt_message = (
+                                txt_message
+                                + "\t"
+                                + self._("Variable:")
+                                + " "
+                                + aRef.get("variable")
+                                + " "
+                                + self._("with option:")
+                                + " "
+                                + aRef.get("option")
+                            )
+                        txt_message = txt_message + "\n"
+                errors.append(txt_message)
+
+            if created == 10:
+                # Primary key not found
+                errors.append(self._("The primary key was not found in the ODK form"))
+            if created == 11 or created == 12:
+                # Parsing XML error
+                if created == 11:
+                    txt_message = (
+                        self._(
+                            "The following files are missing and you need to attach them:"
+                        )
+                        + "\n"
+                    )
+                else:
+                    txt_message = (
+                        self._(
+                            "There was an error while processing some of the XML resource files:"
+                        )
+                        + "\n"
+                    )
+                root = etree.fromstring(message)
+                file_list = root.findall(".//file")
+                if file_list:
+                    for a_file in file_list:
+                        txt_message = txt_message + "\t" + a_file.get("name") + "\n"
+                errors.append(txt_message)
+            if 13 <= created <= 15:
+                # Parsing CSV error
+                if created == 13:
+                    txt_message = (
+                        self._(
+                            "The following files are missing and you need to attach them:"
+                        )
+                        + "\n"
+                    )
+                else:
+                    if created == 13:
+                        txt_message = (
+                            self._(
+                                "The following CSV resource files have invalid characters:"
+                            )
+                            + "\n"
+                        )
+                    else:
+                        txt_message = (
+                            self._(
+                                "There was an error while processing some of the CSV resource files:"
+                            )
+                            + "\n"
+                        )
+                root = etree.fromstring(message)
+                file_list = root.findall(".//file")
+                if file_list:
+                    for a_file in file_list:
+                        txt_message = txt_message + "\t" + a_file.get("name") + "\n"
+                errors.append(txt_message)
+            if created == 16:
+                # Search error. Report issue
+                self.report_critical_error(
+                    user_id, project_id, new_form_id, created, message
+                )
+                errors.append(
+                    self._(
+                        "An unexpected error occurred while processing the merge. "
+                        "An email has been sent to the technical team and they will contact you ASAP."
+                    )
+                )
+            if created == 17:
+                # Primary key is invalid
+                errors.append(self._("The primary key is invalid."))
+            if created == 18:
+                # Duplicate tables. Report issue because this was checked before
+                self.report_critical_error(
+                    user_id, project_id, new_form_id, created, message
+                )
+                errors.append(
+                    self._(
+                        "An unexpected error occurred while processing the merge. "
+                        "An email has been sent to the technical team and they will contact you ASAP."
+                    )
+                )
+            if created == 19:
+                # Duplicate fields. Report issue because this was checked before
+                self.report_critical_error(
+                    user_id, project_id, new_form_id, created, message
+                )
+                errors.append(
+                    self._(
+                        "An unexpected error occurred while processing the merge. "
+                        "An email has been sent to the technical team and they will contact you ASAP."
+                    )
+                )
+            if created == 20:
+                # Invalid fields. Report issue because this was checked before
+                self.report_critical_error(
+                    user_id, project_id, new_form_id, created, message
+                )
+                errors.append(
+                    self._(
+                        "An unexpected error occurred while processing the merge. "
+                        "An email has been sent to the technical team and they will contact you ASAP."
+                    )
+                )
+            if created == 21:
+                # Duplicated lookups
+                txt_message = (
+                    self._("The following choices are duplicated in your ODK:") + "\n"
+                )
+                root = etree.fromstring(message)
+                duplicated_tables = root.findall(".//table")
+                if duplicated_tables:
+                    for a_table in duplicated_tables:
+                        txt_message = (
+                            txt_message
+                            + "- "
+                            + a_table.get("name")
+                            + " "
+                            + self._("with the following duplicates:")
+                            + "\n"
+                        )
+                        duplicated_names = a_table.findall(".//duplicate")
+                        if duplicated_names:
+                            for a_name in duplicated_names:
+                                txt_message = (
+                                    txt_message + "\t" + a_name.get("name") + "\n"
+                                )
+                        txt_message = txt_message + "\t"
+                errors.append(txt_message)
 
         error_string = json.dumps({"errors": errors})
         form_data = {"form_abletomerge": 0, "form_mergerrors": error_string}
@@ -254,7 +461,7 @@ class FormDetails(PrivateView):
             if (
                 len(missing_files) == 0
                 and form_data["form_abletomerge"] == -1
-                    and form_data["parent_form"] is not None
+                and form_data["parent_form"] is not None
             ):
                 able_to_merge, errors = self.check_merge(
                     user_id,

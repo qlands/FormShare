@@ -931,6 +931,8 @@ def update_odk_form(request, project_id, for_form_id, odk_dir, form_data):
                             form_data["form_xlsfile"] = final_xls
                             form_data["form_xmlfile"] = final_xml
                             form_data["form_jsonfile"] = final_survey
+                            form_data["form_abletomerge"] = -1
+                            form_data["form_mergerrors"] = None
                             if geopoint is not None:
                                 form_geopoint = "/".join(parent_array) + "/" + geopoint
                                 if form_geopoint[0] == "/":
@@ -1203,7 +1205,9 @@ def merge_versions(
         request.registry.settings["odktools.path"],
         *["utilities", "mergeVersions", "mergeversions"]
     )
-    os.makedirs(os.path.join(odk_dir, *["forms", xform_directory, "merging_files"]))
+    merge_directory = os.path.join(odk_dir, *["forms", xform_directory, "merging_files"])
+    if not os.path.exists(merge_directory):
+        os.makedirs(merge_directory)
     args = [
         odk_tools_merge_versions,
         "-a " + a_create,
@@ -1351,7 +1355,7 @@ def create_repository(
                 },
             )
             if not for_merging:
-                schema = "P" + project[-12:] + "_D" + str(uuid.uuid4())[-12:]
+                schema = "FS_" + str(uuid.uuid4()).replace("-", "_")
                 create_file = os.path.join(
                     odk_dir, *["forms", xform_directory, "repository", "create.sql"]
                 )

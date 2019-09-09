@@ -81,16 +81,16 @@
                                 {% if formDetails.form_schema == None %}
                                     {% if formDetails.parent_form == None %}
                                         <li><a href="{{ request.route_url('createrepository',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-database"></i> {{ _('Create repository') }} </a></li>
-                                        <li><a id="update_form_btn" class="btn btn-xs btn-white" data-toggle="modal" data-target="#update_form"><i class="fas fa-file-upload"></i> {{ _('Update ODK form') }} </a></li>
                                     {% else %}
                                         {% if formDetails.form_abletomerge == 1 %}
-                                            <li><a class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-code-branch"></i> {{ _('Merge repository') }} </a></li>
+                                            <li><a href="{{ request.route_url('merge_new_version',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id,oldformid=formDetails.parent_form) }}" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-code-branch"></i> {{ _('Merge repository') }} </a></li>
                                         {% else %}
                                             {% if formDetails.form_abletomerge == 0 %}
                                                 <li><a data-toggle="modal" data-target="#merge_error_modal" ><i style="color: red" class="fas fa-exclamation-triangle"></i><span style="color: red"> {{ _('See merging errors') }}</span> </a></li>
                                             {% endif %}
                                         {% endif %}
                                     {% endif %}
+                                    <li><a id="update_form_btn" class="btn btn-xs btn-white" data-toggle="modal" data-target="#update_form"><i class="fas fa-file-upload"></i> {{ _('Update ODK form') }} </a></li>
                                 {% endif %}
                                 {% if projectDetails.access_type <= 2 or formDetails.pubby.user_id == activeUser.id %}
                                     {% if formDetails.has_sub_version == None %}

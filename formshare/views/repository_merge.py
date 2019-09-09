@@ -1,13 +1,8 @@
 from .classes import PrivateView
 from pyramid.httpexceptions import HTTPNotFound, HTTPFound
-from formshare.processes.db import (
-    get_project_id_from_name,
-)
+from formshare.processes.db import get_project_id_from_name
 from formshare.processes.odk.processes import get_form_data
-from formshare.processes.odk.api import (
-    get_odk_path,
-    merge_versions,
-)
+from formshare.processes.odk.api import get_odk_path, merge_versions
 import os
 import logging
 from lxml import etree
@@ -46,9 +41,9 @@ class RepositoryMergeForm(PrivateView):
         new_form_data = get_form_data(project_id, new_form_id, self.request)
         old_form_data = get_form_data(project_id, old_form_id, self.request)
 
-        if new_form_data['form_abletomerge'] == 1:
-            if old_form_data['schema'] is not None:
-                if new_form_data['parent_form'] != old_form_id:
+        if new_form_data["form_abletomerge"] == 1:
+            if old_form_data["schema"] is not None:
+                if new_form_data["parent_form"] != old_form_id:
                     raise HTTPNotFound
             else:
                 raise HTTPNotFound
@@ -76,21 +71,11 @@ class RepositoryMergeForm(PrivateView):
 
             new_create_file = os.path.join(
                 odk_path,
-                *[
-                    "forms",
-                    new_form_data["directory"],
-                    "repository",
-                    "create.xml",
-                ]
+                *["forms", new_form_data["directory"], "repository", "create.xml"]
             )
             new_insert_file = os.path.join(
                 odk_path,
-                *[
-                    "forms",
-                    new_form_data["directory"],
-                    "repository",
-                    "insert.xml",
-                ]
+                *["forms", new_form_data["directory"], "repository", "insert.xml"]
             )
 
             merged, output = merge_versions(
@@ -113,9 +98,7 @@ class RepositoryMergeForm(PrivateView):
                     projcode=project_code,
                     formid=new_form_id,
                 )
-                self.request.session.flash(
-                    self._("FormShare is merging the form")
-                )
+                self.request.session.flash(self._("FormShare is merging the form"))
                 self.returnRawViewResult = True
                 return HTTPFound(next_page)
             else:
@@ -168,9 +151,7 @@ class RepositoryMergeForm(PrivateView):
                                 value_code = a_error.get("value")
                                 c_from = a_error.get("from")
                                 c_to = a_error.get("to")
-                                values_to_ignore.append(
-                                    table_name + ":" + value_code
-                                )
+                                values_to_ignore.append(table_name + ":" + value_code)
                                 errors.append(
                                     self._(
                                         'The option "{}" in lookup table "{}" changed '

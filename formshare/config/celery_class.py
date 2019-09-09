@@ -52,7 +52,7 @@ class CeleryTask(Task):
                 )
             )
         except Exception as e:
-            log.error("Error {} reporting success for task {}").format(str(e), task_id)
+            log.error("Error {} reporting success for task {}".format(str(e), task_id))
         send_sse_event(engine, task_id, self.name, "success")
         engine.dispose()
 

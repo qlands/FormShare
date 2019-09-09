@@ -1205,7 +1205,9 @@ def merge_versions(
         request.registry.settings["odktools.path"],
         *["utilities", "mergeVersions", "mergeversions"]
     )
-    merge_directory = os.path.join(odk_dir, *["forms", xform_directory, "merging_files"])
+    merge_directory = os.path.join(
+        odk_dir, *["forms", xform_directory, "merging_files"]
+    )
     if not os.path.exists(merge_directory):
         os.makedirs(merge_directory)
     args = [

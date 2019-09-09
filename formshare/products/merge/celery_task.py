@@ -47,7 +47,7 @@ def move_changes(node_b, root_a, table_name):
                 table_desc = an_item.get("desc")
                 target = root_a.find(".//table[@name='" + tbl_name + "']")
                 if target is not None:
-                    target.set('desc', table_desc)
+                    target.set("desc", table_desc)
                 move_changes(an_item, root_a, tbl_name)
             else:
                 field_name = an_item.get("name")
@@ -56,7 +56,9 @@ def move_changes(node_b, root_a, table_name):
                 field_protection = an_item.get("protection")
                 target_table = root_a.find(".//table[@name='" + table_name + "']")
                 if target_table is not None:
-                    target_field = target_table.find(".//field[@name='" + field_name + "']")
+                    target_field = target_table.find(
+                        ".//field[@name='" + field_name + "']"
+                    )
                     if target_field is not None:
                         target_field.set("desc", field_desc)
                         if field_sensitive is not None:
@@ -305,8 +307,8 @@ def make_database_changes(
                             log.error(error_message)
         except Exception as e:
             error_message = "Error processing merge log file: {}. Error: {}".format(
-                    merge_log_file, str(e)
-                )
+                merge_log_file, str(e)
+            )
             log.error(error_message)
             error = True
 
@@ -407,9 +409,11 @@ def merge_into_repository(
         initialize_schema()
 
         # Block all forms using the old schema so they cannot accept any changes
-        db_session.quer(Odkform).filter(Odkform.form_schema == b_schema_name).update({'form_blocked': 1})
+        db_session.quer(Odkform).filter(Odkform.form_schema == b_schema_name).update(
+            {"form_blocked": 1}
+        )
         db_session.flush()
-        update_form(db_session, project_id, a_form_id, {'form_blocked': 1})
+        update_form(db_session, project_id, a_form_id, {"form_blocked": 1})
         time.sleep(5)  # Sleep for 5 seconds just to allow any pending updates to finish
         try:
             make_database_changes(
@@ -433,23 +437,43 @@ def merge_into_repository(
             # to deal with them. A log indicating the involved forms are posted
             critical_part = True
             # Move all forms using the old schema to the new schema, replace their create file with C and unblock them
-            res = db_session.query(Odkform).filter(Odkform.form_schema == b_schema_name).all()
+            res = (
+                db_session.query(Odkform)
+                .filter(Odkform.form_schema == b_schema_name)
+                .all()
+            )
             log.error("*************************************103")
             for a_form in res:
                 form_with_changes.append(
-                    {'id': a_form.form_id, 'project_id': a_form.project_id, 'from': a_form.form_schema,
-                     'to': a_schema_name})
-                log.error("Form ID: {} in project: {} will change schema from {} to {}".format(a_form.form_id,
-                                                                                               a_form.project_id,
-                                                                                               a_form.form_schema,
-                                                                                               a_schema_name))
+                    {
+                        "id": a_form.form_id,
+                        "project_id": a_form.project_id,
+                        "from": a_form.form_schema,
+                        "to": a_schema_name,
+                    }
+                )
+                log.error(
+                    "Form ID: {} in project: {} will change schema from {} to {}".format(
+                        a_form.form_id,
+                        a_form.project_id,
+                        a_form.form_schema,
+                        a_schema_name,
+                    )
+                )
             log.error("*************************************103")
 
-            db_session.query(Odkform).filter(Odkform.form_schema == b_schema_name).update(
-                {'form_blocked': 0, 'form_schema': a_schema_name, 'form_createxmlfile': c_create_xml_file})
+            db_session.query(Odkform).filter(
+                Odkform.form_schema == b_schema_name
+            ).update(
+                {
+                    "form_blocked": 0,
+                    "form_schema": a_schema_name,
+                    "form_createxmlfile": c_create_xml_file,
+                }
+            )
             db_session.flush()
 
-            form_data = {"form_schema": a_schema_name, 'form_blocked': 0}
+            form_data = {"form_schema": a_schema_name, "form_blocked": 0}
             update_form(db_session, project_id, a_form_id, form_data)
 
             critical_part = False
@@ -483,14 +507,22 @@ def merge_into_repository(
             if critical_part:
                 email_from = settings.get("mail.from", None)
                 email_to = settings.get("mail.error", None)
-                error_dict = {'errors': form_with_changes}
+                error_dict = {"errors": form_with_changes}
                 log.error("********************************************666")
                 log.error(error_dict)
                 log.error("********************************************666")
-                send_async_email(settings, email_from, email_to, "Critical error with merging", json.dumps(error_dict),
-                                 None, locale)
+                send_async_email(
+                    settings,
+                    email_from,
+                    email_to,
+                    "Critical error with merging",
+                    json.dumps(error_dict),
+                    None,
+                    locale,
+                )
             log.error("Error while merging the form: {}".format(str(e)))
-            db_session.quer(Odkform).filter(Odkform.form_schema == b_schema_name).update({'form_blocked': 0})
+            db_session.quer(Odkform).filter(
+                Odkform.form_schema == b_schema_name
+            ).update({"form_blocked": 0})
             db_session.flush()
-            update_form(db_session, project_id, a_form_id, {'form_blocked': 0})
-
+            update_form(db_session, project_id, a_form_id, {"form_blocked": 0})

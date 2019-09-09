@@ -21,6 +21,9 @@ import gettext
 import uuid
 from lxml import etree
 from sqlalchemy import create_engine
+import time
+from formshare.processes.email.send_async_email import send_async_email
+import json
 
 log = logging.getLogger("formshare")
 
@@ -36,6 +39,31 @@ def get_odk_path(settings):
     return os.path.join(repository_path, *["odk"])
 
 
+def move_changes(node_b, root_a, table_name):
+    if type(node_b) is list:
+        for an_item in node_b:
+            if type(an_item) is list:
+                tbl_name = an_item.get("name")
+                table_desc = an_item.get("desc")
+                target = root_a.find(".//table[@name='" + tbl_name + "']")
+                if target is not None:
+                    target.set('desc', table_desc)
+                move_changes(an_item, root_a, tbl_name)
+            else:
+                field_name = an_item.get("name")
+                field_desc = an_item.get("desc")
+                field_sensitive = an_item.get("sensitive")
+                field_protection = an_item.get("protection")
+                target_table = root_a.find(".//table[@name='" + table_name + "']")
+                if target_table is not None:
+                    target_field = target_table.find(".//field[@name='" + field_name + "']")
+                    if target_field is not None:
+                        target_field.set("desc", field_desc)
+                        if field_sensitive is not None:
+                            target_field.set("sensitive", field_sensitive)
+                            target_field.set("protection", field_protection)
+
+
 def make_database_changes(
     settings,
     cnf_file,
@@ -44,14 +72,13 @@ def make_database_changes(
     merge_create_file,
     merge_insert_file,
     merge_log_file,
-    a_create_xml_file,
+    c_create_xml_file,
     b_create_xml_file,
     b_backup_file,
     a_form_directory,
     task_id,
     _,
 ):
-    pass
     error = False
     error_message = ""
 
@@ -277,45 +304,26 @@ def make_database_changes(
                             )
                             log.error(error_message)
         except Exception as e:
-            log.error(
-                "Error processing merge log file: {}. Error: {}".format(
+            error_message = "Error processing merge log file: {}. Error: {}".format(
                     merge_log_file, str(e)
                 )
-            )
+            log.error(error_message)
+            error = True
 
     if not error:
-        pass
-        # TODO:
-        #  1) The create.xml of the form but be C.
-        #  2) The changes made to b.create.xml must be applied to c.create.xml
-
+        try:
+            root_b = etree.parse(b_create_xml_file)
+            root_c = etree.parse(c_create_xml_file)
+            # Move all metadata changes made to b into c
+            move_changes(root_b, root_c, "")
+        except Exception as e:
+            error_message = "Error while moving metadata changes from {} to {}. Error: {}".format(
+                b_create_xml_file, c_create_xml_file, str(e)
+            )
+            log.error(error_message)
+            error = True
     if error:
         raise MergeDataBaseError(error_message)
-
-    #
-    # if not error:
-    #     send_task_status_to_form(settings, task_id, _("Inserting lookup values..."))
-    #     with open(insert_file) as input_file:
-    #         proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)
-    #         output, error = proc.communicate()
-    #         if proc.returncode != 0:
-    #             error_message = "Error loading lookup tables \n"
-    #             error_message = error_message + "File: " + insert_file + "\n"
-    #             error_message = error_message + "Error: \n"
-    #             if error is not None:
-    #                 error_message = error_message + error.decode() + "\n"
-    #             error_message = error_message + "Output: \n"
-    #             if output is not None:
-    #                 error_message = error_message + output.decode() + "\n"
-    #             log.error(error_message)
-    #             error = True
-    #
-    # if not error:
-    #     odk_dir = get_odk_path(settings)
-
-    #
-    # if error:
-    #     raise BuildDataBaseError(error_message)
 
 
 def update_form(db_session, project, form, form_data):
@@ -368,8 +376,8 @@ def merge_into_repository(
         odk_dir, *["forms", a_form_directory, "merging_files", "output.xml"]
     )
 
-    a_create_xml_file = os.path.join(
-        odk_dir, *["forms", a_form_directory, "repository", "create.xml"]
+    c_create_xml_file = os.path.join(
+        odk_dir, *["forms", a_form_directory, "merging_files", "create.xml"]
     )
 
     b_create_xml_file = os.path.join(
@@ -389,53 +397,100 @@ def merge_into_repository(
 
     task_id = merge_into_repository.request.id
     cnf_file = settings["mysql.cnf"]
-    make_database_changes(
-        settings,
-        cnf_file,
-        a_schema_name,
-        b_schema_name,
-        merge_create_file,
-        merge_insert_file,
-        merge_log_file,
-        a_create_xml_file,
-        b_create_xml_file,
-        b_backup_file,
-        a_form_directory,
-        task_id,
-        _,
-    )
 
     session_factory = get_session_factory(get_engine(settings))
-
+    critical_part = False
+    form_with_changes = []
     with transaction.manager:
         db_session = get_tm_session(session_factory, transaction.manager)
         configure_mappers()
         initialize_schema()
-        form_data = {"form_schema": a_schema_name}
-        update_form(db_session, project_id, a_form_id, form_data)
 
-    # Remove any test submissions if any. In try because nothing happens if they
-    # don't get removed... just junk files
-    submissions_path = os.path.join(
-        odk_dir, *["forms", a_form_directory, "submissions", "*.*"]
-    )
-    files = glob.glob(submissions_path)
-    if files:
-        for file in files:
-            try:
-                os.remove(file)
-            except Exception as e:
-                log.error(str(e))
-    submissions_path = os.path.join(
-        odk_dir, *["forms", a_form_directory, "submissions", "*/"]
-    )
-    files = glob.glob(submissions_path)
-    if files:
-        for file in files:
-            if file[-5:] != "logs/" and file[-5:] != "maps/":
-                try:
-                    shutil.rmtree(file)
-                except Exception as e:
-                    log.error(str(e))
-    # Delete the dataset index
-    delete_dataset_index(settings, user, project_code, a_form_id)
+        # Block all forms using the old schema so they cannot accept any changes
+        db_session.quer(Odkform).filter(Odkform.form_schema == b_schema_name).update({'form_blocked': 1})
+        db_session.flush()
+        update_form(db_session, project_id, a_form_id, {'form_blocked': 1})
+        time.sleep(5)  # Sleep for 5 seconds just to allow any pending updates to finish
+        try:
+            make_database_changes(
+                settings,
+                cnf_file,
+                a_schema_name,
+                b_schema_name,
+                merge_create_file,
+                merge_insert_file,
+                merge_log_file,
+                c_create_xml_file,
+                b_create_xml_file,
+                b_backup_file,
+                a_form_directory,
+                task_id,
+                _,
+            )
+            # At this stage all changes were made to the new schema and C XML create file. Now we need to update
+            # the FormShare forms with the new schema. This is a critical part. If something goes wrong
+            # in between the critical parts then all the involved forms are broken and then technical team will need
+            # to deal with them. A log indicating the involved forms are posted
+            critical_part = True
+            # Move all forms using the old schema to the new schema, replace their create file with C and unblock them
+            res = db_session.query(Odkform).filter(Odkform.form_schema == b_schema_name).all()
+            log.error("*************************************103")
+            for a_form in res:
+                form_with_changes.append(
+                    {'id': a_form.form_id, 'project_id': a_form.project_id, 'from': a_form.form_schema,
+                     'to': a_schema_name})
+                log.error("Form ID: {} in project: {} will change schema from {} to {}".format(a_form.form_id,
+                                                                                               a_form.project_id,
+                                                                                               a_form.form_schema,
+                                                                                               a_schema_name))
+            log.error("*************************************103")
+
+            db_session.query(Odkform).filter(Odkform.form_schema == b_schema_name).update(
+                {'form_blocked': 0, 'form_schema': a_schema_name, 'form_createxmlfile': c_create_xml_file})
+            db_session.flush()
+
+            form_data = {"form_schema": a_schema_name, 'form_blocked': 0}
+            update_form(db_session, project_id, a_form_id, form_data)
+
+            critical_part = False
+            # Remove any test submissions if any. In try because nothing happens if they
+            # don't get removed... just junk files
+            submissions_path = os.path.join(
+                odk_dir, *["forms", a_form_directory, "submissions", "*.*"]
+            )
+            files = glob.glob(submissions_path)
+            if files:
+                for file in files:
+                    try:
+                        os.remove(file)
+                    except Exception as e:
+                        log.error(str(e))
+            submissions_path = os.path.join(
+                odk_dir, *["forms", a_form_directory, "submissions", "*/"]
+            )
+            files = glob.glob(submissions_path)
+            if files:
+                for file in files:
+                    if file[-5:] != "logs/" and file[-5:] != "maps/":
+                        try:
+                            shutil.rmtree(file)
+                        except Exception as e:
+                            log.error(str(e))
+            # Delete the dataset index
+            delete_dataset_index(settings, user, project_code, a_form_id)
+
+        except Exception as e:
+            if critical_part:
+                email_from = settings.get("mail.from", None)
+                email_to = settings.get("mail.error", None)
+                error_dict = {'errors': form_with_changes}
+                log.error("********************************************666")
+                log.error(error_dict)
+                log.error("********************************************666")
+                send_async_email(settings, email_from, email_to, "Critical error with merging", json.dumps(error_dict),
+                                 None, locale)
+            log.error("Error while merging the form: {}".format(str(e)))
+            db_session.quer(Odkform).filter(Odkform.form_schema == b_schema_name).update({'form_blocked': 0})
+            db_session.flush()
+            update_form(db_session, project_id, a_form_id, {'form_blocked': 0})
+

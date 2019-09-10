@@ -7,6 +7,7 @@ import os
 import logging
 from lxml import etree
 from formshare.processes.email.send_email import send_error_to_technical_team
+from formshare.products.merge import merge_form
 
 log = logging.getLogger("formshare")
 
@@ -90,7 +91,15 @@ class RepositoryMergeForm(PrivateView):
             )
             if merged == 0:
 
-                # TODO: We need to call celery here
+                merge_form(
+                    self.request,
+                    project_details["owner"],
+                    project_id,
+                    new_form_id,
+                    new_form_data["directory"],
+                    old_form_data["schema"],
+                    old_form_data["directory"],
+                )
 
                 next_page = self.request.route_url(
                     "form_details",
@@ -98,7 +107,7 @@ class RepositoryMergeForm(PrivateView):
                     projcode=project_code,
                     formid=new_form_id,
                 )
-                self.request.session.flash(self._("FormShare is merging the form"))
+                self.request.session.flash(self._("FormShare is merging the form."))
                 self.returnRawViewResult = True
                 return HTTPFound(next_page)
             else:

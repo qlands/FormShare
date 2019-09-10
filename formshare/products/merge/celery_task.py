@@ -39,31 +39,27 @@ def get_odk_path(settings):
     return os.path.join(repository_path, *["odk"])
 
 
-def move_changes(node_b, root_a, table_name):
-    if type(node_b) is list:
-        for an_item in node_b:
-            if type(an_item) is list:
-                tbl_name = an_item.get("name")
-                table_desc = an_item.get("desc")
-                target = root_a.find(".//table[@name='" + tbl_name + "']")
-                if target is not None:
-                    target.set("desc", table_desc)
-                move_changes(an_item, root_a, tbl_name)
-            else:
-                field_name = an_item.get("name")
-                field_desc = an_item.get("desc")
-                field_sensitive = an_item.get("sensitive")
-                field_protection = an_item.get("protection")
-                target_table = root_a.find(".//table[@name='" + table_name + "']")
+def move_changes(node_b, root_a):
+    target_table = None
+    for tag in node_b.iter():
+        if not len(tag):
+            field_name = tag.get("name")
+            field_desc = tag.get("desc")
+            field_sensitive = tag.get("sensitive")
+            field_protection = tag.get("protection")
+            target_field = target_table.find(".//field[@name='" + field_name + "']")
+            if target_field is not None:
+                target_field.set("desc", field_desc)
+                if field_sensitive is not None:
+                    target_field.set("sensitive", field_sensitive)
+                    target_field.set("protection", field_protection)
+        else:
+            current_table = tag.get("name")
+            if current_table is not None:
+                table_desc = tag.get("desc")
+                target_table = root_a.find(".//table[@name='" + current_table + "']")
                 if target_table is not None:
-                    target_field = target_table.find(
-                        ".//field[@name='" + field_name + "']"
-                    )
-                    if target_field is not None:
-                        target_field.set("desc", field_desc)
-                        if field_sensitive is not None:
-                            target_field.set("sensitive", field_sensitive)
-                            target_field.set("protection", field_protection)
+                    target_table.set("desc", table_desc)
 
 
 def make_database_changes(
@@ -314,10 +310,18 @@ def make_database_changes(
 
     if not error:
         try:
-            root_b = etree.parse(b_create_xml_file)
-            root_c = etree.parse(c_create_xml_file)
             # Move all metadata changes made to b into c
-            move_changes(root_b, root_c, "")
+            tree_b = etree.parse(b_create_xml_file)
+            tree_c = etree.parse(c_create_xml_file)
+            root_b = tree_b.getroot()
+            root_c = tree_c.getroot()
+            move_changes(root_b, root_c)
+            tree_c.write(
+                c_create_xml_file,
+                pretty_print=True,
+                xml_declaration=True,
+                encoding="utf-8",
+            )
         except Exception as e:
             error_message = "Error while moving metadata changes from {} to {}. Error: {}".format(
                 b_create_xml_file, c_create_xml_file, str(e)
@@ -334,10 +338,8 @@ def update_form(db_session, project, form, form_data):
         db_session.query(Odkform).filter(Odkform.project_id == project).filter(
             Odkform.form_id == form
         ).update(mapped_data)
-        db_session.flush()
         return True, ""
     except Exception as e:
-        db_session.rollback()
         log.error(
             "Error {} while updating form {} in project {}".format(
                 str(e), project, form
@@ -389,7 +391,8 @@ def merge_into_repository(
     b_backup_directory = os.path.join(
         odk_dir, *["forms", b_form_directory, "repository_bks"]
     )
-    os.makedirs(b_backup_directory)
+    if not os.path.exists(b_backup_directory):
+        os.makedirs(b_backup_directory)
 
     b_backup_file = os.path.join(
         odk_dir, *["forms", b_form_directory, "repository_bks", b_schema_name + ".sql"]
@@ -409,11 +412,11 @@ def merge_into_repository(
         initialize_schema()
 
         # Block all forms using the old schema so they cannot accept any changes
-        db_session.quer(Odkform).filter(Odkform.form_schema == b_schema_name).update(
+        db_session.query(Odkform).filter(Odkform.form_schema == b_schema_name).update(
             {"form_blocked": 1}
         )
-        db_session.flush()
         update_form(db_session, project_id, a_form_id, {"form_blocked": 1})
+        transaction.commit()
         time.sleep(5)  # Sleep for 5 seconds just to allow any pending updates to finish
         try:
             make_database_changes(
@@ -471,9 +474,12 @@ def merge_into_repository(
                     "form_createxmlfile": c_create_xml_file,
                 }
             )
-            db_session.flush()
 
-            form_data = {"form_schema": a_schema_name, "form_blocked": 0}
+            form_data = {
+                "form_schema": a_schema_name,
+                "form_blocked": 0,
+                "form_createxmlfile": c_create_xml_file,
+            }
             update_form(db_session, project_id, a_form_id, form_data)
 
             critical_part = False
@@ -521,8 +527,7 @@ def merge_into_repository(
                     locale,
                 )
             log.error("Error while merging the form: {}".format(str(e)))
-            db_session.quer(Odkform).filter(
+            db_session.query(Odkform).filter(
                 Odkform.form_schema == b_schema_name
             ).update({"form_blocked": 0})
-            db_session.flush()
             update_form(db_session, project_id, a_form_id, {"form_blocked": 0})

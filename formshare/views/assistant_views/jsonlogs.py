@@ -27,7 +27,11 @@ from webhelpers2.html import literal
 import os
 import uuid
 import json
-from formshare.processes.db import get_form_data, get_project_from_assistant, is_form_blocked
+from formshare.processes.db import (
+    get_form_data,
+    get_project_from_assistant,
+    is_form_blocked,
+)
 import logging
 import paginate
 

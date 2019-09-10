@@ -1899,9 +1899,11 @@ def store_submission(request, user, project, assistant):
         if xform_id is not None:
             form_data = get_form_data(request, project, xform_id)
             if form_data is not None:
-                if form_data['form_accsub'] == 1:
-                    if form_data['form_blocked'] == 0:
-                        if assistant_has_form(request, user, project, xform_id, assistant):
+                if form_data["form_accsub"] == 1:
+                    if form_data["form_blocked"] == 0:
+                        if assistant_has_form(
+                            request, user, project, xform_id, assistant
+                        ):
                             media_path = os.path.join(
                                 odk_dir,
                                 *[
@@ -1923,7 +1925,8 @@ def store_submission(request, user, project, assistant):
                                 ]
                             )
                             target_path = os.path.join(
-                                odk_dir, *["forms", form_data["form_directory"], "submissions"]
+                                odk_dir,
+                                *["forms", form_data["form_directory"], "submissions"]
                             )
                             path = os.path.join(path, *["*.*"])
                             files = glob.glob(path)
@@ -1960,14 +1963,22 @@ def store_submission(request, user, project, assistant):
                                 return False, 404
                         else:
                             log.error(
-                                "Enumerator %s cannot submit data to %s", assistant, xform_id
+                                "Enumerator %s cannot submit data to %s",
+                                assistant,
+                                xform_id,
                             )
                             return False, 404
                     else:
-                        log.error("The form {} is blocked and cannot accept submissions at the moment".format(xform_id))
+                        log.error(
+                            "The form {} is blocked and cannot accept submissions at the moment".format(
+                                xform_id
+                            )
+                        )
                         return False, 404
                 else:
-                    log.error("The form {} does not accept submissions".format(xform_id))
+                    log.error(
+                        "The form {} does not accept submissions".format(xform_id)
+                    )
                     return False, 404
             else:
                 log.error(

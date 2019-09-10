@@ -302,6 +302,8 @@ class DeleteFormSubmission(PrivateView):
         if form_data is not None:
             if form_data["form_schema"] is None:
                 raise HTTPNotFound
+            if form_data["form_blocked"] != 0:
+                raise HTTPNotFound
             if self.request.method == "GET":
                 raise HTTPNotFound
             request_data = self.get_post_dict()
@@ -350,6 +352,8 @@ class DeleteAllSubmissions(PrivateView):
         form_data = get_form_data(self.request, project_id, form_id)
         if form_data is not None:
             if form_data["form_schema"] is None:
+                raise HTTPNotFound
+            if form_data["form_blocked"] != 0:
                 raise HTTPNotFound
             if self.request.method == "GET":
                 raise HTTPNotFound

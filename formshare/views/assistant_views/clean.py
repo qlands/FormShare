@@ -7,7 +7,7 @@ from formshare.processes.submission.api import (
     update_data,
 )
 from pyramid.httpexceptions import HTTPNotFound, HTTPFound
-from formshare.processes.db import get_form_data
+from formshare.processes.db import get_form_data, is_form_blocked
 import json
 import logging
 
@@ -205,32 +205,6 @@ class DataRequest(AssistantView):
                 )
 
                 return call_back + "(" + json.dumps(data) + ")"
-
-                # draw = int(self.request.POST['draw'])
-                # fields = []
-                # start = 0
-                # length = 0
-                # order_index = 0
-                # order_direction = ''
-                # search_value = ""
-                # for key in self.request.POST.keys():
-                #     if key.find("columns[") >= 0 and key.find("[data]") >= 0:
-                #         fields.append(self.request.POST[key])
-                #     if key == "start":
-                #         start = int(self.request.POST[key])
-                #     if key == "length":
-                #         length = int(self.request.POST[key])
-                #     if key.find("order[") >= 0 and key.find("[column]") >= 0:
-                #         order_index = int(self.request.POST[key])
-                #     if key.find("order[") >= 0 and key.find("[dir]") >= 0:
-                #         order_direction = self.request.POST[key]
-                #     if key.find("search[") == 0 and key.find("[value]") >= 0:
-                #         search_value = self.request.POST[key]
-                # result = get_request_data(self.request, self.projectID, form_id, table_name, draw, fields, start,
-                #                           length, order_index, order_direction, search_value)
-                # self.returnRawViewResult = True
-                # # log.debug(result)
-                # return result
             else:
                 raise HTTPNotFound()
         else:
@@ -251,6 +225,9 @@ class PerformAction(AssistantView):
         permissions = get_assistant_permissions_on_a_form(
             self.request, self.userID, self.projectID, self.assistantID, form_id
         )
+
+        if is_form_blocked(self.request, self.projectID, form_id):
+            raise HTTPNotFound()
 
         if permissions["enum_canclean"] == 1:
             self.returnRawViewResult = True

@@ -43,6 +43,8 @@ class EditDictionaryTables(PrivateView):
         if form_data is not None:
             if form_data["form_schema"] is None:
                 raise HTTPNotFound
+            if form_data["form_blocked"] != 0:
+                raise HTTPNotFound
 
             tables = get_tables_from_form(self.request, project_id, form_id)
             if self.request.method == "POST":
@@ -107,6 +109,8 @@ class EditDictionaryFields(PrivateView):
         form_data = get_form_data(self.request, project_id, form_id)
         if form_data is not None:
             if form_data["form_schema"] is None:
+                raise HTTPNotFound
+            if form_data["form_blocked"] != 0:
                 raise HTTPNotFound
             table_desc = get_table_desc(self.request, project_id, form_id, table_id)
             fields, checked = get_fields_from_table(

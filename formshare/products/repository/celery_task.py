@@ -201,7 +201,7 @@ def create_mysql_repository(
         db_session = get_tm_session(session_factory, transaction.manager)
         configure_mappers()
         initialize_schema()
-        form_data = {"form_schema": schema, "form_pkey": primary_key}
+        form_data = {"form_schema": schema, "form_pkey": primary_key, 'form_createxmlfile': create_file}
         update_form(db_session, project_id, form, form_data)
 
     # Remove any test submissions if any. In try because nothing happens if they

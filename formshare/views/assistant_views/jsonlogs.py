@@ -27,7 +27,7 @@ from webhelpers2.html import literal
 import os
 import uuid
 import json
-from formshare.processes.db import get_form_data, get_project_from_assistant
+from formshare.processes.db import get_form_data, get_project_from_assistant, is_form_blocked
 import logging
 import paginate
 
@@ -525,6 +525,9 @@ class JSONPushRevision(AssistantView):
         permissions = get_assistant_permissions_on_a_form(
             self.request, self.userID, self.projectID, self.assistantID, form_id
         )
+
+        if is_form_blocked(self.request, self.projectID, form_id):
+            raise HTTPNotFound()
 
         if permissions["enum_canclean"] == 1:
             data = get_submission_error_details(

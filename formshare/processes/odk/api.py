@@ -1899,67 +1899,75 @@ def store_submission(request, user, project, assistant):
         if xform_id is not None:
             form_data = get_form_data(request, project, xform_id)
             if form_data is not None:
-                if assistant_has_form(request, user, project, xform_id, assistant):
-                    media_path = os.path.join(
-                        odk_dir,
-                        *[
-                            "forms",
-                            form_data["form_directory"],
-                            "submissions",
-                            str(unique_id),
-                            "diffs",
-                        ]
-                    )
-                    os.makedirs(media_path)
-                    media_path = os.path.join(
-                        odk_dir,
-                        *[
-                            "forms",
-                            form_data["form_directory"],
-                            "submissions",
-                            str(unique_id),
-                        ]
-                    )
-                    target_path = os.path.join(
-                        odk_dir, *["forms", form_data["form_directory"], "submissions"]
-                    )
-                    path = os.path.join(path, *["*.*"])
-                    files = glob.glob(path)
-                    xml_file = ""
-                    for file in files:
-                        base_file = os.path.basename(file)
-                        if base_file.upper().find(".XML") >= 0:
-                            target_file = os.path.join(target_path, base_file)
-                            xml_file = target_file
-                        else:
-                            target_file = os.path.join(media_path, base_file)
-                        shutil.move(file, target_file)
-                    if xml_file != "":
-                        res_code, message = convert_xml_to_json(
-                            odk_dir,
-                            xml_file,
-                            form_data["form_directory"],
-                            form_data["form_schema"],
-                            form_data["form_xmlfile"],
-                            user,
-                            project,
-                            xform_id,
-                            assistant,
-                            request,
-                        )
-                        if res_code == 0:
-                            return True, 201
-                        else:
-                            if res_code == 1:
-                                return False, 500
+                if form_data['form_accsub'] == 1:
+                    if form_data['form_blocked'] == 0:
+                        if assistant_has_form(request, user, project, xform_id, assistant):
+                            media_path = os.path.join(
+                                odk_dir,
+                                *[
+                                    "forms",
+                                    form_data["form_directory"],
+                                    "submissions",
+                                    str(unique_id),
+                                    "diffs",
+                                ]
+                            )
+                            os.makedirs(media_path)
+                            media_path = os.path.join(
+                                odk_dir,
+                                *[
+                                    "forms",
+                                    form_data["form_directory"],
+                                    "submissions",
+                                    str(unique_id),
+                                ]
+                            )
+                            target_path = os.path.join(
+                                odk_dir, *["forms", form_data["form_directory"], "submissions"]
+                            )
+                            path = os.path.join(path, *["*.*"])
+                            files = glob.glob(path)
+                            xml_file = ""
+                            for file in files:
+                                base_file = os.path.basename(file)
+                                if base_file.upper().find(".XML") >= 0:
+                                    target_file = os.path.join(target_path, base_file)
+                                    xml_file = target_file
+                                else:
+                                    target_file = os.path.join(media_path, base_file)
+                                shutil.move(file, target_file)
+                            if xml_file != "":
+                                res_code, message = convert_xml_to_json(
+                                    odk_dir,
+                                    xml_file,
+                                    form_data["form_directory"],
+                                    form_data["form_schema"],
+                                    form_data["form_xmlfile"],
+                                    user,
+                                    project,
+                                    xform_id,
+                                    assistant,
+                                    request,
+                                )
+                                if res_code == 0:
+                                    return True, 201
+                                else:
+                                    if res_code == 1:
+                                        return False, 500
+                                    else:
+                                        return True, 201
                             else:
-                                return True, 201
+                                return False, 404
+                        else:
+                            log.error(
+                                "Enumerator %s cannot submit data to %s", assistant, xform_id
+                            )
+                            return False, 404
                     else:
+                        log.error("The form {} is blocked and cannot accept submissions at the moment".format(xform_id))
                         return False, 404
                 else:
-                    log.error(
-                        "Enumerator %s cannot submit data to %s", assistant, xform_id
-                    )
+                    log.error("The form {} does not accept submissions".format(xform_id))
                     return False, 404
             else:
                 log.error(

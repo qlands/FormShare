@@ -1,6 +1,6 @@
 from .classes import PrivateView
 from pyramid.httpexceptions import HTTPNotFound, HTTPFound
-from formshare.processes.db import get_project_id_from_name
+from formshare.processes.db import get_project_id_from_name, update_form
 from formshare.processes.odk.processes import get_form_data
 from formshare.processes.odk.api import get_odk_path, merge_versions
 import os
@@ -91,7 +91,7 @@ class RepositoryMergeForm(PrivateView):
             )
             if merged == 0:
 
-                merge_form(
+                task_id = merge_form(
                     self.request,
                     project_details["owner"],
                     project_id,
@@ -100,6 +100,9 @@ class RepositoryMergeForm(PrivateView):
                     old_form_data["schema"],
                     old_form_data["directory"],
                 )
+
+                form_data = {"form_mergetask": task_id}
+                update_form(self.request, project_id, new_form_id, form_data)
 
                 next_page = self.request.route_url(
                     "form_details",

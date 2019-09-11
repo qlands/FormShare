@@ -182,6 +182,7 @@ def create_mysql_repository(
     cnf_file,
     create_file,
     insert_file,
+    create_xml_file,
     locale,
 ):
     parts = __file__.split("/products/")
@@ -204,7 +205,7 @@ def create_mysql_repository(
         form_data = {
             "form_schema": schema,
             "form_pkey": primary_key,
-            "form_createxmlfile": create_file,
+            "form_createxmlfile": create_xml_file,
         }
         update_form(db_session, project_id, form, form_data)
 

@@ -41,7 +41,11 @@
                                 {% endif %}
                             {% else %}
                                 {% if formDetails.form_reptask == None or (formDetails.form_reptask != None and taskdata.rescode > 0) %}
-                                    <li title="{{ _('Data is not stored in a database') }}"><a style="background-color: #c67d09; color: white; border-radius: 25px">{{ _('In testing') }}</a></li>
+                                    {% if formDetails.form_mergetask == None or (formDetails.form_mergetask != None and mergetaskdata.rescode > 0) %}
+                                        <li title="{{ _('Data is not stored in a database') }}"><a style="background-color: #c67d09; color: white; border-radius: 25px">{{ _('In testing') }}</a></li>
+                                    {% else %}
+                                        <li title="{{ _('FormShare is merging this form. Please wait....') }}"><a style="background-color: #c67d09; color: white; border-radius: 25px">{{ _('Merging form...') }}</a></li>
+                                    {% endif %}
                                 {% else %}
                                     <li title="{{ _('FormShare is generating your repository. Please wait....') }}"><a style="background-color: #c67d09; color: white; border-radius: 25px">{{ _('Generating repository...') }}</a></li>
                                 {% endif %}
@@ -83,7 +87,9 @@
                                         <li><a href="{{ request.route_url('createrepository',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-database"></i> {{ _('Create repository') }} </a></li>
                                     {% else %}
                                         {% if formDetails.form_abletomerge == 1 %}
-                                            <li><a href="{{ request.route_url('merge_new_version',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id,oldformid=formDetails.parent_form) }}" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-code-branch"></i> {{ _('Merge repository') }} </a></li>
+                                            {% if formDetails.form_mergetask == None or (formDetails.form_mergetask != None and mergetaskdata.rescode > 0) %}
+                                                <li><a href="{{ request.route_url('merge_new_version',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id,oldformid=formDetails.parent_form) }}" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-code-branch"></i> {{ _('Merge repository') }} </a></li>
+                                            {% endif %}
                                         {% else %}
                                             {% if formDetails.form_abletomerge == 0 %}
                                                 <li><a data-toggle="modal" data-target="#merge_error_modal" ><i style="color: red" class="fas fa-exclamation-triangle"></i><span style="color: red"> {{ _('See merging errors') }}</span> </a></li>

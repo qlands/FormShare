@@ -77,6 +77,7 @@ from ..views.form import (
     DownloadPublicCSV,
     DownloadPrivateCSV,
     DownloadPrivateXLSData,
+    StopMerge,
 )
 from ..views.odk import (
     ODKFormList,
@@ -766,6 +767,15 @@ def load_routes(config):
             "/user/{userid}/project/{projcode}/form/{formid}/merge/into/{oldformid}",
             RepositoryMergeForm,
             "dashboard/projects/repository/merge_new_version.jinja2",
+        )
+    )
+
+    routes.append(
+        add_route(
+            "stop_merge",
+            "/user/{userid}/project/{projcode}/form/{formid}/stopmerge",
+            StopMerge,
+            None,
         )
     )
 

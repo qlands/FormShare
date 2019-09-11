@@ -14,6 +14,7 @@ def create_database_repository(
     cnf_file,
     create_file,
     insert_file,
+    create_xml_file,
 ):
     settings = {}
     for key, value in request.registry.settings.items():
@@ -34,6 +35,7 @@ def create_database_repository(
             cnf_file,
             create_file,
             insert_file,
+            create_xml_file,
             request.locale_name,
         )
     )

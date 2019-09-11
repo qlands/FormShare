@@ -285,7 +285,6 @@ def get_errors_by_assistant(
                 .filter(Jsonlog.coll_id == assistant)
                 .filter(Jsonlog.form_id == form)
                 .order_by(Jsonlog.log_dtime.desc())
-                .all()
             )
         else:
             query = (
@@ -297,7 +296,6 @@ def get_errors_by_assistant(
                 .filter(Jsonlog.form_id == form)
                 .filter(Jsonlog.status == with_status)
                 .order_by(Jsonlog.log_dtime.desc())
-                .all()
             )
         listen(query, "before_compile", apply_limit(start, page_size), retval=True)
         res = query.all()

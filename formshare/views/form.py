@@ -490,6 +490,14 @@ class FormDetails(PrivateView):
             else:
                 task_data = {"rescode": None, "error": None}
 
+            if form_data["form_mergetask"] is not None:
+                res_code, error = get_task_status(
+                    self.request, form_data["form_mergetask"]
+                )
+                merge_task_data = {"rescode": res_code, "error": error}
+            else:
+                merge_task_data = {"rescode": None, "error": None}
+
             dictionary_data = get_tables_from_form(self.request, project_id, form_id)
             num_sensitive = 0
             num_tables = 0
@@ -512,6 +520,7 @@ class FormDetails(PrivateView):
                 ),
                 "missingFiles": ", ".join(missing_files),
                 "taskdata": task_data,
+                "mergetaskdata": merge_task_data,
                 "numsensitive": num_sensitive,
                 "numtables": num_tables,
                 "products": get_form_products(self.request, project_id, form_id),
@@ -2145,6 +2154,75 @@ class StopRepository(PrivateView):
 
         if self.request.method == "POST":
             task_id = form_data["form_reptask"]
+            product_id, output_id = get_output_by_task(
+                self.request, project_id, form_id, task_id
+            )
+            if product_id is not None:
+                next_page = self.request.params.get("next") or self.request.route_url(
+                    "form_details",
+                    userid=user_id,
+                    projcode=project_code,
+                    formid=form_id,
+                    _query={"tab": "task", "product": product_id},
+                )
+                stopped, message = stop_task(
+                    self.request, self.user.id, project_id, form_id, task_id
+                )
+                if stopped:
+                    reset_form_repository(self.request, project_id, form_id)
+                    self.request.session.flash(
+                        self._("The process was stopped successfully")
+                    )
+                    self.returnRawViewResult = True
+                    return HTTPFound(next_page)
+                else:
+                    self.request.session.flash(
+                        self._("FormShare was not able to stop the process") + "|error"
+                    )
+                    self.returnRawViewResult = True
+                    return HTTPFound(next_page)
+            else:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+
+class StopMerge(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+
+    def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        project_code = self.request.matchdict["projcode"]
+        form_id = self.request.matchdict["formid"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        if self.activeProject["project_id"] == project_id:
+            self.set_active_menu("assistants")
+        else:
+            self.set_active_menu("projects")
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] >= 4:
+            raise HTTPNotFound
+
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+
+        if self.request.method == "POST":
+            task_id = form_data["form_mergetask"]
             product_id, output_id = get_output_by_task(
                 self.request, project_id, form_id, task_id
             )

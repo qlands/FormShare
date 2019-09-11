@@ -1364,6 +1364,9 @@ def create_repository(
                 insert_file = os.path.join(
                     odk_dir, *["forms", xform_directory, "repository", "insert.sql"]
                 )
+                create_xml_file = os.path.join(
+                    odk_dir, *["forms", xform_directory, "repository", "create.xml"]
+                )
 
                 formshare_create_repository = True
                 cnf_file = request.registry.settings["mysql.cnf"]
@@ -1392,6 +1395,7 @@ def create_repository(
                         cnf_file,
                         create_file,
                         insert_file,
+                        create_xml_file,
                     )
                     form_data = {"form_reptask": task}
                     update_form(request, project, form, form_data)

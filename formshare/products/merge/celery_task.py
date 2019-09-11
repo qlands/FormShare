@@ -438,6 +438,14 @@ def merge_into_repository(
             # the FormShare forms with the new schema. This is a critical part. If something goes wrong
             # in between the critical parts then all the involved forms are broken and then technical team will need
             # to deal with them. A log indicating the involved forms are posted
+
+            send_task_status_to_form(
+                settings, task_id, "FINALIZING"
+            )
+            # Sleep for another five seconds because the FINALIZING will disable the cancellation of the task.
+            # Just to be sure that the user cannot cancel the task beyond this point.
+            time.sleep(5)
+
             critical_part = True
             # Move all forms using the old schema to the new schema, replace their create file with C and unblock them
             res = (

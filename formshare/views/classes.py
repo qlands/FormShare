@@ -30,7 +30,6 @@ from formshare.processes.db import (
     get_user_by_api_key,
 )
 import logging
-from webob.headers import EnvironHeaders
 
 log = logging.getLogger("formshare")
 

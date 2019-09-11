@@ -1,0 +1,105 @@
+let sse = $.SSE('{{ request.route_url('form_sse', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}', {
+    onMessage: function(e){
+        let message = JSON.parse(e.data)['message'];
+        if (message !== null)
+        {
+            message = JSON.parse(message);
+            if (typeof message === 'object')
+            {
+                let task_id = message['task'];
+                let task_status = message['status'];
+                if (task_id === "{{ formDetails.form_mergetask }}")
+                {
+                    if ((task_status === "success") || (task_status === "failure") || (task_status === "FINALIZING"))
+                    {
+                        if ((task_status === "success") || (task_status === "failure"))
+                            location.reload();
+                        else
+                        {
+                            $("#cancel_merge").prop('disabled',true);
+                        }
+                    }
+                    else {
+                        $(".merge_message").text(task_status);
+                        $("#sse_" + task_id).text(task_status);
+                    }
+                }
+            }
+            else
+            {
+                console.log(message)
+            }
+        }
+    }
+});
+sse.start();
+
+function fadeInOut () {
+    $("#merge_message").fadeIn(1500, function () {
+        $("#merge_message").fadeOut(1500, function () {
+            fadeInOut();
+        });
+    });
+}
+fadeInOut();
+
+$('.cancel_merge').click(function () {
+    swal({
+            title: "{{ _('Stop merging this form') }}",
+            text: "{{ _('Are you sure that you want to stop this?') }}",
+            type: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#DD6B55",
+            confirmButtonText: "{{ _('Yes, stop the merge') }}",
+            cancelButtonText: "{{ _('Oops!, cancel!') }}",
+            closeOnConfirm: true,
+            closeOnCancel: true },
+        function (isConfirm) {
+            if (isConfirm) {
+                var form = document.createElement('form');
+                form.setAttribute('method', 'post');
+                form.setAttribute('action', '{{ request.route_url('stop_merge',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}');
+                form.style.display = 'hidden';
+
+                var i = document.createElement("input"); //input element, text
+                i.setAttribute('type',"text");
+                i.setAttribute('name',"csrf_token");
+                i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                form.appendChild(i);
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+});
+
+$('.cancel-task').click(function () {
+    var action_url = $( this ).attr('urn');
+    swal({
+            title: "{{ _('Cancel the process') }}",
+            text: "{{ _('Are you sure that you want to cancel this process') }}",
+            type: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#DD6B55",
+            confirmButtonText: "{{ _('Yes, stop the process') }}",
+            cancelButtonText: "{{ _('Oops!, cancel!') }}",
+            closeOnConfirm: true,
+            closeOnCancel: true },
+        function (isConfirm) {
+            if (isConfirm) {
+                var form = document.createElement('form');
+                form.setAttribute('method', 'post');
+                form.setAttribute('action', action_url);
+                form.style.display = 'hidden';
+
+                var i = document.createElement("input"); //input element, text
+                i.setAttribute('type',"text");
+                i.setAttribute('name',"csrf_token");
+                i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                form.appendChild(i);
+
+                document.body.appendChild(form);
+                form.submit();
+            }
+        });
+});

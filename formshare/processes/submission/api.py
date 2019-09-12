@@ -410,6 +410,7 @@ def field_is_editable(field_name):
         "surveyid",
         "originid",
         "_submitted_by",
+        "_xform_id_string",
         "_submitted_date",
         "_geopoint",
         "instanceid",

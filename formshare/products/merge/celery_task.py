@@ -24,6 +24,7 @@ from sqlalchemy import create_engine
 import time
 from formshare.processes.email.send_async_email import send_async_email
 import json
+import traceback
 
 log = logging.getLogger("formshare")
 
@@ -358,6 +359,7 @@ def merge_into_repository(
     a_form_directory,
     b_form_directory,
     b_schema_name,
+    odk_merge_string,
     locale,
 ):
     parts = __file__.split("/products/")
@@ -439,12 +441,10 @@ def merge_into_repository(
             # in between the critical parts then all the involved forms are broken and then technical team will need
             # to deal with them. A log indicating the involved forms are posted
 
-            send_task_status_to_form(
-                settings, task_id, "FINALIZING"
-            )
+            send_task_status_to_form(settings, task_id, "FINALIZING")
             # Sleep for another five seconds because the FINALIZING will disable the cancellation of the task.
             # Just to be sure that the user cannot cancel the task beyond this point.
-            time.sleep(5)
+            time.sleep(10)
 
             critical_part = True
             # Move all forms using the old schema to the new schema, replace their create file with C and unblock them
@@ -519,23 +519,33 @@ def merge_into_repository(
 
         except Exception as e:
             if critical_part:
-                email_from = settings.get("mail.from", None)
-                email_to = settings.get("mail.error", None)
-                error_dict = {"errors": form_with_changes}
+                status = "Critical error with merging"
+            else:
+                status = "Non Critical error with merging"
+            email_from = settings.get("mail.from", None)
+            email_to = settings.get("mail.error", None)
+            error_dict = {"errors": form_with_changes}
+            if critical_part:
                 log.error("********************************************666")
                 log.error(error_dict)
+                log.error(odk_merge_string)
                 log.error("********************************************666")
-                send_async_email(
-                    settings,
-                    email_from,
-                    email_to,
-                    "Critical error with merging",
-                    json.dumps(error_dict),
-                    None,
-                    locale,
-                )
+            send_async_email(
+                settings,
+                email_from,
+                email_to,
+                status,
+                json.dumps(error_dict)
+                + "\n\nError: {}\n\nTraceback: {}\n\nMerge string {}".format(
+                    str(e), traceback.format_exc(), odk_merge_string
+                ),
+                None,
+                locale,
+            )
             log.error("Error while merging the form: {}".format(str(e)))
             db_session.query(Odkform).filter(
                 Odkform.form_schema == b_schema_name
             ).update({"form_blocked": 0})
             update_form(db_session, project_id, a_form_id, {"form_blocked": 0})
+            transaction.commit()
+            raise MergeDataBaseError(str(e))

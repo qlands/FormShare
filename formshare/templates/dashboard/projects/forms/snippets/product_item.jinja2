@@ -31,10 +31,10 @@
                         <small class="float-right text-navy">{{ _('Published by') }} {{ output.published_by_name }} ({{ request.h.simple_date(output.date_published) }})</small>
                     {% endif %}
                     {% if output.status == -2 %}
-                        <small class="float-right text-danger">{{ output.error }}</small>
+                        <small class="float-right text-danger">{{ _('Empty set') }}</small>
                     {% endif %}
                     {% if output.output_file == None %}{{ _('Ran by') }}{% else %}{{ _('Created by') }}{% endif %} <strong>{{ output.created_by_name }}</strong> {% if output.published == 1 %}<span class="label" style="color: white; background: cornflowerblue" title="{{ _('Public Access') }}">{{ _('Public') }}</span>{% endif %} <br>
-                    {% if output.status > 0 %} <textarea style="display:none;" id="error_{{ output.celery_taskid }}">{{ output.error }}</textarea> {{ _('The process generated an error. Click ') }}<a style="color: red" data-toggle="modal" data-target="#product_error" data-task-id="{{ output.celery_taskid }}" class="error_link"><b>{{ _('here') }}</b></a> {{ _('to see it') }}<br>{% endif %}
+                    {% if output.status > 0 %} <textarea style="display:none;" id="error_{{ output.celery_taskid }}"></textarea> {{ _('The process generated an error.') }}<br>{% endif %}
                     <small class="text-muted">{{ request.h.readble_date_with_time(output.datetime_added,request.locale_name) }} {% if output.status == 0 %} {% if output.output_file != None %}- <span class="text-success"> {{ output.downloads }} {{ request.h.pluralize(_('download'),output.downloads,request.locale_name) }} {% if output.last_download != None %}({{ _('last') }}: {{ request.h.simple_date(output.last_download) }}){% endif %}</span>{% endif %} {% endif %}</small>
                 {% endblock product_item_ready_head %}
                 <div class="actions">

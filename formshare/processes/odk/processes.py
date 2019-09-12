@@ -549,6 +549,7 @@ def get_form_data(project, form, request):
         res["form_stage"] = data.form_stage
         res["form_abletomerge"] = data.form_abletomerge
         res["parent_form"] = data.parent_form
+        res["form_createxmlfile"] = data.form_createxmlfile
     return res
 
 

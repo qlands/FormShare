@@ -1249,7 +1249,7 @@ def merge_versions(
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()
     if p.returncode == 0:
-        return 0, stdout.decode()
+        return 0, " ".join(args)
     else:
         return p.returncode, stdout.decode()
 
@@ -1342,8 +1342,6 @@ def create_repository(
         stdout, stderr = p.communicate()
         print("*****************************100")
         print(" ".join(args))
-        print("Result:" + str(p.returncode))
-        print(stdout.decode())
         print("*****************************100")
         if p.returncode == 0:
             update_form_repository_info(
@@ -1396,6 +1394,7 @@ def create_repository(
                         create_file,
                         insert_file,
                         create_xml_file,
+                        " ".join(args),
                     )
                     form_data = {"form_reptask": task}
                     update_form(request, project, form, form_data)

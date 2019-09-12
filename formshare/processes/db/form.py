@@ -127,22 +127,30 @@ def get_number_of_submissions_in_database(request, project, form):
         .count()
     )
 
-    in_db = (
-        request.dbsession.query(Submission)
-        .filter(Submission.project_id == project)
-        .filter(Submission.form_id == form)
-        .filter(Submission.submission_status == 0)
-        .filter(Submission.sameas.is_(None))
-        .count()
-    )
+    schema = get_form_schema(request, project, form)
+    if schema is not None:
+        sql = "SELECT count(*) from {}.maintable".format(schema)
+        res = request.dbsession.execute(sql).fetchone()
+        in_db = res[0]
+    else:
+        in_db = 0
 
-    fixed = (
-        request.dbsession.query(Jsonlog)
-        .filter(Jsonlog.project_id == project)
-        .filter(Jsonlog.form_id == form)
-        .filter(Jsonlog.status == 0)
-        .count()
-    )
+    # in_db = (
+    #     request.dbsession.query(Submission)
+    #     .filter(Submission.project_id == project)
+    #     .filter(Submission.form_id == form)
+    #     .filter(Submission.submission_status == 0)
+    #     .filter(Submission.sameas.is_(None))
+    #     .count()
+    # )
+
+    # fixed = (
+    #     request.dbsession.query(Jsonlog)
+    #     .filter(Jsonlog.project_id == project)
+    #     .filter(Jsonlog.form_id == form)
+    #     .filter(Jsonlog.status == 0)
+    #     .count()
+    # )
 
     in_db_from_logs = (
         request.dbsession.query(Jsonlog)
@@ -169,9 +177,9 @@ def get_number_of_submissions_in_database(request, project, form):
     if res is not None:
         last = res.submission_dtime
         by = res.coll_id
-        return total, last, in_db + fixed, in_db_from_logs, in_error, by
+        return total, last, in_db, in_db_from_logs, in_error, by
     else:
-        return 0, None, 0, 0, 0, None
+        return 0, None, in_db, 0, 0, None
 
 
 def get_number_of_submissions_by_assistant(

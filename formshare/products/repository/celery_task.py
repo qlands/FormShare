@@ -18,6 +18,8 @@ from formshare.processes.elasticsearch.repository_index import delete_dataset_in
 from sqlalchemy.orm import configure_mappers
 from formshare.processes.sse.messaging import send_task_status_to_form
 import gettext
+from formshare.processes.email.send_async_email import send_async_email
+import traceback
 
 log = logging.getLogger("formshare")
 
@@ -90,7 +92,6 @@ def build_database(
                     error_message = error_message + output.decode() + "\n"
                 log.error(error_message)
                 error = True
-
     if not error:
         odk_dir = get_odk_path(settings)
         create_audit_triggers = os.path.join(
@@ -183,6 +184,7 @@ def create_mysql_repository(
     create_file,
     insert_file,
     create_xml_file,
+    repository_string,
     locale,
 ):
     parts = __file__.split("/products/")
@@ -192,9 +194,32 @@ def create_mysql_repository(
     _ = es.gettext
 
     task_id = create_mysql_repository.request.id
-    build_database(
-        settings, cnf_file, create_file, insert_file, schema, form_directory, task_id, _
-    )
+    try:
+        build_database(
+            settings,
+            cnf_file,
+            create_file,
+            insert_file,
+            schema,
+            form_directory,
+            task_id,
+            _,
+        )
+    except Exception as e:
+        email_from = settings.get("mail.from", None)
+        email_to = settings.get("mail.error", None)
+        send_async_email(
+            settings,
+            email_from,
+            email_to,
+            "Build repository error",
+            "\n\nError: {}\n\nTraceback: {}\n\nMerge string {}".format(
+                str(e), traceback.format_exc(), repository_string
+            ),
+            None,
+            locale,
+        )
+        raise BuildDataBaseError(str(e))
 
     session_factory = get_session_factory(get_engine(settings))
 

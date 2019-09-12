@@ -793,19 +793,36 @@ def form_exists(request, project, form):
 
 
 def update_form_color_by_database(request, database, hex_color):
-    request.dbsession.query(Odkform).filter(Odkform.form_schema == database).update({'form_hexcolor': hex_color})
+    request.dbsession.query(Odkform).filter(Odkform.form_schema == database).update(
+        {"form_hexcolor": hex_color}
+    )
 
 
 def delete_form_by_database(request, database):
     result = []
-    log.error("*****************BIG DELETE for database {} ************************".format(database))
+    log.error(
+        "*****************BIG DELETE for database {} ************************".format(
+            database
+        )
+    )
     res = request.dbsession.query(Odkform).filter(Odkform.form_schema == database).all()
     for a_form in res:
-        log.error("Form ID: {} in project: {} will be deleted".format(a_form.form_id, a_form.project_id))
-        result.append({'project_id': a_form.project_id, 'form_id': a_form.form_id})
+        log.error(
+            "Form ID: {} in project: {} will be deleted".format(
+                a_form.form_id, a_form.project_id
+            )
+        )
+        result.append(
+            {
+                "project_id": a_form.project_id,
+                "form_id": a_form.form_id,
+                "form_directory": a_form.form_directory,
+            }
+        )
     log.error("*****************BIG DELETE************************")
     request.dbsession.query(Odkform).filter(Odkform.form_schema == database).update(
-        {"parent_project": None, "parent_form": None})
+        {"parent_project": None, "parent_form": None}
+    )
     request.dbsession.query(Odkform).filter(Odkform.form_schema == database).delete()
     return result
 
@@ -825,12 +842,16 @@ def update_form(request, project, form, form_data):
                 Odkform.project_id == project
             ).filter(Odkform.form_id == form).update(mapped_data)
 
-            if 'form_hexcolor' in form_data.keys():
+            if "form_hexcolor" in form_data.keys():
                 this_form_schema = get_form_schema(request, project, form)
                 if this_form_schema is not None:
-                    if simple_form_has_subversion(request, project, form) or form_has_parent(request, project, form):
-                        this_form_color = form_data['form_hexcolor']
-                        update_form_color_by_database(request, this_form_schema, this_form_color)
+                    if simple_form_has_subversion(
+                        request, project, form
+                    ) or form_has_parent(request, project, form):
+                        this_form_color = form_data["form_hexcolor"]
+                        update_form_color_by_database(
+                            request, this_form_schema, this_form_color
+                        )
             request.dbsession.flush()
             return True, ""
         else:
@@ -864,16 +885,29 @@ def delete_form(request, project, form):
                     deleted = delete_form_by_database(request, this_form_schema)
                     return True, deleted, ""
                 else:
+                    form_directory = get_form_directory(request, project, form)
                     request.dbsession.query(Odkform).filter(
                         Odkform.project_id == project
                     ).filter(Odkform.form_id == form).delete()
+
             else:
+                form_directory = get_form_directory(request, project, form)
                 request.dbsession.query(Odkform).filter(
                     Odkform.project_id == project
                 ).filter(Odkform.form_id == form).delete()
 
             request.dbsession.flush()
-            return True, [{'project_id': project, 'form_id': form}], ""
+            return (
+                True,
+                [
+                    {
+                        "project_id": project,
+                        "form_id": form,
+                        "form_directory": form_directory,
+                    }
+                ],
+                "",
+            )
         else:
             return False, _("This form is blocked and cannot be changed at the moment.")
     except IntegrityError as e:

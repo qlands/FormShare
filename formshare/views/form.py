@@ -786,28 +786,40 @@ class DeleteForm(PrivateView):
                 next_page = self.request.params.get("next") or self.request.route_url(
                     "project_details", userid=user_id, projcode=project_code
                 )
-                form_directory = get_form_directory(self.request, project_id, form_id)
-                paths = ["forms", form_directory]
-                odk_dir = get_odk_path(self.request)
-                form_directory = os.path.join(odk_dir, *paths)
-                deleted, forms_deleted, message = delete_form(self.request, project_id, form_id)
+
+                deleted, forms_deleted, message = delete_form(
+                    self.request, project_id, form_id
+                )
                 if deleted:
                     for a_deleted_form in forms_deleted:
                         delete_dataset_index(
-                            self.request.registry.settings, user_id, project_code, a_deleted_form['form_id']
+                            self.request.registry.settings,
+                            user_id,
+                            project_code,
+                            a_deleted_form["form_id"],
                         )
                         delete_record_index(
-                            self.request.registry.settings, user_id, project_code, a_deleted_form['form_id']
+                            self.request.registry.settings,
+                            user_id,
+                            project_code,
+                            a_deleted_form["form_id"],
                         )
                         try:
+                            form_directory = a_deleted_form["form_directory"]
+                            paths = ["forms", form_directory]
+                            odk_dir = get_odk_path(self.request)
+                            form_directory = os.path.join(odk_dir, *paths)
                             shutil.rmtree(form_directory)
                         except Exception as e:
                             log.error(
                                 "Error {} while removing form {} in project {}. Cannot delete directory {}".format(
-                                    str(e), a_deleted_form['form_id'], project_id, form_directory
+                                    str(e),
+                                    a_deleted_form["form_id"],
+                                    project_id,
+                                    a_deleted_form["form_directory"],
                                 )
                             )
-                        bucket_id = project_id + a_deleted_form['form_id']
+                        bucket_id = project_id + a_deleted_form["form_id"]
                         bucket_id = md5(bucket_id.encode("utf-8")).hexdigest()
                         delete_bucket(self.request, bucket_id)
 

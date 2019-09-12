@@ -1,4 +1,3 @@
-- Manage subversions
 - Plugin interfaces in all places.
 - Create a JSON schema using the create XML file. Use it to validade data from ODK and data imports
 - Messaging, Watch and Follow

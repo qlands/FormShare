@@ -122,9 +122,20 @@
 
                 $('.remove_form').click(function () {
                     var action_url = $( this ).attr('urn');
+                    var has_parent = $( this ).attr('data-has-parent');
+                    var text = "";
+                    var title = "";
+                    if (has_parent === "true") {
+                        text = "{{ _('Look, you are going to delete a form that is a subversion. This means that you will REMOVE ALL the data including its parents as well!!!') }}";
+                        title = "{{ _('Are you sure really really sure?') }}";
+                    }
+                    else {
+                        text = "{{ _('All the data in this form will be deleted!') }}";
+                        title = "{{ _('Are you sure?') }}";
+                    }
                     swal({
-                            title: "{{ _('Are you sure?') }}",
-                            text: "{{ _('All the data in this form will be deleted!') }}",
+                            title: title,
+                            text: text,
                             type: "warning",
                             showCancelButton: true,
                             confirmButtonColor: "#DD6B55",

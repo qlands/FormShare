@@ -300,6 +300,32 @@ def form_has_subversion(request, user, project, form):
         return None
 
 
+def simple_form_has_subversion(request, project, form):
+    res = (
+        request.dbsession.query(Odkform)
+        .filter(Odkform.parent_project == project)
+        .filter(Odkform.parent_form == form)
+        .first()
+    )
+    if res is not None:
+        return True
+    else:
+        return False
+
+
+def form_has_parent(request, project, form):
+    res = (
+        request.dbsession.query(Odkform)
+        .filter(Odkform.project_id == project)
+        .filter(Odkform.form_id == form)
+        .first()
+    )
+    if res.parent_form is not None:
+        return True
+    else:
+        return False
+
+
 def get_form_details(request, user, project, form):
     result = get_form_data(request, project, form)
     if result is not None:
@@ -337,6 +363,13 @@ def get_form_details(request, user, project, form):
                 request, user, project, form
             )
             if result["has_sub_version"] is None:
+                if result["parent_form"] is not None:
+                    result["parent_form_data"] = get_form_data(
+                        request, result["parent_project"], result["parent_form"]
+                    )
+                else:
+                    result["parent_form_data"] = None
+            else:
                 if result["parent_form"] is not None:
                     result["parent_form_data"] = get_form_data(
                         request, result["parent_project"], result["parent_form"]
@@ -449,6 +482,13 @@ def get_project_forms(request, user, project):
                 request, user, form["project_id"], form["form_id"]
             )
             if form["has_sub_version"] is None:
+                if form["parent_form"] is not None:
+                    form["parent_form_data"] = get_form_data(
+                        request, form["parent_project"], form["parent_form"]
+                    )
+                else:
+                    form["parent_form_data"] = None
+            else:
                 if form["parent_form"] is not None:
                     form["parent_form_data"] = get_form_data(
                         request, form["parent_project"], form["parent_form"]
@@ -614,7 +654,7 @@ def get_form_directory(request, project, form):
         request.dbsession.query(Odkform)
         .filter(Odkform.project_id == project)
         .filter(Odkform.form_id == form)
-        .one()
+        .first()
     )
     if form_data is not None:
         return form_data.form_directory
@@ -640,7 +680,7 @@ def get_form_xml_create_file(request, project, form):
         request.dbsession.query(Odkform)
         .filter(Odkform.project_id == project)
         .filter(Odkform.form_id == form)
-        .one()
+        .first()
     )
     if form_data is not None:
         return form_data.form_createxmlfile
@@ -653,7 +693,7 @@ def get_form_xml_file(request, project, form):
         request.dbsession.query(Odkform)
         .filter(Odkform.project_id == project)
         .filter(Odkform.form_id == form)
-        .one()
+        .first()
     )
     if form_data is not None:
         return form_data.form_xmlfile
@@ -666,7 +706,7 @@ def get_form_survey_file(request, project, form):
         request.dbsession.query(Odkform)
         .filter(Odkform.project_id == project)
         .filter(Odkform.form_id == form)
-        .one()
+        .first()
     )
     if form_data is not None:
         return form_data.form_jsonfile
@@ -679,7 +719,7 @@ def get_form_xls_file(request, project, form):
         request.dbsession.query(Odkform)
         .filter(Odkform.project_id == project)
         .filter(Odkform.form_id == form)
-        .one()
+        .first()
     )
     if form_data is not None:
         return form_data.form_xlsfile
@@ -692,7 +732,7 @@ def get_form_schema(request, project, form):
         request.dbsession.query(Odkform)
         .filter(Odkform.project_id == project)
         .filter(Odkform.form_id == form)
-        .one()
+        .first()
     )
     if form_data is not None:
         return form_data.form_schema
@@ -705,7 +745,7 @@ def get_primary_key(request, project, form):
         request.dbsession.query(Odkform)
         .filter(Odkform.project_id == project)
         .filter(Odkform.form_id == form)
-        .one()
+        .first()
     )
     if form_data is not None:
         return form_data.form_pkey
@@ -752,6 +792,24 @@ def form_exists(request, project, form):
         return True
 
 
+def update_form_color_by_database(request, database, hex_color):
+    request.dbsession.query(Odkform).filter(Odkform.form_schema == database).update({'form_hexcolor': hex_color})
+
+
+def delete_form_by_database(request, database):
+    result = []
+    log.error("*****************BIG DELETE for database {} ************************".format(database))
+    res = request.dbsession.query(Odkform).filter(Odkform.form_schema == database).all()
+    for a_form in res:
+        log.error("Form ID: {} in project: {} will be deleted".format(a_form.form_id, a_form.project_id))
+        result.append({'project_id': a_form.project_id, 'form_id': a_form.form_id})
+    log.error("*****************BIG DELETE************************")
+    request.dbsession.query(Odkform).filter(Odkform.form_schema == database).update(
+        {"parent_project": None, "parent_form": None})
+    request.dbsession.query(Odkform).filter(Odkform.form_schema == database).delete()
+    return result
+
+
 def update_form(request, project, form, form_data):
     _ = request.translate
     mapped_data = map_to_schema(Odkform, form_data)
@@ -766,6 +824,13 @@ def update_form(request, project, form, form_data):
             request.dbsession.query(Odkform).filter(
                 Odkform.project_id == project
             ).filter(Odkform.form_id == form).update(mapped_data)
+
+            if 'form_hexcolor' in form_data.keys():
+                this_form_schema = get_form_schema(request, project, form)
+                if this_form_schema is not None:
+                    if simple_form_has_subversion(request, project, form) or form_has_parent(request, project, form):
+                        this_form_color = form_data['form_hexcolor']
+                        update_form_color_by_database(request, this_form_schema, this_form_color)
             request.dbsession.flush()
             return True, ""
         else:
@@ -793,16 +858,27 @@ def delete_form(request, project, form):
             .one()
         )
         if blocked[0] == 0:
-            request.dbsession.query(Odkform).filter(
-                Odkform.project_id == project
-            ).filter(Odkform.form_id == form).delete()
+            this_form_schema = get_form_schema(request, project, form)
+            if this_form_schema is not None:
+                if form_has_parent(request, project, form):
+                    deleted = delete_form_by_database(request, this_form_schema)
+                    return True, deleted, ""
+                else:
+                    request.dbsession.query(Odkform).filter(
+                        Odkform.project_id == project
+                    ).filter(Odkform.form_id == form).delete()
+            else:
+                request.dbsession.query(Odkform).filter(
+                    Odkform.project_id == project
+                ).filter(Odkform.form_id == form).delete()
+
             request.dbsession.flush()
-            return True, ""
+            return True, [{'project_id': project, 'form_id': form}], ""
         else:
             return False, _("This form is blocked and cannot be changed at the moment.")
     except IntegrityError as e:
         request.dbsession.rollback()
-        return False, str(e)
+        return False, [], str(e)
     except Exception as e:
         request.dbsession.rollback()
         log.error(
@@ -810,7 +886,7 @@ def delete_form(request, project, form):
                 str(e), project, form
             )
         )
-        return False, str(e)
+        return False, [], str(e)
 
 
 def set_form_status(request, project, form, status):

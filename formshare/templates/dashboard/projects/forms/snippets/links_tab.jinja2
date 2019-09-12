@@ -40,5 +40,16 @@
                 </div>
             </div>
         {% endblock links_tab_content %}
+        {% block links_qr_content %}
+            <hr>
+            <div style="text-align: center">
+                <span class="text-center">{{ _('Use this QR to configure ODK collect') }}</span><br/>
+                <a title="{{ _('ODK settings') }}" href="{{ request.route_url('project_qr', userid=projectDetails.owner, projcode=projectDetails.project_code) }}"><img style="max-width: 150px" src="{{ request.route_url('project_qr', userid=projectDetails.owner, projcode=projectDetails.project_code) }}" class="img-fluid"></a>
+            </div>
+            ODK URL:<br/>
+            <div class="input-group">
+                <input type="text" value="{{ request.route_url('project_details', userid=projectDetails.owner, projcode=projectDetails.project_code) }}" class="form-control"> <span class="input-group-append"> <a class="btn btn-white btn-bitbucket clipboard" data-clipboard-text="{{ request.route_url('project_details', userid=projectDetails.owner, projcode=projectDetails.project_code) }}" title="{{ _('Copy to clipboard') }}"><i class="far fa-copy"></i></a> </span>
+            </div>
+        {% endblock links_qr_content %}
     </div>
 </div>

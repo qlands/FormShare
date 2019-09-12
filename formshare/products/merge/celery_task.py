@@ -360,6 +360,7 @@ def merge_into_repository(
     b_form_directory,
     b_schema_name,
     odk_merge_string,
+    b_hex_color,
     locale,
 ):
     parts = __file__.split("/products/")
@@ -480,6 +481,7 @@ def merge_into_repository(
                     "form_blocked": 0,
                     "form_schema": a_schema_name,
                     "form_createxmlfile": c_create_xml_file,
+                    "form_hexcolor": b_hex_color,
                 }
             )
 
@@ -487,6 +489,7 @@ def merge_into_repository(
                 "form_schema": a_schema_name,
                 "form_blocked": 0,
                 "form_createxmlfile": c_create_xml_file,
+                "form_hexcolor": b_hex_color,
             }
             update_form(db_session, project_id, a_form_id, form_data)
 

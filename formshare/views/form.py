@@ -790,25 +790,26 @@ class DeleteForm(PrivateView):
                 paths = ["forms", form_directory]
                 odk_dir = get_odk_path(self.request)
                 form_directory = os.path.join(odk_dir, *paths)
-                deleted, message = delete_form(self.request, project_id, form_id)
+                deleted, forms_deleted, message = delete_form(self.request, project_id, form_id)
                 if deleted:
-                    delete_dataset_index(
-                        self.request.registry.settings, user_id, project_code, form_id
-                    )
-                    delete_record_index(
-                        self.request.registry.settings, user_id, project_code, form_id
-                    )
-                    try:
-                        shutil.rmtree(form_directory)
-                    except Exception as e:
-                        log.error(
-                            "Error {} while removing form {} in project {}. Cannot delete directory {}".format(
-                                str(e), form_id, project_id, form_directory
-                            )
+                    for a_deleted_form in forms_deleted:
+                        delete_dataset_index(
+                            self.request.registry.settings, user_id, project_code, a_deleted_form['form_id']
                         )
-                    bucket_id = project_id + form_id
-                    bucket_id = md5(bucket_id.encode("utf-8")).hexdigest()
-                    delete_bucket(self.request, bucket_id)
+                        delete_record_index(
+                            self.request.registry.settings, user_id, project_code, a_deleted_form['form_id']
+                        )
+                        try:
+                            shutil.rmtree(form_directory)
+                        except Exception as e:
+                            log.error(
+                                "Error {} while removing form {} in project {}. Cannot delete directory {}".format(
+                                    str(e), a_deleted_form['form_id'], project_id, form_directory
+                                )
+                            )
+                        bucket_id = project_id + a_deleted_form['form_id']
+                        bucket_id = md5(bucket_id.encode("utf-8")).hexdigest()
+                        delete_bucket(self.request, bucket_id)
 
                     self.request.session.flash(
                         self._("The form was deleted successfully")

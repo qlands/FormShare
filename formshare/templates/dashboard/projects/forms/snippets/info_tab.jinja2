@@ -60,7 +60,7 @@
                             {% endif %}
                             {% if formDetails.has_sub_version != None %}
                                 <li title='"{{ formDetails.has_sub_version.child_data.form_name }}" {{ _("is the sub-version of this form.") }}'><a href="{{ request.route_url('form_details',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.has_sub_version.child_form) }}" style="border-radius: 25px; background-color: #6f42c1; color: white">{{ _('With sub-version') }}</a></li>
-                            {% else %}
+                            {% endif %}
                                 {% if formDetails.parent_form != None %}
                                     <li title='{{ _('This is the sub-version of ') }}"{{ formDetails.parent_form_data.form_name }}".'><a href="{{ request.route_url('form_details',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.parent_form) }}" style="border-radius: 25px; background-color: #6f42c1; color: white">{{ _('Sub-version') }}</a></li>
                                     {% if formDetails.form_abletomerge == -1 %}
@@ -71,7 +71,7 @@
                                         {% endif %}
                                     {% endif %}
                                 {% endif %}
-                            {% endif %}
+{#                            {% endif %}#}
 
                         {% endblock info_tab_content_badges %}
                     </ul>

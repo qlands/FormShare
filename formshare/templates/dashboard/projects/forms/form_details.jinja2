@@ -32,6 +32,7 @@
         {% jsresource request,'formshare','switchery' %}
         {% jsresource request,'formshare','taphold' %}
         {% jsresource request,'formshare','select2' %}
+        {% jsresource request,'formshare','clipboard' %}
         {% jsresource request,'formshare','bs-custom-file-input' %}
         {% jsresource request,'formshare','sse' %}
         {% if formDetails.form_geopoint != None %}
@@ -393,9 +394,15 @@
                     {% if projectDetails.access_type < 4 %}
                         $('.remove_form').click(function () {
                             var action_url = $( this ).attr('urn');
+                            var title = "{{ _('Are you sure?') }}";
+                            var text = "{{ _('All the data in this form will be deleted!') }}";
+                            {% if formDetails.parent_form != None and formDetails.form_schema != None %}
+                                text = "{{ _('Look, you are going to delete a form that is a subversion. This means that you will REMOVE ALL the data including its parents as well!!!') }}";
+                                title = "{{ _('Are you sure really really sure?') }}";
+                            {% endif %}
                             swal({
-                                    title: "{{ _('Are you sure?') }}",
-                                    text: "{{ _('All the data in this form will be deleted!') }}",
+                                    title: title,
+                                    text: text,
                                     type: "warning",
                                     showCancelButton: true,
                                     confirmButtonColor: "#DD6B55",

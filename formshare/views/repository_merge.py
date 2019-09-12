@@ -103,6 +103,7 @@ class RepositoryMergeForm(PrivateView):
                     old_form_data["schema"],
                     old_form_data["directory"],
                     output,
+                    old_form_data["form_hexcolor"],
                 )
 
                 form_data = {"form_mergetask": task_id}

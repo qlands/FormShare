@@ -11,6 +11,7 @@ def merge_form(
     b_schema_name,
     b_form_directory,
     odk_merge_string,
+    b_hex_color,
 ):
     settings = {}
     for key, value in request.registry.settings.items():
@@ -28,6 +29,7 @@ def merge_form(
             b_form_directory,
             b_schema_name,
             odk_merge_string,
+            b_hex_color,
             request.locale_name,
         )
     )

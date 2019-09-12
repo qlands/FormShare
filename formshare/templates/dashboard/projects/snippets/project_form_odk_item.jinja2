@@ -6,7 +6,7 @@
     {% endblock form_item_incon %}
     <div class="media-body ">
         <div class="row">
-            <ul class="col-md-12">
+            <div class="col-md-12">
                 {% block form_item_content %}
                     <span class="float-right">{{ _('Uploaded on') }} {{ request.h.readble_date(form.form_cdate,request.locale_name) }}</span>
                     <strong><a href="{{ request.route_url('form_details',userid=projectData.owner,projcode=projectData.project_code,formid=form.form_id) }}">{{ form.form_name }}</a></strong>
@@ -25,11 +25,11 @@
                     {% endif %}
                     {% if form.has_sub_version != None %}
                         <span style="background-color: #6f42c1; color: white" class="label" title='"{{ form.has_sub_version.child_data.form_name }}" {{ _('is the sub-version of this form.') }}'>{{ _('With sub-version') }}</span>
-                    {% else %}
-                        {% if form.parent_form != None %}
-                            <span style="background-color: #6f42c1; color: white" class="label" title='{{ _('This form is the sub-version of') }} "{{ form.parent_form_data.form_name }}"'>{{ _('Is sub-version') }}</span>
-                        {% endif %}
                     {% endif %}
+                    {% if form.parent_form != None %}
+                        <span style="background-color: #6f42c1; color: white" class="label" title='{{ _('This form is the sub-version of') }} "{{ form.parent_form_data.form_name }}"'>{{ _('Is sub-version') }}</span>
+                    {% endif %}
+
                     <br>
                     {% if form.submissions > 0  %}
                         <span class="text-muted">{{ _('Last submission') }}: {{ request.h.readble_date_with_time(form.last,request.locale_name) }} {{ _('by') }} <a class="text-info">{{ form.bydetails.coll_name }}</a></span><br>
@@ -46,13 +46,7 @@
                 <div class="actions">
                     {% block form_item_actions %}
                         <a class="btn btn-xs btn-white" href="{{ request.route_url('form_download_xlsx',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id) }}"><i class="fab fa-wpforms"></i> {{ _('Download ODK form') }}</a>
-                        {% if form.form_schema == None %}
-                            {% if form.parent_form == None %}
-                                <a href="{{ request.route_url('createrepository',userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id) }}" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-database"></i> {{ _('Create repository') }} </a>
-                            {% else %}
-                                <a class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-code-branch"></i> {{ _('Merge repository') }} </a>
-                            {% endif %}
-                        {% else %}
+                        {% if form.form_schema != None %}
                             {% block form_item_links %}
                                 <a class="btn btn-xs btn-white" target="_blank" href="{{ request.route_url('clean', userid=projectData.owner, projcode=projectData.project_code,formid=form.form_id) }}"><i class="fa fa-pencil"></i> {{ _('Clean data') }}</a>
                                 <a class="btn btn-xs btn-white" target="_blank" href="{{ request.route_url('errorlist', userid=projectData.owner, projcode=projectData.project_code,formid=form.form_id) }}"><i class="fa fa-bug"></i> {{ _('Clean error logs') }}</a>
@@ -65,7 +59,7 @@
                             {% endif %}
                             {% if projectData.access_type <= 2 or form.pubby.user_id == activeUser.id %}
                                 {% if form.has_sub_version == None %}
-                                    <a urn="{{ request.route_url('delete_form', userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next': request.url}) }}" class="btn btn-xs btn-white remove_form"><i style="color: red" class="far fa-trash-alt"></i> {{ _('Delete') }}</a>
+                                    <a {% if form.parent_form != None and form.form_schema != None %}data-has-parent="true"{% else %}data-has-parent="false"{% endif %} urn="{{ request.route_url('delete_form', userid=projectData.owner, projcode=projectData.project_code, formid=form.form_id,_query={'next': request.url}) }}" class="btn btn-xs btn-white remove_form"><i style="color: red" class="far fa-trash-alt"></i> {{ _('Delete') }}</a>
                                 {% endif %}
                             {% endif %}
                             <a href="{{ request.route_url('form_details',userid=projectData.owner,projcode=projectData.project_code,formid=form.form_id) }}" class="btn btn-xs btn-white"><i class="fas fa-gift"></i> {% if form.form_schema == None %}{{ _('Update form and more...') }}{% else %}{{ _('Data downloads and more...') }}{% endif %}</a>

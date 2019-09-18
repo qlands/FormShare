@@ -35,6 +35,10 @@ from formshare.processes.elasticsearch.record_index import (
     delete_from_record_index,
 )
 from webhelpers2.html import literal
+from pandas.io.json import json_normalize
+from collections import OrderedDict
+import pandas as pd
+
 
 __all__ = [
     "get_submission_media_files",
@@ -159,8 +163,60 @@ def get_submission_media_files(request, project, form):
     return False, _("There are no media files to download")
 
 
+def gather_array_sizes(data, array_dict):
+    for key, value in data.items():
+        if type(value) is list:
+            current_size = array_dict.get(key, 0)
+            if len(value) > current_size:
+                array_dict[key] = len(value)
+            for an_item in value:
+                gather_array_sizes(an_item, array_dict)
+
+
+def flatten_json(y, separator="/"):
+    out = OrderedDict()
+
+    def flatten(x, name=""):
+        if type(x) is OrderedDict:
+            for a in x:
+                flatten(x[a], name + a + separator)
+        elif type(x) is list:
+            i = 1
+            for a in x:
+                flatten(a, name + "[" + str(i) + "]" + separator)
+                i += 1
+        else:
+            out[name[:-1]] = x
+
+    flatten(y)
+    return out
+
+
+def separate_multi_selects(data, table_name, tree_root):
+    target_table = tree_root.find(".//table[@name='" + table_name + "']")
+    copy_of_data = dict(data)
+    for key, value in copy_of_data.items():
+        if key.find("/") > 0:
+            parts = key.split("/")
+            variable_name = parts[len(parts)-1]
+        else:
+            variable_name = key
+
+        if type(value) is list:
+            for an_item in value:
+                separate_multi_selects(an_item, variable_name, tree_root)
+        else:
+            if target_table is not None:
+                target_field = target_table.find(".//field[@name='" + variable_name + "']")
+                if target_field is not None:
+                    if target_field.get("isMultiSelect","false") == "true":
+                        values = value.split(" ")
+                        for a_value in values:
+                            data[key + "/" + a_value] = "true"
+                        data.pop(key)
+
+
 def json_to_csv(request, project, form):
-    # TODO: We need to integrate the new code
     _ = request.translate
     uid = str(uuid.uuid4())
     form_directory = get_form_directory(request, project, form)
@@ -180,34 +236,85 @@ def json_to_csv(request, project, form):
     path = os.path.join(odk_dir, *paths)
     files = glob.glob(path)
     if files:
-        # Join The files with JQ
-        args = ["jq", "-s", "."]
-        for file in files:
-            args.append(file)
+        array_dict = {}
+        create_xml_file = os.path.join(
+            odk_dir,
+            *["forms", form_directory, "repository", "create.xml"]
+        )
+        tree_create = etree.parse(create_xml_file)
+        root_create = tree_create.getroot()
+
+        for aFile in files:
+            with open(aFile) as json_file:
+                data = json.load(json_file)
+                gather_array_sizes(data, array_dict)
+                separate_multi_selects(data, "maintable", root_create)
+                new_data = data
+            if new_data is not None:
+                with open(aFile, "w") as outfile:
+                    json_string = json.dumps(new_data, indent=4, ensure_ascii=False)
+                    outfile.write(json_string)
+
+        array_sizes = []
+        for key, value in array_dict.items():
+            array_sizes.append(key + ":" + str(value))
+
+        # Create the dummy file
+        paths = ["utilities", "createDummyJSON", "createdummyjson"]
+
+        create_dummy_json = os.path.join(request.registry.settings["odktools.path"], *paths)
+
+        if not os.path.exists(create_xml_file):
+            return False, _("This form was uploaded using an old version of ODK Tools. Please upload it again.")
+        insert_xml_file = os.path.join(
+            odk_dir,
+            *["forms", form_directory, "repository", "insert.xml"]
+        )
+
+        paths = ["dummy.djson"]
+        dummy_json = os.path.join(tmp_dir, *paths)
+
+        args = [create_dummy_json, "-c " + create_xml_file, "-o " + dummy_json, "-i " + insert_xml_file, "-s"]
+        if len(array_sizes) > 0:
+            args.append("-a " + ",".join(array_sizes))
+
         p = Popen(args, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = p.communicate()
+        p.communicate()
         if p.returncode == 0:
-            uid = str(uuid.uuid4())
-            paths = ["tmp", uid + ".json"]
-            json_file = os.path.join(odk_dir, *paths)
-            file = open(json_file, "w")
-            file.write(stdout.decode())
-            file.close()
-            # Convert the file to CSV
-            paths = ["tmp", uid + ".csv"]
-            csv_file = os.path.join(odk_dir, *paths)
-            args = ["json2csv", json_file, csv_file]
             try:
-                check_call(args)
-            except CalledProcessError as e:
-                msg = "Error creating CSV files \n"
-                msg = msg + "Command: " + " ".join(args) + "\n"
-                msg = msg + "Error: \n"
-                msg = msg + str(e)
-                return False, msg
-            return True, csv_file
+                dataframe_array = []
+                # Adds the dummy
+                with open(dummy_json) as json_file:
+                    data = json.load(json_file, object_pairs_hook=OrderedDict)
+                flat = flatten_json(data)
+                temp = json_normalize(flat)
+                cols = []
+                for col in temp.columns:
+                    cols.append(col.replace(".", ""))
+                temp.columns = cols
+                dataframe_array.append(temp)
+
+                for file in files:
+                    with open(file) as json_file:
+                        data = json.load(json_file, object_pairs_hook=OrderedDict)
+                    flat = flatten_json(data)
+                    temp = json_normalize(flat)
+                    cols = []
+                    for col in temp.columns:
+                        cols.append(col.replace(".", ""))
+                    temp.columns = cols
+                    dataframe_array.append(temp)
+                join = pd.concat(dataframe_array, sort=False)
+                join = join.iloc[1:]
+                paths = ["tmp", uid + ".csv"]
+                csv_file = os.path.join(odk_dir, *paths)
+
+                join.to_csv(csv_file, index=False, encoding="utf-8")
+                return True, csv_file
+            except Exception as e:
+                return False, str(e)
         else:
-            return False, stderr
+            return False, _('Error while creating dummy file')
     else:
         return False, _("There are not submissions to download")
 

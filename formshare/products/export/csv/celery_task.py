@@ -34,17 +34,17 @@ class MySQLDenormalizeError(Exception):
     """
 
 
-def flatten_json(y):
+def flatten_json(y, separator="/"):
     out = OrderedDict()
 
     def flatten(x, name=""):
         if type(x) is OrderedDict:
             for a in x:
-                flatten(x[a], name + a + "_")
+                flatten(x[a], name + a + separator)
         elif type(x) is list:
             i = 1
             for a in x:
-                flatten(a, name + str(i) + "_")
+                flatten(a, name + "[" + str(i) + "]" + separator)
                 i += 1
         else:
             out[name[:-1]] = x
@@ -190,6 +190,11 @@ def build_csv(
     out_path = os.path.join(settings["repository.path"], *paths)
     os.makedirs(out_path)
 
+    create_xml_file = os.path.join(
+        settings["repository.path"],
+        *["odk", "forms", form_directory, "repository", "create.xml"]
+    )
+
     args = [
         mysql_denormalize,
         "-H " + settings["mysql.host"],
@@ -198,10 +203,16 @@ def build_csv(
         "-p " + settings["mysql.password"],
         "-s " + form_schema,
         "-t maintable",
+        "-c " + create_xml_file,
         "-m " + maps_path,
         "-o " + out_path,
         "-T " + temp_path,
+        "-S"
     ]
+
+    log.error("*************************11111")
+    log.error(" ".join(args))
+    log.error("*************************11111")
 
     send_task_status_to_form(settings, task_id, _("Denormalizing database"))
     p = Popen(args, stdout=PIPE, stderr=PIPE)
@@ -227,14 +238,9 @@ def build_csv(
             paths = ["utilities", "createDummyJSON", "createdummyjson"]
             create_dummy_json = os.path.join(settings["odktools.path"], *paths)
 
-            manifest_file = os.path.join(
+            insert_xml_file = os.path.join(
                 settings["repository.path"],
-                *["odk", "forms", form_directory, "repository", "manifest.xml"]
-            )
-
-            create_xml_file = os.path.join(
-                settings["repository.path"],
-                *["odk", "forms", form_directory, "repository", "create.xml"]
+                *["odk", "forms", form_directory, "repository", "insert.xml"]
             )
 
             if protect_sensitive:
@@ -248,9 +254,14 @@ def build_csv(
             paths = ["dummy.djson"]
             dummy_json = os.path.join(out_path, *paths)
 
-            args = [create_dummy_json, "-i " + manifest_file, "-o " + dummy_json, "-r"]
+            args = [create_dummy_json, "-c " + create_xml_file, "-o " + dummy_json, "-i " + insert_xml_file, "-s", "-r"]
             if len(array_sizes) > 0:
                 args.append("-a " + ",".join(array_sizes))
+
+            log.error("*************************22222")
+            log.error(" ".join(args))
+            log.error("*************************22222")
+
             p = Popen(args, stdout=PIPE, stderr=PIPE)
 
             p.communicate()

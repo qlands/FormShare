@@ -47,6 +47,9 @@ def build_xlsx(
     paths = ["forms", form_directory, "repository", "create.xml"]
     create_xml = os.path.join(odk_dir, *paths)
 
+    paths = ["forms", form_directory, "repository", "insert.xml"]
+    insert_xml = os.path.join(odk_dir, *paths)
+
     paths = [odk_tools_dir, "utilities", "MySQLToXLSX", "mysqltoxlsx"]
     mysql_to_xlsx = os.path.join(odk_dir, *paths)
 
@@ -64,12 +67,19 @@ def build_xlsx(
         "-p " + mysql_password,
         "-s " + form_schema,
         "-x " + create_xml,
+        "-I " + insert_xml,
         "-o " + xlsx_file,
         "-T " + temp_dir,
         "-f " + form_id,
+        "-S",
     ]
     if protect_sensitive:
         args.append("-c")
+
+    log.error("*************************33333")
+    log.error(" ".join(args))
+    log.error("*************************33333")
+
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()
     if p.returncode == 0:

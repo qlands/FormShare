@@ -1,7 +1,7 @@
 <div class="middle-box text-center animated fadeInDown" style="margin-top: 0px">
     {% block no_forms_info %}
         {% if projectData.access_type < 4 %}
-            <h1><i class="far fa-plus-square"></i></h1>
+            <h1><a data-toggle="modal" data-target="#upload_form"><i class="far fa-plus-square"></i></a></h1>
         {% endif %}
         <h3 class="font-bold">{{ _('This project has no forms.') }}</h3>
         <div class="error-desc">

@@ -270,7 +270,7 @@ def import_external_data(
     return True, ""
 
 
-def check_jxform_file(request, json_file, external_file=None):
+def check_jxform_file(request, json_file, create_xml_file, insert_xml_file, external_file=None):
     _ = request.translate
     jxform_to_mysql = os.path.join(
         request.registry.settings["odktools.path"], *["JXFormToMysql", "jxformtomysql"]
@@ -278,6 +278,8 @@ def check_jxform_file(request, json_file, external_file=None):
     args = [
         jxform_to_mysql,
         "-j " + json_file,
+        "-C " + create_xml_file,
+        "-I " + insert_xml_file,
         "-t maintable",
         "-v dummy",
         "-e " + os.path.join(os.path.dirname(json_file), *["tmp"]),
@@ -645,6 +647,13 @@ def upload_odk_form(
         json_dict = parse_file_to_json(file_name, warnings=warnings)
         paths = ["tmp", uid, parts[0] + ".srv"]
         survey_file = os.path.join(odk_dir, *paths)
+
+        paths = ["tmp", uid, "create.xml"]
+        create_file = os.path.join(odk_dir, *paths)
+
+        paths = ["tmp", uid, "insert.xml"]
+        insert_file = os.path.join(odk_dir, *paths)
+
         with open(survey_file, "w") as outfile:
             json_string = json.dumps(json_dict, indent=4, ensure_ascii=False)
             outfile.write(json_string)
@@ -666,7 +675,7 @@ def upload_odk_form(
                 form_title = root.findall(".//{" + h_nsmap + "}title")
                 if not form_exists(request, project_id, form_id):
                     error, message = check_jxform_file(
-                        request, survey_file, itemsets_csv
+                        request, survey_file, create_file, insert_file, itemsets_csv
                     )
                     if error == 0:
                         paths = ["forms", form_directory, "media"]
@@ -696,9 +705,15 @@ def upload_odk_form(
                         final_xml = os.path.join(odk_dir, *paths)
                         paths = ["forms", form_directory, survey_file_name]
                         final_survey = os.path.join(odk_dir, *paths)
+                        paths = ["forms", form_directory, "repository", "create.xml"]
+                        final_create_xml = os.path.join(odk_dir, *paths)
+                        paths = ["forms", form_directory, "repository", "insert.xml"]
+                        final_insert_xml = os.path.join(odk_dir, *paths)
                         shutil.copyfile(file_name, final_xls)
                         shutil.copyfile(xml_file, final_xml)
                         shutil.copyfile(survey_file, final_survey)
+                        shutil.copyfile(create_file, final_create_xml)
+                        shutil.copyfile(insert_file, final_insert_xml)
                         parent_array = []
                         try:
                             geopoint = get_geopoint_variable_from_json(
@@ -854,6 +869,13 @@ def update_odk_form(request, project_id, for_form_id, odk_dir, form_data):
         json_dict = parse_file_to_json(file_name, warnings=warnings)
         paths = ["tmp", uid, parts[0] + ".srv"]
         survey_file = os.path.join(odk_dir, *paths)
+
+        paths = ["tmp", uid, "create.xml"]
+        create_file = os.path.join(odk_dir, *paths)
+
+        paths = ["tmp", uid, "insert.xml"]
+        insert_file = os.path.join(odk_dir, *paths)
+
         with open(survey_file, "w") as outfile:
             json_string = json.dumps(json_dict, indent=4, ensure_ascii=False)
             outfile.write(json_string)
@@ -876,7 +898,7 @@ def update_odk_form(request, project_id, for_form_id, odk_dir, form_data):
                     form_title = root.findall(".//{" + h_nsmap + "}title")
                     if form_exists(request, project_id, form_id):
                         error, message = check_jxform_file(
-                            request, survey_file, itemsets_csv
+                            request, survey_file, itemsets_csv, create_file, insert_file
                         )
                         if error == 0:
                             form_directory = get_form_directory(
@@ -909,9 +931,15 @@ def update_odk_form(request, project_id, for_form_id, odk_dir, form_data):
                             final_xml = os.path.join(odk_dir, *paths)
                             paths = ["forms", form_directory, survey_file_name]
                             final_survey = os.path.join(odk_dir, *paths)
+                            paths = ["forms", form_directory, "repository", "create.xml"]
+                            final_create_xml = os.path.join(odk_dir, *paths)
+                            paths = ["forms", form_directory, "repository", "insert.xml"]
+                            final_insert_xml = os.path.join(odk_dir, *paths)
                             shutil.copyfile(file_name, final_xls)
                             shutil.copyfile(xml_file, final_xml)
                             shutil.copyfile(survey_file, final_survey)
+                            shutil.copyfile(create_file, final_create_xml)
+                            shutil.copyfile(insert_file, final_insert_xml)
                             parent_array = []
                             try:
                                 geopoint = get_geopoint_variable_from_json(

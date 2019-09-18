@@ -198,7 +198,7 @@ def separate_multi_selects(data, table_name, tree_root):
     for key, value in copy_of_data.items():
         if key.find("/") > 0:
             parts = key.split("/")
-            variable_name = parts[len(parts)-1]
+            variable_name = parts[len(parts) - 1]
         else:
             variable_name = key
 
@@ -207,9 +207,11 @@ def separate_multi_selects(data, table_name, tree_root):
                 separate_multi_selects(an_item, variable_name, tree_root)
         else:
             if target_table is not None:
-                target_field = target_table.find(".//field[@name='" + variable_name + "']")
+                target_field = target_table.find(
+                    ".//field[@name='" + variable_name + "']"
+                )
                 if target_field is not None:
-                    if target_field.get("isMultiSelect","false") == "true":
+                    if target_field.get("isMultiSelect", "false") == "true":
                         values = value.split(" ")
                         for a_value in values:
                             data[key + "/" + a_value] = "true"
@@ -238,8 +240,7 @@ def json_to_csv(request, project, form):
     if files:
         array_dict = {}
         create_xml_file = os.path.join(
-            odk_dir,
-            *["forms", form_directory, "repository", "create.xml"]
+            odk_dir, *["forms", form_directory, "repository", "create.xml"]
         )
         tree_create = etree.parse(create_xml_file)
         root_create = tree_create.getroot()
@@ -262,19 +263,31 @@ def json_to_csv(request, project, form):
         # Create the dummy file
         paths = ["utilities", "createDummyJSON", "createdummyjson"]
 
-        create_dummy_json = os.path.join(request.registry.settings["odktools.path"], *paths)
+        create_dummy_json = os.path.join(
+            request.registry.settings["odktools.path"], *paths
+        )
 
         if not os.path.exists(create_xml_file):
-            return False, _("This form was uploaded using an old version of ODK Tools. Please upload it again.")
+            return (
+                False,
+                _(
+                    "This form was uploaded using an old version of ODK Tools. Please upload it again."
+                ),
+            )
         insert_xml_file = os.path.join(
-            odk_dir,
-            *["forms", form_directory, "repository", "insert.xml"]
+            odk_dir, *["forms", form_directory, "repository", "insert.xml"]
         )
 
         paths = ["dummy.djson"]
         dummy_json = os.path.join(tmp_dir, *paths)
 
-        args = [create_dummy_json, "-c " + create_xml_file, "-o " + dummy_json, "-i " + insert_xml_file, "-s"]
+        args = [
+            create_dummy_json,
+            "-c " + create_xml_file,
+            "-o " + dummy_json,
+            "-i " + insert_xml_file,
+            "-s",
+        ]
         if len(array_sizes) > 0:
             args.append("-a " + ",".join(array_sizes))
 
@@ -314,7 +327,7 @@ def json_to_csv(request, project, form):
             except Exception as e:
                 return False, str(e)
         else:
-            return False, _('Error while creating dummy file')
+            return False, _("Error while creating dummy file")
     else:
         return False, _("There are not submissions to download")
 

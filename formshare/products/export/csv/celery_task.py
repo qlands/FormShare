@@ -207,7 +207,7 @@ def build_csv(
         "-m " + maps_path,
         "-o " + out_path,
         "-T " + temp_path,
-        "-S"
+        "-S",
     ]
 
     log.error("*************************11111")
@@ -254,7 +254,14 @@ def build_csv(
             paths = ["dummy.djson"]
             dummy_json = os.path.join(out_path, *paths)
 
-            args = [create_dummy_json, "-c " + create_xml_file, "-o " + dummy_json, "-i " + insert_xml_file, "-s", "-r"]
+            args = [
+                create_dummy_json,
+                "-c " + create_xml_file,
+                "-o " + dummy_json,
+                "-i " + insert_xml_file,
+                "-s",
+                "-r",
+            ]
             if len(array_sizes) > 0:
                 args.append("-a " + ",".join(array_sizes))
 

@@ -232,7 +232,7 @@ class UserIndexManager(object):
 
     def query_user(self, q, query_from, query_size):
         query = q.replace("*", "")
-        query_dict = {"query": {"wildcard": {"all_data": "*" + query + "*"}}}
+        query_dict = {"query": {"wildcard": {"all_data": {"value": "*" + query + "*"}}}}
         if query_from is not None:
             query_dict["from"] = query_from
         if query_size is not None:
@@ -242,9 +242,6 @@ class UserIndexManager(object):
         connection = self.create_connection()
         if connection is not None:
             es_result = connection.search(index=self.index_name, body=query_dict)
-            # print("**********************88")
-            # pprint.pprint(es_result)
-            # print("**********************88")
             if es_result["hits"]["total"] > 0:
                 total = es_result["hits"]["total"]
                 for hit in es_result["hits"]["hits"]:

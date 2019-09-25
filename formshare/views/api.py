@@ -25,7 +25,7 @@ class APIUserSearchSelect2(PrivateView):
                 for result in query_result:
                     if result["user_id"] != self.userID:
                         select2_result.append(
-                            {"id": result["user_id"], "text": result["user_name"]}
+                            {"id": result["user_id"], "text": result["user_name"], "user_email": result["user_email"]}
                         )
                 with_pagination = False
                 if page.page_count > 1:

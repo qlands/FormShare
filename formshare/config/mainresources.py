@@ -171,6 +171,9 @@ def create_resources(apppath, config):
     r.add_js_resource(
         "formshare", "select2", "js/plugins/select2/select2.full.min.js", None
     )
+    r.add_js_resource(
+        "formshare", "md5", "js/plugins/md5/jquery.md5.js", None
+    )
 
     # -------------------------------Repository-------------------------------
     r.add_css_resource(

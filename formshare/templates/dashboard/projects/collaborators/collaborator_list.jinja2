@@ -18,6 +18,7 @@
 {% block topScripts %}
     {{ super() }}
     {% jsresource request,'formshare','select2' %}
+    {% jsresource request,'formshare','md5' %}
 {% endblock topScripts %}
 
 {% block breadcrumbs %}
@@ -161,7 +162,20 @@
 
             });
 
+            function formatUser (user) {
+                if (!user.id) {
+                    return user.text;
+                }
+                let md5 = $.md5(user.user_email);
+                let baseUrl = "https://www.gravatar.com/avatar";
+                let $state = $(
+                    '<span><img src="' + baseUrl + '/' + md5 + '?d=identicon&s=45" class="img-flag" /> ' + user.text + '</span>'
+                );
+                return $state;
+            }
+
             $(".js-example-data-ajax").select2({
+                templateResult: formatUser,
                 ajax: {
                     url: "{{ request.route_url('api_select2_users',userid=userid) }}",
                     dataType: 'json',

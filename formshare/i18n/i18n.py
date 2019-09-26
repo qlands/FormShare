@@ -1,4 +1,4 @@
-from pyramid.i18n import get_localizer, TranslationStringFactory
+from pyramid.i18n import get_localizer
 from pyramid.threadlocal import get_current_request
 from babel.support import Translations
 import sys
@@ -34,7 +34,7 @@ def add_localizer(event):
         translations.merge(translations_plugin)
 
     def auto_translate(string):
-        return translations.gettext(string)  # return localizer.translate(tsf(string))
+        return translations.gettext(string)
 
     request.localizer = localizer
     request.translate = auto_translate

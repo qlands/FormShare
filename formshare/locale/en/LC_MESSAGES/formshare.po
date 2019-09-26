@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-09-26 13:20-0600\n"
+"POT-Creation-Date: 2019-09-26 16:36-0600\n"
 "PO-Revision-Date: 2017-11-15 22:40-0600\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -520,7 +520,7 @@ msgstr ""
 
 #: formshare/templates/assistant/page.jinja2:96
 #: formshare/templates/assistant/page.jinja2:125
-#: formshare/templates/dashboard/profile/profile_edit.jinja2:84
+#: formshare/templates/dashboard/profile/profile_edit.jinja2:85
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:105
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:131
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_item.jinja2:38
@@ -533,7 +533,7 @@ msgid "Change password of"
 msgstr ""
 
 #: formshare/templates/assistant/page.jinja2:104
-#: formshare/templates/dashboard/profile/profile_edit.jinja2:65
+#: formshare/templates/dashboard/profile/profile_edit.jinja2:66
 msgid "Old password"
 msgstr ""
 
@@ -547,7 +547,7 @@ msgid "Password"
 msgstr ""
 
 #: formshare/templates/assistant/page.jinja2:117
-#: formshare/templates/dashboard/profile/profile_edit.jinja2:75
+#: formshare/templates/dashboard/profile/profile_edit.jinja2:76
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:121
 msgid "Confirmation"
 msgstr ""
@@ -1314,7 +1314,7 @@ msgstr ""
 msgid "Edit Profile"
 msgstr ""
 
-#: formshare/templates/dashboard/profile/profile_edit.jinja2:33
+#: formshare/templates/dashboard/profile/profile_edit.jinja2:34
 #: formshare/templates/dashboard/projects/assistant_groups/members/member_list.jinja2:52
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:59
 #: formshare/templates/dashboard/projects/forms/snippets/edit_form.jinja2:5
@@ -1322,15 +1322,15 @@ msgstr ""
 msgid "Name"
 msgstr ""
 
-#: formshare/templates/dashboard/profile/profile_edit.jinja2:37
+#: formshare/templates/dashboard/profile/profile_edit.jinja2:38
 msgid "Bio data"
 msgstr ""
 
-#: formshare/templates/dashboard/profile/profile_edit.jinja2:49
+#: formshare/templates/dashboard/profile/profile_edit.jinja2:50
 msgid "Save changes"
 msgstr ""
 
-#: formshare/templates/dashboard/profile/profile_edit.jinja2:70
+#: formshare/templates/dashboard/profile/profile_edit.jinja2:71
 msgid "New password"
 msgstr ""
 
@@ -1370,22 +1370,30 @@ msgstr ""
 msgid "Collaborations"
 msgstr ""
 
-#: formshare/templates/dashboard/profile/snippets/profile_head.jinja2:23
+#: formshare/templates/dashboard/profile/snippets/profile_head.jinja2:16
+msgid "Use"
+msgstr ""
+
+#: formshare/templates/dashboard/profile/snippets/profile_head.jinja2:16
+msgid "to change your profile image"
+msgstr ""
+
+#: formshare/templates/dashboard/profile/snippets/profile_head.jinja2:26
 #: formshare/templates/dashboard/projects/assistant_groups/members/member_list.jinja2:57
 msgid "Joined"
 msgstr ""
 
-#: formshare/templates/dashboard/profile/snippets/profile_head.jinja2:28
+#: formshare/templates/dashboard/profile/snippets/profile_head.jinja2:31
 msgid "API key"
 msgstr ""
 
-#: formshare/templates/dashboard/profile/snippets/profile_head.jinja2:29
+#: formshare/templates/dashboard/profile/snippets/profile_head.jinja2:32
 #: formshare/templates/dashboard/projects/forms/snippets/links_tab.jinja2:51
 #: formshare/templates/dashboard/projects/snippets/project_details.jinja2:35
 msgid "Copy to clipboard"
 msgstr ""
 
-#: formshare/templates/dashboard/profile/snippets/profile_head.jinja2:33
+#: formshare/templates/dashboard/profile/snippets/profile_head.jinja2:36
 #: formshare/templates/dashboard/projects/collaborators/collaborator_list.jinja2:4
 #: formshare/templates/dashboard/projects/collaborators/collaborator_list.jinja2:36
 #: formshare/templates/dashboard/projects/collaborators/snippets/brdcrbs_colbrtsadd.jinja2:14
@@ -1394,7 +1402,7 @@ msgstr ""
 msgid "Collaborators"
 msgstr ""
 
-#: formshare/templates/dashboard/profile/snippets/profile_head.jinja2:41
+#: formshare/templates/dashboard/profile/snippets/profile_head.jinja2:44
 #: formshare/templates/dashboard/projects/assistant_groups/members/snippets/brdcrbs_memlist.jinja2:8
 #: formshare/templates/dashboard/projects/assistant_groups/snippets/brdcrbs_groupadd.jinja2:8
 #: formshare/templates/dashboard/projects/assistant_groups/snippets/brdcrbs_groupedit.jinja2:8
@@ -1423,15 +1431,15 @@ msgstr ""
 msgid "Projects"
 msgstr ""
 
-#: formshare/templates/dashboard/profile/snippets/profile_head.jinja2:45
+#: formshare/templates/dashboard/profile/snippets/profile_head.jinja2:48
 msgid "Last project"
 msgstr ""
 
-#: formshare/templates/dashboard/profile/snippets/profile_head.jinja2:46
+#: formshare/templates/dashboard/profile/snippets/profile_head.jinja2:49
 msgid "without projects"
 msgstr ""
 
-#: formshare/templates/dashboard/profile/snippets/profile_head.jinja2:49
+#: formshare/templates/dashboard/profile/snippets/profile_head.jinja2:52
 #: formshare/templates/dashboard/projects/forms/snippets/brdcrbs_frmdtls.jinja2:2
 #: formshare/templates/dashboard/projects/snippets/no_forms_tab.jinja2:3
 #: formshare/templates/dashboard/projects/snippets/project_details.jinja2:232

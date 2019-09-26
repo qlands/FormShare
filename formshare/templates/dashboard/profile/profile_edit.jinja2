@@ -19,6 +19,7 @@
 
 {% block maincontent %}
     {% block profile_edit_head %}
+        {% set edit_profile = True %}
         {% include 'dashboard/profile/snippets/profile_head.jinja2' %}
     {% endblock profile_edit_head %}
     {% block profile_edit_content %}
@@ -90,6 +91,9 @@
                         </div>
                     </div>
                 {% endif %}
+                {% block profile_edit_section_extra %}
+
+                {% endblock profile_edit_section_extra %}
             </div>
         </div>
     {% endblock profile_edit_content %}

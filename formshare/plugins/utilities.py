@@ -16,10 +16,8 @@ __all__ = [
     "add_route",
     "add_field_to_user_schema",
     "add_field_to_project_schema",
-    "add_field_to_enumerator_schema",
-    "add_field_to_enumerator_group_schema",
-    "add_field_to_data_user_schema",
-    "add_field_to_data_group_schema",
+    "add_field_to_collaborator_schema",
+    "add_field_to_collaborator_group_schema",
     "add_field_to_form_schema",
     "FormSharePublicView",
     "FormSharePrivateView",
@@ -95,31 +93,23 @@ def add_route(name, path, view, renderer):
 
 
 def add_field_to_user_schema(field_name, field_desc):
-    return {"schema": "user", "fieldname": field_name, "fielddesc": field_desc}
+    return {"schema": "fsuser", "fieldname": field_name, "fielddesc": field_desc}
 
 
 def add_field_to_project_schema(field_name, field_desc):
     return {"schema": "project", "fieldname": field_name, "fielddesc": field_desc}
 
 
-def add_field_to_enumerator_schema(field_name, field_desc):
-    return {"schema": "enumerator", "fieldname": field_name, "fielddesc": field_desc}
+def add_field_to_collaborator_schema(field_name, field_desc):
+    return {"schema": "collaborator", "fieldname": field_name, "fielddesc": field_desc}
 
 
-def add_field_to_enumerator_group_schema(field_name, field_desc):
-    return {"schema": "enumgroup", "fieldname": field_name, "fielddesc": field_desc}
-
-
-def add_field_to_data_user_schema(field_name, field_desc):
-    return {"schema": "datauser", "fieldname": field_name, "fielddesc": field_desc}
-
-
-def add_field_to_data_group_schema(field_name, field_desc):
-    return {"schema": "datagroup", "fieldname": field_name, "fielddesc": field_desc}
+def add_field_to_collaborator_group_schema(field_name, field_desc):
+    return {"schema": "collgroup", "fieldname": field_name, "fielddesc": field_desc}
 
 
 def add_field_to_form_schema(field_name, field_desc):
-    return {"schema": "form", "fieldname": field_name, "fielddesc": field_desc}
+    return {"schema": "odkform", "fieldname": field_name, "fielddesc": field_desc}
 
 
 class FormSharePublicView(PublicView):

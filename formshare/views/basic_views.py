@@ -328,7 +328,7 @@ class RegisterView(PublicView):
                                 data["user_active"] = 1
                                 # Load connected plugins and check if they modify the registration of an user
                                 continue_registration = True
-                                for plugin in p.PluginImplementations(p.IAuthorize):
+                                for plugin in p.PluginImplementations(p.IRegistration):
                                     data, continue_with_registration, error_message = plugin.before_register(
                                         self.request, data
                                     )
@@ -376,7 +376,7 @@ class RegisterView(PublicView):
                                         )
                                         plugin_next_page = ""
                                         for plugin in p.PluginImplementations(
-                                            p.IAuthorize
+                                            p.IRegistration
                                         ):
                                             plugin_next_page = plugin.after_register(
                                                 self.request, data

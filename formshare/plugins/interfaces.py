@@ -20,6 +20,7 @@ __all__ = [
     "IProject",
     "IForm",
     "ITranslation",
+    "IRegistration"
 ]
 
 
@@ -247,23 +248,10 @@ class IForm(Interface):
         """
 
 
-class IAuthorize(Interface):
+class IRegistration(Interface):
     """
-        Allows to hook into the user authorization
-        After calling this
+        Allows to hook into the user registration
     """
-
-    def after_login(self, request, user):
-        """
-        Called by the host application so plugins can modify the login of users
-
-        :param request: ``pyramid.request`` object
-        :param user: user object
-        :return Return true or false if the login should continue. If False then a message should state why
-
-        """
-        raise NotImplementedError("after_login must be implemented in subclasses")
-
     def before_register(self, request, registrant):
         """
         Called by the host application so plugins can do something before registering a user
@@ -289,6 +277,23 @@ class IAuthorize(Interface):
         raise NotImplementedError(
             "on_authenticate_user must be implemented in subclasses"
         )
+
+
+class IAuthorize(Interface):
+    """
+        Allows to hook into the user authorization
+    """
+
+    def after_login(self, request, user):
+        """
+        Called by the host application so plugins can modify the login of users
+
+        :param request: ``pyramid.request`` object
+        :param user: user object
+        :return Return true or false if the login should continue. If False then a message should state why
+
+        """
+        raise NotImplementedError("after_login must be implemented in subclasses")
 
     def on_authenticate_user(self, request, user_id, user_is_email):
         """

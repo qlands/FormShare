@@ -19,6 +19,7 @@ __all__ = [
     "IRepository",
     "IProject",
     "IForm",
+    "ITranslation",
 ]
 
 
@@ -580,3 +581,27 @@ class IPluginObserver(Interface):
         Called after a plugin has been unloaded.
         This method is passed the instantiated service object.
         """
+
+
+class ITranslation(Interface):
+    """
+    Allows extensions to provide their own translation strings.
+    """
+
+    def get_translation_directory(self):
+        """
+        Called by FormShare so plugins can add a translation directory
+        :return: String path to the translation directory
+        """
+        raise NotImplementedError(
+            "translation_directory must be implemented in subclasses"
+        )
+
+    def get_translation_domain(self):
+        """
+        Called by FormShare so plugins can add a translation domain
+        :return: String domain name
+        """
+        raise NotImplementedError(
+            "translation_domain must be implemented in subclasses"
+        )

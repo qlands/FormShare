@@ -88,7 +88,7 @@ def load_environment(settings, config, apppath, policy_array):
     # config.set_default_csrf_options(require_csrf=True)
 
     # Add render subscribers for internationalization
-    config.add_translation_dirs("formshare:locale")
+    # config.add_translation_dirs("formshare:locale")
     config.add_subscriber(
         "formshare.i18n.i18n.add_renderer_globals", "pyramid.events.BeforeRender"
     )

@@ -12,6 +12,9 @@
                         <h2 class="no-margins">
                             {{ userDetails.user_name }} {% if viewingSelfAccount and request.registry.settings['auth.allow_edit_profile_name'] == 'true' %} <a href="{{ request.route_url('profile_edit',userid=activeUser.login) }}"><i class="fas fa-pencil-alt text-warning" title="{{ _('Edit') }}"></i></a> {% endif %}
                         </h2>
+                        {% if edit_profile %}
+                            <small>{{ _('Use') }} <a target="_blank" href="https://en.gravatar.com/">Gravatar</a> {{ _('to change your profile image') }}.</small>
+                        {% endif %}
                     </div>
                 </div>
             </div>

@@ -18,7 +18,7 @@ pyramid.includes =
 # Database connection
 ###
 #For MySQL
-sqlalchemy.url = mysql+mysqlconnector://user_name:user_password@localhost/formshare?charset=utf8
+sqlalchemy.url = mysql+mysqlconnector://{{ mysql_user_name }}:{{ mysql_user_password }}@{{ mysql_host }}:{{ mysql_port }}/{{ mysql_schema }}?charset=utf8
 
 #For PostgreSQL
 #sqlalchemy.url = postgresql://user_name:user_password@localhost/formshare
@@ -32,14 +32,14 @@ sqlalchemy.url = mysql+mysqlconnector://user_name:user_password@localhost/formsh
 # Use https://passwordsgenerator.net/ to generate strong 16 and 32 strong passwords
 # Use https://www.browserling.com/tools/random-hex to generate a 32 hex string
 ###
-auth.main.secret = *A 17 char pass**
+auth.main.secret = {{ main_secret }}
 auth.main.cookie = formshare_main_auth_tkt
-auth.assistant.secret = *A 17 char pass**
+auth.assistant.secret = {{ assistant_secret }}
 auth.assistant.cookie = formshare_assistant_auth_tkt
-auth.secret = *A 17 char pass**
-aes.key = ***A 32 char strong password****
-auth.opaque = *****A 32 char hex string*******
-auth.realm = formshare@mycompany.com
+auth.secret = {{ auth_secret }}
+aes.key = {{ aes_key }}
+auth.opaque = {{ auth_opaque }}
+auth.realm = formshare@yourcompany.com
 
 ###
 # Authorization settings
@@ -50,7 +50,7 @@ auth.share_projects_among_users = false
 auth.allow_guest_access = false
 auth.allow_edit_profile_name = true
 auth.allow_user_change_password = true
-auth.auto_accept_collaboration = false
+auth.auto_accept_collaboration = true
 
 ###
 # FormShare Plugins
@@ -109,14 +109,15 @@ elasticsearch.records.index_name = formshare_records
 repository.path = /path/to/a/directory
 odktools.path = /path/to/odktools
 mysql.cnf = %(here)s/mysql.cnf
-mysql.host = localhost
-mysql.port = 3306
-mysql.user = user_name
-mysql.password = user_password
+mysql.host = {{ mysql_host }}
+mysql.port = {{ mysql_port }}
+mysql.user = {{ mysql_user_name }}
+mysql.password = {{ mysql_user_password }}
 
 ###
 # Mail server configuration
 ###
+mail.server.available = false
 mail.server = my.server.com
 mail.port = 465
 mail.login = noreply@me.com
@@ -132,10 +133,11 @@ mail.error = formshare_support@me.com
 
 ###
 # WSGI server configuration
+# FormShare will run in http://localhost:5900/formshare
 ###
 [composite:main]
 use = egg:rutter#urlmap
-/ = formshare
+/formshare = formshare
 
 [server:main]
 use = egg:gunicorn

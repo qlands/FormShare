@@ -157,6 +157,11 @@ class RefreshSessionView(PublicView):
 
 class RecoverPasswordView(PublicView):
     def process_view(self):
+        if (
+            self.request.registry.settings.get("mail.server.available", "false")
+            == "false"
+        ):
+            raise HTTPNotFound()
         if self.request.method == "POST":
             safe = check_csrf_token(self.request, raises=False)
             if not safe:

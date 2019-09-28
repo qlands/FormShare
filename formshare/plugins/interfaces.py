@@ -20,7 +20,7 @@ __all__ = [
     "IProject",
     "IForm",
     "ITranslation",
-    "IRegistration"
+    "IRegistration",
 ]
 
 
@@ -252,6 +252,7 @@ class IRegistration(Interface):
     """
         Allows to hook into the user registration
     """
+
     def before_register(self, request, registrant):
         """
         Called by the host application so plugins can do something before registering a user

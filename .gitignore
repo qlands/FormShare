@@ -28,6 +28,8 @@ wheels/
 MANIFEST
 .idea/
 .directory
+Dockerfile
+docker/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

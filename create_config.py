@@ -25,6 +25,11 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("ini_path", help="Path to ini file to create")
     parser.add_argument("--mysql_host", required=True, help="MySQL host server to use")
+
+    parser.add_argument(
+        "-o", "--overwrite", action="store_true", help="Overwrite if exists"
+    )
+
     parser.add_argument(
         "--repository_path", required=True, help="Path to the FormShare repository"
     )
@@ -78,10 +83,17 @@ def main():
         context
     )
 
-    with open(args.ini_path, "w") as f:
-        f.write(rendered_template)
-
-    print("FormShare INI file created at {}".format(args.ini_path))
+    if not os.path.exists(args.ini_path):
+        with open(args.ini_path, "w") as f:
+            f.write(rendered_template)
+        print("FormShare INI file created at {}".format(args.ini_path))
+    else:
+        if args.overwrite:
+            with open(args.ini_path, "w") as f:
+                f.write(rendered_template)
+            print("FormShare INI file created at {}".format(args.ini_path))
+        else:
+            print("INI file {} already exists".format(args.ini_path))
 
 
 if __name__ == "__main__":

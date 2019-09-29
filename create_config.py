@@ -57,6 +57,12 @@ def main():
         "--elastic_search_port", required=True, help="ElasticSearch host name"
     )
     parser.add_argument(
+        "--formshare_host", required=True, help="Host name for FormShare"
+    )
+    parser.add_argument(
+        "--formshare_port", required=True, help="Port for FormShare"
+    )
+    parser.add_argument(
         "--elastic_search_ssl", action="store_true", help="ElasticSearch use SSL"
     )
     args = parser.parse_args()
@@ -90,6 +96,8 @@ def main():
         "elastic_search_host": args.elastic_search_host,
         "elastic_search_port": args.elastic_search_port,
         "elastic_search_ssl": args.elastic_search_ssl,
+        "formshare_host": args.formshare_host,
+        "formshare_port": args.formshare_port,
 
     }
     rendered_template = template_environment.get_template("formshare.jinja2").render(

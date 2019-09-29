@@ -157,8 +157,8 @@ use = egg:rutter#urlmap
 
 [server:main]
 use = egg:gunicorn
-host = localhost
-port = 5900
+host = {{ formshare_host }}
+port = {{ formshare_port }}
 workers = 1
 worker_class = gevent
 

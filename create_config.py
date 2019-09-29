@@ -50,6 +50,15 @@ def main():
     parser.add_argument(
         "--mysql_user_password", required=True, help="MySQL user name password"
     )
+    parser.add_argument(
+        "--elastic_search_host", required=True, help="ElasticSearch host name"
+    )
+    parser.add_argument(
+        "--elastic_search_port", required=True, help="ElasticSearch host name"
+    )
+    parser.add_argument(
+        "--elastic_search_ssl", action="store_true", help="ElasticSearch use SSL"
+    )
     args = parser.parse_args()
     formshare_path = "."
 
@@ -78,6 +87,10 @@ def main():
         "auth_opaque": auth_opaque,
         "repository_path": args.repository_path,
         "odktools_path": args.odktools_path,
+        "elastic_search_host": args.elastic_search_host,
+        "elastic_search_port": args.elastic_search_port,
+        "elastic_search_ssl": args.elastic_search_ssl,
+
     }
     rendered_template = template_environment.get_template("formshare.jinja2").render(
         context

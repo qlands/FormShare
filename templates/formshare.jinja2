@@ -70,38 +70,54 @@ celery.taskname = fstask
 ###
 elasticfeeds.feed_index = formshare_feeds
 elasticfeeds.network_index = formshare_network
-#elasticfeeds.host = localhost
-#elasticfeeds.port = 9200
+elasticfeeds.host = {{ elastic_search_host }}
+elasticfeeds.port = {{ elastic_search_port }}
 #elasticfeeds.url_prefix = None
-#elasticfeeds.use_ssl = False
 #elasticfeeds.number_of_shards_in_feeds = 5
 #elasticfeeds.number_of_replicas_in_feeds = 1
 #elasticfeeds.number_of_shards_in_network = 5
 #elasticfeeds.number_of_replicas_in_network = 1
 #elasticfeeds.max_link_size = 10000
+{% if elastic_search_ssl %}
+elasticfeeds.use_ssl = True
+{% else %}
+elasticfeeds.use_ssl = False
+{% endif %}
 
 elasticsearch.user.index_name = formshare_users
 #elasticsearch.user.number_of_shards = 5
 #elasticsearch.user.number_of_replicas = 1
-#elasticsearch.user.host = localhost
-#elasticsearch.user.port = 9200
+elasticsearch.user.host = {{ elastic_search_host }}
+elasticsearch.user.port = {{ elastic_search_port }}
 #elasticsearch.user.url_prefix = None
-#elasticsearch.user.use_ssl = False
+{% if elastic_search_ssl %}
+elasticsearch.user.use_ssl = True
+{% else %}
+elasticsearch.user.use_ssl = False
+{% endif %}
 
 #elasticsearch.repository.number_of_shards = 5
 #elasticsearch.repository.number_of_replicas = 1
-#elasticsearch.repository.host = localhost
-#elasticsearch.repository.port = 9200
+elasticsearch.repository.host = {{ elastic_search_host }}
+elasticsearch.repository.port = {{ elastic_search_port }}
 #elasticsearch.repository.url_prefix = None
-#elasticsearch.repository.use_ssl = False
+{% if elastic_search_ssl %}
+elasticsearch.repository.use_ssl = True
+{% else %}
+elasticsearch.repository.use_ssl = False
+{% endif %}
 
 elasticsearch.records.index_name = formshare_records
 #elasticsearch.records.number_of_shards = 5
 #elasticsearch.records.number_of_replicas = 1
-#elasticsearch.records.host = localhost
-#elasticsearch.records.port = 9200
+elasticsearch.records.host = {{ elastic_search_host }}
+elasticsearch.records.port = {{ elastic_search_port }}
 #elasticsearch.records.url_prefix = None
-#elasticsearch.records.use_ssl = False
+{% if elastic_search_ssl %}
+elasticsearch.records.use_ssl = True
+{% else %}
+elasticsearch.records.use_ssl = False
+{% endif %}
 
 ###
 # Repository configuration

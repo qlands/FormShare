@@ -30,6 +30,7 @@ MANIFEST
 .directory
 Dockerfile
 docker/
+docker_files/
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

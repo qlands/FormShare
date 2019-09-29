@@ -26,6 +26,10 @@ def main():
     parser.add_argument("ini_path", help="Path to ini file to create")
     parser.add_argument("--mysql_host", required=True, help="MySQL host server to use")
     parser.add_argument(
+        "--repository_path", required=True, help="Path to the FormShare repository"
+    )
+    parser.add_argument("--odktools_path", required=True, help="Path to ODK Tools")
+    parser.add_argument(
         "--mysql_port", default=3306, help="MySQL port to use. Default to 3306"
     )
     parser.add_argument(
@@ -67,6 +71,8 @@ def main():
         "auth_secret": auth_secret,
         "aes_key": aes_key,
         "auth_opaque": auth_opaque,
+        "repository_path": args.repository_path,
+        "odktools_path": args.odktools_path,
     }
     rendered_template = template_environment.get_template("formshare.jinja2").render(
         context

@@ -106,8 +106,8 @@ elasticsearch.records.index_name = formshare_records
 ###
 # Repository configuration
 ###
-repository.path = /path/to/a/directory
-odktools.path = /path/to/odktools
+repository.path = {{ repository_path }}
+odktools.path = {{ odktools_path  }}
 mysql.cnf = %(here)s/mysql.cnf
 mysql.host = {{ mysql_host }}
 mysql.port = {{ mysql_port }}

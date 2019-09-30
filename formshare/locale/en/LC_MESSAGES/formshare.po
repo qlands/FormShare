@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-09-26 16:36-0600\n"
+"POT-Creation-Date: 2019-09-30 15:13-0600\n"
 "PO-Revision-Date: 2017-11-15 22:40-0600\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -1861,12 +1861,12 @@ msgid "Are you sure that you want to publish this product?"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/form_details.jinja2:274
-msgid "You do not have a single field marked as sensible!"
+msgid "You do not have a single field marked as sensitive!"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/form_details.jinja2:274
 msgid ""
-"IF YOU CONTINUE YOU MIGHT BE AT RISK OF MAKING SENSIBLE DATA PUBLICLY "
+"IF YOU CONTINUE YOU MIGHT BE AT RISK OF MAKING SENSITIVE DATA PUBLICLY "
 "AVAILABLE!"
 msgstr ""
 
@@ -2012,7 +2012,7 @@ msgid "Edit description"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/dictionary/snippets/field_item.jinja2:14
-msgid "Set as not sensible"
+msgid "Set as not sensitive"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/dictionary/snippets/field_item.jinja2:16
@@ -2667,7 +2667,7 @@ msgid "Merge new version"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/snippets/repository_tab.jinja2:26
-msgid "marked as sensible among "
+msgid "marked as sensitive among "
 msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/snippets/repository_tab.jinja2:26
@@ -3293,7 +3293,7 @@ msgstr ""
 
 #: formshare/templates/dashboard/snippets/header.jinja2:131
 #: formshare/templates/dashboard/snippets/header_home.jinja2:64
-#: formshare/templates/generic/login.jinja2:53
+#: formshare/templates/generic/login.jinja2:55
 #: formshare/templates/landing/snippets/header.jinja2:66
 msgid "Sign up"
 msgstr ""
@@ -3419,11 +3419,11 @@ msgstr ""
 msgid "Username or email address"
 msgstr ""
 
-#: formshare/templates/generic/login.jinja2:50
+#: formshare/templates/generic/login.jinja2:51
 msgid "Forgot password?"
 msgstr ""
 
-#: formshare/templates/generic/login.jinja2:52
+#: formshare/templates/generic/login.jinja2:54
 msgid "You don't have an account?"
 msgstr ""
 
@@ -3640,17 +3640,17 @@ msgstr ""
 
 #: formshare/views/assistant_views/forms.py:107
 #: formshare/views/assistants.py:111 formshare/views/assistants.py:310
-#: formshare/views/basic_views.py:444
+#: formshare/views/basic_views.py:449
 msgid "The password cannot be empty"
 msgstr ""
 
 #: formshare/views/assistant_views/forms.py:103
 #: formshare/views/assistants.py:114 formshare/views/assistants.py:302
-#: formshare/views/basic_views.py:424
+#: formshare/views/basic_views.py:429
 msgid "The password and its confirmation are not the same"
 msgstr ""
 
-#: formshare/views/assistants.py:118 formshare/views/basic_views.py:435
+#: formshare/views/assistants.py:118 formshare/views/basic_views.py:440
 msgid "The user id has invalid characters. Only underscore and dot are allowed"
 msgstr ""
 
@@ -3680,15 +3680,15 @@ msgid "Unable to change the password: "
 msgstr ""
 
 #: formshare/views/basic_views.py:139 formshare/views/basic_views.py:146
-#: formshare/views/basic_views.py:254 formshare/views/basic_views.py:264
+#: formshare/views/basic_views.py:259 formshare/views/basic_views.py:269
 msgid "The user account does not exists or the password is invalid"
 msgstr ""
 
-#: formshare/views/basic_views.py:413
+#: formshare/views/basic_views.py:418
 msgid "The password must be less than 50 characters"
 msgstr ""
 
-#: formshare/views/basic_views.py:447
+#: formshare/views/basic_views.py:452
 msgid "Invalid email"
 msgstr ""
 
@@ -4533,5 +4533,20 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "to see it"
+#~ msgstr ""
+
+#~ msgid "You do not have a single field marked as sensible!"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "IF YOU CONTINUE YOU MIGHT BE AT"
+#~ " RISK OF MAKING SENSIBLE DATA "
+#~ "PUBLICLY AVAILABLE!"
+#~ msgstr ""
+
+#~ msgid "Set as not sensible"
+#~ msgstr ""
+
+#~ msgid "marked as sensible among "
 #~ msgstr ""
 

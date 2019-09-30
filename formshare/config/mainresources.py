@@ -173,15 +173,6 @@ def create_resources(apppath, config):
     )
     r.add_js_resource("formshare", "md5", "js/plugins/md5/jquery.md5.js", None)
 
-    # -------------------------------Repository-------------------------------
-    r.add_css_resource(
-        "formshare", "nestable", "js/plugins/nestable/jquery.nestable.css", "bootstrap"
-    )
-    r.add_js_resource(
-        "formshare", "nestable", "js/plugins/nestable/jquery.nestable.js", None
-    )
-    r.add_js_resource("formshare", "separation", "js/separation.js", "nestable")
-
     # --------------------------------------JSON---------------------------
     r.add_css_resource(
         "formshare", "simplemde", "js/plugins/simplemde/simplemde.min.css", "bootstrap"

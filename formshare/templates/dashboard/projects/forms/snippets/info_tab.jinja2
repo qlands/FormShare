@@ -35,9 +35,9 @@
                         {% block info_tab_content_badges %}
                             {% if formDetails.form_schema != None %}
                                 {% if formDetails.parent_form == None %}
-                                    <li><a style="background-color: #1c84c6; color: white; border-radius: 25px" >With repository</a></li>
+                                    <li><a style="background-color: #1c84c6; color: white; border-radius: 25px" >{{ _('With repository') }}</a></li>
                                 {% else %}
-                                    <li title='{{ _("Merged into the repository of") }} "{{ formDetails.parent_form_data.form_name }}"'><a style="background-color: #1c84c6; color: white; border-radius: 25px" >Merged</a></li>
+                                    <li title='{{ _("Merged into the repository of") }} "{{ formDetails.parent_form_data.form_name }}"'><a style="background-color: #1c84c6; color: white; border-radius: 25px" >{{ _('Merged') }}</a></li>
                                 {% endif %}
                             {% else %}
                                 {% if formDetails.form_reptask == None or (formDetails.form_reptask != None and taskdata.rescode > 0) %}

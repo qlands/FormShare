@@ -68,6 +68,7 @@
 
 {% block scripts %}
     {% jsresource request,'formshare','inspinia' %}
+    {% include 'dashboard/snippets/change_language.jinja2' %}
     <script>
         $(document).ready(function() {
             let xform_upload_started = false;

@@ -1,5 +1,5 @@
 - Plugin interfaces in all places.
-- Messaging, Watch and Follow
+- Social (Messaging, Watch and Follow)
 - Create a JSON schema using the create XML file. Use it to validade data from ODK and data imports
 - Import from BriefCase (XML import)
 - Clean data JSON API (How to submit an update based on a row UUID)
@@ -8,8 +8,4 @@
 - Handle sharing of private products with token keys.
     - Token management and API
     - Token extension. After token, before token-
-- Plugins:
-    - OData
-    - Data-CI
-    - Off-line data cleaning
 - Search engine

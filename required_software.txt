@@ -1,6 +1,0 @@
-sudo npm install -g diff2html
-sudo npm install -g diff2html-cli
-sudo sudo apt install mongodb
-sudo rabbitmqctl add_user formshare formshare
-sudo rabbitmqctl add_vhost formshare
-sudo rabbitmqctl set_permissions -p formshare formshare ".*" ".*" ".*"

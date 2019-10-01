@@ -1,0 +1,130 @@
+Installation steps. Tested in Ubuntu 18.04
+You need to install and properly configure and run the following services
+- MySQL - Take note of the root password. You will need it later on.
+- Elastic Search 6.X
+
+This will run FormShare in http://localhost:5900/formshare
+
+Steps:
+# Installing dependencies
+
+sudo apt-get update
+sudo apt-get -y upgrade
+sudo apt-get install -y software-properties-common
+sudo add-apt-repository universe
+sudo add-apt-repository multiverse
+sudo apt-get update
+
+sudo apt-get install -y build-essential qt5-default qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake mongodb jq libboost-all-dev unzip zlib1g-dev automake npm rabbitmq-server libmysqlclient-dev mysql-client-5.7 openjdk-11-jdk sqlite3 libqt5sql5-sqlite git wget python3-venv
+
+sudo npm install -g diff2html
+sudo npm install -g diff2html-cli
+
+# Installing ODK Tools
+
+cd /opt
+sudo git clone https://github.com/qlands/odktools.git
+sudo mkdir odktools-deps
+cd odktools-deps
+sudo wget --user=user https://github.com/mongodb/mongo-c-driver/releases/download/1.6.1/mongo-c-driver-1.6.1.tar.gz
+sudo wget --user=user https://github.com/jmcnamara/libxlsxwriter/archive/RELEASE_0.7.6.tar.gz
+sudo wget https://downloads.sourceforge.net/project/quazip/quazip/0.7.3/quazip-0.7.3.tar.gz
+sudo git clone https://github.com/rgamble/libcsv.git
+
+sudo tar xvfz mongo-c-driver-1.6.1.tar.gz
+cd mongo-c-driver-1.6.1
+sudo ./configure
+sudo make
+sudo make install
+cd ..
+
+sudo tar xvfz quazip-0.7.3.tar.gz
+cd quazip-0.7.3
+sudo mkdir build
+sudo cd build
+sudo cmake -DCMAKE_C_FLAGS:STRING="-fPIC" -DCMAKE_CXX_FLAGS:STRING="-fPIC" ..
+sudo make
+sudo make install
+cd ../..
+
+sudo ln -s /usr/bin/aclocal-1.15 /usr/bin/aclocal-1.14
+sudo ln -s /usr/bin/automake-1.15 /usr/bin/automake-1.14
+
+sudo tar xvfz RELEASE_0.7.6.tar.gz
+cd libxlsxwriter-RELEASE_0.7.6
+sudo mkdir build
+cd build
+sudo cmake ..
+sudo make
+sudo make install
+cd ../..
+
+cd libcsv
+sudo ./configure
+sudo make
+sudo make install
+
+sudo cd /opt/odktools/dependencies/mongo-cxx-driver-r3.1.1
+sudo mkdir build
+sudo cmake -DCMAKE_C_FLAGS:STRING="-O2 -fPIC" -DCMAKE_CXX_FLAGS:STRING="-O2 -fPIC" -DBSONCXX_POLY_USE_BOOST=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
+sudo make
+sudo make install
+sudo cd ../../..
+
+sudo qmake
+sudo make
+
+# Installing FormShare
+
+cd /opt
+sudo mkdir formshare_repository
+sudo mkdir formshare_log
+sudo mkdir formshare_celery
+sudo mkdir formshare_gunicorn
+sudo mkdir formshare_config
+sudo python3 -m venv formshare_env
+
+sudo git clone https://github.com/qlands/FormShare.git -b stable-2.0 formshare
+. ./formshare_env/bin/activate
+pip install wheel
+pip install -r /opt/formshare/requirements.txt
+python /opt/formshare/download_nltk_packages.py
+
+sudo cp /opt/formshare/docker_files/etc/default/celery_formshare /etc/default/celery_formshare
+sudo cp /opt/formshare/docker_files/etc/init.d/celery_formshare /etc/init.d/celery_formshare
+sudo cp /opt/formshare/docker_files/run_server.sh /opt/formshare_gunicorn
+
+sudo chmod +x /etc/init.d/celery_formshare
+sudo chmod +x /opt/formshare_gunicorn/run_server.sh
+sudo chmod 640 /etc/default/celery_formshare
+sudo ldconfig
+
+sudo service rabbitmq-server start
+sudo service mongodb start
+
+rabbitmqctl add_user formshare formshare
+rabbitmqctl add_vhost formshare
+rabbitmqctl set_permissions -p formshare formshare ".*" ".*" ".*"
+
+# Final configuration of FormShare. You need to modify the information between []
+
+mysql -h $MYSQL_HOST_NAME -u [MYSQL_USER_NAME] --password=[MYSQL_USER_PASSWORD] --execute='CREATE SCHEMA IF NOT EXISTS formshare'
+source /opt/formshare_env/bin/activate
+cd /opt/formshare
+python create_config.py --mysql_host [MYSQL_HOST_NAME] --mysql_user_name [MYSQL_USER_NAME] --mysql_user_password [MYSQL_USER_PASSWORD] --repository_path /opt/formshare_repository --odktools_path /opt/odktools --elastic_search_host [ELASTIC_SEARCH_HOST] --elastic_search_port [ELASTIC_SEARCH_PORT] --formshare_host localhost --formshare_port 5900 /opt/formshare_config/development.ini
+ln -s /opt/formshare_config/development.ini ./development.ini
+python configure_celery.py ./development.ini
+python setup.py develop
+python setup.py compile_catalog
+configure_alembic ./development.ini .
+configure_mysql ./development.ini .
+alembic upgrade head
+create_superuser --user_id [FORMSHARE_ADMIN_USER] --user_email [FORMSHARE_ADMIN_EMAIL] --user_password [FORMSHARE_ADMIN_PASSWORD] ./development.ini
+deactivate
+/etc/init.d/celery_formshare start
+
+# Run FormShare
+
+source /opt/formshare_env/bin/activate
+gunicorn --capture-output --proxy-protocol --forwarded-allow-ips 127.0.0.1 --pid /opt/formshare_gunicorn/formshare.pid --log-file /opt/formshare_log/error_log --paste /opt/formshare/development.ini
+

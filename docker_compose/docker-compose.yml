@@ -1,0 +1,102 @@
+version: '3'
+services:
+  fsmysql:
+    image: mysql:5.7.27
+    hostname: mysql
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: my_secure_password
+    volumes:
+      - /opt/formshare/mysql:/var/lib/mysql
+    networks:
+      fsnet:
+        ipv4_address: 172.28.1.5
+  
+  fselasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.3.2
+    container_name: elasticsearch
+    environment:
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - network.host=172.28.1.1
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - /opt/formshare/elasticsearch/esdata:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    networks:
+      fsnet:
+        ipv4_address: 172.28.1.1
+  fselasticsearch2:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.3.2
+    container_name: elasticsearch2
+    environment:
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - network.host=172.28.1.2
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "discovery.zen.ping.unicast.hosts=elasticsearch"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - /opt/formshare/elasticsearch/esdata2:/usr/share/elasticsearch/data
+    networks:
+      fsnet:
+        ipv4_address: 172.28.1.2
+  fselasticsearch3:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.3.2
+    container_name: elasticsearch3
+    environment:
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - network.host=172.28.1.3
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "discovery.zen.ping.unicast.hosts=elasticsearch"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - /opt/formshare/elasticsearch/esdata3:/usr/share/elasticsearch/data
+    networks:
+      fsnet:
+        ipv4_address: 172.28.1.3
+        
+  formshare:
+    image: qlands/formshare2:20190929
+    container_name: formshare
+    environment:
+      MYSQL_HOST_NAME: 172.28.1.5
+      MYSQL_USER_NAME: root
+      MYSQL_USER_PASSWORD: my_secure_password
+      FORMSHARE_ADMIN_USER: admin
+      FORMSHARE_ADMIN_EMAIL: admin@myserver.com
+      FORMSHARE_ADMIN_PASSWORD: my_secure_password
+      ELASTIC_SEARCH_HOST: 172.28.1.1
+      ELASTIC_SEARCH_PORT: 9200
+      FORMSHARE_HOST: 172.28.1.4
+      FORMSHARE_PORT: 5900
+      WAIT_HOSTS: mysql:3306
+    volumes:
+      - /opt/formshare/repository:/opt/formshare_repository
+      - /opt/formshare/log:/opt/formshare_log
+      - /opt/formshare/celery:/opt/formshare_celery
+      - /opt/formshare/config:/opt/formshare_config
+    ports:
+      - 5900:5900
+    networks:
+      fsnet: 
+        ipv4_address: 172.28.1.4
+      
+networks:
+  fsnet:
+     ipam:
+        driver: default
+        config:
+          - subnet: 172.28.0.0/16

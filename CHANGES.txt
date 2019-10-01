@@ -1,10 +1,4 @@
-0.1 Alpha (First commit)
+2.0 (First commit stable) 20190930
 ---
-- Built using Pyramid
-- Extensibility system using plugins (PyUtilib Component Architecture)
-- CSS/JS Resource Injection
-- Landing page
-- Registration
-- Login
-- Profile (under development)
-- Edit profile
+- All basic components are ready and stable
+

@@ -526,27 +526,37 @@ class IRepository(Interface):
 
     def custom_repository_process(
         self,
-        request,
-        project,
-        form,
-        cnf_file,
-        create_file,
-        insert_file,
-        schema,
-        primary_key,
+            request,
+            user,
+            project,
+            form,
+            odk_dir,
+            form_directory,
+            schema,
+            primary_key,
+            cnf_file,
+            create_file,
+            insert_file,
+            create_xml_file,
+            repository_string,
     ):
         """
         Called after FormShare tells Celery to create the repository if before_creating_repository == True. You can
         use this to create your own version of the repository. You MUST use Celery to not block the request. The
         returned Celery task ID will be passed to on_creating_repository
         :param request: Pyramid request object
+        :param user: User ID
         :param project: Project ID
         :param form: Form ID
+        :param odk_dir: Path to the ODK dir in the repository
+        :param form_directory: Directory of the form
         :param cnf_file: MySQL CNF file
         :param create_file: Repository create SQL file
         :param insert_file: Repository insert SQL file
+        :param create_xml_file: Path to the create xml file
         :param schema: Schema to create
         :param primary_key: Primary key that should be used
+        :param repository_string: Command executed by JXFomToMysql for traceability
         :return: Celery task ID
         """
         raise NotImplementedError(

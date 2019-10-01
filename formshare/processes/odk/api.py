@@ -1478,13 +1478,18 @@ def create_repository(
                 for a_plugin in plugin.PluginImplementations(plugin.IRepository):
                     custom_task = a_plugin.custom_repository_process(
                         request,
+                        user,
                         project,
                         form,
+                        odk_dir,
+                        xform_directory,
+                        schema,
+                        primary_key,
                         cnf_file,
                         create_file,
                         insert_file,
-                        schema,
-                        primary_key,
+                        create_xml_file,
+                        " ".join(args),
                     )
                     custom_repository_process = True
                     break  # Only one plugin implementing custom_repository_process will be called

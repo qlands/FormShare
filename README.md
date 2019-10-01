@@ -25,7 +25,7 @@ Screen Shot
 
 Releases
 ------------
-The current stable release is 2.0.0. Is available [here]() 
+The current stable release is 2.0.0. Is available [here](https://github.com/qlands/FormShare/tree/stable-2.0) 
 
 Installation
 ------------

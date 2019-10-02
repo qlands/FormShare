@@ -93,6 +93,7 @@ sudo chown $whoami formshare_config
 sudo python3 -m venv formshare_env
 
 sudo git clone https://github.com/qlands/FormShare.git -b stable-2.0 formshare
+sudo chown -R $whoami formshare
 . ./formshare_env/bin/activate
 pip install wheel
 pip install -r /opt/formshare/requirements.txt

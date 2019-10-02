@@ -1444,6 +1444,7 @@ def create_repository(
                     if formshare_create_repository:
                         formshare_create_repository = a_plugin.before_creating_repository(
                             request,
+                            user,
                             project,
                             form,
                             cnf_file,
@@ -1498,7 +1499,7 @@ def create_repository(
                     update_form(request, project, form, form_data)
                     for a_plugin in plugin.PluginImplementations(plugin.IRepository):
                         a_plugin.on_creating_repository(
-                            request, project, form, custom_task
+                            request, user, project, form, custom_task
                         )
 
                 return 0, ""

@@ -494,11 +494,12 @@ class IRepository(Interface):
     """
 
     def before_creating_repository(
-        self, request, project, form, cnf_file, create_file, insert_file, schema
+        self, request, user, project, form, cnf_file, create_file, insert_file, schema
     ):
         """
         Called before creating a repository so plugins can perform extra actions or overwrite the process
         :param request: Pyramid request object
+        :param user: User ID
         :param project: Project ID
         :param form: Form ID
         :param cnf_file: MySQL CNF file
@@ -511,10 +512,11 @@ class IRepository(Interface):
             "before_creating_repository must be implemented in subclasses"
         )
 
-    def on_creating_repository(self, request, project, form, task_id):
+    def on_creating_repository(self, request, user, project, form, task_id):
         """
         Called after FormShare tells Celery to create the repository
         :param request: Pyramid request object
+        :param user: User ID
         :param project: Project ID
         :param form: Form ID
         :param task_id: Celery task ID creating the repository

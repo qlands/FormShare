@@ -82,6 +82,14 @@ sudo mkdir formshare_log
 sudo mkdir formshare_celery
 sudo mkdir formshare_gunicorn
 sudo mkdir formshare_config
+
+whoami=$(whoami)
+sudo chown $whoami formshare_repository
+sudo chown $whoami formshare_log
+sudo chown $whoami formshare_celery
+sudo chown $whoami formshare_gunicorn
+sudo chown $whoami formshare_config
+
 sudo python3 -m venv formshare_env
 
 sudo git clone https://github.com/qlands/FormShare.git -b stable-2.0 formshare

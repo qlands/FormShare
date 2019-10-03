@@ -55,6 +55,10 @@ class AssistantForms(AssistantView):
 
 
 class ChangeMyAssistantPassword(AssistantView):
+    def __init__(self, request):
+        AssistantView.__init__(self, request)
+        self.checkCrossPost = False
+
     def process_view(self):
         if self.request.method == "POST":
             next_page = self.request.params.get("next") or self.request.route_url(
@@ -81,15 +85,12 @@ class ChangeMyAssistantPassword(AssistantView):
                             assistant_data["coll_password"],
                         )
                         if changed:
-                            policy = self.get_policy("assistant")
-                            headers = policy.forget(self.request)
                             next_page = self.request.route_url(
-                                "assistant_login",
+                                "assistant_logout",
                                 userid=self.userID,
                                 projcode=self.projectCode,
-                                _query={"next": next_page},
                             )
-                            return HTTPFound(next_page, headers=headers)
+                            return HTTPFound(next_page)
                         else:
                             self.add_error(
                                 self._("Unable to change the password: ") + message

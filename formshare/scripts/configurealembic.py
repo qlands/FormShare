@@ -49,7 +49,10 @@ def main(argv=sys.argv):
         trim_blocks=False,
     )
     sqlalchemy_url = get_ini_value(os.path.abspath(argv[1]), "sqlalchemy.url", "empty")
-    context = {"sqlalchemy_url": sqlalchemy_url}
+    context = {
+        "sqlalchemy_url": sqlalchemy_url,
+        "formshare_ini_file": formshare_ini_file_path,
+    }
 
     rendered_template = template_environment.get_template("alembic.jinja2").render(
         context

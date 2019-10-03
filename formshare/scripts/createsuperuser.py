@@ -10,7 +10,7 @@ from pyramid.paster import get_appsettings, setup_logging
 from formshare.models.meta import Base
 from formshare.models import get_engine, get_session_factory, get_tm_session
 from formshare.models import User
-from formshare.config.encdecdata import encode_data_with_aes_key
+from formshare.config.encdecdata import encode_data_with_key
 
 
 def main():
@@ -48,7 +48,7 @@ def main():
     setup_logging(config_uri)
     settings = get_appsettings(config_uri, "formshare")
 
-    enc_pass = encode_data_with_aes_key(pass1, settings["aes.key"])
+    enc_pass = encode_data_with_key(pass1, settings["aes.key"].encode())
 
     engine = get_engine(settings)
     Base.metadata.create_all(engine)

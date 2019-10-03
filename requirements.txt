@@ -3,6 +3,7 @@ alembic==1.0.11
 amqp==2.5.0
 appdirs==1.4.3
 arrow==0.14.2
+asn1crypto==1.0.0
 attrs==19.1.0
 Babel==2.7.0
 backports.csv==1.0.7
@@ -15,12 +16,14 @@ boto==2.49.0
 bs4==0.0.1
 celery==4.3.0
 certifi==2019.6.16
+cffi==1.12.3
 Chameleon==3.6.2
 chardet==3.0.4
 cheroot==6.5.5
 CherryPy==18.1.2
 Click==7.0
 cookiecutter==1.6.0
+cryptography==2.7
 decorator==4.4.0
 docutils==0.14
 -e git+https://github.com/qlands/elasticfeeds.git@f128339c02f73285fb0d96c636d3975d3b3f86d8#egg=elasticfeeds
@@ -71,6 +74,7 @@ polib==1.1.0
 portend==2.5
 poyo==0.4.2
 protobuf==3.8.0
+pycparser==2.19
 pycrypto==2.6.1
 pycryptodome==3.8.2
 Pygments==2.4.2

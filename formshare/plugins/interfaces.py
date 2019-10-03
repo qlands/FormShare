@@ -528,19 +528,19 @@ class IRepository(Interface):
 
     def custom_repository_process(
         self,
-            request,
-            user,
-            project,
-            form,
-            odk_dir,
-            form_directory,
-            schema,
-            primary_key,
-            cnf_file,
-            create_file,
-            insert_file,
-            create_xml_file,
-            repository_string,
+        request,
+        user,
+        project,
+        form,
+        odk_dir,
+        form_directory,
+        schema,
+        primary_key,
+        cnf_file,
+        create_file,
+        insert_file,
+        create_xml_file,
+        repository_string,
     ):
         """
         Called after FormShare tells Celery to create the repository if before_creating_repository == True. You can

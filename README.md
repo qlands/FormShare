@@ -6,13 +6,13 @@ Centralize data – Decentralize knowledge
 
 About
 -----
-FormShare 2.0 is inspired from the excellent [Formhub](<http://github.com/SEL-Columbia/formhub>) platform developed by the Sustainable Engineering Lab at Columbia University. After I forked OnaData back in 2016 it was clear that the code needed at lot to bring it to the main ideas that I had: 1) Integrate it with [ODK Tools](https://github.com/qlands/odktools), 2) provide a proper MySQL repository to centralize the data and, 3) use latest software technologies to decentralize the management.
+FormShare 2.0 is inspired from the excellent [FormHub](<http://github.com/SEL-Columbia/formhub>) platform developed by the Sustainable Engineering Lab at Columbia University. After I forked [OnaData](https://github.com/onaio/onadata) (a fork of FormHub) back in 2016 it was clear that the code needed at lot to bring it to the main ideas that I had: 1) Integrate it with [ODK Tools](https://github.com/qlands/odktools), 2) provide a proper MySQL repository to centralize the data and, 3) use latest software technologies to decentralize the management.
 
 FormShare 2.0 was created because:
 
 * I want to provide a open source **free** platform to private and public organizations to help them manage their data when using ODK.
 * ODK Aggregate, in my personal opinion, is badly designed, buggy and not interoperable. ODK Central is just not there yet.
-* OnaData, KoBoToolbox (kpi) and many more based on Formhub suffer from the ills of their father: Django (sorry if I hurt your feelings), no proper repository, rudimentary data cleaning, no auditing, little interoperability, poor or none extensibility... among many others.
+* Forks based on FormHub suffer from the same ills of their father: Django (sorry if I hurt your feelings), no proper repository, rudimentary data cleaning, no auditing, little interoperability, poor or none extensibility... among many others.
 
 FormShare 2.0 has been written from scratch (not a single line of code comes from Formhub, just ideas and principles) using Python 3, [Pyramid](https://trypyramid.com/) and [PyUtilib](https://github.com/PyUtilib/pyutilib) to deliver a complete and extensible data management solution for ODK Data collection. It took us three years but is finally here :-) and it is Django free!
 

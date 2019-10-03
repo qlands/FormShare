@@ -2,7 +2,7 @@ FormShare 2.0
 =========
 The future of FormHub
 
-Centralize data – Decentralize knowledge
+Centralize data – Decentralize knowledge<sup>TM</sup>
 
 About
 -----

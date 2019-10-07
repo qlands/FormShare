@@ -210,9 +210,7 @@ def build_csv(
         "-S",
     ]
 
-    log.error("*************************11111")
-    log.error(" ".join(args))
-    log.error("*************************11111")
+    log.info(" ".join(args))
 
     send_task_status_to_form(settings, task_id, _("Denormalizing database"))
     p = Popen(args, stdout=PIPE, stderr=PIPE)
@@ -265,9 +263,7 @@ def build_csv(
             if len(array_sizes) > 0:
                 args.append("-a " + ",".join(array_sizes))
 
-            log.error("*************************22222")
-            log.error(" ".join(args))
-            log.error("*************************22222")
+            log.info(" ".join(args))
 
             p = Popen(args, stdout=PIPE, stderr=PIPE)
 

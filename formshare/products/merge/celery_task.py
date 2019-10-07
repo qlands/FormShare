@@ -454,7 +454,6 @@ def merge_into_repository(
                 .filter(Odkform.form_schema == b_schema_name)
                 .all()
             )
-            log.error("*************************************103")
             for a_form in res:
                 form_with_changes.append(
                     {
@@ -472,7 +471,6 @@ def merge_into_repository(
                         a_schema_name,
                     )
                 )
-            log.error("*************************************103")
 
             db_session.query(Odkform).filter(
                 Odkform.form_schema == b_schema_name
@@ -529,10 +527,10 @@ def merge_into_repository(
             email_to = settings.get("mail.error", None)
             error_dict = {"errors": form_with_changes}
             if critical_part:
-                log.error("********************************************666")
+                log.error("BEGIN CRITICAL MERGE ERROR")
                 log.error(error_dict)
                 log.error(odk_merge_string)
-                log.error("********************************************666")
+                log.error("END CRITICAL MERGE ERROR")
             send_async_email(
                 settings,
                 email_from,

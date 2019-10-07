@@ -88,6 +88,9 @@ VOLUME /opt/formshare_log
 RUN mkdir formshare_celery
 VOLUME /opt/formshare_celery
 
+RUN mkdir formshare_fluent
+VOLUME /opt/formshare_fluent
+
 RUN mkdir formshare_gunicorn
 RUN python3 -m venv formshare_env
 

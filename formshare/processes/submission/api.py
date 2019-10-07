@@ -893,9 +893,9 @@ def update_data(request, user, project, form, table_name, row_uuid, field, value
     sql = "UPDATE " + schema + "." + table_name + " SET " + field + " = '" + value + "'"
     sql = sql + " WHERE rowuuid = '" + row_uuid + "'"
     sql = sql.replace("''", "null")
-    log.error("*****************777")
-    log.error(sql)
-    log.error("*****************777")
+
+    log.info(sql)
+
     try:
         engine = create_engine(sql_url)
         engine.execute("SET @odktools_current_user = '" + user + "'")

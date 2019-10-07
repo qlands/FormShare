@@ -800,14 +800,11 @@ def update_form_color_by_database(request, database, hex_color):
 
 def delete_form_by_database(request, database):
     result = []
-    log.error(
-        "*****************BIG DELETE for database {} ************************".format(
-            database
-        )
-    )
+    log.warning("BEGIN BIG DATABASE DELETE")
+    log.warning("Database: {}".format(database))
     res = request.dbsession.query(Odkform).filter(Odkform.form_schema == database).all()
     for a_form in res:
-        log.error(
+        log.warning(
             "Form ID: {} in project: {} will be deleted".format(
                 a_form.form_id, a_form.project_id
             )
@@ -819,7 +816,7 @@ def delete_form_by_database(request, database):
                 "form_directory": a_form.form_directory,
             }
         )
-    log.error("*****************BIG DELETE************************")
+    log.warning("END BIG DATABASE DELETE")
     request.dbsession.query(Odkform).filter(Odkform.form_schema == database).update(
         {"parent_project": None, "parent_form": None}
     )

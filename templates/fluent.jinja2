@@ -1,0 +1,58 @@
+<source>
+  @type  forward
+  @id    input1
+  @label @mainstream
+  port  24224
+</source>
+
+<filter **>
+  @type stdout
+</filter>
+
+<source>
+  @type tail
+  @label @mainstream
+  @id    input2
+  path {{ formshare_log_file }}
+  pos_file /fluentd/error_log.pos
+  tag formshare.error
+  <parse>
+    @type multiline
+    format_firstline /\d{4}-\d{1,2}-\d{1,2}/
+    format1 /(?<time>\d{4}-\d{1,2}-\d{1,2} +\d{1,2}:\d{1,2}:\d{1,2},\d{3}) +(?<level>[A-Z]+)[ ]{1,2}\[(?<module>(.*?))\]\[(?<thread>(.*?))\] (?<messages>.*)/
+    time_format %Y-%m-%d %H:%M:%S,%L
+  </parse>
+</source>
+
+<label @mainstream>
+  <match formshare.access.**>
+    @type elasticsearch
+    host {{ elastic_search_host }}
+    port {{ elastic_search_port }}
+    logstash_format true
+    logstash_prefix formshare_access
+{%- if elastic_search_ssl %}
+    scheme https
+{%- endif %}
+  </match>
+  <match formshare.error.**>
+    @type elasticsearch
+    host {{ elastic_search_host }}
+    port {{ elastic_search_port }}
+    logstash_format true
+    logstash_prefix formshare_error
+{%- if elastic_search_ssl %}
+    scheme https
+{%- endif %}
+  </match>
+  <match **>
+    @type file
+    @id   output1
+    path         /fluentd/log/data.*.log
+    symlink_path /fluentd/log/data.log
+    append       true
+    time_slice_format %Y%m%d
+    time_slice_wait   10m
+    time_format       %Y%m%dT%H%M%S%z
+  </match>
+</label>

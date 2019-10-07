@@ -23,6 +23,7 @@ __all__ = [
     "IRegistration",
     "IPublicView",
     "IPrivateView",
+    "ILogOut",
 ]
 
 
@@ -624,6 +625,52 @@ class IPrivateView(Interface):
         )
 
 
+class ITranslation(Interface):
+    """
+    Allows extensions to provide their own translation strings.
+    """
+
+    def get_translation_directory(self):
+        """
+        Called by FormShare so plugins can add a translation directory
+        :return: String path to the translation directory
+        """
+        raise NotImplementedError(
+            "translation_directory must be implemented in subclasses"
+        )
+
+    def get_translation_domain(self):
+        """
+        Called by FormShare so plugins can add a translation domain
+        :return: String domain name
+        """
+        raise NotImplementedError(
+            "translation_domain must be implemented in subclasses"
+        )
+
+
+class ILogOut(Interface):
+    """
+    Allow extensions to hook to the FormShare logout process
+    """
+
+    def before_log_out(self, request, user):
+        """
+        Called by FormShare so plugins can perform actions before FormShare logs out an user
+        :param request: Pyramid request object
+        :param user: User disconnecting
+        :return: True if the logout should proceed. Or false to halt the logout
+        """
+
+    def after_log_out(self, request, user):
+        """
+        Called by FormShare so plugins can perform actions after FormShare logs out an user
+        :param request: Pyramid request object
+        :param user: User that disconnected
+        :return: None
+        """
+
+
 class IPluginObserver(Interface):
     """
     Plugin to the plugin loading mechanism
@@ -659,25 +706,4 @@ class IPluginObserver(Interface):
         """
 
 
-class ITranslation(Interface):
-    """
-    Allows extensions to provide their own translation strings.
-    """
 
-    def get_translation_directory(self):
-        """
-        Called by FormShare so plugins can add a translation directory
-        :return: String path to the translation directory
-        """
-        raise NotImplementedError(
-            "translation_directory must be implemented in subclasses"
-        )
-
-    def get_translation_domain(self):
-        """
-        Called by FormShare so plugins can add a translation domain
-        :return: String domain name
-        """
-        raise NotImplementedError(
-            "translation_domain must be implemented in subclasses"
-        )

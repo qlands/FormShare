@@ -76,9 +76,7 @@ def build_xlsx(
     if protect_sensitive:
         args.append("-c")
 
-    log.error("*************************33333")
-    log.error(" ".join(args))
-    log.error("*************************33333")
+    log.info(" ".join(args))
 
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()

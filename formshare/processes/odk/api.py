@@ -293,9 +293,9 @@ def check_jxform_file(
         args.append(external_file)
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()
-    print("*****************************102")
-    print(" ".join(args))
-    print("*****************************102")
+
+    log.info(" ".join(args))
+
     if p.returncode == 0:
         try:
             root = etree.fromstring(stdout)
@@ -1314,9 +1314,7 @@ def merge_versions(
     if ignore_string is not None:
         args.append("-i " + ignore_string)
 
-    print("*****************************101")
-    print(" ".join(args))
-    print("*****************************101")
+    log.info(" ".join(args))
 
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()
@@ -1412,9 +1410,9 @@ def create_repository(
                 args.append(aFile)
         p = Popen(args, stdout=PIPE, stderr=PIPE)
         stdout, stderr = p.communicate()
-        print("*****************************100")
-        print(" ".join(args))
-        print("*****************************100")
+
+        log.info(" ".join(args))
+
         if p.returncode == 0:
             update_form_repository_info(
                 request,

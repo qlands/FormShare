@@ -30,6 +30,7 @@ from formshare.processes.db import (
     get_user_by_api_key,
 )
 import logging
+from .. import plugins as p
 
 log = logging.getLogger("formshare")
 
@@ -199,7 +200,16 @@ class PublicView(object):
 
     def __call__(self):
         self.resultDict["errors"] = self.errors
+
+        i_public_view_implementations = p.PluginImplementations(p.IPublicView)
+        for plugin in i_public_view_implementations:
+            plugin.before_processing(self.request)
+
         process_dict = self.process_view()
+
+        for plugin in i_public_view_implementations:
+            process_dict = plugin.after_processing(self.request, process_dict)
+
         if not self.returnRawViewResult:
             self.resultDict.update(process_dict)
             return self.resultDict
@@ -368,7 +378,41 @@ class PrivateView(object):
         self.classResult["viewingSelfAccount"] = self.viewingSelfAccount
         self.classResult["errors"] = self.errors
         self.classResult["showWelcome"] = self.showWelcome
+
+        i_private_view_implementations = p.PluginImplementations(p.IPrivateView)
+        for plugin in i_private_view_implementations:
+            plugin.before_processing(
+                self.request,
+                {
+                    "returnRawViewResult": self.returnRawViewResult,
+                    "privateOnly": self.privateOnly,
+                    "guestAccess": self.guestAccess,
+                    "viewingSelfAccount": self.viewingSelfAccount,
+                    "showWelcome": self.showWelcome,
+                    "checkCrossPost": self.checkCrossPost,
+                    "queryProjects": self.queryProjects,
+                    "userid": self.userID,
+                },
+            )
+
         self.viewResult = self.process_view()
+
+        for plugin in i_private_view_implementations:
+            self.viewResult = plugin.after_processing(
+                self.request,
+                {
+                    "returnRawViewResult": self.returnRawViewResult,
+                    "privateOnly": self.privateOnly,
+                    "guestAccess": self.guestAccess,
+                    "viewingSelfAccount": self.viewingSelfAccount,
+                    "showWelcome": self.showWelcome,
+                    "checkCrossPost": self.checkCrossPost,
+                    "queryProjects": self.queryProjects,
+                    "userid": self.userID,
+                },
+                self.viewResult,
+            )
+
         if not self.returnRawViewResult:
             self.classResult.update(self.viewResult)
             return self.classResult

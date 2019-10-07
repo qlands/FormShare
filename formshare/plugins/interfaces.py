@@ -21,6 +21,8 @@ __all__ = [
     "IForm",
     "ITranslation",
     "IRegistration",
+    "IPublicView",
+    "IPrivateView",
 ]
 
 
@@ -563,6 +565,62 @@ class IRepository(Interface):
         """
         raise NotImplementedError(
             "custom_repository_process must be implemented in subclasses"
+        )
+
+
+class IPublicView(Interface):
+    """
+     Allows to hook into FormShare's view public class.
+    """
+
+    def before_processing(self, request):
+        """
+        Called by FormShare's PublicView class before processing a public view
+        :param request: Pyramid request object
+        :return: None
+        """
+        raise NotImplementedError(
+            "IPublicView before_processing must be implemented in subclasses"
+        )
+
+    def after_processing(self, request, context):
+        """
+        Called by FormShare's PublicView class after processing a public view but just before returning the context
+        :param request: Pyramid request object
+        :param context: Context of the view
+        :return: A modified version of context
+        """
+        raise NotImplementedError(
+            "IPublicView after_processing must be implemented in subclasses"
+        )
+
+
+class IPrivateView(Interface):
+    """
+     Allows to hook into FormShare's private class.
+    """
+
+    def before_processing(self, request, class_data):
+        """
+        Called by FormShare's PublicView class before processing a public view
+        :param request: Pyramid request object
+        :param class_data: Class parameters as dict
+        :return: None
+        """
+        raise NotImplementedError(
+            "IPrivateView before_processing must be implemented in subclasses"
+        )
+
+    def after_processing(self, request, class_data, context):
+        """
+        Called by FormShare's PublicView class after processing a public view but just before returning the context
+        :param request: Pyramid request object
+        :param context: Context of the view
+        :param class_data: Class parameters as dict
+        :return: A modified version of context
+        """
+        raise NotImplementedError(
+            "IPrivateView after_processing must be implemented in subclasses"
         )
 
 

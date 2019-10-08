@@ -39,4 +39,6 @@ def decode_data(request, data):
 def encode_data_with_key(data, key):
     key = base64.b64encode(key)
     f = Fernet(key)
+    if not isinstance(data, bytes):
+        data = data.encode()
     return f.encrypt(data)

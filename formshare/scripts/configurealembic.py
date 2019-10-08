@@ -38,7 +38,7 @@ def main(argv=sys.argv):
         print("Path to FormShare does not exits")
         sys.exit(1)
 
-    formshare_ini_file_path = os.path.dirname(os.path.abspath(argv[1]))
+    formshare_ini_file_path = os.path.abspath(argv[1])
     formshare_path = os.path.abspath(argv[2])
 
     alembic_ini_file = os.path.join(formshare_path, *["alembic.ini"])

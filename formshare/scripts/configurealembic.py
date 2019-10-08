@@ -41,7 +41,7 @@ def main(argv=sys.argv):
     formshare_ini_file_path = os.path.dirname(os.path.abspath(argv[1]))
     formshare_path = os.path.abspath(argv[2])
 
-    alembic_ini_file = os.path.join(formshare_ini_file_path, *["alembic.ini"])
+    alembic_ini_file = os.path.join(formshare_path, *["alembic.ini"])
 
     template_environment = Environment(
         autoescape=False,

@@ -1,4 +1,6 @@
-# This docker is only applicable if you want to implement at plugin that stores the FormShare logs with Fluentd (https://www.fluentd.org/)
+# This docker compose is only applicable if you want to store the FormShare logs in ElasticSearch
+  with Fluentd (https://www.fluentd.org/)
+
 Before you run docker-compose you need to
 
 1) Install docker-compose

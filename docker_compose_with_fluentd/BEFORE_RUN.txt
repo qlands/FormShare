@@ -1,5 +1,7 @@
-# This docker compose is only applicable if you want to store the FormShare logs in ElasticSearch
-  with Fluentd (https://www.fluentd.org/)
+This docker compose is only applicable if you want to store the FormShare logs in ElasticSearch
+with Fluentd (https://www.fluentd.org/)
+
+Memory used:  8GB of RAM
 
 Before you run docker-compose you need to
 

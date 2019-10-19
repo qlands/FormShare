@@ -31,6 +31,99 @@ Installation
 ------------
 Please read the [Installation guide](install_steps.txt) if you want to install FormShare manually. However, we encourage you to use the Docker Compose file available in the docker_compose directory.
 
+The below is a common recipe for running FormShare using docker:
+
+```shell
+# From a fresh installation of Ubuntu 18.04.03 from https://ubuntu.com/download/server
+# Update the repositories and packages
+sudo add-apt-repository multiverse
+sudo apt-get update
+sudo apt-get -y upgrade
+
+# Install docker-compose
+sudo apt-get install -y docker-compose
+
+# Collect the FormShare source code
+cd /opt
+sudo git clone https://github.com/qlands/FormShare.git -b stable-2.0 formshare_source
+
+# Copy the docker compose file from the source to a new directory
+sudo mkdir formshare_docker_compose
+sudo cp ./formshare_source/docker_compose/docker-compose.yml ./formshare_docker_compose/
+
+# Make the directory structure for FormShare
+sudo mkdir /opt/formshare
+whoami=$(whoami)
+sudo chown $whoami /opt/formshare
+mkdir /opt/formshare/celery
+mkdir /opt/formshare/log
+mkdir /opt/formshare/repository
+mkdir /opt/formshare/config
+mkdir /opt/formshare/mysql
+mkdir /opt/formshare/elasticsearch
+mkdir /opt/formshare/elasticsearch/esdata
+mkdir /opt/formshare/elasticsearch/esdata2
+mkdir /opt/formshare/elasticsearch/esdata3
+
+# Set enough memory for Elasctic search
+sudo sysctl -w vm.max_map_count=262144
+echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.d/60-vm-max_map_count.conf
+
+# Download all the required Docker Images
+cd /opt/formshare_docker_compose
+sudo docker-compose pull
+
+# Edit the docker-compose.yml file to set the mysql and admin password
+nano /opt/formshare_docker_compose/docker-compose.yml
+# Press Alt+Shit+3 to show the line numbers in Nano
+
+Edit line 7: Change the root password from "my_secure_password" to your password
+Edit line 76: Change the root password from "my_secure_password" to the same password of line 8
+Edit line 77: Change the admin user name (optiona)
+Edit line 78: Change the admin user password from "my_secure_password" to your password
+Edit line 79: Change the admin email address
+# Save the file with Ctlr+o Enter . Exit with Ctrl+x
+
+# Install Apache Server
+sudo apt-get install -y apache2
+
+# Enable proxy for Apache
+sudo ln -s /etc/apache2/mods-available/proxy.conf /etc/apache2/mods-enabled/
+sudo ln -s /etc/apache2/mods-available/proxy.load /etc/apache2/mods-enabled/
+sudo ln -s /etc/apache2/mods-available/proxy_http.load /etc/apache2/mods-enabled/
+
+# Edit the apache configuration to proxy pass formshare 
+sudo nano /etc/apache2/sites-enabled/000-default.conf
+# Add the following lines after line 28
+        ProxyRequests Off
+        ProxyPreserveHost On
+   
+        ProxyPass           /formshare    http://127.0.0.1:5900/formshare
+        ProxyPassReverse    /formshare    http://127.0.0.1:5900/formshare
+  
+        <Proxy *>
+           allow from all
+        </Proxy>
+        ProxyTimeout 120
+           
+# Save the file with Ctlr+o Enter . Exit with Ctrl+x
+# Stop the apache server
+sudo service apache2 stop
+# Start the apache server
+sudo service apache2 start
+
+# Start the FormShare containers. It will take about 3 minutes for all the containers to be ready.
+# You can check the status with "sudo docker stats". FormShare will be ready for usage when the container reach about 1 GiB of MEM USAGE
+# This is the only two commands you need to start FormShare after a server restart
+cd /opt/formshare_docker_compose
+sudo docker-compose up -d
+
+# Browse to FormShare
+http://[this server IP address]/formshare
+```
+
+
+
 
 Contributing
 ------------

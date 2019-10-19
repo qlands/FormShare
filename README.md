@@ -65,7 +65,7 @@ mkdir /opt/formshare/elasticsearch/esdata
 mkdir /opt/formshare/elasticsearch/esdata2
 mkdir /opt/formshare/elasticsearch/esdata3
 
-# Set enough memory for Elasctic search
+# Set enough memory for ElasticSearch
 sudo sysctl -w vm.max_map_count=262144
 echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.d/60-vm-max_map_count.conf
 
@@ -73,13 +73,13 @@ echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.d/60-vm-max_map_count.c
 cd /opt/formshare_docker_compose
 sudo docker-compose pull
 
-# Edit the docker-compose.yml file to set the mysql and admin password
+# Edit the docker-compose.yml file to set the mysql root and FormShare admin passwords
 nano /opt/formshare_docker_compose/docker-compose.yml
 # Press Alt+Shit+3 to show the line numbers in Nano
 
 Edit line 7: Change the root password from "my_secure_password" to your password
 Edit line 76: Change the root password from "my_secure_password" to the same password of line 8
-Edit line 77: Change the admin user name (optiona)
+Edit line 77: Change the admin user name (optional)
 Edit line 78: Change the admin user password from "my_secure_password" to your password
 Edit line 79: Change the admin email address
 # Save the file with Ctlr+o Enter . Exit with Ctrl+x
@@ -92,7 +92,7 @@ sudo ln -s /etc/apache2/mods-available/proxy.conf /etc/apache2/mods-enabled/
 sudo ln -s /etc/apache2/mods-available/proxy.load /etc/apache2/mods-enabled/
 sudo ln -s /etc/apache2/mods-available/proxy_http.load /etc/apache2/mods-enabled/
 
-# Edit the apache configuration to proxy pass formshare 
+# Edit the apache configuration to proxy pass FormShare 
 sudo nano /etc/apache2/sites-enabled/000-default.conf
 # Add the following lines after line 28
         ProxyRequests Off
@@ -107,9 +107,9 @@ sudo nano /etc/apache2/sites-enabled/000-default.conf
         ProxyTimeout 120
            
 # Save the file with Ctlr+o Enter . Exit with Ctrl+x
-# Stop the apache server
+# Stop the Apache server
 sudo service apache2 stop
-# Start the apache server
+# Start the Apache server
 sudo service apache2 start
 
 # Start the FormShare containers. It will take about 3 minutes for all the containers to be ready.

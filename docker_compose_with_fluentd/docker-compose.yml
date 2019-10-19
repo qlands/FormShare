@@ -81,7 +81,7 @@ services:
       FORMSHARE_PORT: 5900
       CONFIGURE_FLUENT: "true"
       WAIT_HOSTS: 172.28.1.5:3306, 172.28.1.1:9200
-      WAIT_HOSTS_TIMEOUT: 90
+      WAIT_HOSTS_TIMEOUT: 120
     volumes:
       - /opt/formshare/repository:/opt/formshare_repository
       - /opt/formshare/log:/opt/formshare_log

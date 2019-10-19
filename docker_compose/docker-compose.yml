@@ -79,6 +79,7 @@ services:
       ELASTIC_SEARCH_PORT: 9200
       FORMSHARE_HOST: 172.28.1.4
       FORMSHARE_PORT: 5900
+      WAIT_HOSTS_TIMEOUT: 120
       WAIT_HOSTS: 172.28.1.5:3306, 172.28.1.1:9200
     volumes:
       - /opt/formshare/repository:/opt/formshare_repository

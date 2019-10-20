@@ -26,7 +26,7 @@ cookiecutter==1.6.0
 cryptography==2.7
 decorator==4.4.0
 docutils==0.14
--e git+https://github.com/qlands/elasticfeeds.git@f128339c02f73285fb0d96c636d3975d3b3f86d8#egg=elasticfeeds
+-e git+https://github.com/qlands/elasticfeeds.git@stable-1.0#egg=elasticfeeds
 elasticsearch==7.0.2
 et-xmlfile==1.0.1
 feedparser==5.2.1
@@ -80,7 +80,7 @@ pycryptodome==3.8.2
 Pygments==2.4.2
 pyparsing==2.4.0
 pyramid==1.10.4
--e git+https://github.com/wichert/pyramid_authstack.git@ef3aa348f08d62f7fbcbf3fd1942022093f9c057#egg=pyramid_authstack
+-e git+https://github.com/qlands/pyramid_authstack.git@formshare#egg=pyramid_authstack
 pyramid-debugtoolbar==4.5
 pyramid-jinja2==2.8
 pyramid-mako==1.0.2

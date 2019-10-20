@@ -1,0 +1,17 @@
+<div class="col-sm-12">
+    <h2>{{ _('Assistant list') }}</h2>
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ request.route_url("dashboard",userid=activeUser.login) }}">{{ _('Dashboard') }}</a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ request.route_url("projects",userid=activeUser.id) }}">{{ _('Projects') }}</a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ request.route_url("project_details",userid=projectDetails.owner, projcode=projectDetails.project_code) }}">{{ projectDetails.project_name }}</a>
+        </li>
+        <li class="breadcrumb-item active">
+            <strong>{{ _('Assistants') }}</strong>
+        </li>
+    </ol>
+</div>

@@ -28,6 +28,7 @@ class User(object):
         self.userData = user_data
         self.login = user_data["user_id"]
         self.name = user_data["user_name"]
+        self.super = user_data["user_super"]
         self.gravatarURL = gravatar_url
         if user_data["user_about"] is None:
             self.about = ""

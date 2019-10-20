@@ -5,9 +5,13 @@ import argparse
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("fluent_conf_file", help="Path to fluent configuration file to create")
+    parser.add_argument(
+        "fluent_conf_file", help="Path to fluent configuration file to create"
+    )
     parser.add_argument("--formshare_path", required=True, help="Path to FormShare")
-    parser.add_argument("--formshare_log_file", required=True, help="Path to FormShare log file to read")
+    parser.add_argument(
+        "--formshare_log_file", required=True, help="Path to FormShare log file to read"
+    )
     parser.add_argument(
         "--elastic_search_host", required=True, help="ElasticSearch host name"
     )

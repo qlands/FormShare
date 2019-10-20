@@ -6,7 +6,9 @@ import paginate
 class APIUserSearchSelect2(PrivateView):
     def process_view(self):
         index_manager = get_user_index_manager(self.request)
-        q = self.request.params.get("q")
+        q = self.request.params.get("q", "")
+        if q == "":
+            q = None
         current_page = self.request.params.get("page")
         if current_page is None:
             current_page = 1

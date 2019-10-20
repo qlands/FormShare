@@ -47,6 +47,11 @@
                     <li {% if activeMenu == 'dashboard' %}class="active" {% endif %}>
                         <a href="{{ request.route_url('dashboard',userid=activeUser.login) }}"><i class="fa fa-th-large"></i> <span class="nav-label">{{ _('Dashboard') }}</span></a>
                     </li>
+                    {% if activeUser.super == 1 and request.registry.settings.get("auth.register_users_via_web", "true") == "false" %}
+                        <li {% if activeMenu == 'users' %}class="active" {% endif %}>
+                            <a href="{{ request.route_url('manage_users',userid=activeUser.login) }}"><i class="fas fa-user-plus text-warning"></i> <span class="nav-label text-warning">{{ _('Manage users') }}</span></a>
+                        </li>
+                    {% endif %}
                     <li {% if activeMenu == 'projects' %}class="active" {% endif %}>
                         <a href="{{ request.route_url('projects',userid=activeUser.login) }}"><i class="fas fa-project-diagram"></i> <span class="nav-label">{{ _('Projects') }}</span></a>
                     </li>

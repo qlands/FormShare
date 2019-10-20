@@ -154,21 +154,22 @@ class UserIndexManager(object):
 
         connection = self.create_connection()
         if connection is not None:
-            try:
-                connection.indices.create(
-                    self.index_name,
-                    body=_get_user_index_definition(
-                        number_of_shards, number_of_replicas
-                    ),
-                )
-            except RequestError as e:
-                if e.status_code == 400:
-                    if e.error.find("already_exists") >= 0:
-                        pass
+            if not connection.indices.exists(self.index_name):
+                try:
+                    connection.indices.create(
+                        self.index_name,
+                        body=_get_user_index_definition(
+                            number_of_shards, number_of_replicas
+                        ),
+                    )
+                except RequestError as e:
+                    if e.status_code == 400:
+                        if e.error.find("already_exists") >= 0:
+                            pass
+                        else:
+                            raise e
                     else:
                         raise e
-                else:
-                    raise e
 
         else:
             raise RequestError("Cannot connect to ElasticSearch")
@@ -223,6 +224,28 @@ class UserIndexManager(object):
                     index=self.index_name,
                     doc_type="user",
                     body=_get_user_search_dict(user_id),
+                )
+                return True
+            else:
+                raise RequestError("Cannot connect to ElasticSearch")
+        else:
+            raise UserNotExistError()
+
+    def update_user(self, user_id, data_dict):
+        """
+        Removes an user from the index
+        :param user_id: The user to be removed.
+        :return: Bool
+        """
+        if self.user_exists(user_id):
+            connection = self.create_connection()
+            if connection is not None:
+                es_data_dict = {"doc": data_dict}
+                connection.update(
+                    index=self.index_name,
+                    id=user_id,
+                    doc_type="user",
+                    body=es_data_dict,
                 )
                 return True
             else:

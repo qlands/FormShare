@@ -128,6 +128,7 @@ from ..views.repository_submissions import (
 )
 
 from ..views.repository_merge import RepositoryMergeForm
+from ..views.users import UsersListView, EditUserView, AddUserView
 
 import logging
 
@@ -188,6 +189,30 @@ def load_routes(config):
     routes.append(
         add_route(
             "dashboard", "/user/{userid}", UserDashBoardView, "dashboard/index.jinja2"
+        )
+    )
+    routes.append(
+        add_route(
+            "manage_users",
+            "/user/{userid}/manage_users",
+            UsersListView,
+            "dashboard/users/user_list.jinja2",
+        )
+    )
+    routes.append(
+        add_route(
+            "modify_user",
+            "/user/{userid}/manage_user/{manageuser}/edit",
+            EditUserView,
+            "dashboard/users/user_edit.jinja2",
+        )
+    )
+    routes.append(
+        add_route(
+            "add_user",
+            "/user/{userid}/manage_users/add",
+            AddUserView,
+            "dashboard/users/user_add.jinja2",
         )
     )
     routes.append(

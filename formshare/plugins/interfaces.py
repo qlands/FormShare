@@ -704,6 +704,3 @@ class IPluginObserver(Interface):
         Called after a plugin has been unloaded.
         This method is passed the instantiated service object.
         """
-
-
-

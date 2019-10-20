@@ -4,6 +4,7 @@ from formshare.processes.db import update_profile
 from formshare.config.auth import get_user_data
 from formshare.config.encdecdata import encode_data
 from formshare.processes.db.user import update_password
+from formshare.processes.elasticsearch.user_index import get_user_index_manager
 
 
 class UserProfileView(ProfileView):
@@ -38,6 +39,10 @@ class EditProfileView(ProfileView):
                         data["user_name"] = self.user.name
                     res, message = update_profile(self.request, user_id, data)
                     if res:
+                        user_index = get_user_index_manager(self.request)
+                        user_index.update_user(
+                            user_id, {"user_name": data["user_name"]}
+                        )
                         self.reload_user_details()
                         self.request.session.flash(
                             self._("The profile has been updated")

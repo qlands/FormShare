@@ -18,6 +18,7 @@ __all__ = [
     "get_user_name",
     "get_user_by_api_key",
     "update_password",
+    "email_exists",
 ]
 
 log = logging.getLogger("formshare")
@@ -145,30 +146,49 @@ def register_user(request, user_data):
         return False, _("Email is invalid")
 
 
-def user_exists(request, user):
-    res = (
-        request.dbsession.query(User)
-        .filter(User.user_id == user)
-        .filter(User.user_active == 1)
-        .first()
-    )
+def user_exists(request, user, just_active=True):
+    if just_active:
+        res = (
+            request.dbsession.query(User)
+            .filter(User.user_id == user)
+            .filter(User.user_active == 1)
+            .first()
+        )
+    else:
+        res = request.dbsession.query(User).filter(User.user_id == user).first()
     if res is None:
         return False
     return True
 
 
-def get_user_details(request, user):
-    res = (
-        request.dbsession.query(User)
-        .filter(User.user_id == user)
-        .filter(User.user_active == 1)
-        .first()
-    )
+def get_user_details(request, user, just_active=True):
+    if just_active:
+        res = (
+            request.dbsession.query(User)
+            .filter(User.user_id == user)
+            .filter(User.user_active == 1)
+            .first()
+        )
+    else:
+        res = request.dbsession.query(User).filter(User.user_id == user).first()
     if res is not None:
         result = map_from_schema(res)
         result["user_stats"] = get_user_stats(request, user)
         return result
     return {}
+
+
+def email_exists(request, user, email):
+    res = (
+        request.dbsession.query(User)
+        .filter(User.user_id != user)
+        .filter(User.user_email == email)
+        .first()
+    )
+    if res is None:
+        return False
+    else:
+        return True
 
 
 def get_user_name(request, user):

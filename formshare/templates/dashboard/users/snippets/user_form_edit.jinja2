@@ -1,26 +1,36 @@
-{% extends 'dashboard/projects/assistants/snippets/assistant_form.jinja2' %}
+{% extends 'dashboard/users/snippets/user_form.jinja2' %}
 
-{% block assistant_form_code %}
+{% block user_form_code %}
     <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('User id') }}</label>
-        <div class="col-sm-10"><input readonly type="text" class="form-control" name="coll_id" value="{{ assistantData.coll_id }}"></div>
+        <div class="col-sm-10"><input readonly type="text" class="form-control" name="user_id" value="{{ userData.user_id }}"></div>
     </div>
-{% endblock assistant_form_code %}
+{% endblock user_form_code %}
 
-{% block assistant_form_controls_extra %}
+{% block user_form_passwords %}
+
+{% endblock user_form_passwords %}
+
+{% block user_form_controls_extra %}
+    {{ super() }}
     <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Active') }}</label>
-        <div class="col-sm-10"><input type="checkbox" name="coll_active" class="js-switch2" {% if assistantData|length > 0 %} {% if assistantData.coll_active == 1 %}checked{% endif %}{% else %}checked{% endif %} /></div>
+        <div class="col-sm-10"><input type="checkbox" name="user_active" class="js-switch2" {% if userData|length > 0 %} {% if userData.user_active == 1 %}checked{% endif %}{% else %}checked{% endif %} /></div>
     </div>
     <div class="hr-line-dashed"></div>
-{% endblock assistant_form_controls_extra %}
-
-{% block assistant_form_passwords %}
-
-{% endblock assistant_form_passwords %}
-
-{% block assistant_form_actions %}
-    <div class="form-group row">
-        <div class="col-sm-4 col-sm-offset-2">
-            <button class="btn btn-warning btn-sm" type="submit">{{ _('Modify assistant') }}</button>
+    <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('API Key') }}</label>
+        <div class="input-group col-sm-10">
+            <input type="text" class="form-control" id="user_apikey" name="user_apikey" value="{{ userData.user_apikey }}">
+            <span class="input-group-append">
+                <button type="button" id="genkey" class="btn btn-default" title="{{ _('Generate new key') }}"><i class="fas fa-sync-alt"></i></button>
+            </span>
         </div>
     </div>
-{% endblock assistant_form_actions %}
+    <div class="hr-line-dashed"></div>
+{% endblock user_form_controls_extra %}
+
+{% block user_form_actions %}
+    <div class="form-group row">
+        <div class="col-sm-4 col-sm-offset-2">
+            <button class="btn btn-warning btn-sm" type="submit" name="modify">{{ _('Modify user') }}</button>
+        </div>
+    </div>
+{% endblock user_form_actions %}

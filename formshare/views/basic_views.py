@@ -351,9 +351,16 @@ class RegisterView(PublicView):
                                         # Store the notifications
                                         feed_manager = get_manager(self.request)
                                         # The user follows himself
-                                        feed_manager.follow(
-                                            data["user_id"], data["user_id"]
-                                        )
+                                        try:
+                                            feed_manager.follow(
+                                                data["user_id"], data["user_id"]
+                                            )
+                                        except Exception as e:
+                                            log.warning(
+                                                "User {} was in FormShare at some point. Error: {}".format(
+                                                    data["user_id"], str(e)
+                                                )
+                                            )
                                         # The user join FormShare
                                         actor = Actor(data["user_id"], "person")
                                         feed_object = Object("formshare", "platform")
@@ -365,11 +372,11 @@ class RegisterView(PublicView):
                                             self.request
                                         )
                                         user_index_data = data
-                                        user_index_data.pop("user_apikey")
-                                        user_index_data.pop("user_password")
-                                        user_index_data.pop("user_active")
-                                        user_index_data.pop("user_cdate")
-                                        user_index_data.pop("csrf_token")
+                                        user_index_data.pop("user_apikey", None)
+                                        user_index_data.pop("user_password", None)
+                                        user_index_data.pop("user_active", None)
+                                        user_index_data.pop("user_cdate", None)
+                                        user_index_data.pop("csrf_token", None)
                                         user_index.add_user(
                                             data["user_id"], user_index_data
                                         )

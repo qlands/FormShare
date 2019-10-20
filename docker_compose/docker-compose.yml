@@ -17,7 +17,7 @@ services:
     environment:
       - cluster.name=docker-cluster
       - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - network.host=172.28.1.1
     ulimits:
       memlock:
@@ -35,7 +35,7 @@ services:
       - cluster.name=docker-cluster
       - bootstrap.memory_lock=true
       - network.host=172.28.1.2
-      - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - "discovery.zen.ping.unicast.hosts=172.28.1.1"
     ulimits:
       memlock:
@@ -53,7 +53,7 @@ services:
       - cluster.name=docker-cluster
       - bootstrap.memory_lock=true
       - network.host=172.28.1.3
-      - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - "discovery.zen.ping.unicast.hosts=172.28.1.1"
     ulimits:
       memlock:
@@ -79,6 +79,7 @@ services:
       ELASTIC_SEARCH_PORT: 9200
       FORMSHARE_HOST: 172.28.1.4
       FORMSHARE_PORT: 5900
+      FORWARDED_ALLOW_IP: 172.28.1.4
       WAIT_HOSTS_TIMEOUT: 120
       WAIT_HOSTS: 172.28.1.5:3306, 172.28.1.1:9200
     volumes:

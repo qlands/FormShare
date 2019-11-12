@@ -35,7 +35,7 @@ line 79: FORMSHARE_ADMIN_EMAIL: admin@myserver.com
 line 80: FORMSHARE_ADMIN_PASSWORD: my_secure_password
 
 4) Run docker compose
-cd forshare/docker_compose_with_fluentd
+cd forshare/docker_compose_with_apache
 sudo docker-compose up
 
 Docker will pull the necessary images and run FormShare. After all images are pulled and

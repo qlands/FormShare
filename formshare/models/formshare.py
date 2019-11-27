@@ -217,7 +217,7 @@ class MediaFile(Base):
     file_name = Column(Unicode(120))
     file_udate = Column(DateTime)
     file_md5 = Column(Unicode(64))
-    file_mimetype = Column(Unicode(64))
+    file_mimetype = Column(Unicode(120))
 
     project = relationship("Odkform")
 

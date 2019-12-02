@@ -102,6 +102,7 @@ class Collaborator(Base):
     coll_email = Column(UnicodeText)
     coll_telephone = Column(Unicode(120))
     coll_prjshare = Column(INTEGER)
+    coll_apikey = Column(Unicode(64))
     extras = Column(UnicodeText)
     tags = Column(UnicodeText)
 

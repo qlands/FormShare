@@ -93,6 +93,7 @@ from ..views.assistant_views.forms import (
     AssistantForms,
     ChangeMyAssistantPassword,
     GetQRCode,
+    ChangeMyAPIKey,
 )
 from ..views.assistant_views.jsonlogs import (
     JSONList,
@@ -125,6 +126,7 @@ from ..views.repository_submissions import (
     DeleteAllSubmissions,
     GetFormAudit,
     ReviewAudit,
+    UpdateRepositoryView,
 )
 
 from ..views.repository_merge import RepositoryMergeForm
@@ -914,6 +916,15 @@ def load_routes(config):
 
     routes.append(
         add_route(
+            "assistant_change_my_key",
+            "/user/{userid}/project/{projcode}/assistantaccess/changemykey",
+            ChangeMyAPIKey,
+            None,
+        )
+    )
+
+    routes.append(
+        add_route(
             "assistant_qr_code",
             "/user/{userid}/project/{projcode}/assistantaccess/form/{formid}/qrcode",
             GetQRCode,
@@ -1064,13 +1075,23 @@ def load_routes(config):
         )
     )
 
-    # API
+    # Utility API
     routes.append(
         add_route(
             "api_select2_users",
             "/user/{userid}/api/select2_user",
             APIUserSearchSelect2,
             "json",
+        )
+    )
+
+    # Repository API
+    routes.append(
+        add_route(
+            "api_update_repository",
+            "/user/{userid}/project/{projcode}/form/{formid}/api_update",
+            UpdateRepositoryView,
+            None,
         )
     )
 

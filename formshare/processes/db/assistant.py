@@ -10,6 +10,7 @@ from formshare.models import (
 )
 import logging
 import datetime
+from uuid import uuid4
 from sqlalchemy.exc import IntegrityError
 from formshare.config.encdecdata import encode_data
 from formshare.config.encdecdata import decode_data
@@ -26,6 +27,7 @@ __all__ = [
     "get_assistant_password",
     "get_project_from_assistant",
     "get_assigned_assistants",
+    "get_assistant_by_api_key",
 ]
 
 log = logging.getLogger("formshare")
@@ -180,6 +182,16 @@ def get_assistant_data(request, project, assistant):
     return res
 
 
+def get_assistant_by_api_key(request, project, api_key):
+    res = map_from_schema(
+        request.dbsession.query(Collaborator)
+        .filter(Collaborator.project_id == project)
+        .filter(Collaborator.coll_apikey == api_key)
+        .first()
+    )
+    return res
+
+
 def delete_assistant(request, project, assistant):
     try:
         request.dbsession.query(Collaborator).filter(
@@ -205,6 +217,7 @@ def add_assistant(request, project, assistant_data):
     mapped_data["coll_cdate"] = datetime.datetime.now()
     mapped_data["coll_active"] = 1
     mapped_data["project_id"] = project
+    mapped_data["coll_apikey"] = str(uuid4())
     mapped_data["coll_password"] = encode_data(request, mapped_data["coll_password"])
     new_assistant = Collaborator(**mapped_data)
     try:

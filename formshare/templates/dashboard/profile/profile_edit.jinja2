@@ -41,6 +41,15 @@
                                     </div>
                                 </div>
                                 <div class="hr-line-dashed"></div>
+                                <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('API Key') }}</label>
+                                    <div class="input-group col-sm-10">
+                                        <input type="text" readonly class="form-control" id="user_apikey" name="user_apikey" value="{{ userDetails.user_apikey }}">
+                                        <span class="input-group-append">
+                                            <button type="button" id="genkey" class="btn btn-default" title="{{ _('Generate new key') }}"><i class="fas fa-sync-alt"></i></button>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="hr-line-dashed"></div>
                                 {% block profile_edit_controls_extra %}
 
                                 {% endblock profile_edit_controls_extra %}
@@ -98,3 +107,21 @@
         </div>
     {% endblock profile_edit_content %}
 {% endblock maincontent %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        function uuidv4() {
+            return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+                (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+            );
+        }
+
+        $(document).ready(function() {
+            $('#genkey').click(function () {
+                $('#user_apikey').val(uuidv4());
+            });
+
+        });
+    </script>
+{% endblock scripts %}

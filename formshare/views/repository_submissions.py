@@ -1,4 +1,4 @@
-from .classes import PrivateView
+from .classes import PrivateView, AssistantAPIView
 from pyramid.httpexceptions import HTTPNotFound, HTTPFound
 from formshare.processes.db import (
     get_form_data,
@@ -13,7 +13,11 @@ from formshare.processes.submission.api import (
     get_fields_from_table,
     delete_submission,
     delete_all_submission,
+    update_record_with_id,
 )
+from pyramid.response import Response
+from formshare.processes.elasticsearch.record_index import get_table
+from formshare.processes.odk.processes import get_assistant_permissions_on_a_form
 
 
 class ManageSubmissions(PrivateView):
@@ -407,3 +411,85 @@ class DeleteAllSubmissions(PrivateView):
 
         else:
             raise HTTPNotFound
+
+
+class UpdateRepositoryView(AssistantAPIView):
+    def __init__(self, request):
+        AssistantAPIView.__init__(self, request)
+
+    def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        project_code = self.request.matchdict["projcode"]
+        form_id = self.request.matchdict["formid"]
+
+        permissions = get_assistant_permissions_on_a_form(
+            self.request, user_id, self.project_id, self.assistant["coll_id"], form_id
+        )
+
+        if permissions["enum_canclean"] == 0:
+            response = Response(
+                content_type="application/json",
+                status=401,
+                body=json.dumps(
+                    {"error": self._("You are not authorized to clean this dataset")}
+                ).encode(),
+            )
+            return response
+
+        if "rowuuid" in self.json.keys():
+            try:
+                schema, table = get_table(
+                    self.request.registry.settings,
+                    user_id,
+                    project_code,
+                    form_id,
+                    self.json["rowuuid"],
+                )
+                if schema is not None:
+                    modified, error = update_record_with_id(
+                        self.request,
+                        self.assistant["coll_id"],
+                        schema,
+                        table,
+                        self.json["rowuuid"],
+                        self.json,
+                    )
+                    if modified:
+                        response = Response(
+                            content_type="application/json",
+                            body=json.dumps({"status": self._("OK")}).encode(),
+                        )
+                        return response
+                    else:
+                        response = Response(
+                            content_type="application/json",
+                            status=400,
+                            body=json.dumps({"error": error}).encode(),
+                        )
+                        return response
+                else:
+                    response = Response(
+                        content_type="application/json",
+                        status=404,
+                        body=json.dumps(
+                            {"error": self._("RowUUID not found")}
+                        ).encode(),
+                    )
+                    return response
+
+            except Exception as e:
+                response = Response(
+                    content_type="application/json",
+                    status=500,
+                    body=json.dumps({"error": type(e).__name__}).encode(),
+                )
+                return response
+        else:
+            response = Response(
+                content_type="application/json",
+                status=400,
+                body=json.dumps(
+                    {"error": self._("The JSON data does not have a rowuuid")}
+                ).encode(),
+            )
+            return response

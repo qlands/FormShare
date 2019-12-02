@@ -1751,7 +1751,7 @@ def store_json_file(
                                         form,
                                         schema,
                                         parts[0],
-                                        parts[1],
+                                        parts[1].replace("\n", ""),
                                     )
 
                         return 0, ""

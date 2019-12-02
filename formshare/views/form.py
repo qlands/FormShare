@@ -1640,6 +1640,7 @@ class DownloadPublicXLSData(PrivateView):
             projcode=project_code,
             formid=form_id,
             _query={"tab": "task", "product": "xlsx_public_export"},
+            _anchor="products_and_tasks",
         )
         self.returnRawViewResult = True
         return HTTPFound(location=next_page)
@@ -1693,6 +1694,7 @@ class DownloadPrivateXLSData(PrivateView):
             projcode=project_code,
             formid=form_id,
             _query={"tab": "task", "product": "xlsx_private_export"},
+            _anchor="products_and_tasks",
         )
         self.returnRawViewResult = True
         return HTTPFound(location=next_page)
@@ -1808,6 +1810,7 @@ class DownloadSubmissionFiles(PrivateView):
                 projcode=project_code,
                 formid=form_id,
                 _query={"tab": "task", "product": "media_export"},
+                _anchor="products_and_tasks",
             )
             return HTTPFound(location=next_page)
 
@@ -1894,6 +1897,7 @@ class DownloadKML(PrivateView):
             projcode=project_code,
             formid=form_id,
             _query={"tab": "task", "product": "kml_export"},
+            _anchor="products_and_tasks",
         )
         return HTTPFound(location=next_page)
 
@@ -1944,6 +1948,7 @@ class DownloadPublicCSV(PrivateView):
             projcode=project_code,
             formid=form_id,
             _query={"tab": "task", "product": "csv_public_export"},
+            _anchor="products_and_tasks",
         )
         return HTTPFound(location=next_page)
 
@@ -1993,6 +1998,7 @@ class DownloadPrivateCSV(PrivateView):
             projcode=project_code,
             formid=form_id,
             _query={"tab": "task", "product": "csv_private_export"},
+            _anchor="products_and_tasks",
         )
         return HTTPFound(location=next_page)
 

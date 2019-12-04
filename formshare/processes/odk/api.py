@@ -1685,7 +1685,7 @@ def store_json_file(
                     if files:
                         for file in files:
                             args.append(file)
-                    log.error(" ".join(args))
+                    # log.error(" ".join(args))
                     p = Popen(args, stdout=PIPE, stderr=PIPE)
                     stdout, stderr = p.communicate()
                     # An error 2 is an SQL error that goes to the logs
@@ -1950,6 +1950,9 @@ def store_submission(request, user, project, assistant):
             filename = request.POST[key].filename
             if filename.upper().find(".XML") >= 0:
                 filename = str(unique_id) + ".xml"
+            else:
+                if filename == "xml_submission_file":
+                    filename = str(unique_id) + ".xml"
             input_file = request.POST[key].file
             file_path = os.path.join(path, filename)
             if file_path.upper().find(".XML") >= 0:

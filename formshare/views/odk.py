@@ -94,11 +94,13 @@ class ODKSubmission(ODKView):
                     return self.ask_for_credentials()
             else:
                 if self.request.method == "POST":
-                    if is_assistant_active(self.request, user_id, project_id, self.user):
+                    if is_assistant_active(
+                        self.request, user_id, project_id, self.user
+                    ):
                         if self.authorize(
-                                get_assistant_password(
-                                    self.request, user_id, project_id, self.user
-                                )
+                            get_assistant_password(
+                                self.request, user_id, project_id, self.user
+                            )
                         ):
                             stored, error = store_submission(
                                 self.request, user_id, project_id, self.user

@@ -6,6 +6,12 @@ to manipulate the host behaviour without the trouble if dealing with it
 import inspect
 import os
 from formshare.views.classes import PublicView, PrivateView
+from formshare.processes.settings import (
+    store_settings,
+    update_settings,
+    delete_settings,
+    get_settings,
+)
 
 __all__ = [
     "add_templates_directory",
@@ -21,6 +27,7 @@ __all__ = [
     "add_field_to_form_schema",
     "FormSharePublicView",
     "FormSharePrivateView",
+    "FormShareSettings",
 ]
 
 
@@ -125,3 +132,20 @@ class FormSharePrivateView(PrivateView):
     """
     A view class for plugins which require a private (login required) view.
     """
+
+
+class FormShareSettings(object):
+    def __init__(self, request):
+        self.request = request
+
+    def store(self, key, value):
+        return store_settings(self.request, key, value)
+
+    def update(self, key, value):
+        return update_settings(self.request, key, value)
+
+    def delete(self, key):
+        return delete_settings(self.request, key)
+
+    def get(self, key):
+        return get_settings(self.request, key)

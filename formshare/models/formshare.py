@@ -9,12 +9,35 @@ from sqlalchemy import (
     text,
     Unicode,
     UnicodeText,
-    TIMESTAMP,
 )
+from sqlalchemy.ext import mutable
+import sqlalchemy.types as types
 from sqlalchemy.orm import relationship
 from .meta import Base
+import json
 
 metadata = Base.metadata
+
+
+class JsonEncodedDict(types.TypeDecorator):
+    """Enables JSON storage by encoding and decoding on the fly."""
+
+    impl = types.UnicodeText
+
+    def process_bind_param(self, value, dialect):
+        if value is None:
+            return "{}"
+        else:
+            return json.dumps(value)
+
+    def process_result_value(self, value, dialect):
+        if value is None:
+            return {}
+        else:
+            return json.loads(value)
+
+
+mutable.MutableDict.associate_with(JsonEncodedDict)
 
 
 class Collaboratorlog(Base):
@@ -65,6 +88,13 @@ class Project(Base):
     project_image = Column(UnicodeText)
     extras = Column(UnicodeText)
     tags = Column(UnicodeText)
+
+
+class Settings(Base):
+    __tablename__ = "settings"
+
+    settings_key = Column(Unicode(64), primary_key=True)
+    settings_value = Column(JsonEncodedDict)
 
 
 class Userlog(Base):
@@ -136,6 +166,20 @@ class Collgroup(Base):
     group_active = Column(INTEGER)
     extras = Column(UnicodeText)
     tags = Column(UnicodeText)
+
+    project = relationship("Project")
+
+
+class ProjectSettings(Base):
+    __tablename__ = "prjsettings"
+
+    project_id = Column(
+        ForeignKey("project.project_id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+    settings_key = Column(Unicode(64), primary_key=True)
+    settings_value = Column(JsonEncodedDict)
 
     project = relationship("Project")
 
@@ -437,6 +481,25 @@ class Submission(Base):
     sameas = Column(Unicode(64))
 
     collaborator = relationship("Collaborator")
+    project = relationship("Odkform")
+
+
+class FormSettings(Base):
+    __tablename__ = "formsettings"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["project_id", "form_id"],
+            ["odkform.project_id", "odkform.form_id"],
+            ondelete="CASCADE",
+        ),
+        Index("fk_settings_form1_idx", "project_id", "form_id"),
+    )
+
+    project_id = Column(Unicode(64), primary_key=True, nullable=False)
+    form_id = Column(Unicode(120), primary_key=True, nullable=False)
+    settings_key = Column(Unicode(64), primary_key=True)
+    settings_value = Column(JsonEncodedDict)
+
     project = relationship("Odkform")
 
 

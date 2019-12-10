@@ -393,27 +393,67 @@ class PrivateView(object):
                     "showWelcome": self.showWelcome,
                     "checkCrossPost": self.checkCrossPost,
                     "queryProjects": self.queryProjects,
-                    "userid": self.userID,
+                    "user": self.user,
                 },
             )
 
         self.viewResult = self.process_view()
 
-        for plugin in i_private_view_implementations:
-            self.viewResult = plugin.after_processing(
-                self.request,
-                {
-                    "returnRawViewResult": self.returnRawViewResult,
-                    "privateOnly": self.privateOnly,
-                    "guestAccess": self.guestAccess,
-                    "viewingSelfAccount": self.viewingSelfAccount,
-                    "showWelcome": self.showWelcome,
-                    "checkCrossPost": self.checkCrossPost,
-                    "queryProjects": self.queryProjects,
-                    "userid": self.userID,
-                },
-                self.viewResult,
-            )
+        if not self.returnRawViewResult:
+            if self.request.matched_route is not None:
+                if self.request.matched_route.name == "dashboard":
+                    i_view_implementations = p.PluginImplementations(p.IDashBoardView)
+                    for plugin in i_view_implementations:
+                        self.viewResult = plugin.after_dashboard_processing(
+                            self.request,
+                            {
+                                "returnRawViewResult": self.returnRawViewResult,
+                                "privateOnly": self.privateOnly,
+                                "guestAccess": self.guestAccess,
+                                "viewingSelfAccount": self.viewingSelfAccount,
+                                "showWelcome": self.showWelcome,
+                                "checkCrossPost": self.checkCrossPost,
+                                "queryProjects": self.queryProjects,
+                                "user": self.user,
+                            },
+                            self.viewResult,
+                        )
+                if self.request.matched_route.name == "project_details":
+                    i_view_implementations = p.PluginImplementations(
+                        p.IProjectDetailsView
+                    )
+                    for plugin in i_view_implementations:
+                        self.viewResult = plugin.after_project_details_processing(
+                            self.request,
+                            {
+                                "returnRawViewResult": self.returnRawViewResult,
+                                "privateOnly": self.privateOnly,
+                                "guestAccess": self.guestAccess,
+                                "viewingSelfAccount": self.viewingSelfAccount,
+                                "showWelcome": self.showWelcome,
+                                "checkCrossPost": self.checkCrossPost,
+                                "queryProjects": self.queryProjects,
+                                "user": self.user,
+                            },
+                            self.viewResult,
+                        )
+                if self.request.matched_route.name == "form_details":
+                    i_view_implementations = p.PluginImplementations(p.IFormDetailsView)
+                    for plugin in i_view_implementations:
+                        self.viewResult = plugin.after_form_details_processing(
+                            self.request,
+                            {
+                                "returnRawViewResult": self.returnRawViewResult,
+                                "privateOnly": self.privateOnly,
+                                "guestAccess": self.guestAccess,
+                                "viewingSelfAccount": self.viewingSelfAccount,
+                                "showWelcome": self.showWelcome,
+                                "checkCrossPost": self.checkCrossPost,
+                                "queryProjects": self.queryProjects,
+                                "user": self.user,
+                            },
+                            self.viewResult,
+                        )
 
         if not self.returnRawViewResult:
             self.classResult.update(self.viewResult)

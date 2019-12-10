@@ -24,6 +24,9 @@ __all__ = [
     "IPublicView",
     "IPrivateView",
     "ILogOut",
+    "IDashBoardView",
+    "IProjectDetailsView",
+    "IFormDetailsView",
 ]
 
 
@@ -603,7 +606,7 @@ class IPrivateView(Interface):
 
     def before_processing(self, request, class_data):
         """
-        Called by FormShare's PublicView class before processing a public view
+        Called by FormShare's PrivateView class before processing a private view
         :param request: Pyramid request object
         :param class_data: Class parameters as dict
         :return: None
@@ -612,16 +615,61 @@ class IPrivateView(Interface):
             "IPrivateView before_processing must be implemented in subclasses"
         )
 
-    def after_processing(self, request, class_data, context):
+
+class IDashBoardView(Interface):
+    """
+     Allows to hook into FormShare's dashboard view class.
+    """
+
+    def after_dashboard_processing(self, request, class_data, context):
         """
-        Called by FormShare's PublicView class after processing a public view but just before returning the context
+        Called by FormShare's PrivateView class after processing the dashboard view but just before returning the
+        context
         :param request: Pyramid request object
         :param context: Context of the view
         :param class_data: Class parameters as dict
         :return: A modified version of context
         """
         raise NotImplementedError(
-            "IPrivateView after_processing must be implemented in subclasses"
+            "IDashBoardView after_processing must be implemented in subclasses"
+        )
+
+
+class IProjectDetailsView(Interface):
+    """
+     Allows to hook into FormShare's project details view class.
+    """
+
+    def after_project_details_processing(self, request, class_data, context):
+        """
+        Called by FormShare's PrivateView class after processing the project details view but just before returning the
+        context
+        :param request: Pyramid request object
+        :param context: Context of the view
+        :param class_data: Class parameters as dict
+        :return: A modified version of context
+        """
+        raise NotImplementedError(
+            "IProjectDetailsView after_processing must be implemented in subclasses"
+        )
+
+
+class IFormDetailsView(Interface):
+    """
+     Allows to hook into FormShare's form details view class.
+    """
+
+    def after_form_details_processing(self, request, class_data, context):
+        """
+        Called by FormShare's PrivateView class after processing the form details view but just before returning the
+        context
+        :param request: Pyramid request object
+        :param context: Context of the view
+        :param class_data: Class parameters as dict
+        :return: A modified version of context
+        """
+        raise NotImplementedError(
+            "IFormDetailsView after_processing must be implemented in subclasses"
         )
 
 

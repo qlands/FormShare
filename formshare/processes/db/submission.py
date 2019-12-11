@@ -36,11 +36,14 @@ def add_submission(
     )
     try:
         request.dbsession.add(new_submission)
+        request.dbsession.flush()
         return True, ""
     except IntegrityError as e:
+        request.dbsession.rollback()
         log.error(str(e))
         return False, str(e)
     except Exception as e:
+        request.dbsession.rollback()
         log.error(str(e))
         return False, str(e)
 
@@ -69,10 +72,13 @@ def add_submission_same_as(
     )
     try:
         request.dbsession.add(new_submission)
+        request.dbsession.flush()
         return True, ""
     except IntegrityError as e:
+        request.dbsession.rollback()
         log.error(str(e))
         return False, str(e)
     except Exception as e:
+        request.dbsession.rollback()
         log.error(str(e))
         return False, str(e)

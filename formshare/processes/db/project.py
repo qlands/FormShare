@@ -307,7 +307,9 @@ def add_project(request, user, project_data):
             )
             try:
                 request.dbsession.add(new_access)
+                request.dbsession.flush()
             except IntegrityError:
+                request.dbsession.rollback()
                 log.error(
                     "Duplicated access for user {} in project {}".format(
                         user, mapped_data["project_id"]
@@ -315,6 +317,7 @@ def add_project(request, user, project_data):
                 )
                 return False, _("Error allocating access")
             except Exception as e:
+                request.dbsession.rollback()
                 log.error(
                     "Error {} while allocating access for user {} in project {}".format(
                         str(e), user, mapped_data["project_id"]
@@ -349,7 +352,9 @@ def modify_project(request, project, project_data):
         request.dbsession.query(Project).filter(Project.project_id == project).update(
             mapped_data
         )
+        request.dbsession.flush()
     except Exception as e:
+        request.dbsession.rollback()
         log.error("Error {} while updating project {}".format(str(e), project))
         return False, str(e)
     return True, ""
@@ -382,6 +387,7 @@ def delete_project(request, user, project):
                 )
                 request.dbsession.flush()
     except IntegrityError as e:
+        request.dbsession.rollback()
         log.error("Error {} while deleting project {}".format(str(e), project))
         return (
             False,
@@ -390,6 +396,7 @@ def delete_project(request, user, project):
             ),
         )
     except Exception as e:
+        request.dbsession.rollback()
         log.error("Error {} while deleting project {}".format(str(e), project))
         return False, str(e)
     return True, ""
@@ -406,6 +413,7 @@ def set_project_as_active(request, user, project):
         ).update({"project_active": 1})
         request.dbsession.flush()
     except Exception as e:
+        request.dbsession.rollback()
         log.error("Error {} while setting project {} as active".format(str(e), project))
         return False, str(e)
     return True, ""
@@ -429,7 +437,10 @@ def add_file_to_project(request, project, file_name, overwrite=False):
         )
         try:
             request.dbsession.add(new_file)
+            request.dbsession.flush()
+
         except Exception as e:
+            request.dbsession.rollback()
             log.error(
                 "Error {} while adding file {} in project {}".format(
                     str(e), file_name, project
@@ -458,8 +469,10 @@ def remove_file_from_project(request, project, file_name):
         request.dbsession.query(ProjectFile).filter(
             ProjectFile.project_id == project
         ).filter(ProjectFile.file_name == file_name).delete()
+        request.dbsession.flush()
         return True, ""
     except Exception as e:
+        request.dbsession.rollback()
         log.error(
             "Error {} while removing file {} in project {}".format(
                 str(e), file_name, project

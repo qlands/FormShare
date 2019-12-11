@@ -16,6 +16,7 @@ from formshare.processes.db import (
     add_new_form,
     form_exists,
     get_form_directory,
+    update_form_directory,
     get_form_xml_file,
     get_form_survey_file,
     update_form,
@@ -62,7 +63,6 @@ import zipfile
 import glob
 from formshare.products.fs1import.fs1import import formshare_one_import_json
 from formshare.processes.color_hash import ColorHash
-import formshare.plugins as plugin
 from formshare.products.repository import create_database_repository
 from formshare.processes.odk.processes import update_form_repository_info
 import formshare.plugins as plugins
@@ -249,7 +249,7 @@ def import_external_data(
         pass  # We need to implement the BriefCase Import
     if import_type > 2:
         # We call connected plugins to see if there is other ways to import
-        for a_plugin in plugin.PluginImplementations(plugin.IImportExternalData):
+        for a_plugin in plugins.PluginImplementations(plugins.IImportExternalData):
             a_plugin.import_external_data(
                 request,
                 user,
@@ -683,7 +683,7 @@ def upload_odk_form(
                     if error == 0:
                         continue_creation = True
                         for a_plugin in plugins.PluginImplementations(plugins.IForm):
-                            continue_creation, error_message = a_plugin.after_form_checks(
+                            continue_creation, error_message = a_plugin.after_odk_form_checks(
                                 request,
                                 user_id,
                                 project_id,
@@ -780,9 +780,43 @@ def upload_odk_form(
                             if message != "":
                                 form_data["form_reqfiles"] = message
 
-                            added, message = add_new_form(request, form_data)
-                            if not added:
-                                return added, message
+                            continue_adding = True
+                            for a_plugin in plugins.PluginImplementations(
+                                plugins.IForm
+                            ):
+                                continue_adding, message, form_data = a_plugin.before_adding_form(
+                                    request,
+                                    "ODK",
+                                    user_id,
+                                    project_id,
+                                    form_id,
+                                    form_data,
+                                )
+                                break  # Only one plugin is executed
+                            if continue_adding:
+                                added, message = add_new_form(request, form_data)
+                                if not added:
+                                    paths = ["forms", form_directory]
+                                    dir_to_delete = os.path.join(odk_dir, *paths)
+                                    shutil.rmtree(dir_to_delete)
+                                    return added, message
+                                else:
+                                    for a_plugin in plugins.PluginImplementations(
+                                        plugins.IForm
+                                    ):
+                                        a_plugin.after_adding_form(
+                                            request,
+                                            "ODK",
+                                            user_id,
+                                            project_id,
+                                            form_id,
+                                            form_data,
+                                        )
+                            else:
+                                paths = ["forms", form_directory]
+                                dir_to_delete = os.path.join(odk_dir, *paths)
+                                shutil.rmtree(dir_to_delete)
+                                return False, message
 
                             # If we have itemsets.csv add it as media files
                             if itemsets_csv is not None:
@@ -828,6 +862,11 @@ def upload_odk_form(
                                 )
                                 outfile.write(json_string)
                             return True, form_id
+                        else:
+                            paths = ["forms", form_directory]
+                            dir_to_delete = os.path.join(odk_dir, *paths)
+                            shutil.rmtree(dir_to_delete)
+                            return False, message
                     else:
                         return False, message
                 else:
@@ -861,7 +900,7 @@ def upload_odk_form(
         return False, str(e).replace("'", "").replace('"', "").replace("\n", "")
 
 
-def update_odk_form(request, project_id, for_form_id, odk_dir, form_data):
+def update_odk_form(request, user_id, project_id, for_form_id, odk_dir, form_data):
     _ = request.translate
     uid = str(uuid.uuid4())
     paths = ["tmp", uid]
@@ -935,140 +974,235 @@ def update_odk_form(request, project_id, for_form_id, odk_dir, form_data):
                             request, survey_file, itemsets_csv, create_file, insert_file
                         )
                         if error == 0:
-                            form_directory = get_form_directory(
+                            old_form_directory = get_form_directory(
                                 request, project_id, form_id
                             )
-                            paths = ["forms", form_directory, "media"]
-                            if not os.path.exists(os.path.join(odk_dir, *paths)):
-                                os.makedirs(os.path.join(odk_dir, *paths))
-
-                                paths = ["forms", form_directory, "submissions"]
-                                os.makedirs(os.path.join(odk_dir, *paths))
-
-                                paths = ["forms", form_directory, "submissions", "logs"]
-                                os.makedirs(os.path.join(odk_dir, *paths))
-
-                                paths = ["forms", form_directory, "submissions", "maps"]
-                                os.makedirs(os.path.join(odk_dir, *paths))
-
-                                paths = ["forms", form_directory, "repository"]
-                                os.makedirs(os.path.join(odk_dir, *paths))
-                                paths = ["forms", form_directory, "repository", "temp"]
-                                os.makedirs(os.path.join(odk_dir, *paths))
-
-                            xls_file_fame = os.path.basename(file_name)
-                            xml_file_name = os.path.basename(xml_file)
-                            survey_file_name = os.path.basename(survey_file)
-                            paths = ["forms", form_directory, xls_file_fame]
-                            final_xls = os.path.join(odk_dir, *paths)
-                            paths = ["forms", form_directory, xml_file_name]
-                            final_xml = os.path.join(odk_dir, *paths)
-                            paths = ["forms", form_directory, survey_file_name]
-                            final_survey = os.path.join(odk_dir, *paths)
-                            paths = [
-                                "forms",
-                                form_directory,
-                                "repository",
-                                "create.xml",
-                            ]
-                            final_create_xml = os.path.join(odk_dir, *paths)
-                            paths = [
-                                "forms",
-                                form_directory,
-                                "repository",
-                                "insert.xml",
-                            ]
-                            final_insert_xml = os.path.join(odk_dir, *paths)
-                            shutil.copyfile(file_name, final_xls)
-                            shutil.copyfile(xml_file, final_xml)
-                            shutil.copyfile(survey_file, final_survey)
-                            shutil.copyfile(create_file, final_create_xml)
-                            shutil.copyfile(insert_file, final_insert_xml)
-                            parent_array = []
-                            try:
-                                geopoint = get_geopoint_variable_from_json(
-                                    json_dict, parent_array
+                            form_directory = uid
+                            continue_creation = True
+                            for a_plugin in plugins.PluginImplementations(
+                                plugins.IForm
+                            ):
+                                continue_creation, error_message = a_plugin.after_odk_form_checks(
+                                    request,
+                                    user_id,
+                                    project_id,
+                                    form_id,
+                                    form_data,
+                                    form_directory,
+                                    survey_file,
+                                    create_file,
+                                    insert_file,
+                                    itemsets_csv,
                                 )
-                            except Exception as e:
-                                geopoint = None
-                                log.warning(
-                                    "Unable to extract GeoPoint from file {}. Error: {}".format(
-                                        final_survey, str(e)
-                                    )
-                                )
-                            form_data["project_id"] = project_id
-                            form_data["form_id"] = form_id
-                            form_data["form_name"] = form_title[0].text
-                            form_data["form_lupdate"] = datetime.datetime.now()
-                            form_data["form_xlsfile"] = final_xls
-                            form_data["form_xmlfile"] = final_xml
-                            form_data["form_jsonfile"] = final_survey
-                            form_data["form_abletomerge"] = -1
-                            form_data["form_mergerrors"] = None
-                            if geopoint is not None:
-                                form_geopoint = "/".join(parent_array) + "/" + geopoint
-                                if form_geopoint[0] == "/":
-                                    form_geopoint = form_geopoint[1:]
-                                form_data["form_geopoint"] = form_geopoint
-                            if message != "":
-                                form_data["form_reqfiles"] = message
+                                if not continue_creation:
+                                    return False, error_message
+                                break  # Only one plugging will be called to extend before_create
+                            if continue_creation:
+                                paths = ["forms", form_directory, "media"]
+                                if not os.path.exists(os.path.join(odk_dir, *paths)):
+                                    os.makedirs(os.path.join(odk_dir, *paths))
 
-                            updated, message = update_form(
-                                request, project_id, for_form_id, form_data
-                            )
-                            if not updated:
-                                return updated, message
+                                    paths = ["forms", form_directory, "submissions"]
+                                    os.makedirs(os.path.join(odk_dir, *paths))
 
-                            # If we have itemsets.csv add it as media files
-                            if itemsets_csv is not None:
-                                bucket_id = project_id + form_id
-                                bucket_id = md5(bucket_id.encode("utf-8")).hexdigest()
+                                    paths = [
+                                        "forms",
+                                        form_directory,
+                                        "submissions",
+                                        "logs",
+                                    ]
+                                    os.makedirs(os.path.join(odk_dir, *paths))
+
+                                    paths = [
+                                        "forms",
+                                        form_directory,
+                                        "submissions",
+                                        "maps",
+                                    ]
+                                    os.makedirs(os.path.join(odk_dir, *paths))
+
+                                    paths = ["forms", form_directory, "repository"]
+                                    os.makedirs(os.path.join(odk_dir, *paths))
+                                    paths = [
+                                        "forms",
+                                        form_directory,
+                                        "repository",
+                                        "temp",
+                                    ]
+                                    os.makedirs(os.path.join(odk_dir, *paths))
+
+                                xls_file_fame = os.path.basename(file_name)
+                                xml_file_name = os.path.basename(xml_file)
+                                survey_file_name = os.path.basename(survey_file)
+                                paths = ["forms", form_directory, xls_file_fame]
+                                final_xls = os.path.join(odk_dir, *paths)
+                                paths = ["forms", form_directory, xml_file_name]
+                                final_xml = os.path.join(odk_dir, *paths)
+                                paths = ["forms", form_directory, survey_file_name]
+                                final_survey = os.path.join(odk_dir, *paths)
+                                paths = [
+                                    "forms",
+                                    form_directory,
+                                    "repository",
+                                    "create.xml",
+                                ]
+                                final_create_xml = os.path.join(odk_dir, *paths)
+                                paths = [
+                                    "forms",
+                                    form_directory,
+                                    "repository",
+                                    "insert.xml",
+                                ]
+                                final_insert_xml = os.path.join(odk_dir, *paths)
+                                shutil.copyfile(file_name, final_xls)
+                                shutil.copyfile(xml_file, final_xml)
+                                shutil.copyfile(survey_file, final_survey)
+                                shutil.copyfile(create_file, final_create_xml)
+                                shutil.copyfile(insert_file, final_insert_xml)
+                                parent_array = []
                                 try:
-                                    delete_stream(request, bucket_id, "itemsets.csv")
+                                    geopoint = get_geopoint_variable_from_json(
+                                        json_dict, parent_array
+                                    )
                                 except Exception as e:
-                                    log.error(
-                                        "Error {} removing filename {} from bucket {}".format(
-                                            str(e), "itemsets.csv", bucket_id
+                                    geopoint = None
+                                    log.warning(
+                                        "Unable to extract GeoPoint from file {}. Error: {}".format(
+                                            final_survey, str(e)
                                         )
                                     )
-                                with open(itemsets_csv, "rb") as itemset_file:
-                                    md5sum = md5(itemset_file.read()).hexdigest()
-                                    added, message = add_file_to_form(
+                                form_data["project_id"] = project_id
+                                form_data["form_id"] = form_id
+                                form_data["form_directory"] = form_directory
+                                form_data["form_name"] = form_title[0].text
+                                form_data["form_lupdate"] = datetime.datetime.now()
+                                form_data["form_xlsfile"] = final_xls
+                                form_data["form_xmlfile"] = final_xml
+                                form_data["form_jsonfile"] = final_survey
+                                form_data["form_abletomerge"] = -1
+                                form_data["form_mergerrors"] = None
+                                if geopoint is not None:
+                                    form_geopoint = (
+                                        "/".join(parent_array) + "/" + geopoint
+                                    )
+                                    if form_geopoint[0] == "/":
+                                        form_geopoint = form_geopoint[1:]
+                                    form_data["form_geopoint"] = form_geopoint
+                                if message != "":
+                                    form_data["form_reqfiles"] = message
+
+                                continue_updating = True
+                                for a_plugin in plugins.PluginImplementations(
+                                    plugins.IForm
+                                ):
+                                    continue_updating, message, form_data = a_plugin.before_updating_form(
                                         request,
+                                        "ODK",
+                                        user_id,
                                         project_id,
                                         form_id,
-                                        "itemsets.csv",
-                                        True,
-                                        md5sum,
+                                        form_data,
                                     )
-                                    if added:
-                                        itemset_file.seek(0)
-                                        store_file(
+                                    break  # Only one plugin is executed
+
+                                if continue_updating:
+                                    updated, message = update_form(
+                                        request, project_id, for_form_id, form_data
+                                    )
+                                    if not updated:
+                                        # Rollbacks the form directory
+                                        update_form_directory(
                                             request,
-                                            bucket_id,
-                                            "itemsets.csv",
-                                            itemset_file,
+                                            project_id,
+                                            for_form_id,
+                                            old_form_directory,
+                                        )
+                                        return updated, message
+
+                                    for a_plugin in plugins.PluginImplementations(
+                                        plugins.IForm
+                                    ):
+                                        continue_updating, message, form_data = a_plugin.after_updating_form(
+                                            request,
+                                            "ODK",
+                                            user_id,
+                                            project_id,
+                                            form_id,
+                                            form_data,
                                         )
 
-                            paths = ["forms", form_directory, parts[0] + ".json"]
-                            json_file = os.path.join(odk_dir, *paths)
+                                    # If we have itemsets.csv add it as media files
+                                    if itemsets_csv is not None:
+                                        bucket_id = project_id + form_id
+                                        bucket_id = md5(
+                                            bucket_id.encode("utf-8")
+                                        ).hexdigest()
+                                        try:
+                                            delete_stream(
+                                                request, bucket_id, "itemsets.csv"
+                                            )
+                                        except Exception as e:
+                                            log.error(
+                                                "Error {} removing filename {} from bucket {}".format(
+                                                    str(e), "itemsets.csv", bucket_id
+                                                )
+                                            )
+                                        with open(itemsets_csv, "rb") as itemset_file:
+                                            md5sum = md5(
+                                                itemset_file.read()
+                                            ).hexdigest()
+                                            added, message = add_file_to_form(
+                                                request,
+                                                project_id,
+                                                form_id,
+                                                "itemsets.csv",
+                                                True,
+                                                md5sum,
+                                            )
+                                            if added:
+                                                itemset_file.seek(0)
+                                                store_file(
+                                                    request,
+                                                    bucket_id,
+                                                    "itemsets.csv",
+                                                    itemset_file,
+                                                )
 
-                            metadata = {
-                                "formID": form_id,
-                                "name": form_title[0].text,
-                                "majorMinorVersion": "",
-                                "version": datetime.datetime.now().strftime("%Y%m%d"),
-                                "hash": "md5:"
-                                + md5(open(final_xml, "rb").read()).hexdigest(),
-                                "descriptionText": form_title[0].text,
-                            }
+                                    paths = [
+                                        "forms",
+                                        form_directory,
+                                        parts[0] + ".json",
+                                    ]
+                                    json_file = os.path.join(odk_dir, *paths)
 
-                            with open(json_file, "w") as outfile:
-                                json_string = json.dumps(
-                                    metadata, indent=4, ensure_ascii=False
-                                )
-                                outfile.write(json_string)
-                            return True, form_id
+                                    metadata = {
+                                        "formID": form_id,
+                                        "name": form_title[0].text,
+                                        "majorMinorVersion": "",
+                                        "version": datetime.datetime.now().strftime(
+                                            "%Y%m%d"
+                                        ),
+                                        "hash": "md5:"
+                                        + md5(open(final_xml, "rb").read()).hexdigest(),
+                                        "descriptionText": form_title[0].text,
+                                    }
+
+                                    with open(json_file, "w") as outfile:
+                                        json_string = json.dumps(
+                                            metadata, indent=4, ensure_ascii=False
+                                        )
+                                        outfile.write(json_string)
+                                    return True, form_id
+                                else:
+                                    paths = ["forms", form_directory]
+                                    dir_to_delete = os.path.join(odk_dir, *paths)
+                                    shutil.rmtree(dir_to_delete)
+                                    return False, message
+                            else:
+                                paths = ["forms", form_directory]
+                                dir_to_delete = os.path.join(odk_dir, *paths)
+                                shutil.rmtree(dir_to_delete)
+                                return False, message
                         else:
                             return False, message
                     else:
@@ -1438,7 +1572,7 @@ def create_repository(
 
                 formshare_create_repository = True
                 cnf_file = request.registry.settings["mysql.cnf"]
-                for a_plugin in plugin.PluginImplementations(plugin.IRepository):
+                for a_plugin in plugins.PluginImplementations(plugins.IRepository):
                     if formshare_create_repository:
                         formshare_create_repository = a_plugin.before_creating_repository(
                             request,
@@ -1469,12 +1603,12 @@ def create_repository(
                     )
                     form_data = {"form_reptask": task}
                     update_form(request, project, form, form_data)
-                    for a_plugin in plugin.PluginImplementations(plugin.IRepository):
+                    for a_plugin in plugins.PluginImplementations(plugins.IRepository):
                         a_plugin.on_creating_repository(request, project, form, task)
 
                 custom_repository_process = False
                 custom_task = None
-                for a_plugin in plugin.PluginImplementations(plugin.IRepository):
+                for a_plugin in plugins.PluginImplementations(plugins.IRepository):
                     custom_task = a_plugin.custom_repository_process(
                         request,
                         user,
@@ -1495,7 +1629,7 @@ def create_repository(
                 if custom_repository_process:
                     form_data = {"form_reptask": custom_task}
                     update_form(request, project, form, form_data)
-                    for a_plugin in plugin.PluginImplementations(plugin.IRepository):
+                    for a_plugin in plugins.PluginImplementations(plugins.IRepository):
                         a_plugin.on_creating_repository(
                             request, user, project, form, custom_task
                         )
@@ -1754,7 +1888,7 @@ def store_json_file(
                                         parts[1].replace("\n", ""),
                                     )
 
-                        return 0, ""
+                        return p.returncode, ""
                     else:
                         log.error(
                             "JSONToMySQL error. Inserting "
@@ -1766,7 +1900,7 @@ def store_json_file(
                             + ". Command line: "
                             + " ".join(args)
                         )
-                        return 2, ""
+                        return 1, ""
                 else:
                     # If the MD5Sum is the same then add it to the submission table
                     # indicating the "sameas" field. Any media files of the
@@ -1804,7 +1938,7 @@ def store_json_file(
                     + json_file
                     + ". Error: "
                     + "-"
-                    + stderr
+                    + stderr.decode()
                     + ". Command line: "
                     + " ".join(args)
                 )

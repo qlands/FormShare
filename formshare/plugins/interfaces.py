@@ -156,7 +156,7 @@ class ISchema(Interface):
 
     def update_schema(self, config):
         """
-        Called by the host application so plugins can add new fields to table schemata
+        Called by FormShare so plugins can add new fields to table schemata
 
         :param config: ``pyramid.config`` object
         :return Returns a dict array [{'schema':'schema_to_update','fieldname':'myfield',
@@ -200,7 +200,7 @@ class IProject(Interface):
 
     def before_create(self, request, user, project_data):
         """
-        Called by the host application so plugins can perform actions before adding a project
+        Called by FormShare so plugins can perform actions before adding a project
         :param request: ``pyramid.request`` object
         :param user: User owner of the project
         :param project_data: project data
@@ -211,7 +211,7 @@ class IProject(Interface):
 
     def after_create(self, request, user, project_data):
         """
-        Called by the host application so plugins can perform actions before adding a project
+        Called by FormShare so plugins can perform actions before adding a project
         :param request: ``pyramid.request`` object
         :param user: User owner of the project
         :param project_data: project data
@@ -225,7 +225,7 @@ class IForm(Interface):
         Allows to hook into the processes that create, update and delete forms
     """
 
-    def after_form_checks(
+    def after_odk_form_checks(
         self,
         request,
         user,
@@ -239,7 +239,7 @@ class IForm(Interface):
         itemsets_csv,
     ):
         """
-        Called by the host application so plugins can perform actions after FormShare checks a form
+        Called by FormShare so plugins can perform actions after FormShare checks a ODK form
         :param request: ``pyramid.request`` object
         :param user: User owner of the project
         :param project: Project id
@@ -253,6 +253,88 @@ class IForm(Interface):
         :return: True, "" or False, Message
         """
 
+    def before_adding_form(
+        self, request, form_type, user_id, project_id, form_id, form_data
+    ):
+        """
+        Called by FormShare so plugins can perform actions before FormShare adds the form to the database
+        :param request: ``pyramid.request`` object
+        :param form_type: Type of form: ODK, CSPRO, etc
+        :param user_id: User ID
+        :param project_id: Project id
+        :param form_id: Form ID
+        :param form_data: Form data to be added to the database
+        :return: True, "", modified version of data or False, Message, None
+        """
+
+    def after_adding_form(
+        self, request, form_type, user_id, project_id, form_id, form_data
+    ):
+        """
+        Called by FormShare so plugins can perform actions after FormShare adds the form to the database
+        :param request: ``pyramid.request`` object
+        :param form_type: Type of form: ODK, CSPRO, etc
+        :param user_id: User id
+        :param project_id: Project id
+        :param form_id: Form ID
+        :param form_data: Form data to be added to the database
+        :return: None
+        """
+
+    def before_updating_form(
+        self, request, form_type, user_id, project_id, form_id, form_data
+    ):
+        """
+        Called by FormShare so plugins can perform actions before FormShare updates a form in the database
+        :param request: ``pyramid.request`` object
+        :param form_type: Type of form: ODK, CSPRO, etc
+        :param user_id: User ID
+        :param project_id: Project id
+        :param form_id: Form ID
+        :param form_data: Form data to be added to the database
+        :return: True, "", modified version of data or False, Message, None
+        """
+
+    def after_updating_form(
+        self, request, form_type, user_id, project_id, form_id, form_data
+    ):
+        """
+        Called by FormShare so plugins can perform actions after FormShare adds the form to the database
+        :param request: ``pyramid.request`` object
+        :param form_type: Type of form: ODK, CSPRO, etc
+        :param user_id: User id
+        :param project_id: Project id
+        :param form_id: Form ID
+        :param form_data: Form data to be added to the database
+        :return: None
+        """
+
+    def before_deleting_form(
+        self, request, form_type, user_id, project_id, form_id
+    ):
+        """
+        Called by FormShare so plugins can perform actions before FormShare deletes a form from the database
+        :param request: ``pyramid.request`` object
+        :param form_type: Type of form: ODK, CSPRO, etc
+        :param user_id: User ID
+        :param project_id: Project id
+        :param form_id: Form ID
+        :return: True, "", or False, Message
+        """
+
+    def after_deleting_form(
+        self, request, form_type, user_id, project_id, form_id
+    ):
+        """
+        Called by FormShare so plugins can perform actions after FormShare deletes a form from the database
+        :param request: ``pyramid.request`` object
+        :param form_type: Type of form: ODK, CSPRO, etc
+        :param user_id: User ID
+        :param project_id: Project id
+        :param form_id: Form ID
+        :return: None
+        """
+
 
 class IRegistration(Interface):
     """
@@ -261,7 +343,7 @@ class IRegistration(Interface):
 
     def before_register(self, request, registrant):
         """
-        Called by the host application so plugins can do something before registering a user
+        Called by FormShare so plugins can do something before registering a user
 
         :param request: ``pyramid.request`` object
         :param registrant: Dictionary containing the details of the registrant
@@ -273,7 +355,7 @@ class IRegistration(Interface):
 
     def after_register(self, request, registrant):
         """
-        Called by the host application so plugins do something after registering a user
+        Called by FormShare so plugins do something after registering a user
 
         :param request: ``pyramid.request`` object
         :param registrant: Dictionary containing the details of the registrant
@@ -293,7 +375,7 @@ class IAuthorize(Interface):
 
     def after_login(self, request, user):
         """
-        Called by the host application so plugins can modify the login of users
+        Called by FormShare so plugins can modify the login of users
 
         :param request: ``pyramid.request`` object
         :param user: user object
@@ -369,7 +451,7 @@ class IProduct(Interface):
 
     def register_products(self, config):
         """
-            Called by the host application so plugins can add new products with Celery as task manager
+            Called by FormShare so plugins can add new products with Celery as task manager
 
             :param config: ``pyramid.config`` object
             :return Must returns a dict array [{'code':'productCode', 'hidden': False, 'icon':'fas fa-box-open',
@@ -468,7 +550,7 @@ class IImportExternalData(Interface):
         ignore_xform,
     ):
         """
-        Called by the host application so plugins can import new types of data into FormShare. You should do this as a
+        Called by FormShare so plugins can import new types of data into FormShare. You should do this as a
         product and use Celery to not hang a request in case the import process several files
         :param request: Pyramid request object
         :param user: FormShare user account ID

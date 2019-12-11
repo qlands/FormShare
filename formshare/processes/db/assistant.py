@@ -205,7 +205,6 @@ def delete_assistant(request, project, assistant):
                 str(e), assistant, project
             )
         )
-        request.dbsession.rollback()
         return False, str(e)
 
 
@@ -225,10 +224,8 @@ def add_assistant(request, project, assistant_data):
         request.dbsession.flush()
         return True, ""
     except IntegrityError:
-        request.dbsession.rollback()
         return False, _("The assistant is already part of this project")
     except Exception as e:
-        request.dbsession.rollback()
         log.error(
             "Error {} while adding assistant {} in project {}".format(
                 str(e), assistant_data["coll_name"], project
@@ -248,10 +245,8 @@ def modify_assistant(request, project, assistant, assistant_data):
         request.dbsession.flush()
         return True, ""
     except IntegrityError:
-        request.dbsession.rollback()
         return False, _("The assistant is already part of this project")
     except Exception as e:
-        request.dbsession.rollback()
         log.error(
             "Error {} while adding assistant {} in project {}".format(
                 str(e), assistant_data["coll_name"], project
@@ -271,7 +266,6 @@ def change_assistant_password(request, project, assistant, password):
         request.dbsession.flush()
         return True, ""
     except Exception as e:
-        request.dbsession.rollback()
         log.error(
             "Error {} while adding assistant {} in project {}".format(
                 str(e), assistant, project

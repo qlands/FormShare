@@ -108,7 +108,6 @@ def remove_collaborator_from_project(request, project, collaborator):
 
         return True, ""
     except Exception as e:
-        request.dbsession.rollback()
         log.error(
             "Error {} while removing collaborator {} from project {}".format(
                 str(e), collaborator, project
@@ -125,7 +124,6 @@ def set_collaborator_role(request, project, collaborator, role):
         request.dbsession.flush()
         return True, ""
     except Exception as e:
-        request.dbsession.rollback()
         log.error(
             "Error {} while changing role to collaborator {} in project {}".format(
                 str(e), collaborator, project
@@ -169,10 +167,8 @@ def add_collaborator_to_project(request, project, collaborator):
         request.dbsession.flush()
         return True, ""
     except IntegrityError:
-        request.dbsession.rollback()
         return False, _("The collaborator is already part of this project")
     except Exception as e:
-        request.dbsession.rollback()
         log.error(
             "Error {} while adding collaborator {} in project {}".format(
                 str(e), collaborator, project
@@ -199,7 +195,6 @@ def accept_collaboration(request, user, project):
         request.dbsession.flush()
         return True, ""
     except Exception as e:
-        request.dbsession.rollback()
         log.error(
             "Error {} while accepting collaboration for user {} in project {}".format(
                 str(e), user, project
@@ -217,7 +212,6 @@ def decline_collaboration(request, user, project):
         request.dbsession.flush()
         return True, ""
     except Exception as e:
-        request.dbsession.rollback()
         log.error(
             "Error {} while declining collaboration for user {} in project {}".format(
                 str(e), user, project

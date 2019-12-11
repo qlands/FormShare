@@ -197,7 +197,6 @@ def delete_assistant(request, project, assistant):
         request.dbsession.query(Collaborator).filter(
             Collaborator.project_id == project
         ).filter(Collaborator.coll_id == assistant).delete()
-        request.dbsession.flush()
         return True, ""
     except Exception as e:
         log.error(
@@ -205,7 +204,6 @@ def delete_assistant(request, project, assistant):
                 str(e), assistant, project
             )
         )
-        request.dbsession.rollback()
         return False, str(e)
 
 
@@ -222,13 +220,10 @@ def add_assistant(request, project, assistant_data):
     new_assistant = Collaborator(**mapped_data)
     try:
         request.dbsession.add(new_assistant)
-        request.dbsession.flush()
         return True, ""
     except IntegrityError:
-        request.dbsession.rollback()
         return False, _("The assistant is already part of this project")
     except Exception as e:
-        request.dbsession.rollback()
         log.error(
             "Error {} while adding assistant {} in project {}".format(
                 str(e), assistant_data["coll_name"], project
@@ -245,13 +240,10 @@ def modify_assistant(request, project, assistant, assistant_data):
         request.dbsession.query(Collaborator).filter(
             Collaborator.project_id == project
         ).filter(Collaborator.coll_id == assistant).update(mapped_data)
-        request.dbsession.flush()
         return True, ""
     except IntegrityError:
-        request.dbsession.rollback()
         return False, _("The assistant is already part of this project")
     except Exception as e:
-        request.dbsession.rollback()
         log.error(
             "Error {} while adding assistant {} in project {}".format(
                 str(e), assistant_data["coll_name"], project
@@ -268,10 +260,8 @@ def change_assistant_password(request, project, assistant, password):
         ).filter(Collaborator.coll_id == assistant).update(
             {"coll_password": encrypted_password}
         )
-        request.dbsession.flush()
         return True, ""
     except Exception as e:
-        request.dbsession.rollback()
         log.error(
             "Error {} while adding assistant {} in project {}".format(
                 str(e), assistant, project

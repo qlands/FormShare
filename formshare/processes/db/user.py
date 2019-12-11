@@ -124,14 +124,11 @@ def register_user(request, user_data):
             new_user = User(**mapped_data)
             try:
                 request.dbsession.add(new_user)
-                request.dbsession.flush()
                 return True, ""
             except IntegrityError:
-                request.dbsession.rollback()
                 log.error("Duplicated user {}".format(mapped_data["user_id"]))
                 return False, _("Username is already taken")
             except Exception as e:
-                request.dbsession.rollback()
                 log.error(
                     "Error {} when inserting user {}".format(
                         str(e), mapped_data["user_id"]
@@ -208,10 +205,8 @@ def update_profile(request, user, profile_data):
     mapped_data = map_to_schema(User, profile_data)
     try:
         request.dbsession.query(User).filter(User.user_id == user).update(mapped_data)
-        request.dbsession.flush()
         return True, ""
     except Exception as e:
-        request.dbsession.rollback()
         log.error("Error {} when updating user {}".format(str(e), user))
         return False, str(e)
 
@@ -235,9 +230,7 @@ def update_password(request, user, password):
         request.dbsession.query(User).filter(User.user_id == user).update(
             {"user_password": password}
         )
-        request.dbsession.flush()
         return True, ""
     except Exception as e:
-        request.dbsession.rollback()
         log.error("Error {} when changing password for user {}".format(str(e), user))
         return False, str(e)

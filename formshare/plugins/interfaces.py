@@ -309,9 +309,7 @@ class IForm(Interface):
         :return: None
         """
 
-    def before_deleting_form(
-        self, request, form_type, user_id, project_id, form_id
-    ):
+    def before_deleting_form(self, request, form_type, user_id, project_id, form_id):
         """
         Called by FormShare so plugins can perform actions before FormShare deletes a form from the database
         :param request: ``pyramid.request`` object
@@ -322,9 +320,7 @@ class IForm(Interface):
         :return: True, "", or False, Message
         """
 
-    def after_deleting_form(
-        self, request, form_type, user_id, project_id, form_id
-    ):
+    def after_deleting_form(self, request, form_type, user_id, project_id, form_id):
         """
         Called by FormShare so plugins can perform actions after FormShare deletes a form from the database
         :param request: ``pyramid.request`` object

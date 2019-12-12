@@ -1,5 +1,5 @@
 {% set active_tab = request.params.get('tab',None) %}
-<div class="ibox {% if active_tab != 'task' %}collapsed{% endif %}">
+<div id="products_and_tasks" class="ibox {% if active_tab != 'task' %}collapsed{% endif %}">
     <div class="ibox-title">
         {% block project_tasks_title %}
             <h5>{{ _('Products & tasks') }}</h5>

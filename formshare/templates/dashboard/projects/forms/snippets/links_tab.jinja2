@@ -48,8 +48,11 @@
             </div>
             ODK URL:<br/>
             <div class="input-group">
-                <input type="text" value="{{ request.route_url('project_details', userid=projectDetails.owner, projcode=projectDetails.project_code) }}" class="form-control"> <span class="input-group-append"> <a class="btn btn-white btn-bitbucket clipboard" data-clipboard-text="{{ request.route_url('project_details', userid=projectDetails.owner, projcode=projectDetails.project_code) }}" title="{{ _('Copy to clipboard') }}"><i class="far fa-copy"></i></a> </span>
+                <input type="text" readonly value="{{ request.route_url('project_details', userid=projectDetails.owner, projcode=projectDetails.project_code) }}" class="form-control"> <span class="input-group-append"> <a class="btn btn-white btn-bitbucket clipboard" data-clipboard-text="{{ request.route_url('project_details', userid=projectDetails.owner, projcode=projectDetails.project_code) }}" title="{{ _('Copy to clipboard') }}"><i class="far fa-copy"></i></a> </span>
             </div>
         {% endblock links_qr_content %}
+        {% block links_extra_content %}
+
+        {% endblock links_extra_content %}
     </div>
 </div>

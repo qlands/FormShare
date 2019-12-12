@@ -98,8 +98,10 @@
                                     {% if formDetails.form_geopoint != None %}
                                         {% include 'dashboard/projects/forms/snippets/form_map.jinja2' %}
                                     {% endif %}
-                                    {% include 'dashboard/projects/forms/snippets/form_tasks.jinja2' %}
-                                    {#                                {% include 'dashboard/projects/forms/snippets/form_activity.jinja2' %}#}
+                                    {% if formDetails.form_schema != None %}
+                                        {% include 'dashboard/projects/forms/snippets/form_tasks.jinja2' %}
+                                        {#                                {% include 'dashboard/projects/forms/snippets/form_activity.jinja2' %}#}
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -138,6 +140,9 @@
     {% if formDetails.form_type == 1 %}
         <script>
             $(document).ready(function() {
+
+                new ClipboardJS('.clipboard');
+
                 let upload_started = false;
                 let xform_update_started = false;
                 $('#form_upload_file_form').submit(function() {

@@ -1,0 +1,43 @@
+This docker compose is only applicable if you want to store the FormShare logs in ElasticSearch
+with Fluentd (https://www.fluentd.org/)
+
+Memory used:  8GB of RAM
+
+Before you run docker-compose you need to
+
+1) Install docker-compose and give it enough memory
+sudo apt-get install -y docker-compose
+sudo sysctl -w vm.max_map_count=262144
+echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.d/60-vm-max_map_count.conf
+
+2) Run the following commands to store the FormShare data outside the docker containers
+sudo mkdir /opt/formshare
+whoami=$(whoami)
+sudo chown $whoami /opt/formshare
+mkdir /opt/formshare/celery
+mkdir /opt/formshare/log
+mkdir /opt/formshare/repository
+mkdir /opt/formshare/config
+mkdir /opt/formshare/mysql
+mkdir /opt/formshare/elasticsearch
+mkdir /opt/formshare/elasticsearch/esdata
+mkdir /opt/formshare/elasticsearch/esdata2
+mkdir /opt/formshare/elasticsearch/esdata3
+
+3) Edit the docker-compose.yml to change:
+-The mysql security credentials:
+line 8: MYSQL_ROOT_PASSWORD: my_secure_password
+line 77: MYSQL_USER_PASSWORD: my_secure_password
+
+-The admin credentials:
+line 78: FORMSHARE_ADMIN_USER: admin
+line 79: FORMSHARE_ADMIN_EMAIL: admin@myserver.com
+line 80: FORMSHARE_ADMIN_PASSWORD: my_secure_password
+
+4) Run docker compose
+cd forshare/docker_compose_with_apache
+sudo docker-compose up
+
+Docker will pull the necessary images and run FormShare. After all images are pulled and
+all services run, you will be able to access FormShare at http://localhost:5900/formshare.
+From there you can poxy pass it using Apache.

@@ -1,5 +1,6 @@
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import RequestError
+from uuid import UUID
 
 
 def _get_record_index_definition(number_of_shards, number_of_replicas):
@@ -164,3 +165,36 @@ def add_record(settings, user, project, form, schema, table, record_uuid):
         )
     else:
         raise RequestError("Cannot connect to ElasticSearch")
+
+
+def _validate_uuid4(uuid_string):
+    try:
+        UUID(uuid_string, version=4)
+    except ValueError:
+        return False
+    return True
+
+
+def get_table(settings, user, project, form, record_uuid):
+    if _validate_uuid4(record_uuid):
+        connection = create_connection(settings)
+        if connection is not None:
+            index_name = get_index_name(user, project, form)
+            query_dict = {"query": {"match": {"_id": record_uuid}}}
+            es_result = connection.search(index=index_name, body=query_dict)
+            if es_result["hits"]["total"] == 0:
+                # If no results found then try with carry return at the end
+                # because that is how was initially stored
+                query_dict = {"query": {"match": {"_id": record_uuid + "\n"}}}
+                es_result = connection.search(index=index_name, body=query_dict)
+            if es_result["hits"]["total"] == 0:
+                return None, None
+            else:
+                return (
+                    es_result["hits"]["hits"][0]["_source"]["schema"],
+                    es_result["hits"]["hits"][0]["_source"]["table"],
+                )
+        else:
+            raise RequestError("Cannot connect to ElasticSearch")
+    else:
+        return None, None

@@ -1,6 +1,6 @@
 <div class="row border-bottom {% if activeUser == None %}white-bg{% endif %}">
     {% if activeUser != None %}
-        <nav class="navbar navbar-static-top" role="navigation" style="margin-bottom: 0">
+        <nav class="navbar navbar-fixed-top" role="navigation" style="margin-bottom: 0">
             <div class="navbar-header">
                 {% block header_main_button %}
                     <a class="navbar-minimalize minimalize-styl-2" href="#"><img alt="image" src="{{ request.url_for_static('formshare-small-black.png') }}"/> Form<b>Share</b></a>

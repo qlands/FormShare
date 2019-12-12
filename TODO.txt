@@ -1,8 +1,8 @@
+- Testing framework
 - Plugin interfaces in all places.
 - Social (Messaging, Watch and Follow)
-- Create a JSON schema using the create XML file. Use it to validade data from ODK and data imports
+- Create a JSON schema using the create XML file. Use it to validate data from ODK and data imports
 - Import from BriefCase (XML import)
-- Clean data JSON API (How to submit an update based on a row UUID)
 - Export submissions in XML format (Using denormalize but converting the JSON to XML)
 - Export submissions in JSON format
 - Handle sharing of private products with token keys.

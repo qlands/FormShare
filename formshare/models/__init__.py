@@ -27,6 +27,9 @@ from .formshare import (
     Product,
     FinishedTask,
     TaskMessages,
+    Settings,
+    ProjectSettings,
+    FormSettings,
 )
 
 from .schema import *

@@ -94,6 +94,7 @@ class Assistant(object):
         self.login = assistant_data["coll_id"]
         self.projectID = project
         self.fullName = assistant_data["coll_name"]
+        self.APIKey = assistant_data["coll_apikey"]
 
     def check_password(self, password, request):
         return check_assistant_login(self.projectID, self.login, password, request)

@@ -57,19 +57,19 @@
                     </li>
                     {% if activeProject %}
                         <li class="special_link">
-                            <a href="{{ request.route_url('project_details', userid=activeProject.owner, projcode=activeProject.project_code) }}"><i class="fas fa-star"></i> <span class="nav-label" title="{{ activeProject.project_name }}">{{ activeProject.project_name|truncate(15,true,'...') }}</span> <span class="label label-info float-right">{{ _('Active') }}</span></a>
+                            <a href="{{ request.route_url('project_details', userid=activeProject.owner, projcode=activeProject.project_code) }}"><i class="fas fa-star" style="color: goldenrod" title="{{ activeProject.project_name }} ({{ _('Active') }})"></i> <span class="nav-label" title="{{ _('Active') }}">{{ activeProject.project_name|truncate(15,true,'...') }}</span></a>
                         </li>
                         {% if activeProject.access_type < 4 %}
                             {% if activeProject.access_type <= 2 %}
                                 <li {% if activeMenu == 'collaborators' %}class="active" {% endif %}>
-                                    <a href="{{ request.route_url('collaborators', userid=activeProject.owner,projcode=activeProject.project_code ) }}" ><i style="margin-left: 10px" class="far fa-handshake"></i> <span class="nav-label">{{ _('Collaborators') }}</span></a>
+                                    <a href="{{ request.route_url('collaborators', userid=activeProject.owner,projcode=activeProject.project_code ) }}" ><i style="margin-left: 20px" class="far fa-handshake"></i> <span class="nav-label">{{ _('Collaborators') }}</span></a>
                                 </li>
                             {% endif %}
                             <li {% if activeMenu == 'assistants' %}class="active" {% endif %}>
-                                <a href="{{ request.route_url('assistants', userid=activeProject.owner,projcode=activeProject.project_code ) }}" ><i style="margin-left: 10px" class="fas fa-user-circle"></i> <span class="nav-label">{{ _('Assistants') }}</span></a>
+                                <a href="{{ request.route_url('assistants', userid=activeProject.owner,projcode=activeProject.project_code ) }}" ><i style="margin-left: 20px" class="fas fa-user-circle"></i> <span class="nav-label">{{ _('Assistants') }}</span></a>
                             </li>
                             <li {% if activeMenu == 'groups' %}class="active" {% endif %}>
-                                <a href="{{ request.route_url('groups', userid=activeProject.owner,projcode=activeProject.project_code ) }}"><i style="margin-left: 10px" class="fas fa-users"></i> <span class="nav-label">{{ _('Assistant groups') }}</span></a>
+                                <a href="{{ request.route_url('groups', userid=activeProject.owner,projcode=activeProject.project_code ) }}"><i style="margin-left: 20px" class="fas fa-users"></i> <span class="nav-label">{{ _('Assistant groups') }}</span></a>
                             </li>
 {#                            <li>#}
 {#                                <a href="#"><i style="margin-left: 10px" class="fab fa-wpforms"></i> <span class="nav-label">{{ _('Forms') }}</span></a>#}

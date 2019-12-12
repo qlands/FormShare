@@ -7,6 +7,7 @@ from formshare.processes.db import (
     get_project_from_assistant,
     change_assistant_password,
     get_assistant_password,
+    modify_assistant,
 )
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from formshare.config.auth import check_assistant_login
@@ -108,6 +109,35 @@ class ChangeMyAssistantPassword(AssistantView):
                 self.add_error(self._("The password cannot be empty"))
                 return HTTPFound(next_page)
 
+        else:
+            raise HTTPNotFound
+
+
+class ChangeMyAPIKey(AssistantView):
+    def __init__(self, request):
+        AssistantView.__init__(self, request)
+        self.checkCrossPost = False
+
+    def process_view(self):
+        if self.request.method == "POST":
+            next_page = self.request.params.get("next") or self.request.route_url(
+                "assistant_forms", userid=self.userID, projcode=self.projectCode
+            )
+            self.returnRawViewResult = True
+            assistant_data = self.get_post_dict()
+
+            project_of_assistant = get_project_from_assistant(
+                self.request, self.userID, self.projectID, self.assistantID
+            )
+
+            modified, message = modify_assistant(
+                self.request, project_of_assistant, self.assistantID, assistant_data
+            )
+            if modified:
+                return HTTPFound(next_page)
+            else:
+                self.add_error(self._("Unable to change the password: ") + message)
+                return HTTPFound(next_page)
         else:
             raise HTTPNotFound
 

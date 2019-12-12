@@ -52,6 +52,13 @@
             {% jsresource request,'formshare','inspinia' %}
 
             <script>
+
+                function uuidv4() {
+                    return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+                        (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+                    );
+                }
+
                 $(document).ready(function() {
                     var selectedLanguage = readCookie('_LOCALE_');
                     if (selectedLanguage != null)
@@ -61,6 +68,11 @@
                         setCookie('_LOCALE_', this.value, 365);
                         location.reload();
                     });
+
+                    $('#genkey').click(function () {
+                        $('#coll_apikey').val(uuidv4());
+                    });
+
                 });
 
                 function setCookie(cookieName, cookieValue, nDays) {
@@ -128,5 +140,36 @@
             </div>
         </div>
     </div>
+
+    <div class="modal inmodal" id="myModalAPIKey" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content animated fadeIn">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                    <h4 class="modal-title">{{ _('Change API key') }}</h4>
+                    <small id="password_who" class="font-bold">{{ _('Change API key of') }} {{ activeAssistant.fullName }}</small>
+                </div>
+                <form class="m-t" id="change_key_form" role="form" method="post" action="{{ request.route_url('assistant_change_my_key', userid=userid, projcode=projcode,_query={'next': request.url}) }}">
+                    {{ form.secure_form(request) }}
+                    <input type="hidden" id="assistant_id" name="assistant_id" value="">
+                    <div class="modal-body">
+                        <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('API Key') }}</label>
+                            <div class="input-group col-sm-10">
+                                <input type="text" readonly class="form-control" id="coll_apikey" name="coll_apikey" value="{{ activeAssistant.APIKey }}">
+                                <span class="input-group-append">
+                                    <button type="button" id="genkey" class="btn btn-default" title="{{ _('Generate new key') }}"><i class="fas fa-sync-alt"></i></button>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
+                        <button type="submit" name="change_apikey" class="btn btn-primary">{{ _('Change API key') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     </body>
 {% endblock body_tag %}

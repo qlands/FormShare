@@ -2,7 +2,7 @@ import uuid
 import os
 import shutil
 import glob
-from subprocess import Popen, PIPE, check_call, CalledProcessError
+from subprocess import Popen, PIPE
 from formshare.processes.db import (
     get_form_schema,
     get_form_directory,
@@ -57,6 +57,7 @@ __all__ = [
     "get_request_data_jqgrid",
     "delete_submission",
     "delete_all_submission",
+    "update_record_with_id",
 ]
 
 log = logging.getLogger("formshare")
@@ -895,15 +896,15 @@ def update_data(request, user, project, form, table_name, row_uuid, field, value
     sql = sql.replace("''", "null")
 
     log.info(sql)
-
+    engine = create_engine(sql_url)
     try:
-        engine = create_engine(sql_url)
         engine.execute("SET @odktools_current_user = '" + user + "'")
         engine.execute(sql)
         engine.dispose()
         res = {"data": {field: value}}
         return res
     except exc.IntegrityError as e:
+        engine.dispose()
         p1 = re.compile(r"`(\w+)`")
         m1 = p1.findall(str(e))
         if m1:
@@ -1096,3 +1097,47 @@ def delete_all_submission(request, user, project, form, project_code):
     except Exception as e:
         log.error("Unable to remove submissions. Error {}".format(str(e)))
         return False, str(e)
+
+
+def update_record_with_id(request, user, schema, table, rowuuid, data):
+    sql = "DESC {}.{}".format(schema, table)
+    fields = request.dbsession.execute(sql).fetchall()
+    field_array = []
+    key_array = []
+    for a_field in fields:
+        field_array.append(a_field[0])
+        if a_field[3] == "PRI":
+            key_array.append(a_field[0])
+    data.pop("rowuuid", None)
+    for a_key in key_array:
+        data.pop(a_key, None)
+    fields_not_found = []
+    for a_key in data.keys():
+        if a_key not in field_array:
+            fields_not_found.append(a_key)
+    if len(fields_not_found) == 0:
+        sql = "UPDATE {}.{}".format(schema, table) + " SET "
+        updates = []
+        for a_key in data.keys():
+            updates.append(a_key + " = '{}'".format(data[a_key]))
+        sql = sql + ",".join(updates)
+        sql = sql + " WHERE rowuuid = '" + rowuuid + "'"
+        sql_url = request.registry.settings.get("sqlalchemy.url")
+        engine = create_engine(sql_url)
+        try:
+            engine.execute("SET @odktools_current_user = '" + user + "'")
+            engine.execute(sql)
+            engine.dispose()
+            return True, ""
+        except Exception as e:
+            engine.dispose()
+            return False, str(e)
+    else:
+        return (
+            False,
+            request.translate(
+                "The following fields where not found in table {}".format(table)
+            )
+            + ": "
+            + ",".join(fields_not_found),
+        )

@@ -80,6 +80,51 @@
     {% endif %}
 {% endblock mainsection %}
 
+{% block body_end %}
+    {% if activeUser.super == 1 %}
+        <div class="theme-config">
+            <div class="theme-config-box">
+                <div class="spin-icon">
+                    <i class="fa fa-cogs fa-spin"></i>
+                </div>
+                <div class="skin-settings">
+                    <div class="title">{{ _('Configure FormShare') }} <br>
+                        <small style="text-transform: none;font-weight: 400">
+                            {{ _('Core and plugin settings') }}
+                        </small></div>
+                    {#                <div class="setings-item">#}
+                    {#                    <span>#}
+                    {#                        Fixed sidebar#}
+                    {#                    </span>#}
+                    {##}
+                    {#                    <div class="switch">#}
+                    {#                        <div class="onoffswitch">#}
+                    {#                            <input type="checkbox" name="fixedsidebar" class="onoffswitch-checkbox" id="fixedsidebar">#}
+                    {#                            <label class="onoffswitch-label" for="fixedsidebar">#}
+                    {#                                <span class="onoffswitch-inner"></span>#}
+                    {#                                <span class="onoffswitch-switch"></span>#}
+                    {#                            </label>#}
+                    {#                        </div>#}
+                    {#                    </div>#}
+                    {#                </div>#}
+
+                    <div class="title"><i class="fas fa-arrow-alt-circle-down"></i> {{ _('Plugins') }} <i class="fas fa-arrow-alt-circle-down"></i></div>
+                    {% block settings_plugin_items %}
+{#                        <div class="setings-item default-skin">#}
+{#                    <span class="skin-name ">#}
+{#                         <a href="#">#}
+{#                             Enketo#}
+{#                         </a>#}
+{#                    </span>#}
+{#                        </div>#}
+                    {% endblock settings_plugin_items %}
+
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock body_end %}
+
 {% block scripts %}
     {{ super() }}
     {% if viewingSelfAccount == False %}
@@ -101,6 +146,13 @@
     {% else %}
         <script>
             $(document).ready(function() {
+
+                {% if activeUser.super == 1 %}
+                    $('.spin-icon').click(function (){
+                        $(".theme-config-box").toggleClass("show");
+                    });
+                {% endif %}
+
                 let xform_upload_started = false;
                 $('#form_upload_form').submit(function() {
                     $(this).find("button[type='submit']").prop('disabled',true);

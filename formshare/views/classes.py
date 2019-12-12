@@ -28,8 +28,10 @@ from formshare.processes.db import (
     get_user_projects,
     get_project_from_assistant,
     get_user_by_api_key,
+    get_assistant_by_api_key,
 )
 import logging
+import json
 from .. import plugins as p
 
 log = logging.getLogger("formshare")
@@ -391,27 +393,67 @@ class PrivateView(object):
                     "showWelcome": self.showWelcome,
                     "checkCrossPost": self.checkCrossPost,
                     "queryProjects": self.queryProjects,
-                    "userid": self.userID,
+                    "user": self.user,
                 },
             )
 
         self.viewResult = self.process_view()
 
-        for plugin in i_private_view_implementations:
-            self.viewResult = plugin.after_processing(
-                self.request,
-                {
-                    "returnRawViewResult": self.returnRawViewResult,
-                    "privateOnly": self.privateOnly,
-                    "guestAccess": self.guestAccess,
-                    "viewingSelfAccount": self.viewingSelfAccount,
-                    "showWelcome": self.showWelcome,
-                    "checkCrossPost": self.checkCrossPost,
-                    "queryProjects": self.queryProjects,
-                    "userid": self.userID,
-                },
-                self.viewResult,
-            )
+        if not self.returnRawViewResult:
+            if self.request.matched_route is not None:
+                if self.request.matched_route.name == "dashboard":
+                    i_view_implementations = p.PluginImplementations(p.IDashBoardView)
+                    for plugin in i_view_implementations:
+                        self.viewResult = plugin.after_dashboard_processing(
+                            self.request,
+                            {
+                                "returnRawViewResult": self.returnRawViewResult,
+                                "privateOnly": self.privateOnly,
+                                "guestAccess": self.guestAccess,
+                                "viewingSelfAccount": self.viewingSelfAccount,
+                                "showWelcome": self.showWelcome,
+                                "checkCrossPost": self.checkCrossPost,
+                                "queryProjects": self.queryProjects,
+                                "user": self.user,
+                            },
+                            self.viewResult,
+                        )
+                if self.request.matched_route.name == "project_details":
+                    i_view_implementations = p.PluginImplementations(
+                        p.IProjectDetailsView
+                    )
+                    for plugin in i_view_implementations:
+                        self.viewResult = plugin.after_project_details_processing(
+                            self.request,
+                            {
+                                "returnRawViewResult": self.returnRawViewResult,
+                                "privateOnly": self.privateOnly,
+                                "guestAccess": self.guestAccess,
+                                "viewingSelfAccount": self.viewingSelfAccount,
+                                "showWelcome": self.showWelcome,
+                                "checkCrossPost": self.checkCrossPost,
+                                "queryProjects": self.queryProjects,
+                                "user": self.user,
+                            },
+                            self.viewResult,
+                        )
+                if self.request.matched_route.name == "form_details":
+                    i_view_implementations = p.PluginImplementations(p.IFormDetailsView)
+                    for plugin in i_view_implementations:
+                        self.viewResult = plugin.after_form_details_processing(
+                            self.request,
+                            {
+                                "returnRawViewResult": self.returnRawViewResult,
+                                "privateOnly": self.privateOnly,
+                                "guestAccess": self.guestAccess,
+                                "viewingSelfAccount": self.viewingSelfAccount,
+                                "showWelcome": self.showWelcome,
+                                "checkCrossPost": self.checkCrossPost,
+                                "queryProjects": self.queryProjects,
+                                "user": self.user,
+                            },
+                            self.viewResult,
+                        )
 
         if not self.returnRawViewResult:
             self.classResult.update(self.viewResult)
@@ -434,6 +476,35 @@ class PrivateView(object):
 
     def add_error(self, message):
         self.request.session.flash("{}|error".format(message), queue="error")
+
+    def get_project_access_level(self):
+        """
+        Return the access level of a logged user to a project. This could be:
+             1: Owner
+             2: Administrator (Can edit the project and its forms + add other collaborators)
+             3: Editor (Can edit the project and its forms)
+             4: Member (Can access the project and its forms)
+             5: No access (Either the project does not exits or the user has no access to it)
+        """
+        user_id = self.request.matchdict.get("userid", None)
+        project_code = self.request.matchdict.get("projcode", None)
+        if user_id is not None and project_code is not None:
+            project_id = get_project_id_from_name(self.request, user_id, project_code)
+            project_details = {}
+            if project_id is not None:
+                project_found = False
+                for project in self.user_projects:
+                    if project["project_id"] == project_id:
+                        project_found = True
+                        project_details = project
+                if not project_found:
+                    return 5
+            else:
+                return 5
+        else:
+            return 5
+
+        return project_details["access_type"]
 
 
 class DashboardView(PrivateView):
@@ -600,7 +671,7 @@ class APIView(object):
     def __init__(self, request):
         self.request = request
         self.user = None
-        self.body = None
+        self.json = {}
         self.api_key = ""
         self._ = self.request.translate
 
@@ -610,23 +681,119 @@ class APIView(object):
             self.user = get_user_by_api_key(self.request, self.api_key)
             if self.user is None:
                 response = Response(
+                    content_type="application/json",
                     status=401,
-                    body={
-                        "error": self._("This API key does not exist or is inactive.")
-                    },
+                    body=json.dumps(
+                        {"error": self._("This API key does not exist or is inactive")}
+                    ).encode(),
                 )
                 return response
 
             if self.request.method == "POST":
-                self.body = self.request.params.get("Body", None)
-                if self.body is None:
+                try:
+                    self.json = json.loads(self.request.body)
+                except json.JSONDecodeError:
                     response = Response(
-                        status=401, body={"error": self._("Body non-existent")}
+                        content_type="application/json",
+                        status=400,
+                        body=json.dumps(
+                            {"error": self._("The JSON cannot be parsed")}
+                        ).encode(),
+                    )
+                    return response
+                except Exception as e:
+                    response = Response(
+                        content_type="application/json",
+                        status=400,
+                        body=json.dumps({"error": type(e).__name__}).encode(),
                     )
                     return response
         else:
             response = Response(
-                status=401, body={"error": self._("You need to specify an API key")}
+                content_type="application/json",
+                status=401,
+                body=json.dumps(
+                    {"error": self._("You need to specify an API key")}
+                ).encode(),
+            )
+            return response
+
+        return self.process_view()
+
+    def process_view(self):
+        return {"key": self.api_key}
+
+
+class AssistantAPIView(object):
+    def __init__(self, request):
+        self.request = request
+        self.assistant = None
+        self.json = {}
+        self.api_key = ""
+        self.project_id = None
+        self._ = self.request.translate
+
+    def __call__(self):
+        self.api_key = self.request.params.get("apikey", None)
+        if self.api_key is not None:
+            user_id = self.request.matchdict["userid"]
+            project_code = self.request.matchdict["projcode"]
+            self.project_id = get_project_id_from_name(
+                self.request, user_id, project_code
+            )
+            if self.project_id is not None:
+                self.assistant = get_assistant_by_api_key(
+                    self.request, self.project_id, self.api_key
+                )
+                if not self.assistant:
+                    response = Response(
+                        content_type="application/json",
+                        status=401,
+                        body=json.dumps(
+                            {
+                                "error": self._(
+                                    "This API key does not exist or is inactive"
+                                )
+                            }
+                        ).encode(),
+                    )
+                    return response
+
+                if self.request.method == "POST":
+                    try:
+                        self.json = json.loads(self.request.body)
+                    except json.JSONDecodeError:
+                        response = Response(
+                            content_type="application/json",
+                            status=400,
+                            body=json.dumps(
+                                {"error": self._("The JSON cannot be parsed")}
+                            ).encode(),
+                        )
+                        return response
+                    except Exception as e:
+                        response = Response(
+                            content_type="application/json",
+                            status=400,
+                            body=json.dumps({"error": type(e).__name__}).encode(),
+                        )
+                        return response
+            else:
+                response = Response(
+                    content_type="application/json",
+                    status=401,
+                    body=json.dumps(
+                        {"error": self._("Such project does not exists")}
+                    ).encode(),
+                )
+                return response
+        else:
+            response = Response(
+                content_type="application/json",
+                status=401,
+                body=json.dumps(
+                    {"error": self._("You need to specify an API key")}
+                ).encode(),
             )
             return response
 

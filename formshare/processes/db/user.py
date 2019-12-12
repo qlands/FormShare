@@ -127,11 +127,9 @@ def register_user(request, user_data):
                 request.dbsession.flush()
                 return True, ""
             except IntegrityError:
-                request.dbsession.rollback()
                 log.error("Duplicated user {}".format(mapped_data["user_id"]))
                 return False, _("Username is already taken")
             except Exception as e:
-                request.dbsession.rollback()
                 log.error(
                     "Error {} when inserting user {}".format(
                         str(e), mapped_data["user_id"]
@@ -211,7 +209,6 @@ def update_profile(request, user, profile_data):
         request.dbsession.flush()
         return True, ""
     except Exception as e:
-        request.dbsession.rollback()
         log.error("Error {} when updating user {}".format(str(e), user))
         return False, str(e)
 
@@ -238,6 +235,5 @@ def update_password(request, user, password):
         request.dbsession.flush()
         return True, ""
     except Exception as e:
-        request.dbsession.rollback()
         log.error("Error {} when changing password for user {}".format(str(e), user))
         return False, str(e)

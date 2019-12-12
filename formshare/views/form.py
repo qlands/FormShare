@@ -70,6 +70,7 @@ from formshare.products.export.csv import (
 from formshare.processes.email.send_email import send_error_to_technical_team
 from lxml import etree
 import json
+import formshare.plugins as plugins
 
 log = logging.getLogger("formshare")
 
@@ -576,12 +577,7 @@ class AddNewForm(PrivateView):
                 form_data["form_target"] = 0
 
             uploaded, message = upload_odk_form(
-                self.request,
-                project_id,
-                self.user.login,
-                odk_path,
-                form_data,
-                for_merging,
+                self.request, project_id, user_id, odk_path, form_data, for_merging
             )
 
             if uploaded:
@@ -656,7 +652,7 @@ class UploadNewVersion(PrivateView):
                 form_data["form_target"] = 0
 
             updated, message = update_odk_form(
-                self.request, project_id, form_id, odk_path, form_data
+                self.request, user_id, project_id, form_id, odk_path, form_data
             )
 
             if updated:
@@ -787,47 +783,65 @@ class DeleteForm(PrivateView):
                     "project_details", userid=user_id, projcode=project_code
                 )
 
-                deleted, forms_deleted, message = delete_form(
-                    self.request, project_id, form_id
-                )
-                if deleted:
-                    for a_deleted_form in forms_deleted:
-                        delete_dataset_index(
-                            self.request.registry.settings,
-                            user_id,
-                            project_code,
-                            a_deleted_form["form_id"],
-                        )
-                        delete_record_index(
-                            self.request.registry.settings,
-                            user_id,
-                            project_code,
-                            a_deleted_form["form_id"],
-                        )
-                        try:
-                            form_directory = a_deleted_form["form_directory"]
-                            paths = ["forms", form_directory]
-                            odk_dir = get_odk_path(self.request)
-                            form_directory = os.path.join(odk_dir, *paths)
-                            shutil.rmtree(form_directory)
-                        except Exception as e:
-                            log.error(
-                                "Error {} while removing form {} in project {}. Cannot delete directory {}".format(
-                                    str(e),
-                                    a_deleted_form["form_id"],
-                                    project_id,
-                                    a_deleted_form["form_directory"],
-                                )
-                            )
-                        bucket_id = project_id + a_deleted_form["form_id"]
-                        bucket_id = md5(bucket_id.encode("utf-8")).hexdigest()
-                        delete_bucket(self.request, bucket_id)
-
-                    self.request.session.flash(
-                        self._("The form was deleted successfully")
+                continue_delete = True
+                message = ""
+                for a_plugin in plugins.PluginImplementations(plugins.IForm):
+                    continue_delete, message = a_plugin.before_deleting_form(
+                        self.request, "ODK", user_id, project_id, form_id
                     )
-                    self.returnRawViewResult = True
-                    return HTTPFound(next_page)
+                    break  # Only one plugin is executed
+                if continue_delete:
+                    deleted, forms_deleted, message = delete_form(
+                        self.request, project_id, form_id
+                    )
+                    if deleted:
+                        for a_plugin in plugins.PluginImplementations(plugins.IForm):
+                            a_plugin.after_deleting_form(
+                                self.request, "ODK", user_id, project_id, form_id
+                            )
+
+                        for a_deleted_form in forms_deleted:
+                            delete_dataset_index(
+                                self.request.registry.settings,
+                                user_id,
+                                project_code,
+                                a_deleted_form["form_id"],
+                            )
+                            delete_record_index(
+                                self.request.registry.settings,
+                                user_id,
+                                project_code,
+                                a_deleted_form["form_id"],
+                            )
+                            try:
+                                form_directory = a_deleted_form["form_directory"]
+                                paths = ["forms", form_directory]
+                                odk_dir = get_odk_path(self.request)
+                                form_directory = os.path.join(odk_dir, *paths)
+                                if os.path.exists(form_directory):
+                                    shutil.rmtree(form_directory)
+                            except Exception as e:
+                                log.error(
+                                    "Error {} while removing form {} in project {}. Cannot delete directory {}".format(
+                                        str(e),
+                                        a_deleted_form["form_id"],
+                                        project_id,
+                                        a_deleted_form["form_directory"],
+                                    )
+                                )
+                            bucket_id = project_id + a_deleted_form["form_id"]
+                            bucket_id = md5(bucket_id.encode("utf-8")).hexdigest()
+                            delete_bucket(self.request, bucket_id)
+
+                        self.request.session.flash(
+                            self._("The form was deleted successfully")
+                        )
+                        self.returnRawViewResult = True
+                        return HTTPFound(next_page)
+                    else:
+                        self.returnRawViewResult = True
+                        self.add_error(message)
+                        return HTTPFound(next_page)
                 else:
                     self.returnRawViewResult = True
                     self.add_error(message)
@@ -1375,28 +1389,38 @@ class AddGroupToForm(PrivateView):
 
         if self.request.method == "POST":
             assistant_data = self.get_post_dict()
-            if assistant_data["group_id"] != "":
-                privilege = assistant_data["group_privilege"]
-                added, message = add_group_to_form(
-                    self.request,
-                    project_id,
-                    form_id,
-                    assistant_data["group_id"],
-                    privilege,
-                )
-                if added:
-                    self.request.session.flash(
-                        self._("The group was added successfully")
+            if "group_id" in assistant_data.keys():
+                if assistant_data["group_id"] != "":
+                    privilege = assistant_data["group_privilege"]
+                    added, message = add_group_to_form(
+                        self.request,
+                        project_id,
+                        form_id,
+                        assistant_data["group_id"],
+                        privilege,
                     )
-                    next_page = self.request.route_url(
-                        "form_details",
-                        userid=user_id,
-                        projcode=project_code,
-                        formid=form_id,
-                    )
-                    return HTTPFound(location=next_page)
+                    if added:
+                        self.request.session.flash(
+                            self._("The group was added successfully")
+                        )
+                        next_page = self.request.route_url(
+                            "form_details",
+                            userid=user_id,
+                            projcode=project_code,
+                            formid=form_id,
+                        )
+                        return HTTPFound(location=next_page)
+                    else:
+                        self.add_error(message)
+                        next_page = self.request.route_url(
+                            "form_details",
+                            userid=user_id,
+                            projcode=project_code,
+                            formid=form_id,
+                        )
+                        return HTTPFound(location=next_page)
                 else:
-                    self.add_error(message)
+                    self.add_error("The group cannot be empty")
                     next_page = self.request.route_url(
                         "form_details",
                         userid=user_id,
@@ -1630,6 +1654,7 @@ class DownloadPublicXLSData(PrivateView):
             projcode=project_code,
             formid=form_id,
             _query={"tab": "task", "product": "xlsx_public_export"},
+            _anchor="products_and_tasks",
         )
         self.returnRawViewResult = True
         return HTTPFound(location=next_page)
@@ -1683,6 +1708,7 @@ class DownloadPrivateXLSData(PrivateView):
             projcode=project_code,
             formid=form_id,
             _query={"tab": "task", "product": "xlsx_private_export"},
+            _anchor="products_and_tasks",
         )
         self.returnRawViewResult = True
         return HTTPFound(location=next_page)
@@ -1798,6 +1824,7 @@ class DownloadSubmissionFiles(PrivateView):
                 projcode=project_code,
                 formid=form_id,
                 _query={"tab": "task", "product": "media_export"},
+                _anchor="products_and_tasks",
             )
             return HTTPFound(location=next_page)
 
@@ -1884,6 +1911,7 @@ class DownloadKML(PrivateView):
             projcode=project_code,
             formid=form_id,
             _query={"tab": "task", "product": "kml_export"},
+            _anchor="products_and_tasks",
         )
         return HTTPFound(location=next_page)
 
@@ -1934,6 +1962,7 @@ class DownloadPublicCSV(PrivateView):
             projcode=project_code,
             formid=form_id,
             _query={"tab": "task", "product": "csv_public_export"},
+            _anchor="products_and_tasks",
         )
         return HTTPFound(location=next_page)
 
@@ -1983,6 +2012,7 @@ class DownloadPrivateCSV(PrivateView):
             projcode=project_code,
             formid=form_id,
             _query={"tab": "task", "product": "csv_private_export"},
+            _anchor="products_and_tasks",
         )
         return HTTPFound(location=next_page)
 

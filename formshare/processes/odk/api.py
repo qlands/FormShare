@@ -9,6 +9,7 @@ from pyramid.httpexceptions import HTTPNotFound
 from uuid import uuid4
 from subprocess import Popen, PIPE
 from pyramid.response import FileResponse
+import traceback
 from formshare.processes.db import (
     assistant_has_form,
     get_assistant_forms,
@@ -971,7 +972,7 @@ def update_odk_form(request, user_id, project_id, for_form_id, odk_dir, form_dat
                     form_title = root.findall(".//{" + h_nsmap + "}title")
                     if form_exists(request, project_id, form_id):
                         error, message = check_jxform_file(
-                            request, survey_file, itemsets_csv, create_file, insert_file
+                            request, survey_file, create_file, insert_file, itemsets_csv
                         )
                         if error == 0:
                             old_form_directory = get_form_directory(
@@ -1122,7 +1123,7 @@ def update_odk_form(request, user_id, project_id, for_form_id, odk_dir, form_dat
                                     for a_plugin in plugins.PluginImplementations(
                                         plugins.IForm
                                     ):
-                                        continue_updating, message, form_data = a_plugin.after_updating_form(
+                                        a_plugin.after_updating_form(
                                             request,
                                             "ODK",
                                             user_id,
@@ -1229,6 +1230,7 @@ def update_odk_form(request, user_id, project_id, for_form_id, odk_dir, form_dat
                 + "https://github.com/qlands/FormShare",
             )
     except PyXFormError as e:
+        traceback.print_exc()
         log.error(
             "Error {} while adding form {} in project {}".format(
                 str(e), input_file_name, project_id
@@ -1236,6 +1238,7 @@ def update_odk_form(request, user_id, project_id, for_form_id, odk_dir, form_dat
         )
         return False, str(e)
     except Exception as e:
+        traceback.print_exc()
         log.error(
             "Error {} while adding form {} in project {}".format(
                 str(e), input_file_name, project_id

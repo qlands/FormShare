@@ -818,7 +818,8 @@ class DeleteForm(PrivateView):
                                 paths = ["forms", form_directory]
                                 odk_dir = get_odk_path(self.request)
                                 form_directory = os.path.join(odk_dir, *paths)
-                                shutil.rmtree(form_directory)
+                                if os.path.exists(form_directory):
+                                    shutil.rmtree(form_directory)
                             except Exception as e:
                                 log.error(
                                     "Error {} while removing form {} in project {}. Cannot delete directory {}".format(

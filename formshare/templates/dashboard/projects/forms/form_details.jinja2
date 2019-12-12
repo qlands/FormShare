@@ -140,6 +140,9 @@
     {% if formDetails.form_type == 1 %}
         <script>
             $(document).ready(function() {
+
+                new ClipboardJS('.clipboard');
+
                 let upload_started = false;
                 let xform_update_started = false;
                 $('#form_upload_file_form').submit(function() {

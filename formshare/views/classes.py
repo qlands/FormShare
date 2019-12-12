@@ -477,6 +477,35 @@ class PrivateView(object):
     def add_error(self, message):
         self.request.session.flash("{}|error".format(message), queue="error")
 
+    def get_project_access_level(self):
+        """
+        Return the access level of a logged user to a project. This could be:
+             1: Owner
+             2: Administrator (Can edit the project and its forms + add other collaborators)
+             3: Editor (Can edit the project and its forms)
+             4: Member (Can access the project and its forms)
+             5: No access (Either the project does not exits or the user has no access to it)
+        """
+        user_id = self.request.matchdict.get("userid", None)
+        project_code = self.request.matchdict.get("projcode", None)
+        if user_id is not None and project_code is not None:
+            project_id = get_project_id_from_name(self.request, user_id, project_code)
+            project_details = {}
+            if project_id is not None:
+                project_found = False
+                for project in self.user_projects:
+                    if project["project_id"] == project_id:
+                        project_found = True
+                        project_details = project
+                if not project_found:
+                    return 5
+            else:
+                return 5
+        else:
+            return 5
+
+        return project_details["access_type"]
+
 
 class DashboardView(PrivateView):
     def __call__(self):

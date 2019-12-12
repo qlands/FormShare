@@ -122,6 +122,27 @@ sudo docker-compose up -d
 http://[this server IP address]/formshare
 ```
 
+## Upgrading information
+
+Please read the upgrade guide if you have FormShare installed from source. If you use Docker then things are easier:
+
+```sh
+# Download the new version of formShare
+sudo git clone https://github.com/qlands/FormShare.git -b stable-2.1 formshare_2.1_source
+
+# Copy the docker compose file from the source to a new directory
+sudo mkdir formshare_2.1_docker_compose
+sudo cp ./formshare_2.1_source/docker_compose/docker-compose.yml ./formshare_2.1_docker_compose/
+
+# Clean the docker networks and containters. WARNING! If you have other dockers besides FormShare you will need to remove the "fsnet" network and the FormShare container manually.
+sudo docker network prune
+sudo docker container prune
+
+# Start the new version of FormShare. All required updates in the database and ini files will be done automatically.
+cd /opt/formshare_2.1_docker_compose
+sudo docker-compose up -d
+
+```
 
 
 

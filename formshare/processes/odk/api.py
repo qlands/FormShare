@@ -932,7 +932,7 @@ def update_odk_form(request, project_id, for_form_id, odk_dir, form_data):
                     form_title = root.findall(".//{" + h_nsmap + "}title")
                     if form_exists(request, project_id, form_id):
                         error, message = check_jxform_file(
-                            request, survey_file, itemsets_csv, create_file, insert_file
+                            request, survey_file, create_file, insert_file, itemsets_csv
                         )
                         if error == 0:
                             form_directory = get_form_directory(

@@ -824,9 +824,9 @@ def delete_form_by_database(request, database):
 
 
 def update_form_directory(request, project, form, directory):
-    request.dbsession.query(Odkform).filter(
-        Odkform.project_id == project
-    ).filter(Odkform.form_id == form).update({'form_directory': directory})
+    request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(
+        Odkform.form_id == form
+    ).update({"form_directory": directory})
 
 
 def update_form(request, project, form, form_data):

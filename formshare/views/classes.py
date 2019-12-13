@@ -283,23 +283,31 @@ class PrivateView(object):
                 if login_data["group"] == "mainApp":
                     self.user = get_user_data(login_data["login"], self.request)
                     if self.user is not None:
-                        safe = check_csrf_token(self.request, raises=False)
-                        if not safe:
-                            self.request.session.pop_flash()
-                            log.error(
-                                "SECURITY-CSRF error at {} ".format(self.request.url)
+                        if (
+                            self.request.registry.settings.get(
+                                "perform_post_checks", "true"
                             )
-                            raise HTTPFound(self.request.route_url("refresh"))
-                        else:
-                            if self.checkCrossPost:
-                                if self.request.referer != self.request.url:
-                                    self.request.session.pop_flash()
-                                    log.error(
-                                        "SECURITY-CrossPost error. Posting at {} from {} ".format(
-                                            self.request.url, self.request.referer
-                                        )
+                            == "true"
+                        ):
+                            safe = check_csrf_token(self.request, raises=False)
+                            if not safe:
+                                self.request.session.pop_flash()
+                                log.error(
+                                    "SECURITY-CSRF error at {} ".format(
+                                        self.request.url
                                     )
-                                    raise HTTPNotFound()
+                                )
+                                raise HTTPFound(self.request.route_url("refresh"))
+                            else:
+                                if self.checkCrossPost:
+                                    if self.request.referer != self.request.url:
+                                        self.request.session.pop_flash()
+                                        log.error(
+                                            "SECURITY-CrossPost error. Posting at {} from {} ".format(
+                                                self.request.url, self.request.referer
+                                            )
+                                        )
+                                        raise HTTPNotFound()
                     else:
                         raise HTTPFound(location=self.request.route_url("login"))
                 else:

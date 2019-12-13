@@ -217,6 +217,8 @@ def load_routes(config):
             "dashboard/users/user_add.jinja2",
         )
     )
+
+    # Profile
     routes.append(
         add_route(
             "profile",

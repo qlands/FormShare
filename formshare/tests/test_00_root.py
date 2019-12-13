@@ -293,21 +293,36 @@ class FunctionalTests(unittest.TestCase):
             # Change password fails. New passwords are not the same
             self.testapp.post(
                 "/user/{}/profile/edit".format(self.randonLogin),
-                {"changepass": "", "old_pass": "123", "new_pass": "123", "conf_pass": "321"},
+                {
+                    "changepass": "",
+                    "old_pass": "123",
+                    "new_pass": "123",
+                    "conf_pass": "321",
+                },
                 status=200,
             )
 
             # Change password fails. Old password is incorrect
             self.testapp.post(
                 "/user/{}/profile/edit".format(self.randonLogin),
-                {"changepass": "", "old_pass": "321", "new_pass": "123", "conf_pass": "123"},
+                {
+                    "changepass": "",
+                    "old_pass": "321",
+                    "new_pass": "123",
+                    "conf_pass": "123",
+                },
                 status=200,
             )
 
             # Change password succeeds
             self.testapp.post(
                 "/user/{}/profile/edit".format(self.randonLogin),
-                {"changepass": "", "old_pass": "123", "new_pass": "123", "conf_pass": "123"},
+                {
+                    "changepass": "",
+                    "old_pass": "123",
+                    "new_pass": "123",
+                    "conf_pass": "123",
+                },
                 status=302,
             )
 

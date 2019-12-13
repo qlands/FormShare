@@ -235,6 +235,7 @@ class UserIndexManager(object):
         """
         Removes an user from the index
         :param user_id: The user to be removed.
+        :param data_dict: New user data
         :return: Bool
         """
         if self.user_exists(user_id):

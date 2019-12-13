@@ -11,9 +11,6 @@ def start(settings):
     """ This function returns a Pyramid WSGI application.
     """
 
-    print("*************")
-    print(settings)
-    print("**************")
     auth_policy = AuthenticationStackPolicy()
     policy_array = []
 

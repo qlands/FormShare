@@ -43,6 +43,9 @@ from formshare.processes.submission.api import get_gps_points_from_project
 import re
 from pyramid.response import FileResponse
 import formshare.plugins as p
+import logging
+
+log = logging.getLogger("formshare")
 
 
 class ProjectStoredFileView(ProjectsView):
@@ -468,16 +471,44 @@ class AddFileToProject(ProjectsView):
             else:
                 overwrite = False
             for file in files:
-                file_name = file.filename
-                added, message = add_file_to_project(
-                    self.request, project_id, file_name, overwrite
-                )
-                if added:
-                    file.file.seek(0)
-                    store_file(self.request, project_id, file_name, file.file)
-                else:
+                try:
+                    if os.path.isabs(file.filename):
+                        file_name = os.path.basename(file.filename)
+                    else:
+                        file_name = file.filename
+                    added, message = add_file_to_project(
+                        self.request, project_id, file_name, overwrite
+                    )
+                    if added:
+                        file.file.seek(0)
+                        store_file(self.request, project_id, file_name, file.file)
+                    else:
+                        error = True
+                        break
+                except Exception as e:
+                    log.error(
+                        "Error while uploading files into project {}. Error: {}".format(
+                            project_id, str(e)
+                        )
+                    )
                     error = True
-                    break
+                    if len(files) == 1:
+                        if files[0] == b"":
+                            message = self._("No files were attached")
+                        else:
+                            message = self._(
+                                "Error {} encountered. A log entry has been produced".format(
+                                    type(e).__name__
+                                )
+                            )
+
+                    else:
+                        message = self._(
+                            "Error {} encountered. A log entry has been produced".format(
+                                type(e).__name__
+                            )
+                        )
+
             if not error:
                 if len(files) == 1:
                     self.request.session.flash(

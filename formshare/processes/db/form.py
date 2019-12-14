@@ -842,9 +842,9 @@ def update_form(request, project, form, form_data):
         .one()
     )
     if blocked[0] == 0:
-        request.dbsession.query(Odkform).filter(
-            Odkform.project_id == project
-        ).filter(Odkform.form_id == form).update(mapped_data)
+        request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(
+            Odkform.form_id == form
+        ).update(mapped_data)
 
         if "form_hexcolor" in form_data.keys():
             this_form_schema = get_form_schema(request, project, form)
@@ -928,7 +928,6 @@ def delete_form(request, project, form):
         return False, _("This form is blocked and cannot be changed at the moment.")
 
 
-
 def set_form_status(request, project, form, status):
     _ = request.translate
 
@@ -939,9 +938,9 @@ def set_form_status(request, project, form, status):
         .one()
     )
     if blocked[0] == 0:
-        request.dbsession.query(Odkform).filter(
-            Odkform.project_id == project
-        ).filter(Odkform.form_id == form).update({"form_accsub": status})
+        request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(
+            Odkform.form_id == form
+        ).update({"form_accsub": status})
         try:
             request.dbsession.flush()
             return True, ""
@@ -958,7 +957,6 @@ def set_form_status(request, project, form, status):
             return False, str(e)
     else:
         return False, _("This form is blocked and cannot be changed at the moment.")
-
 
 
 def reset_form_repository(request, project, form):

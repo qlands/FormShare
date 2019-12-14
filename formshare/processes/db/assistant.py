@@ -200,6 +200,7 @@ def delete_assistant(request, project, assistant):
         request.dbsession.flush()
         return True, ""
     except Exception as e:
+        request.dbsession.rollback()
         log.error(
             "Error {} while removing assistant {} from project {}".format(
                 str(e), assistant, project
@@ -224,8 +225,10 @@ def add_assistant(request, project, assistant_data):
         request.dbsession.flush()
         return True, ""
     except IntegrityError:
+        request.dbsession.rollback()
         return False, _("The assistant is already part of this project")
     except Exception as e:
+        request.dbsession.rollback()
         log.error(
             "Error {} while adding assistant {} in project {}".format(
                 str(e), assistant_data["coll_name"], project
@@ -245,8 +248,10 @@ def modify_assistant(request, project, assistant, assistant_data):
         request.dbsession.flush()
         return True, ""
     except IntegrityError:
+        request.dbsession.rollback()
         return False, _("The assistant is already part of this project")
     except Exception as e:
+        request.dbsession.rollback()
         log.error(
             "Error {} while adding assistant {} in project {}".format(
                 str(e), assistant_data["coll_name"], project
@@ -256,8 +261,8 @@ def modify_assistant(request, project, assistant, assistant_data):
 
 
 def change_assistant_password(request, project, assistant, password):
+    encrypted_password = encode_data(request, password)
     try:
-        encrypted_password = encode_data(request, password)
         request.dbsession.query(Collaborator).filter(
             Collaborator.project_id == project
         ).filter(Collaborator.coll_id == assistant).update(
@@ -266,6 +271,7 @@ def change_assistant_password(request, project, assistant, password):
         request.dbsession.flush()
         return True, ""
     except Exception as e:
+        request.dbsession.rollback()
         log.error(
             "Error {} while adding assistant {} in project {}".format(
                 str(e), assistant, project

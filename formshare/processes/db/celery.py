@@ -19,6 +19,7 @@ def cancel_task(request, user, task_id):
         request.dbsession.flush()
         return True, ""
     except Exception as e:
+        request.dbsession.rollback()
         return False, str(e)
 
 

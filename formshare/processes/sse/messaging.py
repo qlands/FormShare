@@ -31,6 +31,7 @@ def send_task_status_to_form(settings, task_id, status):
                 db_session.add(new_message)
                 db_session.flush()
             except Exception as e:
+                db_session.rollback()
                 log.error(
                     "Error {} while adding a new message to task {}".format(
                         str(e), task_id

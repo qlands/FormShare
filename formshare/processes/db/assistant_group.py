@@ -76,6 +76,7 @@ def delete_group(request, project, group):
         request.dbsession.flush()
         return True, ""
     except Exception as e:
+        request.dbsession.rollback()
         log.error(
             "Error {} while removing group {} from project {}".format(
                 str(e), group, project
@@ -109,6 +110,7 @@ def add_group(request, project, group_data):
             request.dbsession.flush()
             return True, ""
         except IntegrityError:
+            request.dbsession.rollback()
             log.error(
                 "The group code {} already exists in project {}".format(
                     group_id, project
@@ -116,6 +118,7 @@ def add_group(request, project, group_data):
             )
             return False, _("The group is already part of this project")
         except Exception as e:
+            request.dbsession.rollback()
             log.error(
                 "Error {} while adding group {} in project {}".format(
                     str(e), group_data["group_desc"], project
@@ -147,8 +150,10 @@ def modify_group(request, project, group, group_data):
             request.dbsession.flush()
             return True, ""
         except IntegrityError:
+            request.dbsession.rollback()
             return False, _("The group is already part of this project")
         except Exception as e:
+            request.dbsession.rollback()
             log.error(
                 "Error {} while editing collaborator {} in project {}".format(
                     str(e), group_data["group_desc"], project
@@ -174,6 +179,7 @@ def add_assistant_to_group(request, project, group, assistant_project, assistant
         request.dbsession.flush()
         return True, ""
     except IntegrityError:
+        request.dbsession.rollback()
         log.error(
             "The group member {} already exists in group {} of project {}".format(
                 assistant, group, project
@@ -181,6 +187,7 @@ def add_assistant_to_group(request, project, group, assistant_project, assistant
         )
         return False, _("The member is already part of this group")
     except Exception as e:
+        request.dbsession.rollback()
         log.error(
             "Error {} while adding member {} in group {} of project {}".format(
                 str(e), assistant, group, project
@@ -202,6 +209,7 @@ def remove_assistant_from_group(request, project, group, assistant_project, assi
         request.dbsession.flush()
         return True, ""
     except IntegrityError:
+        request.dbsession.rollback()
         log.error(
             "Cannot remove member {} from group {} of project {}".format(
                 assistant, group, project
@@ -209,6 +217,7 @@ def remove_assistant_from_group(request, project, group, assistant_project, assi
         )
         return False, _("Cannot remove the member")
     except Exception as e:
+        request.dbsession.rollback()
         log.error(
             "Error {} while removing member {} in group {} of project {}".format(
                 str(e), assistant, group, project

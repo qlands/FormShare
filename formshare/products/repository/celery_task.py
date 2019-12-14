@@ -160,6 +160,7 @@ def update_form(db_session, project, form, form_data):
         db_session.flush()
         return True, ""
     except Exception as e:
+        db_session.rollback()
         log.error(
             "Error {} while updating form {} in project {}".format(
                 str(e), project, form

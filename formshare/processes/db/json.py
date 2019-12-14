@@ -35,9 +35,11 @@ def add_json_log(
         request.dbsession.flush()
         return True, ""
     except IntegrityError as e:
+        request.dbsession.rollback()
         log.debug(str(e))
         return False, str(e)
     except Exception as e:
+        request.dbsession.rollback()
         log.debug(str(e))
         return False, str(e)
 
@@ -49,9 +51,11 @@ def update_json_status(request, project, form, submission, status):
         ).update({"status": status})
         request.dbsession.flush()
     except IntegrityError as e:
+        request.dbsession.rollback()
         log.debug(str(e))
         return False, str(e)
     except Exception as e:
+        request.dbsession.rollback()
         log.debug(str(e))
         return False, str(e)
 
@@ -84,8 +88,10 @@ def add_json_history(
         request.dbsession.flush()
         return True, ""
     except IntegrityError as e:
+        request.dbsession.rollback()
         log.debug(str(e))
         return False, str(e)
     except Exception as e:
+        request.dbsession.rollback()
         log.debug(str(e))
         return True, str(e)

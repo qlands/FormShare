@@ -19,12 +19,14 @@ def store_settings(request, key, value):
         request.dbsession.add(new_settings)
         request.dbsession.flush()
     except IntegrityError:
+        request.dbsession.rollback()
         log.error("Duplicated setting key {}".format(key))
         return (
             False,
             _("Error storing setting for key {}. Key already exits".format(key)),
         )
     except Exception as e:
+        request.dbsession.rollback()
         log.error("Error {} while while storing key {}".format(str(e), key))
         return False, str(e)
 

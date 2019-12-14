@@ -60,6 +60,7 @@ def add_product_instance(
         request.dbsession.flush()
         return True, ""
     except Exception as e:
+        request.dbsession.rollback()
         log.error("Error {} while adding product instance".format(str(e)))
         return False, str(e)
 
@@ -100,6 +101,7 @@ def delete_product(request, project, form, product, output):
                 request.dbsession.flush()
                 return True, ""
             except Exception as e:
+                request.dbsession.rollback()
                 log.error(
                     "Error {} while updating setting public access for product {} output ()".format(
                         str(e), product, output
@@ -243,6 +245,7 @@ def update_download_counter(request, project, form, product, output):
         )
         request.dbsession.flush()
     except Exception as e:
+        request.dbsession.rollback()
         log.error(
             "Error {} while updating product download counter for product {} output ()".format(
                 str(e), product, output
@@ -270,6 +273,7 @@ def set_output_public_state(request, project, form, product, output, public, by)
         )
         request.dbsession.flush()
     except Exception as e:
+        request.dbsession.rollback()
         log.error(
             "Error {} while updating setting public access for product {} output ()".format(
                 str(e), product, output

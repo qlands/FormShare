@@ -772,8 +772,10 @@ def add_new_form(request, form_data):
         request.dbsession.flush()
         return True, ""
     except IntegrityError as e:
+        request.dbsession.rollback()
         return False, str(e)
     except Exception as e:
+        request.dbsession.rollback()
         log.error("Error {} while adding a new form".format(str(e)))
         return False, str(e)
 
@@ -832,70 +834,73 @@ def update_form_directory(request, project, form, directory):
 def update_form(request, project, form, form_data):
     _ = request.translate
     mapped_data = map_to_schema(Odkform, form_data)
-    try:
-        blocked = (
-            request.dbsession.query(Odkform.form_blocked)
-            .filter(Odkform.project_id == project)
-            .filter(Odkform.form_id == form)
-            .one()
-        )
-        if blocked[0] == 0:
-            request.dbsession.query(Odkform).filter(
-                Odkform.project_id == project
-            ).filter(Odkform.form_id == form).update(mapped_data)
 
-            if "form_hexcolor" in form_data.keys():
-                this_form_schema = get_form_schema(request, project, form)
-                if this_form_schema is not None:
-                    if simple_form_has_subversion(
-                        request, project, form
-                    ) or form_has_parent(request, project, form):
-                        this_form_color = form_data["form_hexcolor"]
-                        update_form_color_by_database(
-                            request, this_form_schema, this_form_color
-                        )
+    blocked = (
+        request.dbsession.query(Odkform.form_blocked)
+        .filter(Odkform.project_id == project)
+        .filter(Odkform.form_id == form)
+        .one()
+    )
+    if blocked[0] == 0:
+        request.dbsession.query(Odkform).filter(
+            Odkform.project_id == project
+        ).filter(Odkform.form_id == form).update(mapped_data)
+
+        if "form_hexcolor" in form_data.keys():
+            this_form_schema = get_form_schema(request, project, form)
+            if this_form_schema is not None:
+                if simple_form_has_subversion(
+                    request, project, form
+                ) or form_has_parent(request, project, form):
+                    this_form_color = form_data["form_hexcolor"]
+                    update_form_color_by_database(
+                        request, this_form_schema, this_form_color
+                    )
+        try:
             request.dbsession.flush()
             return True, ""
-        else:
-            return False, _("This form is blocked and cannot be changed at the moment.")
-    except IntegrityError as e:
-        return False, str(e)
-    except Exception as e:
-        log.error(
-            "Error {} while updating form {} in project {}".format(
-                str(e), project, form
+        except IntegrityError as e:
+            request.dbsession.rollback()
+            return False, str(e)
+        except Exception as e:
+            request.dbsession.rollback()
+            log.error(
+                "Error {} while updating form {} in project {}".format(
+                    str(e), project, form
+                )
             )
-        )
-        return False, str(e)
+            return False, str(e)
+    else:
+        return False, _("This form is blocked and cannot be changed at the moment.")
 
 
 def delete_form(request, project, form):
     _ = request.translate
-    try:
-        blocked = (
-            request.dbsession.query(Odkform.form_blocked)
-            .filter(Odkform.project_id == project)
-            .filter(Odkform.form_id == form)
-            .one()
-        )
-        if blocked[0] == 0:
-            this_form_schema = get_form_schema(request, project, form)
-            if this_form_schema is not None:
-                if form_has_parent(request, project, form):
-                    deleted = delete_form_by_database(request, this_form_schema)
-                    return True, deleted, ""
-                else:
-                    form_directory = get_form_directory(request, project, form)
-                    request.dbsession.query(Odkform).filter(
-                        Odkform.project_id == project
-                    ).filter(Odkform.form_id == form).delete()
 
+    blocked = (
+        request.dbsession.query(Odkform.form_blocked)
+        .filter(Odkform.project_id == project)
+        .filter(Odkform.form_id == form)
+        .one()
+    )
+    if blocked[0] == 0:
+        this_form_schema = get_form_schema(request, project, form)
+        if this_form_schema is not None:
+            if form_has_parent(request, project, form):
+                deleted = delete_form_by_database(request, this_form_schema)
+                return True, deleted, ""
             else:
                 form_directory = get_form_directory(request, project, form)
                 request.dbsession.query(Odkform).filter(
                     Odkform.project_id == project
                 ).filter(Odkform.form_id == form).delete()
 
+        else:
+            form_directory = get_form_directory(request, project, form)
+            request.dbsession.query(Odkform).filter(
+                Odkform.project_id == project
+            ).filter(Odkform.form_id == form).delete()
+        try:
             request.dbsession.flush()
             return (
                 True,
@@ -908,45 +913,52 @@ def delete_form(request, project, form):
                 ],
                 "",
             )
-        else:
-            return False, _("This form is blocked and cannot be changed at the moment.")
-    except IntegrityError as e:
-        return False, [], str(e)
-    except Exception as e:
-        log.error(
-            "Error {} while deleting form {} in project {}".format(
-                str(e), project, form
+        except IntegrityError as e:
+            request.dbsession.rollback()
+            return False, [], str(e)
+        except Exception as e:
+            request.dbsession.rollback()
+            log.error(
+                "Error {} while deleting form {} in project {}".format(
+                    str(e), project, form
+                )
             )
-        )
-        return False, [], str(e)
+            return False, [], str(e)
+    else:
+        return False, _("This form is blocked and cannot be changed at the moment.")
+
 
 
 def set_form_status(request, project, form, status):
     _ = request.translate
-    try:
-        blocked = (
-            request.dbsession.query(Odkform.form_blocked)
-            .filter(Odkform.project_id == project)
-            .filter(Odkform.form_id == form)
-            .one()
-        )
-        if blocked[0] == 0:
-            request.dbsession.query(Odkform).filter(
-                Odkform.project_id == project
-            ).filter(Odkform.form_id == form).update({"form_accsub": status})
+
+    blocked = (
+        request.dbsession.query(Odkform.form_blocked)
+        .filter(Odkform.project_id == project)
+        .filter(Odkform.form_id == form)
+        .one()
+    )
+    if blocked[0] == 0:
+        request.dbsession.query(Odkform).filter(
+            Odkform.project_id == project
+        ).filter(Odkform.form_id == form).update({"form_accsub": status})
+        try:
             request.dbsession.flush()
             return True, ""
-        else:
-            return False, _("This form is blocked and cannot be changed at the moment.")
-    except IntegrityError as e:
-        return False, str(e)
-    except Exception as e:
-        log.error(
-            "Error {} while updating status of form {} in project {}".format(
-                str(e), project, form
+        except IntegrityError as e:
+            request.dbsession.rollback()
+            return False, str(e)
+        except Exception as e:
+            request.dbsession.rollback()
+            log.error(
+                "Error {} while updating status of form {} in project {}".format(
+                    str(e), project, form
+                )
             )
-        )
-        return False, str(e)
+            return False, str(e)
+    else:
+        return False, _("This form is blocked and cannot be changed at the moment.")
+
 
 
 def reset_form_repository(request, project, form):
@@ -957,8 +969,10 @@ def reset_form_repository(request, project, form):
         request.dbsession.flush()
         return True, ""
     except IntegrityError as e:
+        request.dbsession.rollback()
         return False, str(e)
     except Exception as e:
+        request.dbsession.rollback()
         log.error(
             "Error {} while resetting the repository form {} in project {}".format(
                 str(e), project, form
@@ -1010,8 +1024,8 @@ def add_file_to_form(request, project, form, file_name, overwrite=False, md5sum=
             try:
                 request.dbsession.add(new_file)
                 request.dbsession.flush()
-
             except Exception as e:
+                request.dbsession.rollback()
                 log.error(
                     "Error {} while adding file {} in "
                     "form {} of project {} ".format(str(e), file_name, form, project)
@@ -1032,6 +1046,7 @@ def add_file_to_form(request, project, form, file_name, overwrite=False, md5sum=
                     )
                     request.dbsession.flush()
                 except Exception as e:
+                    request.dbsession.rollback()
                     log.error(
                         "Error {} while adding file {} in form {} of project {} ".format(
                             str(e), file_name, form, project
@@ -1060,6 +1075,7 @@ def remove_file_from_form(request, project, form, file_name):
             ).delete()
             request.dbsession.flush()
         except Exception as e:
+            request.dbsession.rollback()
             log.error(
                 "Error {} while deleting file {} in form {} of project {} ".format(
                     str(e), file_name, form, project
@@ -1107,6 +1123,7 @@ def add_assistant_to_form(request, project, form, from_project, assistant, privi
             request.dbsession.flush()
             return True, ""
         except IntegrityError as e:
+            request.dbsession.rollback()
             log.error(
                 "Error {} while adding access to assistant {} of "
                 "project {} to form {} in project {}".format(
@@ -1115,6 +1132,7 @@ def add_assistant_to_form(request, project, form, from_project, assistant, privi
             )
             return False, "The assistant already exists in this form"
         except Exception as e:
+            request.dbsession.rollback()
             log.error(
                 "Error {} while adding access to assistant {} of "
                 "project {} to form {} in project {}".format(
@@ -1163,6 +1181,7 @@ def update_assistant_privileges(
             request.dbsession.flush()
             return True, ""
         except Exception as e:
+            request.dbsession.rollback()
             log.error(
                 "Error {} while updating access to assistant {} of "
                 "project {} to form {} in project {}".format(
@@ -1194,6 +1213,7 @@ def remove_assistant_from_form(request, project, form, from_project, assistant):
             request.dbsession.flush()
             return True, ""
         except Exception as e:
+            request.dbsession.rollback()
             log.error(
                 "Error {} while removing assistant {} of "
                 "project {} from form {} in project {}".format(
@@ -1227,12 +1247,14 @@ def add_group_to_form(request, project, form, group, privilege):
             request.dbsession.flush()
             return True, ""
         except IntegrityError as e:
+            request.dbsession.rollback()
             log.error(
                 "Error {} while adding access to group {} of "
                 "project {} to form {}".format(str(e), group, project, form)
             )
             return False, "The group already exists in this form"
         except Exception as e:
+            request.dbsession.rollback()
             log.error(
                 "Error {} while adding access to group {} of "
                 "project {} to form {}".format(str(e), group, project, form)
@@ -1277,6 +1299,7 @@ def update_group_privileges(request, project, form, group, privilege):
             request.dbsession.flush()
             return True, ""
         except Exception as e:
+            request.dbsession.rollback()
             log.error(
                 "Error {} while updating access to group {} of "
                 "to form {} in project {}".format(str(e), group, project, form)
@@ -1306,6 +1329,7 @@ def remove_group_from_form(request, project, form, group):
             request.dbsession.flush()
             return True, ""
         except Exception as e:
+            request.dbsession.rollback()
             log.error(
                 "Error {} while removing access to group {} of "
                 "to form {} in project {}".format(str(e), group, project, form)

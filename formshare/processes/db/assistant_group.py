@@ -91,7 +91,8 @@ def add_group(request, project, group_data):
     mapped_data = map_to_schema(Collgroup, group_data)
     group_id = str(uuid.uuid4())
     group_id = group_id[-12:]
-    mapped_data["group_id"] = group_id
+    if "group_id" not in mapped_data.keys():
+        mapped_data["group_id"] = group_id
     mapped_data["group_cdate"] = datetime.datetime.now()
     mapped_data["group_active"] = 1
     mapped_data["project_id"] = project

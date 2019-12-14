@@ -256,11 +256,7 @@ def get_active_project(request, user):
                     request.dbsession.flush()
                 except Exception as e:
                     request.dbsession.rollback()
-                    log.error(
-                        "Error {} while getting an active project".format(
-                            str(e)
-                        )
-                    )
+                    log.error("Error {} while getting an active project".format(str(e)))
 
                 res = (
                     request.dbsession.query(Project, Userproject)

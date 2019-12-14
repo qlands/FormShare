@@ -1,5 +1,7 @@
 import unittest
 import time
+import uuid
+import os
 
 """
 This testing module test all routes. It launch start the server and test all the routes and processes
@@ -20,6 +22,8 @@ class FunctionalTests(unittest.TestCase):
         self.testapp = TestApp(app)
         self.randonLogin = ""
         self.collaboratorLogin = ""
+        self.project = ""
+        self.path = os.path.dirname(os.path.abspath(__file__))
 
     def test_all(self):
         def test_root():
@@ -91,7 +95,10 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
 
-            random_login = "formshare"
+            random_login = str(uuid.uuid4())
+            random_login = random_login[-12:]
+
+            #  random_login = "formshare"
             self.randonLogin = random_login
 
             # Register succeed
@@ -190,7 +197,9 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
 
-            random_login = "collaborator"
+            random_login = str(uuid.uuid4())
+            random_login = random_login[-12:]
+            # random_login = "collaborator"
             self.collaboratorLogin = random_login
             # Add user succeed
             self.testapp.post(
@@ -327,6 +336,197 @@ class FunctionalTests(unittest.TestCase):
             )
 
         def test_projects():
+            # Add a project fails. The project id is empty
+            self.testapp.post(
+                "/user/{}/projects/add".format(self.randonLogin),
+                {"project_code": "", "project_abstract": ""},
+                status=200,
+            )
+            # Add a project fails. The project id is not valid
+            self.testapp.post(
+                "/user/{}/projects/add".format(self.randonLogin),
+                {"project_code": "some@test", "project_abstract": ""},
+                status=200,
+            )
+
+            # Add a project succeed.
+            self.testapp.post(
+                "/user/{}/projects/add".format(self.randonLogin),
+                {
+                    "project_code": "test001",
+                    "project_name": "Test project",
+                    "project_abstract": "",
+                },
+                status=302,
+            )
+
+            # Add a project fails. The project already exists
+            self.testapp.post(
+                "/user/{}/projects/add".format(self.randonLogin),
+                {
+                    "project_code": "test001",
+                    "project_name": "Test project",
+                    "project_abstract": "",
+                },
+                status=200,
+            )
+
+            # List the projects
+            self.testapp.get("/user/{}/projects".format(self.randonLogin), status=200)
+
+            # Gets the details of a project
+            self.testapp.get(
+                "/user/{}/project/{}".format(self.randonLogin, "test001"), status=200
+            )
+
+            self.project = "test001"
+
+            # Edit a project
+            self.testapp.post(
+                "/user/{}/project/{}/edit".format(self.randonLogin, "test001"),
+                {
+                    "project_code": "test001",
+                    "project_name": "Test project",
+                    "project_abstract": "",
+                },
+                status=302,
+            )
+
+            # Delete a project
+            self.testapp.post(
+                "/user/{}/project/{}/delete".format(self.randonLogin, "test001"),
+                status=302,
+            )
+
+            # Adds again a project.
+            self.testapp.post(
+                "/user/{}/projects/add".format(self.randonLogin),
+                {
+                    "project_code": "test001",
+                    "project_name": "Test project",
+                    "project_abstract": "",
+                },
+                status=302,
+            )
+
+            # Gets the QR of a project
+            self.testapp.get(
+                "/user/{}/project/{}/qr".format(self.randonLogin, "test001"), status=200
+            )
+
+            # Sets a project as active
+            self.testapp.post(
+                "/user/{}/project/{}/setactive".format(self.randonLogin, "test001"),
+                status=302,
+            )
+
+            # Uploads a file file
+            paths = ["resources", "test1.dat"]
+            resource_file = os.path.join(self.path, *paths)
+
+            self.testapp.post(
+                "/user/{}/project/{}/upload".format(self.randonLogin, "test001"),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+
+            # Uploads the same file reporting that already exists
+            self.testapp.post(
+                "/user/{}/project/{}/upload".format(self.randonLogin, "test001"),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+
+            # Overwrites the same file
+            self.testapp.post(
+                "/user/{}/project/{}/upload".format(self.randonLogin, "test001"),
+                {"overwrite": ""},
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+
+            # Returns a project file
+            self.testapp.get(
+                "/user/{}/project/{}/storage/{}".format(
+                    self.randonLogin, "test001", "test1.dat"
+                ),
+                status=200,
+            )
+
+            # Remove the project file
+            self.testapp.post(
+                "/user/{}/project/{}/uploads/{}/remove".format(
+                    self.randonLogin, "test001", "test1.dat"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+
+            # Gets the QR of a project
+            # TODO: This has to be done twice later on for project with GPS points with and without repository
+            self.testapp.get(
+                "/user/{}/project/{}/download/gpspoints".format(
+                    self.randonLogin, "test001"
+                ),
+                status=200,
+            )
+
+        def test_collaborators():
+            # Add a collaborator fails. Collaborator in empty
+            self.testapp.post(
+                "/user/{}/project/{}/collaborators".format(self.randonLogin, self.project),
+                {
+                    "add_collaborator": "",
+                },
+                status=200,
+            )
+
+            # Add a collaborator succeed
+            self.testapp.post(
+                "/user/{}/project/{}/collaborators".format(self.randonLogin, self.project),
+                {
+                    "add_collaborator": "",
+                    "collaborator": self.collaboratorLogin
+                },
+                status=302,
+            )
+
+            # Add a collaborator fails. Collaborator already exists
+            self.testapp.post(
+                "/user/{}/project/{}/collaborators".format(self.randonLogin, self.project),
+                {
+                    "add_collaborator": "",
+                    "collaborator": self.collaboratorLogin
+                },
+                status=200,
+            )
+
+            # Change the role of a collaborator
+            self.testapp.post(
+                "/user/{}/project/{}/collaborators".format(self.randonLogin, self.project),
+                {
+                    "change_role": "",
+                    "collaborator_id": self.collaboratorLogin,
+                    "role_collaborator": 2,
+                },
+                status=302,
+            )
+
+            # Get the collaborators
+            self.testapp.get(
+                "/user/{}/project/{}/collaborators".format(self.randonLogin, self.project),
+                status=200,
+            )
+
+            # Remove the collaborator
+            self.testapp.post(
+                "/user/{}/project/{}/collaborator/{}/remove".format(self.randonLogin, self.project, self.collaboratorLogin),
+                status=302,
+            )
+
+            # TODO: We need to test accept and declined collaboration
+
+        def test_assistants():
             pass
 
         test_root()
@@ -334,3 +534,5 @@ class FunctionalTests(unittest.TestCase):
         test_dashboard()
         test_profile()
         test_projects()
+        test_collaborators()
+        test_assistants()

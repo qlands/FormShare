@@ -826,6 +826,95 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
 
+        def test_forms():
+            # Uploads a form fails. PyXForm conversion fails
+            paths = ["resources", "forms", "form01.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "UploadError" in res.headers
+
+            # Uploads a form fails. Invalid ID
+            paths = ["resources", "forms", "form02.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "UploadError" in res.headers
+
+            # Uploads a form fails. Invalid field name
+            paths = ["resources", "forms", "form03.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "UploadError" in res.headers
+
+            # Uploads a form fails. Duplicated choices
+            paths = ["resources", "forms", "form04.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "UploadError" in res.headers
+
+            # Uploads a form fails. Duplicated variables
+            paths = ["resources", "forms", "form05.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "UploadError" in res.headers
+
+            # Uploads a form fails. Duplicated options
+            paths = ["resources", "forms", "form06.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "UploadError" in res.headers
+
+            # Upload a form fails. Too many selects
+            paths = ["resources", "forms", "form07.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "UploadError" in res.headers
+
+            # Upload a form a succeeds
+            paths = ["resources", "forms", "form08_OK.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "UploadError" not in res.headers
+
         test_root()
         test_login()
         test_dashboard()
@@ -834,3 +923,4 @@ class FunctionalTests(unittest.TestCase):
         test_collaborators()
         test_assistants()
         test_assistant_groups()
+        test_forms()

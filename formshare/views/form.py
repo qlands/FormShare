@@ -607,7 +607,7 @@ class AddNewForm(PrivateView):
                     )
                 self.add_error(self._("Unable to upload the form: ") + message)
                 res = HTTPFound(next_page)
-                res.headers['UploadError'] = "True"
+                res.headers["UploadError"] = "True"
                 return res
 
         else:
@@ -679,7 +679,9 @@ class UploadNewVersion(PrivateView):
                     formid=form_id,
                 )
                 self.add_error(self._("Unable to upload the form: ") + message)
-                return HTTPFound(next_page)
+                res = HTTPFound(next_page)
+                res.headers["UploadError"] = "True"
+                return res
 
         else:
             raise HTTPNotFound
@@ -1006,19 +1008,45 @@ class AddFileToForm(PrivateView):
             else:
                 overwrite = False
             for file in files:
-                file_name = file.filename
-                md5sum = md5(file.file.read()).hexdigest()
-                added, message = add_file_to_form(
-                    self.request, project_id, form_id, file_name, overwrite, md5sum
-                )
-                if added:
-                    file.file.seek(0)
-                    bucket_id = project_id + form_id
-                    bucket_id = md5(bucket_id.encode("utf-8")).hexdigest()
-                    store_file(self.request, bucket_id, file_name, file.file)
-                else:
+                try:
+                    file_name = file.filename
+                    if os.path.isabs(file_name):
+                        file_name = os.path.basename(file_name)
+                    md5sum = md5(file.file.read()).hexdigest()
+                    added, message = add_file_to_form(
+                        self.request, project_id, form_id, file_name, overwrite, md5sum
+                    )
+                    if added:
+                        file.file.seek(0)
+                        bucket_id = project_id + form_id
+                        bucket_id = md5(bucket_id.encode("utf-8")).hexdigest()
+                        store_file(self.request, bucket_id, file_name, file.file)
+                    else:
+                        error = True
+                        break
+                except Exception as e:
+                    log.error(
+                        "Error while uploading files into form {} of project {}. Error: {}".format(
+                            form_id, project_id, str(e)
+                        )
+                    )
                     error = True
-                    break
+                    if len(files) == 1:
+                        if files[0] == b"":
+                            message = self._("No files were attached")
+                        else:
+                            message = self._(
+                                "Error {} encountered. A log entry has been produced".format(
+                                    type(e).__name__
+                                )
+                            )
+
+                    else:
+                        message = self._(
+                            "Error {} encountered. A log entry has been produced".format(
+                                type(e).__name__
+                            )
+                        )
             if not error:
                 if len(files) == 1:
                     self.request.session.flash(

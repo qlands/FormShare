@@ -895,6 +895,8 @@ def update_odk_form(request, user_id, project_id, for_form_id, odk_dir, form_dat
     try:
         input_file = request.POST["xlsx"].file
         input_file_name = request.POST["xlsx"].filename.lower()
+        if os.path.isabs(input_file_name):
+            input_file_name = os.path.basename(input_file_name)
     except Exception as e:
         log.error("The post xlsx elements is empty. Error {}".format(str(e)))
         return False, _("No file was attached")

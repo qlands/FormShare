@@ -287,7 +287,8 @@ def add_project(request, user, project_data):
         .first()
     )
     if res is None:
-        project_data["project_id"] = str(uuid.uuid4())
+        if "project_id" not in project_data.keys():
+            project_data["project_id"] = str(uuid.uuid4())
         project_data["project_cdate"] = datetime.datetime.now()
 
         mapped_data = map_to_schema(Project, project_data)

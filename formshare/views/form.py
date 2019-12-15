@@ -606,7 +606,9 @@ class AddNewForm(PrivateView):
                         formid=form_data["parent_form"],
                     )
                 self.add_error(self._("Unable to upload the form: ") + message)
-                return HTTPFound(next_page)
+                res = HTTPFound(next_page)
+                res.headers['UploadError'] = "True"
+                return res
 
         else:
             raise HTTPNotFound

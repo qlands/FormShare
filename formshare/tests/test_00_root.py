@@ -443,7 +443,7 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
 
-            # Uploads a file file
+            # Uploads a file to the project
             paths = ["resources", "test1.dat"]
             resource_file = os.path.join(self.path, *paths)
 
@@ -560,7 +560,8 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
 
-            # TODO: We need to test accept and declined collaboration
+            # TODO: We need to test accept and declined collaboration.
+            #  This need to logout and login with the collaborator
 
         def test_assistants():
             # Add an assistant fail. The assistant in empty
@@ -821,7 +822,7 @@ class FunctionalTests(unittest.TestCase):
                     self.project,
                     self.assistantGroupID,
                     self.assistantLogin,
-                    self.projectID
+                    self.projectID,
                 ),
                 status=302,
             )
@@ -914,6 +915,276 @@ class FunctionalTests(unittest.TestCase):
                 upload_files=[("xlsx", resource_file)],
             )
             assert "UploadError" not in res.headers
+
+            # Upload a form fails. The form already exists
+            paths = ["resources", "forms", "form08_OK.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "UploadError" in res.headers
+
+            # Get the details of a form
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                status=200,
+            )
+
+            # Edit a project. Get details with a form
+            self.testapp.get(
+                "/user/{}/project/{}/edit".format(self.randonLogin, self.project),
+                status=200,
+            )
+
+            # Test access to the dashboard with a form
+            self.testapp.get("/user/{}".format(self.randonLogin), status=200)
+
+            # Access profile
+            self.testapp.get("/user/{}/profile".format(self.randonLogin), status=200)
+
+            # Update a form fails. The form is not the same
+            paths = ["resources", "forms", "form09.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "UploadError" in res.headers
+
+            # Update a form fails. PyXForm conversion fails
+            paths = ["resources", "forms", "form01.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "UploadError" in res.headers
+
+            # Update a form fails. Invalid ID
+            paths = ["resources", "forms", "form02.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "UploadError" in res.headers
+
+            # Update a form fails. Invalid field name
+            paths = ["resources", "forms", "form03.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "UploadError" in res.headers
+
+            # Update a form fails. Duplicated choices
+            paths = ["resources", "forms", "form04.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "UploadError" in res.headers
+
+            # Update a form fails. Duplicated variables
+            paths = ["resources", "forms", "form05.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "UploadError" in res.headers
+
+            # Update a form fails. Duplicated options
+            paths = ["resources", "forms", "form06.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "UploadError" in res.headers
+
+            # Update a form fails. Too many selects
+            paths = ["resources", "forms", "form07.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "UploadError" in res.headers
+
+            # Update a form a succeeds
+            paths = ["resources", "forms", "form08_OK.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "UploadError" not in res.headers
+
+            # Edit a form. Show details
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/edit".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                status=200,
+            )
+
+            # Edit a form.
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/edit".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                {"form_target": "100", "form_hexcolor": "#663f3c"},
+                status=302,
+            )
+            # TODO: We need to update a form when is a subversion
+
+            # Set form as active
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/activate".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                status=302,
+            )
+
+            # Delete the form
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/delete".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                status=302,
+            )
+            # TODO: Delete a form with our without schema. Delete when merged
+
+            # Upload the form again
+            paths = ["resources", "forms", "form08_OK.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "UploadError" not in res.headers
+
+            # TODO: Test form_sse
+            # TODO: Test stop_task
+            # TODO: Test stop_repository
+
+            # Set form as inactive
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/deactivate".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                status=302,
+            )
+
+            # TODO: Test import_data
+
+            # Uploads a file to the form
+            paths = ["resources", "test1.dat"]
+            resource_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, "test001", "Justtest"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+
+            # Uploads the same file to the form
+            paths = ["resources", "test1.dat"]
+            resource_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, "test001", "Justtest"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+
+            # Overwrites the same file to the form
+            paths = ["resources", "test1.dat"]
+            resource_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, "test001", "Justtest"
+                ),
+                {"overwrite": ""},
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+
+            # Removes a file from a form
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/uploads/{}/remove".format(
+                    self.randonLogin, "test001", "Justtest", "test1.dat"
+                ),
+                status=302,
+            )
+
+            # Uploads the file again
+            paths = ["resources", "test1.dat"]
+            resource_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, "test001", "Justtest"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+
+            # Gets the file
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/uploads/{}/retrieve".format(
+                    self.randonLogin, "test001", "Justtest", "test1.dat"
+                ),
+                status=200,
+            )
+            
 
         test_root()
         test_login()

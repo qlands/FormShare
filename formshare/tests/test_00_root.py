@@ -23,6 +23,9 @@ class FunctionalTests(unittest.TestCase):
         self.randonLogin = ""
         self.collaboratorLogin = ""
         self.project = ""
+        self.projectID = ""
+        self.assistantLogin = ""
+        self.assistantGroupID = ""
         self.path = os.path.dirname(os.path.abspath(__file__))
 
     def test_all(self):
@@ -271,6 +274,11 @@ class FunctionalTests(unittest.TestCase):
             # Access profile
             self.testapp.get("/user/{}/profile".format(self.randonLogin), status=200)
 
+            # Access profile in edit mode
+            self.testapp.get(
+                "/user/{}/profile/edit".format(self.randonLogin), status=200
+            )
+
             # Edit profile fails. Name is empty
             self.testapp.post(
                 "/user/{}/profile/edit".format(self.randonLogin),
@@ -371,6 +379,19 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
 
+            # Edit a project. Get details
+            self.testapp.get(
+                "/user/{}/project/{}/edit".format(self.randonLogin, "test001"),
+                status=200,
+            )
+
+            # Edit a project fails.
+            self.testapp.post(
+                "/user/{}/project/{}/edit".format(self.randonLogin, "test001"),
+                {"project_code": "test001", "project_abstract": ""},
+                status=302,
+            )
+
             # List the projects
             self.testapp.get("/user/{}/projects".format(self.randonLogin), status=200)
 
@@ -378,8 +399,6 @@ class FunctionalTests(unittest.TestCase):
             self.testapp.get(
                 "/user/{}/project/{}".format(self.randonLogin, "test001"), status=200
             )
-
-            self.project = "test001"
 
             # Edit a project
             self.testapp.post(
@@ -398,10 +417,14 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
 
+            self.project = "test001"
+            self.projectID = str(uuid.uuid4())
+
             # Adds again a project.
             self.testapp.post(
                 "/user/{}/projects/add".format(self.randonLogin),
                 {
+                    "project_id": self.projectID,
                     "project_code": "test001",
                     "project_name": "Test project",
                     "project_abstract": "",
@@ -474,36 +497,36 @@ class FunctionalTests(unittest.TestCase):
         def test_collaborators():
             # Add a collaborator fails. Collaborator in empty
             self.testapp.post(
-                "/user/{}/project/{}/collaborators".format(self.randonLogin, self.project),
-                {
-                    "add_collaborator": "",
-                },
+                "/user/{}/project/{}/collaborators".format(
+                    self.randonLogin, self.project
+                ),
+                {"add_collaborator": ""},
                 status=200,
             )
 
             # Add a collaborator succeed
             self.testapp.post(
-                "/user/{}/project/{}/collaborators".format(self.randonLogin, self.project),
-                {
-                    "add_collaborator": "",
-                    "collaborator": self.collaboratorLogin
-                },
+                "/user/{}/project/{}/collaborators".format(
+                    self.randonLogin, self.project
+                ),
+                {"add_collaborator": "", "collaborator": self.collaboratorLogin},
                 status=302,
             )
 
             # Add a collaborator fails. Collaborator already exists
             self.testapp.post(
-                "/user/{}/project/{}/collaborators".format(self.randonLogin, self.project),
-                {
-                    "add_collaborator": "",
-                    "collaborator": self.collaboratorLogin
-                },
+                "/user/{}/project/{}/collaborators".format(
+                    self.randonLogin, self.project
+                ),
+                {"add_collaborator": "", "collaborator": self.collaboratorLogin},
                 status=200,
             )
 
             # Change the role of a collaborator
             self.testapp.post(
-                "/user/{}/project/{}/collaborators".format(self.randonLogin, self.project),
+                "/user/{}/project/{}/collaborators".format(
+                    self.randonLogin, self.project
+                ),
                 {
                     "change_role": "",
                     "collaborator_id": self.collaboratorLogin,
@@ -514,20 +537,294 @@ class FunctionalTests(unittest.TestCase):
 
             # Get the collaborators
             self.testapp.get(
-                "/user/{}/project/{}/collaborators".format(self.randonLogin, self.project),
+                "/user/{}/project/{}/collaborators".format(
+                    self.randonLogin, self.project
+                ),
                 status=200,
             )
 
             # Remove the collaborator
             self.testapp.post(
-                "/user/{}/project/{}/collaborator/{}/remove".format(self.randonLogin, self.project, self.collaboratorLogin),
+                "/user/{}/project/{}/collaborator/{}/remove".format(
+                    self.randonLogin, self.project, self.collaboratorLogin
+                ),
+                status=302,
+            )
+
+            # Add a collaborator again to be used later on
+            self.testapp.post(
+                "/user/{}/project/{}/collaborators".format(
+                    self.randonLogin, self.project
+                ),
+                {"add_collaborator": "", "collaborator": self.collaboratorLogin},
                 status=302,
             )
 
             # TODO: We need to test accept and declined collaboration
 
         def test_assistants():
-            pass
+            # Add an assistant fail. The assistant in empty
+            self.testapp.post(
+                "/user/{}/project/{}/assistants/add".format(
+                    self.randonLogin, self.project
+                ),
+                {"coll_id": ""},
+                status=200,
+            )
+
+            # Add an assistant fail. The assistant is invalid
+            self.testapp.post(
+                "/user/{}/project/{}/assistants/add".format(
+                    self.randonLogin, self.project
+                ),
+                {"coll_id": "some@test"},
+                status=200,
+            )
+
+            # Add an assistant fail. The passwords are not the same
+            self.testapp.post(
+                "/user/{}/project/{}/assistants/add".format(
+                    self.randonLogin, self.project
+                ),
+                {
+                    "coll_id": "assistant001",
+                    "coll_password": "123",
+                    "coll_password2": "321",
+                },
+                status=200,
+            )
+
+            # Add an assistant fail. The passwords are empty
+            self.testapp.post(
+                "/user/{}/project/{}/assistants/add".format(
+                    self.randonLogin, self.project
+                ),
+                {"coll_id": "assistant001", "coll_password": "", "coll_password2": ""},
+                status=200,
+            )
+
+            # Add an assistant succeed
+            self.assistantLogin = "assistant001"
+
+            self.testapp.post(
+                "/user/{}/project/{}/assistants/add".format(
+                    self.randonLogin, self.project
+                ),
+                {
+                    "coll_id": "assistant001",
+                    "coll_password": "123",
+                    "coll_password2": "123",
+                    "coll_prjshare": 1,
+                },
+                status=302,
+            )
+
+            # Add an assistant fail. The assistant already exists
+            self.testapp.post(
+                "/user/{}/project/{}/assistants/add".format(
+                    self.randonLogin, self.project
+                ),
+                {
+                    "coll_id": "assistant001",
+                    "coll_password": "123",
+                    "coll_password2": "123",
+                    "coll_prjshare": 1,
+                },
+                status=200,
+            )
+
+            # Get the assistants
+            self.testapp.get(
+                "/user/{}/project/{}/assistants".format(self.randonLogin, self.project),
+                status=200,
+            )
+
+            # Get the details of an assistant in edit mode
+            self.testapp.get(
+                "/user/{}/project/{}/assistant/{}/edit".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                status=200,
+            )
+
+            # Edit an assistant
+            self.testapp.post(
+                "/user/{}/project/{}/assistant/{}/edit".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                {"coll_active": "1", "coll_id": self.assistantLogin},
+                status=302,
+            )
+
+            # Change assistant password fails. Password is empty
+            self.testapp.post(
+                "/user/{}/project/{}/assistant/{}/change".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                {"coll_password": ""},
+                status=302,
+            )
+
+            # Change assistant password fails. Passwords are not the same
+            self.testapp.post(
+                "/user/{}/project/{}/assistant/{}/change".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                {"coll_password": "123", "coll_password2": "321"},
+                status=302,
+            )
+
+            # Change assistant succeeds
+            self.testapp.post(
+                "/user/{}/project/{}/assistant/{}/change".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                {"coll_password": "123", "coll_password2": "123"},
+                status=302,
+            )
+
+            # Delete the assistant
+            self.testapp.post(
+                "/user/{}/project/{}/assistant/{}/delete".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                status=302,
+            )
+
+            # Add the assistant again
+            self.testapp.post(
+                "/user/{}/project/{}/assistants/add".format(
+                    self.randonLogin, self.project
+                ),
+                {
+                    "coll_id": "assistant001",
+                    "coll_password": "123",
+                    "coll_password2": "123",
+                    "coll_prjshare": 1,
+                },
+                status=302,
+            )
+
+        def test_assistant_groups():
+            # Add an assistant group fail. The description is empty
+            self.testapp.post(
+                "/user/{}/project/{}/groups/add".format(self.randonLogin, self.project),
+                {"group_desc": ""},
+                status=200,
+            )
+
+            # Add an assistant group succeeds
+            self.testapp.post(
+                "/user/{}/project/{}/groups/add".format(self.randonLogin, self.project),
+                {"group_desc": "Test if a group"},
+                status=302,
+            )
+
+            # Add an assistant group fails. Group name already exists
+            self.testapp.post(
+                "/user/{}/project/{}/groups/add".format(self.randonLogin, self.project),
+                {"group_desc": "Test if a group"},
+                status=200,
+            )
+
+            # Add an assistant group with code succeeds
+            self.testapp.post(
+                "/user/{}/project/{}/groups/add".format(self.randonLogin, self.project),
+                {"group_desc": "Test if a group 2", "group_id": "grp001"},
+                status=302,
+            )
+            self.assistantGroupID = "grp001"
+
+            # Get the assistant groups
+            self.testapp.get(
+                "/user/{}/project/{}/groups".format(self.randonLogin, self.project),
+                status=200,
+            )
+
+            # Get the assistant groups in edit mode
+            self.testapp.get(
+                "/user/{}/project/{}/group/{}/edit".format(
+                    self.randonLogin, self.project, self.assistantGroupID
+                ),
+                status=200,
+            )
+
+            # Edit the assistant group fails. The name already exists
+            self.testapp.post(
+                "/user/{}/project/{}/group/{}/edit".format(
+                    self.randonLogin, self.project, self.assistantGroupID
+                ),
+                {"group_desc": "Test if a group", "group_active": "1"},
+                status=200,
+            )
+
+            # Edit the assistant group succeeds
+            self.testapp.post(
+                "/user/{}/project/{}/group/{}/edit".format(
+                    self.randonLogin, self.project, self.assistantGroupID
+                ),
+                {"group_desc": "Test if a group 3", "group_active": "1"},
+                status=302,
+            )
+
+            # Add a member to a group fails. No assistant
+            self.testapp.post(
+                "/user/{}/project/{}/group/{}/members".format(
+                    self.randonLogin, self.project, self.assistantGroupID
+                ),
+                {"add_assistant": ""},
+                status=302,
+            )
+
+            # Add a member to a group fails. Assistant is empty
+            self.testapp.post(
+                "/user/{}/project/{}/group/{}/members".format(
+                    self.randonLogin, self.project, self.assistantGroupID
+                ),
+                {"add_assistant": "", "coll_id": ""},
+                status=302,
+            )
+
+            # Add a member to a group fails. Collaborator does not exists
+            self.testapp.post(
+                "/user/{}/project/{}/group/{}/members".format(
+                    self.randonLogin, self.project, self.assistantGroupID
+                ),
+                {"add_assistant": "", "coll_id": "{}|hello2".format(self.projectID)},
+                status=302,
+            )
+
+            # Add a member to a group succeeds
+            self.testapp.post(
+                "/user/{}/project/{}/group/{}/members".format(
+                    self.randonLogin, self.project, self.assistantGroupID
+                ),
+                {
+                    "add_assistant": "",
+                    "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
+                },
+                status=302,
+            )
+
+            # List members
+            self.testapp.get(
+                "/user/{}/project/{}/group/{}/members".format(
+                    self.randonLogin, self.project, self.assistantGroupID
+                ),
+                status=200,
+            )
+
+            # Remove a member
+            self.testapp.post(
+                "/user/{}/project/{}/group/{}/member/{}/of/{}/remove".format(
+                    self.randonLogin,
+                    self.project,
+                    self.assistantGroupID,
+                    self.assistantLogin,
+                    self.projectID
+                ),
+                status=302,
+            )
 
         test_root()
         test_login()
@@ -536,3 +833,4 @@ class FunctionalTests(unittest.TestCase):
         test_projects()
         test_collaborators()
         test_assistants()
+        test_assistant_groups()

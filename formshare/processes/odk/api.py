@@ -319,6 +319,7 @@ def check_jxform_file(
         if p.returncode == 19:
             log.error(
                 ". Error: "
+                + str(p.returncode)
                 + "-"
                 + stderr.decode()
                 + " while checking PyXForm. Command line: "
@@ -368,6 +369,7 @@ def check_jxform_file(
         if p.returncode == 20:
             log.error(
                 ". Error: "
+                + str(p.returncode)
                 + "-"
                 + stderr.decode()
                 + " while checking PyXForm. Command line: "
@@ -392,6 +394,7 @@ def check_jxform_file(
         if p.returncode == 21:
             log.error(
                 ". Error: "
+                + str(p.returncode)
                 + "-"
                 + stderr.decode()
                 + " while checking PyXForm. Command line: "
@@ -430,6 +433,7 @@ def check_jxform_file(
         if p.returncode == 18:
             log.error(
                 ". Error: "
+                + str(p.returncode)
                 + "-"
                 + stderr.decode()
                 + " while checking PyXForm. Command line: "
@@ -464,6 +468,7 @@ def check_jxform_file(
         if p.returncode == 9:
             log.error(
                 ". Error: "
+                + str(p.returncode)
                 + "-"
                 + stderr.decode()
                 + " while checking PyXForm. Command line: "
@@ -495,33 +500,11 @@ def check_jxform_file(
                         + "\n"
                     )
             return 9, message
-        if p.returncode == 16:
-            log.error(
-                ". Error: "
-                + "-"
-                + stderr.decode()
-                + " while checking PyXForm. Command line: "
-                + " ".join(args)
-            )
-            message = (
-                _("FormShare checks a little bit more your ODK for inconsistencies.")
-                + "\n"
-            )
-            message = (
-                message
-                + _(
-                    "The ODK you just submitted has a search statement in the appearance "
-                    "column with a syntax that is not recognized by FormShare. Please "
-                    "go to {} an raise an issue so the technical team can inspect your ODK and "
-                    "find a solution."
-                ).format("https://github.com/qlands/FormShare")
-                + "\n"
-            )
-            return 9, message
 
         if p.returncode == 2:
             log.error(
                 ". Error: "
+                + str(p.returncode)
                 + "-"
                 + stderr.decode()
                 + " while checking PyXForm. Command line: "
@@ -619,6 +602,8 @@ def upload_odk_form(
     try:
         input_file = request.POST["xlsx"].file
         input_file_name = request.POST["xlsx"].filename.lower()
+        if os.path.isabs(input_file_name):
+            input_file_name = os.path.basename(input_file_name)
     except Exception as e:
         log.error("The post xlsx elements is empty. Error {}".format(str(e)))
         return False, _("No file was attached")

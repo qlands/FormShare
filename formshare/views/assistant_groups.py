@@ -202,7 +202,7 @@ class DeleteGroup(PrivateView):
                 self.request.session.flash(
                     self._("Unable to delete the group: ") + message
                 )
-                return HTTPFound(next_page)
+                return HTTPFound(next_page, headers={'FS_error': "true"})
 
         else:
             raise HTTPNotFound
@@ -264,13 +264,13 @@ class GroupMembersView(PrivateView):
                             return HTTPFound(next_page)
                         else:
                             self.add_error(message)
-                            return HTTPFound(next_page)
+                            return HTTPFound(next_page, headers={'FS_error': "true"})
                     else:
                         self.add_error(self._("You need to specify an assistant"))
-                        return HTTPFound(next_page)
+                        return HTTPFound(next_page, headers={'FS_error': "true"})
                 else:
                     self.add_error(self._("You need to specify an assistant"))
-                    return HTTPFound(next_page)
+                    return HTTPFound(next_page, headers={'FS_error': "true"})
         return {
             "groupData": group_data,
             "members": members,
@@ -323,7 +323,7 @@ class RemoveMember(PrivateView):
                 self.request.session.flash(
                     self._("Unable to delete the group: ") + message
                 )
-                return HTTPFound(next_page)
+                return HTTPFound(next_page, headers={'FS_error': "true"})
 
         else:
             raise HTTPNotFound

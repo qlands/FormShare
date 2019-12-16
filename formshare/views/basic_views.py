@@ -87,7 +87,7 @@ class LoginView(PublicView):
                         return HTTPFound(
                             location=self.request.route_url(
                                 "dashboard", userid=current_user.login
-                            )
+                            ), headers={'FS_error': "true"}
                         )
         else:
             if (

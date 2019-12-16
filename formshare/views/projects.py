@@ -368,7 +368,7 @@ class ActivateProjectView(ProjectsView):
                 return HTTPFound(location=next_page)
             else:
                 self.add_error(self._("Error activating project: ") + message)
-                return HTTPFound(location=next_page)
+                return HTTPFound(location=next_page, headers={'FS_error': "true"})
         else:
             raise HTTPNotFound
 
@@ -425,7 +425,7 @@ class DeleteProjectView(ProjectsView):
                 return HTTPFound(location=next_page)
             else:
                 self.add_error(self._("Unable to delete the project: ") + message)
-                return HTTPFound(location=next_page)
+                return HTTPFound(location=next_page, headers={'FS_error': "true"})
         else:
             raise HTTPNotFound
 
@@ -524,7 +524,7 @@ class AddFileToProject(ProjectsView):
                 next_page = self.request.route_url(
                     "project_details", userid=user_id, projcode=project_code
                 )
-                return HTTPFound(location=next_page)
+                return HTTPFound(location=next_page, headers={'FS_error': "true"})
         else:
             raise HTTPNotFound
 
@@ -567,13 +567,13 @@ class RemoveFileFromProject(ProjectsView):
             if removed:
                 delete_stream(self.request, project_id, file_name)
                 self.request.session.flash(self._("The files was removed successfully"))
+                return HTTPFound(location=next_page)
             else:
                 self.add_error(message)
                 next_page = self.request.route_url(
                     "project_details", userid=user_id, projcode=project_code
                 )
-                return HTTPFound(location=next_page)
-            return HTTPFound(location=next_page)
+                return HTTPFound(location=next_page, headers={'FS_error': "true"})
         else:
             raise HTTPNotFound
 

@@ -332,15 +332,6 @@ class DeleteProduct(PrivateView):
                 deleted, message = delete_product(
                     self.request, project_id, form_id, product_id, output_id
                 )
-                if deleted:
-                    self.request.session.flash(
-                        self._("The product was deleted successfully")
-                    )
-                else:
-                    self.request.session.flash(
-                        self._("Unable to delete the product") + "|error"
-                    )
-
                 next_page = self.request.route_url(
                     "form_details",
                     userid=user_id,
@@ -348,7 +339,16 @@ class DeleteProduct(PrivateView):
                     formid=form_id,
                     _query={"tab": "task", "product": product_id},
                 )
-                return HTTPFound(location=next_page)
+                if deleted:
+                    self.request.session.flash(
+                        self._("The product was deleted successfully")
+                    )
+                    return HTTPFound(location=next_page)
+                else:
+                    self.request.session.flash(
+                        self._("Unable to delete the product") + "|error"
+                    )
+                    return HTTPFound(location=next_page, headers={'FS_error': "true"})
             else:
                 raise HTTPNotFound
         else:

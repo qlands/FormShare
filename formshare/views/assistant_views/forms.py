@@ -96,18 +96,18 @@ class ChangeMyAssistantPassword(AssistantView):
                             self.add_error(
                                 self._("Unable to change the password: ") + message
                             )
-                            return HTTPFound(next_page)
+                            return HTTPFound(next_page, headers={'FS_error': "true"})
                     else:
                         self.add_error(self._("The old password is not correct"))
-                        return HTTPFound(next_page)
+                        return HTTPFound(next_page, headers={'FS_error': "true"})
                 else:
                     self.add_error(
                         self._("The password and its confirmation are not the same")
                     )
-                    return HTTPFound(next_page)
+                    return HTTPFound(next_page, headers={'FS_error': "true"})
             else:
                 self.add_error(self._("The password cannot be empty"))
-                return HTTPFound(next_page)
+                return HTTPFound(next_page, headers={'FS_error': "true"})
 
         else:
             raise HTTPNotFound
@@ -137,7 +137,7 @@ class ChangeMyAPIKey(AssistantView):
                 return HTTPFound(next_page)
             else:
                 self.add_error(self._("Unable to change the password: ") + message)
-                return HTTPFound(next_page)
+                return HTTPFound(next_page, headers={'FS_error': "true"})
         else:
             raise HTTPNotFound
 

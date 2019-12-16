@@ -348,7 +348,7 @@ class DeleteProduct(PrivateView):
                     self.request.session.flash(
                         self._("Unable to delete the product") + "|error"
                     )
-                    return HTTPFound(location=next_page, headers={'FS_error': "true"})
+                    return HTTPFound(location=next_page, headers={"FS_error": "true"})
             else:
                 raise HTTPNotFound
         else:

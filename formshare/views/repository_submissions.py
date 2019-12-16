@@ -386,7 +386,8 @@ class DeleteAllSubmissions(PrivateView):
                                 userid=project_details["owner"],
                                 projcode=project_code,
                                 formid=form_id,
-                            ), headers={'FS_error': "true"}
+                            ),
+                            headers={"FS_error": "true"},
                         )
                 else:
                     self.add_error(self._("The email is not correct"))
@@ -396,7 +397,8 @@ class DeleteAllSubmissions(PrivateView):
                             userid=project_details["owner"],
                             projcode=project_code,
                             formid=form_id,
-                        ), headers={'FS_error': "true"}
+                        ),
+                        headers={"FS_error": "true"},
                     )
             else:
                 self.add_error(self._("You need to enter your email"))
@@ -406,7 +408,8 @@ class DeleteAllSubmissions(PrivateView):
                         userid=project_details["owner"],
                         projcode=project_code,
                         formid=form_id,
-                    ), headers={'FS_error': "true"}
+                    ),
+                    headers={"FS_error": "true"},
                 )
 
         else:

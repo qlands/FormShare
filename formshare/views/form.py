@@ -606,7 +606,7 @@ class AddNewForm(PrivateView):
                         formid=form_data["parent_form"],
                     )
                 self.add_error(self._("Unable to upload the form: ") + message)
-                return HTTPFound(next_page, headers={'FS_error': "true"})
+                return HTTPFound(next_page, headers={"FS_error": "true"})
 
         else:
             raise HTTPNotFound
@@ -677,7 +677,7 @@ class UploadNewVersion(PrivateView):
                     formid=form_id,
                 )
                 self.add_error(self._("Unable to upload the form: ") + message)
-                return HTTPFound(next_page, headers={'FS_error': "true"})
+                return HTTPFound(next_page, headers={"FS_error": "true"})
 
         else:
             raise HTTPNotFound
@@ -841,11 +841,11 @@ class DeleteForm(PrivateView):
                     else:
                         self.returnRawViewResult = True
                         self.add_error(message)
-                        return HTTPFound(next_page, headers={'FS_error': "true"})
+                        return HTTPFound(next_page, headers={"FS_error": "true"})
                 else:
                     self.returnRawViewResult = True
                     self.add_error(message)
-                    return HTTPFound(next_page, headers={'FS_error': "true"})
+                    return HTTPFound(next_page, headers={"FS_error": "true"})
             else:
                 raise HTTPNotFound
         else:
@@ -900,7 +900,7 @@ class ActivateForm(PrivateView):
             else:
                 self.returnRawViewResult = True
                 self.add_error(message)
-                return HTTPFound(next_page, headers={'FS_error': "true"})
+                return HTTPFound(next_page, headers={"FS_error": "true"})
         else:
             raise HTTPNotFound
 
@@ -953,7 +953,7 @@ class DeActivateForm(PrivateView):
             else:
                 self.returnRawViewResult = True
                 self.add_error(message)
-                return HTTPFound(next_page, headers={'FS_error': "true"})
+                return HTTPFound(next_page, headers={"FS_error": "true"})
         else:
             raise HTTPNotFound
 
@@ -1061,7 +1061,7 @@ class AddFileToForm(PrivateView):
                     projcode=project_code,
                     formid=form_id,
                 )
-                return HTTPFound(location=next_page, headers={'FS_error': "true"})
+                return HTTPFound(location=next_page, headers={"FS_error": "true"})
 
         else:
             raise HTTPNotFound
@@ -1121,7 +1121,7 @@ class RemoveFileFromForm(PrivateView):
                     projcode=project_code,
                     formid=form_id,
                 )
-                return HTTPFound(location=next_page, headers={'FS_error': "true"})
+                return HTTPFound(location=next_page, headers={"FS_error": "true"})
         else:
             raise HTTPNotFound
 
@@ -1230,7 +1230,9 @@ class AddAssistant(PrivateView):
                             projcode=project_code,
                             formid=form_id,
                         )
-                        return HTTPFound(location=next_page, headers={'FS_error': "true"})
+                        return HTTPFound(
+                            location=next_page, headers={"FS_error": "true"}
+                        )
 
                 else:
                     self.add_error("Error in submitted assistant")
@@ -1240,7 +1242,7 @@ class AddAssistant(PrivateView):
                         projcode=project_code,
                         formid=form_id,
                     )
-                    return HTTPFound(location=next_page, headers={'FS_error': "true"})
+                    return HTTPFound(location=next_page, headers={"FS_error": "true"})
             else:
                 self.add_error("The assistant cannot be empty")
                 next_page = self.request.route_url(
@@ -1249,7 +1251,7 @@ class AddAssistant(PrivateView):
                     projcode=project_code,
                     formid=form_id,
                 )
-                return HTTPFound(location=next_page, headers={'FS_error': "true"})
+                return HTTPFound(location=next_page, headers={"FS_error": "true"})
 
         else:
             raise HTTPNotFound
@@ -1316,7 +1318,7 @@ class EditAssistant(PrivateView):
                     projcode=project_code,
                     formid=form_id,
                 )
-                return HTTPFound(location=next_page, headers={'FS_error': "true"})
+                return HTTPFound(location=next_page, headers={"FS_error": "true"})
         else:
             raise HTTPNotFound
 
@@ -1377,7 +1379,7 @@ class RemoveAssistant(PrivateView):
                     projcode=project_code,
                     formid=form_id,
                 )
-                return HTTPFound(location=next_page, headers={'FS_error': "true"})
+                return HTTPFound(location=next_page, headers={"FS_error": "true"})
         else:
             raise HTTPNotFound
 
@@ -1444,7 +1446,9 @@ class AddGroupToForm(PrivateView):
                             projcode=project_code,
                             formid=form_id,
                         )
-                        return HTTPFound(location=next_page, headers={'FS_error': "true"})
+                        return HTTPFound(
+                            location=next_page, headers={"FS_error": "true"}
+                        )
                 else:
                     self.add_error("The group cannot be empty")
                     next_page = self.request.route_url(
@@ -1453,7 +1457,7 @@ class AddGroupToForm(PrivateView):
                         projcode=project_code,
                         formid=form_id,
                     )
-                    return HTTPFound(location=next_page, headers={'FS_error': "true"})
+                    return HTTPFound(location=next_page, headers={"FS_error": "true"})
             else:
                 self.add_error("The group cannot be empty")
                 next_page = self.request.route_url(
@@ -1462,7 +1466,7 @@ class AddGroupToForm(PrivateView):
                     projcode=project_code,
                     formid=form_id,
                 )
-                return HTTPFound(location=next_page, headers={'FS_error': "true"})
+                return HTTPFound(location=next_page, headers={"FS_error": "true"})
 
         else:
             raise HTTPNotFound
@@ -1523,7 +1527,7 @@ class EditFormGroup(PrivateView):
                     projcode=project_code,
                     formid=form_id,
                 )
-                return HTTPFound(location=next_page, headers={'FS_error': "true"})
+                return HTTPFound(location=next_page, headers={"FS_error": "true"})
         else:
             raise HTTPNotFound
 
@@ -1581,7 +1585,7 @@ class RemoveGroupForm(PrivateView):
                     projcode=project_code,
                     formid=form_id,
                 )
-                return HTTPFound(location=next_page, headers={'FS_error': "true"})
+                return HTTPFound(location=next_page, headers={"FS_error": "true"})
         else:
             raise HTTPNotFound
 
@@ -1629,7 +1633,7 @@ class DownloadCSVData(PrivateView):
             next_page = self.request.params.get("next") or self.request.route_url(
                 "form_details", userid=user_id, projcode=project_code, formid=form_id
             )
-            return HTTPFound(location=next_page, headers={'FS_error': "true"})
+            return HTTPFound(location=next_page, headers={"FS_error": "true"})
 
 
 class DownloadPublicXLSData(PrivateView):
@@ -1831,7 +1835,7 @@ class DownloadSubmissionFiles(PrivateView):
                     projcode=project_code,
                     formid=form_id,
                 )
-                return HTTPFound(location=next_page, headers={'FS_error': "true"})
+                return HTTPFound(location=next_page, headers={"FS_error": "true"})
         else:
             odk_dir = get_odk_path(self.request)
             generate_media_zip_file(
@@ -2180,7 +2184,7 @@ class StopTask(PrivateView):
                         self._("FormShare was not able to stop the process") + "|error"
                     )
                     self.returnRawViewResult = True
-                    return HTTPFound(next_page, headers={'FS_error': "true"})
+                    return HTTPFound(next_page, headers={"FS_error": "true"})
             else:
                 raise HTTPNotFound
         else:
@@ -2249,7 +2253,7 @@ class StopRepository(PrivateView):
                         self._("FormShare was not able to stop the process") + "|error"
                     )
                     self.returnRawViewResult = True
-                    return HTTPFound(next_page, headers={'FS_error': "true"})
+                    return HTTPFound(next_page, headers={"FS_error": "true"})
             else:
                 raise HTTPNotFound
         else:
@@ -2318,7 +2322,7 @@ class StopMerge(PrivateView):
                         self._("FormShare was not able to stop the process") + "|error"
                     )
                     self.returnRawViewResult = True
-                    return HTTPFound(next_page, headers={'FS_error': "true"})
+                    return HTTPFound(next_page, headers={"FS_error": "true"})
             else:
                 raise HTTPNotFound
         else:

@@ -204,7 +204,7 @@ class RepositoryMergeForm(PrivateView):
                     )
 
                     self.returnRawViewResult = True
-                    return HTTPFound(self.request.url, headers={'FS_error': "true"})
+                    return HTTPFound(self.request.url, headers={"FS_error": "true"})
 
         return {
             "userid": user_id,

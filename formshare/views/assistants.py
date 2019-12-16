@@ -108,7 +108,9 @@ class AddAssistantsView(PrivateView):
                             else:
                                 self.append_to_errors(message)
                         else:
-                            self.append_to_errors(self._("The password cannot be empty"))
+                            self.append_to_errors(
+                                self._("The password cannot be empty")
+                            )
                     else:
                         self.append_to_errors(
                             self._("The password and its confirmation are not the same")
@@ -236,7 +238,7 @@ class DeleteAssistant(PrivateView):
                 self.request.session.flash(
                     self._("Unable to delete the assistant: ") + message
                 )
-                return HTTPFound(next_page, headers={'FS_error': "true"})
+                return HTTPFound(next_page, headers={"FS_error": "true"})
 
         else:
             raise HTTPNotFound
@@ -295,7 +297,8 @@ class ChangeAssistantPassword(PrivateView):
                         return HTTPFound(
                             self.request.route_url(
                                 "assistants", userid=user_id, projcode=project_code
-                            ), headers={'FS_error': "true"}
+                            ),
+                            headers={"FS_error": "true"},
                         )
                 else:
                     self.add_error(
@@ -304,14 +307,16 @@ class ChangeAssistantPassword(PrivateView):
                     return HTTPFound(
                         self.request.route_url(
                             "assistants", userid=user_id, projcode=project_code
-                        ), headers={'FS_error': "true"}
+                        ),
+                        headers={"FS_error": "true"},
                     )
             else:
                 self.add_error(self._("The password cannot be empty"))
                 return HTTPFound(
                     self.request.route_url(
                         "assistants", userid=user_id, projcode=project_code
-                    ), headers={'FS_error': "true"}
+                    ),
+                    headers={"FS_error": "true"},
                 )
 
         else:

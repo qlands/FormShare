@@ -73,7 +73,7 @@ class GenerateRepository(PrivateView):
                         if postdata.get("form_pkey", "") != "":
                             primary_key = postdata.get("form_pkey")
                         else:
-                            self.errors.append(
+                            self.append_to_errors(
                                 self._("The primary key cannot be empty")
                             )
                             run_process = False
@@ -88,7 +88,7 @@ class GenerateRepository(PrivateView):
                         if postdata.get("form_deflang", "") != "":
                             default_language = postdata.get("form_deflang")
                         else:
-                            self.errors.append(
+                            self.append_to_errors(
                                 self._("You need to indicate the primary language")
                             )
                             run_process = False
@@ -121,7 +121,7 @@ class GenerateRepository(PrivateView):
                                 empty_code_found = True
                                 break
                         if empty_code_found:
-                            self.errors.append(
+                            self.append_to_errors(
                                 self._(
                                     "You need to indicate a ISO 639-1 code for each language"
                                 )
@@ -236,7 +236,7 @@ class GenerateRepository(PrivateView):
                             if result_code == 10:
                                 # Primary key not found
                                 stage = 1
-                                self.errors.append(
+                                self.append_to_errors(
                                     self._(
                                         "The primary key was not found in the ODK form"
                                     )
@@ -265,7 +265,7 @@ class GenerateRepository(PrivateView):
                                 stage = -1
                             if result_code == 17:
                                 # Primary key is invalid
-                                self.errors.append(
+                                self.append_to_errors(
                                     self._("The primary key is invalid.")
                                 )
                                 stage = 1

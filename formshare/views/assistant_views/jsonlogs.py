@@ -171,7 +171,7 @@ class JSONCompare(AssistantView):
                                     comp_code,
                                 )
                                 if error != 0:
-                                    self.errors.append(
+                                    self.append_to_errors(
                                         self._(
                                             "An error occurred while comparing the files. "
                                             "Sorry for this. Please post the below error "
@@ -179,17 +179,17 @@ class JSONCompare(AssistantView):
                                         )
                                         + "https://github.com/qlands/FormShare"
                                     )
-                                    self.errors.append(diff)
+                                    self.append_to_errors(diff)
                                     diff = None
                                 else:
                                     diff = literal(diff)
                             else:
                                 comp_data = {}
-                                self.errors.append(
+                                self.append_to_errors(
                                     self._("The submission ID does not exist")
                                 )
                         else:
-                            self.errors.append(
+                            self.append_to_errors(
                                 self._("No point to compare to the same submission ID")
                             )
 
@@ -382,14 +382,14 @@ class JSONCheckin(AssistantView):
                                             )
                                         )
                                     else:
-                                        self.errors.append(message)
+                                        self.append_to_errors(message)
                                 except Exception as ex:
                                     log.debug(str(ex))
-                                    self.errors.append(
+                                    self.append_to_errors(
                                         self._("Error reading JSON file")
                                     )
                             else:
-                                self.errors.append(
+                                self.append_to_errors(
                                     self._(
                                         "The new file must have the same name as the submission"
                                     )
@@ -633,7 +633,7 @@ class JSONDisregard(AssistantView):
                                 )
                             )
                         else:
-                            self.errors.append(
+                            self.append_to_errors(
                                 self._(
                                     "You need to provide an explanation when disregarding an error"
                                 )
@@ -699,7 +699,7 @@ class JSONCancelDisregard(AssistantView):
                                 )
                             )
                         else:
-                            self.errors.append(
+                            self.append_to_errors(
                                 self._(
                                     "You need to provide an explanation when canceling a disregard"
                                 )
@@ -743,7 +743,7 @@ class JSONCompareSubmissions(AssistantView):
                 self.request, self.projectID, form_id, submission_a, submission_b
             )
             if error != 0:
-                self.errors.append(
+                self.append_to_errors(
                     self._(
                         "An error occurred while comparing the files. "
                         "Sorry for this. Please post the below error "
@@ -751,7 +751,7 @@ class JSONCompareSubmissions(AssistantView):
                     )
                     + "https://github.com/qlands/FormShare"
                 )
-                self.errors.append(diff)
+                self.append_to_errors(diff)
                 diff = None
             else:
                 diff = literal(diff)

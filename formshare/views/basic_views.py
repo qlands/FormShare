@@ -121,7 +121,7 @@ class LoginView(PublicView):
                             self.request, user
                         )
                         if not continue_with_login:
-                            self.errors.append(error_message)
+                            self.append_to_errors(error_message)
                             continue_login = False
                         break  # Only one plugging will be called to extend after_login
                     if continue_login:
@@ -139,14 +139,14 @@ class LoginView(PublicView):
                             login
                         )
                     )
-                    self.errors.append(
+                    self.append_to_errors(
                         self._(
                             "The user account does not exists or the password is invalid"
                         )
                     )
             else:
                 log.error("User account {} does not exist".format(login))
-                self.errors.append(
+                self.append_to_errors(
                     self._(
                         "The user account does not exists or the password is invalid"
                     )
@@ -243,7 +243,7 @@ class AssistantLoginView(PublicView):
                             self.request, collaborator
                         )
                         if not continue_with_login:
-                            self.errors.append(error_message)
+                            self.append_to_errors(error_message)
                             continue_login = False
                         break  # Only one plugging will be called to extend after_collaborator_login
                     if continue_login:
@@ -259,7 +259,7 @@ class AssistantLoginView(PublicView):
                             login, user_id, project_code
                         )
                     )
-                    self.errors.append(
+                    self.append_to_errors(
                         self._(
                             "The user account does not exists or the password is invalid"
                         )
@@ -269,7 +269,7 @@ class AssistantLoginView(PublicView):
                     "Assistant account {} for FormShare account {} in project {} "
                     "does not exists".format(login, user_id, project_code)
                 )
-                self.errors.append(
+                self.append_to_errors(
                     self._(
                         "The user account does not exists or the password is invalid"
                     )
@@ -346,7 +346,7 @@ class RegisterView(PublicView):
                                         self.request, data
                                     )
                                     if not continue_with_registration:
-                                        self.errors.append(error_message)
+                                        self.append_to_errors(error_message)
                                         continue_registration = False
                                     break  # Only one plugging will be called to extend before_register
                                 if continue_registration:
@@ -354,7 +354,7 @@ class RegisterView(PublicView):
                                         self.request, data
                                     )
                                     if not added:
-                                        self.errors.append(error_message)
+                                        self.append_to_errors(error_message)
                                     else:
                                         # Store the notifications
                                         feed_manager = get_manager(self.request)
@@ -429,7 +429,7 @@ class RegisterView(PublicView):
                                             self.returnRawViewResult = True
                                             return HTTPFound(next_page)
                             else:
-                                self.errors.append(
+                                self.append_to_errors(
                                     self._(
                                         "The password must be less than 50 characters"
                                     )
@@ -440,7 +440,7 @@ class RegisterView(PublicView):
                                     data["user_password"], data["user_password2"]
                                 )
                             )
-                            self.errors.append(
+                            self.append_to_errors(
                                 self._(
                                     "The password and its confirmation are not the same"
                                 )
@@ -451,7 +451,7 @@ class RegisterView(PublicView):
                                 data["user_id"]
                             )
                         )
-                        self.errors.append(
+                        self.append_to_errors(
                             self._(
                                 "The user id has invalid characters. Only underscore "
                                 "and dot are allowed"
@@ -461,8 +461,8 @@ class RegisterView(PublicView):
                     log.error(
                         "Registering user {} has empty password".format(data["user_id"])
                     )
-                    self.errors.append(self._("The password cannot be empty"))
+                    self.append_to_errors(self._("The password cannot be empty"))
             else:
                 log.error("Invalid email {}".format(data["user_email"]))
-                self.errors.append(self._("Invalid email"))
+                self.append_to_errors(self._("Invalid email"))
         return {"next": next, "userdata": data}

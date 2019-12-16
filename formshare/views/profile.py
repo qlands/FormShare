@@ -50,9 +50,9 @@ class EditProfileView(ProfileView):
                         self.returnRawViewResult = True
                         return HTTPFound(location=self.request.url)
                     else:
-                        self.errors.append(message)
+                        self.append_to_errors(message)
                 else:
-                    self.errors.append(self._("The name cannot be empty"))
+                    self.append_to_errors(self._("The name cannot be empty"))
             if "changepass" in data.keys():
                 if (
                     self.request.registry.settings["auth.allow_user_change_password"]
@@ -75,23 +75,23 @@ class EditProfileView(ProfileView):
                                             location=self.request.route_url("logout")
                                         )
                                     else:
-                                        self.errors.append(message)
+                                        self.append_to_errors(message)
                                 else:
-                                    self.errors.append(
+                                    self.append_to_errors(
                                         self._("The old password is incorrect")
                                     )
                             else:
-                                self.errors.append(
+                                self.append_to_errors(
                                     self._(
                                         "The new password and its confirmation are not the same"
                                     )
                                 )
                         else:
-                            self.errors.append(
+                            self.append_to_errors(
                                 self._("You need to specify a new password")
                             )
                     else:
-                        self.errors.append(
+                        self.append_to_errors(
                             self._("You need to specify the old password")
                         )
                 else:

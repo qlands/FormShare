@@ -606,9 +606,7 @@ class AddNewForm(PrivateView):
                         formid=form_data["parent_form"],
                     )
                 self.add_error(self._("Unable to upload the form: ") + message)
-                res = HTTPFound(next_page)
-                res.headers["UploadError"] = "True"
-                return res
+                return HTTPFound(next_page, headers={'FS_error': "true"})
 
         else:
             raise HTTPNotFound
@@ -679,9 +677,7 @@ class UploadNewVersion(PrivateView):
                     formid=form_id,
                 )
                 self.add_error(self._("Unable to upload the form: ") + message)
-                res = HTTPFound(next_page)
-                res.headers["UploadError"] = "True"
-                return res
+                return HTTPFound(next_page, headers={'FS_error': "true"})
 
         else:
             raise HTTPNotFound

@@ -161,7 +161,7 @@ class RemoveCollaborator(PrivateView):
                 self.request.session.flash(
                     self._("Unable to remove the collaborator: ") + message
                 )
-                return HTTPFound(next_page)
+                return HTTPFound(next_page, headers={'FS_error': "true"})
 
         else:
             raise HTTPNotFound

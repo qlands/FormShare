@@ -236,7 +236,7 @@ class DeleteAssistant(PrivateView):
                 self.request.session.flash(
                     self._("Unable to delete the assistant: ") + message
                 )
-                return HTTPFound(next_page)
+                return HTTPFound(next_page, headers={'FS_error': "true"})
 
         else:
             raise HTTPNotFound
@@ -295,7 +295,7 @@ class ChangeAssistantPassword(PrivateView):
                         return HTTPFound(
                             self.request.route_url(
                                 "assistants", userid=user_id, projcode=project_code
-                            )
+                            ), headers={'FS_error': "true"}
                         )
                 else:
                     self.add_error(
@@ -304,14 +304,14 @@ class ChangeAssistantPassword(PrivateView):
                     return HTTPFound(
                         self.request.route_url(
                             "assistants", userid=user_id, projcode=project_code
-                        )
+                        ), headers={'FS_error': "true"}
                     )
             else:
                 self.add_error(self._("The password cannot be empty"))
                 return HTTPFound(
                     self.request.route_url(
                         "assistants", userid=user_id, projcode=project_code
-                    )
+                    ), headers={'FS_error': "true"}
                 )
 
         else:

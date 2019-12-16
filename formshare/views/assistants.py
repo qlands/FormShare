@@ -106,22 +106,22 @@ class AddAssistantsView(PrivateView):
                                 self.returnRawViewResult = True
                                 return HTTPFound(next_page)
                             else:
-                                self.errors.append(message)
+                                self.append_to_errors(message)
                         else:
-                            self.errors.append(self._("The password cannot be empty"))
+                            self.append_to_errors(self._("The password cannot be empty"))
                     else:
-                        self.errors.append(
+                        self.append_to_errors(
                             self._("The password and its confirmation are not the same")
                         )
                 else:
-                    self.errors.append(
+                    self.append_to_errors(
                         self._(
                             "The user id has invalid characters. Only underscore "
                             "and dot are allowed"
                         )
                     )
             else:
-                self.errors.append(self._("You need to specify an user id"))
+                self.append_to_errors(self._("You need to specify an user id"))
         else:
             assistant_data = {}
         return {
@@ -185,7 +185,7 @@ class EditAssistantsView(PrivateView):
                 self.returnRawViewResult = True
                 return HTTPFound(next_page)
             else:
-                self.errors.append(message)
+                self.append_to_errors(message)
         else:
             assistant_data = get_assistant_data(self.request, project_id, assistant_id)
         return {

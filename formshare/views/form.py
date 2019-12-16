@@ -731,7 +731,7 @@ class EditForm(PrivateView):
                 self.returnRawViewResult = True
                 return HTTPFound(next_page)
             else:
-                self.errors.append(message)
+                self.append_to_errors(message)
         else:
             form_data = get_form_data(self.request, project_id, form_id)
             if form_data is None:

@@ -88,9 +88,9 @@ class AddGroupView(PrivateView):
                     self.returnRawViewResult = True
                     return HTTPFound(next_page)
                 else:
-                    self.errors.append(message)
+                    self.append_to_errors(message)
             else:
-                self.errors.append(self._("You need to specify a name"))
+                self.append_to_errors(self._("You need to specify a name"))
         else:
             group_data = {}
         return {
@@ -151,9 +151,9 @@ class EditGroupView(PrivateView):
                     self.returnRawViewResult = True
                     return HTTPFound(next_page)
                 else:
-                    self.errors.append(message)
+                    self.append_to_errors(message)
             else:
-                self.errors.append(self._("You need to specify a name"))
+                self.append_to_errors(self._("You need to specify a name"))
         else:
             group_data = get_group_data(self.request, project_id, group_id)
         return {

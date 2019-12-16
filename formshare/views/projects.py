@@ -190,7 +190,7 @@ class AddProjectView(ProjectsView):
                             self.request, self.user.login, project_details
                         )
                         if not continue_creation:
-                            self.errors.append(error_message)
+                            self.append_to_errors(error_message)
                         else:
                             project_details = data
                         break  # Only one plugging will be called to extend before_create
@@ -261,15 +261,15 @@ class AddProjectView(ProjectsView):
                             self.returnRawViewResult = True
                             return HTTPFound(location=next_page)
                         else:
-                            self.errors.append(message)
+                            self.append_to_errors(message)
                 else:
-                    self.errors.append(
+                    self.append_to_errors(
                         self._(
                             "The project code has invalid characters. Only underscore (_) is allowed"
                         )
                     )
             else:
-                self.errors.append(self._("The project code cannot be empty"))
+                self.append_to_errors(self._("The project code cannot be empty"))
         else:
             project_details = {"project_public": 1}
         return {"projectDetails": project_details}
@@ -313,24 +313,27 @@ class EditProjectView(ProjectsView):
 
             #  TODO: If the project becomes private then we need to unwatched it from consumers
 
-            next_page = self.request.params.get("next") or self.request.url
-            modified, message = modify_project(
-                self.request, project_id, project_details
-            )
-            if modified:
-                # Store the notifications
-                feed_manager = get_manager(self.request)
-                # Notify tha the user edited the project
-                actor = Actor(self.user.login, "person")
-                feed_object = Object(project_id, "project")
-                activity = Activity("edit", actor, feed_object)
-                feed_manager.add_activity_feed(activity)
+            if project_details["project_name"] != "":
+                next_page = self.request.params.get("next") or self.request.url
+                modified, message = modify_project(
+                    self.request, project_id, project_details
+                )
+                if modified:
+                    # Store the notifications
+                    feed_manager = get_manager(self.request)
+                    # Notify tha the user edited the project
+                    actor = Actor(self.user.login, "person")
+                    feed_object = Object(project_id, "project")
+                    activity = Activity("edit", actor, feed_object)
+                    feed_manager.add_activity_feed(activity)
 
-                self.request.session.flash(self._("The project has been modified"))
-                self.returnRawViewResult = True
-                return HTTPFound(location=next_page)
+                    self.request.session.flash(self._("The project has been modified"))
+                    self.returnRawViewResult = True
+                    return HTTPFound(location=next_page)
+                else:
+                    self.append_to_errors(message)
             else:
-                self.errors.append(message)
+                self.append_to_errors(self._("The name cannot be empty"))
 
         return {"projectDetails": project_details}
 

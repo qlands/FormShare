@@ -92,7 +92,9 @@ class CollaboratorsListView(PrivateView):
                             )
                         )
                     else:
-                        self.errors.append(message)
+                        self.append_to_errors(message)
+                else:
+                    self.append_to_errors(self._("You need to specify a collaborator"))
             if "change_role" in collaborator_details.keys():
                 changed, message = set_collaborator_role(
                     self.request,
@@ -109,7 +111,7 @@ class CollaboratorsListView(PrivateView):
                         )
                     )
                 else:
-                    self.errors.append(message)
+                    self.append_to_errors(message)
 
         collaborators, more = get_project_collaborators(self.request, project_id)
         return {

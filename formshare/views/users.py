@@ -71,12 +71,12 @@ class EditUserView(PrivateView):
 
                 email_valid = validators.email(user_details["user_email"])
                 if not email_valid:
-                    self.errors.append(self._("Such email address is not valid"))
+                    self.append_to_errors(self._("Such email address is not valid"))
                 else:
                     if email_exists(
                         self.request, user_to_modify, user_details["user_email"]
                     ):
-                        self.errors.append(
+                        self.append_to_errors(
                             self._(
                                 "Such email address already belongs to another account"
                             )
@@ -126,7 +126,7 @@ class EditUserView(PrivateView):
                                 )
                             )
                         else:
-                            self.errors.append(message)
+                            self.append_to_errors(message)
 
             if "changepass" in user_details.keys():
                 action = "changepass"
@@ -158,13 +158,13 @@ class EditUserView(PrivateView):
                                 )
                             )
                         else:
-                            self.errors.append(message)
+                            self.append_to_errors(message)
                     else:
-                        self.errors.append(
+                        self.append_to_errors(
                             self._("The password and its confirmation are not the same")
                         )
                 else:
-                    self.errors.append(self._("The password cannot be empty"))
+                    self.append_to_errors(self._("The password cannot be empty"))
         else:
             action = None
         return {"userid": user_id, "userData": user_data, "action": action}
@@ -203,7 +203,7 @@ class AddUserView(PrivateView):
 
                             email_valid = validators.email(user_details["user_email"])
                             if not email_valid:
-                                self.errors.append(
+                                self.append_to_errors(
                                     self._("Such email address is not valid")
                                 )
                             else:
@@ -212,7 +212,7 @@ class AddUserView(PrivateView):
                                     user_details["user_id"],
                                     user_details["user_email"],
                                 ):
-                                    self.errors.append(
+                                    self.append_to_errors(
                                         self._(
                                             "Such email address already belongs to another account"
                                         )
@@ -230,7 +230,7 @@ class AddUserView(PrivateView):
                                         self.request, user_details
                                     )
                                     if not added:
-                                        self.errors.append(error_message)
+                                        self.append_to_errors(error_message)
                                     else:
                                         # Store the notifications
                                         feed_manager = get_manager(self.request)
@@ -286,17 +286,17 @@ class AddUserView(PrivateView):
                                         self.returnRawViewResult = True
                                         return HTTPFound(location=next_page)
                         else:
-                            self.errors.append(
+                            self.append_to_errors(
                                 self._(
                                     "The password and its confirmation are not the same"
                                 )
                             )
                     else:
-                        self.errors.append(self._("The password cannot be empty"))
+                        self.append_to_errors(self._("The password cannot be empty"))
                 else:
-                    self.errors.append(self._("Such user already exists"))
+                    self.append_to_errors(self._("Such user already exists"))
             else:
-                self.errors.append(
+                self.append_to_errors(
                     self._(
                         "The user id has invalid characters. Only underscore "
                         "and dot are allowed"

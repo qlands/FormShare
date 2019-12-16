@@ -225,6 +225,10 @@ class PublicView(object):
         dct = variable_decode(self.request.POST)
         return dct
 
+    def append_to_errors(self, error):
+        self.request.response.headers["FS_error"] = "true"
+        self.errors.append(error)
+
 
 class PrivateView(object):
     def __init__(self, request):
@@ -251,6 +255,10 @@ class PrivateView(object):
             self.classResult["rtl"] = True
         self.classResult["activeMenu"] = ""
 
+    def append_to_errors(self, error):
+        self.request.response.headers["FS_error"] = "true"
+        self.errors.append(error)
+
     def get_policy(self, policy_name):
         policies = self.request.policies()
         for policy in policies:
@@ -261,7 +269,7 @@ class PrivateView(object):
     def __call__(self):
         error = self.request.session.pop_flash(queue="error")
         if len(error) > 0:
-            self.errors.append(error[0].replace("|error", ""))
+            self.append_to_errors(error[0].replace("|error", ""))
 
         # login_data = authenticated_userid(self.request)
         policy = self.get_policy("main")
@@ -586,7 +594,7 @@ class AssistantView(object):
     def __call__(self):
         error = self.request.session.pop_flash(queue="error")
         if len(error) > 0:
-            self.errors.append(error[0])
+            self.append_to_errors(error[0])
 
         self.userID = self.request.matchdict["userid"]
         self.projectCode = self.request.matchdict["projcode"]

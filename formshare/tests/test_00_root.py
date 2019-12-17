@@ -26,6 +26,7 @@ class FunctionalTests(unittest.TestCase):
         self.projectID = ""
         self.assistantLogin = ""
         self.assistantGroupID = ""
+        self.formID = ""
         self.path = os.path.dirname(os.path.abspath(__file__))
 
     def test_all(self):
@@ -295,7 +296,9 @@ class FunctionalTests(unittest.TestCase):
 
         def test_profile():
             # Access profile
-            res = self.testapp.get("/user/{}/profile".format(self.randonLogin), status=200)
+            res = self.testapp.get(
+                "/user/{}/profile".format(self.randonLogin), status=200
+            )
             assert "FS_error" not in res.headers
 
             # Access profile in edit mode
@@ -432,7 +435,9 @@ class FunctionalTests(unittest.TestCase):
             assert "FS_error" in res.headers
 
             # List the projects
-            res = self.testapp.get("/user/{}/projects".format(self.randonLogin), status=200)
+            res = self.testapp.get(
+                "/user/{}/projects".format(self.randonLogin), status=200
+            )
             assert "FS_error" not in res.headers
 
             # Gets the details of a project
@@ -537,7 +542,6 @@ class FunctionalTests(unittest.TestCase):
             assert "FS_error" not in res.headers
 
             # Gets the GPS Points of a project
-            # TODO: This has to be done twice later on for project with GPS points with and without repository
             res = self.testapp.get(
                 "/user/{}/project/{}/download/gpspoints".format(
                     self.randonLogin, "test001"
@@ -1034,7 +1038,9 @@ class FunctionalTests(unittest.TestCase):
             assert "FS_error" not in res.headers
 
             # Access profile
-            res = self.testapp.get("/user/{}/profile".format(self.randonLogin), status=200)
+            res = self.testapp.get(
+                "/user/{}/profile".format(self.randonLogin), status=200
+            )
             assert "FS_error" not in res.headers
 
             # Update a form fails. The form is not the same
@@ -1301,7 +1307,10 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/assistants/add".format(
                     self.randonLogin, self.project, "Justtest"
                 ),
-                {"coll_id": "{}|{}".format(self.projectID, self.assistantLogin), "privilege": "1"},
+                {
+                    "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
+                    "privilege": "1",
+                },
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -1309,7 +1318,11 @@ class FunctionalTests(unittest.TestCase):
             # Edit an assistant
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
-                    self.randonLogin, self.project, "Justtest", self.projectID, self.assistantLogin
+                    self.randonLogin,
+                    self.project,
+                    "Justtest",
+                    self.projectID,
+                    self.assistantLogin,
                 ),
                 {"privilege": "3"},
                 status=302,
@@ -1319,11 +1332,222 @@ class FunctionalTests(unittest.TestCase):
             # Remove the assistant
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/assistant/{}/{}/remove".format(
-                    self.randonLogin, self.project, "Justtest", self.projectID, self.assistantLogin
+                    self.randonLogin,
+                    self.project,
+                    "Justtest",
+                    self.projectID,
+                    self.assistantLogin,
                 ),
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            # Add a group to a form fails. No group_id
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/groups/add".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                status=302,
+            )
+            assert "FS_error" in res.headers
+
+            # Add a group to a form fails. The group_id is empty
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/groups/add".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                {"group_id": ""},
+                status=302,
+            )
+            assert "FS_error" in res.headers
+
+            # Add a group to a form succeeds
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/groups/add".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                {"group_id": self.assistantGroupID, "group_privilege": 1},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Edit a group
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/group/{}/edit".format(
+                    self.randonLogin, self.project, "Justtest", self.assistantGroupID
+                ),
+                {"privilege": 3},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Delete a group
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/group/{}/remove".format(
+                    self.randonLogin, self.project, "Justtest", self.assistantGroupID
+                ),
+                {"privilege": 3},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # TODO: We need to test most of form request.
+
+        def test_odk():
+
+            # Upload a complex form succeeds
+            paths = ["resources", "forms", "complex_form", "B.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            self.formID = "LB_Sequia_MAG_20190123"
+
+            # Uploads a file to the form
+            paths = ["resources", "forms", "complex_form", "cantones.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Uploads a file to the form
+            paths = ["resources", "forms", "complex_form", "distritos.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Test getting the forms. Ask for credential
+            res = self.testapp.get(
+                "/user/{}/project/{}/formList".format(self.randonLogin, self.project),
+                status=401,
+            )
+
+            # Add an assistant to a form succeeds
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
+                    "privilege": "3",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Test getting the forms.
+            self.testapp.get(
+                "/user/{}/project/{}/formList".format(self.randonLogin, self.project),
+                status=200,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            # Test Download the form.
+            self.testapp.get(
+                "/user/{}/project/{}/{}/xmlform".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+            # Get the manifest
+            res = self.testapp.get(
+                "/user/{}/project/{}/{}/manifest".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            # Get the a media file
+            self.testapp.get(
+                "/user/{}/project/{}/{}/manifest/mediafile/cantones.csv".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            # Get head submission
+            self.testapp.head(
+                "/user/{}/project/{}/submission".format(
+                    self.randonLogin, self.project
+                ),
+                status=204,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            # Test submission
+            paths = ["resources", "forms", "complex_form", "submission001.xml"]
+            submission_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(
+                    self.randonLogin, self.project
+                ),
+                status=201,
+                upload_files=[("filetoupload", submission_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            time.sleep(5)  # Wait for ElasticSearch to store this
+            # Gets the GPS Points of a project
+            # TODO: This has to be done again later on for project with GPS points with repository
+            res = self.testapp.get(
+                "/user/{}/project/{}/download/gpspoints".format(
+                    self.randonLogin, self.project
+                ),
+                status=200,
+            )
+            assert "FS_error" not in res.headers
+            f = open('/home/cquiros/out.json', 'wb')
+            f.write(res.body)
+            f.close()
+
+            # Test access to the dashboard
+            res = self.testapp.get("/user/{}".format(self.randonLogin), status=200)
+            assert "FS_error" not in res.headers
+
+            # Gets the details of a project
+            res = self.testapp.get(
+                "/user/{}/project/{}".format(self.randonLogin, self.project), status=200
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
 
         test_root()
         test_login()
@@ -1334,3 +1558,4 @@ class FunctionalTests(unittest.TestCase):
         test_assistants()
         test_assistant_groups()
         test_forms()
+        test_odk()

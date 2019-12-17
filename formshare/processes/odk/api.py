@@ -2072,6 +2072,8 @@ def store_submission(request, user, project, assistant):
     for key in request.POST.keys():
         try:
             filename = request.POST[key].filename
+            if os.path.isabs(filename):
+                filename = os.path.basename(filename)
             if filename.upper().find(".XML") >= 0:
                 filename = str(unique_id) + ".xml"
             else:

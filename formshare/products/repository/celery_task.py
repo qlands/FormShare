@@ -186,6 +186,7 @@ def create_mysql_repository(
     create_xml_file,
     repository_string,
     locale,
+    testing_task=None,
 ):
     parts = __file__.split("/products/")
     this_file_path = parts[0] + "/locale"
@@ -193,7 +194,10 @@ def create_mysql_repository(
     es.install()
     _ = es.gettext
 
-    task_id = create_mysql_repository.request.id
+    if testing_task is None:
+        task_id = create_mysql_repository.request.id
+    else:
+        task_id = testing_task
     try:
         build_database(
             settings,

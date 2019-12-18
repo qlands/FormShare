@@ -21,6 +21,7 @@ class FunctionalTests(unittest.TestCase):
 
         self.testapp = TestApp(app)
         self.randonLogin = ""
+        self.server_config = server_config
         self.collaboratorLogin = ""
         self.project = ""
         self.projectID = ""
@@ -1433,7 +1434,7 @@ class FunctionalTests(unittest.TestCase):
             assert "FS_error" not in res.headers
 
             # Test getting the forms. Ask for credential
-            res = self.testapp.get(
+            self.testapp.get(
                 "/user/{}/project/{}/formList".format(self.randonLogin, self.project),
                 status=401,
             )
@@ -1471,7 +1472,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
             )
             # Get the manifest
-            res = self.testapp.get(
+            self.testapp.get(
                 "/user/{}/project/{}/{}/manifest".format(
                     self.randonLogin, self.project, self.formID
                 ),
@@ -1494,9 +1495,7 @@ class FunctionalTests(unittest.TestCase):
 
             # Get head submission
             self.testapp.head(
-                "/user/{}/project/{}/submission".format(
-                    self.randonLogin, self.project
-                ),
+                "/user/{}/project/{}/submission".format(self.randonLogin, self.project),
                 status=204,
                 extra_environ=dict(
                     FS_for_testing="true", FS_user_for_testing=self.assistantLogin
@@ -1506,12 +1505,14 @@ class FunctionalTests(unittest.TestCase):
             # Test submission
             paths = ["resources", "forms", "complex_form", "submission001.xml"]
             submission_file = os.path.join(self.path, *paths)
+
+            paths = ["resources", "forms", "complex_form", "image001.png"]
+            image_file = os.path.join(self.path, *paths)
+
             self.testapp.post(
-                "/user/{}/project/{}/push".format(
-                    self.randonLogin, self.project
-                ),
+                "/user/{}/project/{}/push".format(self.randonLogin, self.project),
                 status=201,
-                upload_files=[("filetoupload", submission_file)],
+                upload_files=[("filetoupload", submission_file), ("image", image_file)],
                 extra_environ=dict(
                     FS_for_testing="true", FS_user_for_testing=self.assistantLogin
                 ),
@@ -1527,9 +1528,160 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
             assert "FS_error" not in res.headers
-            f = open('/home/cquiros/out.json', 'wb')
-            f.write(res.body)
-            f.close()
+
+            # Test access to the dashboard
+            res = self.testapp.get("/user/{}".format(self.randonLogin), status=200)
+            assert "FS_error" not in res.headers
+
+            # Gets the details of a project
+            res = self.testapp.get(
+                "/user/{}/project/{}".format(self.randonLogin, self.project), status=200
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+
+            # Download the ODK form file
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/get/odk".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+
+            # Download data in CSV format
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/csv".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+
+            # Download submitted media files
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/media".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+            assert "FS_error" not in res.headers
+
+            # Download submitted media files. No media
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/media".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                status=302,
+            )
+            assert "FS_error" in res.headers
+
+        def test_repository():
+            def mimic_create_repository():
+                from formshare.products.repository.celery_task import (
+                    create_mysql_repository,
+                )
+                from sqlalchemy import create_engine
+
+                engine = create_engine(self.server_config["sqlalchemy.url"])
+                result = engine.execute(
+                    "SELECT form_directory,form_reptask FROM odkform WHERE project_id = '{}' AND form_id = '{}'".format(
+                        self.projectID, self.formID
+                    )
+                ).fetchone()
+                form_directory = result[0]
+                form_reptask = result[1]
+                engine.dispose()
+                form_schema = "FS" + str(uuid.uuid4()).replace("-", "_")
+
+                create_mysql_repository(
+                    self.server_config,
+                    self.randonLogin,
+                    self.projectID,
+                    self.project,
+                    self.formID,
+                    "/home/cquiros/temp/formshare/odk",
+                    form_directory,
+                    form_schema,
+                    "I_D",
+                    "/home/cquiros/data/projects2017/personal/software/FormShare/mysql.cnf",
+                    "/home/cquiros/temp/formshare/odk/forms/{}/repository/create.sql".format(
+                        form_directory
+                    ),
+                    "/home/cquiros/temp/formshare/odk/forms/{}/repository/insert.sql".format(
+                        form_directory
+                    ),
+                    "/home/cquiros/temp/formshare/odk/forms/{}/repository/create.xml".format(
+                        form_directory
+                    ),
+                    "",
+                    "en",
+                    form_reptask,
+                )
+
+            # Gets tje repository page
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+
+            # Generate the repository using celery
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {"form_pkey": "I_D", "start_stage1": ""},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            time.sleep(10)  # Wait for Celery to finish
+
+            # Mimic to create the repository again
+            mimic_create_repository()
+
+            # Get the details of a form. The form now should have a repository
+            res = self.testapp.get(
+                 "/user/{}/project/{}/form/{}".format(
+                     self.randonLogin, self.project, self.formID
+                 ),
+                 status=200,
+             )
+            self.assertTrue(b'With repository' in res.body)
+
+            # Test submission storing into repository
+            paths = ["resources", "forms", "complex_form", "submission001.xml"]
+            submission_file = os.path.join(self.path, *paths)
+
+            paths = ["resources", "forms", "complex_form", "image001.png"]
+            image_file = os.path.join(self.path, *paths)
+
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, self.project),
+                status=201,
+                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            time.sleep(5)  # Wait for ElasticSearch to store this
+            # Gets the GPS Points of a project
+            # TODO: This has to be done again later on for project with GPS points with repository
+            res = self.testapp.get(
+                "/user/{}/project/{}/download/gpspoints".format(
+                    self.randonLogin, self.project
+                ),
+                status=200,
+            )
+            assert "FS_error" not in res.headers
 
             # Test access to the dashboard
             res = self.testapp.get("/user/{}".format(self.randonLogin), status=200)
@@ -1559,3 +1711,4 @@ class FunctionalTests(unittest.TestCase):
         test_assistant_groups()
         test_forms()
         test_odk()
+        test_repository()

@@ -65,9 +65,18 @@ def gather_array_sizes(data, array_dict):
 
 @celeryApp.task(base=CeleryTask)
 def build_csv(
-    settings, form_directory, form_schema, csv_file, protect_sensitive, locale
+    settings,
+    form_directory,
+    form_schema,
+    csv_file,
+    protect_sensitive,
+    locale,
+    test_task_id=None,
 ):
-    task_id = build_csv.request.id
+    if test_task_id is None:
+        task_id = build_csv.request.id
+    else:
+        task_id = test_task_id
     tables = {}
     keys = []
     replace_values = []

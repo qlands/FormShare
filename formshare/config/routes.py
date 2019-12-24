@@ -171,10 +171,14 @@ def load_routes(config):
 
     # FormShare routes
     routes.append(add_route("home", "/", HomeView, "landing/index.jinja2"))
+
+    # TODO: Test
     routes.append(
         add_route("refresh", "/refresh", RefreshSessionView, "generic/refresh.jinja2")
     )
     routes.append(add_route("login", "/login", LoginView, "generic/login.jinja2"))
+
+    # TODO: Test
     routes.append(
         add_route(
             "recover_password",
@@ -186,8 +190,11 @@ def load_routes(config):
     routes.append(
         add_route("register", "/join", RegisterView, "generic/register.jinja2")
     )
+
+    # TODO: Test
     routes.append(add_route("logout", "/logout", log_out_view, None))
 
+    # TODO: Test for merged forms
     routes.append(
         add_route(
             "dashboard", "/user/{userid}", UserDashBoardView, "dashboard/index.jinja2"
@@ -219,6 +226,7 @@ def load_routes(config):
     )
 
     # Profile
+    # TODO: Test with merged forms
     routes.append(
         add_route(
             "profile",
@@ -254,6 +262,8 @@ def load_routes(config):
             "dashboard/projects/project_list.jinja2",
         )
     )
+
+    # TODO: Test with merged forms
     routes.append(
         add_route(
             "project_details",
@@ -321,6 +331,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test with merged forms
     routes.append(
         add_route(
             "project_download_gpspoints",
@@ -349,6 +360,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "accept_collaboration",
@@ -466,6 +478,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test with merged forms
     routes.append(
         add_route(
             "form_details",
@@ -493,6 +506,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test with merged forms
     routes.append(
         add_route(
             "delete_form",
@@ -511,6 +525,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "form_sse",
@@ -520,6 +535,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "stop_task",
@@ -529,6 +545,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "stop_repository",
@@ -547,6 +564,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "import_data",
@@ -642,6 +660,7 @@ def load_routes(config):
 
     # Form Products
 
+    # TODO: Test
     routes.append(
         add_route(
             "download_private_product",
@@ -651,6 +670,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "download_public_product",
@@ -660,6 +680,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "api_download_private_product",
@@ -669,6 +690,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "publish_product",
@@ -678,6 +700,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "unpublish_product",
@@ -687,6 +710,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "delete_product",
@@ -698,6 +722,7 @@ def load_routes(config):
 
     # Form Downloads
 
+    # TODO: Test with repository and merged forms
     routes.append(
         add_route(
             "form_download_csv",
@@ -707,6 +732,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test and with merged forms
     routes.append(
         add_route(
             "form_download_public_xlsx_data",
@@ -716,6 +742,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test and with merged forms
     routes.append(
         add_route(
             "form_download_private_xlsx_data",
@@ -734,6 +761,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test with repository and with merged forms
     routes.append(
         add_route(
             "form_download_media",
@@ -743,6 +771,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test with repository and with merged forms
     routes.append(
         add_route(
             "form_download_gpspoints",
@@ -752,6 +781,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test with repository and with merged forms
     routes.append(
         add_route(
             "form_download_kml",
@@ -761,6 +791,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test with repository and with merged forms
     routes.append(
         add_route(
             "form_download_repo_public_csv",
@@ -770,6 +801,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test with repository and with merged forms
     routes.append(
         add_route(
             "form_download_repo_private_csv",
@@ -780,7 +812,7 @@ def load_routes(config):
     )
 
     # Repository
-
+    # TODO: Test all error cases
     routes.append(
         add_route(
             "createrepository",
@@ -790,6 +822,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "merge_new_version",
@@ -799,6 +832,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "stop_merge",
@@ -808,6 +842,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "editDictTables",
@@ -817,6 +852,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "editDictFields",
@@ -826,6 +862,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "manageSubmissions",
@@ -835,6 +872,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "viewAudit",
@@ -844,6 +882,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "getFormSubmissions",
@@ -853,6 +892,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "getFormAudit",
@@ -861,6 +901,8 @@ def load_routes(config):
             "string",
         )
     )
+
+    # TODO: Test
     routes.append(
         add_route(
             "deleteFormSubmission",
@@ -869,6 +911,8 @@ def load_routes(config):
             "json",
         )
     )
+
+    # TODO: Test
     routes.append(
         add_route(
             "deleteAllSubmissions",
@@ -880,6 +924,7 @@ def load_routes(config):
 
     # Assistant access
 
+    # TODO: Test
     routes.append(
         add_route(
             "assistant_login",
@@ -889,6 +934,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "assistant_logout",
@@ -898,6 +944,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "assistant_forms",
@@ -907,6 +954,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "assistant_change_my_pass",
@@ -916,6 +964,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "assistant_change_my_key",
@@ -925,6 +974,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "assistant_qr_code",
@@ -936,6 +986,7 @@ def load_routes(config):
 
     # JSON logs
 
+    # TODO: Test
     routes.append(
         add_route(
             "errorlist",
@@ -945,6 +996,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "comparejsons",
@@ -954,6 +1006,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "checkoutjson",
@@ -963,6 +1016,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "cancelcheckout",
@@ -972,6 +1026,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "getsubmission",
@@ -981,6 +1036,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "checkinjson",
@@ -990,6 +1046,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "viewrevision",
@@ -1000,6 +1057,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "cancelrevision",
@@ -1010,6 +1068,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "pushrevision",
@@ -1020,6 +1079,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "disregard",
@@ -1030,6 +1090,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "canceldisregard",
@@ -1040,6 +1101,7 @@ def load_routes(config):
         )
     )
 
+    # TODO: Test
     routes.append(
         add_route(
             "comparesubmissions",
@@ -1052,6 +1114,7 @@ def load_routes(config):
 
     # Clean interface
 
+    # TODO: Test
     routes.append(
         add_route(
             "clean",
@@ -1060,6 +1123,8 @@ def load_routes(config):
             "assistant/clean/clean_data.jinja2",
         )
     )
+
+    # TODO: Test
     routes.append(
         add_route(
             "request",
@@ -1068,6 +1133,8 @@ def load_routes(config):
             "string",
         )
     )
+
+    # TODO: Test
     routes.append(
         add_route(
             "action",
@@ -1078,6 +1145,8 @@ def load_routes(config):
     )
 
     # Utility API
+
+    # TODO: Test
     routes.append(
         add_route(
             "api_select2_users",
@@ -1088,6 +1157,8 @@ def load_routes(config):
     )
 
     # Repository API
+
+    # TODO: Test
     routes.append(
         add_route(
             "api_update_repository",

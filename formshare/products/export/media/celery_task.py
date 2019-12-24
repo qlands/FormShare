@@ -22,7 +22,7 @@ class EmptyFileError(Exception):
 
 @celeryApp.task(base=CeleryTask)
 def build_media_zip(
-    settings, odk_dir, form_directory, form_schema, zip_file, primary_key, locale
+    settings, odk_dir, form_directory, form_schema, zip_file, primary_key, locale, test_task_id=None
 ):
     parts = __file__.split("/products/")
     this_file_path = parts[0] + "/locale"
@@ -30,7 +30,11 @@ def build_media_zip(
     es.install()
     _ = es.gettext
 
-    task_id = build_media_zip.request.id
+    if test_task_id is None:
+        task_id = build_media_zip.request.id
+    else:
+        task_id = test_task_id
+
     created = False
     engine = get_engine(settings)
     sql = "SELECT count(surveyid) as total FROM " + form_schema + ".maintable"

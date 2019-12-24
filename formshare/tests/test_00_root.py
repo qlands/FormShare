@@ -2,6 +2,7 @@ import unittest
 import time
 import uuid
 import os
+import datetime
 
 """
 This testing module test all routes. It launch start the server and test all the routes and processes
@@ -624,9 +625,6 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            # TODO: We need to test accept and declined collaboration.
-            #  This need to logout and login with the collaborator
-
         def test_assistants():
             # Add an assistant fail. The assistant in empty
             res = self.testapp.post(
@@ -1179,7 +1177,6 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
-            # TODO: We need to update a form when is a subversion
 
             # Set form as active
             res = self.testapp.post(
@@ -1198,7 +1195,6 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
-            # TODO: Delete a form with our without schema. Delete when merged
 
             # Upload the form again
             paths = ["resources", "forms", "form08_OK.xlsx"]
@@ -1211,10 +1207,6 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            # TODO: Test form_sse
-            # TODO: Test stop_task
-            # TODO: Test stop_repository
-
             # Set form as inactive
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/deactivate".format(
@@ -1223,8 +1215,6 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
-
-            # TODO: Test import_data
 
             # Uploads a file to the form
             paths = ["resources", "test1.dat"]
@@ -1392,8 +1382,6 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            # TODO: We need to test most of form request.
-
         def test_odk():
 
             # Upload a complex form succeeds
@@ -1520,10 +1508,18 @@ class FunctionalTests(unittest.TestCase):
 
             time.sleep(5)  # Wait for ElasticSearch to store this
             # Gets the GPS Points of a project
-            # TODO: This has to be done again later on for project with GPS points with repository
             res = self.testapp.get(
                 "/user/{}/project/{}/download/gpspoints".format(
                     self.randonLogin, self.project
+                ),
+                status=200,
+            )
+            assert "FS_error" not in res.headers
+
+            # Gets the GPS Points of a Form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}/get/gpspoints".format(
+                    self.randonLogin, self.project, self.formID
                 ),
                 status=200,
             )
@@ -1624,7 +1620,7 @@ class FunctionalTests(unittest.TestCase):
                     form_reptask,
                 )
 
-            # Gets tje repository page
+            # Gets the repository page
             self.testapp.get(
                 "/user/{}/project/{}/form/{}/repository/create".format(
                     self.randonLogin, self.project, self.formID
@@ -1649,12 +1645,12 @@ class FunctionalTests(unittest.TestCase):
 
             # Get the details of a form. The form now should have a repository
             res = self.testapp.get(
-                 "/user/{}/project/{}/form/{}".format(
-                     self.randonLogin, self.project, self.formID
-                 ),
-                 status=200,
-             )
-            self.assertTrue(b'With repository' in res.body)
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+            self.assertTrue(b"With repository" in res.body)
 
             # Test submission storing into repository
             paths = ["resources", "forms", "complex_form", "submission001.xml"]
@@ -1674,10 +1670,18 @@ class FunctionalTests(unittest.TestCase):
 
             time.sleep(5)  # Wait for ElasticSearch to store this
             # Gets the GPS Points of a project
-            # TODO: This has to be done again later on for project with GPS points with repository
             res = self.testapp.get(
                 "/user/{}/project/{}/download/gpspoints".format(
                     self.randonLogin, self.project
+                ),
+                status=200,
+            )
+            assert "FS_error" not in res.headers
+
+            # Gets the GPS Points of a Form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}/get/gpspoints".format(
+                    self.randonLogin, self.project, self.formID
                 ),
                 status=200,
             )
@@ -1701,6 +1705,294 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
 
+            # Test submitting the same data into the repository storing it into the logs
+            paths = ["resources", "forms", "complex_form", "submission001.xml"]
+            submission_file = os.path.join(self.path, *paths)
+
+            paths = ["resources", "forms", "complex_form", "image001.png"]
+            image_file = os.path.join(self.path, *paths)
+
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, self.project),
+                status=201,
+                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            # Add a second submission to test downloads
+            paths = ["resources", "forms", "complex_form", "submission002.xml"]
+            submission_file = os.path.join(self.path, *paths)
+
+            paths = ["resources", "forms", "complex_form", "image001.png"]
+            image_file = os.path.join(self.path, *paths)
+
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, self.project),
+                status=201,
+                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+        def test_repository_downloads():
+            def mimic_celery_public_csv_process():
+                from formshare.products.export.csv.celery_task import build_csv
+
+                from sqlalchemy import create_engine
+
+                engine = create_engine(self.server_config["sqlalchemy.url"])
+                result = engine.execute(
+                    "SELECT form_directory,form_schema FROM odkform WHERE project_id = '{}' AND form_id = '{}'".format(
+                        self.projectID, self.formID
+                    )
+                ).fetchone()
+                form_directory = result[0]
+                form_schema = result[1]
+                task_id = str(uuid.uuid4())
+                sql = (
+                    "INSERT INTO product (project_id,form_id,product_id,output_file,output_mimetype,"
+                    "celery_taskid,datetime_added,created_by,output_id,process_only,publishable) "
+                    "VALUES ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}',{})".format(
+                        self.projectID,
+                        self.formID,
+                        "csv_public_export",
+                        "/home/cquiros/{}.csv".format(task_id),
+                        "text/csv",
+                        task_id,
+                        datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
+                        self.randonLogin,
+                        task_id[-12:],
+                        0,
+                        1,
+                    )
+                )
+                engine.execute(sql)
+                engine.dispose()
+                build_csv(
+                    self.server_config,
+                    form_directory,
+                    form_schema,
+                    "/home/cquiros/{}.csv".format(task_id),
+                    True,
+                    "en",
+                    task_id,
+                )
+
+            def mimic_celery_private_csv_process():
+                from formshare.products.export.csv.celery_task import build_csv
+
+                from sqlalchemy import create_engine
+
+                engine = create_engine(self.server_config["sqlalchemy.url"])
+                result = engine.execute(
+                    "SELECT form_directory,form_schema FROM odkform WHERE project_id = '{}' AND form_id = '{}'".format(
+                        self.projectID, self.formID
+                    )
+                ).fetchone()
+                form_directory = result[0]
+                form_schema = result[1]
+                task_id = str(uuid.uuid4())
+                sql = (
+                    "INSERT INTO product (project_id,form_id,product_id,output_file,output_mimetype,"
+                    "celery_taskid,datetime_added,created_by,output_id,process_only,publishable) "
+                    "VALUES ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}',{})".format(
+                        self.projectID,
+                        self.formID,
+                        "csv_private_export",
+                        "/home/cquiros/{}.csv".format(task_id),
+                        "text/csv",
+                        task_id,
+                        datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
+                        self.randonLogin,
+                        task_id[-12:],
+                        0,
+                        1,
+                    )
+                )
+                engine.execute(sql)
+                engine.dispose()
+                build_csv(
+                    self.server_config,
+                    form_directory,
+                    form_schema,
+                    "/home/cquiros/{}.csv".format(task_id),
+                    False,
+                    "en",
+                    task_id,
+                )
+
+            def mimic_celery_xlsx_process():
+                from formshare.products.export.xlsx.celery_task import build_xlsx
+                from sqlalchemy import create_engine
+
+                engine = create_engine(self.server_config["sqlalchemy.url"])
+                result = engine.execute(
+                    "SELECT form_directory,form_schema FROM odkform WHERE project_id = '{}' AND form_id = '{}'".format(
+                        self.projectID, self.formID
+                    )
+                ).fetchone()
+                form_directory = result[0]
+                form_schema = result[1]
+                task_id = str(uuid.uuid4())
+
+                sql = (
+                    "INSERT INTO product (project_id,form_id,product_id,output_file,output_mimetype,"
+                    "celery_taskid,datetime_added,created_by,output_id,process_only,publishable) "
+                    "VALUES ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}',{})".format(
+                        self.projectID,
+                        self.formID,
+                        "xlsx_public_export",
+                        "/home/cquiros/{}.xlsx".format(task_id),
+                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        task_id,
+                        datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
+                        self.randonLogin,
+                        task_id[-12:],
+                        0,
+                        1,
+                    )
+                )
+                engine.execute(sql)
+                engine.dispose()
+                build_xlsx(self.server_config, self.server_config['repository.path'] + "/odk",
+                           form_directory, form_schema, self.formID,
+                           "/home/cquiros/{}.xlsx".format(task_id), True, "en")
+
+            def mimic_celery_kml_process():
+                from formshare.products.export.kml.celery_task import build_kml
+                from sqlalchemy import create_engine
+
+                engine = create_engine(self.server_config["sqlalchemy.url"])
+                result = engine.execute(
+                    "SELECT form_schema FROM odkform WHERE project_id = '{}' AND form_id = '{}'".format(
+                        self.projectID, self.formID
+                    )
+                ).fetchone()
+                form_schema = result[0]
+                task_id = str(uuid.uuid4())
+
+                sql = (
+                    "INSERT INTO product (project_id,form_id,product_id,output_file,output_mimetype,"
+                    "celery_taskid,datetime_added,created_by,output_id,process_only,publishable) "
+                    "VALUES ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}',{})".format(
+                        self.projectID,
+                        self.formID,
+                        "kml_export",
+                        "/home/cquiros/{}.kml".format(task_id),
+                        "application/vnd.google-earth.kml+xml",
+                        task_id,
+                        datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
+                        self.randonLogin,
+                        task_id[-12:],
+                        0,
+                        1,
+                    )
+                )
+                engine.execute(sql)
+                engine.dispose()
+                build_kml(self.server_config, form_schema,
+                          "/home/cquiros/{}.kml".format(task_id), "I_D", "en", task_id)
+
+            def mimic_celery_media_process():
+                from formshare.products.export.media.celery_task import build_media_zip
+                from sqlalchemy import create_engine
+
+                engine = create_engine(self.server_config["sqlalchemy.url"])
+                result = engine.execute(
+                    "SELECT form_directory,form_schema FROM odkform WHERE project_id = '{}' AND form_id = '{}'".format(
+                        self.projectID, self.formID
+                    )
+                ).fetchone()
+                form_directory = result[0]
+                form_schema = result[1]
+                task_id = str(uuid.uuid4())
+
+                sql = (
+                    "INSERT INTO product (project_id,form_id,product_id,output_file,output_mimetype,"
+                    "celery_taskid,datetime_added,created_by,output_id,process_only,publishable) "
+                    "VALUES ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}',{})".format(
+                        self.projectID,
+                        self.formID,
+                        "media_export",
+                        "/home/cquiros/{}.zip".format(task_id),
+                        "application/zip",
+                        task_id,
+                        datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
+                        self.randonLogin,
+                        task_id[-12:],
+                        0,
+                        1,
+                    )
+                )
+                engine.execute(sql)
+                engine.dispose()
+                build_media_zip(self.server_config, self.server_config['repository.path'] + "/odk",
+                                form_directory, form_schema, "/home/cquiros/{}.zip".format(task_id),
+                                "I_D", "en", task_id)
+
+            # Generate submitted media files
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/media".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Generate public XLSX
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/public_xlsx".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Private public XLSX
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/private_xlsx".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # KML
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/kml".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Public CSV
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/repo_public_csv".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Private CSV
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/repo_private_csv".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            mimic_celery_public_csv_process()
+            mimic_celery_private_csv_process()
+            mimic_celery_xlsx_process()
+            mimic_celery_kml_process()
+            mimic_celery_media_process()
+
         test_root()
         test_login()
         test_dashboard()
@@ -1712,3 +2004,4 @@ class FunctionalTests(unittest.TestCase):
         test_forms()
         test_odk()
         test_repository()
+        test_repository_downloads()  # TODO: Test again a key that is sensitive

@@ -22,7 +22,14 @@ class EmptyFileError(Exception):
 
 @celeryApp.task(base=CeleryTask)
 def build_media_zip(
-    settings, odk_dir, form_directory, form_schema, zip_file, primary_key, locale, test_task_id=None
+    settings,
+    odk_dir,
+    form_directory,
+    form_schema,
+    zip_file,
+    primary_key,
+    locale,
+    test_task_id=None,
 ):
     parts = __file__.split("/products/")
     this_file_path = parts[0] + "/locale"

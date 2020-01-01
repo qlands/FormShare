@@ -201,6 +201,8 @@ def import_external_data(
     form_post_data,
 ):
     input_file_name = request.POST["file"].filename
+    if os.path.isabs(input_file_name):
+        input_file_name = os.path.basename(input_file_name)
     input_file_name = input_file_name.lower()
 
     uid = str(uuid.uuid4())

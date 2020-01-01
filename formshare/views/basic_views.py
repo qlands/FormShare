@@ -335,7 +335,8 @@ class RegisterView(PublicView):
                         if data["user_password"] == data["user_password2"]:
                             if len(data["user_password"]) <= 50:
                                 data["user_cdate"] = datetime.datetime.now()
-                                data["user_apikey"] = str(uuid.uuid4())
+                                if "user_apikey" not in data.keys():
+                                    data["user_apikey"] = str(uuid.uuid4())
                                 data["user_password"] = encode_data(
                                     self.request, data["user_password"]
                                 )

@@ -3,6 +3,7 @@ import time
 import uuid
 import os
 import datetime
+import shutil
 
 """
 This testing module test all routes. It launch start the server and test all the routes and processes
@@ -10,6 +11,23 @@ We allocated all in one massive test because separating them in different test f
 the environment processes multiple times and crash FormShare.
    
 """
+
+
+def store_task_status(task, config):
+    from sqlalchemy import create_engine
+
+    message_id = str(uuid.uuid4())
+    engine = create_engine(config["sqlalchemy.url"])
+    engine.execute(
+        "INSERT INTO finishedtask (task_id,task_enumber) VALUES ('{}',0)".format(task)
+    )
+    engine.execute(
+        "INSERT INTO taskmessages (message_id, celery_taskid, message_date, message_content) "
+        "VALUES ('{}','{}','{}','success')".format(
+            message_id, task, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
+        )
+    )
+    engine.dispose()
 
 
 class FunctionalTests(unittest.TestCase):
@@ -22,6 +40,7 @@ class FunctionalTests(unittest.TestCase):
 
         self.testapp = TestApp(app)
         self.randonLogin = ""
+        self.randonLoginKey = ""
         self.server_config = server_config
         self.collaboratorLogin = ""
         self.project = ""
@@ -107,6 +126,7 @@ class FunctionalTests(unittest.TestCase):
             assert "FS_error" in res.headers
 
             random_login = str(uuid.uuid4())
+            self.randonLoginKey = random_login
             random_login = random_login[-12:]
 
             #  random_login = "formshare"
@@ -123,6 +143,7 @@ class FunctionalTests(unittest.TestCase):
                     "user_password2": "123",
                     "user_name": "Testing",
                     "user_super": "1",
+                    "user_apikey": self.randonLoginKey,
                 },
                 status=302,
             )
@@ -1780,6 +1801,50 @@ class FunctionalTests(unittest.TestCase):
                     "en",
                     task_id,
                 )
+                store_task_status(task_id, self.server_config)
+
+                # Download unpublished product fails
+                self.testapp.get(
+                    "/user/{}/project/{}/form/{}/public_download/{}/output/{}".format(
+                        self.randonLogin, self.project, self.formID, "csv_public_export", task_id[-12:]
+                    ),
+                    status=404,
+                )
+
+                # Publish the product
+                res2 = self.testapp.post(
+                    "/user/{}/project/{}/form/{}/products/{}/output/{}/publish".format(
+                        self.randonLogin, self.project, self.formID, "csv_public_export", task_id[-12:]
+                    ),
+                    status=302,
+                )
+                assert "FS_error" not in res2.headers
+
+                # Download published product pass
+                self.testapp.get(
+                    "/user/{}/project/{}/form/{}/public_download/{}/output/{}".format(
+                        self.randonLogin, self.project, self.formID, "csv_public_export", task_id[-12:]
+                    ),
+                    status=200,
+                )
+
+                # Unpublish the product
+                res2 = self.testapp.post(
+                    "/user/{}/project/{}/form/{}/products/{}/output/{}/unpublish".format(
+                        self.randonLogin, self.project, self.formID, "csv_public_export", task_id[-12:]
+                    ),
+                    status=302,
+                )
+                assert "FS_error" not in res2.headers
+
+                # Delete the product
+                res2 = self.testapp.post(
+                    "/user/{}/project/{}/form/{}/products/{}/output/{}/delete".format(
+                        self.randonLogin, self.project, self.formID, "csv_public_export", task_id[-12:]
+                    ),
+                    status=302,
+                )
+                assert "FS_error" not in res2.headers
 
             def mimic_celery_private_csv_process():
                 from formshare.products.export.csv.celery_task import build_csv
@@ -1823,6 +1888,20 @@ class FunctionalTests(unittest.TestCase):
                     "en",
                     task_id,
                 )
+                store_task_status(task_id, self.server_config)
+                self.testapp.get(
+                    "/user/{}/project/{}/form/{}/private_download/{}/output/{}".format(
+                        self.randonLogin, self.project, self.formID, "csv_private_export", task_id[-12:]
+                    ),
+                    status=200,
+                )
+                self.testapp.get(
+                    "/user/{}/project/{}/form/{}/api_download/{}/output/{}?apikey={}".format(
+                        self.randonLogin, self.project, self.formID, "csv_private_export",
+                        task_id[-12:], self.randonLoginKey
+                    ),
+                    status=200,
+                )
 
             def mimic_celery_xlsx_process():
                 from formshare.products.export.xlsx.celery_task import build_xlsx
@@ -1857,9 +1936,23 @@ class FunctionalTests(unittest.TestCase):
                 )
                 engine.execute(sql)
                 engine.dispose()
-                build_xlsx(self.server_config, self.server_config['repository.path'] + "/odk",
-                           form_directory, form_schema, self.formID,
-                           "/home/cquiros/{}.xlsx".format(task_id), True, "en")
+                build_xlsx(
+                    self.server_config,
+                    self.server_config["repository.path"] + "/odk",
+                    form_directory,
+                    form_schema,
+                    self.formID,
+                    "/home/cquiros/{}.xlsx".format(task_id),
+                    True,
+                    "en",
+                )
+                store_task_status(task_id, self.server_config)
+                self.testapp.get(
+                    "/user/{}/project/{}/form/{}/private_download/{}/output/{}".format(
+                        self.randonLogin, self.project, self.formID, "xlsx_public_export", task_id[-12:]
+                    ),
+                    status=200,
+                )
 
             def mimic_celery_kml_process():
                 from formshare.products.export.kml.celery_task import build_kml
@@ -1893,8 +1986,21 @@ class FunctionalTests(unittest.TestCase):
                 )
                 engine.execute(sql)
                 engine.dispose()
-                build_kml(self.server_config, form_schema,
-                          "/home/cquiros/{}.kml".format(task_id), "I_D", "en", task_id)
+                build_kml(
+                    self.server_config,
+                    form_schema,
+                    "/home/cquiros/{}.kml".format(task_id),
+                    "I_D",
+                    "en",
+                    task_id,
+                )
+                store_task_status(task_id, self.server_config)
+                self.testapp.get(
+                    "/user/{}/project/{}/form/{}/private_download/{}/output/{}".format(
+                        self.randonLogin, self.project, self.formID, "kml_export", task_id[-12:]
+                    ),
+                    status=200,
+                )
 
             def mimic_celery_media_process():
                 from formshare.products.export.media.celery_task import build_media_zip
@@ -1929,9 +2035,23 @@ class FunctionalTests(unittest.TestCase):
                 )
                 engine.execute(sql)
                 engine.dispose()
-                build_media_zip(self.server_config, self.server_config['repository.path'] + "/odk",
-                                form_directory, form_schema, "/home/cquiros/{}.zip".format(task_id),
-                                "I_D", "en", task_id)
+                build_media_zip(
+                    self.server_config,
+                    self.server_config["repository.path"] + "/odk",
+                    form_directory,
+                    form_schema,
+                    "/home/cquiros/{}.zip".format(task_id),
+                    "I_D",
+                    "en",
+                    task_id,
+                )
+                store_task_status(task_id, self.server_config)
+                self.testapp.get(
+                    "/user/{}/project/{}/form/{}/private_download/{}/output/{}".format(
+                        self.randonLogin, self.project, self.formID, "media_export", task_id[-12:]
+                    ),
+                    status=200,
+                )
 
             # Generate submitted media files
             res = self.testapp.get(
@@ -1987,11 +2107,194 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            time.sleep(10)  # Wait 5 seconds
+
             mimic_celery_public_csv_process()
             mimic_celery_private_csv_process()
             mimic_celery_xlsx_process()
             mimic_celery_kml_process()
             mimic_celery_media_process()
+
+        def test_import_data():
+            def mimic_celery_test_import():
+                from formshare.products.fs1import.celery_task import import_json_files
+                from sqlalchemy import create_engine
+
+                engine = create_engine(self.server_config["sqlalchemy.url"])
+                result = engine.execute(
+                    "SELECT form_directory,form_schema FROM odkform WHERE project_id = '{}' AND form_id = '{}'".format(
+                        self.projectID, self.formID
+                    )
+                ).fetchone()
+                form_directory = result[0]
+                form_schema = result[1]
+                task_id = str(uuid.uuid4())
+                odk_dir = self.server_config["repository.path"] + "/odk"
+
+                file_paths = [
+                    "resources",
+                    "forms",
+                    "complex_form",
+                    "for_import",
+                    "files",
+                    "tmp",
+                ]
+                path_to_files = os.path.join(self.path, *file_paths)
+
+                file_to_import = os.path.join(
+                    self.path,
+                    *[
+                        "resources",
+                        "forms",
+                        "complex_form",
+                        "for_import",
+                        "files",
+                        "file1.json",
+                    ]
+                )
+                file_to_import_target = os.path.join(
+                    self.path,
+                    *[
+                        "resources",
+                        "forms",
+                        "complex_form",
+                        "for_import",
+                        "files",
+                        "tmp",
+                        "file1.json",
+                    ]
+                )
+                shutil.copyfile(file_to_import, file_to_import_target)
+
+                file_to_import = os.path.join(
+                    self.path,
+                    *[
+                        "resources",
+                        "forms",
+                        "complex_form",
+                        "for_import",
+                        "files",
+                        "file2.json",
+                    ]
+                )
+                file_to_import_target = os.path.join(
+                    self.path,
+                    *[
+                        "resources",
+                        "forms",
+                        "complex_form",
+                        "for_import",
+                        "files",
+                        "tmp",
+                        "file2.json",
+                    ]
+                )
+                shutil.copyfile(file_to_import, file_to_import_target)
+
+                file_to_import = os.path.join(
+                    self.path,
+                    *[
+                        "resources",
+                        "forms",
+                        "complex_form",
+                        "for_import",
+                        "files",
+                        "file3.json",
+                    ]
+                )
+                file_to_import_target = os.path.join(
+                    self.path,
+                    *[
+                        "resources",
+                        "forms",
+                        "complex_form",
+                        "for_import",
+                        "files",
+                        "tmp",
+                        "file3.json",
+                    ]
+                )
+                shutil.copyfile(file_to_import, file_to_import_target)
+
+                sql = (
+                    "INSERT INTO product (project_id,form_id,product_id,output_file,output_mimetype,"
+                    "celery_taskid,datetime_added,created_by,output_id,process_only,publishable) "
+                    "VALUES ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}',{})".format(
+                        self.projectID,
+                        self.formID,
+                        "fs1import",
+                        None,
+                        None,
+                        task_id,
+                        datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
+                        self.randonLogin,
+                        task_id[-12:],
+                        1,
+                        0,
+                    )
+                )
+                engine.execute(sql)
+                engine.dispose()
+
+                import_json_files(
+                    self.randonLogin,
+                    self.projectID,
+                    self.formID,
+                    odk_dir,
+                    form_directory,
+                    form_schema,
+                    self.assistantLogin,
+                    path_to_files,
+                    self.project,
+                    "si_participa/SECTION/GPS",
+                    self.projectID,
+                    self.server_config,
+                    "en",
+                    True,
+                    task_id,
+                )
+                store_task_status(task_id, self.server_config)
+
+            # Test import a simple file
+            paths = [
+                "resources",
+                "forms",
+                "complex_form",
+                "for_import",
+                "simple_file.json",
+            ]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/import".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "import_type": "1",
+                    "ignore_xform": "",
+                    "assistant": "{}@{}".format(self.assistantLogin, self.projectID),
+                },
+                status=302,
+                upload_files=[("file", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Test import a zip file
+            paths = ["resources", "forms", "complex_form", "for_import", "zip_file.zip"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/import".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "import_type": "1",
+                    "assistant": "{}@{}".format(self.assistantLogin, self.projectID),
+                },
+                status=302,
+                upload_files=[("file", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            mimic_celery_test_import()
 
         test_root()
         test_login()
@@ -2005,3 +2308,4 @@ class FunctionalTests(unittest.TestCase):
         test_odk()
         test_repository()
         test_repository_downloads()  # TODO: Test again a key that is sensitive
+        test_import_data()

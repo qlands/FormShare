@@ -564,7 +564,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "import_data",
@@ -660,7 +659,6 @@ def load_routes(config):
 
     # Form Products
 
-    # TODO: Test
     routes.append(
         add_route(
             "download_private_product",
@@ -670,7 +668,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "download_public_product",
@@ -680,7 +677,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "api_download_private_product",
@@ -690,7 +686,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "publish_product",
@@ -700,7 +695,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "unpublish_product",
@@ -710,7 +704,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "delete_product",

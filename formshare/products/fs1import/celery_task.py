@@ -310,6 +310,7 @@ def import_json_files(
     settings,
     locale,
     ignore_xform_check=False,
+    test_task_id=None,
 ):
     parts = __file__.split("/products/")
     this_file_path = parts[0] + "/locale"
@@ -317,7 +318,11 @@ def import_json_files(
     es.install()
     _ = es.gettext
 
-    task_id = import_json_files.request.id
+    if test_task_id is None:
+        task_id = import_json_files.request.id
+    else:
+        task_id = test_task_id
+
     engine = create_engine(settings["sqlalchemy.url"])
     list_of_files = path_to_files + "/**/*.json"
     files_to_import = glob.iglob(list_of_files, recursive=True)

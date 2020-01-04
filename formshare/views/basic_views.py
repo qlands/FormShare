@@ -224,9 +224,13 @@ class AssistantLoginView(PublicView):
                             )
                         )
         else:
-            safe = check_csrf_token(self.request, raises=False)
-            if not safe:
-                raise HTTPNotFound()
+            if (
+                    self.request.registry.settings.get("perform_post_checks", "true")
+                    == "true"
+            ):
+                safe = check_csrf_token(self.request, raises=False)
+                if not safe:
+                    raise HTTPNotFound()
             data = variable_decode(self.request.POST)
             login = data["login"]
             passwd = data["passwd"]

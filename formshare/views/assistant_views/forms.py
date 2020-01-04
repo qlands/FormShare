@@ -136,7 +136,7 @@ class ChangeMyAPIKey(AssistantView):
             if modified:
                 return HTTPFound(next_page)
             else:
-                self.add_error(self._("Unable to change the password: ") + message)
+                self.add_error(self._("Unable to change the key: ") + message)
                 return HTTPFound(next_page, headers={"FS_error": "true"})
         else:
             raise HTTPNotFound

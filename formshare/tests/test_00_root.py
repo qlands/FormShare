@@ -4,6 +4,7 @@ import uuid
 import os
 import datetime
 import shutil
+from sqlalchemy import create_engine
 
 """
 This testing module test all routes. It launch start the server and test all the routes and processes
@@ -28,6 +29,22 @@ def store_task_status(task, config):
         )
     )
     engine.dispose()
+
+
+def get_form_details(config, project, form):
+    engine = create_engine(config["sqlalchemy.url"])
+    result = engine.execute(
+        "SELECT form_directory,form_schema,form_reptask FROM odkform WHERE project_id = '{}' AND form_id = '{}'".format(
+            project, form
+        )
+    ).fetchone()
+    result = {
+        "form_directory": result[0],
+        "form_schema": result[1],
+        "form_reptask": result[2],
+    }
+    engine.dispose()
+    return result
 
 
 class FunctionalTests(unittest.TestCase):
@@ -1603,17 +1620,13 @@ class FunctionalTests(unittest.TestCase):
                 from formshare.products.repository.celery_task import (
                     create_mysql_repository,
                 )
-                from sqlalchemy import create_engine
 
-                engine = create_engine(self.server_config["sqlalchemy.url"])
-                result = engine.execute(
-                    "SELECT form_directory,form_reptask FROM odkform WHERE project_id = '{}' AND form_id = '{}'".format(
-                        self.projectID, self.formID
-                    )
-                ).fetchone()
-                form_directory = result[0]
-                form_reptask = result[1]
-                engine.dispose()
+                form_details = get_form_details(
+                    self.server_config, self.projectID, self.formID
+                )
+                form_directory = form_details["form_directory"]
+                form_reptask = form_details["form_reptask"]
+
                 form_schema = "FS" + str(uuid.uuid4()).replace("-", "_")
 
                 create_mysql_repository(
@@ -1762,16 +1775,14 @@ class FunctionalTests(unittest.TestCase):
             def mimic_celery_public_csv_process():
                 from formshare.products.export.csv.celery_task import build_csv
 
-                from sqlalchemy import create_engine
-
                 engine = create_engine(self.server_config["sqlalchemy.url"])
-                result = engine.execute(
-                    "SELECT form_directory,form_schema FROM odkform WHERE project_id = '{}' AND form_id = '{}'".format(
-                        self.projectID, self.formID
-                    )
-                ).fetchone()
-                form_directory = result[0]
-                form_schema = result[1]
+
+                form_details = get_form_details(
+                    self.server_config, self.projectID, self.formID
+                )
+
+                form_directory = form_details["form_directory"]
+                form_schema = form_details["form_schema"]
                 task_id = str(uuid.uuid4())
                 sql = (
                     "INSERT INTO product (project_id,form_id,product_id,output_file,output_mimetype,"
@@ -1806,7 +1817,11 @@ class FunctionalTests(unittest.TestCase):
                 # Download unpublished product fails
                 self.testapp.get(
                     "/user/{}/project/{}/form/{}/public_download/{}/output/{}".format(
-                        self.randonLogin, self.project, self.formID, "csv_public_export", task_id[-12:]
+                        self.randonLogin,
+                        self.project,
+                        self.formID,
+                        "csv_public_export",
+                        task_id[-12:],
                     ),
                     status=404,
                 )
@@ -1814,7 +1829,11 @@ class FunctionalTests(unittest.TestCase):
                 # Publish the product
                 res2 = self.testapp.post(
                     "/user/{}/project/{}/form/{}/products/{}/output/{}/publish".format(
-                        self.randonLogin, self.project, self.formID, "csv_public_export", task_id[-12:]
+                        self.randonLogin,
+                        self.project,
+                        self.formID,
+                        "csv_public_export",
+                        task_id[-12:],
                     ),
                     status=302,
                 )
@@ -1823,7 +1842,11 @@ class FunctionalTests(unittest.TestCase):
                 # Download published product pass
                 self.testapp.get(
                     "/user/{}/project/{}/form/{}/public_download/{}/output/{}".format(
-                        self.randonLogin, self.project, self.formID, "csv_public_export", task_id[-12:]
+                        self.randonLogin,
+                        self.project,
+                        self.formID,
+                        "csv_public_export",
+                        task_id[-12:],
                     ),
                     status=200,
                 )
@@ -1831,7 +1854,11 @@ class FunctionalTests(unittest.TestCase):
                 # Unpublish the product
                 res2 = self.testapp.post(
                     "/user/{}/project/{}/form/{}/products/{}/output/{}/unpublish".format(
-                        self.randonLogin, self.project, self.formID, "csv_public_export", task_id[-12:]
+                        self.randonLogin,
+                        self.project,
+                        self.formID,
+                        "csv_public_export",
+                        task_id[-12:],
                     ),
                     status=302,
                 )
@@ -1840,7 +1867,11 @@ class FunctionalTests(unittest.TestCase):
                 # Delete the product
                 res2 = self.testapp.post(
                     "/user/{}/project/{}/form/{}/products/{}/output/{}/delete".format(
-                        self.randonLogin, self.project, self.formID, "csv_public_export", task_id[-12:]
+                        self.randonLogin,
+                        self.project,
+                        self.formID,
+                        "csv_public_export",
+                        task_id[-12:],
                     ),
                     status=302,
                 )
@@ -1849,16 +1880,14 @@ class FunctionalTests(unittest.TestCase):
             def mimic_celery_private_csv_process():
                 from formshare.products.export.csv.celery_task import build_csv
 
-                from sqlalchemy import create_engine
-
                 engine = create_engine(self.server_config["sqlalchemy.url"])
-                result = engine.execute(
-                    "SELECT form_directory,form_schema FROM odkform WHERE project_id = '{}' AND form_id = '{}'".format(
-                        self.projectID, self.formID
-                    )
-                ).fetchone()
-                form_directory = result[0]
-                form_schema = result[1]
+
+                form_details = get_form_details(
+                    self.server_config, self.projectID, self.formID
+                )
+
+                form_directory = form_details["form_directory"]
+                form_schema = form_details["form_schema"]
                 task_id = str(uuid.uuid4())
                 sql = (
                     "INSERT INTO product (project_id,form_id,product_id,output_file,output_mimetype,"
@@ -1891,30 +1920,35 @@ class FunctionalTests(unittest.TestCase):
                 store_task_status(task_id, self.server_config)
                 self.testapp.get(
                     "/user/{}/project/{}/form/{}/private_download/{}/output/{}".format(
-                        self.randonLogin, self.project, self.formID, "csv_private_export", task_id[-12:]
+                        self.randonLogin,
+                        self.project,
+                        self.formID,
+                        "csv_private_export",
+                        task_id[-12:],
                     ),
                     status=200,
                 )
                 self.testapp.get(
                     "/user/{}/project/{}/form/{}/api_download/{}/output/{}?apikey={}".format(
-                        self.randonLogin, self.project, self.formID, "csv_private_export",
-                        task_id[-12:], self.randonLoginKey
+                        self.randonLogin,
+                        self.project,
+                        self.formID,
+                        "csv_private_export",
+                        task_id[-12:],
+                        self.randonLoginKey,
                     ),
                     status=200,
                 )
 
             def mimic_celery_xlsx_process():
                 from formshare.products.export.xlsx.celery_task import build_xlsx
-                from sqlalchemy import create_engine
 
                 engine = create_engine(self.server_config["sqlalchemy.url"])
-                result = engine.execute(
-                    "SELECT form_directory,form_schema FROM odkform WHERE project_id = '{}' AND form_id = '{}'".format(
-                        self.projectID, self.formID
-                    )
-                ).fetchone()
-                form_directory = result[0]
-                form_schema = result[1]
+                form_details = get_form_details(
+                    self.server_config, self.projectID, self.formID
+                )
+                form_directory = form_details["form_directory"]
+                form_schema = form_details["form_schema"]
                 task_id = str(uuid.uuid4())
 
                 sql = (
@@ -1949,22 +1983,25 @@ class FunctionalTests(unittest.TestCase):
                 store_task_status(task_id, self.server_config)
                 self.testapp.get(
                     "/user/{}/project/{}/form/{}/private_download/{}/output/{}".format(
-                        self.randonLogin, self.project, self.formID, "xlsx_public_export", task_id[-12:]
+                        self.randonLogin,
+                        self.project,
+                        self.formID,
+                        "xlsx_public_export",
+                        task_id[-12:],
                     ),
                     status=200,
                 )
 
             def mimic_celery_kml_process():
                 from formshare.products.export.kml.celery_task import build_kml
-                from sqlalchemy import create_engine
 
                 engine = create_engine(self.server_config["sqlalchemy.url"])
-                result = engine.execute(
-                    "SELECT form_schema FROM odkform WHERE project_id = '{}' AND form_id = '{}'".format(
-                        self.projectID, self.formID
-                    )
-                ).fetchone()
-                form_schema = result[0]
+
+                form_details = get_form_details(
+                    self.server_config, self.projectID, self.formID
+                )
+
+                form_schema = form_details["form_schema"]
                 task_id = str(uuid.uuid4())
 
                 sql = (
@@ -1997,23 +2034,24 @@ class FunctionalTests(unittest.TestCase):
                 store_task_status(task_id, self.server_config)
                 self.testapp.get(
                     "/user/{}/project/{}/form/{}/private_download/{}/output/{}".format(
-                        self.randonLogin, self.project, self.formID, "kml_export", task_id[-12:]
+                        self.randonLogin,
+                        self.project,
+                        self.formID,
+                        "kml_export",
+                        task_id[-12:],
                     ),
                     status=200,
                 )
 
             def mimic_celery_media_process():
                 from formshare.products.export.media.celery_task import build_media_zip
-                from sqlalchemy import create_engine
 
                 engine = create_engine(self.server_config["sqlalchemy.url"])
-                result = engine.execute(
-                    "SELECT form_directory,form_schema FROM odkform WHERE project_id = '{}' AND form_id = '{}'".format(
-                        self.projectID, self.formID
-                    )
-                ).fetchone()
-                form_directory = result[0]
-                form_schema = result[1]
+                form_details = get_form_details(
+                    self.server_config, self.projectID, self.formID
+                )
+                form_directory = form_details["form_directory"]
+                form_schema = form_details["form_schema"]
                 task_id = str(uuid.uuid4())
 
                 sql = (
@@ -2048,7 +2086,11 @@ class FunctionalTests(unittest.TestCase):
                 store_task_status(task_id, self.server_config)
                 self.testapp.get(
                     "/user/{}/project/{}/form/{}/private_download/{}/output/{}".format(
-                        self.randonLogin, self.project, self.formID, "media_export", task_id[-12:]
+                        self.randonLogin,
+                        self.project,
+                        self.formID,
+                        "media_export",
+                        task_id[-12:],
                     ),
                     status=200,
                 )
@@ -2118,16 +2160,13 @@ class FunctionalTests(unittest.TestCase):
         def test_import_data():
             def mimic_celery_test_import():
                 from formshare.products.fs1import.celery_task import import_json_files
-                from sqlalchemy import create_engine
 
                 engine = create_engine(self.server_config["sqlalchemy.url"])
-                result = engine.execute(
-                    "SELECT form_directory,form_schema FROM odkform WHERE project_id = '{}' AND form_id = '{}'".format(
-                        self.projectID, self.formID
-                    )
-                ).fetchone()
-                form_directory = result[0]
-                form_schema = result[1]
+                form_details = get_form_details(
+                    self.server_config, self.projectID, self.formID
+                )
+                form_directory = form_details["form_directory"]
+                form_schema = form_details["form_schema"]
                 task_id = str(uuid.uuid4())
                 odk_dir = self.server_config["repository.path"] + "/odk"
 
@@ -2296,6 +2335,236 @@ class FunctionalTests(unittest.TestCase):
 
             mimic_celery_test_import()
 
+        def test_repository_tasks():
+            # Get the tables in a repository
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/dictionary/tables".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+            # Change the description of a table
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/dictionary/tables".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "table_name": "maintable",
+                    "table_desc": "New description of maintable",
+                },
+                status=200,
+            )
+            # Get the fields of a table
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/dictionary/table/{}/fields".format(
+                    self.randonLogin, self.project, self.formID, "maintable"
+                ),
+                status=200,
+            )
+            # Update the description of a field
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/dictionary/table/{}/fields".format(
+                    self.randonLogin, self.project, self.formID, "maintable"
+                ),
+                {
+                    "post_type": "change_desc",
+                    "field_name": "i_d",
+                    "field_desc": "ID of the farmer",
+                },
+                status=200,
+            )
+            # Update the primary key as sensitive
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/dictionary/table/{}/fields".format(
+                    self.randonLogin, self.project, self.formID, "maintable"
+                ),
+                {
+                    "post_type": "change_as_sensitive",
+                    "field_name": "i_d",
+                    "field_protection": "recode",
+                },
+                status=200,
+            )
+
+            # Test the download with the ID as sensitive with recode
+            test_repository_downloads()
+
+            # Update the primary key as not sensitive
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/dictionary/table/{}/fields".format(
+                    self.randonLogin, self.project, self.formID, "maintable"
+                ),
+                {"post_type": "change_as_not_sensitive", "field_name": "i_d"},
+                status=200,
+            )
+
+            # Get the submissions on a form
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/submissions".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+
+            # Select the submissions rows
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/submissions/get?callback=jQuery311038923674830152466_1578156795294".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "_search": "false",
+                    "nd": "1578156795454",
+                    "rows": "10",
+                    "page": "1",
+                    "sidx": "",
+                    "sord": "asc",
+                },
+                status=200,
+            )
+
+            # Set form as inactive
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/deactivate".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Delete a submission
+            form_details = get_form_details(
+                self.server_config, self.projectID, self.formID
+            )
+            engine = create_engine(self.server_config["sqlalchemy.url"])
+            res = engine.execute(
+                "SELECT rowuuid FROM {}.maintable".format(form_details["form_schema"])
+            ).first()
+            row_uuid = res[0]
+            engine.dispose()
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/submissions/delete".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {"oper": "del", "id": row_uuid},
+                status=200,
+            )
+
+        def test_assistant_access():
+
+            # Test accessing the login page
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/login".format(
+                    self.randonLogin, self.project
+                ),
+                status=200,
+            )
+
+            # Assistant login fails. Assistant not found
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/login".format(
+                    self.randonLogin, self.project
+                ),
+                {"login": "123", "passwd": "123"},
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Assistant login fails. Password is not correct
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/login".format(
+                    self.randonLogin, self.project
+                ),
+                {"login": self.assistantLogin, "passwd": "321"},
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Assistant login succeeds.
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/login".format(
+                    self.randonLogin, self.project
+                ),
+                {"login": self.assistantLogin, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the assistant forms
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/forms".format(
+                    self.randonLogin, self.project
+                ),
+                status=200,
+            )
+
+            # Change the assistant password fails. Empty password
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/changemypassword".format(
+                    self.randonLogin, self.project
+                ),
+                {"coll_password": ""},
+                status=302,
+            )
+            assert "FS_error" in res.headers
+
+            # Change the assistant password fails. Password not the same
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/changemypassword".format(
+                    self.randonLogin, self.project
+                ),
+                {"coll_password": "123", "coll_password2": "321"},
+                status=302,
+            )
+            assert "FS_error" in res.headers
+
+            # Change the assistant password fails. Old password not correct
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/changemypassword".format(
+                    self.randonLogin, self.project
+                ),
+                {"coll_password": "123", "coll_password2": "123", "old_password": "321"},
+                status=302,
+            )
+            assert "FS_error" in res.headers
+
+            # Change the assistant password succeeds.
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/changemypassword".format(
+                    self.randonLogin, self.project
+                ),
+                {"coll_password": "123", "coll_password2": "123", "old_password": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Assistant login succeeds.
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/login".format(
+                    self.randonLogin, self.project
+                ),
+                {"login": self.assistantLogin, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Change the assistant key.
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/changemykey".format(
+                    self.randonLogin, self.project
+                ),
+                {"coll_apikey": str(uuid.uuid4())},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the assistant QR code
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/qrcode".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+
         test_root()
         test_login()
         test_dashboard()
@@ -2307,5 +2576,7 @@ class FunctionalTests(unittest.TestCase):
         test_forms()
         test_odk()
         test_repository()
-        test_repository_downloads()  # TODO: Test again a key that is sensitive
+        test_repository_downloads()
         test_import_data()
+        test_repository_tasks()
+        test_assistant_access()

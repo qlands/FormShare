@@ -835,7 +835,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "editDictTables",
@@ -845,7 +844,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "editDictFields",
@@ -855,7 +853,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "manageSubmissions",
@@ -875,7 +872,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "getFormSubmissions",
@@ -895,7 +891,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "deleteFormSubmission",
@@ -917,7 +912,6 @@ def load_routes(config):
 
     # Assistant access
 
-    # TODO: Test
     routes.append(
         add_route(
             "assistant_login",
@@ -927,7 +921,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "assistant_logout",
@@ -937,7 +930,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "assistant_forms",
@@ -947,7 +939,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "assistant_change_my_pass",
@@ -957,7 +948,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "assistant_change_my_key",
@@ -967,7 +957,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "assistant_qr_code",

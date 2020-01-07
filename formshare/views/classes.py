@@ -661,10 +661,8 @@ class AssistantView(object):
 
         if self.request.method == "POST":
             if (
-                    self.request.registry.settings.get(
-                        "perform_post_checks", "true"
-                    )
-                    == "true"
+                self.request.registry.settings.get("perform_post_checks", "true")
+                == "true"
             ):
                 safe = check_csrf_token(self.request, raises=False)
                 if not safe:

@@ -968,7 +968,6 @@ def load_routes(config):
 
     # JSON logs
 
-    # TODO: Test
     routes.append(
         add_route(
             "errorlist",
@@ -978,7 +977,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "comparejsons",
@@ -988,7 +986,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "checkoutjson",
@@ -998,7 +995,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "cancelcheckout",
@@ -1008,7 +1004,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "getsubmission",
@@ -1018,7 +1013,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "checkinjson",
@@ -1028,7 +1022,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "viewrevision",
@@ -1039,7 +1032,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "cancelrevision",
@@ -1050,7 +1042,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "pushrevision",
@@ -1061,7 +1052,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "disregard",
@@ -1072,7 +1062,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "canceldisregard",
@@ -1083,7 +1072,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "comparesubmissions",

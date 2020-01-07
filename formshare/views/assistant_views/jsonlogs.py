@@ -349,6 +349,8 @@ class JSONCheckin(AssistantView):
                     if self.request.method == "POST":
                         if not isinstance(self.request.POST["json"], bytes):
                             filename = self.request.POST["json"].filename
+                            if os.path.isabs(filename):
+                                filename = os.path.basename(filename)
                             input_file = self.request.POST["json"].file
                             base_name, file_extension = os.path.splitext(filename)
                             if base_name == submission_id:
@@ -357,32 +359,38 @@ class JSONCheckin(AssistantView):
                                     text_obj = byte_str.decode()
                                     json.loads(text_obj)
                                     input_file.seek(0)
-                                    sequence = str(uuid.uuid4())
-                                    sequence = sequence[-12:]
-                                    notes = self.request.POST["notes"]
-                                    res, message = store_new_version(
-                                        self.request,
-                                        self.userID,
-                                        self.projectID,
-                                        form_id,
-                                        submission_id,
-                                        self.assistantID,
-                                        sequence,
-                                        input_file,
-                                        notes,
-                                    )
-                                    if res == 0:
-                                        self.returnRawViewResult = True
-                                        return HTTPFound(
-                                            location=self.request.route_url(
-                                                "errorlist",
-                                                userid=self.userID,
-                                                projcode=self.projectCode,
-                                                formid=form_id,
-                                            )
-                                        )
+                                    if self.request.POST.get("sequence", None) is None:
+                                        sequence = str(uuid.uuid4())
+                                        sequence = sequence[-12:]
                                     else:
-                                        self.append_to_errors(message)
+                                        sequence = self.request.POST.get("sequence", None)
+                                    notes = self.request.POST["notes"]
+                                    if notes != "":
+                                        res, message = store_new_version(
+                                            self.request,
+                                            self.userID,
+                                            self.projectID,
+                                            form_id,
+                                            submission_id,
+                                            self.assistantID,
+                                            sequence,
+                                            input_file,
+                                            notes,
+                                        )
+                                        if res == 0:
+                                            self.returnRawViewResult = True
+                                            return HTTPFound(
+                                                location=self.request.route_url(
+                                                    "errorlist",
+                                                    userid=self.userID,
+                                                    projcode=self.projectCode,
+                                                    formid=form_id,
+                                                )
+                                            )
+                                        else:
+                                            self.append_to_errors(message)
+                                    else:
+                                        self.append_to_errors(self._("You need to indicate a note to the checkin"))
                                 except Exception as ex:
                                     log.debug(str(ex))
                                     self.append_to_errors(

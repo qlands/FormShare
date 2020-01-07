@@ -5,6 +5,7 @@ import os
 import datetime
 import shutil
 from sqlalchemy import create_engine
+import json
 
 """
 This testing module test all routes. It launch start the server and test all the routes and processes
@@ -2522,7 +2523,11 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/assistantaccess/changemypassword".format(
                     self.randonLogin, self.project
                 ),
-                {"coll_password": "123", "coll_password2": "123", "old_password": "321"},
+                {
+                    "coll_password": "123",
+                    "coll_password2": "123",
+                    "old_password": "321",
+                },
                 status=302,
             )
             assert "FS_error" in res.headers
@@ -2532,7 +2537,11 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/assistantaccess/changemypassword".format(
                     self.randonLogin, self.project
                 ),
-                {"coll_password": "123", "coll_password2": "123", "old_password": "123"},
+                {
+                    "coll_password": "123",
+                    "coll_password2": "123",
+                    "old_password": "123",
+                },
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -2565,6 +2574,366 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
 
+        def test_json_logs():
+            # Get all logs
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/errors".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+
+            # Get all errors
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/errors".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {"status": "error"},
+                status=200,
+            )
+
+            # Load compare submission
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/compare".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                ),
+                status=200,
+            )
+
+            # Compare the against a submission fails. Same submission
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/compare".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                ),
+                {"submissionid": "4b99bebd-8369-4cea-8b99-23a243c95547"},
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Compare the against a submission fails. Submission does not exits
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/compare".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                ),
+                {"submissionid": "test"},
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Compare the against a submission
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/compare".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                ),
+                {"submissionid": "file1"},
+                status=200,
+            )
+            assert "FS_error" not in res.headers
+
+            # Load disregard submission
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/disregard".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                ),
+                status=200,
+            )
+
+            # Disregard fails. No note
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/disregard".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                ),
+                {"notes": ""},
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Disregard passes
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/disregard".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                ),
+                {"notes": "Some notes about the disregard"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the disregarded
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/errors".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {"status": "disregarded"},
+                status=200,
+            )
+
+            # Load cancel disregard submission
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/canceldisregard".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                ),
+                status=200,
+            )
+
+            # Cancel disregard fails. No note
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/canceldisregard".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                ),
+                {"notes": ""},
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Cancel disregard passes
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/canceldisregard".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                ),
+                {"notes": "Some notes about the disregard"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Checkout the submission
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/checkout".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the checkout
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/errors".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {"status": "checkout"},
+                status=200,
+            )
+
+            # Cancels the checkout
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/cancel".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Checkout the submission again
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/checkout".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Gets the submission file
+            res = self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/get".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                ),
+                status=200,
+            )
+            data = json.loads(res.body)
+            data["si_participa/section_household_info/RespondentDetails/I_D"] = "501890387B2"
+            paths = ["tmp", "4b99bebd-8369-4cea-8b99-23a243c95547.json"]
+            submission_file = os.path.join(self.path, *paths)
+
+            with open(submission_file, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=4)
+
+            # Loads the checkin page
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/checkin".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                ),
+                status=200,
+            )
+
+            # Checkin a file fails. No notes
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/checkin".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                ),
+                {"notes": "", "sequence": "23a243c95547"},
+                status=200,
+                upload_files=[("json", submission_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Checkin a file passes.
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/checkin".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                ),
+                {"notes": "Some notes about the checkin", "sequence": "23a243c95547"},
+                status=302,
+                upload_files=[("json", submission_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            os.remove(submission_file)
+
+            # Loads the revision review page
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/view".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                    "23a243c95547"
+                ),
+                status=200,
+            )
+
+            # Cancel the revision.
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/cancel".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                    "23a243c95547"
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Checkout the submission again
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/checkout".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Gets the submission file again
+            res = self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/get".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                ),
+                status=200,
+            )
+            data = json.loads(res.body)
+            data["si_participa/section_household_info/RespondentDetails/I_D"] = "501890387B2"
+            paths = ["tmp", "4b99bebd-8369-4cea-8b99-23a243c95547.json"]
+            submission_file = os.path.join(self.path, *paths)
+
+            with open(submission_file, 'w', encoding='utf-8') as f:
+                json.dump(data, f, ensure_ascii=False, indent=4)
+
+            # Checkin the file again
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/checkin".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                ),
+                {"notes": "Some notes about the checkin", "sequence": "23a243c95548"},
+                status=302,
+                upload_files=[("json", submission_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            os.remove(submission_file)
+
+            # Push the revision.
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/push".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                    "23a243c95548"
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the checkout
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/errors".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {"status": "fixed"},
+                status=200,
+            )
+
+            # Load the compare page
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/compare".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                    "file1",
+                ),
+                status=200,
+            )
+
         test_root()
         test_login()
         test_dashboard()
@@ -2580,3 +2949,4 @@ class FunctionalTests(unittest.TestCase):
         test_import_data()
         test_repository_tasks()
         test_assistant_access()
+        test_json_logs()

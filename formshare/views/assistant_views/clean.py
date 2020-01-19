@@ -238,7 +238,7 @@ class PerformAction(AssistantView):
                 if operator == "edit":
                     post_data.pop("oper")
                     post_data.pop("id")
-                    post_data.pop("csrf_token")
+                    post_data.pop("csrf_token", None)
                     for key, value in post_data.items():
                         update_data(
                             self.request,

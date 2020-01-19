@@ -363,7 +363,9 @@ class JSONCheckin(AssistantView):
                                         sequence = str(uuid.uuid4())
                                         sequence = sequence[-12:]
                                     else:
-                                        sequence = self.request.POST.get("sequence", None)
+                                        sequence = self.request.POST.get(
+                                            "sequence", None
+                                        )
                                     notes = self.request.POST["notes"]
                                     if notes != "":
                                         res, message = store_new_version(
@@ -390,7 +392,11 @@ class JSONCheckin(AssistantView):
                                         else:
                                             self.append_to_errors(message)
                                     else:
-                                        self.append_to_errors(self._("You need to indicate a note to the checkin"))
+                                        self.append_to_errors(
+                                            self._(
+                                                "You need to indicate a note to the checkin"
+                                            )
+                                        )
                                 except Exception as ex:
                                     log.debug(str(ex))
                                     self.append_to_errors(

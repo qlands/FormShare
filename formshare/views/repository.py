@@ -21,8 +21,8 @@ class GenerateRepository(PrivateView):
         send_error_to_technical_team(
             self.request,
             "Error while creating the repository for form {} in "
-            "project {}. \nAccount: {}\nError: {}\nMessage: {}\n".format(
-                form, project, user, error_code, message
+            "project {}. \nURL:{} \nAccount: {}\nError: {}\nMessage: {}\n".format(
+                form, project, self.request.url, user, error_code, message
             ),
         )
         log.error(
@@ -187,7 +187,7 @@ class GenerateRepository(PrivateView):
                                 )
                                 stage = -1
                             if 3 <= result_code <= 6:
-                                if result_code == 3:
+                                if result_code == 3 or result_code == 4:
                                     root = etree.fromstring(message)
                                     language_array = root.findall(
                                         ".//language"

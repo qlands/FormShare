@@ -64,6 +64,7 @@ class FunctionalTests(unittest.TestCase):
         self.project = ""
         self.projectID = ""
         self.assistantLogin = ""
+        self.assistantLoginKey = ""
         self.assistantGroupID = ""
         self.formID = ""
         self.path = os.path.dirname(os.path.abspath(__file__))
@@ -72,8 +73,10 @@ class FunctionalTests(unittest.TestCase):
         def test_root():
             # Test the root urls
             self.testapp.get("/", status=200)
+            self.testapp.get("/refresh", status=200)
             self.testapp.get("/login", status=200)
             self.testapp.get("/join", status=200)
+            self.testapp.get("/recover", status=200)
             self.testapp.get("/not_found", status=404)
 
         def test_login():
@@ -163,6 +166,14 @@ class FunctionalTests(unittest.TestCase):
                     "user_super": "1",
                     "user_apikey": self.randonLoginKey,
                 },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Test recover the password
+            res = self.testapp.post(
+                "/recover",
+                {"email": random_login + "@qlands.com", "user": ""},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -269,6 +280,7 @@ class FunctionalTests(unittest.TestCase):
                     "user_password": "123",
                     "user_password2": "123",
                     "user_email": random_login + "@qlands.com",
+                    "user_name": random_login,
                 },
                 status=302,
             )
@@ -299,7 +311,8 @@ class FunctionalTests(unittest.TestCase):
                 {
                     "modify": "",
                     "user_email": random_login + "@qlands.com",
-                    "user_apikey": "newkey",
+                    "user_apikey": str(uuid.uuid4()),
+                    "user_active": "1",
                 },
                 status=302,
             )
@@ -663,6 +676,14 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            # Get the available collaborators
+            self.testapp.get(
+                "/user/{}/api/select2_user?q={}".format(
+                    self.randonLogin, self.collaboratorLogin
+                ),
+                status=200,
+            )
 
         def test_assistants():
             # Add an assistant fail. The assistant in empty
@@ -1756,21 +1777,28 @@ class FunctionalTests(unittest.TestCase):
                 ),
             )
 
+            time.sleep(5)  # Wait for ElasticSearch to store this
+
             # Add a second submission to test downloads
             paths = ["resources", "forms", "complex_form", "submission002.xml"]
-            submission_file = os.path.join(self.path, *paths)
+            submission_file2 = os.path.join(self.path, *paths)
 
             paths = ["resources", "forms", "complex_form", "image001.png"]
-            image_file = os.path.join(self.path, *paths)
+            image_file2 = os.path.join(self.path, *paths)
 
             self.testapp.post(
                 "/user/{}/project/{}/push".format(self.randonLogin, self.project),
                 status=201,
-                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                upload_files=[
+                    ("filetoupload", submission_file2),
+                    ("image", image_file2),
+                ],
                 extra_environ=dict(
                     FS_for_testing="true", FS_user_for_testing=self.assistantLogin
                 ),
             )
+
+            time.sleep(5)  # Wait for ElasticSearch to store this
 
         def test_repository_downloads():
             def mimic_celery_public_csv_process():
@@ -2337,6 +2365,7 @@ class FunctionalTests(unittest.TestCase):
             mimic_celery_test_import()
 
         def test_repository_tasks():
+            time.sleep(5)  # Wait 5 seconds to other tests to finish
             # Get the tables in a repository
             self.testapp.get(
                 "/user/{}/project/{}/form/{}/dictionary/tables".format(
@@ -2556,12 +2585,14 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            self.assistantLoginKey = str(uuid.uuid4())
+
             # Change the assistant key.
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/changemykey".format(
                     self.randonLogin, self.project
                 ),
-                {"coll_apikey": str(uuid.uuid4())},
+                {"coll_apikey": self.assistantLoginKey},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -2592,13 +2623,31 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
 
+            form_details = get_form_details(
+                self.server_config, self.projectID, self.formID
+            )
+            engine = create_engine(self.server_config["sqlalchemy.url"])
+            res = engine.execute(
+                "SELECT surveyid FROM {}.maintable WHERE i_d = '501890386'".format(
+                    form_details["form_schema"]
+                )
+            ).first()
+            survey_id = res[0]
+
+            res = engine.execute(
+                "SELECT submission_id FROM formshare.submission "
+                "WHERE submission_status = 2 AND project_id = '{}'".format(
+                    self.projectID
+                )
+            ).first()
+            duplicated_id = res[0]
+
+            engine.dispose()
+
             # Load compare submission
             self.testapp.get(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/compare".format(
-                    self.randonLogin,
-                    self.project,
-                    self.formID,
-                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                    self.randonLogin, self.project, self.formID, duplicated_id
                 ),
                 status=200,
             )
@@ -2606,12 +2655,9 @@ class FunctionalTests(unittest.TestCase):
             # Compare the against a submission fails. Same submission
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/compare".format(
-                    self.randonLogin,
-                    self.project,
-                    self.formID,
-                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                    self.randonLogin, self.project, self.formID, duplicated_id
                 ),
-                {"submissionid": "4b99bebd-8369-4cea-8b99-23a243c95547"},
+                {"submissionid": duplicated_id},
                 status=200,
             )
             assert "FS_error" in res.headers
@@ -2619,10 +2665,7 @@ class FunctionalTests(unittest.TestCase):
             # Compare the against a submission fails. Submission does not exits
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/compare".format(
-                    self.randonLogin,
-                    self.project,
-                    self.formID,
-                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                    self.randonLogin, self.project, self.formID, duplicated_id
                 ),
                 {"submissionid": "test"},
                 status=200,
@@ -2632,12 +2675,9 @@ class FunctionalTests(unittest.TestCase):
             # Compare the against a submission
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/compare".format(
-                    self.randonLogin,
-                    self.project,
-                    self.formID,
-                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                    self.randonLogin, self.project, self.formID, duplicated_id
                 ),
-                {"submissionid": "file1"},
+                {"submissionid": survey_id},
                 status=200,
             )
             assert "FS_error" not in res.headers
@@ -2645,10 +2685,7 @@ class FunctionalTests(unittest.TestCase):
             # Load disregard submission
             self.testapp.get(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/disregard".format(
-                    self.randonLogin,
-                    self.project,
-                    self.formID,
-                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                    self.randonLogin, self.project, self.formID, duplicated_id
                 ),
                 status=200,
             )
@@ -2656,10 +2693,7 @@ class FunctionalTests(unittest.TestCase):
             # Disregard fails. No note
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/disregard".format(
-                    self.randonLogin,
-                    self.project,
-                    self.formID,
-                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                    self.randonLogin, self.project, self.formID, duplicated_id
                 ),
                 {"notes": ""},
                 status=200,
@@ -2669,10 +2703,7 @@ class FunctionalTests(unittest.TestCase):
             # Disregard passes
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/disregard".format(
-                    self.randonLogin,
-                    self.project,
-                    self.formID,
-                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                    self.randonLogin, self.project, self.formID, duplicated_id
                 ),
                 {"notes": "Some notes about the disregard"},
                 status=302,
@@ -2691,10 +2722,7 @@ class FunctionalTests(unittest.TestCase):
             # Load cancel disregard submission
             self.testapp.get(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/canceldisregard".format(
-                    self.randonLogin,
-                    self.project,
-                    self.formID,
-                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                    self.randonLogin, self.project, self.formID, duplicated_id
                 ),
                 status=200,
             )
@@ -2702,10 +2730,7 @@ class FunctionalTests(unittest.TestCase):
             # Cancel disregard fails. No note
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/canceldisregard".format(
-                    self.randonLogin,
-                    self.project,
-                    self.formID,
-                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                    self.randonLogin, self.project, self.formID, duplicated_id
                 ),
                 {"notes": ""},
                 status=200,
@@ -2715,10 +2740,7 @@ class FunctionalTests(unittest.TestCase):
             # Cancel disregard passes
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/canceldisregard".format(
-                    self.randonLogin,
-                    self.project,
-                    self.formID,
-                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                    self.randonLogin, self.project, self.formID, duplicated_id
                 ),
                 {"notes": "Some notes about the disregard"},
                 status=302,
@@ -2728,10 +2750,7 @@ class FunctionalTests(unittest.TestCase):
             # Checkout the submission
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/checkout".format(
-                    self.randonLogin,
-                    self.project,
-                    self.formID,
-                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                    self.randonLogin, self.project, self.formID, duplicated_id
                 ),
                 status=302,
             )
@@ -2749,10 +2768,7 @@ class FunctionalTests(unittest.TestCase):
             # Cancels the checkout
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/cancel".format(
-                    self.randonLogin,
-                    self.project,
-                    self.formID,
-                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                    self.randonLogin, self.project, self.formID, duplicated_id
                 ),
                 status=302,
             )
@@ -2761,10 +2777,7 @@ class FunctionalTests(unittest.TestCase):
             # Checkout the submission again
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/checkout".format(
-                    self.randonLogin,
-                    self.project,
-                    self.formID,
-                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                    self.randonLogin, self.project, self.formID, duplicated_id
                 ),
                 status=302,
             )
@@ -2773,28 +2786,24 @@ class FunctionalTests(unittest.TestCase):
             # Gets the submission file
             res = self.testapp.get(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/get".format(
-                    self.randonLogin,
-                    self.project,
-                    self.formID,
-                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                    self.randonLogin, self.project, self.formID, duplicated_id
                 ),
                 status=200,
             )
             data = json.loads(res.body)
-            data["si_participa/section_household_info/RespondentDetails/I_D"] = "501890387B2"
-            paths = ["tmp", "4b99bebd-8369-4cea-8b99-23a243c95547.json"]
+            data[
+                "si_participa/section_household_info/RespondentDetails/I_D"
+            ] = "501890387B2"
+            paths = ["tmp", duplicated_id + ".json"]
             submission_file = os.path.join(self.path, *paths)
 
-            with open(submission_file, 'w', encoding='utf-8') as f:
+            with open(submission_file, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=4)
 
             # Loads the checkin page
             self.testapp.get(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/checkin".format(
-                    self.randonLogin,
-                    self.project,
-                    self.formID,
-                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                    self.randonLogin, self.project, self.formID, duplicated_id
                 ),
                 status=200,
             )
@@ -2802,10 +2811,7 @@ class FunctionalTests(unittest.TestCase):
             # Checkin a file fails. No notes
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/checkin".format(
-                    self.randonLogin,
-                    self.project,
-                    self.formID,
-                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                    self.randonLogin, self.project, self.formID, duplicated_id
                 ),
                 {"notes": "", "sequence": "23a243c95547"},
                 status=200,
@@ -2816,10 +2822,7 @@ class FunctionalTests(unittest.TestCase):
             # Checkin a file passes.
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/checkin".format(
-                    self.randonLogin,
-                    self.project,
-                    self.formID,
-                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                    self.randonLogin, self.project, self.formID, duplicated_id
                 ),
                 {"notes": "Some notes about the checkin", "sequence": "23a243c95547"},
                 status=302,
@@ -2835,8 +2838,8 @@ class FunctionalTests(unittest.TestCase):
                     self.randonLogin,
                     self.project,
                     self.formID,
-                    "4b99bebd-8369-4cea-8b99-23a243c95547",
-                    "23a243c95547"
+                    duplicated_id,
+                    "23a243c95547",
                 ),
                 status=200,
             )
@@ -2847,8 +2850,8 @@ class FunctionalTests(unittest.TestCase):
                     self.randonLogin,
                     self.project,
                     self.formID,
-                    "4b99bebd-8369-4cea-8b99-23a243c95547",
-                    "23a243c95547"
+                    duplicated_id,
+                    "23a243c95547",
                 ),
                 status=302,
             )
@@ -2857,10 +2860,7 @@ class FunctionalTests(unittest.TestCase):
             # Checkout the submission again
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/checkout".format(
-                    self.randonLogin,
-                    self.project,
-                    self.formID,
-                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                    self.randonLogin, self.project, self.formID, duplicated_id
                 ),
                 status=302,
             )
@@ -2869,28 +2869,24 @@ class FunctionalTests(unittest.TestCase):
             # Gets the submission file again
             res = self.testapp.get(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/get".format(
-                    self.randonLogin,
-                    self.project,
-                    self.formID,
-                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                    self.randonLogin, self.project, self.formID, duplicated_id
                 ),
                 status=200,
             )
             data = json.loads(res.body)
-            data["si_participa/section_household_info/RespondentDetails/I_D"] = "501890387B2"
-            paths = ["tmp", "4b99bebd-8369-4cea-8b99-23a243c95547.json"]
+            data[
+                "si_participa/section_household_info/RespondentDetails/I_D"
+            ] = "501890387B2"
+            paths = ["tmp", duplicated_id + ".json"]
             submission_file = os.path.join(self.path, *paths)
 
-            with open(submission_file, 'w', encoding='utf-8') as f:
+            with open(submission_file, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=4)
 
             # Checkin the file again
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/checkin".format(
-                    self.randonLogin,
-                    self.project,
-                    self.formID,
-                    "4b99bebd-8369-4cea-8b99-23a243c95547",
+                    self.randonLogin, self.project, self.formID, duplicated_id
                 ),
                 {"notes": "Some notes about the checkin", "sequence": "23a243c95548"},
                 status=302,
@@ -2906,8 +2902,8 @@ class FunctionalTests(unittest.TestCase):
                     self.randonLogin,
                     self.project,
                     self.formID,
-                    "4b99bebd-8369-4cea-8b99-23a243c95547",
-                    "23a243c95548"
+                    duplicated_id,
+                    "23a243c95548",
                 ),
                 status=302,
             )
@@ -2928,11 +2924,131 @@ class FunctionalTests(unittest.TestCase):
                     self.randonLogin,
                     self.project,
                     self.formID,
-                    "4b99bebd-8369-4cea-8b99-23a243c95547",
-                    "file1",
+                    duplicated_id,
+                    survey_id,
                 ),
                 status=200,
             )
+
+        def test_clean_interface():
+            # Load the clean page
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/clean".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+
+            # Loads the data for the grid
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/request"
+                "?callback=jQuery31104503466642261382_1578424030318".format(
+                    self.randonLogin, self.project, self.formID, "maintable"
+                ),
+                {
+                    "_search": "false",
+                    "nd": "1578156795454",
+                    "rows": "10",
+                    "page": "1",
+                    "sidx": "",
+                    "sord": "asc",
+                },
+                status=200,
+            )
+
+            form_details = get_form_details(
+                self.server_config, self.projectID, self.formID
+            )
+            engine = create_engine(self.server_config["sqlalchemy.url"])
+            res = engine.execute(
+                "SELECT rowuuid FROM {}.maintable".format(form_details["form_schema"])
+            ).first()
+            row_uuid = res[0]
+            engine.dispose()
+
+            # Emits a change into the database
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/action".format(
+                    self.randonLogin, self.project, self.formID, "maintable"
+                ),
+                {"landcultivated": "13.000", "oper": "edit", "id": row_uuid},
+                status=200,
+            )
+            assert "FS_error" not in res.headers
+
+            # Change data using API fails. No rowuuid
+            self.testapp.post_json(
+                "/user/{}/project/{}/form/{}/api_update?apikey={}".format(
+                    self.randonLogin, self.project, self.formID, self.assistantLoginKey
+                ),
+                {"landcultivated": 14},
+                status=400,
+            )
+
+            #  Change data using API fails. Field cannot be found
+            self.testapp.post_json(
+                "/user/{}/project/{}/form/{}/api_update?apikey={}".format(
+                    self.randonLogin, self.project, self.formID, self.assistantLoginKey
+                ),
+                {"rowuuid": row_uuid, "some_file": 14},
+                status=400,
+            )
+
+            #  Change data using API passes
+            self.testapp.post_json(
+                "/user/{}/project/{}/form/{}/api_update?apikey={}".format(
+                    self.randonLogin, self.project, self.formID, self.assistantLoginKey
+                ),
+                {"rowuuid": "test", "landcultivated": 14},
+                status=404,
+            )
+
+            #  Change data using API passes
+            self.testapp.post_json(
+                "/user/{}/project/{}/form/{}/api_update?apikey={}".format(
+                    self.randonLogin, self.project, self.formID, self.assistantLoginKey
+                ),
+                {"rowuuid": row_uuid, "landcultivated": 14},
+                status=200,
+            )
+
+        def test_audit():
+            # Load the audit page
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/audit".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+
+            # Loads the audit data for the grid
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/audit/get"
+                "?callback=jQuery31104503466642261382_1578424030318".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "_search": "false",
+                    "nd": "1578156795454",
+                    "rows": "10",
+                    "page": "1",
+                    "sidx": "",
+                    "sord": "asc",
+                },
+                status=200,
+            )
+
+        def test_collaborator_access():
+            # Test logout
+            self.testapp.get("/logout", status=302)
+
+            # Login succeed by collaborator
+            res = self.testapp.post(
+                "/login",
+                {"user": "", "email": self.collaboratorLogin, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
 
         test_root()
         test_login()
@@ -2947,6 +3063,9 @@ class FunctionalTests(unittest.TestCase):
         test_repository()
         test_repository_downloads()
         test_import_data()
-        test_repository_tasks()
         test_assistant_access()
         test_json_logs()
+        test_clean_interface()
+        test_audit()
+        test_repository_tasks()
+        test_collaborator_access()

@@ -172,13 +172,12 @@ def load_routes(config):
     # FormShare routes
     routes.append(add_route("home", "/", HomeView, "landing/index.jinja2"))
 
-    # TODO: Test
     routes.append(
         add_route("refresh", "/refresh", RefreshSessionView, "generic/refresh.jinja2")
     )
     routes.append(add_route("login", "/login", LoginView, "generic/login.jinja2"))
 
-    # TODO: Test
+    # TODO: Mimic send emmail celery task
     routes.append(
         add_route(
             "recover_password",
@@ -191,7 +190,6 @@ def load_routes(config):
         add_route("register", "/join", RegisterView, "generic/register.jinja2")
     )
 
-    # TODO: Test
     routes.append(add_route("logout", "/logout", log_out_view, None))
 
     # TODO: Test for merged forms
@@ -862,7 +860,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "viewAudit",
@@ -881,7 +878,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "getFormAudit",
@@ -1084,7 +1080,6 @@ def load_routes(config):
 
     # Clean interface
 
-    # TODO: Test
     routes.append(
         add_route(
             "clean",
@@ -1094,7 +1089,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "request",
@@ -1104,7 +1098,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "action",
@@ -1116,7 +1109,6 @@ def load_routes(config):
 
     # Utility API
 
-    # TODO: Test
     routes.append(
         add_route(
             "api_select2_users",
@@ -1128,7 +1120,6 @@ def load_routes(config):
 
     # Repository API
 
-    # TODO: Test
     routes.append(
         add_route(
             "api_update_repository",

@@ -166,11 +166,19 @@ class RecoverPasswordView(PublicView):
             self.request.registry.settings.get("mail.server.available", "false")
             == "false"
         ):
-            raise HTTPNotFound()
-        if self.request.method == "POST":
-            safe = check_csrf_token(self.request, raises=False)
-            if not safe:
+            if (
+                self.request.registry.settings.get("ignore_email_check", "false")
+                == "false"
+            ):
                 raise HTTPNotFound()
+        if self.request.method == "POST":
+            if (
+                self.request.registry.settings.get("perform_post_checks", "true")
+                == "true"
+            ):
+                safe = check_csrf_token(self.request, raises=False)
+                if not safe:
+                    raise HTTPNotFound()
             data = variable_decode(self.request.POST)
             login = data["email"]
             user = data["user"]
@@ -184,11 +192,13 @@ class RecoverPasswordView(PublicView):
             user = get_user_data(login, self.request)
             if user is not None:
                 user_data = get_formshare_user_data(self.request, user.email, True)
-                user_password = decode_data(self.request, user_data["user_password"])
+                user_password = decode_data(
+                    self.request, user_data["user_password"].encode()
+                )
                 send_password_email(
                     self.request, user.email, user_password.decode(), user.userData
                 )
-                self.returnRawViewResult = True
+            self.returnRawViewResult = True
             return HTTPFound(location=self.request.route_url("login"))
         return {}
 

@@ -29,7 +29,6 @@ MANIFEST
 .idea/
 .directory
 docker/
-formshare/tests/config.py
 
 # PyInstaller
 #  Usually these files are written by a python script from a template

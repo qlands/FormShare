@@ -8,17 +8,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-01-19 20:44-0600\n"
+"POT-Creation-Date: 2020-01-20 19:51-0600\n"
 "PO-Revision-Date: 2020-01-19 20:58-0600\n"
 "Last-Translator: Carlos Quiros <cquiros@qlands.com>\n"
 "Language: es\n"
 "Language-Team: English <kde-i18n-doc@kde.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.7.0\n"
-"X-Generator: Lokalize 2.0\n"
 
 #: formshare/processes/db/assistant.py:229
 #: formshare/processes/db/assistant.py:252
@@ -190,8 +189,7 @@ msgstr ""
 
 #: formshare/processes/odk/api.py:524
 msgid "The following tables have more than 64 selects: "
-msgstr ""
-"Las siguientes tablas tienen mas de 64 opciones de selección (selects):"
+msgstr "Las siguientes tablas tienen mas de 64 opciones de selección (selects):"
 
 #: formshare/processes/odk/api.py:532
 msgid " with "
@@ -644,14 +642,14 @@ msgstr "Confirmación"
 msgid "Cancel"
 msgstr "Cancelar"
 
+# | msgid "Change privilege"
 #: formshare/templates/assistant/page.jinja2:149
 #: formshare/templates/assistant/page.jinja2:167
-#| msgid "Change privilege"
 msgid "Change API key"
 msgstr "Cambiar llave API"
 
+# | msgid "Changing role of"
 #: formshare/templates/assistant/page.jinja2:150
-#| msgid "Changing role of"
 msgid "Change API key of"
 msgstr "Cambiar la llave API de"
 
@@ -1289,8 +1287,8 @@ msgstr "Parece que eres nuevo aquí!"
 msgid "Create a new project"
 msgstr "Crear nuevo proyecto"
 
+# | msgid "Join FormShare"
 #: formshare/templates/dashboard/index.jinja2:91
-#| msgid "Join FormShare"
 msgid "Configure FormShare"
 msgstr "Configurar FormShare"
 
@@ -2092,8 +2090,7 @@ msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/dictionary/edit_tables.jinja2:68
 msgid "Lookup tables: Contain the description of categorical variables."
-msgstr ""
-"Tablas de búsqueda: Contienen la descripción de las variables categóricas"
+msgstr "Tablas de búsqueda: Contienen la descripción de las variables categóricas"
 
 #: formshare/templates/dashboard/projects/forms/dictionary/edit_tables.jinja2:79
 msgid "Filter by table type"
@@ -2566,8 +2563,8 @@ msgstr "Con repositorio"
 msgid "Merged into the repository of"
 msgstr "Fusionada con el repositorio de"
 
+# | msgid "red"
 #: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:40
-#| msgid "red"
 msgid "Merged"
 msgstr "Unido"
 
@@ -2900,8 +2897,7 @@ msgstr "Subir nueva versión"
 
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:13
 msgid "Warning: Uploading a new version will remove any test data"
-msgstr ""
-"Advertencia: Al subir una nueva versión usted borrará los datos de prueba"
+msgstr "Advertencia: Al subir una nueva versión usted borrará los datos de prueba"
 
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:24
 msgid "Choose file"
@@ -3205,8 +3201,7 @@ msgid "FormShare will perform more checks on"
 msgstr "FormShare realizará más verificaciones en"
 
 #: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:31
-msgid ""
-"and report whether or not is possible to merge it into the repository of"
+msgid "and report whether or not is possible to merge it into the repository of"
 msgstr "e informar si es posible o no fusionarlo en el repositorio de"
 
 #: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:31
@@ -3544,8 +3539,8 @@ msgstr "Huésped"
 msgid "Logout"
 msgstr "Salir"
 
+# | msgid "Manage errors"
 #: formshare/templates/dashboard/snippets/navbar.jinja2:52
-#| msgid "Manage errors"
 msgid "Manage users"
 msgstr "Administrar usuarios"
 
@@ -3555,15 +3550,15 @@ msgstr "Administrar usuarios"
 msgid "Add user"
 msgstr "Añadir usuario"
 
+# | msgid "Current information"
 #: formshare/templates/dashboard/users/user_add.jinja2:24
-#| msgid "Current information"
 msgid "User information"
 msgstr "Información del usuario"
 
+# | msgid "Edit Record"
 #: formshare/templates/dashboard/users/snippets/brdcrbs_useredit.jinja2:2
 #: formshare/templates/dashboard/users/user_edit.jinja2:4
 #: formshare/templates/dashboard/users/user_list.jinja2:62
-#| msgid "Edit Record"
 msgid "Edit user"
 msgstr "Editar usuario"
 
@@ -3578,24 +3573,25 @@ msgstr "Usuario de FormShare"
 #: formshare/templates/dashboard/users/user_list.jinja2:37
 msgid "As an administrator you can add and edit FormShare users"
 msgstr ""
-"Siendo un administrador usted puede agregar y modificar usuario de FormShare"
+"Siendo un administrador usted puede agregar y modificar usuario de "
+"FormShare"
 
 #: formshare/templates/dashboard/users/user_list.jinja2:53
 msgid "Search for an user"
 msgstr "Buscar usuario"
 
+# | msgid "Search by username, full name or email address"
 #: formshare/templates/dashboard/users/user_list.jinja2:54
-#| msgid "Search by username, full name or email address"
 msgid "You can search by username, full name or email address"
 msgstr "Buscar por nombre de usuario, nombre completo o correo electrónico"
 
+# | msgid "Add new form"
 #: formshare/templates/dashboard/users/snippets/brdcrbs_useradd.jinja2:2
-#| msgid "Add new form"
 msgid "Add new user"
 msgstr "Añadir nuevo usuario"
 
+# | msgid "Group list"
 #: formshare/templates/dashboard/users/snippets/brdcrbs_userlist.jinja2:2
-#| msgid "Group list"
 msgid "User list"
 msgstr "Listado de usuarios"
 
@@ -3608,8 +3604,8 @@ msgstr "Nombre del usuario"
 msgid "Is super user"
 msgstr "Es super usuario"
 
+# | msgid "Modify group"
 #: formshare/templates/dashboard/users/snippets/user_form_edit.jinja2:33
-#| msgid "Modify group"
 msgid "Modify user"
 msgstr "Modificar usuario"
 
@@ -3638,8 +3634,7 @@ msgstr "Por favor responda a"
 
 #: formshare/templates/email/collaborate_email.jinja2:12
 msgid "if you think you got this email by mistake."
-msgstr ""
-"si usted considera que este correo electrónico le fue enviado por error."
+msgstr "si usted considera que este correo electrónico le fue enviado por error."
 
 # | msgid "Disregarded"
 #: formshare/templates/email/collaborate_email.jinja2:15
@@ -3773,9 +3768,9 @@ msgstr "Sesión expirada"
 msgid "Your session has expired."
 msgstr "Su sesión ha expirado."
 
+# | msgid "" "Dont worry, just go back and refresh the page to obtain a new
+# | secure " "session."
 #: formshare/templates/generic/refresh.jinja2:18
-#| msgid "" "Dont worry, just go back and refresh the page to obtain a new
-#| secure " "session."
 msgid ""
 "Don't worry, just go back and refresh the page to obtain a new secure "
 "session."
@@ -4039,14 +4034,14 @@ msgstr "La contraseña debe tener menos de 50 caracteres."
 msgid "Invalid email"
 msgstr "Correo electrónico inválido"
 
+# | msgid "This API key does not exist or is inactive."
 #: formshare/views/classes.py:723 formshare/views/classes.py:790
-#| msgid "This API key does not exist or is inactive."
 msgid "This API key does not exist or is inactive"
 msgstr "Esta llave API no existe o está inactiva."
 
 # | msgid "To be pushed"
+# | msgid "cannot be parsed"
 #: formshare/views/classes.py:736 formshare/views/classes.py:806
-#| msgid "cannot be parsed"
 msgid "The JSON cannot be parsed"
 msgstr "El archivo JSON no se puede analizar"
 
@@ -4054,8 +4049,8 @@ msgstr "El archivo JSON no se puede analizar"
 msgid "You need to specify an API key"
 msgstr "Usted necesita indicar la llave API"
 
+# | msgid "Output does not exists"
 #: formshare/views/classes.py:822
-#| msgid "Output does not exists"
 msgid "Such project does not exists"
 msgstr "El proyecto no existe"
 
@@ -4071,8 +4066,8 @@ msgstr ""
 "El colaborador fue añadido a este proyecto. Sin embargo, un correo "
 "electrónico se le ha enviado a el o ella para aceptar la colaboración"
 
+# | msgid "You need to specify a name"
 #: formshare/views/collaborators.py:97
-#| msgid "You need to specify a name"
 msgid "You need to specify a collaborator"
 msgstr "Usted necesita indicar un colaborador"
 
@@ -4196,8 +4191,7 @@ msgstr "Faltan los siguientes archivos y debe adjuntarlos:"
 
 #: formshare/views/form.py:304
 msgid "There was an error while processing some of the XML resource files:"
-msgstr ""
-"Se produjo un error al procesar algunos de los archivos de recursos XML:"
+msgstr "Se produjo un error al procesar algunos de los archivos de recursos XML:"
 
 # | msgid "The following variables are have invalid names:"
 #: formshare/views/form.py:327
@@ -4206,8 +4200,7 @@ msgstr "Los siguientes archivos de recursos CSV tienen caracteres no válidos:"
 
 #: formshare/views/form.py:334
 msgid "There was an error while processing some of the CSV resource files:"
-msgstr ""
-"Se produjo un error al procesar algunos de los archivos de recursos CSV:"
+msgstr "Se produjo un error al procesar algunos de los archivos de recursos CSV:"
 
 # | msgid "Email is invalid"
 #: formshare/views/form.py:358 formshare/views/repository.py:269
@@ -4254,8 +4247,8 @@ msgid "The form was deactivated successfully"
 msgstr "El formulario fue desactivado satisfactoriamente"
 
 # | msgid "The role was changed"
+# | msgid "No file was attached"
 #: formshare/views/form.py:1032 formshare/views/projects.py:500
-#| msgid "No file was attached"
 msgid "No files were attached"
 msgstr "No adjuntó ningún archivo"
 
@@ -4263,7 +4256,8 @@ msgstr "No adjuntó ningún archivo"
 #: formshare/views/projects.py:504 formshare/views/projects.py:511
 msgid "Error {} encountered. A log entry has been produced"
 msgstr ""
-"Se encontró el error {}. Se ha agregado una entrada en la bitácora de errores"
+"Se encontró el error {}. Se ha agregado una entrada en la bitácora de "
+"errores"
 
 #: formshare/views/form.py:1049 formshare/views/projects.py:518
 msgid "The file was uploaded successfully"
@@ -4437,8 +4431,8 @@ msgstr "Usted no esta autorizado para limpiar este set de datos"
 msgid "OK"
 msgstr "OK"
 
+# | msgid "Page not found"
 #: formshare/views/repository_submissions.py:478
-#| msgid "Page not found"
 msgid "RowUUID not found"
 msgstr "No se encontró el RowUUID indicado"
 
@@ -4454,8 +4448,8 @@ msgstr "El correo electrónico no es valido"
 msgid "Such email address already belongs to another account"
 msgstr "El correo electrónico ya esta en uso por otro usuario"
 
+# | msgid "The profile has been updated"
 #: formshare/views/users.py:120
-#| msgid "The profile has been updated"
 msgid "The user has been updated"
 msgstr "El usuario se ha actualizado"
 
@@ -4463,13 +4457,13 @@ msgstr "El usuario se ha actualizado"
 msgid "The password for {} was modified"
 msgstr "La contraseña para {} fue modificada"
 
+# | msgid "The form was added successfully"
 #: formshare/views/users.py:284
-#| msgid "The form was added successfully"
 msgid "The user was added successfully"
 msgstr "El usuario fue añadido satisfactoriamente"
 
+# | msgid "The project already exist"
 #: formshare/views/users.py:297
-#| msgid "The project already exist"
 msgid "Such user already exists"
 msgstr "El usuario ya existe"
 
@@ -4477,8 +4471,8 @@ msgstr "El usuario ya existe"
 msgid "The old password is not correct"
 msgstr "La antigua contraseña es incorrecta"
 
+# | msgid "Unable to change the password: "
 #: formshare/views/assistant_views/forms.py:139
-#| msgid "Unable to change the password: "
 msgid "Unable to change the key: "
 msgstr "No se pudo cambiar la llave API:"
 
@@ -4499,8 +4493,8 @@ msgstr "La identificación del envío no existe"
 msgid "No point to compare to the same submission ID"
 msgstr "Los dos envíos son iguales no tiene sentido compararlos"
 
+# | msgid "You need to indicate the primary language"
 #: formshare/views/assistant_views/jsonlogs.py:396
-#| msgid "You need to indicate the primary language"
 msgid "You need to indicate a note to the checkin"
 msgstr "Debes indicar una nota al hacer el checkin"
 

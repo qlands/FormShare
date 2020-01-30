@@ -36,7 +36,7 @@ class UsersListView(PrivateView):
             raise HTTPNotFound
         if (
             self.request.registry.settings.get("auth.register_users_via_web", "true")
-            == "false"
+            == "true"
         ):
             raise HTTPNotFound
         return {"userid": user_id}
@@ -57,7 +57,7 @@ class EditUserView(PrivateView):
             raise HTTPNotFound
         if (
             self.request.registry.settings.get("auth.register_users_via_web", "true")
-            == "false"
+            == "true"
         ):
             raise HTTPNotFound
         user_data = get_user_details(self.request, user_to_modify, False)
@@ -184,7 +184,7 @@ class AddUserView(PrivateView):
             raise HTTPNotFound
         if (
             self.request.registry.settings.get("auth.register_users_via_web", "true")
-            == "false"
+            == "true"
         ):
             raise HTTPNotFound
         user_details = {}

@@ -17,7 +17,7 @@ class UserNotExistError(Exception):
     """
 
     def __str__(self):
-        return "Link object already exists in network"
+        return "Link object does not exists in network"
 
 
 def _get_user_index_definition(number_of_shards, number_of_replicas):

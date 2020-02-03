@@ -4,7 +4,13 @@ from formshare.processes.db import update_profile
 from formshare.config.auth import get_user_data
 from formshare.config.encdecdata import encode_data
 from formshare.processes.db.user import update_password
-from formshare.processes.elasticsearch.user_index import get_user_index_manager
+from formshare.processes.elasticsearch.user_index import (
+    get_user_index_manager,
+    UserNotExistError,
+)
+import logging
+
+log = logging.getLogger("formshare")
 
 
 class UserProfileView(ProfileView):
@@ -40,9 +46,31 @@ class EditProfileView(ProfileView):
                     res, message = update_profile(self.request, user_id, data)
                     if res:
                         user_index = get_user_index_manager(self.request)
-                        user_index.update_user(
-                            user_id, {"user_name": data["user_name"]}
-                        )
+                        try:
+                            user_index.update_user(
+                                user_id, {"user_name": data["user_name"]}
+                            )
+                        except UserNotExistError:
+                            try:
+                                log.error(
+                                    "User {} was not found in index. Trying to add it".format(
+                                        user_id
+                                    )
+                                )
+                                user_index.add_user(
+                                    user_id,
+                                    {
+                                        "user_id": user_id,
+                                        "user_name": data["user_name"],
+                                    },
+                                )
+                            except Exception as e:
+                                log.error(
+                                    "Error in ElasticSearch user index: {}".format(
+                                        str(e)
+                                    )
+                                )
+
                         self.reload_user_details()
                         self.request.session.flash(
                             self._("The profile has been updated")

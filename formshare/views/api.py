@@ -30,7 +30,7 @@ class APIUserSearchSelect2(PrivateView):
                             {
                                 "id": result["user_id"],
                                 "text": result["user_name"],
-                                "user_email": result["user_email"],
+                                "user_email": result.get("user_email", ""),
                             }
                         )
                 with_pagination = False

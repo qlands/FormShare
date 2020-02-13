@@ -1008,6 +1008,9 @@ class AddFileToForm(PrivateView):
                     file_name = file.filename
                     if os.path.isabs(file_name):
                         file_name = os.path.basename(file_name)
+                    slash_index = file_name.find("\\")
+                    if slash_index >= 0:
+                        file_name = file_name[slash_index + 1:]
                     md5sum = md5(file.file.read()).hexdigest()
                     added, message = add_file_to_form(
                         self.request, project_id, form_id, file_name, overwrite, md5sum

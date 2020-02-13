@@ -351,6 +351,9 @@ class JSONCheckin(AssistantView):
                             filename = self.request.POST["json"].filename
                             if os.path.isabs(filename):
                                 filename = os.path.basename(filename)
+                            slash_index = filename.find("\\")
+                            if slash_index >= 0:
+                                filename = filename[slash_index + 1:]
                             input_file = self.request.POST["json"].file
                             base_name, file_extension = os.path.splitext(filename)
                             if base_name == submission_id:

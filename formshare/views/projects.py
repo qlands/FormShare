@@ -479,6 +479,9 @@ class AddFileToProject(ProjectsView):
                         file_name = os.path.basename(file.filename)
                     else:
                         file_name = file.filename
+                    slash_index = file_name.find("\\")
+                    if slash_index >= 0:
+                        file_name = file_name[slash_index + 1:]
                     added, message = add_file_to_project(
                         self.request, project_id, file_name, overwrite
                     )

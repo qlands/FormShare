@@ -25,7 +25,7 @@ Screen Shot
 
 Releases
 ------------
-The current stable release is 2.0.0 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.0) 
+The current stable release is 2.5.1 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.0) 
 
 Installation
 ------------
@@ -177,7 +177,7 @@ You basically can extend FormShare to fit your need. We are working on proper do
 Localization
 ------------
 
-FormShare comes out of the box in English, Spanish and French (Google generated). It uses Babel for translation and you can help us by creating new translations or by correcting an existing one.
+FormShare comes out of the box in English, Spanish, French (Google generated) and Portuguese (Google generated). It uses Babel for translation and you can help us by creating new translations or by correcting an existing one.
 
 To generate a new translation:
 

@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.1\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-01-20 19:51-0600\n"
+"POT-Creation-Date: 2020-02-12 19:48-0600\n"
 "PO-Revision-Date: 2020-02-12 10:42-0600\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: pt <LL@li.org>\n"
@@ -583,7 +583,7 @@ msgstr "Senha Antiga"
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:114
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2:29
 #: formshare/templates/dashboard/users/snippets/user_form.jinja2:23
-#: formshare/templates/generic/assistant_login.jinja2:26
+#: formshare/templates/generic/assistant_login.jinja2:27
 #: formshare/templates/generic/login.jinja2:41
 #: formshare/templates/generic/register.jinja2:25
 msgid "Password"
@@ -1182,8 +1182,8 @@ msgstr "Mudar a minha chave de API"
 msgid "Language"
 msgstr "Língua"
 
-#: formshare/templates/assistant/snippets/header.jinja2:62
-#: formshare/templates/dashboard/snippets/header.jinja2:52
+#: formshare/templates/assistant/snippets/header.jinja2:63
+#: formshare/templates/dashboard/snippets/header.jinja2:53
 msgid "Sign out"
 msgstr "Sair"
 
@@ -3420,6 +3420,7 @@ msgid "Nothing to show. This project has not forms"
 msgstr "Nada para mostrar. Este projecto não tem formas"
 
 #: formshare/templates/dashboard/snippets/footer.jinja2:4
+#: formshare/templates/generic/login.jinja2:59
 #: formshare/templates/landing/snippets/contact.jinja2:47
 msgid "Version"
 msgstr "Versão"
@@ -3431,10 +3432,10 @@ msgstr "Versão"
 msgid "Welcome to FormShare"
 msgstr "Bem-vindo ao FormShare"
 
-#: formshare/templates/dashboard/snippets/header.jinja2:125
+#: formshare/templates/dashboard/snippets/header.jinja2:126
 #: formshare/templates/dashboard/snippets/header_home.jinja2:57
 #: formshare/templates/dashboard/snippets/navbar.jinja2:25
-#: formshare/templates/generic/assistant_login.jinja2:30
+#: formshare/templates/generic/assistant_login.jinja2:31
 #: formshare/templates/generic/login.jinja2:4
 #: formshare/templates/generic/login.jinja2:28
 #: formshare/templates/generic/login.jinja2:46
@@ -3443,7 +3444,7 @@ msgstr "Bem-vindo ao FormShare"
 msgid "Sign in"
 msgstr "assinar em"
 
-#: formshare/templates/dashboard/snippets/header.jinja2:132
+#: formshare/templates/dashboard/snippets/header.jinja2:133
 #: formshare/templates/dashboard/snippets/header_home.jinja2:64
 #: formshare/templates/generic/login.jinja2:55
 #: formshare/templates/landing/snippets/header.jinja2:66
@@ -3626,7 +3627,7 @@ msgstr "Volte para a página inicial"
 msgid "Assistant Sign in"
 msgstr "Assistente Entrar"
 
-#: formshare/templates/generic/assistant_login.jinja2:23
+#: formshare/templates/generic/assistant_login.jinja2:24
 msgid "Assistant ID"
 msgstr "assistente ID"
 
@@ -4174,27 +4175,27 @@ msgstr "O produto foi excluído com sucesso"
 msgid "Unable to delete the product"
 msgstr "Não é possível excluir o produto"
 
-#: formshare/views/profile.py:48
+#: formshare/views/profile.py:76
 msgid "The profile has been updated"
 msgstr "O perfil foi atualizado"
 
-#: formshare/views/profile.py:55 formshare/views/projects.py:336
+#: formshare/views/profile.py:83 formshare/views/projects.py:336
 msgid "The name cannot be empty"
 msgstr "O nome não pode estar vazio"
 
-#: formshare/views/profile.py:81
+#: formshare/views/profile.py:109
 msgid "The old password is incorrect"
 msgstr "A senha antiga é incorreta"
 
-#: formshare/views/profile.py:85
+#: formshare/views/profile.py:113
 msgid "The new password and its confirmation are not the same"
 msgstr "A nova senha e sua confirmação não são os mesmos"
 
-#: formshare/views/profile.py:91
+#: formshare/views/profile.py:119
 msgid "You need to specify a new password"
 msgstr "Você precisa especificar uma nova senha"
 
-#: formshare/views/profile.py:95
+#: formshare/views/profile.py:123
 msgid "You need to specify the old password"
 msgstr "É necessário especificar a senha antiga"
 

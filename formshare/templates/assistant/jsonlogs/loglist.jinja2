@@ -44,13 +44,13 @@
             </div>
         </div>
         <div class="ibox-content">
-             {{ _('Filter') }}: <div class="btn-group">
+            {{ _('Filter') }}: <div class="btn-group">
             <button class="btn btn-white" onclick="location.href='{{ request.route_url('errorlist', userid=userid,projcode=projcode,formid=formid) }}';" type="button">{% if status == "all" %}<b>{{ _('All') }}</b>{% else %}{{ _('All') }}{% endif %}</button>
             <button class="btn btn-primary" onclick="location.href='{{ request.route_url('errorlist', userid=userid,projcode=projcode,formid=formid,_query={'status':'fixed'}) }}';" type="button">{% if status == "fixed" %}<b>{{ _('Fixed') }}</b>{% else %}{{ _('Fixed') }}{% endif %}</button>
             <button class="btn btn-danger" onclick="location.href='{{ request.route_url('errorlist', userid=userid,projcode=projcode,formid=formid,_query={'status':'error'}) }}';" type="button">{% if status == "error" %}<b>{{ _('With error') }}</b>{% else %}{{ _('With error') }}{% endif %}</button>
             <button class="btn btn-warning" onclick="location.href='{{ request.route_url('errorlist', userid=userid,projcode=projcode,formid=formid,_query={'status':'disregarded'}) }}';" type="button">{% if status == "disregarded" %}<b>{{ _('Disregarded') }}</b>{% else %}{{ _('Disregarded') }}{% endif %}</button>
             <button class="btn btn-info" onclick="location.href='{{ request.route_url('errorlist', userid=userid,projcode=projcode,formid=formid,_query={'status':'checkout'}) }}';" type="button">{% if status == "checkout" %}<b>{{ _('Checked out') }}</b>{% else %}{{ _('Checked out') }}{% endif %}</button>
-                            </div>
+        </div>
             <div class="clients-list">
                 <div class="row">
                     <div class="col-lg-12">
@@ -132,6 +132,50 @@
 
         ias.extension(new IASSpinnerExtension());
 
+        function ias_loaded(event) {
+            $('.action-required').click(function () {
+                var action_url = $( this ).attr('urn');
+                var title = $( this ).attr('data-title');
+                var message = $( this ).attr('data-message');
+                swal({
+                        title: title,
+                        text: message,
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#DD6B55",
+                        confirmButtonText: "{{ _('Yes, go ahead!') }}",
+                        cancelButtonText: "{{ _('Oops, cancel!') }}",
+                        closeOnConfirm: true,
+                        closeOnCancel: true },
+                    function (isConfirm) {
+                        if (isConfirm) {
+                            var form = document.createElement('form');
+                            form.setAttribute('method', 'post');
+                            form.setAttribute('action', action_url);
+                            form.style.display = 'hidden';
+
+                            var i = document.createElement("input"); //input element, text
+                            i.setAttribute('type',"text");
+                            i.setAttribute('name',"csrf_token");
+                            i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                            form.appendChild(i);
+
+                            document.body.appendChild(form);
+                            form.submit();
+                        }
+                    });
+            });
+
+            $('.button-note').click(function () {
+                var id = $( this ).attr('data-error');
+                var message = $('#' + id).val();
+                var converter = new showdown.Converter();
+                var html = converter.makeHtml(message);
+                $('#modal-notes').html(html);
+            });
+        }
+        ias.on('rendered', ias_loaded);
+
         // Add a link after page 2 which has to be clicked to load the next page
         //ias.extension(new IASTriggerExtension({offset: 2}));
 
@@ -183,7 +227,7 @@
             });
 
         });
-        </script>
+    </script>
 {% endblock scripts %}
 
 

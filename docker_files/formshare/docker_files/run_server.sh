@@ -15,7 +15,9 @@ python configure_celery.py ./development.ini
 python setup.py develop
 python setup.py compile_catalog
 configure_alembic /opt/formshare_config/development.ini .
-configure_mysql ./development.ini .
+configure_mysql ./development.ini /opt/formshare_config
+ln -s /opt/formshare_config/mysql.cnf ./mysql.cnf
+
 configure_fluent="${CONFIGURE_FLUENT:=false}"
 if [ $configure_fluent = "true" ]; then
   if [ $elastic_search_ssl = "false" ]; then

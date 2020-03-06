@@ -25,7 +25,7 @@ Screen Shot
 
 Releases
 ------------
-The current stable release is 2.5.2 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.5.2) 
+The current stable release is 2.5.3 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.5.2) 
 
 Installation
 ------------
@@ -45,7 +45,7 @@ sudo apt-get install -y docker-compose
 
 # Collect the FormShare source code
 cd /opt
-sudo git clone https://github.com/qlands/FormShare.git -b stable-2.0 formshare_source
+sudo git clone https://github.com/qlands/FormShare.git -b stable-2.5.3 formshare_source
 
 # Copy the docker compose file from the source to a new directory
 sudo mkdir formshare_docker_compose

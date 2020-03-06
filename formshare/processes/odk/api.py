@@ -205,7 +205,7 @@ def import_external_data(
         input_file_name = os.path.basename(input_file_name)
     slash_index = input_file_name.find("\\")
     if slash_index >= 0:
-        input_file_name = input_file_name[slash_index + 1:]
+        input_file_name = input_file_name[slash_index + 1 :]
     input_file_name = input_file_name.lower()
 
     uid = str(uuid.uuid4())
@@ -611,7 +611,7 @@ def upload_odk_form(
             input_file_name = os.path.basename(input_file_name)
         slash_index = input_file_name.find("\\")
         if slash_index >= 0:
-            input_file_name = input_file_name[slash_index+1:]
+            input_file_name = input_file_name[slash_index + 1 :]
     except Exception as e:
         log.error("The post xlsx elements is empty. Error {}".format(str(e)))
         return False, _("No file was attached")
@@ -907,7 +907,7 @@ def update_odk_form(request, user_id, project_id, for_form_id, odk_dir, form_dat
             input_file_name = os.path.basename(input_file_name)
         slash_index = input_file_name.find("\\")
         if slash_index >= 0:
-            input_file_name = input_file_name[slash_index + 1:]
+            input_file_name = input_file_name[slash_index + 1 :]
     except Exception as e:
         log.error("The post xlsx elements is empty. Error {}".format(str(e)))
         return False, _("No file was attached")
@@ -2087,7 +2087,7 @@ def store_submission(request, user, project, assistant):
                 filename = os.path.basename(filename)
             slash_index = filename.find("\\")
             if slash_index >= 0:
-                filename = filename[slash_index + 1:]
+                filename = filename[slash_index + 1 :]
             if filename.upper().find(".XML") >= 0:
                 filename = str(unique_id) + ".xml"
             else:

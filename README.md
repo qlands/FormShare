@@ -78,10 +78,11 @@ nano /opt/formshare_docker_compose/docker-compose.yml
 # Press Alt+Shit+3 to show the line numbers in Nano
 
 Edit line 7: Change the root password from "my_secure_password" to your password
-Edit line 76: Change the root password from "my_secure_password" to the same password of line 8
-Edit line 77: Change the admin user name (optional)
-Edit line 78: Change the admin user password from "my_secure_password" to your password
-Edit line 79: Change the admin email address
+Edit line 74: Change the root password from "my_secure_password" to the same password of line 7
+Edit line 75: Change the admin user name (optional)
+Edit line 76: Change the admin email address
+Edit line 77: Change the admin user password from "my_secure_password" to your password
+
 # Save the file with Ctlr+o Enter . Exit with Ctrl+x
 
 # Install Apache Server

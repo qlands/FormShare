@@ -14,9 +14,10 @@ ln -s /opt/formshare_config/development.ini ./development.ini
 python configure_celery.py ./development.ini
 python setup.py develop
 python setup.py compile_catalog
-configure_alembic /opt/formshare_config/development.ini .
+configure_alembic /opt/formshare_config/development.ini /opt/formshare_config
 configure_mysql ./development.ini /opt/formshare_config
 ln -s /opt/formshare_config/mysql.cnf ./mysql.cnf
+ln -s /opt/formshare_config/alembic.ini ./alembic.ini
 
 configure_fluent="${CONFIGURE_FLUENT:=false}"
 if [ $configure_fluent = "true" ]; then

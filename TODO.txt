@@ -9,3 +9,6 @@
     - Token management and API
     - Token extension. After token, before token-
 - Search engine
+- Download media from outside submissions
+- Make current of publishable products visible
+- Tours and documentation

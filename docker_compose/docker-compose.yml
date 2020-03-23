@@ -87,6 +87,7 @@ services:
       - /opt/formshare/log:/opt/formshare_log
       - /opt/formshare/celery:/opt/formshare_celery
       - /opt/formshare/config:/opt/formshare_config
+      - /opt/formshare/plugins:/opt/formshare_plugins
     ports:
       - 5900:5900
     networks:

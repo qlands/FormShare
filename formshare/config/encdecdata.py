@@ -1,6 +1,9 @@
 from Crypto.Cipher import AES
 import base64
 from cryptography.fernet import Fernet
+import logging
+
+log = logging.getLogger("formshare")
 
 
 def old_decode_data_with_key(data, key):
@@ -33,7 +36,11 @@ def decode_data(request, data):
     key = request.registry.settings["aes.key"].encode()
     key = base64.b64encode(key)
     f = Fernet(key)
-    return f.decrypt(data)
+    try:
+        return f.decrypt(data)
+    except Exception as e:
+        log.error("Error when decrypting a password. Error: {}".format(str(e)))
+        return ""
 
 
 def encode_data_with_key(data, key):

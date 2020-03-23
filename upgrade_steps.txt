@@ -1,0 +1,224 @@
+Installation steps to build FormShare from source.
+Tested in Ubuntu Server 18.04
+
+Steps:
+
+# Grab this server IP address. This IP address will be used later on
+ifconfig
+
+# Update system and add repositories
+
+sudo apt-get update
+sudo apt-get -y upgrade
+sudo apt-get install -y software-properties-common
+sudo add-apt-repository universe
+sudo add-apt-repository multiverse
+sudo apt-get update
+
+# ---------------------BEGIN OF IMPORTANT NOTE-------------------------
+You need to install, properly configure and run the following services
+- MariaDB or MySQL - You need root or other user with GRANT ALL ON *.*   .Check if the connection to MySQL works
+    - sudo apt-get install mariadb-server
+    or
+    - sudo apt-get install mysql-server
+- Elastic Search 6.X . We strongly recommend to use a Docker image for this
+    - sudo apt-get install -y docker-compose
+# ---------------------END OF IMPORTANT NOTE-------------------------
+
+# Install dependencies
+
+# ---------------------BEGIN OF IMPORTANT NOTE-------------------------
+# If you want to use MySQL do:
+sudo apt-get install -y build-essential qt5-default qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake mongodb jq libboost-all-dev unzip zlib1g-dev automake npm rabbitmq-server libmysqlclient-dev mysql-client-5.7 openjdk-11-jdk sqlite3 libqt5sql5-sqlite git wget python3-venv
+# If you want to use MariaDB do:
+sudo apt-get install -y build-essential qt5-default qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake mongodb jq libboost-all-dev unzip zlib1g-dev automake npm rabbitmq-server libmariadbclient-dev libmariadb-dev mariadb-client openjdk-11-jdk sqlite3 libqt5sql5-sqlite git wget python3-venv
+ln -s /usr/bin/mariadb_config /usr/bin/mysql_config
+# ---------------------END OF IMPORTANT NOTE-------------------------
+
+# Installing ODK Tools
+
+cd /opt
+sudo git clone https://github.com/qlands/odktools.git
+sudo mkdir odktools-deps
+cd odktools-deps
+sudo wget --user=user https://github.com/mongodb/mongo-c-driver/releases/download/1.6.1/mongo-c-driver-1.6.1.tar.gz
+sudo wget --user=user https://github.com/jmcnamara/libxlsxwriter/archive/RELEASE_0.7.6.tar.gz
+sudo wget https://downloads.sourceforge.net/project/quazip/quazip/0.7.3/quazip-0.7.3.tar.gz
+sudo git clone https://github.com/rgamble/libcsv.git
+
+sudo tar xvfz mongo-c-driver-1.6.1.tar.gz
+cd mongo-c-driver-1.6.1
+sudo ./configure
+sudo make
+sudo make install
+cd ..
+
+sudo tar xvfz quazip-0.7.3.tar.gz
+cd quazip-0.7.3
+sudo mkdir build
+cd build
+sudo cmake -DCMAKE_C_FLAGS:STRING="-fPIC" -DCMAKE_CXX_FLAGS:STRING="-fPIC" ..
+sudo make
+sudo make install
+cd ../..
+
+# ---------------------BEGIN OF IMPORTANT NOTE-------------------------
+# Check current version of ACLocal
+ls /usr/bin/aclocal-*
+# If you have aclocal-1.15 do
+sudo ln -s /usr/bin/aclocal-1.15 /usr/bin/aclocal-1.14
+sudo ln -s /usr/bin/automake-1.15 /usr/bin/automake-1.14
+# If you have aclocal-1.16 do
+sudo ln -s /usr/bin/aclocal-1.16 /usr/bin/aclocal-1.14
+sudo ln -s /usr/bin/automake-1.16 /usr/bin/automake-1.14
+# ---------------------END OF IMPORTANT NOTE-------------------------
+
+sudo tar xvfz RELEASE_0.7.6.tar.gz
+cd libxlsxwriter-RELEASE_0.7.6
+sudo mkdir build
+cd build
+sudo cmake ..
+sudo make
+sudo make install
+cd ../..
+
+cd libcsv
+sudo ./configure
+sudo make
+sudo make install
+
+cd /opt/odktools/dependencies/mongo-cxx-driver-r3.1.1
+sudo mkdir build
+cd build
+sudo cmake -DCMAKE_C_FLAGS:STRING="-O2 -fPIC" -DCMAKE_CXX_FLAGS:STRING="-O2 -fPIC" -DBSONCXX_POLY_USE_BOOST=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
+sudo make
+sudo make install
+cd ../../..
+
+# Build ODK Tools
+sudo qmake
+sudo make
+
+# Installing FormShare
+
+# Install runtime dependencies
+sudo npm install -g diff2html
+sudo npm install -g diff2html-cli
+
+# Create the directory structure for FormShare
+cd /opt
+sudo mkdir formshare_repository
+sudo mkdir formshare_log
+sudo mkdir formshare_celery
+sudo mkdir formshare_gunicorn
+sudo mkdir formshare_config
+
+# Setup permissions for the directory structure
+whoami=$(whoami)
+sudo chown $whoami formshare_repository
+sudo chown $whoami formshare_log
+sudo chown $whoami formshare_celery
+sudo chown $whoami formshare_gunicorn
+sudo chown $whoami formshare_config
+
+# Create a separate Python environment for FormShare
+sudo python3 -m venv formshare_env
+
+# Grab the FormShare source code
+# ---------------------BEGIN OF IMPORTANT NOTE-------------------------
+# To use the stable version of FormShare do:
+sudo git clone https://github.com/qlands/FormShare.git -b stable-2.5.3 formshare
+# To use the development version of FormShare do:
+sudo git clone https://github.com/qlands/FormShare.git formshare
+# ---------------------END OF IMPORTANT NOTE-------------------------
+
+# Setup permissions for FormShare and the Python environment
+sudo chown -R $whoami formshare
+sudo chown -R $whoami formshare_env
+
+# Activate the FormShare environment
+source ./formshare_env/bin/activate
+
+# Install FormShare dependencies
+pip install wheel
+pip install -r /opt/formshare/requirements.txt
+python /opt/formshare/download_nltk_packages.py
+
+# Grab the Celery service
+sudo cp /opt/formshare/docker_files/formshare/docker_files/etc/default/celery_formshare /etc/default/celery_formshare
+sudo cp /opt/formshare/docker_files/formshare/docker_files/etc/init.d/celery_formshare /etc/init.d/celery_formshare
+
+# Setup permissions for the Celery service
+sudo chmod +x /etc/init.d/celery_formshare
+sudo chmod 640 /etc/default/celery_formshare
+sudo ldconfig
+
+# Start RabbitMQ and Mongo servers. You may need to start these services after every server restart
+sudo service rabbitmq-server start
+sudo service mongodb start
+
+# Add a queue to RabbitMQ for FormShare to use
+sudo rabbitmqctl add_user formshare formshare
+sudo rabbitmqctl add_vhost formshare
+sudo rabbitmqctl set_permissions -p formshare formshare ".*" ".*" ".*"
+
+
+
+# Final configuration of FormShare. You need to modify the information between []
+
+#Create the FormShare schema
+mysql -h [MYSQL_HOST_NAME] -u [MYSQL_USER_NAME] --password=[MYSQL_USER_PASSWORD] --execute='CREATE SCHEMA IF NOT EXISTS formshare'
+cd /opt/formshare
+
+# Create the FormShare configuration file
+python create_config.py --mysql_host [MYSQL_HOST_NAME] --mysql_user_name [MYSQL_USER_NAME] --mysql_user_password [MYSQL_USER_PASSWORD] --repository_path /opt/formshare_repository --odktools_path /opt/odktools --elastic_search_host [ELASTIC_SEARCH_HOST] --elastic_search_port [ELASTIC_SEARCH_PORT] --formshare_host [THIS_SERVER_IP_ADDRESS] --formshare_port 5900 /opt/formshare_config/development.ini
+ln -s /opt/formshare_config/development.ini ./development.ini
+
+# Configure FormShare to run Celery
+python configure_celery.py ./development.ini
+
+# Build the FormShare source code
+python setup.py develop
+
+# Build the language catalogs
+python setup.py compile_catalog
+
+# Create the Alembic configuration file
+configure_alembic ./development.ini .
+
+# Create the MySQL configuration file
+configure_mysql ./development.ini .
+
+# Build the database
+alembic upgrade head
+
+# Create a FormShare super user
+create_superuser --user_id [FORMSHARE_ADMIN_USER] --user_email [FORMSHARE_ADMIN_EMAIL] --user_password [FORMSHARE_ADMIN_PASSWORD] ./development.ini
+
+# Deactivate the FormShare environment
+deactivate
+
+# Start the FormShare Celery Service. You may need to start this service after every server restart
+sudo /etc/init.d/celery_formshare start
+
+# Set enough memory for ElasticSearch
+sudo sysctl -w vm.max_map_count=262144
+echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.d/60-vm-max_map_count.conf
+
+# Grab the ElasticSearch Docker compose file
+sudo mkdir /opt/docker_elastic
+sudo cp /opt/formshare/docker_compose_just_elastic/docker-compose.yml /opt/docker_elastic
+
+# Start ElasticSearch. You may need to start ElasticSearch after every server restart
+cd /opt/docker_elastic
+sudo docker-compose up -d
+
+# Run FormShare in testing. FormShare will be accessibly at http://this_server_IP_address:5900/formshare
+source /opt/formshare_env/bin/activate
+cd /opt/formshare
+gunicorn --paste ./development.ini
+Ctrl+C
+
+# Run the server as service. The service process ID will be stored in /opt/formshare_gunicorn/formshare.pid. You may need to run this after every server restart
+gunicorn --daemon --capture-output --pid /opt/formshare_gunicorn/formshare.pid --log-file /opt/formshare_log/error_log --paste /opt/formshare/development.ini
+

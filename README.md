@@ -29,7 +29,7 @@ The current stable release is 2.5.3 and it is available [here](https://github.co
 
 Installation
 ------------
-Please read the [Installation guide](install_steps.txt) if you want to install FormShare manually. However, we encourage you to use the Docker Compose file available in the docker_compose directory.
+Please read the [Installation guide](install_steps.txt) if you want to install FormShare manually. However, we encourage you to use the Docker Compose file available in the docker_compose directory. This will help you later on in backing FormShare or move it to another server.
 
 The below is a common recipe for running FormShare using docker:
 
@@ -60,6 +60,7 @@ mkdir /opt/formshare/log
 mkdir /opt/formshare/repository
 mkdir /opt/formshare/config
 mkdir /opt/formshare/mysql
+mkdir /opt/formshare/plugins
 mkdir /opt/formshare/elasticsearch
 mkdir /opt/formshare/elasticsearch/esdata
 mkdir /opt/formshare/elasticsearch/esdata2
@@ -123,29 +124,92 @@ sudo docker-compose up -d
 http://[this server IP address]/formshare
 ```
 
+## Install plug-ins while using Docker (images > 20200306)
+
+All plug-ins must be deployed in the directory /opt/formshare/plugins which is a volume in all the provided docker compose files.
+
+```sh
+# Grab the container ID running FormShare
+sudo docker stats
+# Get into the container
+sudo docker exec -it [formshare_container_id] /bin/bash
+# Activate the environment
+source /opt/formshare_env/bin/activate
+# Go to the plugins directory
+cd /opt/formshare_plugins
+# For each plugin run develop
+python setup.py develop
+# For each plugin compile the language catalogs
+python setup.py compile_catalog
+#Exit the container
+exit
+# Stop the FormShare docker container
+sudo docker stop formshare_container_id
+# Edit the file /opt/formshare/config/development.ini and enable the plug-ins
+sudo nano /opt/formshare/config/development.ini
+# Start the FormShare docker container
+sudo docker start formshare_container_id
+```
+
+**Important Note:** You may need to repeat these steps if the FormShare container gets updated or if you update FormShare. Use the information in "Upgrading information" if this is the case.
+
 ## Upgrading information
 
 Please read the upgrade guide if you have FormShare installed from source. If you use Docker then things are easier:
 
 ```sh
+# Create the plug-ins directory if it does not exists
+sudo mkdir /opt/formshare
+whoami=$(whoami)
+mkdir /opt/formshare/plugins
+
+# Edit the file /opt/formshare/config/development.ini and disable all plug-ins
+sudo nano /opt/formshare/config/development.ini
+
 # Download the new version of formShare
-sudo git clone https://github.com/qlands/FormShare.git -b stable-2.1 formshare_2.1_source
+sudo git clone https://github.com/qlands/FormShare.git -b stable-2.X formshare_2.X_source
 
 # Copy the docker compose file from the source to a new directory
-sudo mkdir formshare_2.1_docker_compose
-sudo cp ./formshare_2.1_source/docker_compose/docker-compose.yml ./formshare_2.1_docker_compose/
+sudo mkdir formshare_2.X_docker_compose
+sudo cp ./formshare_2.X_source/docker_compose/docker-compose.yml ./formshare_2.X_docker_compose/
 
-# Clean the docker networks and containters. WARNING! If you have other dockers besides FormShare you will need to remove the "fsnet" network and the FormShare container manually.
+# Clean the docker networks and containters. WARNING! The following two line will erase all containers and networks. If you have other dockers besides FormShare you will need to remove the "fsnet" network and the FormShare containers manually.
 sudo docker network prune
 sudo docker container prune
 
-# Start the new version of FormShare. All required updates in the database and ini files will be done automatically.
-cd /opt/formshare_2.1_docker_compose
+# Start the new version of FormShare. All required updates in the database will be done automatically.
+cd /opt/formshare_2.X_docker_compose
 sudo docker-compose up -d
+
+# If you have plug-ins then you need to build them and enable them again. See section "Install plug-ins while using Docker (images > 20200306)""
 
 ```
 
 
+
+## How to make your FormShare installation inaccessible, inconsistent and/or broken.
+
+FormShare uses MySQL, ElasticSearch and a file repository. **All of them are synchronized**, thus the following list of things may make your FormShare installation inaccessible, inconsistent and/or broken:
+
+- Altering the database manually for example, removing/adding users or forms
+- Removing files manually from the repository 
+- Changing the encryption key (aes.key) in the development.ini file.
+- Deleting or changing the ElasticSearch index data
+- Deleting the repository
+
+## Backing up and migrating FormShare
+
+FormShare uses MySQL, ElasticSearch and a file repository. **All of them are synchronized**. To backup FormShare or move it to a new server do:
+
+- Stop the FormShare service
+- Use mysqldump to backup the schema called "formshare" and all schemata starting with "FS"
+- If you used any of the provided Docker compose files then backup the directory /opt/formshare
+- If you did not use Docker then:
+  - Backup the development.ini file
+  - Backup the ElasticSearch data directory or create a [snapshot](https://www.elastic.co/guide/en/elasticsearch/reference/6.1/modules-snapshots.html#_snapshot)  of the following indexes:
+    - formshare_*
+    - [user]_[project]_*
+  - Backup the file repository directory
 
 Contributing
 ------------

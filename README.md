@@ -158,6 +158,8 @@ sudo docker start formshare_container_id
 Please read the [upgrade guide](upgrade_steps.txt) if you have FormShare installed from source. If you use Docker then things are easier:
 
 ```sh
+# Make a backup of your installation. See the section "Backup FormShare"
+
 # Create the plug-ins directory if it does not exists
 mkdir /opt/formshare/plugins
 
@@ -165,12 +167,15 @@ mkdir /opt/formshare/plugins
 sudo nano /opt/formshare/config/development.ini
 
 # Download the new version of formShare
+cd /opt
 sudo git clone https://github.com/qlands/FormShare.git -b stable-2.X formshare_2.X_source
 
 # Copy the docker compose file from the source to a new directory
-cd /opt
 sudo mkdir formshare_2.X_docker_compose
 sudo cp ./formshare_2.X_source/docker_compose/docker-compose.yml ./formshare_2.X_docker_compose/
+
+#Edit the new docker-compose.yml so it has the same parameters as the previous one (MySQL server, ElasticSearch server, MySQL user and password, FormShare admin, etc)
+sudo nano /opt/formshare/config/docker-compose.yml
 
 # Clean the docker networks and containters. WARNING! The following two line will erase all containers and networks. If you have other dockers besides FormShare you will need to remove the "fsnet" network and the FormShare containers manually.
 sudo docker network prune
@@ -196,12 +201,13 @@ FormShare uses MySQL, ElasticSearch and a file repository. **All of them are syn
 - Deleting or changing the ElasticSearch index data
 - Deleting the repository
 
-## Backing up and migrating FormShare
+## Backup FormShare
 
-FormShare uses MySQL, ElasticSearch and a file repository. **All of them are synchronized**. To backup FormShare or move it to a new server do:
+FormShare uses MySQL, ElasticSearch and a file repository. **All of them are synchronized**. To backup FormShare do:
 
 - Stop the FormShare service
-- Use mysqldump to backup the schema called "formshare" and all schemata starting with "FS"
+- Use mysqldump to backup the schema called "formshare" 
+- Use mysqldump to backup all schemata starting with "FS" (optional: Only if you are migrating FormShare to a new server)
 - If you used any of the provided Docker compose files then backup the directory /opt/formshare
 - If you did not use Docker then:
   - Backup the development.ini file

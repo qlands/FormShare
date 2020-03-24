@@ -21,7 +21,7 @@ FormShare **is for organizations** to install it in their own server or cloud se
 Screen Shot
 ----------
 
-![Image](./Screenshot.png?raw=true "FormShare home screen")
+![Image](./Screenshot.png "FormShare home screen")
 
 Releases
 ------------
@@ -155,7 +155,7 @@ sudo docker start formshare_container_id
 
 ## Upgrading information
 
-Please read the upgrade guide if you have FormShare installed from source. If you use Docker then things are easier:
+Please read the [upgrade guide](upgrade_steps.txt) if you have FormShare installed from source. If you use Docker then things are easier:
 
 ```sh
 # Create the plug-ins directory if it does not exists

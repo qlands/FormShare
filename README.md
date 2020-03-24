@@ -159,8 +159,6 @@ Please read the [upgrade guide](upgrade_steps.txt) if you have FormShare install
 
 ```sh
 # Create the plug-ins directory if it does not exists
-sudo mkdir /opt/formshare
-whoami=$(whoami)
 mkdir /opt/formshare/plugins
 
 # Edit the file /opt/formshare/config/development.ini and disable all plug-ins
@@ -170,6 +168,7 @@ sudo nano /opt/formshare/config/development.ini
 sudo git clone https://github.com/qlands/FormShare.git -b stable-2.X formshare_2.X_source
 
 # Copy the docker compose file from the source to a new directory
+cd /opt
 sudo mkdir formshare_2.X_docker_compose
 sudo cp ./formshare_2.X_source/docker_compose/docker-compose.yml ./formshare_2.X_docker_compose/
 

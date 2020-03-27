@@ -27,6 +27,10 @@ Releases
 ------------
 The current stable release is 2.5.4 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.5.4) 
 
+The database signature for stable 2.5.4 is e6574044279f
+
+The Docker image for stable 2.5.4 is 20200326
+
 Installation
 ------------
 Please read the [Installation guide](install_steps.txt) if you want to install FormShare manually. However, we encourage you to use the Docker Compose file available in the docker_compose directory. This will help you later on in backing FormShare or move it to another server.
@@ -48,8 +52,8 @@ cd /opt
 sudo git clone https://github.com/qlands/FormShare.git -b stable-2.5.4 formshare_source
 
 # Copy the docker compose file from the source to a new directory
-sudo mkdir formshare_docker_compose
-sudo cp ./formshare_source/docker_compose/docker-compose.yml ./formshare_docker_compose/
+sudo mkdir formshare_docker_compose_20200326
+sudo cp ./formshare_source/docker_compose/docker-compose.yml ./formshare_docker_compose_20200326/
 
 # Make the directory structure for FormShare
 sudo mkdir /opt/formshare
@@ -71,11 +75,11 @@ sudo sysctl -w vm.max_map_count=262144
 echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.d/60-vm-max_map_count.conf
 
 # Download all the required Docker Images
-cd /opt/formshare_docker_compose
+cd /opt/formshare_docker_compose_20200326
 sudo docker-compose pull
 
 # Edit the docker-compose.yml file to set the mysql root and FormShare admin passwords
-nano /opt/formshare_docker_compose/docker-compose.yml
+nano /opt/formshare_docker_compose_20200326/docker-compose.yml
 # Press Alt+Shit+3 to show the line numbers in Nano
 
 Edit line 7: Change the root password from "my_secure_password" to your password
@@ -117,7 +121,7 @@ sudo service apache2 start
 # Start the FormShare containers. It will take about 3 minutes for all the containers to be ready.
 # You can check the status with "sudo docker stats". FormShare will be ready for usage when the container reach about 1 GiB of MEM USAGE
 # This is the only two commands you need to start FormShare after a server restart
-cd /opt/formshare_docker_compose
+cd /opt/formshare_docker_compose_20200326
 sudo docker-compose up -d
 
 # Browse to FormShare
@@ -144,7 +148,7 @@ python setup.py compile_catalog
 #Exit the container
 exit
 # Stop the FormShare docker container
-sudo docker stop formshare_container_id
+sudo docker stop [formshare_container_id]
 # Edit the file /opt/formshare/config/development.ini and enable the plug-ins
 sudo nano /opt/formshare/config/development.ini
 # Start the FormShare docker container
@@ -166,26 +170,59 @@ mkdir /opt/formshare/plugins
 # Edit the file /opt/formshare/config/development.ini and disable all plug-ins
 sudo nano /opt/formshare/config/development.ini
 
-# Download the new version of formShare
+# Download the new version of formShare. Replace X for the version you want to use
 cd /opt
 sudo git clone https://github.com/qlands/FormShare.git -b stable-2.X formshare_2.X_source
 
-# Copy the docker compose file from the source to a new directory
-sudo mkdir formshare_2.X_docker_compose
-sudo cp ./formshare_2.X_source/docker_compose/docker-compose.yml ./formshare_2.X_docker_compose/
+# Copy the docker compose file from the source to a new directory. Replace XXXXXXXX to the Docker image that you want to use
+sudo mkdir formshare_docker_compose_XXXXXXXX
+sudo cp ./formshare_2.X_source/docker_compose/docker-compose.yml /opt/formshare_docker_compose_XXXXXXXX/
 
 #Edit the new docker-compose.yml so it has the same parameters as the previous one (MySQL server, ElasticSearch server, MySQL user and password, FormShare admin, etc)
-sudo nano /opt/formshare/config/docker-compose.yml
+sudo nano /opt/formshare_docker_compose_XXXXXXXX/docker-compose.yml
 
 # Clean the docker networks and containters. WARNING! The following two line will erase all containers and networks. If you have other dockers besides FormShare you will need to remove the "fsnet" network and the FormShare containers manually.
 sudo docker network prune
 sudo docker container prune
 
 # Start the new version of FormShare. All required updates in the database will be done automatically.
-cd /opt/formshare_2.X_docker_compose
+cd /opt/formshare_docker_compose_XXXXXXXX
 sudo docker-compose up -d
 
-# If you have plug-ins then you need to build them and enable them again. See section "Install plug-ins while using Docker (images > 20200306)""
+# If you have plug-ins then you need to build them and enable them again. See section "Install plug-ins while using Docker"
+
+```
+
+
+
+## Downgrading information
+
+Starting with version 2.5.4 this document has the version of the database. If you use Docker then things are easier:
+
+```shell
+# Make a backup of your installation. See the section "Backup FormShare"
+
+# Grab the container ID running FormShare
+sudo docker stats
+# Get into the container
+sudo docker exec -it [formshare_container_id] /bin/bash
+
+# Activate the environment
+source /opt/formshare_env/bin/activate
+
+# Get into the FormShare source
+cd /opt/formshare
+# Downgrade to a previous version of the database. Replace XXXXXXXXXXXX for the specific version of the database
+alembic downgrade XXXXXXXXXXXX
+
+#Exit the container
+exit
+# Stop the FormShare docker container
+sudo docker stop [formshare_container_id]
+
+# Start the old version of FormShare THAT MATCHES such database.Replace XXXXXXXX to the Docker image that you want to use
+cd /opt/formshare_docker_compose_XXXXXXXX
+sudo docker-compose up -d
 
 ```
 

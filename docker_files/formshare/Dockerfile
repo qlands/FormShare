@@ -11,13 +11,10 @@ RUN apt-get install -y build-essential qt5-default qtbase5-private-dev qtdeclara
 RUN npm install -g diff2html
 RUN npm install -g diff2html-cli
 
-RUN cd /opt
 WORKDIR /opt
 RUN git clone https://github.com/qlands/odktools.git
-VOLUME /opt/odktools
 
 RUN mkdir odktools-deps
-RUN cd odktools-deps
 WORKDIR /opt/odktools-deps
 RUN wget --user=user https://github.com/mongodb/mongo-c-driver/releases/download/1.6.1/mongo-c-driver-1.6.1.tar.gz
 RUN wget --user=user https://github.com/jmcnamara/libxlsxwriter/archive/RELEASE_0.7.6.tar.gz
@@ -25,56 +22,44 @@ RUN wget https://downloads.sourceforge.net/project/quazip/quazip/0.7.3/quazip-0.
 RUN git clone https://github.com/rgamble/libcsv.git
 
 RUN tar xvfz mongo-c-driver-1.6.1.tar.gz
-RUN cd mongo-c-driver-1.6.1
 WORKDIR /opt/odktools-deps/mongo-c-driver-1.6.1
 RUN ./configure
 RUN make
 RUN make install
-RUN cd ..
 WORKDIR /opt/odktools-deps
 
 RUN tar xvfz quazip-0.7.3.tar.gz
-RUN cd quazip-0.7.3
 WORKDIR /opt/odktools-deps/quazip-0.7.3
 RUN mkdir build
-RUN cd build
 WORKDIR /opt/odktools-deps/quazip-0.7.3/build
 RUN cmake -DCMAKE_C_FLAGS:STRING="-fPIC" -DCMAKE_CXX_FLAGS:STRING="-fPIC" ..
 RUN make
 RUN make install
-RUN cd ../..
 WORKDIR /opt/odktools-deps
 
 RUN ln -s /usr/bin/aclocal-1.15 /usr/bin/aclocal-1.14
 RUN ln -s /usr/bin/automake-1.15 /usr/bin/automake-1.14
 
 RUN tar xvfz RELEASE_0.7.6.tar.gz
-RUN cd libxlsxwriter-RELEASE_0.7.6
 WORKDIR /opt/odktools-deps/libxlsxwriter-RELEASE_0.7.6
 RUN mkdir build
-RUN cd build
 WORKDIR /opt/odktools-deps/libxlsxwriter-RELEASE_0.7.6/build
 RUN cmake ..
 RUN make
 RUN make install
-RUN cd ../..
 WORKDIR /opt/odktools-deps
 
-RUN cd libcsv
 WORKDIR /opt/odktools-deps/libcsv
 RUN ./configure
 RUN make
 RUN make install
 
-RUN cd /opt/odktools/dependencies/mongo-cxx-driver-r3.1.1
 WORKDIR /opt/odktools/dependencies/mongo-cxx-driver-r3.1.1
 RUN mkdir build
-RUN cd build
 WORKDIR /opt/odktools/dependencies/mongo-cxx-driver-r3.1.1/build
 RUN cmake -DCMAKE_C_FLAGS:STRING="-O2 -fPIC" -DCMAKE_CXX_FLAGS:STRING="-O2 -fPIC" -DBSONCXX_POLY_USE_BOOST=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
 RUN make
 RUN make install
-RUN cd ../../..
 WORKDIR /opt/odktools
 
 RUN qmake
@@ -100,7 +85,6 @@ RUN mkdir formshare_gunicorn
 RUN python3 -m venv formshare_env
 
 RUN git clone https://github.com/qlands/FormShare.git -b stable-2.5.4 formshare
-VOLUME /opt/formshare
 RUN . ./formshare_env/bin/activate && pip install wheel && pip install -r /opt/formshare/requirements.txt && python /opt/formshare/download_nltk_packages.py
 
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.6.0/wait /wait
@@ -117,6 +101,8 @@ ENV LC_ALL en_US.UTF-8
 WORKDIR /opt
 RUN mkdir formshare_config
 VOLUME /opt/formshare_config
+VOLUME /opt/odktools
+VOLUME /opt/formshare
 
 COPY ./docker_files/etc/default/celery_formshare /etc/default/celery_formshare
 COPY ./docker_files/etc/init.d/celery_formshare /etc/init.d/celery_formshare

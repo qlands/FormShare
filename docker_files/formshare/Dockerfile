@@ -99,7 +99,7 @@ VOLUME /opt/formshare_plugins
 RUN mkdir formshare_gunicorn
 RUN python3 -m venv formshare_env
 
-RUN git clone https://github.com/qlands/FormShare.git -b stable-2.5.3 formshare
+RUN git clone https://github.com/qlands/FormShare.git -b stable-2.5.4 formshare
 VOLUME /opt/formshare
 RUN . ./formshare_env/bin/activate && pip install wheel && pip install -r /opt/formshare/requirements.txt && python /opt/formshare/download_nltk_packages.py
 

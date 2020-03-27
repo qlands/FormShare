@@ -90,6 +90,8 @@ services:
       - /opt/formshare/config:/opt/formshare_config
       - /opt/formshare/fluentd:/opt/formshare_fluentd
       - /opt/formshare/plugins:/opt/formshare_plugins
+      - fsokdtools:/opt/odktools
+      - fssource:/opt/formshare
     ports:
       - 5900:5900
     networks:
@@ -125,3 +127,9 @@ networks:
         driver: default
         config:
           - subnet: 172.28.0.0/16
+
+volumes:
+  fsokdtools:
+    driver: local
+  fssource:
+    driver: local

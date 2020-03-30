@@ -9,6 +9,7 @@ from ...models import (
 from sqlalchemy.exc import IntegrityError
 import logging
 import validators
+import datetime
 
 __all__ = [
     "register_user",
@@ -19,6 +20,7 @@ __all__ = [
     "get_user_by_api_key",
     "update_password",
     "email_exists",
+    "update_last_login",
 ]
 
 log = logging.getLogger("formshare")
@@ -213,6 +215,17 @@ def update_profile(request, user, profile_data):
     except Exception as e:
         request.dbsession.rollback()
         log.error("Error {} when updating user {}".format(str(e), user))
+        return False, str(e)
+
+
+def update_last_login(request, user):
+    try:
+        request.dbsession.query(User).filter(User.user_id == user).update({"user_llogin": datetime.datetime.now()})
+        request.dbsession.flush()
+        return True, ""
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error("Error {} when updating last login for user {}".format(str(e), user))
         return False, str(e)
 
 

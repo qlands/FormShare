@@ -10,6 +10,7 @@ from ..processes.db import (
     register_user,
     get_project_id_from_name,
     get_project_from_assistant,
+    update_last_login,
 )
 from ast import literal_eval
 import datetime
@@ -126,6 +127,7 @@ class LoginView(PublicView):
                             continue_login = False
                         break  # Only one plugging will be called to extend after_login
                     if continue_login:
+                        update_last_login(self.request, user.login)
                         headers = remember(
                             self.request, str(login_data), policies=["main"]
                         )

@@ -1,5 +1,6 @@
-- Testing framework
+- Finish Testing framework
 - Plugin interfaces in all places.
+- Extension sections in all templates
 - Social (Messaging, Watch and Follow)
 - Create a JSON schema using the create XML file. Use it to validate data from ODK and data imports
 - Import from BriefCase (XML import)
@@ -8,7 +9,12 @@
 - Handle sharing of private products with token keys.
     - Token management and API
     - Token extension. After token, before token-
-- Search engine
 - Download media from outside submissions
 - Make current of publishable products visible
+- Add version to publishable products
+- Store create XML structure in database
+- Allow to tag fields in database
 - Tours and documentation
+- Cleaning documentation. "How to clean data"
+- Anonymization documentation. How to Anonymize my data.
+- Search engine

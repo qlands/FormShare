@@ -220,7 +220,9 @@ def update_profile(request, user, profile_data):
 
 def update_last_login(request, user):
     try:
-        request.dbsession.query(User).filter(User.user_id == user).update({"user_llogin": datetime.datetime.now()})
+        request.dbsession.query(User).filter(User.user_id == user).update(
+            {"user_llogin": datetime.datetime.now()}
+        )
         request.dbsession.flush()
         return True, ""
     except Exception as e:

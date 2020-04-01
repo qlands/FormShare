@@ -11,6 +11,7 @@ from ..views.basic_views import (
     RefreshSessionView,
     RecoverPasswordView,
     ErrorView,
+    Gravatar,
 )
 from ..views.dashboard import UserDashBoardView
 from ..views.projects import (
@@ -240,6 +241,9 @@ def load_routes(config):
             EditProfileView,
             "dashboard/profile/profile_edit.jinja2",
         )
+    )
+    routes.append(
+        add_route("gravatar", "/gravatar", Gravatar, None)
     )
 
     # Projects

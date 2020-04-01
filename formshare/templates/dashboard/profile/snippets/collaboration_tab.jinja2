@@ -19,7 +19,7 @@
             {% block profile_collaborators_list %}
                 <div class="user-friends">
                     {% for collaborator in userDetails.user_stats.collaborators %}
-                        <a href="{{ request.route_url('dashboard',userid=collaborator.user_id) }}"><img alt="image" title="{{ collaborator.user_name }}" class="rounded-circle" src="{{ request.h.get_gravatar_url(collaborator.user_email) }}"></a>
+                        <a href="{{ request.route_url('dashboard',userid=collaborator.user_id) }}"><img alt="image" title="{{ collaborator.user_name }}" class="rounded-circle" src="{{ request.h.get_gravatar_url(request, collaborator.user_name) }}"></a>
                     {% endfor %}
                 </div>
             {% endblock profile_collaborators_list %}

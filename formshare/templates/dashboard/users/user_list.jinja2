@@ -90,10 +90,9 @@
                 if (!user.id) {
                     return user.text;
                 }
-                let md5 = $.md5(user.user_email);
-                let baseUrl = "https://www.gravatar.com/avatar";
+                let baseUrl = "{{ request.route_url('gravatar') }}";
                 let $state = $(
-                    '<span><img src="' + baseUrl + '/' + md5 + '?d=identicon&s=45" class="img-flag" /> ' + user.text + '</span>'
+                    '<span><img src="' + baseUrl + '?name=' + user.text + '&size=45" class="img-flag" /> ' + user.text + '</span>'
                 );
                 return $state;
             }

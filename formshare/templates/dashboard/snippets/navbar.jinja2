@@ -6,7 +6,7 @@
                     <div class="dropdown profile-element">
                         {% block nav_profile%}
                             {% if activeUser != None %}
-                                <img alt="image" class="rounded-circle" src="{{ activeUser.gravatarURL }}"/>
+                                <img alt="image" class="rounded-circle" src="{{ request.h.get_gravatar_url(request, activeUser.name) }}"/>
                             {% else %}
                                 <img alt="image" class="rounded-circle" src="{{ request.url_for_static('guest.png') }}"/>
                             {% endif %}

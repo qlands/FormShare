@@ -3,7 +3,7 @@
         <div class="col-md-4">
             {% block collaborator_item_desc %}
                 <div class="text-center">
-                    <img class="client-avatar rounded-circle" style="width: 30px" alt="image" src="{{ request.h.get_gravatar_url(collaborator.user_email) }}">
+                    <img class="client-avatar rounded-circle" style="width: 30px" alt="image" src="{{ request.h.get_gravatar_url(request, collaborator.user_name) }}">
                     <a {% if collaborator.project_accepted == 1 %}href="{{ request.route_url('dashboard',userid=collaborator.user_id) }}"{% endif %} class="client-link">{{ collaborator.user_name }}</a>
                 </div>
             {% endblock collaborator_item_desc %}

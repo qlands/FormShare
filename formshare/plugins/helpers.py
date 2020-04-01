@@ -161,22 +161,15 @@ def pluralize(noun, size, locale="en"):
 
 
 @core_helper
-def get_gravatar_url(email, size=45):
+def get_gravatar_url(request, name, size=45):
     """
-    Return the gravatar based on a email
-    :param email: email address
+    Return the gravatar based on a name
+    :param request: pyramid request
+    :param name: Name for the avatar
     :param size: Size of the image
     :return: Gravatar URL
     """
-    encoded_email = email.encode("utf-8")
-    default = "identicon"
-    gravatar_url = (
-        "https://www.gravatar.com/avatar/"
-        + hashlib.md5(encoded_email.lower()).hexdigest()
-        + "?"
-    )
-    gravatar_url += urllib.parse.urlencode({"d": default, "s": str(size)})
-    return gravatar_url
+    return request.route_url("gravatar", _query={"name": name, "size": size})
 
 
 @core_helper

@@ -25,6 +25,8 @@ import logging
 import traceback
 from formshare.processes.email.send_email import send_error_to_technical_team
 from formshare.processes.email.send_email import send_password_email
+from formshare.processes.avatar import Avatar
+from pyramid.response import Response
 
 log = logging.getLogger("formshare")
 
@@ -38,6 +40,19 @@ class NotFoundView(PublicView):
     def process_view(self):
         self.request.response.status = 404
         return {}
+
+
+class Gravatar(PublicView):
+    def process_view(self):
+        self.returnRawViewResult = True
+        try:
+            size = int(self.request.params.get("size", 45))
+        except ValueError:
+            size = 45
+        name = self.request.params.get("name", "#")
+        avatar = Avatar.generate(size, name, "PNG")
+        headers = [("Content-Type", "image/png")]
+        return Response(avatar, 200, headers)
 
 
 class ErrorView(PublicView):

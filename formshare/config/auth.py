@@ -15,21 +15,13 @@ class User(object):
     """
 
     def __init__(self, user_data):
-        default = "identicon"
-        size = 45
         self.id = user_data["user_id"]
         self.email = user_data["user_email"]
-        gravatar_url = (
-            "https://www.gravatar.com/avatar/"
-            + hashlib.md5(self.email.lower().encode("utf8")).hexdigest()
-            + "?"
-        )
-        gravatar_url += urllib.parse.urlencode({"d": default, "s": str(size)})
         self.userData = user_data
         self.login = user_data["user_id"]
         self.name = user_data["user_name"]
         self.super = user_data["user_super"]
-        self.gravatarURL = gravatar_url
+        self.gravatarURL = "#"
         if user_data["user_about"] is None:
             self.about = ""
         else:
@@ -37,6 +29,7 @@ class User(object):
         self.apikey = user_data["user_apikey"]
 
     def check_password(self, password, request):
+        self.set_gravatar_url(request, self.name, 45)
         # Load connected plugins and check if they modify the password authentication
         plugin_result = None
         for plugin in PluginImplementations(IAuthorize):
@@ -49,47 +42,14 @@ class User(object):
         else:
             return plugin_result
 
-    def get_gravatar_url(self, size):
-        default = "identicon"
-        gravatar_url = (
-            "https://www.gravatar.com/avatar/"
-            + hashlib.md5(self.email.lower()).hexdigest()
-            + "?"
-        )
-        gravatar_url += urllib.parse.urlencode({"d": default, "s": str(size)})
-        return gravatar_url
-
-    def update_gravatar_url(self):
-        default = "identicon"
-        size = 45
-        gravatar_url = (
-            "https://www.gravatar.com/avatar/"
-            + hashlib.md5(self.email.lower()).hexdigest()
-            + "?"
-        )
-        gravatar_url += urllib.parse.urlencode({"d": default, "s": str(size)})
-        self.gravatarURL = gravatar_url
+    def set_gravatar_url(self, request, name, size):
+        self.gravatarURL = request.route_url("gravatar", _query={"name": name, "size": size})
 
 
 class Assistant(object):
     def __init__(self, assistant_data, project):
-        default = "identicon"
-        size = 45
         self.email = assistant_data["coll_email"]
-        if self.email is not None:
-            if validators.email(self.email):
-                gravatar_url = (
-                    "https://www.gravatar.com/avatar/"
-                    + hashlib.md5(self.email.lower().encode("utf8")).hexdigest()
-                    + "?"
-                )
-                gravatar_url += urllib.parse.urlencode({"d": default, "s": str(size)})
-                self.gravatarURL = gravatar_url
-            else:
-                self.gravatarURL = ""
-        else:
-            self.gravatarURL = ""
-
+        self.gravatarURL = "#"
         self.assistantData = assistant_data
         self.login = assistant_data["coll_id"]
         self.projectID = project
@@ -97,23 +57,11 @@ class Assistant(object):
         self.APIKey = assistant_data["coll_apikey"]
 
     def check_password(self, password, request):
+        self.set_gravatar_url(request, self.fullName, 45)
         return check_assistant_login(self.projectID, self.login, password, request)
 
-    def get_gravatar_url(self, size):
-        if self.email is not None:
-            if validators.email(self.email):
-                default = "identicon"
-                gravatar_url = (
-                    "https://www.gravatar.com/avatar/"
-                    + hashlib.md5(self.email.lower()).hexdigest()
-                    + "?"
-                )
-                gravatar_url += urllib.parse.urlencode({"d": default, "s": str(size)})
-                return gravatar_url
-            else:
-                return ""
-        else:
-            return ""
+    def set_gravatar_url(self, request, name, size):
+        self.gravatarURL = request.route_url("gravatar", _query={"name": name, "size": size})
 
 
 def get_formshare_user_data(request, user, is_email):

@@ -18,3 +18,6 @@
 - Cleaning documentation. "How to clean data"
 - Anonymization documentation. How to Anonymize my data.
 - Search engine
+- Add a note in export if date of export is < last submission date or < last_update
+- Fix CSV export with carry return and comas in fields
+- Fix SSE with Edge servers

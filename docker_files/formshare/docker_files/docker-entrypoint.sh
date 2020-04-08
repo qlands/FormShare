@@ -1,6 +1,7 @@
 #!/bin/bash
 
 /etc/init.d/mongodb start
+rm /var/run/rabbitmq/pid
 /etc/init.d/rabbitmq-server start
 
 set -e

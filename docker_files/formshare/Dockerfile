@@ -81,6 +81,9 @@ VOLUME /opt/formshare_fluentd
 RUN mkdir formshare_plugins
 VOLUME /opt/formshare_plugins
 
+RUN mkdir formshare_odata
+VOLUME /opt/formshare_odata
+
 RUN mkdir formshare_gunicorn
 RUN python3 -m venv formshare_env
 

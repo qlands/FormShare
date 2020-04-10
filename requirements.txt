@@ -42,7 +42,7 @@ filelock==3.0.12
 fluent-logger==0.9.6
 FormEncode==1.3.1
 future==0.18.2
-gevent==1.4.0
+gevent==1.5.0
 greenlet==0.4.15
 gunicorn==20.0.4
 hupper==1.10.2
@@ -83,7 +83,7 @@ pandas==1.0.3
 PasteDeploy==2.1.0
 path==13.1.0
 path.py==12.4.0
-pathspec==0.7.0
+pathspec==0.8.0
 Pattern==3.6
 pdfminer.six==20200402
 pika==1.1.0
@@ -95,7 +95,7 @@ pluggy==0.13.1
 polib==1.1.0
 portend==2.6
 poyo==0.5.0
-protobuf==3.11.3
+protobuf==3.6.1
 psutil==5.7.0
 py==1.8.1
 pycparser==2.20
@@ -140,7 +140,7 @@ six==1.14.0
 snowballstemmer==2.0.0
 sortedcontainers==2.1.0
 soupsieve==2.0
-Sphinx==3.0.0
+Sphinx==3.0.1
 sphinxcontrib-applehelp==1.0.2
 sphinxcontrib-devhelp==1.0.2
 sphinxcontrib-htmlhelp==1.0.3
@@ -166,7 +166,7 @@ urllib3==1.25.8
 validators==0.14.3
 venusian==3.0.0
 vine==1.3.0
-virtualenv==20.0.16
+virtualenv==20.0.17
 waitress==1.4.3
 wcwidth==0.1.9
 WebHelpers2==2.0

@@ -1,16 +1,21 @@
-from .config.environment import load_environment
+import sys
+if sys.version_info[0] == 3 and sys.version_info[1] >= 6:
+    import gevent.monkey
+    gevent.monkey.patch_all()
+
+
 from pyramid.config import Configurator
 import os
 
 from pyramid.authentication import AuthTktAuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid_authstack import AuthenticationStackPolicy
+from formshare.config.environment import load_environment
 
 
 def main(global_config, **settings):
     """ This function returns a Pyramid WSGI application.
     """
-
     auth_policy = AuthenticationStackPolicy()
     policy_array = []
 

@@ -278,103 +278,116 @@ class PrivateView(object):
                 return policy["policy"]
         return None
 
-    def check_authorization(self):
-        policy = self.get_policy("main")
-        login_data = policy.authenticated_userid(self.request)
-
-        if login_data is not None:
-            login_data = literal_eval(login_data)
-        self.guestAccess = False
-        self.userID = self.request.matchdict["userid"]
-        if not user_exists(self.request, self.userID):
-            raise HTTPNotFound()
-        self.classResult["userDetails"] = get_user_details(self.request, self.userID)
+    def check_post_put_delete(self):
         if (
             self.request.method == "POST"
             or self.request.method == "PUT"
             or self.request.method == "DELETE"
         ):
-            if login_data is not None:
-                if login_data["group"] == "mainApp":
-                    self.user = get_user_data(login_data["login"], self.request)
-                    if self.user is not None:
-                        if (
-                            self.request.registry.settings.get(
-                                "perform_post_checks", "true"
-                            )
-                            == "true"
-                        ):
-                            safe = check_csrf_token(self.request, raises=False)
-                            if not safe:
-                                self.request.session.pop_flash()
-                                log.error(
-                                    "SECURITY-CSRF error at {} ".format(
-                                        self.request.url
-                                    )
-                                )
-                                raise HTTPFound(self.request.route_url("refresh"))
-                            else:
-                                if self.checkCrossPost:
-                                    if self.request.referer != self.request.url:
-                                        self.request.session.pop_flash()
-                                        log.error(
-                                            "SECURITY-CrossPost error. Posting at {} from {} ".format(
-                                                self.request.url, self.request.referer
-                                            )
-                                        )
-                                        raise HTTPNotFound()
-                    else:
-                        raise HTTPFound(location=self.request.route_url("login"))
+            if (
+                self.request.registry.settings.get(
+                    "perform_post_checks", "true"
+                )
+                == "true"
+            ):
+                safe = check_csrf_token(self.request, raises=False)
+                if not safe:
+                    self.request.session.pop_flash()
+                    log.error(
+                        "SECURITY-CSRF error at {} ".format(
+                            self.request.url
+                        )
+                    )
+                    raise HTTPFound(self.request.route_url("refresh"))
                 else:
-                    raise HTTPFound(location=self.request.route_url("login"))
-            else:
-                raise HTTPFound(location=self.request.route_url("login"))
+                    if self.checkCrossPost:
+                        if self.request.referer != self.request.url:
+                            self.request.session.pop_flash()
+                            log.error(
+                                "SECURITY-CrossPost error. Posting at {} from {} ".format(
+                                    self.request.url, self.request.referer
+                                )
+                            )
+                            raise HTTPNotFound()
 
+    def check_authorization(self):
+        policy = self.get_policy("main")
+        login_data = policy.authenticated_userid(self.request)
         if login_data is not None:
+            login_data = literal_eval(login_data)
             if login_data["group"] == "mainApp":
                 self.user = get_user_data(login_data["login"], self.request)
                 if self.user is None:
-                    if (
-                        self.request.registry.settings["auth.allow_guest_access"]
-                        == "false"
-                        or self.privateOnly
-                    ):
-                        raise HTTPFound(
-                            location=self.request.route_url(
-                                "login", _query={"next": self.request.url}
-                            )
-                        )
-                    else:
-                        self.guestAccess = True
-            else:
-                if (
-                    self.request.registry.settings["auth.allow_guest_access"] == "false"
-                    or self.privateOnly
-                ):
                     raise HTTPFound(
                         location=self.request.route_url(
                             "login", _query={"next": self.request.url}
                         )
                     )
-                else:
-                    self.guestAccess = True
-        else:
-            if (
-                self.request.registry.settings["auth.allow_guest_access"] == "false"
-                or self.privateOnly
-            ):
+                self.check_post_put_delete()
+            else:
                 raise HTTPFound(
                     location=self.request.route_url(
                         "login", _query={"next": self.request.url}
                     )
                 )
-            else:
-                self.guestAccess = True
+        else:
+            raise HTTPFound(
+                location=self.request.route_url(
+                    "login", _query={"next": self.request.url}
+                )
+            )
+
+        # if login_data is not None:
+        #     if login_data["group"] == "mainApp":
+        #         self.user = get_user_data(login_data["login"], self.request)
+        #         if self.user is None:
+        #             if (
+        #                 self.request.registry.settings["auth.allow_guest_access"]
+        #                 == "false"
+        #                 or self.privateOnly
+        #             ):
+        #                 raise HTTPFound(
+        #                     location=self.request.route_url(
+        #                         "login", _query={"next": self.request.url}
+        #                     )
+        #                 )
+        #             else:
+        #                 self.guestAccess = True
+        #     else:
+        #         if (
+        #             self.request.registry.settings["auth.allow_guest_access"] == "false"
+        #             or self.privateOnly
+        #         ):
+        #             raise HTTPFound(
+        #                 location=self.request.route_url(
+        #                     "login", _query={"next": self.request.url}
+        #                 )
+        #             )
+        #         else:
+        #             self.guestAccess = True
+        # else:
+        #     if (
+        #         self.request.registry.settings["auth.allow_guest_access"] == "false"
+        #         or self.privateOnly
+        #     ):
+        #         raise HTTPFound(
+        #             location=self.request.route_url(
+        #                 "login", _query={"next": self.request.url}
+        #             )
+        #         )
+        #     else:
+        #         self.guestAccess = True
 
     def __call__(self):
         error = self.request.session.pop_flash(queue="error")
         if len(error) > 0:
             self.append_to_errors(error[0].replace("|error", ""))
+
+        self.userID = self.request.matchdict["userid"]
+        if not user_exists(self.request, self.userID):
+            raise HTTPNotFound()
+        self.classResult["userDetails"] = get_user_details(self.request, self.userID)
+        self.guestAccess = False
 
         i_user_authorization = p.PluginImplementations(p.IUserAuthorization)
         continue_authorization = True
@@ -383,9 +396,27 @@ class PrivateView(object):
             break  # Only only plugin will be called for before_check_authorization
         if continue_authorization:
             self.check_authorization()
-        for plugin in i_user_authorization:
-            plugin.custom_authorization(self.request)
-            break  # Only only plugin will be called for custom_authorization
+        else:
+            authorized = False
+            user_authorized = ""
+            for plugin in i_user_authorization:
+                authorized, user_authorized = plugin.custom_authorization(self.request)
+                break  # Only only plugin will be called for custom_authorization
+            if authorized:
+                self.user = get_user_data(user_authorized, self.request)
+                if self.user is None:
+                    raise HTTPFound(
+                        location=self.request.route_url(
+                            "login", _query={"next": self.request.url}
+                        )
+                    )
+                self.check_post_put_delete()
+            else:
+                raise HTTPFound(
+                    location=self.request.route_url(
+                        "login", _query={"next": self.request.url}
+                    )
+                )
 
         if not self.guestAccess:
             self.classResult["activeUser"] = self.user

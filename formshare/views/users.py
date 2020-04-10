@@ -34,11 +34,12 @@ class UsersListView(PrivateView):
             raise HTTPNotFound
         if self.user.super != 1:
             raise HTTPNotFound
-        if (
-            self.request.registry.settings.get("auth.register_users_via_web", "true")
-            == "true"
-        ):
-            raise HTTPNotFound
+        if self.request.registry.settings.get("always_add_user", "false") == "false":
+            if (
+                self.request.registry.settings.get("auth.register_users_via_web", "true")
+                == "true"
+            ):
+                raise HTTPNotFound
         return {"userid": user_id}
 
 
@@ -55,11 +56,12 @@ class EditUserView(PrivateView):
             raise HTTPNotFound
         if self.user.super != 1:
             raise HTTPNotFound
-        if (
-            self.request.registry.settings.get("auth.register_users_via_web", "true")
-            == "true"
-        ):
-            raise HTTPNotFound
+        if self.request.registry.settings.get("always_add_user", "false") == "false":
+            if (
+                self.request.registry.settings.get("auth.register_users_via_web", "true")
+                == "true"
+            ):
+                raise HTTPNotFound
         user_data = get_user_details(self.request, user_to_modify, False)
         if self.request.method == "POST":
             action = None
@@ -182,11 +184,12 @@ class AddUserView(PrivateView):
             raise HTTPNotFound
         if self.user.super != 1:
             raise HTTPNotFound
-        if (
-            self.request.registry.settings.get("auth.register_users_via_web", "true")
-            == "true"
-        ):
-            raise HTTPNotFound
+        if self.request.registry.settings.get("always_add_user", "false") == "false":
+            if (
+                self.request.registry.settings.get("auth.register_users_via_web", "true")
+                == "true"
+            ):
+                raise HTTPNotFound
         user_details = {}
         if self.request.method == "POST":
             user_details = self.get_post_dict()

@@ -437,7 +437,7 @@ class IUserAuthorization(Interface):
         """
         Called by FormShare so plugins can perform their own way of authorizing a user.
         :param request:
-        :return: None
+        :return: True, Authorized user name or False, ""
         """
         raise NotImplementedError(
             "custom_authorization must be implemented in subclasses"

@@ -278,12 +278,7 @@ class PrivateView(object):
                 return policy["policy"]
         return None
 
-    def __call__(self):
-        error = self.request.session.pop_flash(queue="error")
-        if len(error) > 0:
-            self.append_to_errors(error[0].replace("|error", ""))
-
-        # login_data = authenticated_userid(self.request)
+    def check_authorization(self):
         policy = self.get_policy("main")
         login_data = policy.authenticated_userid(self.request)
 
@@ -375,6 +370,23 @@ class PrivateView(object):
                 )
             else:
                 self.guestAccess = True
+
+    def __call__(self):
+        error = self.request.session.pop_flash(queue="error")
+        if len(error) > 0:
+            self.append_to_errors(error[0].replace("|error", ""))
+
+        i_user_authorization = p.PluginImplementations(p.IUserAuthorization)
+        continue_authorization = True
+        for plugin in i_user_authorization:
+            continue_authorization = plugin.before_check_authorization(self.request)
+            break  # Only only plugin will be called for before_check_authorization
+        if continue_authorization:
+            self.check_authorization()
+        for plugin in i_user_authorization:
+            plugin.custom_authorization(self.request)
+            break  # Only only plugin will be called for custom_authorization
+
         if not self.guestAccess:
             self.classResult["activeUser"] = self.user
             if self.user.login != self.userID:

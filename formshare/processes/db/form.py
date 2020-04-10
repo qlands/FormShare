@@ -351,7 +351,14 @@ def get_form_details(request, user, project, form):
             else:
                 result["parent_form_data"] = None
         else:
-            submissions, last, in_database, in_logs, in_error, by = get_number_of_submissions_in_database(
+            (
+                submissions,
+                last,
+                in_database,
+                in_logs,
+                in_error,
+                by,
+            ) = get_number_of_submissions_in_database(
                 request, project, result["form_id"]
             )
             result["submissions"] = submissions
@@ -470,7 +477,14 @@ def get_project_forms(request, user, project):
                 form["parent_form_data"] = None
 
         else:
-            submissions, last, in_database, in_logs, in_error, by = get_number_of_submissions_in_database(
+            (
+                submissions,
+                last,
+                in_database,
+                in_logs,
+                in_error,
+                by,
+            ) = get_number_of_submissions_in_database(
                 request, form["project_id"], form["form_id"]
             )
             form["submissions"] = submissions

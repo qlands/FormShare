@@ -677,7 +677,10 @@ def upload_odk_form(
                     if error == 0:
                         continue_creation = True
                         for a_plugin in plugins.PluginImplementations(plugins.IForm):
-                            continue_creation, error_message = a_plugin.after_odk_form_checks(
+                            (
+                                continue_creation,
+                                error_message,
+                            ) = a_plugin.after_odk_form_checks(
                                 request,
                                 user_id,
                                 project_id,
@@ -778,7 +781,11 @@ def upload_odk_form(
                             for a_plugin in plugins.PluginImplementations(
                                 plugins.IForm
                             ):
-                                continue_adding, message, form_data = a_plugin.before_adding_form(
+                                (
+                                    continue_adding,
+                                    message,
+                                    form_data,
+                                ) = a_plugin.before_adding_form(
                                     request,
                                     "ODK",
                                     user_id,
@@ -981,7 +988,10 @@ def update_odk_form(request, user_id, project_id, for_form_id, odk_dir, form_dat
                             for a_plugin in plugins.PluginImplementations(
                                 plugins.IForm
                             ):
-                                continue_creation, error_message = a_plugin.after_odk_form_checks(
+                                (
+                                    continue_creation,
+                                    error_message,
+                                ) = a_plugin.after_odk_form_checks(
                                     request,
                                     user_id,
                                     project_id,
@@ -1094,7 +1104,11 @@ def update_odk_form(request, user_id, project_id, for_form_id, odk_dir, form_dat
                                 for a_plugin in plugins.PluginImplementations(
                                     plugins.IForm
                                 ):
-                                    continue_updating, message, form_data = a_plugin.before_updating_form(
+                                    (
+                                        continue_updating,
+                                        message,
+                                        form_data,
+                                    ) = a_plugin.before_updating_form(
                                         request,
                                         "ODK",
                                         user_id,

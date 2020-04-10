@@ -33,7 +33,13 @@ class AssistantForms(AssistantView):
                     prj_form["privileges"] = ass_form["privileges"]
                     forms.append(prj_form)
         for form in forms:
-            submissions, last, in_database, in_logs, in_error = get_number_of_submissions_by_assistant(
+            (
+                submissions,
+                last,
+                in_database,
+                in_logs,
+                in_error,
+            ) = get_number_of_submissions_by_assistant(
                 self.request,
                 form["project_id"],
                 form["form_id"],

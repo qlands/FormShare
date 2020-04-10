@@ -133,7 +133,7 @@ class LoginView(PublicView):
                 if user.check_password(passwd, self.request):
                     continue_login = True
                     # Load connected plugins and check if they modify the login authorization
-                    for plugin in p.PluginImplementations(p.IAuthorize):
+                    for plugin in p.PluginImplementations(p.IUserAuthentication):
                         continue_with_login, error_message = plugin.after_login(
                             self.request, user
                         )
@@ -270,10 +270,11 @@ class AssistantLoginView(PublicView):
                 if collaborator.check_password(passwd, self.request):
                     continue_login = True
                     # Load connected plugins and check if they modify the login authorization
-                    for plugin in p.PluginImplementations(p.IAuthorize):
-                        continue_with_login, error_message = plugin.after_collaborator_login(
-                            self.request, collaborator
-                        )
+                    for plugin in p.PluginImplementations(p.IUserAuthentication):
+                        (
+                            continue_with_login,
+                            error_message,
+                        ) = plugin.after_collaborator_login(self.request, collaborator)
                         if not continue_with_login:
                             self.append_to_errors(error_message)
                             continue_login = False
@@ -375,9 +376,11 @@ class RegisterView(PublicView):
                                 # Load connected plugins and check if they modify the registration of an user
                                 continue_registration = True
                                 for plugin in p.PluginImplementations(p.IRegistration):
-                                    data, continue_with_registration, error_message = plugin.before_register(
-                                        self.request, data
-                                    )
+                                    (
+                                        data,
+                                        continue_with_registration,
+                                        error_message,
+                                    ) = plugin.before_register(self.request, data)
                                     if not continue_with_registration:
                                         self.append_to_errors(error_message)
                                         continue_registration = False

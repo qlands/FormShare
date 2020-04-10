@@ -6,6 +6,7 @@ import datetime
 import shutil
 from sqlalchemy import create_engine
 import json
+import pkg_resources
 
 """
 This testing module test all routes. It launch start the server and test all the routes and processes
@@ -50,13 +51,12 @@ def get_form_details(config, project, form):
 
 class FunctionalTests(unittest.TestCase):
     def setUp(self):
-        from formshare import start
         from .config import server_config
-
-        app = start.start(server_config)
+        from formshare import main
+        app = main(None, **server_config)
         from webtest import TestApp
-
         self.testapp = TestApp(app)
+
         self.randonLogin = ""
         self.randonLoginKey = ""
         self.server_config = server_config
@@ -71,6 +71,7 @@ class FunctionalTests(unittest.TestCase):
 
     def test_all(self):
         def test_root():
+            pkg_resources.require("formshare")
             # Test the root urls
             self.testapp.get("/", status=200)
             self.testapp.get("/refresh", status=200)
@@ -78,6 +79,7 @@ class FunctionalTests(unittest.TestCase):
             self.testapp.get("/join", status=200)
             self.testapp.get("/recover", status=200)
             self.testapp.get("/not_found", status=404)
+            self.testapp.get("/gravatar?name=Carlos", status=200)
 
         def test_login():
             # Login failed
@@ -875,6 +877,23 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
             self.assistantGroupID = "grp001"
+
+            # Delete the assistant
+            res = self.testapp.post(
+                "/user/{}/project/{}/group/{}/delete".format(
+                    self.randonLogin, self.project, self.assistantGroupID
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Add an assistant group again
+            res = self.testapp.post(
+                "/user/{}/project/{}/groups/add".format(self.randonLogin, self.project),
+                {"group_desc": "Test if a group 2", "group_id": "grp001"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
 
             # Get the assistant groups
             res = self.testapp.get(
@@ -2508,6 +2527,26 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
             assert "FS_error" in res.headers
+
+            # Assistant login succeeds.
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/login".format(
+                    self.randonLogin, self.project
+                ),
+                {"login": self.assistantLogin, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Assistant login succeeds.
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/logout".format(
+                    self.randonLogin, self.project
+                ),
+                {"login": self.assistantLogin, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
 
             # Assistant login succeeds.
             res = self.testapp.post(

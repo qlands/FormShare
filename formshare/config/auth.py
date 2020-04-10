@@ -1,12 +1,10 @@
 from formshare.models import User as userModel
 from formshare.models import Collaborator as collaboratorModel
 from .encdecdata import decode_data
-import urllib
-import hashlib
 from ..models import map_from_schema
 import validators
 from formshare.plugins.core import PluginImplementations
-from formshare.plugins.interfaces import IAuthorize
+from formshare.plugins.interfaces import IUserAuthentication
 
 
 class User(object):
@@ -32,7 +30,7 @@ class User(object):
         self.set_gravatar_url(request, self.name, 45)
         # Load connected plugins and check if they modify the password authentication
         plugin_result = None
-        for plugin in PluginImplementations(IAuthorize):
+        for plugin in PluginImplementations(IUserAuthentication):
             plugin_result = plugin.on_authenticate_password(
                 request, self.login, password
             )
@@ -43,7 +41,9 @@ class User(object):
             return plugin_result
 
     def set_gravatar_url(self, request, name, size):
-        self.gravatarURL = request.route_url("gravatar", _query={"name": name, "size": size})
+        self.gravatarURL = request.route_url(
+            "gravatar", _query={"name": name, "size": size}
+        )
 
 
 class Assistant(object):
@@ -61,7 +61,9 @@ class Assistant(object):
         return check_assistant_login(self.projectID, self.login, password, request)
 
     def set_gravatar_url(self, request, name, size):
-        self.gravatarURL = request.route_url("gravatar", _query={"name": name, "size": size})
+        self.gravatarURL = request.route_url(
+            "gravatar", _query={"name": name, "size": size}
+        )
 
 
 def get_formshare_user_data(request, user, is_email):
@@ -86,7 +88,7 @@ def get_user_data(user, request):
     # Load connected plugins and check if they modify the user authentication
     plugin_result = None
     plugin_result_dict = {}
-    for plugin in PluginImplementations(IAuthorize):
+    for plugin in PluginImplementations(IUserAuthentication):
         plugin_result, plugin_result_dict = plugin.on_authenticate_user(
             request, user, email_valid
         )

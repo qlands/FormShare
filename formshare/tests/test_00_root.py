@@ -53,8 +53,10 @@ class FunctionalTests(unittest.TestCase):
     def setUp(self):
         from .config import server_config
         from formshare import main
+
         app = main(None, **server_config)
         from webtest import TestApp
+
         self.testapp = TestApp(app)
 
         self.randonLogin = ""

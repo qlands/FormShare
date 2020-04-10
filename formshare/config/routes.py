@@ -242,9 +242,7 @@ def load_routes(config):
             "dashboard/profile/profile_edit.jinja2",
         )
     )
-    routes.append(
-        add_route("gravatar", "/gravatar", Gravatar, None)
-    )
+    routes.append(add_route("gravatar", "/gravatar", Gravatar, None))
 
     # Projects
     routes.append(

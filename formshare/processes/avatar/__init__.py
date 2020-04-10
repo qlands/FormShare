@@ -22,9 +22,7 @@ class Avatar(object):
             :param filetype: the file format of the image (i.e. JPEG, PNG)
         """
         render_size = max(size, Avatar.MIN_RENDER_SIZE)
-        image = Image.new(
-            "RGB", (render_size, render_size), cls._background_color()
-        )
+        image = Image.new("RGB", (render_size, render_size), cls._background_color())
         draw = ImageDraw.Draw(image)
         font = cls._font(render_size)
         text = cls._text(string)
@@ -77,7 +75,9 @@ class Avatar(object):
                 if len(part) == 1:
                     data = part[0]
                     if len(data) >= 3:
-                        return part[0][0].upper() + part[0][1].upper() + part[0][2].upper()
+                        return (
+                            part[0][0].upper() + part[0][1].upper() + part[0][2].upper()
+                        )
                     else:
                         if len(data) == 2:
                             return part[0][0].upper() + part[0][1].upper()
@@ -87,9 +87,13 @@ class Avatar(object):
                     if len(part) == 2:
                         return part[0][0].upper() + part[1][0].upper()
                     else:
-                        return part[0][0].upper() + part[1][0].upper() + part[2][0].upper()
+                        return (
+                            part[0][0].upper() + part[1][0].upper() + part[2][0].upper()
+                        )
         except Exception as e:
-            log.error("Error creating avatar for string {}. Error: {}".format(string, str(e)))
+            log.error(
+                "Error creating avatar for string {}. Error: {}".format(string, str(e))
+            )
             return "#"
 
     @staticmethod

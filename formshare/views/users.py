@@ -36,7 +36,9 @@ class UsersListView(PrivateView):
             raise HTTPNotFound
         if self.request.registry.settings.get("always_add_user", "false") == "false":
             if (
-                self.request.registry.settings.get("auth.register_users_via_web", "true")
+                self.request.registry.settings.get(
+                    "auth.register_users_via_web", "true"
+                )
                 == "true"
             ):
                 raise HTTPNotFound
@@ -58,7 +60,9 @@ class EditUserView(PrivateView):
             raise HTTPNotFound
         if self.request.registry.settings.get("always_add_user", "false") == "false":
             if (
-                self.request.registry.settings.get("auth.register_users_via_web", "true")
+                self.request.registry.settings.get(
+                    "auth.register_users_via_web", "true"
+                )
                 == "true"
             ):
                 raise HTTPNotFound
@@ -186,7 +190,9 @@ class AddUserView(PrivateView):
             raise HTTPNotFound
         if self.request.registry.settings.get("always_add_user", "false") == "false":
             if (
-                self.request.registry.settings.get("auth.register_users_via_web", "true")
+                self.request.registry.settings.get(
+                    "auth.register_users_via_web", "true"
+                )
                 == "true"
             ):
                 raise HTTPNotFound

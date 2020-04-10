@@ -12,7 +12,7 @@ __all__ = [
     "IPluralize",
     "ISchema",
     "IDatabase",
-    "IAuthorize",
+    "IUserAuthentication",
     "ITemplateHelpers",
     "IProduct",
     "IImportExternalData",
@@ -27,6 +27,7 @@ __all__ = [
     "IDashBoardView",
     "IProjectDetailsView",
     "IFormDetailsView",
+    "IUserAuthorization",
 ]
 
 
@@ -364,9 +365,9 @@ class IRegistration(Interface):
         )
 
 
-class IAuthorize(Interface):
+class IUserAuthentication(Interface):
     """
-        Allows to hook into the user authorization
+        Allows to hook into the user authentication
     """
 
     def after_login(self, request, user):
@@ -412,6 +413,34 @@ class IAuthorize(Interface):
                         """
         raise NotImplementedError(
             "on_authenticate_password must be implemented in subclasses"
+        )
+
+
+class IUserAuthorization(Interface):
+    """
+        Allows to hook into the user authorization.
+    """
+
+    def before_check_authorization(self, request):
+        """
+        Called by FormShare so plugins can modify the normal authorization of users
+
+        :param request: ``pyramid.request`` object
+        :return Return true or false if FormShare should check the authorization of a user.
+
+        """
+        raise NotImplementedError(
+            "before_check_authorization must be implemented in subclasses"
+        )
+
+    def custom_authorization(self, request):
+        """
+        Called by FormShare so plugins can perform their own way of authorizing a user.
+        :param request:
+        :return: None
+        """
+        raise NotImplementedError(
+            "custom_authorization must be implemented in subclasses"
         )
 
 

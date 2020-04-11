@@ -33,6 +33,7 @@ def upgrade():
     config.read(config_uri)
     modify_ini_file(config, "ADD", "server:main", "capture_output", "True")
     modify_ini_file(config, "ADD", "server:main", "proxy_protocol", "True")
+    modify_ini_file(config, "ADD", "server:main", "daemon", "True")
     if "FORMSHARE_HOST" in os.environ:  # Running on Docker
         path_to_pid_file = "/opt/formshare_gunicorn/formshare.pid"
         path_to_log_file = "/opt/formshare_log/error_log"
@@ -59,6 +60,7 @@ def downgrade():
     config.read(config_uri)
     modify_ini_file(config, "REMOVE", "server:main", "capture_output")
     modify_ini_file(config, "REMOVE", "server:main", "proxy_protocol")
+    modify_ini_file(config, "REMOVE", "server:main", "daemon")
     modify_ini_file(config, "REMOVE", "server:main", "pidfile")
     modify_ini_file(config, "REMOVE", "server:main", "errorlog")
     modify_ini_file(config, "REMOVE", "server:main", "forwarded_allow_ips")

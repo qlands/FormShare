@@ -151,7 +151,8 @@ def append_to_routes(route_array):
         for curr_route in route_list:
             if curr_route["path"] == new_route["path"]:
                 found = True
-        pos += 1
+                break
+            pos = pos + 1
         if not found:
             route_list.append(new_route)
         else:

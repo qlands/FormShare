@@ -79,6 +79,7 @@ setup(
             "configure_mysql = formshare.scripts.configuremysql:main",
             "configure_alembic = formshare.scripts.configurealembic:main",
             "configure_fluent = formshare.scripts.configurefluent:main",
+            "modify_config = formshare.scripts.modifyconfig:main",
         ],
     },
 )

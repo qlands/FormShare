@@ -32,4 +32,5 @@ rabbitmqctl add_vhost formshare
 rabbitmqctl set_permissions -p formshare formshare ".*" ".*" ".*"
 /etc/init.d/celery_formshare start
 source /opt/formshare_env/bin/activate
-gunicorn --capture-output --proxy-protocol --forwarded-allow-ips $FORWARDED_ALLOW_IP --pid /opt/formshare_gunicorn/formshare.pid --log-file /opt/formshare_log/error_log --paste /opt/formshare/development.ini
+pserve /opt/formshare/development.ini
+tail -f /dev/null

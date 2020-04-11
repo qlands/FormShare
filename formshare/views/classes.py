@@ -285,19 +285,13 @@ class PrivateView(object):
             or self.request.method == "DELETE"
         ):
             if (
-                self.request.registry.settings.get(
-                    "perform_post_checks", "true"
-                )
+                self.request.registry.settings.get("perform_post_checks", "true")
                 == "true"
             ):
                 safe = check_csrf_token(self.request, raises=False)
                 if not safe:
                     self.request.session.pop_flash()
-                    log.error(
-                        "SECURITY-CSRF error at {} ".format(
-                            self.request.url
-                        )
-                    )
+                    log.error("SECURITY-CSRF error at {} ".format(self.request.url))
                     raise HTTPFound(self.request.route_url("refresh"))
                 else:
                     if self.checkCrossPost:

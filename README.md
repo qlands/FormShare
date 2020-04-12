@@ -10,7 +10,7 @@ FormShare 2 is inspired from the excellent [FormHub](<http://github.com/SEL-Colu
 
 FormShare was created because:
 
-* I want to provide a open source **free** platform to private and public organizations to help them manage their data when using ODK.
+* I want to provide a open source and **free** platform to private and public organizations to help them manage their data when using ODK.
 * ODK Aggregate, in my personal opinion, is badly designed, buggy and not interoperable. ODK Central is just not there yet.
 * Forks based on FormHub suffer from the same ills of their father: Django (sorry if I hurt your feelings), no proper repository, rudimentary data cleaning, no auditing, little interoperability, poor or none extensibility... among many others.
 

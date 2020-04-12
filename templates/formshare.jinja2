@@ -161,6 +161,12 @@ host = {{ formshare_host }}
 port = {{ formshare_port }}
 workers = 1
 worker_class = gevent
+capture_output = {{ capture_output }}
+proxy_protocol = True
+daemon = {{ daemon }}
+pidfile = {{ pid_file }}
+errorlog = {{ error_log_file }}
+forwarded_allow_ips = {{ forwarded_allow_ip }}
 
 ###
 # Logging configuration

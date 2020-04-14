@@ -21,6 +21,7 @@ __all__ = [
     "update_password",
     "email_exists",
     "update_last_login",
+    "get_user_id_with_email",
 ]
 
 log = logging.getLogger("formshare")
@@ -202,6 +203,19 @@ def get_user_name(request, user):
     )
     if res is not None:
         return res.user_name
+    else:
+        return None
+
+
+def get_user_id_with_email(request, email):
+    res = (
+        request.dbsession.query(User)
+        .filter(User.user_email == email)
+        .filter(User.user_active == 1)
+        .first()
+    )
+    if res is not None:
+        return res.user_id
     else:
         return None
 

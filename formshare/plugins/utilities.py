@@ -142,6 +142,7 @@ class FormShareFormEditorView(PrivateView):
     """
        A view class for plugins which require a private Form View with editor+ privileges.
     """
+
     def __init__(self, request):
         PrivateView.__init__(self, request)
         self.checkCrossPost = False

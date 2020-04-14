@@ -25,14 +25,32 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("ini_path", help="Path to ini file to create")
     parser.add_argument("--mysql_host", required=True, help="MySQL host server to use")
-    parser.add_argument("--forwarded_allow_ip", required=True, help="IP of the proxy server calling FormShare")
-    parser.add_argument("--pid_file", required=True, help="File that will store the FormShare process ID")
-    parser.add_argument("--error_log_file", required=True, help="File that will store the FormShare logs")
     parser.add_argument(
-        "-d", "--daemon", action="store_true", help="Start as FormShare in detached mode"
+        "--forwarded_allow_ip",
+        required=True,
+        help="IP of the proxy server calling FormShare",
     )
     parser.add_argument(
-        "-c", "--capture_output", action="store_true", help="Start as FormShare in detached mode"
+        "--pid_file",
+        required=True,
+        help="File that will store the FormShare process ID",
+    )
+    parser.add_argument(
+        "--error_log_file",
+        required=True,
+        help="File that will store the FormShare logs",
+    )
+    parser.add_argument(
+        "-d",
+        "--daemon",
+        action="store_true",
+        help="Start as FormShare in detached mode",
+    )
+    parser.add_argument(
+        "-c",
+        "--capture_output",
+        action="store_true",
+        help="Start as FormShare in detached mode",
     )
     parser.add_argument(
         "-o", "--overwrite", action="store_true", help="Overwrite if exists"

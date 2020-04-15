@@ -23,7 +23,7 @@ def main(global_config, **settings):
 
     main_policy = AuthTktAuthenticationPolicy(
         settings["auth.main.secret"],
-        timeout=1800 * 60,
+        timeout=7200,
         cookie_name=settings["auth.main.cookie"],
     )
     auth_policy.add_policy("main", main_policy)
@@ -31,7 +31,7 @@ def main(global_config, **settings):
 
     assistant_policy = AuthTktAuthenticationPolicy(
         settings["auth.assistant.secret"],
-        timeout=1800 * 60,
+        timeout=7200,
         cookie_name=settings["auth.assistant.cookie"],
     )
     auth_policy.add_policy("assistant", assistant_policy)

@@ -143,6 +143,13 @@ mail.ssl = true
 mail.from = noreply@me.com
 mail.error = formshare_support@me.com
 
+# Redis
+redis.sessions.secret = {{ redis_sessions_secret }}
+redis.sessions.timeout = 7200
+redis.sessions.cookie_name = formshare_session
+redis.sessions.host = {{ redis_sessions_host }}
+redis.sessions.port = {{ redis_sessions_port }}
+
 # By default, the toolbar only appears for clients from IP addresses
 # '127.0.0.1' and '::1'.
 # debugtoolbar.hosts = 127.0.0.1 ::1

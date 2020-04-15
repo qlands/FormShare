@@ -89,10 +89,15 @@ def main():
     parser.add_argument(
         "--elastic_search_ssl", action="store_true", help="ElasticSearch use SSL"
     )
+    parser.add_argument(
+        "--redis_host", required=True, help="Redis host name or IP address"
+    )
+    parser.add_argument("--redis_port", default=6379, help="Redis port")
     args = parser.parse_args()
     formshare_path = "."
 
     main_secret = random_password(13).replace("%", "~")
+    redis_sessions_secret = random_password(13).replace("%", "~")
     assistant_secret = random_password(13).replace("%", "!")
     auth_secret = random_password(13).replace("%", "#")
     aes_key = random_password(28).replace("%", "#")
@@ -127,6 +132,9 @@ def main():
         "pid_file": args.pid_file,
         "error_log_file": args.error_log_file,
         "forwarded_allow_ip": args.forwarded_allow_ip,
+        "redis_sessions_secret": redis_sessions_secret,
+        "redis_sessions_host": args.redis_host,
+        "redis_sessions_port": args.redis_port,
     }
     rendered_template = template_environment.get_template("formshare.jinja2").render(
         context

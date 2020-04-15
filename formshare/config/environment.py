@@ -1,5 +1,4 @@
 import os
-from pyramid.session import SignedCookieSessionFactory
 import formshare.plugins as p
 import formshare.products as prd
 import formshare.resources as r
@@ -18,7 +17,7 @@ from .elasticfeeds import configure_manager
 from formshare.processes.elasticsearch.user_index import configure_user_index_manager
 from formshare.products.formshare_products import register_products
 
-my_session_factory = SignedCookieSessionFactory('`h6N[wQ8@S"B$bGy;')
+from pyramid_session_redis import session_factory_from_settings
 
 main_policy_array = []
 
@@ -83,7 +82,9 @@ def load_environment(settings, config, apppath, policy_array):
     configure_user_index_manager(settings)
 
     # Add the session factory to the config
-    config.set_session_factory(my_session_factory)
+    session_factory = session_factory_from_settings(settings)
+    config.set_session_factory(session_factory)
+
     config.set_csrf_storage_policy(SessionCSRFStoragePolicy())
     # config.set_default_csrf_options(require_csrf=True)
 

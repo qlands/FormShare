@@ -331,47 +331,6 @@ class PrivateView(object):
                 )
             )
 
-        # if login_data is not None:
-        #     if login_data["group"] == "mainApp":
-        #         self.user = get_user_data(login_data["login"], self.request)
-        #         if self.user is None:
-        #             if (
-        #                 self.request.registry.settings["auth.allow_guest_access"]
-        #                 == "false"
-        #                 or self.privateOnly
-        #             ):
-        #                 raise HTTPFound(
-        #                     location=self.request.route_url(
-        #                         "login", _query={"next": self.request.url}
-        #                     )
-        #                 )
-        #             else:
-        #                 self.guestAccess = True
-        #     else:
-        #         if (
-        #             self.request.registry.settings["auth.allow_guest_access"] == "false"
-        #             or self.privateOnly
-        #         ):
-        #             raise HTTPFound(
-        #                 location=self.request.route_url(
-        #                     "login", _query={"next": self.request.url}
-        #                 )
-        #             )
-        #         else:
-        #             self.guestAccess = True
-        # else:
-        #     if (
-        #         self.request.registry.settings["auth.allow_guest_access"] == "false"
-        #         or self.privateOnly
-        #     ):
-        #         raise HTTPFound(
-        #             location=self.request.route_url(
-        #                 "login", _query={"next": self.request.url}
-        #             )
-        #         )
-        #     else:
-        #         self.guestAccess = True
-
     def __call__(self):
         error = self.request.session.pop_flash(queue="error")
         if len(error) > 0:
@@ -587,25 +546,18 @@ class DashboardView(PrivateView):
 
 class ProfileView(PrivateView):
     def __call__(self):
-        policy = self.get_policy("main")
-        login_data = policy.authenticated_userid(self.request)
-        # login_data = authenticated_userid(self.request)
-        if login_data is not None:
-            self.set_active_menu("profile")
-            PrivateView.__call__(self)
-            if not self.returnRawViewResult:
-                self.classResult.update(self.viewResult)
-                return self.classResult
-            else:
-                return self.viewResult
+        self.set_active_menu("profile")
+        PrivateView.__call__(self)
+        if not self.returnRawViewResult:
+            self.classResult.update(self.viewResult)
+            return self.classResult
         else:
-            raise HTTPNotFound()
+            return self.viewResult
 
 
 class ProjectsView(PrivateView):
     def __call__(self):
         self.set_active_menu("projects")
-        # We need to set here relevant information for the dashboard
         PrivateView.__call__(self)
         if not self.returnRawViewResult:
             self.classResult.update(self.viewResult)

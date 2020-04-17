@@ -61,8 +61,8 @@ auth.auto_accept_collaboration = true
 # Celery configuration
 # Change if necessary. The RabbitMQ server should be the same as the one hosting FormShare
 ###
-celery.broker = amqp://formshare:formshare@localhost:5672/formshare
-celery.backend = rpc://formshare:formshare@localhost:5672/formshare
+celery.broker = redis://localhost:6379/0
+celery.backend = redis://localhost:6379/0
 celery.taskname = fstask
 
 ###
@@ -147,8 +147,8 @@ mail.error = formshare_support@me.com
 redis.sessions.secret = {{ redis_sessions_secret }}
 redis.sessions.timeout = 7200
 redis.sessions.cookie_name = formshare_session
-redis.sessions.host = {{ redis_sessions_host }}
-redis.sessions.port = {{ redis_sessions_port }}
+redis.sessions.host = localhost
+redis.sessions.port = 6379
 
 # By default, the toolbar only appears for clients from IP addresses
 # '127.0.0.1' and '::1'.

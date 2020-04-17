@@ -1,7 +1,7 @@
 <div class="row border-bottom white-bg">
 
     <nav class="navbar navbar-expand-lg navbar-static-top" role="navigation">
-        <a href="{{ request.route_url('home') }}" style="margin-left: -16px; background: #026AA8" class="navbar-brand"><img alt="image" src="{{ request.url_for_static('formshare-small-black.png') }}"/> Form<b>Share</b></a>
+        <a href="{{ request.route_url('home') }}" style="{% block nav_brand_style %}margin-left: -16px; background: #026AA8{% endblock nav_brand_style %}" class="navbar-brand"><img alt="image" src="{{ request.url_for_static('formshare-small-black.png') }}"/> Form<b>Share</b></a>
         {#            <form role="search" class="navbar-form-custom" style="display: block; !important;" action="#">#}
         {#                <div class="form-group">#}
         {#                    <input type="text" placeholder="Search FormShare" class="form-control" name="top-search" id="top-search">#}

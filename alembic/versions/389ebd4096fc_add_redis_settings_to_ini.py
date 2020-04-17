@@ -15,8 +15,8 @@ import string
 
 
 # revision identifiers, used by Alembic.
-revision = '389ebd4096fc'
-down_revision = 'f73906cd769f'
+revision = "389ebd4096fc"
+down_revision = "f73906cd769f"
 branch_labels = None
 depends_on = None
 
@@ -51,16 +51,25 @@ def upgrade():
     config.read(config_uri)
 
     redis_sessions_secret = random_password(17).replace("%", "~")
-    modify_ini_file(config, "ADD", "app:formshare", "redis.sessions.secret", redis_sessions_secret)
+    modify_ini_file(
+        config, "ADD", "app:formshare", "redis.sessions.secret", redis_sessions_secret
+    )
     modify_ini_file(config, "ADD", "app:formshare", "redis.sessions.timeout", "7200")
-    modify_ini_file(config, "ADD", "app:formshare", "redis.sessions.cookie_name", "formshare_session")
-
-    if "FORMSHARE_HOST" in os.environ:  # Running on Docker
-        modify_ini_file(config, "ADD", "app:formshare", "redis.sessions.host", "172.28.1.6")
-        modify_ini_file(config, "ADD", "app:formshare", "redis.sessions.port", "6379")
-    else:
-        modify_ini_file(config, "ADD", "app:formshare", "redis.sessions.host", "localhost")
-        modify_ini_file(config, "ADD", "app:formshare", "redis.sessions.port", "6379")
+    modify_ini_file(
+        config,
+        "ADD",
+        "app:formshare",
+        "redis.sessions.cookie_name",
+        "formshare_session",
+    )
+    modify_ini_file(config, "ADD", "app:formshare", "redis.sessions.host", "localhost")
+    modify_ini_file(config, "ADD", "app:formshare", "redis.sessions.port", "6379")
+    modify_ini_file(
+        config, "ADD", "app:formshare", "celery.broker", "redis://localhost:6379/0"
+    )
+    modify_ini_file(
+        config, "ADD", "app:formshare", "celery.backend", "redis://localhost:6379/0"
+    )
 
     with open(config_uri, "w") as configfile:
         config.write(configfile)
@@ -75,6 +84,20 @@ def downgrade():
     modify_ini_file(config, "REMOVE", "app:formshare", "redis.sessions.cookie_name")
     modify_ini_file(config, "REMOVE", "app:formshare", "redis.sessions.host")
     modify_ini_file(config, "REMOVE", "app:formshare", "redis.sessions.port")
+    modify_ini_file(
+        config,
+        "ADD",
+        "app:formshare",
+        "celery.broker",
+        "amqp://formshare:formshare@localhost:5672/formshare",
+    )
+    modify_ini_file(
+        config,
+        "ADD",
+        "app:formshare",
+        "celery.backend",
+        "rpc://formshare:formshare@localhost:5672/formshare",
+    )
 
     with open(config_uri, "w") as configfile:
         config.write(configfile)

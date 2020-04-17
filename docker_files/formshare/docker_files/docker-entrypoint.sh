@@ -1,8 +1,8 @@
 #!/bin/bash
 
 /etc/init.d/mongodb start
-rm /var/run/rabbitmq/pid
-/etc/init.d/rabbitmq-server start
+rm /var/run/redis/redis-server.pid
+/etc/init.d/redis-server start
 
 set -e
 

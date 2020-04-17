@@ -42,30 +42,32 @@
             {% endblock user_edit_content %}
         </div>
     </div>
-    <div class="ibox">
-        <div class="ibox-title">
-            {% block user_password_title %}
-                <h5>{{ _('Change password') }}</h5>
-                <div class="ibox-tools">
-                    {% block user_password_tools %}
-                        <a class="fullscreen-link">
-                            <i class="fa fa-expand"></i>
-                        </a>
-                    {% endblock user_password_tools %}
-                </div>
-            {% endblock user_password_title %}
+    {% block change_password_section %}
+        <div class="ibox">
+            <div class="ibox-title">
+                {% block user_password_title %}
+                    <h5>{{ _('Change password') }}</h5>
+                    <div class="ibox-tools">
+                        {% block user_password_tools %}
+                            <a class="fullscreen-link">
+                                <i class="fa fa-expand"></i>
+                            </a>
+                        {% endblock user_password_tools %}
+                    </div>
+                {% endblock user_password_title %}
+            </div>
+            <div class="ibox-content">
+                {% block user_password_content %}
+                    {% block password_errors %}
+                        {% if action == "changepass" %}
+                            {{ form.display_errors(errors) }}
+                        {% endif %}
+                    {% endblock password_errors %}
+                    {% include 'dashboard/users/snippets/user_password_form.jinja2' %}
+                {% endblock user_password_content %}
+            </div>
         </div>
-        <div class="ibox-content">
-            {% block user_password_content %}
-                {% block password_errors %}
-                    {% if action == "changepass" %}
-                        {{ form.display_errors(errors) }}
-                    {% endif %}
-                {% endblock password_errors %}
-                {% include 'dashboard/users/snippets/user_password_form.jinja2' %}
-            {% endblock user_password_content %}
-        </div>
-    </div>
+    {% endblock change_password_section %}
 {% endblock maincontent %}
 
 {% block scripts %}

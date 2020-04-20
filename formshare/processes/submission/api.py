@@ -534,6 +534,8 @@ def field_is_editable(field_name):
         "_xform_id_string",
         "_submitted_date",
         "_geopoint",
+        "_longitude",
+        "_latitude",
         "instanceid",
         "rowuuid",
     ]

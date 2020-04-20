@@ -1719,6 +1719,26 @@ def store_json_file(
                         submission_data["_geopoint"] = submission_data[
                             geopoint_variable
                         ]
+                        parts = submission_data["_geopoint"].split(" ")
+                        if len(parts) >= 4:
+                            submission_data["_longitude"] = parts[0]
+                            submission_data["_latitude"] = parts[1]
+                            submission_data["_elevation"] = parts[2]
+                            submission_data["_precision"] = parts[3]
+                        else:
+                            if len(parts) == 3:
+                                submission_data["_longitude"] = parts[0]
+                                submission_data["_latitude"] = parts[1]
+                                submission_data["_elevation"] = parts[2]
+                            else:
+                                if len(parts) == 2:
+                                    submission_data["_longitude"] = parts[0]
+                                    submission_data["_latitude"] = parts[1]
+                        if len(parts) >= 2:
+                            submission_data["_geolocation"] = {
+                                "lat": submission_data["_latitude"],
+                                "lon": submission_data["_longitude"],
+                            }
                 # pkey_variable = get_form_primary_key(request, project, form)
                 # if pkey_variable is not None:
                 #     if geopoint_variable in submission_data.keys():
@@ -1979,6 +1999,26 @@ def store_json_file(
                         submission_data["_geopoint"] = submission_data[
                             geopoint_variable
                         ]
+                        parts = submission_data["_geopoint"].split(" ")
+                        if len(parts) >= 4:
+                            submission_data["_longitude"] = parts[0]
+                            submission_data["_latitude"] = parts[1]
+                            submission_data["_elevation"] = parts[2]
+                            submission_data["_precision"] = parts[3]
+                        else:
+                            if len(parts) == 3:
+                                submission_data["_longitude"] = parts[0]
+                                submission_data["_latitude"] = parts[1]
+                                submission_data["_elevation"] = parts[2]
+                            else:
+                                if len(parts) == 2:
+                                    submission_data["_longitude"] = parts[0]
+                                    submission_data["_latitude"] = parts[1]
+                        if len(parts) >= 2:
+                            submission_data["_geolocation"] = {
+                                "lat": submission_data["_latitude"],
+                                "lon": submission_data["_longitude"],
+                            }
                     except KeyError:
                         pass
 
@@ -2514,6 +2554,36 @@ def push_revision(request, user, project, form, submission):
     json_to_mysql = os.path.join(
         request.registry.settings["odktools.path"], *["JSONToMySQL", "jsontomysql"]
     )
+
+    with open(current_file, "r") as f:
+        submission_data = json.load(f)
+        try:
+            parts = submission_data["_geopoint"].split(" ")
+            if len(parts) >= 4:
+                submission_data["_longitude"] = parts[0]
+                submission_data["_latitude"] = parts[1]
+                submission_data["_elevation"] = parts[2]
+                submission_data["_precision"] = parts[3]
+            else:
+                if len(parts) == 3:
+                    submission_data["_longitude"] = parts[0]
+                    submission_data["_latitude"] = parts[1]
+                    submission_data["_elevation"] = parts[2]
+                else:
+                    if len(parts) == 2:
+                        submission_data["_longitude"] = parts[0]
+                        submission_data["_latitude"] = parts[1]
+            if len(parts) >= 2:
+                submission_data["_geolocation"] = {
+                    "lat": submission_data["_latitude"],
+                    "lon": submission_data["_longitude"],
+                }
+        except KeyError:
+            pass
+    with open(current_file, "w") as outfile:
+        json_string = json.dumps(submission_data, indent=4, ensure_ascii=False)
+        outfile.write(json_string)
+
     args.append(json_to_mysql)
     args.append("-H " + mysql_host)
     args.append("-P " + mysql_port)
@@ -2530,20 +2600,17 @@ def push_revision(request, user, project, form, submission):
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()
     if p.returncode == 0:
-        with open(current_file, "r") as f:
-            submission_data = json.load(f)
-
-            # Add the JSON to the Elastic Search index
-            project_code = get_project_code_from_id(request, user, project)
-            create_dataset_index(request.registry.settings, user, project_code, form)
-            add_dataset(
-                request.registry.settings,
-                user,
-                project_code,
-                form,
-                submission,
-                submission_data,
-            )
+        # Add the JSON to the Elastic Search index
+        project_code = get_project_code_from_id(request, user, project)
+        create_dataset_index(request.registry.settings, user, project_code, form)
+        add_dataset(
+            request.registry.settings,
+            user,
+            project_code,
+            form,
+            submission,
+            submission_data,
+        )
         return 0, ""
     else:
         log.error(

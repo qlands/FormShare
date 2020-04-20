@@ -127,6 +127,21 @@ def store_json_file(
         if geopoint_variable is not None:
             if geopoint_variable in submission_data.keys():
                 submission_data["_geopoint"] = submission_data[geopoint_variable]
+                parts = submission_data["_geopoint"].split(" ")
+                if len(parts) >= 4:
+                    submission_data["_longitude"] = parts[0]
+                    submission_data["_latitude"] = parts[1]
+                    submission_data["_elevation"] = parts[2]
+                    submission_data["_precision"] = parts[3]
+                else:
+                    if len(parts) == 3:
+                        submission_data["_longitude"] = parts[0]
+                        submission_data["_latitude"] = parts[1]
+                        submission_data["_elevation"] = parts[2]
+                    else:
+                        if len(parts) == 2:
+                            submission_data["_longitude"] = parts[0]
+                            submission_data["_latitude"] = parts[1]
 
     with open(temp_json_file, "w") as outfile:
         json_string = json.dumps(submission_data, indent=4, ensure_ascii=False)

@@ -262,8 +262,18 @@ def store_json_file(
             else:
                 # Add the JSON to the Elastic Search index but only submissions without error
                 create_dataset_index(settings, user, project_code, form)
+                index_data = {
+                    "_submitted_date": submission_data.get("_submitted_date", ""),
+                    "_xform_id_string": submission_data.get("_xform_id_string", ""),
+                    "_submitted_by": submission_data.get("_submitted_by", ""),
+                    "_user_id": submission_data.get("_user_id", ""),
+                    "_project_code": submission_data.get("_project_code", ""),
+                    "_geopoint": submission_data.get("_geopoint", ""),
+                }
+                if submission_data.get("_geolocation", "") != "":
+                    index_data["_geolocation"] = submission_data.get("_geolocation", "")
                 add_dataset(
-                    settings, user, project_code, form, submission_id, submission_data
+                    settings, user, project_code, form, submission_id, index_data
                 )
                 # Add the inserted records in the record index
                 create_record_index(settings, user, project_code, form)

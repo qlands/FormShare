@@ -35,7 +35,7 @@ from formshare.processes.elasticsearch.record_index import (
     delete_from_record_index,
 )
 from webhelpers2.html import literal
-from pandas.io.json import json_normalize
+from pandas import json_normalize
 from collections import OrderedDict
 import pandas as pd
 

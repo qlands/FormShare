@@ -8,7 +8,7 @@ from subprocess import Popen, PIPE
 import glob
 from formshare.processes.sse.messaging import send_task_status_to_form
 import json
-from pandas.io.json import json_normalize
+from pandas import json_normalize
 from collections import OrderedDict
 import pandas as pd
 from lxml import etree

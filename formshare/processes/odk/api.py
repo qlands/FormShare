@@ -1897,13 +1897,33 @@ def store_json_file(
                             create_dataset_index(
                                 request.registry.settings, user, project_code, form
                             )
+                            index_data = {
+                                "_submitted_date": submission_data.get(
+                                    "_submitted_date", ""
+                                ),
+                                "_xform_id_string": submission_data.get(
+                                    "_xform_id_string", ""
+                                ),
+                                "_submitted_by": submission_data.get(
+                                    "_submitted_by", ""
+                                ),
+                                "_user_id": submission_data.get("_user_id", ""),
+                                "_project_code": submission_data.get(
+                                    "_project_code", ""
+                                ),
+                                "_geopoint": submission_data.get("_geopoint", ""),
+                            }
+                            if submission_data.get("_geolocation", "") != "":
+                                index_data["_geolocation"] = submission_data.get(
+                                    "_geolocation", ""
+                                )
                             add_dataset(
                                 request.registry.settings,
                                 user,
                                 project_code,
                                 form,
                                 submission_id,
-                                submission_data,
+                                index_data,
                             )
                             # Add the inserted records in the record index
                             create_record_index(
@@ -2024,13 +2044,23 @@ def store_json_file(
 
             # Adds the dataset to the Elastic Search index
             create_dataset_index(request.registry.settings, user, project_code, form)
+            index_data = {
+                "_submitted_date": submission_data.get("_submitted_date", ""),
+                "_xform_id_string": submission_data.get("_xform_id_string", ""),
+                "_submitted_by": submission_data.get("_submitted_by", ""),
+                "_user_id": submission_data.get("_user_id", ""),
+                "_project_code": submission_data.get("_project_code", ""),
+                "_geopoint": submission_data.get("_geopoint", ""),
+            }
+            if submission_data.get("_geolocation", "") != "":
+                index_data["_geolocation"] = submission_data.get("_geolocation", "")
             add_dataset(
                 request.registry.settings,
                 user,
                 project_code,
                 form,
                 submission_id,
-                submission_data,
+                index_data,
             )
 
             with open(json_file, "w") as outfile:
@@ -2603,13 +2633,18 @@ def push_revision(request, user, project, form, submission):
         # Add the JSON to the Elastic Search index
         project_code = get_project_code_from_id(request, user, project)
         create_dataset_index(request.registry.settings, user, project_code, form)
+        index_data = {
+            "_submitted_date": submission_data.get("_submitted_date", ""),
+            "_xform_id_string": submission_data.get("_xform_id_string", ""),
+            "_submitted_by": submission_data.get("_submitted_by", ""),
+            "_user_id": submission_data.get("_user_id", ""),
+            "_project_code": submission_data.get("_project_code", ""),
+            "_geopoint": submission_data.get("_geopoint", ""),
+        }
+        if submission_data.get("_geolocation", "") != "":
+            index_data["_geolocation"] = submission_data.get("_geolocation", "")
         add_dataset(
-            request.registry.settings,
-            user,
-            project_code,
-            form,
-            submission,
-            submission_data,
+            request.registry.settings, user, project_code, form, submission, index_data,
         )
         return 0, ""
     else:

@@ -63,11 +63,9 @@ def upgrade():
             + "_"
             + a_form.form_id.lower()
         )
-        session.query(Odkform).filter(
-            Odkform.project_id == a_form.project_id
-        ).filter(Odkform.form_id == a_form.form_id).update(
-            {"form_index": index_name}
-        )
+        session.query(Odkform).filter(Odkform.project_id == a_form.project_id).filter(
+            Odkform.form_id == a_form.form_id
+        ).update({"form_index": index_name})
         fixed = True
         if es_connection.indices.exists(index_name):
             es_connection.indices.put_mapping(

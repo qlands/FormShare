@@ -269,7 +269,6 @@ def store_json_file(
                     "_user_id": submission_data.get("_user_id", ""),
                     "_project_code": submission_data.get("_project_code", ""),
                     "_geopoint": submission_data.get("_geopoint", ""),
-                    "_submission_id": submission_data.get("_submission_id", ""),
                 }
                 if submission_data.get("_geolocation", "") != "":
                     index_data["_geolocation"] = submission_data.get("_geolocation", "")

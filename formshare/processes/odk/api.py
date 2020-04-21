@@ -762,7 +762,13 @@ def upload_odk_form(
                             form_data["form_cdate"] = datetime.datetime.now()
                             form_data["form_directory"] = form_directory
                             project_code = request.matchdict["projcode"]
-                            form_data["form_index"] = user_id.lower() + "_" + project_code.lower() + "_" + form_id.lower()
+                            form_data["form_index"] = (
+                                user_id.lower()
+                                + "_"
+                                + project_code.lower()
+                                + "_"
+                                + form_id.lower()
+                            )
                             form_data["form_accsub"] = 1
                             form_data["form_testing"] = 1
                             form_data["form_xlsfile"] = final_xls

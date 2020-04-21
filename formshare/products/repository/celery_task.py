@@ -233,7 +233,6 @@ def create_mysql_repository(
         initialize_schema()
         form_data = {
             "form_schema": schema,
-            "form_index": user.lower() + "_" + project_code.lower() + "_" + form,
             "form_pkey": primary_key,
             "form_createxmlfile": create_xml_file,
         }

@@ -36,6 +36,7 @@ def _get_dataset_index_definition(number_of_shards, number_of_replicas):
                     "_project_code": {"type": "keyword"},
                     "_geopoint": {"type": "text"},
                     "_geolocation": {"type": "geo_point"},
+                    "_submission_id": {"type": "text"},
                 }
             }
         },

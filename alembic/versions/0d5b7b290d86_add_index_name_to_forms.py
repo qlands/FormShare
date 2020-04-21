@@ -71,7 +71,8 @@ def upgrade():
         fixed = True
         if es_connection.indices.exists(index_name):
             es_connection.indices.put_mapping(
-                {"properties": {"_geolocation": {"type": "geo_point"}}},
+                {"properties": {"_geolocation": {"type": "geo_point"},
+                                "_submission_id": {"type": "text"}}},
                 index_name,
                 "dataset",
             )

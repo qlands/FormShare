@@ -8,7 +8,6 @@ Create Date: 2020-04-15 07:45:26.850428
 import configparser
 from alembic import context
 from formshare.scripts.modifyconfig import modify_ini_file
-import os
 import shutil
 import random
 import string

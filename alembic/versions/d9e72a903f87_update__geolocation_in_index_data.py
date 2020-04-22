@@ -64,17 +64,16 @@ def upgrade():
                             longitude = parts[1]
                 if longitude != "null" and latitude != "null":
                     new_loc = {
-                        "doc": {
-                            "_geolocation": {
-                                "lat": latitude,
-                                "lon": longitude,
-                            }
-                        }
+                        "doc": {"_geolocation": {"lat": latitude, "lon": longitude,}}
                     }
 
                     try:
-                        es_connection.update(index=a_form.form_index, id=dataset_id,
-                                             body=new_loc, doc_type="dataset")
+                        es_connection.update(
+                            index=a_form.form_index,
+                            id=dataset_id,
+                            body=new_loc,
+                            doc_type="dataset",
+                        )
                     except Exception as e:
                         print("********************************E")
                         print(str(e))

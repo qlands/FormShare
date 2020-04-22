@@ -66,9 +66,9 @@ def get_datasets_dict(query_from=None, query_size=None):
     return _dict
 
 
-def get_datasets_with_gps():
+def get_datasets_with_gps(size=0):
     _dict = {
-        "size": 0,
+        "size": size,
         "query": {"constant_score": {"filter": {"exists": {"field": "_geopoint"}}}},
     }
     return _dict
@@ -271,6 +271,23 @@ def get_number_of_datasets_with_gps(settings, user, project, form):
                 return 0
         except NotFoundError:
             return 0
+    else:
+        raise RequestError("Cannot connect to ElasticSearch")
+
+
+def get_all_datasets_with_gps(settings, index_name, size=0):
+    connection = create_connection(settings)
+    if connection is not None:
+        try:
+            es_result = connection.search(
+                index=index_name, body=get_datasets_with_gps(size)
+            )
+            if es_result["hits"]["total"] > 0:
+                return es_result["hits"]["hits"]
+            else:
+                []
+        except NotFoundError:
+            return []
     else:
         raise RequestError("Cannot connect to ElasticSearch")
 

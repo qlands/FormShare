@@ -29,9 +29,9 @@ You need to install, properly configure and run the following services
 
 # ---------------------BEGIN OF IMPORTANT NOTE-------------------------
 # If you want to use MySQL do:
-sudo apt-get install -y build-essential qt5-default qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake mongodb jq libboost-all-dev unzip zlib1g-dev automake npm rabbitmq-server libmysqlclient-dev mysql-client-5.7 openjdk-11-jdk sqlite3 libqt5sql5-sqlite git wget python3-venv
+sudo apt-get install -y build-essential qt5-default qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake mongodb jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client-5.7 openjdk-11-jdk sqlite3 libqt5sql5-sqlite git wget python3-venv
 # If you want to use MariaDB do:
-sudo apt-get install -y build-essential qt5-default qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake mongodb jq libboost-all-dev unzip zlib1g-dev automake npm rabbitmq-server libmariadbclient-dev libmariadb-dev mariadb-client openjdk-11-jdk sqlite3 libqt5sql5-sqlite git wget python3-venv
+sudo apt-get install -y build-essential qt5-default qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake mongodb jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmariadbclient-dev libmariadb-dev mariadb-client openjdk-11-jdk sqlite3 libqt5sql5-sqlite git wget python3-venv
 ln -s /usr/bin/mariadb_config /usr/bin/mysql_config
 # ---------------------END OF IMPORTANT NOTE-------------------------
 
@@ -154,15 +154,8 @@ sudo chmod 640 /etc/default/celery_formshare
 sudo ldconfig
 
 # Start RabbitMQ and Mongo servers. You may need to start these services after every server restart
-sudo service rabbitmq-server start
+sudo service redis-server start
 sudo service mongodb start
-
-# Add a queue to RabbitMQ for FormShare to use
-sudo rabbitmqctl add_user formshare formshare
-sudo rabbitmqctl add_vhost formshare
-sudo rabbitmqctl set_permissions -p formshare formshare ".*" ".*" ".*"
-
-
 
 # Final configuration of FormShare. You need to modify the information between []
 
@@ -171,7 +164,7 @@ mysql -h [MYSQL_HOST_NAME] -u [MYSQL_USER_NAME] --password=[MYSQL_USER_PASSWORD]
 cd /opt/formshare
 
 # Create the FormShare configuration file
-python create_config.py --mysql_host [MYSQL_HOST_NAME] --mysql_user_name [MYSQL_USER_NAME] --mysql_user_password [MYSQL_USER_PASSWORD] --repository_path /opt/formshare_repository --odktools_path /opt/odktools --elastic_search_host [ELASTIC_SEARCH_HOST] --elastic_search_port [ELASTIC_SEARCH_PORT] --formshare_host [THIS_SERVER_IP_ADDRESS] --formshare_port 5900 /opt/formshare_config/development.ini
+python create_config.py --daemon --capture_output --mysql_host [MYSQL_HOST_NAME] --mysql_user_name [MYSQL_USER_NAME] --mysql_user_password [MYSQL_USER_PASSWORD] --repository_path /opt/formshare_repository --odktools_path /opt/odktools --elastic_search_host [ELASTIC_SEARCH_HOST] --elastic_search_port [ELASTIC_SEARCH_PORT] --formshare_host [THIS_SERVER_IP_ADDRESS] --formshare_port 5900 --forwarded_allow_ip $FORWARDED_ALLOW_IP --pid_file /opt/formshare_gunicorn/formshare.pid --error_log_file /opt/formshare_log/error_log /opt/formshare_config/development.ini
 ln -s /opt/formshare_config/development.ini ./development.ini
 
 # Configure FormShare to run Celery
@@ -213,12 +206,8 @@ sudo cp /opt/formshare/docker_compose_just_elastic/docker-compose.yml /opt/docke
 cd /opt/docker_elastic
 sudo docker-compose up -d
 
-# Run FormShare in testing. FormShare will be accessibly at http://this_server_IP_address:5900/formshare
+# Run the server as service. The service process ID will be stored in /opt/formshare_gunicorn/formshare.pid. You may need to run this after every server restart
 source /opt/formshare_env/bin/activate
 cd /opt/formshare
-gunicorn --paste ./development.ini
-Ctrl+C
-
-# Run the server as service. The service process ID will be stored in /opt/formshare_gunicorn/formshare.pid. You may need to run this after every server restart
-gunicorn --daemon --capture-output --pid /opt/formshare_gunicorn/formshare.pid --log-file /opt/formshare_log/error_log --paste /opt/formshare/development.ini
+pserve ./development.ini
 

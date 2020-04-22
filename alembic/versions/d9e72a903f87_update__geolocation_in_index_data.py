@@ -52,16 +52,16 @@ def upgrade():
                 longitude = "null"
                 latitude = "null"
                 if len(parts) >= 4:
-                    longitude = parts[0]
-                    latitude = parts[1]
+                    latitude = parts[0]
+                    longitude = parts[1]
                 else:
                     if len(parts) == 3:
-                        longitude = parts[0]
-                        latitude = parts[1]
+                        latitude = parts[0]
+                        longitude = parts[1]
                     else:
                         if len(parts) == 2:
-                            longitude = parts[0]
-                            latitude = parts[1]
+                            latitude = parts[0]
+                            longitude = parts[1]
                 if longitude != "null" and latitude != "null":
                     new_loc = {
                         "doc": {

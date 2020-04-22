@@ -61,19 +61,19 @@ def upgrade():
                     elevation = "null"
                     precision = "null"
                     if len(parts) >= 4:
-                        longitude = parts[0]
-                        latitude = parts[1]
+                        latitude = parts[0]
+                        longitude = parts[1]
                         elevation = parts[2]
                         precision = parts[3]
                     else:
                         if len(parts) == 3:
-                            longitude = parts[0]
-                            latitude = parts[1]
+                            latitude = parts[0]
+                            longitude = parts[1]
                             elevation = parts[2]
                         else:
                             if len(parts) == 2:
-                                longitude = parts[0]
-                                latitude = parts[1]
+                                latitude = parts[0]
+                                longitude = parts[1]
                     try:
                         conn.execute(
                             "UPDATE {}.maintable SET _longitude = {}, _latitude = {}, _elevation = {}, "

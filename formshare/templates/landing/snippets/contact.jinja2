@@ -1,4 +1,4 @@
-<section id="contact" class="gray-section contact">
+<section id="contact" class="gray-section contact" {% block contact_css_style %} {% endblock contact_css_style %}>
     <div class="container">
         <div class="row m-b-lg">
             <div class="col-lg-12 text-center">
@@ -29,9 +29,9 @@
         <div class="row">
             {% block contact_and_social %}
             <div class="col-lg-12 text-center">
-                <a href="mailto:info@qlands.com" class="btn btn-primary">{{ _('Send us mail') }}</a>
+                <a href="mailto:info@qlands.com" class="btn btn-primary">{{ _('Send us an email') }}</a>
                 <p class="m-t-sm">
-                    {{ _('Or follow us on social platform') }}
+                    {{ _('Or follow us on social media') }}
                 </p>
                 <ul class="list-inline social-icon">
                     <li class="list-inline-item"><a href="https://twitter.com/QlandsS" target="_blank"><i class="fa fa-twitter"></i></a>

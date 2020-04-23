@@ -34,7 +34,7 @@ def upgrade():
     settings = get_appsettings(config_uri, "formshare")
     repository_directory = settings.get("repository.path", "")
     if repository_directory == "":
-        print("Cannot find the respository path.")
+        print("Cannot find the repository path.")
         exit(1)
     parts = ["odk", "forms"]
     forms_directory = os.path.join(repository_directory, *parts)

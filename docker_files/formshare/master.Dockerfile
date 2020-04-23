@@ -37,8 +37,8 @@ RUN make
 RUN make install
 WORKDIR /opt/odktools-deps
 
-RUN ln -s /usr/bin/aclocal-1.15 /usr/bin/aclocal-1.14
-RUN ln -s /usr/bin/automake-1.15 /usr/bin/automake-1.14
+RUN ln -s /usr/bin/aclocal-1.16 /usr/bin/aclocal-1.14
+RUN ln -s /usr/bin/automake-1.16 /usr/bin/automake-1.14
 
 RUN tar xvfz RELEASE_0.7.6.tar.gz
 WORKDIR /opt/odktools-deps/libxlsxwriter-RELEASE_0.7.6

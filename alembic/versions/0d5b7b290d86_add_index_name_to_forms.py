@@ -43,7 +43,6 @@ def upgrade():
     # ### end Alembic commands ###
     session = Session(bind=op.get_bind())
     forms = session.query(Odkform.project_id, Odkform.form_id).all()
-    fixed = False
     for a_form in forms:
         project_code = (
             session.query(Project.project_code)
@@ -66,15 +65,14 @@ def upgrade():
         session.query(Odkform).filter(Odkform.project_id == a_form.project_id).filter(
             Odkform.form_id == a_form.form_id
         ).update({"form_index": index_name})
-        fixed = True
         if es_connection.indices.exists(index_name):
             es_connection.indices.put_mapping(
                 {"properties": {"_geolocation": {"type": "geo_point"}}},
                 index_name,
                 "dataset",
             )
-    if fixed:
-        session.commit()
+
+    session.commit()
 
 
 def downgrade():

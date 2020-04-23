@@ -323,7 +323,9 @@ def get_datasets_from_form(
             result = []
             if es_result["hits"]["total"] > 0:
                 for hit in es_result["hits"]["hits"]:
-                    result.append(hit["_source"])
+                    res = hit["_source"]
+                    res["_submission_id"] = hit["_id"]
+                    result.append(res)
                 return len(result), result
             else:
                 return 0, []

@@ -285,7 +285,7 @@ def get_all_datasets_with_gps(settings, index_name, size=0):
             if es_result["hits"]["total"] > 0:
                 return es_result["hits"]["hits"]
             else:
-                []
+                return []
         except NotFoundError:
             return []
     else:

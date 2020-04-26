@@ -14,7 +14,7 @@ FormShare was created because:
 * ODK Aggregate, in my personal opinion, is badly designed, buggy, and not interoperable. ODK Central is just not there yet.
 * Forks based on FormHub suffer from the same ills of their father: Django (sorry if I hurt your feelings), no proper repository, rudimentary data cleaning, no auditing, little interoperability, poor or none extensibility... among many others.
 
-FormShare 2 has been written from scratch (not a single line of code comes from Formhub, just ideas, and principles) using Python 3, [Pyramid](https://trypyramid.com/), and [PyUtilib](https://github.com/PyUtilib/pyutilib) to deliver a complete and extensible data management solution for ODK Data collection. It took us three years but is finally here :-) and it is Django free!
+FormShare 2 has been written from scratch (not a single line of code comes from Formhub, just ideas, and principles) using Python 3, [Pyramid](https://trypyramid.com/), MySQL, [ElasticSearch](https://www.elastic.co/elasticsearch/), and [PyUtilib](https://github.com/PyUtilib/pyutilib) to deliver a complete and extensible data management solution for ODK Data collection. It took us three years but is finally here :-) and it is Django free!
 
 FormShare **is for organizations** to install it in their server or cloud service to serve ODK XForms and collect and manage the submissions. FormShare is also available as a service at [https://formshare.org](https://formshare.org) for those organizations that lacks the capacity or resources to run their installation.
 
@@ -27,7 +27,7 @@ Releases
 ------------
 The current stable release is 2.6.1 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.6.1) 
 
-The database signature for stable 2.6.1 is 5657a4829a73
+The database signature for stable 2.6.1 is be94ab1faa43
 
 The Docker image for stable 2.6.1 is 20200426
 
@@ -181,48 +181,14 @@ sudo cp ./formshare_2.X_source/docker_compose/docker-compose.yml /opt/formshare_
 #Edit the new docker-compose.yml so it has the same parameters as the previous one (MySQL server, ElasticSearch server, MySQL user and password, FormShare admin, etc)
 sudo nano /opt/formshare_docker_compose_XXXXXXXX/docker-compose.yml
 
-# Clean the docker networks and containers. WARNING! The following two lines will erase all containers and networks. If you have other dockers besides FormShare you will need to remove the "fsnet" network and the FormShare containers manually.
-sudo docker network prune
-sudo docker container prune
+# Remove the old Docker Network. Replace XXXXXXX for the previous Docker image
+sudo docker network rm formsharedockercomposeXXXXXXXX_fsnet
 
 # Start the new version of FormShare. All required updates in the database will be done automatically.
 cd /opt/formshare_docker_compose_XXXXXXXX
 sudo docker-compose up -d
 
 # If you have plug-ins then you need to build them and enable them again. See the section "Install plug-ins while using Docker"
-
-```
-
-
-
-## Downgrading information
-
-Starting with version 2.5.4 this document has the version of the database. If you use Docker then things are easier:
-
-```shell
-# Make a backup of your installation. See the section "Backup FormShare"
-
-# Grab the container ID running FormShare
-sudo docker stats
-# Get into the container
-sudo docker exec -it [formshare_container_id] /bin/bash
-
-# Activate the environment
-source /opt/formshare_env/bin/activate
-
-# Get into the FormShare source
-cd /opt/formshare
-# Downgrade to a previous version of the database. Replace XXXXXXXXXXXX for the specific version of the database
-alembic downgrade XXXXXXXXXXXX
-
-#Exit the container
-exit
-# Stop the FormShare docker container
-sudo docker stop [formshare_container_id]
-
-# Start the old version of FormShare THAT MATCHES such database.Replace XXXXXXXX to the Docker image that you want to use
-cd /opt/formshare_docker_compose_XXXXXXXX
-sudo docker-compose up -d
 
 ```
 

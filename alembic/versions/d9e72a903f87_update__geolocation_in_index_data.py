@@ -14,7 +14,7 @@ from formshare.processes.elasticsearch.repository_index import (
     create_connection,
     get_all_datasets_with_gps,
 )
-
+import time
 
 # revision identifiers, used by Alembic.
 revision = "d9e72a903f87"
@@ -72,7 +72,7 @@ def upgrade():
                             index=a_form.form_index,
                             id=dataset_id,
                             body=new_loc,
-                            doc_type="dataset",
+                            doc_type="dataset", request_timeout=1200
                         )
                     except Exception as e:
                         print("********************************E")
@@ -87,6 +87,7 @@ def upgrade():
 
         except Exception as e:
             print(str(e))
+        time.sleep(10)  # Allow ElasticSearch to apply the update across shards
     session.commit()
 
 

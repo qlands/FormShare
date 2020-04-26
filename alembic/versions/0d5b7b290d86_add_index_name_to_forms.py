@@ -12,7 +12,7 @@ from sqlalchemy.orm.session import Session
 from pyramid.paster import get_appsettings, setup_logging
 from formshare.models.formshare import Odkform, Project, Userproject
 from formshare.processes.elasticsearch.repository_index import create_connection
-
+import time
 
 # revision identifiers, used by Alembic.
 revision = "0d5b7b290d86"
@@ -69,8 +69,9 @@ def upgrade():
             es_connection.indices.put_mapping(
                 {"properties": {"_geolocation": {"type": "geo_point"}}},
                 index_name,
-                "dataset",
+                "dataset", request_timeout=1200
             )
+            time.sleep(10)  # Allow ElasticSearch to replicate the mappings across shards
 
     session.commit()
 

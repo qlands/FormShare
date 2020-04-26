@@ -1,19 +1,19 @@
 version: '3'
 services:
-  fsmysql:
+  fsmysql_20200426:
     image: mysql:5.7.27
-    container_name: fs_mysql
+    container_name: fs_mysql_20200426
     environment:
       MYSQL_ROOT_PASSWORD: my_secure_password
     volumes:
       - /opt/formshare/mysql:/var/lib/mysql
     networks:
-      fsnet:
+      fsnet_20200426:
         ipv4_address: 172.28.1.5
   
-  fselasticsearch:
+  fselasticsearch_20200426:
     image: docker.elastic.co/elasticsearch/elasticsearch:6.3.2
-    container_name: fs_elasticsearch
+    container_name: fs_elasticsearch_20200426
     environment:
       - cluster.name=docker-cluster
       - bootstrap.memory_lock=true
@@ -26,11 +26,11 @@ services:
     volumes:
       - /opt/formshare/elasticsearch/esdata:/usr/share/elasticsearch/data
     networks:
-      fsnet:
+      fsnet_20200426:
         ipv4_address: 172.28.1.1
-  fselasticsearch2:
+  fselasticsearch2_20200426:
     image: docker.elastic.co/elasticsearch/elasticsearch:6.3.2
-    container_name: fs_elasticsearch2
+    container_name: fs_elasticsearch2_20200426
     environment:
       - cluster.name=docker-cluster
       - bootstrap.memory_lock=true
@@ -44,11 +44,11 @@ services:
     volumes:
       - /opt/formshare/elasticsearch/esdata2:/usr/share/elasticsearch/data
     networks:
-      fsnet:
+      fsnet_20200426:
         ipv4_address: 172.28.1.2
-  fselasticsearch3:
+  fselasticsearch3_20200426:
     image: docker.elastic.co/elasticsearch/elasticsearch:6.3.2
-    container_name: fs_elasticsearch3
+    container_name: fs_elasticsearch3_20200426
     environment:
       - cluster.name=docker-cluster
       - bootstrap.memory_lock=true
@@ -62,11 +62,11 @@ services:
     volumes:
       - /opt/formshare/elasticsearch/esdata3:/usr/share/elasticsearch/data
     networks:
-      fsnet:
+      fsnet_20200426:
         ipv4_address: 172.28.1.3
-  formshare:
+  formshare_20200426:
     image: qlands/formshare2:20200426
-    container_name: formshare
+    container_name: formshare_20200426
     environment:
       MYSQL_HOST_NAME: 172.28.1.5
       MYSQL_USER_NAME: root
@@ -94,20 +94,20 @@ services:
     ports:
       - 5900:5900
     networks:
-      fsnet: 
+      fsnet_20200426: 
         ipv4_address: 172.28.1.4
 
-  fsapache:
+  fsapache_20200426:
     image: qlands/httpd:2.4
-    container_name: fsapache
+    container_name: fsapache_20200426
     ports:
       - 80:80
     networks:
-      fsnet:
+      fsnet_20200426:
         ipv4_address: 172.28.1.6
       
 networks:
-  fsnet:
+  fsnet_20200426:
      ipam:
         driver: default
         config:

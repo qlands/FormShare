@@ -34,7 +34,7 @@ distlib==0.3.0
 dnspython==1.16.0
 docutils==0.16
 -e git+https://github.com/qlands/elasticfeeds.git@stable-1.0#egg=elasticfeeds
-elasticsearch==7.6.0
+elasticsearch==6.8.1
 et-xmlfile==1.0.1
 execnet==1.7.1
 feedparser==5.2.1
@@ -66,7 +66,7 @@ Mako==1.1.2
 MarkupSafe==1.1.1
 mock==4.0.2
 more-itertools==8.2.0
-msgpack==1.0.0
+msgpack==0.6.2
 mysql-connector==2.2.9
 mysql-connector-python==8.0.19
 mysqlclient==1.4.6

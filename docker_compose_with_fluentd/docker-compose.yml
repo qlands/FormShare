@@ -8,7 +8,7 @@ services:
     volumes:
       - /opt/formshare/mysql:/var/lib/mysql
     networks:
-      fsnet_20200426:
+      fsnet:
         ipv4_address: 172.28.1.5
   
   fselasticsearch_20200426:
@@ -26,7 +26,7 @@ services:
     volumes:
       - /opt/formshare/elasticsearch/esdata:/usr/share/elasticsearch/data
     networks:
-      fsnet_20200426:
+      fsnet:
         ipv4_address: 172.28.1.1
   fselasticsearch2_20200426:
     image: docker.elastic.co/elasticsearch/elasticsearch:6.3.2
@@ -44,7 +44,7 @@ services:
     volumes:
       - /opt/formshare/elasticsearch/esdata2:/usr/share/elasticsearch/data
     networks:
-      fsnet_20200426:
+      fsnet:
         ipv4_address: 172.28.1.2
   fselasticsearch_202004263:
     image: docker.elastic.co/elasticsearch/elasticsearch:6.3.2
@@ -62,7 +62,7 @@ services:
     volumes:
       - /opt/formshare/elasticsearch/esdata3:/usr/share/elasticsearch/data
     networks:
-      fsnet_20200426:
+      fsnet:
         ipv4_address: 172.28.1.3
   formshare_20200426:
     image: qlands/formshare2:20200426
@@ -94,7 +94,7 @@ services:
     ports:
       - 5900:5900
     networks:
-      fsnet_20200426: 
+      fsnet: 
         ipv4_address: 172.28.1.4
 
   fsfluentd_20200426:
@@ -107,7 +107,7 @@ services:
       - /opt/formshare/log:/opt/formshare_log
       - /opt/formshare/fluentd:/fluentd/etc/
     networks:
-      fsnet_20200426:
+      fsnet:
         ipv4_address: 172.28.1.6
 
   fskibana_20200426:
@@ -118,10 +118,10 @@ services:
     ports:
       - 5601:5601
     networks:
-      - fsnet_20200426
+      - fsnet
       
 networks:
-  fsnet_20200426:
+  fsnet:
      ipam:
         driver: default
         config:

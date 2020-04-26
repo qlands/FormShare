@@ -70,9 +70,12 @@ def upgrade():
             es_connection.indices.put_mapping(
                 {"properties": {"_geolocation": {"type": "geo_point"}}},
                 index_name,
-                "dataset", request_timeout=1200
+                "dataset",
+                request_timeout=1200,
             )
-            time.sleep(10)  # Allow ElasticSearch to replicate the mappings across shards
+            time.sleep(
+                10
+            )  # Allow ElasticSearch to replicate the mappings across shards
 
     session.commit()
 

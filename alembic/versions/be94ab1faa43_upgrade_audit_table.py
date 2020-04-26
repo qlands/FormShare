@@ -11,8 +11,8 @@ from formshare.models.formshare import Odkform
 
 
 # revision identifiers, used by Alembic.
-revision = 'be94ab1faa43'
-down_revision = 'a63e75eb09b1'
+revision = "be94ab1faa43"
+down_revision = "a63e75eb09b1"
 branch_labels = None
 depends_on = None
 

@@ -12,8 +12,8 @@ import shutil
 
 
 # revision identifiers, used by Alembic.
-revision = 'a63e75eb09b1'
-down_revision = '5657a4829a73'
+revision = "a63e75eb09b1"
+down_revision = "5657a4829a73"
 branch_labels = None
 depends_on = None
 

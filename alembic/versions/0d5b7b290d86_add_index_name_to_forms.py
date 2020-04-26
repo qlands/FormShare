@@ -32,6 +32,7 @@ def upgrade():
         )
         exit(1)
 
+    time.sleep(120)  # Wait 2 minutes for ElasticSearch to finish start
     setup_logging(config_uri)
     settings = get_appsettings(config_uri, "formshare")
     es_connection = create_connection(settings)

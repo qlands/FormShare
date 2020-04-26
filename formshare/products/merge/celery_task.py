@@ -121,7 +121,11 @@ def make_database_changes(
         if major_version <= 5 or maria_db:
             args = ["mysqldump", "--defaults-file=" + cnf_file, b_schema]
         else:
-            args = ["mysqldump", "--column-statistics=0 --defaults-file=" + cnf_file, b_schema]
+            args = [
+                "mysqldump",
+                "--column-statistics=0 --defaults-file=" + cnf_file,
+                b_schema,
+            ]
         with open(b_backup_file, "w") as backup_file:
             proc = Popen(args, stdin=PIPE, stderr=PIPE, stdout=backup_file)
             output, error = proc.communicate()

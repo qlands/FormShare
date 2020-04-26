@@ -74,6 +74,15 @@ def humanize_date(date, locale="en"):
 
 
 @core_helper
+def get_version():
+    """
+    This returns the version of FormShare
+    :return: The version of FormShare
+    """
+    return "2.6.1 (20200426)"
+
+
+@core_helper
 def readble_date(date, locale="en"):
     """
     Returns a readable date"

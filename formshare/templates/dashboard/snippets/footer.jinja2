@@ -1,7 +1,7 @@
 <div class="footer fixed">
     {% block footer %}
     <div class="float-right">
-        <strong>{{ _('Version') }} {{ formshare_version }} ({{ formshare_build }})</strong>
+        <strong>{{ _('Version') }} {{ request.h.get_version() }})</strong>
     </div>
     <div>
         <strong>FormShare</strong> &copy; 2020 QLands Technology Consultants

@@ -214,12 +214,6 @@ class PublicView(object):
 
     def __call__(self):
         self.resultDict["errors"] = self.errors
-        self.resultDict["formshare_version"] = self.request.registry.settings.get(
-            "formshare.version"
-        )
-        self.resultDict["formshare_build"] = self.request.registry.settings.get(
-            "formshare.build"
-        )
 
         i_public_view_implementations = p.PluginImplementations(p.IPublicView)
         for plugin in i_public_view_implementations:
@@ -338,12 +332,6 @@ class PrivateView(object):
             )
 
     def __call__(self):
-        self.classResult["formshare_version"] = self.request.registry.settings.get(
-            "formshare.version"
-        )
-        self.classResult["formshare_build"] = self.request.registry.settings.get(
-            "formshare.build"
-        )
         error = self.request.session.pop_flash(queue="error")
         if len(error) > 0:
             self.append_to_errors(error[0].replace("|error", ""))
@@ -545,12 +533,6 @@ class PrivateView(object):
 
 class DashboardView(PrivateView):
     def __call__(self):
-        self.classResult["formshare_version"] = self.request.registry.settings.get(
-            "formshare.version"
-        )
-        self.classResult["formshare_build"] = self.request.registry.settings.get(
-            "formshare.build"
-        )
         self.set_active_menu("dashboard")
         self.showWelcome = True
         # We need to set here relevant information for the dashboard
@@ -564,12 +546,6 @@ class DashboardView(PrivateView):
 
 class ProfileView(PrivateView):
     def __call__(self):
-        self.classResult["formshare_version"] = self.request.registry.settings.get(
-            "formshare.version"
-        )
-        self.classResult["formshare_build"] = self.request.registry.settings.get(
-            "formshare.build"
-        )
         self.set_active_menu("profile")
         PrivateView.__call__(self)
         if not self.returnRawViewResult:
@@ -581,12 +557,6 @@ class ProfileView(PrivateView):
 
 class ProjectsView(PrivateView):
     def __call__(self):
-        self.classResult["formshare_version"] = self.request.registry.settings.get(
-            "formshare.version"
-        )
-        self.classResult["formshare_build"] = self.request.registry.settings.get(
-            "formshare.build"
-        )
         self.set_active_menu("projects")
         PrivateView.__call__(self)
         if not self.returnRawViewResult:
@@ -627,12 +597,6 @@ class AssistantView(object):
         self.errors.append(error)
 
     def __call__(self):
-        self.resultDict["formshare_version"] = self.request.registry.settings.get(
-            "formshare.version"
-        )
-        self.resultDict["formshare_build"] = self.request.registry.settings.get(
-            "formshare.build"
-        )
         error = self.request.session.pop_flash(queue="error")
         if len(error) > 0:
             self.append_to_errors(error[0])

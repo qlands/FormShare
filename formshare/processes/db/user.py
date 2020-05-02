@@ -10,6 +10,7 @@ from sqlalchemy.exc import IntegrityError
 import logging
 import validators
 import datetime
+from sqlalchemy import func
 
 __all__ = [
     "register_user",
@@ -185,7 +186,7 @@ def email_exists(request, user, email):
     res = (
         request.dbsession.query(User)
         .filter(User.user_id != user)
-        .filter(User.user_email == email)
+        .filter(func.lower(User.user_email) == func.lower(email))
         .first()
     )
     if res is None:
@@ -210,7 +211,7 @@ def get_user_name(request, user):
 def get_user_id_with_email(request, email):
     res = (
         request.dbsession.query(User)
-        .filter(User.user_email == email)
+        .filter(func.lower(User.user_email) == func.lower(email))
         .filter(User.user_active == 1)
         .first()
     )

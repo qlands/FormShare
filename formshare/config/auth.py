@@ -5,6 +5,7 @@ from ..models import map_from_schema
 import validators
 from formshare.plugins.core import PluginImplementations
 from formshare.plugins.interfaces import IUserAuthentication
+from sqlalchemy import func
 
 
 class User(object):
@@ -70,7 +71,7 @@ def get_formshare_user_data(request, user, is_email):
     if is_email:
         return map_from_schema(
             request.dbsession.query(userModel)
-            .filter(userModel.user_email == user)
+            .filter(func.lower(userModel.user_email) == func.lower(user))
             .filter(userModel.user_active == 1)
             .first()
         )

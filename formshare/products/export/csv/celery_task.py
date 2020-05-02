@@ -47,7 +47,7 @@ def flatten_json(y, separator="/"):
                 flatten(a, name + "[" + str(i) + "]" + separator)
                 i += 1
         else:
-            out[name[:-1]] = x
+            out[name[:-1]] = x.replace("\r\n", "").replace("\n", "").replace(",", "")
 
     flatten(y)
     return out

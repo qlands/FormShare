@@ -2,32 +2,43 @@ let active_tasks = [{% for product in products %}{% for output in product.output
 let finished_tasks = [];
 let sse2 = $.SSE('{{ request.route_url('form_sse', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}', {
     onMessage: function(e){
-        let message = JSON.parse(e.data)['message'];
-        if (message !== null)
-        {
-            message = JSON.parse(message);
-            if (typeof message === 'object')
+        var lines = e.data.split("\n");
+        for (var a_line in lines) {
+            let message = null;
+            try
             {
-                let task_id = message['task'];
-                let task_status = message['status'];
-                if ((task_status === "success") || (task_status === "failure")) {
-                    if (active_tasks.indexOf(task_id) >= 0) {
-                        finished_tasks.push(task_id);
-                        if (active_tasks.length === finished_tasks.length)
-                            sse2.stop();
-                        $('#feed_element_' + task_id).load('{{ request.url }} #feed_element_' + task_id,function(){
-                            product_buttons()
-                        });
-                    }
-                }
-                else {
-                    $("#sse_" + task_id).text(task_status);
-                }
-
+                message = JSON.parse(lines[a_line])['message'];
             }
-            else
+            catch(err)
             {
-                console.log(message)
+                console.log(lines[a_line])
+            }
+            if (message !== null)
+            {
+                message = JSON.parse(message);
+                if (typeof message === 'object')
+                {
+                    let task_id = message['task'];
+                    let task_status = message['status'];
+                    if ((task_status === "success") || (task_status === "failure")) {
+                        if (active_tasks.indexOf(task_id) >= 0) {
+                            finished_tasks.push(task_id);
+                            if (active_tasks.length === finished_tasks.length)
+                                sse2.stop();
+                            $('#feed_element_' + task_id).load('{{ request.url }} #feed_element_' + task_id,function(){
+                                product_buttons()
+                            });
+                        }
+                    }
+                    else {
+                        $("#sse_" + task_id).text(task_status);
+                    }
+
+                }
+                else
+                {
+                    console.log(message)
+                }
             }
         }
     }

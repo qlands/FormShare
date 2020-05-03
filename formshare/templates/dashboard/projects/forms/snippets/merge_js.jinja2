@@ -1,33 +1,45 @@
 let sse = $.SSE('{{ request.route_url('form_sse', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}', {
     onMessage: function(e){
-        let message = JSON.parse(e.data)['message'];
-        if (message !== null)
+        var lines = e.data.split("\n");
+        for (var a_line in lines)
         {
-            message = JSON.parse(message);
-            if (typeof message === 'object')
+            let message = null;
+            try
             {
-                let task_id = message['task'];
-                let task_status = message['status'];
-                if (task_id === "{{ formDetails.form_mergetask }}")
+                message = JSON.parse(lines[a_line])['message'];
+            }
+            catch(err)
+            {
+                console.log(lines[a_line])
+            }
+            if (message !== null)
+            {
+                message = JSON.parse(message);
+                if (typeof message === 'object')
                 {
-                    if ((task_status === "success") || (task_status === "failure") || (task_status === "FINALIZING"))
+                    let task_id = message['task'];
+                    let task_status = message['status'];
+                    if (task_id === "{{ formDetails.form_mergetask }}")
                     {
-                        if ((task_status === "success") || (task_status === "failure"))
-                            location.reload();
-                        else
+                        if ((task_status === "success") || (task_status === "failure") || (task_status === "FINALIZING"))
                         {
-                            $("#cancel_merge").prop('disabled',true);
+                            if ((task_status === "success") || (task_status === "failure"))
+                                location.reload();
+                            else
+                            {
+                                $("#cancel_merge").prop('disabled',true);
+                            }
+                        }
+                        else {
+                            $(".merge_message").text(task_status);
+                            $("#sse_" + task_id).text(task_status);
                         }
                     }
-                    else {
-                        $(".merge_message").text(task_status);
-                        $("#sse_" + task_id).text(task_status);
-                    }
                 }
-            }
-            else
-            {
-                console.log(message)
+                else
+                {
+                    console.log(message)
+                }
             }
         }
     }

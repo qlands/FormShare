@@ -1,29 +1,41 @@
 let sse = $.SSE('{{ request.route_url('form_sse', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}', {
     onMessage: function(e){
-        let message = JSON.parse(e.data)['message'];
-        if (message !== null)
+        var lines = e.data.split("\n");
+        for (var a_line in lines)
         {
-            console.log(message)
-            message = JSON.parse(message);
-            if (typeof message === 'object')
+            let message = null;
+            try
             {
-                let task_id = message['task'];
-                let task_status = message['status'];
-                if (task_id === "{{ formDetails.form_reptask }}")
-                {
-                    if ((task_status === "success") || (task_status === "failure"))
-                    {
-                        location.reload();
-                    }
-                    else {
-                        $(".repository_message").text(task_status);
-                        $("#sse_" + task_id).text(task_status);
-                    }
-                }
+                message = JSON.parse(lines[a_line])['message'];
             }
-            else
+            catch(err)
+            {
+                console.log(lines[a_line])
+            }
+            if (message !== null)
             {
                 console.log(message)
+                message = JSON.parse(message);
+                if (typeof message === 'object')
+                {
+                    let task_id = message['task'];
+                    let task_status = message['status'];
+                    if (task_id === "{{ formDetails.form_reptask }}")
+                    {
+                        if ((task_status === "success") || (task_status === "failure"))
+                        {
+                            location.reload();
+                        }
+                        else {
+                            $(".repository_message").text(task_status);
+                            $("#sse_" + task_id).text(task_status);
+                        }
+                    }
+                }
+                else
+                {
+                    console.log(message)
+                }
             }
         }
     }

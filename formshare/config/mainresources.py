@@ -120,7 +120,7 @@ def create_resources(apppath, config):
         "js/plugins/bs-custom-file-input/bs-custom-file-input.min.js",
         "jquery",
     )
-    r.add_js_resource("formshare", "sse", "js/plugins/sse/jquery.sse.min.js", "jquery")
+    r.add_js_resource("formshare", "sse", "js/plugins/sse/jquery.sse.js", "jquery")
     r.add_js_resource(
         "formshare", "codemirror", "js/plugins/codemirror/codemirror.js", None
     )

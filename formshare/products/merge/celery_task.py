@@ -99,15 +99,15 @@ def make_database_changes(
         error = True
 
     if not error:
-        args = ["mysql_config", "--version"]
+        maria_db = False
+        args = ["mariadb_config", "--version"]
         p = Popen(args, stdout=PIPE, stderr=PIPE)
         stdout, stderr = p.communicate()
-        maria_db = False
         if p.returncode == 0:
+            maria_db = True
             mysql_version = stdout.decode().replace("\n", "")
         else:
-            maria_db = True
-            args = ["mariadb_config", "--version"]
+            args = ["mysql_config", "--version"]
             p = Popen(args, stdout=PIPE, stderr=PIPE)
             stdout, stderr = p.communicate()
             if p.returncode == 0:

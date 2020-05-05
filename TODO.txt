@@ -19,4 +19,3 @@
 - Anonymization documentation. How to Anonymize my data.
 - Search engine
 - Add a note in export if date of export is < last submission date or < last_update
-- Fix SSE with Edge servers

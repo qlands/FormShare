@@ -1,13 +1,13 @@
 <div class="middle-box text-center animated fadeInDown" style="margin-top: 0px">
     {% block no_forms_info %}
         {% if projectData.access_type < 4 %}
-            <h1><a href="{{ request.route_url('assistant_add',userid=projectDetails.owner,projcode=projectDetails.project_code) }}"><i class="far fa-plus-square"></i></a></h1>
+            <h1><a data-toggle="modal" data-target="#add_assistant" ><i class="far fa-plus-square"></i></a></h1>
         {% endif %}
-        <h3 class="font-bold">{{ _('There are no assistants') }}</h3>
+        <h3 class="font-bold">{{ _('This form has no assistants') }}</h3>
         <p class="font-bold">{{ _('Assistants helps you to collect and clean data') }}</p>
         <div class="error-desc">
             {% if projectData.access_type < 4 %}
-                <button id="add_assistants" type="button" class="btn btn-block btn-outline btn-primary">{{ _('Add an assistant') }}</button>
+                <a type="button" data-toggle="modal" data-target="#add_assistant" class="btn btn-block btn-outline btn-primary">{{ _('Assign an assistant') }}</a>
             {% endif %}
         </div>
     {% endblock no_forms_info %}

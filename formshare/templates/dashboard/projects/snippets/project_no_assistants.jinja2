@@ -1,14 +1,12 @@
+<div class="feed-activity-list">
 <div class="middle-box text-center animated fadeInDown" style="margin-top: 0px">
     {% block no_forms_info %}
-        {% if projectData.access_type < 4 %}
-            <h1><a href="{{ request.route_url('assistant_add',userid=projectDetails.owner,projcode=projectDetails.project_code) }}"><i class="far fa-plus-square"></i></a></h1>
-        {% endif %}
-        <h3 class="font-bold">{{ _('There are no assistants') }}</h3>
+        <h1><a href="{{ request.route_url('assistant_add',userid=projectDetails.owner,projcode=projectDetails.project_code,_query={'next': request.url}) }}"><i class="far fa-plus-square" style="color: #676a6c"></i></a></h1>
+        <h3 class="font-bold">{{ _('There are no project level assistants') }}</h3>
         <p class="font-bold">{{ _('Assistants helps you to collect and clean data') }}</p>
         <div class="error-desc">
-            {% if projectData.access_type < 4 %}
-                <a href="{{ request.route_url('assistant_add',userid=projectDetails.owner,projcode=projectDetails.project_code) }}" type="button" class="btn btn-block btn-outline btn-primary">{{ _('Add an assistant') }}</a>
-            {% endif %}
+            <a href="{{ request.route_url('assistant_add',userid=projectDetails.owner,projcode=projectDetails.project_code,_query={'next': request.url}) }}" type="button" class="btn btn-block btn-outline btn-primary">{{ _('Add an assistant') }}</a>
         </div>
     {% endblock no_forms_info %}
+</div>
 </div>

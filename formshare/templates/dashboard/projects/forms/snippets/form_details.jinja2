@@ -15,7 +15,7 @@
             </dl>
             <dl class="row mb-0">
                 <div class="col-sm-4 text-sm-right"><dt>{{ _('Assistants') }}:</dt> </div>
-                <div class="col-sm-8 text-sm-left"> <dd class="mb-1"> {{ formassistants|length }} {% if formassistants|length == 0 and formgroups|length == 0 and projectDetails.access_type < 4 %} <span class="text-danger"><a data-toggle="modal" data-target="#add_assistant"> ({{ _('You need to add one') }}</a>  )</span>{% endif %}</dd></div>
+                <div class="col-sm-8 text-sm-left"> <dd class="mb-1"> {{ formassistants|length }} {% if formassistants|length == 0 and formgroups|length == 0 and projectDetails.access_type < 4 %} <span class="text-danger"><a data-toggle="modal" data-target="#add_assistant"> ({{ _('You need to assign one') }}</a>  )</span>{% endif %}</dd></div>
             </dl>
             <dl class="row mb-0">
                 <div class="col-sm-4 text-sm-right"><dt>{{ _('Assistant groups') }}:</dt> </div>

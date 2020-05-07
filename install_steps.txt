@@ -1,5 +1,6 @@
 Installation steps to build FormShare from source.
-Tested in Ubuntu Server 18.04
+Tested with Ubuntu Server 19.10, 20.04
+Tested with Ubuntu Server 18.04 (MariaDB only)
 
 Steps:
 
@@ -19,8 +20,10 @@ sudo apt-get update
 You need to install, properly configure and run the following services
 - MariaDB or MySQL - You need root or other user with GRANT ALL ON *.*   .Check if the connection to MySQL works
     - sudo apt-get install mariadb-server
+    - sudo mysql_secure_installation
     or
     - sudo apt-get install mysql-server
+    - sudo mysql_secure_installation
 - Elastic Search 6.X . We strongly recommend to use a Docker image for this
     - sudo apt-get install -y docker-compose
 # ---------------------END OF IMPORTANT NOTE-------------------------
@@ -29,10 +32,10 @@ You need to install, properly configure and run the following services
 
 # ---------------------BEGIN OF IMPORTANT NOTE-------------------------
 # If you want to use MySQL do:
-sudo apt-get install -y build-essential qt5-default qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake mongodb jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client-5.7 openjdk-11-jdk sqlite3 libqt5sql5-sqlite git wget python3-venv
+sudo apt-get install -y build-essential qt5-default qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake mongodb jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev openjdk-11-jdk sqlite3 libqt5sql5-sqlite git wget python3-venv
 # If you want to use MariaDB do:
 sudo apt-get install -y build-essential qt5-default qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake mongodb jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmariadbclient-dev libmariadb-dev mariadb-client openjdk-11-jdk sqlite3 libqt5sql5-sqlite git wget python3-venv
-ln -s /usr/bin/mariadb_config /usr/bin/mysql_config
+sudo ln -s /usr/bin/mariadb_config /usr/bin/mysql_config
 # ---------------------END OF IMPORTANT NOTE-------------------------
 
 # Installing ODK Tools
@@ -127,7 +130,7 @@ sudo python3 -m venv formshare_env
 # Grab the FormShare source code
 # ---------------------BEGIN OF IMPORTANT NOTE-------------------------
 # To use the stable version of FormShare do:
-sudo git clone https://github.com/qlands/FormShare.git -b stable-2.5.4 formshare
+sudo git clone https://github.com/qlands/FormShare.git -b stable-2.6.1 formshare
 # To use the development version of FormShare do:
 sudo git clone https://github.com/qlands/FormShare.git formshare
 # ---------------------END OF IMPORTANT NOTE-------------------------
@@ -153,18 +156,30 @@ sudo chmod +x /etc/init.d/celery_formshare
 sudo chmod 640 /etc/default/celery_formshare
 sudo ldconfig
 
-# Start RabbitMQ and Mongo servers. You may need to start these services after every server restart
+# Start Redis and Mongo servers. You may need to start these services after every server restart
 sudo service redis-server start
 sudo service mongodb start
 
 # Final configuration of FormShare. You need to modify the information between []
+
+# Set enough memory for ElasticSearch
+sudo sysctl -w vm.max_map_count=262144
+echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.d/60-vm-max_map_count.conf
+
+# Grab the ElasticSearch Docker compose file
+sudo mkdir /opt/docker_elastic
+sudo cp /opt/formshare/docker_compose_just_elastic/docker-compose.yml /opt/docker_elastic
+
+# Start ElasticSearch. ElasticSearch will run in localhost at port 9200. You may need to start ElasticSearch after every server restart
+cd /opt/docker_elastic
+sudo docker-compose up -d
 
 #Create the FormShare schema
 mysql -h [MYSQL_HOST_NAME] -u [MYSQL_USER_NAME] --password=[MYSQL_USER_PASSWORD] --execute='CREATE SCHEMA IF NOT EXISTS formshare'
 cd /opt/formshare
 
 # Create the FormShare configuration file
-python create_config.py --daemon --capture_output --mysql_host [MYSQL_HOST_NAME] --mysql_user_name [MYSQL_USER_NAME] --mysql_user_password [MYSQL_USER_PASSWORD] --repository_path /opt/formshare_repository --odktools_path /opt/odktools --elastic_search_host [ELASTIC_SEARCH_HOST] --elastic_search_port [ELASTIC_SEARCH_PORT] --formshare_host [THIS_SERVER_IP_ADDRESS] --formshare_port 5900 --forwarded_allow_ip $FORWARDED_ALLOW_IP --pid_file /opt/formshare_gunicorn/formshare.pid --error_log_file /opt/formshare_log/error_log /opt/formshare_config/development.ini
+python create_config.py --daemon --capture_output --mysql_host [MYSQL_HOST_NAME] --mysql_user_name [MYSQL_USER_NAME] --mysql_user_password [MYSQL_USER_PASSWORD] --repository_path /opt/formshare_repository --odktools_path /opt/odktools --elastic_search_host localhost --elastic_search_port 9200 --formshare_host [THIS_SERVER_IP_ADDRESS] --formshare_port 5900 --forwarded_allow_ip [THIS_SERVER_IP_ADDRESS] --pid_file /opt/formshare_gunicorn/formshare.pid --error_log_file /opt/formshare_log/error_log /opt/formshare_config/development.ini
 ln -s /opt/formshare_config/development.ini ./development.ini
 
 # Configure FormShare to run Celery
@@ -194,20 +209,10 @@ deactivate
 # Start the FormShare Celery Service. You may need to start this service after every server restart
 sudo /etc/init.d/celery_formshare start
 
-# Set enough memory for ElasticSearch
-sudo sysctl -w vm.max_map_count=262144
-echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.d/60-vm-max_map_count.conf
-
-# Grab the ElasticSearch Docker compose file
-sudo mkdir /opt/docker_elastic
-sudo cp /opt/formshare/docker_compose_just_elastic/docker-compose.yml /opt/docker_elastic
-
-# Start ElasticSearch. You may need to start ElasticSearch after every server restart
-cd /opt/docker_elastic
-sudo docker-compose up -d
-
-# Run the server as service. The service process ID will be stored in /opt/formshare_gunicorn/formshare.pid. You may need to run this after every server restart
+# Run the server as service.
+# FormShare will be at http://[THIS_SERVER_IP_ADDRESS]:5900/formshare
+# The service process ID will be stored in /opt/formshare_gunicorn/formshare.pid.
+# You may need to run this after every server restart
 source /opt/formshare_env/bin/activate
 cd /opt/formshare
 pserve ./development.ini
-

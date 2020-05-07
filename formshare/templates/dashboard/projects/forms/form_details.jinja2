@@ -95,12 +95,23 @@
                             {% include 'dashboard/projects/forms/snippets/form_details.jinja2' %}
                             <div class="row m-t-sm">
                                 <div class="col-lg-12">
-                                    {% if formDetails.form_geopoint != None %}
-                                        {% include 'dashboard/projects/forms/snippets/form_map.jinja2' %}
-                                    {% endif %}
-                                    {% if formDetails.form_schema != None %}
-                                        {% include 'dashboard/projects/forms/snippets/form_tasks.jinja2' %}
-                                        {#                                {% include 'dashboard/projects/forms/snippets/form_activity.jinja2' %}#}
+                                    {% if project.assistants|length > 0 %}
+                                        {% if formassistants|length > 0 %}
+                                            {% if formDetails.form_geopoint != None %}
+                                                {% include 'dashboard/projects/forms/snippets/form_map.jinja2' %}
+                                            {% endif %}
+                                            {% if formDetails.form_schema != None %}
+                                                {% include 'dashboard/projects/forms/snippets/form_tasks.jinja2' %}
+                                            {% endif %}
+                                        {% else %}
+                                            {% if projectDetails.access_type < 4 %}
+                                                {% include 'dashboard/projects/forms/snippets/form_no_assistants.jinja2' %}
+                                            {% endif %}
+                                        {% endif %}
+                                    {% else %}
+                                        {% if projectDetails.access_type < 4 %}
+                                            {% include 'dashboard/projects/snippets/project_no_assistants.jinja2' %}
+                                        {% endif %}
                                     {% endif %}
                                 </div>
                             </div>

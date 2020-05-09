@@ -36,21 +36,47 @@
                     {% if output.output_file == None %}{{ _('Ran by') }}{% else %}{{ _('Created by') }}{% endif %} <strong>{{ output.created_by_name }}</strong> {% if output.published == 1 %}<span class="label" style="color: white; background: cornflowerblue" title="{{ _('Public Access') }}">{{ _('Public') }}</span>{% endif %} <br>
                     {% if output.status > 0 %} <textarea style="display:none;" id="error_{{ output.celery_taskid }}"></textarea> {{ _('The process generated an error.') }}<br>{% endif %}
                     <small class="text-muted">{{ request.h.readble_date_with_time(output.datetime_added,request.locale_name) }} {% if output.status == 0 %} {% if output.output_file != None %}- <span class="text-success"> {{ output.downloads }} {{ request.h.pluralize(_('download'),output.downloads,request.locale_name) }} {% if output.last_download != None %}({{ _('last') }}: {{ request.h.simple_date(output.last_download) }}){% endif %}</span>{% endif %} {% endif %}</small>
+                    <br/>
+                    {% if loop_index == 1 %}
+                        <span title="This is the latest export of this product" class="badge">{{ _('Latest') }}</span>
+                    {% endif %}
+                    {% if formDetails.cleanedlast != "" %}
+                        {% if output.datetime_added > formDetails.last and output.datetime_added >formDetails.cleanedlast %}
+                            <span class="badge badge-success">{{ _('Up to date') }}</span>
+                        {% else %}
+                            <span title="{{ _('This product was created before the last submission and/or before the last data cleaning update') }}" class="badge badge-danger">{{ _('Outdated') }}</span>
+                        {% endif %}
+                    {% else %}
+                        {% if output.datetime_added > formDetails.last %}
+                            <span class="badge badge-success">{{ _('Up to date') }}</span>
+                        {% else %}
+                            <span title="{{ _('This product was created before the last submission') }}" class="badge badge-danger">{{ _('Outdated') }}</span>
+                        {% endif %}
+                    {% endif %}
                 {% endblock product_item_ready_head %}
                 <div class="actions">
                     {% block product_item_ready_actions %}
                         {% if output.output_file != None and output.status == 0 %}
                             {% if output.product_published == 1 %}
                                 {% block product_item_ready_public_tools %}
-                                    <a href="{{ request.route_url('download_public_product', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid=output.output_id) }}"  class="btn btn-xs btn-white"><i class="fas fa-download"></i> {{ _('Download') }} </a>
+                                    {% if loop_index == 1 %}
+                                        <a href="{{ request.route_url('download_public_product', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid='latest') }}"  class="btn btn-xs btn-white"><i class="fas fa-download"></i> {{ _('Download') }} </a>
+                                    {% else %}
+                                        <a href="{{ request.route_url('download_public_product', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid=output.output_id) }}"  class="btn btn-xs btn-white"><i class="fas fa-download"></i> {{ _('Download') }} </a>
+                                    {% endif %}
                                     {% if projectDetails.access_type < 4 %}
                                         <a urn="{{ request.route_url('unpublish_product', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid=output.output_id) }}"  class="btn btn-xs btn-white unpublish-product"><i class="fas fa-lock"></i> {{ _('Unpublish') }}</a>
                                     {% endif %}
                                 {% endblock product_item_ready_public_tools %}
                             {% else %}
                                 {% block product_item_ready_private_tools %}
-                                    <a href="{{ request.route_url('download_private_product', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid=output.output_id) }}"  class="btn btn-xs btn-white"><i class="fas fa-download"></i> {{ _('Download') }} </a>
-                                    <a href="{{ request.route_url('api_download_private_product', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid=output.output_id, _query={'apikey': activeUser.apikey}) }}"  class="btn btn-xs btn-white"><i class="fas fa-code"></i> {{ _('API Download') }} </a>
+                                    {% if loop_index == 1 %}
+                                        <a href="{{ request.route_url('download_private_product', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid='latest') }}"  class="btn btn-xs btn-white"><i class="fas fa-download"></i> {{ _('Download') }} </a>
+                                        <a href="{{ request.route_url('api_download_private_product', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid='latest', _query={'apikey': activeUser.apikey}) }}"  class="btn btn-xs btn-white"><i class="fas fa-code"></i> {{ _('API Download') }} </a>
+                                    {% else %}
+                                        <a href="{{ request.route_url('download_private_product', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid=output.output_id) }}"  class="btn btn-xs btn-white"><i class="fas fa-download"></i> {{ _('Download') }} </a>
+                                        <a href="{{ request.route_url('api_download_private_product', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid=output.output_id, _query={'apikey': activeUser.apikey}) }}"  class="btn btn-xs btn-white"><i class="fas fa-code"></i> {{ _('API Download') }} </a>
+                                    {% endif %}
                                     {% if output.publishable == 1 %}
                                         {% if projectDetails.access_type < 4 %}
                                             <a urn="{{ request.route_url('publish_product', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid=output.output_id) }}"  class="btn btn-xs btn-white publish-product"><i class="fas fa-unlock"></i> {{ _('Publish') }}</a>

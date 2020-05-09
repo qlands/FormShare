@@ -123,14 +123,16 @@ def get_number_of_submissions(request, user, project, form):
 def get_last_clean_info(request, project, form):
     schema = get_form_schema(request, project, form)
     if schema is not None:
-        sql = "SELECT audit_date,audit_user from {}.audit_log ORDER BY audit_date DESC LIMIT 1".format(schema)
+        sql = "SELECT audit_date,audit_user from {}.audit_log ORDER BY audit_date DESC LIMIT 1".format(
+            schema
+        )
         res = request.dbsession.execute(sql).fetchone()
         if res is not None:
             return res[0], res[1]
         else:
             return "", ""
     else:
-        return "NA","NA"
+        return "NA", "NA"
 
 
 def get_number_of_submissions_in_database(request, project, form):

@@ -26,6 +26,7 @@
                             <div class="tab-pane {% if active_product == product.code %}active{% endif %}" id="prd_tab_{{ product.code }}">
                                 <div class="feed-activity-list">
                                     {% for output in product.outputs %}
+                                        {% set loop_index = loop.index %}
                                         {% include 'dashboard/projects/forms/snippets/product_item.jinja2' %}
                                     {% endfor %}
                                 </div>

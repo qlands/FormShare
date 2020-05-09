@@ -73,6 +73,7 @@ __all__ = [
     "reset_form_repository",
     "get_assistant_forms_for_cleaning",
     "update_form_directory",
+    "get_last_clean_info",
 ]
 
 log = logging.getLogger("formshare")
@@ -119,6 +120,19 @@ def get_number_of_submissions(request, user, project, form):
     return get_dataset_stats_for_form(request.registry.settings, user, project, form)
 
 
+def get_last_clean_info(request, project, form):
+    schema = get_form_schema(request, project, form)
+    if schema is not None:
+        sql = "SELECT audit_date,audit_user from {}.audit_log ORDER BY audit_date DESC LIMIT 1".format(schema)
+        res = request.dbsession.execute(sql).fetchone()
+        if res is not None:
+            return res[0], res[1]
+        else:
+            return "", ""
+    else:
+        return "NA","NA"
+
+
 def get_number_of_submissions_in_database(request, project, form):
     total = (
         request.dbsession.query(Submission)
@@ -135,23 +149,6 @@ def get_number_of_submissions_in_database(request, project, form):
         in_db = res[0]
     else:
         in_db = 0
-
-    # in_db = (
-    #     request.dbsession.query(Submission)
-    #     .filter(Submission.project_id == project)
-    #     .filter(Submission.form_id == form)
-    #     .filter(Submission.submission_status == 0)
-    #     .filter(Submission.sameas.is_(None))
-    #     .count()
-    # )
-
-    # fixed = (
-    #     request.dbsession.query(Jsonlog)
-    #     .filter(Jsonlog.project_id == project)
-    #     .filter(Jsonlog.form_id == form)
-    #     .filter(Jsonlog.status == 0)
-    #     .count()
-    # )
 
     in_db_from_logs = (
         request.dbsession.query(Jsonlog)
@@ -338,6 +335,8 @@ def get_form_details(request, user, project, form):
             )
             result["submissions"] = submissions
             result["last"] = last
+            result["cleanedlast"] = "NA"
+            result["cleanedby"] = "NA"
             result["by"] = by
             result["bydetails"] = get_by_details(request, user, project, by)
             result["indb"] = 0
@@ -361,8 +360,15 @@ def get_form_details(request, user, project, form):
             ) = get_number_of_submissions_in_database(
                 request, project, result["form_id"]
             )
+            cleaned_last, cleaned_by = get_last_clean_info(request, project, form)
             result["submissions"] = submissions
             result["last"] = last
+            result["cleanedlast"] = cleaned_last
+            cleaned_by_details = get_by_details(request, user, project, cleaned_by)
+            if not cleaned_by_details:
+                result["cleanedby"] = cleaned_by
+            else:
+                result["cleanedby"] = cleaned_by_details["coll_name"]
             result["bydetails"] = get_by_details(request, user, project, by)
             result["indb"] = in_database
             result["inlogs"] = in_logs
@@ -403,52 +409,6 @@ def get_project_forms(request, user, project):
         .all()
     )
     forms = map_from_schema(res)
-    # # We nest the forms in an element tree so child belong to parents
-    # root = etree.Element("root")
-    # for form in parent_forms:
-    #     e_form = etree.Element(form["form_id"])
-    #     e_form.set("haschildren", "False")
-    #     e_form.set("project_id", form["project_id"])
-    #     root.append(e_form)
-    #
-    # # Get all children forms in ascending order
-    # res = (
-    #     request.dbsession.query(Odkform)
-    #     .filter(Odkform.project_id == project)
-    #     .filter(Odkform.form_incversion == 1)
-    #     .order_by(Odkform.form_cdate.desc())
-    #     .all()
-    # )
-    # child_forms = map_from_schema(res)
-    # for form in child_forms:
-    #     form_id = root.findall(".//" + form["parent_form"])
-    #     if form_id:
-    #         form_id[0].set("haschildren", "True")
-    #         child = etree.Element(form["form_id"])
-    #         child.set("project_id", form["project_id"])
-    #         form_id[0].append(child)
-    #
-    # # Get all the form ids in order
-    # form_order = []
-    # for tag in root.iter():
-    #     if tag.tag != "root":
-    #         form_order.append(
-    #             {
-    #                 "id": tag.tag,
-    #                 "haschildren": tag.get("haschildren"),
-    #                 "project_id": tag.get("project_id"),
-    #             }
-    #         )
-    #
-    # # Get all the forms in order
-    # all_forms = parent_forms + child_forms
-    # forms = []
-    # for form in form_order:
-    #     for a_form in all_forms:
-    #         if form["id"] == a_form["form_id"]:
-    #             a_form["haschildren"] = form["haschildren"]
-    #             forms.append(a_form)
-    #             break
 
     for form in forms:
         form["pubby"] = get_creator_data(request, form["form_pubby"])

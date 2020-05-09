@@ -1,0 +1,89 @@
+{% set active_tab = request.params.get('tab',None) %}
+<div class="ibox">
+    <div class="ibox-title">
+        {% block form_important_links_title %}
+            <h5>{{ _('Quick actions') }}</h5>
+        {% endblock form_important_links_title %}
+    </div>
+    <div class="ibox-content">
+        {% block form_important_links_content %}
+            <div class="row">
+                <div class="col-lg-2">
+                    <a href="{{ request.route_url('editDictTables', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" title="{{ numsensitive }} {{ request.h.pluralize(_('field'),numsensitive,request.locale_name) }} {{ _('marked as sensitive among ') }}{{ numtables }} {{ request.h.pluralize(_('table'),numtables,request.locale_name) }}">
+                    <div class="widget navy-bg p-lg text-center" style="padding: 20px">
+                        <div class="m-b-n-sm">
+                            <i class="fas fa-eye-slash fa-2x"></i>
+                            <h4 class="font-bold no-margins">
+                                {{ _('Anonymize fields') }}
+                            </h4>
+                        </div>
+                    </div>
+                    </a>
+                </div>
+                {% if formDetails.submissions > 0 %}
+                    <div class="col-lg-2">
+                        <a target="_blank" href="{{ request.route_url('clean', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}" title="{{ _('Clean data using the browser') }}">
+                            <div class="widget navy-bg p-lg text-center" style="padding: 20px">
+                                <div class="m-b-n-sm">
+                                    <i class="fas fa-broom fa-2x"></i>
+                                    <h4 class="font-bold no-margins">
+                                        {{ _('Data cleaning') }}
+                                    </h4>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-lg-2">
+                        <a title="{{ _('Clean data using scripts') }}">
+                            <div class="widget navy-bg p-lg text-center" style="padding: 20px">
+                                <div class="m-b-n-sm">
+                                    <i class="fas fa-code fa-2x"></i>
+                                    <h4 class="font-bold no-margins">
+                                        {{ _('API data cleaning') }}
+                                    </h4>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-lg-2">
+                        <a href="{{ request.route_url('viewAudit', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" title="{{ _('Review data cleaning history') }}">
+                            <div class="widget navy-bg p-lg text-center" style="padding: 20px">
+                                <div class="m-b-n-sm">
+                                    <i class="fas fa-shield-alt fa-2x"></i>
+                                    <h4 class="font-bold no-margins">
+                                        {{ _('Audit log') }}
+                                    </h4>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-lg-2 popr" data-id="demo">
+                        <div class="widget navy-bg p-lg text-center"  style="padding: 20px">
+                            <div class="m-b-n-sm">
+                                <i class="fas fa-download fa-2x"></i>
+                                <h4 class="font-bold no-margins">
+                                    {{ _('Export data') }}
+                                </h4>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="popr-box" data-box-id="demo">
+                        {% block quick_download_contents %}
+                            <a href="{{ request.route_url('form_download_public_xlsx_data',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><div class="popr-item">{{ _('Publishable XLSX') }}</div></a>
+                            <a href="{{ request.route_url('form_download_private_xlsx_data',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><div class="popr-item">{{ _('Unpublishable XLSX') }}</div></a>
+                            <hr>
+                            <a href="{{ request.route_url('form_download_repo_public_csv',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><div class="popr-item">{{ _('Publishable CSV') }}</div></a>
+                            <a href="{{ request.route_url('form_download_repo_private_csv',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><div class="popr-item">{{ _('Unpublishable CSV') }}</div></a>
+                            {% if formDetails.form_geopoint != None and withgps > 0 %}
+                                <hr>
+                                <a href="{{ request.route_url('form_download_kml',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><div class="popr-item">KML</div></a>
+                            {% endif %}
+                            <hr>
+                            <a href="{{ request.route_url('form_download_media',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><div class="popr-item">{{ _('Media') }}</div></a>
+                        {% endblock quick_download_contents %}
+                    </div>
+                {% endif %}
+            </div>
+        {% endblock form_important_links_content %}
+    </div>
+</div>

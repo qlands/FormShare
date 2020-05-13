@@ -12,6 +12,7 @@ from .jinja_extensions import (
 from .mainresources import create_resources
 import formshare.plugins.helpers as helpers
 from .routes import load_routes
+from .api_routes import load_api_version_1_routes
 from pyramid.csrf import SessionCSRFStoragePolicy
 from .elasticfeeds import configure_manager
 from formshare.processes.elasticsearch.user_index import configure_user_index_manager
@@ -202,3 +203,4 @@ def load_environment(settings, config, apppath, policy_array):
 
     # Finally we load the routes
     load_routes(config)
+    load_api_version_1_routes(config)

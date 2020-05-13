@@ -1,11 +1,12 @@
 import requests
 
-url = "http://192.168.0.100:5900/api/1/upload_file_to_form?apikey=e8e695ce-d20a-49d5-881a-f2922f54a64e"
+url = "http://192.168.0.100:5900/api/1/upload_file_to_form"
 xml_file = "/home/cquiros/temp/justtest.csv"
 
 files = {"file_to_upload": open(xml_file, "rb")}
 
 payload = {
+    "apikey": "e8e695ce-d20a-49d5-881a-f2922f54a64e",
     "user_id": "cquiros",
     "project_code": "prj001",
     "form_id": "PRISE_PPRSDGhana_2018_V1",

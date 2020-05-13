@@ -701,7 +701,10 @@ class APIView(object):
         self.error = False
 
     def __call__(self):
-        self.api_key = self.request.params.get("apikey", None)
+        if self.request.method == "GET":
+            self.api_key = self.request.params.get("apikey", None)
+        else:
+            self.api_key = self.request.POST.get("apikey", None)
         if self.api_key is not None:
             self.user = get_user_by_api_key(self.request, self.api_key)
             if self.user is None:
@@ -730,6 +733,7 @@ class APIView(object):
                 ).encode(),
             )
             return response
+
         res = self.process_view()
         if not self.error:
             return res

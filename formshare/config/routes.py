@@ -40,7 +40,7 @@ from ..views.assistants import (
     DeleteAssistant,
     ChangeAssistantPassword,
 )
-from ..views.api import APIUserSearchSelect2
+from ..views.search import APIUserSearchSelect2
 from ..views.assistant_groups import (
     GroupListView,
     AddGroupView,

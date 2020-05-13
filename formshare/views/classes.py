@@ -13,7 +13,7 @@
 from ..config.auth import get_user_data, get_assistant_data
 from pyramid.httpexceptions import HTTPFound
 from pyramid.session import check_csrf_token
-from pyramid.httpexceptions import HTTPNotFound
+from pyramid.httpexceptions import HTTPNotFound, exception_response
 from formencode.variabledecode import variable_decode
 from pyramid.response import Response
 import hashlib
@@ -696,9 +696,9 @@ class APIView(object):
     def __init__(self, request):
         self.request = request
         self.user = None
-        self.json = {}
         self.api_key = ""
         self._ = self.request.translate
+        self.error = False
 
     def __call__(self):
         self.api_key = self.request.params.get("apikey", None)
@@ -718,31 +718,6 @@ class APIView(object):
                     ).encode(),
                 )
                 return response
-
-            if self.request.method == "POST":
-                try:
-                    self.json = json.loads(self.request.body)
-                except json.JSONDecodeError:
-                    response = Response(
-                        content_type="application/json",
-                        status=400,
-                        body=json.dumps(
-                            {
-                                "error": self._("The JSON cannot be parsed"),
-                                "error_type": "parsing",
-                            }
-                        ).encode(),
-                    )
-                    return response
-                except Exception as e:
-                    response = Response(
-                        content_type="application/json",
-                        status=400,
-                        body=json.dumps(
-                            {"error": type(e).__name__, "error_type": "other"}
-                        ).encode(),
-                    )
-                    return response
         else:
             response = Response(
                 content_type="application/json",
@@ -755,8 +730,16 @@ class APIView(object):
                 ).encode(),
             )
             return response
-
-        return self.process_view()
+        res = self.process_view()
+        if not self.error:
+            return res
+        else:
+            response = Response(
+                content_type="application/json",
+                status=400,
+                body=json.dumps(res).encode(),
+            )
+            return response
 
     def process_view(self):
         return {"key": self.api_key}
@@ -764,7 +747,7 @@ class APIView(object):
     def check_keys(self, key_list):
         not_found_keys = []
         for a_key in key_list:
-            if a_key not in self.json.keys():
+            if a_key not in self.request.POST.keys():
                 not_found_keys.append(a_key)
         if not_found_keys:
             json_result = {
@@ -777,12 +760,22 @@ class APIView(object):
             for a_key in not_found_keys:
                 json_result["keys"].append(a_key)
 
-            response = Response(
+            response = exception_response(
+                400,
                 content_type="application/json",
-                status=400,
                 body=json.dumps(json_result).encode(),
             )
-            return response
+            raise response
+
+    def return_error(self, error_type, error_message):
+        response = exception_response(
+            400,
+            content_type="application/json",
+            body=json.dumps(
+                {"error": error_message, "error_type": error_type}
+            ).encode(),
+        )
+        raise response
 
 
 class AssistantAPIView(object):

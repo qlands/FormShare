@@ -33,6 +33,7 @@ __all__ = [
     "get_project_details",
     "set_project_as_active",
     "get_project_owner",
+    "get_project_access_type",
 ]
 
 log = logging.getLogger("formshare")
@@ -51,6 +52,19 @@ def get_project_id_from_name(request, user, project_code):
     if res is not None:
         return res.project_id
     return None
+
+
+def get_project_access_type(request, user, project_id):
+    res = (
+        request.dbsession.query(Userproject.access_type)
+        .filter(Userproject.user_id == user)
+        .filter(Userproject.project_id == project_id)
+        .first()
+    )
+    if res is not None:
+        return res.access_type
+    else:
+        return None
 
 
 def get_project_code_from_id(request, user, project_id):

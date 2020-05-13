@@ -709,8 +709,12 @@ class APIView(object):
                     content_type="application/json",
                     status=401,
                     body=json.dumps(
-                        {"error": self._("This API key does not exist or is inactive"),
-                         "error_type": "authentication"}
+                        {
+                            "error": self._(
+                                "This API key does not exist or is inactive"
+                            ),
+                            "error_type": "authentication",
+                        }
                     ).encode(),
                 )
                 return response
@@ -723,8 +727,10 @@ class APIView(object):
                         content_type="application/json",
                         status=400,
                         body=json.dumps(
-                            {"error": self._("The JSON cannot be parsed"),
-                             "error_type": "parsing"}
+                            {
+                                "error": self._("The JSON cannot be parsed"),
+                                "error_type": "parsing",
+                            }
                         ).encode(),
                     )
                     return response
@@ -732,8 +738,9 @@ class APIView(object):
                     response = Response(
                         content_type="application/json",
                         status=400,
-                        body=json.dumps({"error": type(e).__name__,
-                                         "error_type": "other"}).encode(),
+                        body=json.dumps(
+                            {"error": type(e).__name__, "error_type": "other"}
+                        ).encode(),
                     )
                     return response
         else:
@@ -741,8 +748,10 @@ class APIView(object):
                 content_type="application/json",
                 status=401,
                 body=json.dumps(
-                    {"error": self._("You need to specify an API key"),
-                     "error_type": "api_key_missing"}
+                    {
+                        "error": self._("You need to specify an API key"),
+                        "error_type": "api_key_missing",
+                    }
                 ).encode(),
             )
             return response
@@ -758,18 +767,20 @@ class APIView(object):
             if a_key not in self.json.keys():
                 not_found_keys.append(a_key)
         if not_found_keys:
-            json_result = {"error": self._("The following keys were not present in the submitted JSON"),
-                           "keys": [],
-                           "error_type": "missing_key"}
+            json_result = {
+                "error": self._(
+                    "The following keys were not present in the submitted JSON"
+                ),
+                "keys": [],
+                "error_type": "missing_key",
+            }
             for a_key in not_found_keys:
                 json_result["keys"].append(a_key)
 
             response = Response(
                 content_type="application/json",
                 status=400,
-                body=json.dumps(
-                    json_result
-                ).encode(),
+                body=json.dumps(json_result).encode(),
             )
             return response
 

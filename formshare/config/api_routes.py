@@ -37,7 +37,14 @@ def load_api_version_1_routes(config):
         append_to_routes(routes)
 
     # FormShare API routes
-    routes.append(add_route("API1UploadFileToForm", "/api/1/upload_file_to_form", API1UploadFileToForm, "json"))
+    routes.append(
+        add_route(
+            "API1UploadFileToForm",
+            "/api/1/upload_file_to_form",
+            API1UploadFileToForm,
+            "json",
+        )
+    )
 
     # Overwrite or add the API routes
     append_to_routes(routes)

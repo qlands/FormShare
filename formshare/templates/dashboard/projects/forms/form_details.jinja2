@@ -11,9 +11,7 @@
         {% if formDetails.form_geopoint != None %}
             {% cssresource request,'formshare','leaflet' %}
         {% endif %}
-        {% if products|length > 0 %}
-            {% cssresource request,'formshare','codemirror-ambiance' %}
-        {% endif %}
+        {% cssresource request,'formshare','codemirror-ambiance' %}
         {% if formDetails.form_schema != None %}
             {% cssresource request,'formshare','popr' %}
         {% endif %}
@@ -43,6 +41,7 @@
         {% endif %}
         {% if formDetails.form_schema != None %}
             {% jsresource request,'formshare','popr' %}
+            {% jsresource request,'formshare','codemirror-r' %}
         {% endif %}
         {% if products|length > 0 %}
             {% jsresource request,'formshare','codemirror-shell' %}
@@ -138,6 +137,9 @@
             {% include 'dashboard/projects/forms/snippets/edit_assistant.jinja2' %}
             {% include 'dashboard/projects/forms/snippets/add_group.jinja2' %}
             {% include 'dashboard/projects/forms/snippets/edit_group.jinja2' %}
+            {% if formDetails.form_schema != None %}
+                {% include 'dashboard/projects/forms/snippets/api_examples.jinja2' %}
+            {% endif %}
             {% set upload_for_merging = true %}
             {% set parent_project = projectDetails.project_id %}
             {% set parent_form = formDetails.form_id %}
@@ -208,6 +210,58 @@
                         {% endif %}
                     {% endif %}
 
+                    {% if formDetails.form_schema != None %}
+                        let example_stata_loaded = false;
+                        let example_spss_loaded = false;
+                        let example_r_loaded = false;
+                        $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+                            if (e.target.getAttribute("href") === "#example-stata")
+                                load_stata_example();
+                            if (e.target.getAttribute("href") === "#example-spss")
+                                load_spss_example();
+                            if (e.target.getAttribute("href") === "#example-r")
+                                load_r_example();
+                        })
+                        $('#apiexamples').on('shown.bs.modal', function () {
+                            load_stata_example();
+                        });
+
+                        function load_stata_example() {
+                            if (example_stata_loaded === false) {
+                                example_stata_loaded = true;
+                                let stata_editor = CodeMirror.fromTextArea(document.getElementById("stata_code"), {
+                                    lineNumbers: true,
+                                    matchBrackets: true,
+                                    styleActiveLine: true,
+                                    readOnly: true,
+                                });
+                            }
+                        }
+                        function load_spss_example() {
+                            if (example_spss_loaded === false) {
+                                example_spss_loaded = true;
+                                let spss_editor = CodeMirror.fromTextArea(document.getElementById("spss_code"), {
+                                    lineNumbers: true,
+                                    matchBrackets: true,
+                                    styleActiveLine: true,
+                                    readOnly: true,
+                                });
+                            }
+                        }
+                        function load_r_example() {
+                            if (example_r_loaded === false) {
+                                example_r_loaded = true;
+                                let r_editor = CodeMirror.fromTextArea(document.getElementById("r_code"), {
+                                    lineNumbers: true,
+                                    matchBrackets: true,
+                                    styleActiveLine: true,
+                                    readOnly: true,
+                                    mode: 'r',
+                                });
+                            }
+                        }
+                    {% endif %}
+
                     {% if products|length > 0 %}
 
                         let editor = CodeMirror.fromTextArea(document.getElementById("error_code"), {
@@ -215,7 +269,7 @@
                             matchBrackets: true,
                             styleActiveLine: true,
                             readOnly: true,
-                            theme:"ambiance"
+                            mode: 'shell'
                         });
 
                         function product_buttons() {

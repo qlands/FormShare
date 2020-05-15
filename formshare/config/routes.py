@@ -127,7 +127,6 @@ from ..views.repository_submissions import (
     DeleteAllSubmissions,
     GetFormAudit,
     ReviewAudit,
-    UpdateRepositoryView,
 )
 
 from ..views.repository_merge import RepositoryMergeForm
@@ -1122,15 +1121,6 @@ def load_routes(config):
     )
 
     # Repository API
-
-    routes.append(
-        add_route(
-            "api_update_repository",
-            "/user/{userid}/project/{projcode}/form/{formid}/api_update",
-            UpdateRepositoryView,
-            None,
-        )
-    )
 
     # ODK Forms
     routes.append(

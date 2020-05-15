@@ -130,6 +130,12 @@ def create_resources(apppath, config):
         "js/plugins/codemirror/mode/shell/shell.js",
         "codemirror",
     )
+    r.add_js_resource(
+        "formshare",
+        "codemirror-r",
+        "js/plugins/codemirror/mode/r/r.js",
+        "codemirror",
+    )
     r.add_css_resource(
         "formshare", "codemirror", "css/plugins/codemirror/codemirror.css", None
     )

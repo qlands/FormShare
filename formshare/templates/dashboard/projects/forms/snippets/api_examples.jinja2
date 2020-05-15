@@ -1,0 +1,213 @@
+<div class="modal inmodal fade" id="apiexamples" tabindex="-1" role="dialog"  aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">{{ _('Close') }}</span></button>
+                <h4 class="modal-title">{{ _('Cleaning API') }}</h4>
+                <small class="font-bold">{{ _('Here are some examples on how to clean data using scripts') }}</small>
+            </div>
+            <div class="modal-body">
+                <div class="tabs-container">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li><a class="nav-link active" data-toggle="tab" href="#example-stata">STATA</a></li>
+                        <li><a class="nav-link" data-toggle="tab" href="#example-spss">SPSS</a></li>
+                        <li><a class="nav-link" data-toggle="tab" href="#example-r">R</a></li>
+                        {% block api_examples_tabs_exta %}
+
+                        {% endblock api_examples_tabs_exta %}
+                    </ul>
+                    <div class="tab-content">
+                        <div role="tabpanel" id="example-stata" class="tab-pane active">
+                            <div class="panel-body">
+                                <textarea readonly id="stata_code">
+* {{ _('Download and install') }} Python 3.X. {{ _('In Windows you can get it here') }}: https://www.anaconda.com/products/individual
+
+* {{ _('Download a private CSV file using an access key') }}.
+python:
+import urllib.request
+
+# {{ _('Each private CSV product generated in FormShare has a API download link. Copy that link and place it below') }}
+url = "replace_me_with_the_API_url"
+
+request = urllib.request.urlopen(url)
+data_to_write = request.read()
+
+# {{ _('Where do you want to save the CSV file downloaded from FormShare') }}
+destination_file = "C:/path/to/taget/directory/{{ formDetails.form_id }}.csv"
+
+with open(destination_file, "wb") as f:
+    f.write(data_to_write)
+end
+
+* {{ _('Define a dataset with the information that you want to update') }}.
+* {{ _('The dataset needs to have the following structure:') }}
+* rowuuid: {{ _('Each data row in FormShare has an unique') }} rowuuid.
+* variable_code: {{ _('The variable that you want to change') }}.
+* new_value: {{ _('This is the new value that you want to apply to the variable for the selected') }} rowuuid.
+* {{ _('In this example we will replace the variable income to read') }} 1300 {{ _('for the') }} rowuuid 94e84a4e-7a3a-45eb-b669-d98a8b720b50.
+input str40 rowuuid str120 variable_code new_value
+94e84a4e-7a3a-45eb-b669-d98a8b720b50 income 1300
+end
+
+* {{ _('Read the list of changes and push the updates to FormShare') }}.
+python:
+import urllib.request
+import json
+from sfi import Data
+
+# {{ _('Setup the FormShare update URL') }}
+url = "{{ request.route_url('api1_update_repository', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}"
+
+# {{ _('Setup your FormShare assistant API key. For example:') }}
+api_key = "4e0c9025-7db5-42da-a7e5-245fc9171be0"
+
+# {{ _('Pass through each update in the list and push it to FormShare') }}
+all_updates = Data.get("rowuuid variable_code new_value")
+for an_update in all_updates:
+   # {{ _('Creates a Python Dict structure. In this example this will look like') }}: {"api_key": "4e0c9025-7db5-42da-a7e5-245fc9171be0", "rowuuid": "94e84a4e-7a3a-45eb-b669-d98a8b720b50", "income": 1300}
+   # {{ _('This will tell FormShare to look for') }} rowuuid = 94e84a4e-7a3a-45eb-b669-d98a8b720b50, {{ _('change the variable income to') }} 1300 {{ _('using the API key') }} 4e0c9025-7db5-42da-a7e5-245fc9171be0
+   data = {"apikey":api_key, "rowuuid":an_update[0].strip(), an_update[1].strip():an_update[2]}
+
+   # {{ _('Convert the data to string') }}
+   string_data = json.dumps(data).encode('utf8')
+
+   # {{ _('Push the change to FormShare') }}
+   req = urllib.request.Request(url, data=string_data, headers={'content-type': 'application/json'})
+   try:
+     response = urllib.request.urlopen(req)
+   except urllib.error.HTTPError as e:
+      print ("-------------------{{ _('Error') }}----------------------")
+      print (data)
+      print ("------------------------------------------------")
+      print (e.read())
+      print ("------------------------------------------------")
+end
+clear</textarea>
+                            </div>
+                        </div>
+                        <div role="tabpanel" id="example-spss" class="tab-pane">
+                            <div class="panel-body">
+                                <textarea readonly id="spss_code">
+* {{ _('Python program: Download a private csv file using an access key') }}.
+BEGIN PROGRAM.
+import urllib
+
+# {{ _('Each private CSV product generated in FormShare has a API download link. Copy that link and place it below') }}.
+url = "replace_me_with_the_API_url"
+
+# {{ _('Where do you want to save the CSV file') }}
+destination_file = "C:/path/to/target/directory/{{ formDetails.form_id }}.csv"
+
+testfile = urllib.URLopener()
+testfile.retrieve(url, destination_file)
+END PROGRAM.
+
+
+* {{ _('Define a list with the information that you want to update') }}.
+* {{ _('The list needs to have the following structure') }}:.
+* rowuuid: {{ _('Each data row in FormShare has an unique') }} rowuuid.
+* variable_code: {{ _('The variable that you want to change') }}.
+* new_value: {{ _('This is the new value that you want to apply to the variable for the selected rowuuid') }}.
+
+* {{ _('In this example we will replace the variable income to read') }} 1300 {{ _('for the') }} rowuuid 94e84a4e-7a3a-45eb-b669-d98a8b720b50.
+DATA LIST LIST
+ / rowuuid (A40) variable_code (A120) new_value .
+BEGIN DATA.
+"94e84a4e-7a3a-45eb-b669-d98a8b720b50","income", 1300
+END DATA.
+LIST.
+
+* {{ _('Python program: Read the list of changes and push the update to FormShare') }}.
+BEGIN PROGRAM.
+import spss
+import json
+import urllib2
+
+# {{ _('Setup the FormShare update API URL') }}
+url = "{{ request.route_url('api1_update_repository', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}"
+
+# {{ _('Setup your FormShare assistant API key. Form example:') }}
+api_key = "4e0c9025-7db5-42da-a7e5-245fc9171be0"
+
+# {{ _('Read data list of updates into an array called all_updates.') }}
+dataCursor = spss.Cursor()
+all_updates = dataCursor.fetchall()
+dataCursor.close()
+
+# {{ _('Pass through each update in the list and push it to FormShare') }}
+for an_update in all_updates:
+   # {{ _('Creates a Python Dict structure. In this example this will look like') }}: {"api_key": "4e0c9025-7db5-42da-a7e5-245fc9171be0", "rowuuid": "94e84a4e-7a3a-45eb-b669-d98a8b720b50", "income": 1300}
+   # {{ _('This will tell FormShare to look for rowuuid') }} = 94e84a4e-7a3a-45eb-b669-d98a8b720b50 {{ _('and change the variable income to') }} 1300 {{ _('using the API key') }} 4e0c9025-7db5-42da-a7e5-245fc9171be0
+   data = {"apikey":api_key, "rowuuid":an_update[0].strip(), an_update[1].strip():an_update[2]}
+
+   # {{ _('Convert the data to string') }}
+   string_data = json.dumps(data).encode('utf8')
+
+   # {{ _('Push the change to FormShare') }}
+   response = urllib2.Request(url, string_data, {'Content-Type': 'application/json'})
+   try:
+      urllib2.urlopen(req)
+   except urllib2.HTTPError, e:
+      print "-------------------{{ _('Error') }}----------------------"
+      print data
+      print "------------------------------------------------"
+      print e.read()
+      print "------------------------------------------------"
+END PROGRAM.</textarea>
+                            </div>
+                        </div>
+                        <div role="tabpanel" id="example-r" class="tab-pane">
+                            <div class="panel-body">
+                                <textarea readonly id="r_code">
+# {{ _('If you use Linux you need to install') }} libcurl4-openssl-dev. {{ _('For example') }}: sudo apt-get install libcurl4-openssl-dev
+
+if("httr" %in% rownames(installed.packages()) == FALSE) {install.packages("httr")}
+
+library(httr)
+
+# {{ _('Download a private CSV file using an access key') }}.
+# {{ _('Each private CSV product generated in FormShare has a API download link. Copy the link and place it below') }}
+csv_data <- read.csv("replace_me_with_the_API_url")
+
+# {{ _('Create a new data frame for the updates') }}
+# {{ _('The dataset needs to have the following structure:') }}
+#   rowuuid: {{ _('Each data row in FormShare has an unique') }} rowuuid.
+#   variable_code: {{ _('The variable that you want to change') }}.
+#   new_value: {{ _('This is the new value that you want to apply to the variable for the selected') }} rowuuid.
+data_updates <- data.frame(rowuuid=character(),variable_code=character(),new_value=double())
+
+# {{ _('Add a new row to the data frame') }}
+# {{ _('In this example we will replace the variable income to read 1300 for the') }} rowuuid 94e84a4e-7a3a-45eb-b669-d98a8b720b50.
+new_update <- list(rowuuid="94e84a4e-7a3a-45eb-b669-d98a8b720b50", variable_code="income", new_value=1300)
+# {{ _('Append the new update to the data frame of updates') }}
+data_updates = rbind(data_updates,new_update, stringsAsFactors=FALSE)
+
+# {{ _('Setup the FormShare update API URL') }}
+url = "{{ request.route_url('api1_update_repository', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}"
+
+# {{ _('Setup your FormShare assistant API key. Form example') }}:.
+api_key = "4e0c9025-7db5-42da-a7e5-245fc9171be0"
+
+for (row in 1:nrow(data_updates)) {
+  # {{ _('Creates a JSON string using the data in the data frame. In this example this will look like') }}: {"api_key": "4e0c9025-7db5-42da-a7e5-245fc9171be0", "rowuuid": "94e84a4e-7a3a-45eb-b669-d98a8b720b50", "income": 1300}
+  json_string = paste('{"apikey":"',api_key,'", "rowuuid": "',data_updates[row,"rowuuid"],'", "',data_updates[row,"variable_code"], '": ',data_updates[row,"new_value"], '}', sep = "")
+  # {{ _('Push the change to FormShare') }}
+  r <- POST(url, content_type_json(), body=json_string, encode = "json")
+  if (status_code(r) != 200) {
+    print(content(r,"text",encoding="UTF-8"))
+  }
+}</textarea>
+                            </div>
+                        </div>
+                        {% block api_examples_content_exta %}
+
+                        {% endblock api_examples_content_exta %}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Close') }}</button>
+            </div>
+        </div>
+    </div>
+</div>

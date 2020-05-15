@@ -15,7 +15,6 @@ from formshare.processes.submission.api import (
     delete_all_submission,
     update_record_with_id,
 )
-from pyramid.response import Response
 from formshare.processes.elasticsearch.record_index import get_table
 from formshare.processes.odk.processes import get_assistant_permissions_on_a_form
 
@@ -416,7 +415,7 @@ class DeleteAllSubmissions(PrivateView):
             raise HTTPNotFound
 
 
-class UpdateRepositoryView(AssistantAPIView):
+class API1UpdateRepository(AssistantAPIView):
     def __init__(self, request):
         AssistantAPIView.__init__(self, request)
 
@@ -428,17 +427,8 @@ class UpdateRepositoryView(AssistantAPIView):
         permissions = get_assistant_permissions_on_a_form(
             self.request, user_id, self.project_id, self.assistant["coll_id"], form_id
         )
-
         if permissions["enum_canclean"] == 0:
-            response = Response(
-                content_type="application/json",
-                status=401,
-                body=json.dumps(
-                    {"error": self._("You are not authorized to clean this dataset")}
-                ).encode(),
-            )
-            return response
-
+            self.return_error("unauthorized", self._("You don't have permission to clean this form"))
         if "rowuuid" in self.json.keys():
             try:
                 schema, table = get_table(
@@ -458,41 +448,16 @@ class UpdateRepositoryView(AssistantAPIView):
                         self.json,
                     )
                     if modified:
-                        response = Response(
-                            content_type="application/json",
-                            body=json.dumps({"status": self._("OK")}).encode(),
-                        )
-                        return response
+                        return {"status": "OK", "message": self._("Update completed")}
                     else:
-                        response = Response(
-                            content_type="application/json",
-                            status=400,
-                            body=json.dumps({"error": error}).encode(),
-                        )
-                        return response
+                        self.error = True
+                        return {"error": error, "error_type": "update_error"}
                 else:
-                    response = Response(
-                        content_type="application/json",
-                        status=404,
-                        body=json.dumps(
-                            {"error": self._("RowUUID not found")}
-                        ).encode(),
-                    )
-                    return response
+                    self.error = True
+                    return {"error": self._("Rowuuid not found"), "error_type": "rowuuid_not_found"}
 
             except Exception as e:
-                response = Response(
-                    content_type="application/json",
-                    status=500,
-                    body=json.dumps({"error": type(e).__name__}).encode(),
-                )
-                return response
+                self.error = True
+                return {"error": str(e), "error_type": "update_error"}
         else:
-            response = Response(
-                content_type="application/json",
-                status=400,
-                body=json.dumps(
-                    {"error": self._("The JSON data does not have a rowuuid")}
-                ).encode(),
-            )
-            return response
+            self.return_error("rowuuid_missing", self._("You need to indicate a rowuuid"))

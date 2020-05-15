@@ -1111,6 +1111,7 @@ def update_record_with_id(request, user, schema, table, rowuuid, data):
         if a_field[3] == "PRI":
             key_array.append(a_field[0])
     data.pop("rowuuid", None)
+    data.pop("apikey", None)
     for a_key in key_array:
         data.pop(a_key, None)
     fields_not_found = []

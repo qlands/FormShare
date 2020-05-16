@@ -1,8 +1,8 @@
 version: '3'
 services:
-  fsmysql_20200426:
+  fsmysql_20200515:
     image: mysql:5.7.27
-    container_name: fs_mysql_20200426
+    container_name: fs_mysql_20200515
     environment:
       MYSQL_ROOT_PASSWORD: my_secure_password
     volumes:
@@ -11,9 +11,9 @@ services:
       fsnet:
         ipv4_address: 172.28.1.5
   
-  fselasticsearch_20200426:
+  fselasticsearch_20200515:
     image: docker.elastic.co/elasticsearch/elasticsearch:6.3.2
-    container_name: fs_elasticsearch_20200426
+    container_name: fs_elasticsearch_20200515
     environment:
       - cluster.name=docker-cluster
       - bootstrap.memory_lock=true
@@ -28,9 +28,9 @@ services:
     networks:
       fsnet:
         ipv4_address: 172.28.1.1
-  fselasticsearch2_20200426:
+  fselasticsearch2_20200515:
     image: docker.elastic.co/elasticsearch/elasticsearch:6.3.2
-    container_name: fs_elasticsearch2_20200426
+    container_name: fs_elasticsearch2_20200515
     environment:
       - cluster.name=docker-cluster
       - bootstrap.memory_lock=true
@@ -46,9 +46,9 @@ services:
     networks:
       fsnet:
         ipv4_address: 172.28.1.2
-  fselasticsearch3_20200426:
+  fselasticsearch3_20200515:
     image: docker.elastic.co/elasticsearch/elasticsearch:6.3.2
-    container_name: fs_elasticsearch3_20200426
+    container_name: fs_elasticsearch3_20200515
     environment:
       - cluster.name=docker-cluster
       - bootstrap.memory_lock=true
@@ -65,9 +65,9 @@ services:
       fsnet:
         ipv4_address: 172.28.1.3
 
-  formshare_20200426:
-    image: qlands/formshare2:20200426
-    container_name: formshare_20200426
+  formshare_20200515:
+    image: qlands/formshare2:20200515
+    container_name: formshare_20200515
     environment:
       MYSQL_HOST_NAME: 172.28.1.5
       MYSQL_USER_NAME: root

@@ -41,10 +41,10 @@ end
 
 * {{ _('Define a dataset with the information that you want to update') }}.
 * {{ _('The dataset needs to have the following structure:') }}
-* rowuuid: {{ _('Each data row in FormShare has an unique') }} rowuuid.
+* rowuuid: {{ _('Each data row in FormShare has an unique rowuuid') }} .
 * variable_code: {{ _('The variable that you want to change') }}.
-* new_value: {{ _('This is the new value that you want to apply to the variable for the selected') }} rowuuid.
-* {{ _('In this example we will replace the variable income to read') }} 1300 {{ _('for the') }} rowuuid 94e84a4e-7a3a-45eb-b669-d98a8b720b50.
+* new_value: {{ _('This is the new value that you want to apply to the variable for the selected rowuuid') }} .
+* {{ _('In this example we will replace the variable income to read 1300 for the rowuuid') }}  94e84a4e-7a3a-45eb-b669-d98a8b720b50.
 input str40 rowuuid str120 variable_code new_value
 94e84a4e-7a3a-45eb-b669-d98a8b720b50 income 1300
 end
@@ -64,7 +64,7 @@ api_key = "4e0c9025-7db5-42da-a7e5-245fc9171be0"
 # {{ _('Pass through each update in the list and push it to FormShare') }}
 all_updates = Data.get("rowuuid variable_code new_value")
 for an_update in all_updates:
-   # {{ _('Creates a Python Dict structure. In this example this will look like') }}: {"api_key": "4e0c9025-7db5-42da-a7e5-245fc9171be0", "rowuuid": "94e84a4e-7a3a-45eb-b669-d98a8b720b50", "income": 1300}
+   # {{ _('Create a Python Dict structure. In this example this will look like') }}: {"api_key": "4e0c9025-7db5-42da-a7e5-245fc9171be0", "rowuuid": "94e84a4e-7a3a-45eb-b669-d98a8b720b50", "income": 1300}
    # {{ _('This will tell FormShare to look for') }} rowuuid = 94e84a4e-7a3a-45eb-b669-d98a8b720b50, {{ _('change the variable income to') }} 1300 {{ _('using the API key') }} 4e0c9025-7db5-42da-a7e5-245fc9171be0
    data = {"apikey":api_key, "rowuuid":an_update[0].strip(), an_update[1].strip():an_update[2]}
 
@@ -105,11 +105,11 @@ END PROGRAM.
 
 * {{ _('Define a list with the information that you want to update') }}.
 * {{ _('The list needs to have the following structure') }}:.
-* rowuuid: {{ _('Each data row in FormShare has an unique') }} rowuuid.
+* rowuuid: {{ _('Each data row in FormShare has an unique rowuuid') }} .
 * variable_code: {{ _('The variable that you want to change') }}.
 * new_value: {{ _('This is the new value that you want to apply to the variable for the selected rowuuid') }}.
 
-* {{ _('In this example we will replace the variable income to read') }} 1300 {{ _('for the') }} rowuuid 94e84a4e-7a3a-45eb-b669-d98a8b720b50.
+* {{ _('In this example we will replace the variable income to read 1300 for the rowuuid ') }}  94e84a4e-7a3a-45eb-b669-d98a8b720b50.
 DATA LIST LIST
  / rowuuid (A40) variable_code (A120) new_value .
 BEGIN DATA.
@@ -126,7 +126,7 @@ import urllib2
 # {{ _('Setup the FormShare update API URL') }}
 url = "{{ request.route_url('api1_update_repository', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}"
 
-# {{ _('Setup your FormShare assistant API key. Form example:') }}
+# {{ _('Setup your FormShare assistant API key. For example:') }}
 api_key = "4e0c9025-7db5-42da-a7e5-245fc9171be0"
 
 # {{ _('Read data list of updates into an array called all_updates.') }}
@@ -136,7 +136,7 @@ dataCursor.close()
 
 # {{ _('Pass through each update in the list and push it to FormShare') }}
 for an_update in all_updates:
-   # {{ _('Creates a Python Dict structure. In this example this will look like') }}: {"api_key": "4e0c9025-7db5-42da-a7e5-245fc9171be0", "rowuuid": "94e84a4e-7a3a-45eb-b669-d98a8b720b50", "income": 1300}
+   # {{ _('Create a Python Dict structure. In this example this will look like') }}: {"api_key": "4e0c9025-7db5-42da-a7e5-245fc9171be0", "rowuuid": "94e84a4e-7a3a-45eb-b669-d98a8b720b50", "income": 1300}
    # {{ _('This will tell FormShare to look for rowuuid') }} = 94e84a4e-7a3a-45eb-b669-d98a8b720b50 {{ _('and change the variable income to') }} 1300 {{ _('using the API key') }} 4e0c9025-7db5-42da-a7e5-245fc9171be0
    data = {"apikey":api_key, "rowuuid":an_update[0].strip(), an_update[1].strip():an_update[2]}
 
@@ -171,13 +171,13 @@ csv_data <- read.csv("replace_me_with_the_API_url")
 
 # {{ _('Create a new data frame for the updates') }}
 # {{ _('The dataset needs to have the following structure:') }}
-#   rowuuid: {{ _('Each data row in FormShare has an unique') }} rowuuid.
+#   rowuuid: {{ _('Each data row in FormShare has an unique rowuuid') }} .
 #   variable_code: {{ _('The variable that you want to change') }}.
-#   new_value: {{ _('This is the new value that you want to apply to the variable for the selected') }} rowuuid.
+#   new_value: {{ _('This is the new value that you want to apply to the variable for the selected rowuuid') }} .
 data_updates <- data.frame(rowuuid=character(),variable_code=character(),new_value=double())
 
 # {{ _('Add a new row to the data frame') }}
-# {{ _('In this example we will replace the variable income to read 1300 for the') }} rowuuid 94e84a4e-7a3a-45eb-b669-d98a8b720b50.
+# {{ _('In this example we will replace the variable income to read 1300 for the rowuuid') }}  94e84a4e-7a3a-45eb-b669-d98a8b720b50.
 new_update <- list(rowuuid="94e84a4e-7a3a-45eb-b669-d98a8b720b50", variable_code="income", new_value=1300)
 # {{ _('Append the new update to the data frame of updates') }}
 data_updates = rbind(data_updates,new_update, stringsAsFactors=FALSE)
@@ -185,11 +185,11 @@ data_updates = rbind(data_updates,new_update, stringsAsFactors=FALSE)
 # {{ _('Setup the FormShare update API URL') }}
 url = "{{ request.route_url('api1_update_repository', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}"
 
-# {{ _('Setup your FormShare assistant API key. Form example') }}:.
+# {{ _('Setup your FormShare assistant API key. For example') }}:.
 api_key = "4e0c9025-7db5-42da-a7e5-245fc9171be0"
 
 for (row in 1:nrow(data_updates)) {
-  # {{ _('Creates a JSON string using the data in the data frame. In this example this will look like') }}: {"api_key": "4e0c9025-7db5-42da-a7e5-245fc9171be0", "rowuuid": "94e84a4e-7a3a-45eb-b669-d98a8b720b50", "income": 1300}
+  # {{ _('Create a JSON string using the data in the data frame. In this example this will look like') }}: {"api_key": "4e0c9025-7db5-42da-a7e5-245fc9171be0", "rowuuid": "94e84a4e-7a3a-45eb-b669-d98a8b720b50", "income": 1300}
   json_string = paste('{"apikey":"',api_key,'", "rowuuid": "',data_updates[row,"rowuuid"],'", "',data_updates[row,"variable_code"], '": ',data_updates[row,"new_value"], '}', sep = "")
   # {{ _('Push the change to FormShare') }}
   r <- POST(url, content_type_json(), body=json_string, encode = "json")

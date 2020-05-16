@@ -31,8 +31,8 @@ def upgrade():
             "The parameter 'formshare.ini.file' must point to the full path of the FormShare ini file"
         )
         exit(1)
-
-    time.sleep(120)  # Wait 2 minutes for ElasticSearch to finish start
+    print("Waiting 3 minutes for ElasticSearch to start with all clusters ready")
+    time.sleep(180)  # Wait 3 minutes for ElasticSearch to finish start
     setup_logging(config_uri)
     settings = get_appsettings(config_uri, "formshare")
     es_connection = create_connection(settings)

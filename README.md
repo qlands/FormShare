@@ -79,7 +79,7 @@ cd /opt/formshare_docker_compose_20200515
 sudo docker-compose pull
 
 # Edit the docker-compose.yml file to set the mysql root and FormShare admin passwords
-nano /opt/formshare_docker_compose_20200515/docker-compose.yml
+sudo nano /opt/formshare_docker_compose_20200515/docker-compose.yml
 # Press Alt+Shit+3 to show the line numbers in Nano
 
 Edit line 7: Change the root password from "my_secure_password" to your password
@@ -118,8 +118,9 @@ sudo service apache2 stop
 # Start the Apache server
 sudo service apache2 start
 
-# Start the FormShare containers. It will take about 3 minutes for all the containers to be ready.
-# You can check the status with "sudo docker stats". FormShare will be ready for usage when the container reaches about 1 GiB of MEM USAGE
+# Start the FormShare containers. The fist time you start the container FormShare will construct the database and apply all updates. This will take about 5 minutes.
+# Subsequent start will take about 2 minutes. You can check the status with "sudo docker stats". 
+# FormShare will be ready for usage when the container reaches more than 500 kB of MEM USAGE
 # This is the only two commands you need to start FormShare after a server restart
 cd /opt/formshare_docker_compose_20200515
 sudo docker-compose up -d

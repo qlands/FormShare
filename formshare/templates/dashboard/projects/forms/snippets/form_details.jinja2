@@ -40,18 +40,20 @@
                 {% endif %}
             </dl>
             {% if formDetails.submissions > 0 %}
-                <dl class="row mb-0">
-                    <div class="col-sm-4 text-sm-right">
-                        <dt>{{ _('Last cleaned') }}:</dt>
-                    </div>
-                    <div class="col-sm-8 text-sm-left">
-                        {% if formDetails.cleanedlast == "" %}
-                            <dd class="mb-1">{{ _('Not cleaned yet') }}</dd>
-                        {% else %}
-                            <dd class="mb-1">{{ request.h.readble_date_with_time(formDetails.cleanedlast, request.locale_name) }} by {{ formDetails.cleanedby }}</dd>
-                        {% endif %}
-                    </div>
-                </dl>
+                {% if formDetails.form_schema != None %}
+                    <dl class="row mb-0">
+                        <div class="col-sm-4 text-sm-right">
+                            <dt>{{ _('Last cleaned') }}:</dt>
+                        </div>
+                        <div class="col-sm-8 text-sm-left">
+                            {% if formDetails.cleanedlast == "" %}
+                                <dd class="mb-1">{{ _('Not cleaned yet') }}</dd>
+                            {% else %}
+                                <dd class="mb-1">{{ request.h.readble_date_with_time(formDetails.cleanedlast, request.locale_name) }} by {{ formDetails.cleanedby }}</dd>
+                            {% endif %}
+                        </div>
+                    </dl>
+                {% endif %}
             {% endif %}
             <dl class="row mb-0">
                 <div class="col-sm-4 text-sm-right">

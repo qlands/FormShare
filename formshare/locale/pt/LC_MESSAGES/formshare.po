@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.1\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-05-16 12:12-0600\n"
+"POT-Creation-Date: 2020-05-17 13:30-0600\n"
 "PO-Revision-Date: 2020-04-23 15:47-0600\n"
 "Last-Translator: Carlos Quiros <cquiros@qlands.com>\n"
 "Language-Team: English <kde-i18n-doc@kde.org>\n"
@@ -615,8 +615,8 @@ msgstr "Confirmação"
 #: formshare/templates/dashboard/projects/forms/snippets/add_group.jinja2:36
 #: formshare/templates/dashboard/projects/forms/snippets/edit_assistant.jinja2:31
 #: formshare/templates/dashboard/projects/forms/snippets/edit_group.jinja2:29
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:140
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:166
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:142
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:168
 #: formshare/templates/dashboard/projects/forms/snippets/product_item.jinja2:13
 #: formshare/templates/dashboard/projects/forms/snippets/product_item.jinja2:15
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:30
@@ -652,7 +652,7 @@ msgstr "Gerar nova chave"
 
 #: formshare/templates/assistant/clean/clean_data.jinja2:5
 #: formshare/templates/assistant/clean/snippets/brdcrbs_clean.jinja2:8
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:72
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:74
 #: formshare/templates/dashboard/projects/forms/snippets/links_tab.jinja2:27
 #: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:51
 msgid "Clean data"
@@ -2577,41 +2577,41 @@ msgid "You need to assign one"
 msgstr "Você precisa de um assign"
 
 # | msgid "Can clean"
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:45
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:46
 msgid "Last cleaned"
 msgstr "Última limpo"
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:49
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:50
 msgid "Not cleaned yet"
 msgstr "Não limpas ainda"
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:58
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:60
 #: formshare/templates/dashboard/projects/forms/submissions/snippets/brdcrbs_submissions.jinja2:17
 msgid "Submissions"
 msgstr "submissões"
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:69
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:71
 msgid "In database"
 msgstr "no banco de dados"
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:77
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:79
 msgid "In logs"
 msgstr "em toras"
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:80
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:82
 msgid "View logs"
 msgstr "Ver registros"
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:85
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:87
 msgid "With errors"
 msgstr "com erros"
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:88
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:90
 msgid "Manage errors"
 msgstr "Gerenciar erros"
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:101
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:104
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:103
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:106
 msgid ""
 "This form is in testing stage. This means that you can update it at all "
 "times and submissions are for testing purposes. "
@@ -2619,37 +2619,37 @@ msgstr ""
 "Esta forma é em testar fase. Isso significa que você pode atualizá-lo em "
 "todos os momentos e apresentações são para fins de teste."
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:102
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:106
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:104
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:108
 msgid "When you finished testing it you can"
 msgstr "Quando você terminar o teste que você pode"
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:102
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:104
 msgid "create a repository for it"
 msgstr "criar um repositório para ele"
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:102
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:106
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:104
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:108
 msgid "and start collecting \"real\" data."
 msgstr "e iniciar a coleta de dados \"reais\"."
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:106
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:108
 msgid "merge it into the repository of "
 msgstr "fundi-lo para o repositório de"
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:109
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:111
 msgid "However you"
 msgstr "No entanto, você"
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:109
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:111
 msgid "cannot merge it"
 msgstr "não pode fundi-lo"
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:109
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:111
 msgid "into the repository of"
 msgstr "para o repositório de"
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:111
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:113
 msgid ""
 "FormShare needs you to upload all required files before it pre-checks the "
 "form for merging."
@@ -2657,7 +2657,7 @@ msgstr ""
 "FormShare precisa de você para fazer upload de todos os arquivos necessários"
 " antes de ser pré-verificações a forma para a fusão."
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:123
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:125
 msgid ""
 "This form is still in testing stage. Your last attempt to generate its "
 "repository reported an error. This is unexpected and an email has been sent "
@@ -2669,22 +2669,22 @@ msgstr ""
 "a equipe técnica. Um representante irá contactá-lo o mais rápido possível "
 "com uma solução."
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:124
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:151
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:126
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:153
 msgid "If the problem has been corrected, update the ODK form and try again."
 msgstr ""
 "Se o problema foi corrigido, atualizar o formulário ODK e tente novamente."
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:136
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:138
 msgid "FormShare is generating your repository."
 msgstr "FormShare está gerando seu repositório."
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:137
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:163
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:139
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:165
 msgid "Scheduling...."
 msgstr "Agendamento...."
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:150
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:152
 msgid ""
 "This form is still in testing stage. Your last attempt to merge it reported "
 "an error. This is unexpected and an email has been sent to the technical "
@@ -2695,7 +2695,7 @@ msgstr ""
 "técnica. Um representante irá contactá-lo o mais rápido possível com uma "
 "solução."
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:162
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:164
 msgid "FormShare is merging this form."
 msgstr "FormShare está se fundindo este formulário."
 
@@ -3039,6 +3039,11 @@ msgstr "baixar"
 #: formshare/templates/dashboard/projects/forms/snippets/product_item.jinja2:38
 msgid "last"
 msgstr "último"
+
+#: formshare/templates/dashboard/projects/forms/snippets/product_item.jinja2:42
+#| msgid "The assistant is already part of this project"
+msgid "This is the latest export of this product"
+msgstr "Este é o mais recente de exportação deste produto"
 
 # | msgid "last"
 #: formshare/templates/dashboard/projects/forms/snippets/product_item.jinja2:42

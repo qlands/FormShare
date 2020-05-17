@@ -39,7 +39,7 @@
                     {% if output.output_file != None %}
                         <br/>
                         {% if loop_index == 1 %}
-                            <span title="This is the latest export of this product" class="badge">{{ _('Latest') }}</span>
+                            <span title="{{ _('This is the latest export of this product') }}" class="badge">{{ _('Latest') }}</span>
                         {% endif %}
                         {% if formDetails.cleanedlast != "" %}
                             {% if output.datetime_added > formDetails.last and output.datetime_added >formDetails.cleanedlast %}

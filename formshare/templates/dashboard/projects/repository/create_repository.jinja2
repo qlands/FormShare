@@ -123,8 +123,10 @@
                                     {% endif %}
                                     {% if result_code == 15 %}
                                         <h2>{{ _('One of your resource CSV files cannot be used') }}</h2>
-                                        {{ _('The file') }} {{ file_with_error }} {{ _('cannot be read') }}<br/>
-                                        {{ _('You need to fix the problem before continuing the process.') }}
+                                        {{ _('The file') }} {{ file_with_error }} {{ _('cannot be read or you are mixing select options in CSV with options in the choices sheet.') }}<br/>
+                                        {{ _('You need to fix the problem before continuing the process.') }}<br/>
+                                        {{ _('Please check the CSV file and whether your are mixing select options in the choices sheet with options in a CSV for a single list_name and move all the select options to the CSV') }}
+
                                     {% endif %}
                                     {% if result_code == 21 %}
                                         <h2>{{ _('Your ODK have duplicated list names in the choices sheet') }}</h2>

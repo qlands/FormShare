@@ -9,8 +9,8 @@ import json
 log = logging.getLogger("formshare")
 
 
-def send_sse_event(engine, task_id, task_name, message):
-    res = engine.execute(
+def send_sse_event(connection, task_id, task_name, message):
+    res = connection.execute(
         "SELECT count(celery_taskid) FROM product WHERE celery_taskid = '{}'".format(
             task_id
         )
@@ -19,7 +19,7 @@ def send_sse_event(engine, task_id, task_name, message):
         dict_body = {"task": task_id, "status": message}
         body_string = json.dumps(dict_body)
         try:
-            engine.execute(
+            connection.execute(
                 "INSERT INTO taskmessages(message_id,celery_taskid,message_date,message_content) "
                 "VALUES ('{}','{}','{}','{}')".format(
                     str(uuid.uuid4()),
@@ -45,24 +45,27 @@ class CeleryTask(Task):
 
     def on_success(self, retval, task_id, args, kwargs):
         engine = create_engine(get_ini_value("sqlalchemy.url"))
+        connection = engine.connect()
         try:
-            engine.execute(
+            connection.execute(
                 "INSERT INTO finishedtask(task_id,task_enumber) VALUES ('{}',{})".format(
                     str(task_id), 0
                 )
             )
         except Exception as e:
             log.error("Error {} reporting success for task {}".format(str(e), task_id))
-        send_sse_event(engine, task_id, self.name, "success")
+        send_sse_event(connection, task_id, self.name, "success")
+        connection.invalidate()
         engine.dispose()
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         engine = create_engine(get_ini_value("sqlalchemy.url"))
+        connection = engine.connect()
         trace_back = einfo.traceback
         if trace_back is None:
             trace_back = ""
         try:
-            engine.execute(
+            connection.execute(
                 "INSERT INTO finishedtask(task_id,task_enumber,task_error) "
                 "VALUES ('{}','{}','{}')".format(
                     str(task_id), 1, trace_back.replace("'", "")
@@ -70,7 +73,8 @@ class CeleryTask(Task):
             )
         except Exception as e:
             log.error("Error {} reporting failure for task {}".format(str(e), task_id))
-        send_sse_event(engine, task_id, self.name, "failure")
+        send_sse_event(connection, task_id, self.name, "failure")
+        connection.invalidate()
         engine.dispose()
 
     def apply_async(

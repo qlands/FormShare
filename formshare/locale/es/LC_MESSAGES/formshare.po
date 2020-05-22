@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-05-17 13:30-0600\n"
-"PO-Revision-Date: 2020-05-17 13:32-0600\n"
+"POT-Creation-Date: 2020-05-21 17:35-0600\n"
+"PO-Revision-Date: 2020-05-21 17:41-0600\n"
 "Last-Translator: Carlos Quiros <cquiros@qlands.com>\n"
 "Language: es\n"
 "Language-Team: English <kde-i18n-doc@kde.org>\n"
@@ -3107,8 +3107,8 @@ msgstr "descarga"
 msgid "last"
 msgstr "la última vez"
 
+# | msgid "The assistant is already part of this project"
 #: formshare/templates/dashboard/projects/forms/snippets/product_item.jinja2:42
-#| msgid "The assistant is already part of this project"
 msgid "This is the latest export of this product"
 msgstr "Este es la ultima exportación de este producto"
 
@@ -3405,7 +3405,7 @@ msgstr "Tu ODK tiene opciones duplicadas"
 # | msgid ". You need to fix the XLSX, upload it again and continue this
 # | process."
 #: formshare/templates/dashboard/projects/repository/create_repository.jinja2:80
-#: formshare/templates/dashboard/projects/repository/create_repository.jinja2:131
+#: formshare/templates/dashboard/projects/repository/create_repository.jinja2:133
 msgid ""
 "You need to fix the below errors in the ODK form, upload the new version "
 "and continue the process."
@@ -3496,19 +3496,33 @@ msgid "has invalid characters"
 msgstr "tiene caracteres no válidos"
 
 #: formshare/templates/dashboard/projects/repository/create_repository.jinja2:126
-msgid "cannot be read"
-msgstr "no se puede leer"
+msgid ""
+"cannot be read or you are mixing select options in CSV with options in "
+"the choices sheet."
+msgstr ""
+"no se puede leer o usted esta mezclando opciones de selección en CSV con"
+" opciones en la hoja opciones"
 
-#: formshare/templates/dashboard/projects/repository/create_repository.jinja2:130
+#: formshare/templates/dashboard/projects/repository/create_repository.jinja2:128
+msgid ""
+"Please check the CSV file and whether your are mixing select options in "
+"the choices sheet with options in a CSV for a single list_name and move "
+"all the select options to the CSV"
+msgstr ""
+"Por favor revise el archivo CSV y si usted esta mezclando opciones de"
+" selección en la hoja de opciones con opciones en el CSV para un list_name"
+" específico y mueva todas opciones a el CSV"
+
+#: formshare/templates/dashboard/projects/repository/create_repository.jinja2:132
 msgid "Your ODK have duplicated list names in the choices sheet"
 msgstr "Su ODK tiene nombres de lista duplicados en la hoja de opciones"
 
 # | msgid "User name"
-#: formshare/templates/dashboard/projects/repository/create_repository.jinja2:134
+#: formshare/templates/dashboard/projects/repository/create_repository.jinja2:136
 msgid "List name"
 msgstr "Lista de nombres"
 
-#: formshare/templates/dashboard/projects/repository/create_repository.jinja2:136
+#: formshare/templates/dashboard/projects/repository/create_repository.jinja2:138
 msgid "Duplicated list names"
 msgstr "Nombres de lista duplicados"
 
@@ -5401,4 +5415,7 @@ msgstr ""
 
 #~ msgid "Setup your FormShare assistant API key. Form example"
 #~ msgstr ""
+
+#~ msgid "cannot be read"
+#~ msgstr "no se puede leer"
 

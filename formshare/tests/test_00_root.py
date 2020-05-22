@@ -3031,7 +3031,11 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/api_update".format(
                     self.randonLogin, self.project, self.formID
                 ),
-                {"apikey": self.assistantLoginKey, "rowuuid": row_uuid, "some_file": 14},
+                {
+                    "apikey": self.assistantLoginKey,
+                    "rowuuid": row_uuid,
+                    "some_file": 14,
+                },
                 status=400,
             )
 
@@ -3040,7 +3044,11 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/api_update".format(
                     self.randonLogin, self.project, self.formID
                 ),
-                {"apikey": self.assistantLoginKey, "rowuuid": "test", "landcultivated": 14},
+                {
+                    "apikey": self.assistantLoginKey,
+                    "rowuuid": "test",
+                    "landcultivated": 14,
+                },
                 status=400,
             )
 
@@ -3074,7 +3082,11 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/api_update".format(
                     self.randonLogin, self.project, self.formID
                 ),
-                {"apikey": self.assistantLoginKey, "rowuuid": row_uuid, "landcultivated": 14},
+                {
+                    "apikey": self.assistantLoginKey,
+                    "rowuuid": row_uuid,
+                    "landcultivated": 14,
+                },
                 status=200,
             )
 

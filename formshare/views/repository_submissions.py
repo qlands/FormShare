@@ -428,7 +428,9 @@ class API1UpdateRepository(AssistantAPIView):
             self.request, user_id, self.project_id, self.assistant["coll_id"], form_id
         )
         if permissions["enum_canclean"] == 0:
-            self.return_error("unauthorized", self._("You don't have permission to clean this form"))
+            self.return_error(
+                "unauthorized", self._("You don't have permission to clean this form")
+            )
         if "rowuuid" in self.json.keys():
             try:
                 schema, table = get_table(
@@ -454,10 +456,15 @@ class API1UpdateRepository(AssistantAPIView):
                         return {"error": error, "error_type": "update_error"}
                 else:
                     self.error = True
-                    return {"error": self._("Rowuuid not found"), "error_type": "rowuuid_not_found"}
+                    return {
+                        "error": self._("Rowuuid not found"),
+                        "error_type": "rowuuid_not_found",
+                    }
 
             except Exception as e:
                 self.error = True
                 return {"error": str(e), "error_type": "update_error"}
         else:
-            self.return_error("rowuuid_missing", self._("You need to indicate a rowuuid"))
+            self.return_error(
+                "rowuuid_missing", self._("You need to indicate a rowuuid")
+            )

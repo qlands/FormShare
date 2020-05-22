@@ -77,25 +77,27 @@
                                     {% endif %}
                                     {% if result_code == 9 %}
                                         <h2>{{ _('Your ODK have duplicated options') }}</h2>
-                                        {{ _('You need to fix the below errors in the ODK form, upload the new version and continue the process.') }}
+                                        {{ _('You need to fix the below errors in CSV files, upload the new version and continue the process.') }}
                                         <UL>
                                             {% for aList in list_array %}
-                                                <LI><span style="color: red">{{ _('Repeat with duplicated options') }}:</span> {{ aList.name }}
+                                                <LI><span style="color: red">{{ _('CSV with duplicated options') }}:</span> {{ aList.name }}
                                                     <UL>
-                                                        <LI>{{ _('Duplicated options') }}
+                                                        <LI>{{ _('Duplicated options') }}:
                                                             <UL>
                                                                 {% for aValue in aList['values'] %}
                                                                     <LI>{{ aValue }}</LI>
                                                                 {% endfor %}
                                                             </UL>
                                                         </LI>
-                                                        <LI>{{ _('Used by the following variables') }}
-                                                            <UL>
-                                                                {% for aRef in aList['references'] %}
-                                                                    <LI><b>{{ aRef.variable }}</b> -- {{ _('Choice used') }}: {{ aRef.option }}</LI>
-                                                                {% endfor %}
-                                                            </UL>
-                                                        </LI>
+                                                        {% if aList['references']|length > 0 %}
+                                                            <LI>{{ _('Used by the following variables') }}:
+                                                                <UL>
+                                                                    {% for aRef in aList['references'] %}
+                                                                        <LI><b>{{ aRef.variable }}</b> -- {{ _('Choice used') }}: {{ aRef.option }}</LI>
+                                                                    {% endfor %}
+                                                                </UL>
+                                                            </LI>
+                                                        {% endif %}
                                                     </UL>
                                                 </LI>
                                             {% endfor %}

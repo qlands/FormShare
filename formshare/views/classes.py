@@ -811,7 +811,9 @@ class AssistantAPIView(object):
         if self.api_key is not None:
             user_id = self.request.matchdict["userid"]
             project_code = self.request.matchdict["projcode"]
-            self.project_id = get_project_id_from_name(self.request, user_id, project_code)
+            self.project_id = get_project_id_from_name(
+                self.request, user_id, project_code
+            )
             if self.project_id is not None:
                 self.assistant = get_assistant_by_api_key(
                     self.request, self.project_id, self.api_key

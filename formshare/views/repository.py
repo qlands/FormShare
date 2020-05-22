@@ -233,6 +233,32 @@ class GenerateRepository(PrivateView):
                                             )
                                         list_element["references"] = ref_array
                                         list_array.append(list_element)
+                                else:
+                                    xml_lists = root.findall(".//duplicatedItem")
+                                    if xml_lists:
+                                        for aList in xml_lists:
+                                            variable_name = aList.get("variableName")
+                                            duplicated_value = aList.get(
+                                                "duplicatedValue"
+                                            )
+                                            found_index = -1
+                                            for index, an_error in enumerate(
+                                                list_array
+                                            ):
+                                                if an_error["name"] == variable_name + ".csv":
+                                                    found_index = index
+                                                    break
+                                            if found_index == -1:
+                                                list_element = {
+                                                    "name": variable_name + ".csv",
+                                                    "values": [duplicated_value],
+                                                }
+                                                list_array.append(list_element)
+                                            else:
+                                                list_array[found_index][
+                                                    "values"
+                                                ].append(duplicated_value)
+
                             if result_code == 10:
                                 # Primary key not found
                                 stage = 1

@@ -28,6 +28,7 @@ __all__ = [
     "IProjectDetailsView",
     "IFormDetailsView",
     "IUserAuthorization",
+    "IAPIRoutes",
 ]
 
 
@@ -76,6 +77,33 @@ class IRoutes(Interface):
     def after_mapping(self, config):
         """
         Called after the mapping of routes made by FormShare.
+
+        :param config: ``pyramid.config`` object
+        :return Returns a dict array [{'name':'myroute','path':'/myroute','view',viewDefinition,
+                                       'renderer':'renderere_used'}]
+        """
+        raise NotImplementedError("after_mapping must be implemented in subclasses")
+
+
+class IAPIRoutes(Interface):
+    """
+    Plugin into the creation of API routes.
+
+    """
+
+    def before_mapping(self, config):
+        """
+        Called before the mapping of API routes made by FormShare.
+
+        :param config: ``pyramid.config`` object
+        :return Returns a dict array [{'name':'myroute','path':'/myroute','view',viewDefinition,
+                                       'renderer':'renderere_used'}]
+        """
+        raise NotImplementedError("before_mapping must be implemented in subclasses")
+
+    def after_mapping(self, config):
+        """
+        Called after the mapping of API routes made by FormShare.
 
         :param config: ``pyramid.config`` object
         :return Returns a dict array [{'name':'myroute','path':'/myroute','view',viewDefinition,

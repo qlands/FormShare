@@ -17,7 +17,6 @@
         <div class="col-md-3">
             <div class="text-center">
                 {% if error.error.maintable %}
-                    {{ error.json_file }}
                     {{ _('Duplicated value') }} "{{ error.error.duplicated_value }}" {{ _('for primary key') }} "{{ error.error.primary_key }}". {{ _('The value is already in use by submission') }} <a style="color: #0a6aa1" class="compare_survey" urn="{{ request.route_url('comparejsons',userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id) }}" data-survey-id="{{ error.error.survey_id }}">{{ error.error.survey_id }}</a>
                 {% else %}
                     {{ error.error.error }}
@@ -83,7 +82,11 @@
             <div class="text-center">
                 {% if canclean %}
                     {% if error.status != 0 %}
-                        <a class="btn btn-default btn-sm action-buttons" href="" title="{{ _('Download media') }}"><i class="fas fa-images"></i></a>
+                        {% if error.error.maintable %}
+                            <a class="btn btn-default btn-sm action-buttons" href="{{ request.route_url('get_submissions_media',userid=userid,projcode=projcode,formid=formid,submissiona=error.log_id,submissionb=error.error.survey_id) }}" title="{{ _('Download associated media') }}"><i class="fas fa-images"></i></a>
+                        {% else %}
+                            <a class="btn btn-default btn-sm action-buttons" href="{{ request.route_url('get_submissions_media',userid=userid,projcode=projcode,formid=formid,submissiona=error.log_id,submissionb='None') }}" title="{{ _('Download associated media') }}"><i class="fas fa-images"></i></a>
+                        {% endif %}
                         {% if error.status == 1 and not disregard %}
                             <a class="btn btn-default btn-sm action-buttons" href="{{ request.route_url('comparejsons',userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id) }}" title="{{ _('Compare submission') }}"><i style="color: orange" class="fa fa-random"></i></a>
                             <a class="btn btn-primary btn-sm action-buttons action-required" data-title="{{ _('Check-out revision') }}" data-message="{{ _('Are you sure that you want to check-out this submission?') }}" urn="{{ request.route_url('checkoutjson', userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id) }}" title="{{ _('Check out file') }}"><i style="color: white" class="fa fa-arrow-right"></i></a>

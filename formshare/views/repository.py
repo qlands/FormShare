@@ -245,7 +245,10 @@ class GenerateRepository(PrivateView):
                                             for index, an_error in enumerate(
                                                 list_array
                                             ):
-                                                if an_error["name"] == variable_name + ".csv":
+                                                if (
+                                                    an_error["name"]
+                                                    == variable_name + ".csv"
+                                                ):
                                                     found_index = index
                                                     break
                                             if found_index == -1:

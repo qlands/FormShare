@@ -109,6 +109,7 @@ from ..views.assistant_views.jsonlogs import (
     JSONDisregard,
     JSONCancelDisregard,
     JSONCompareSubmissions,
+    JSONGetSubmissionsMedia,
 )
 from ..views.assistant_views.clean import CleanInterface, PerformAction, DataRequest
 from ..views.sse import SSEventStream
@@ -1077,6 +1078,17 @@ def load_routes(config):
             "/form/{formid}/{submissiona}/{submissionb}/compare",
             JSONCompareSubmissions,
             "assistant/jsonlogs/compare_submissions.jinja2",
+        )
+    )
+
+    # TODO: Test
+    routes.append(
+        add_route(
+            "get_submissions_media",
+            "/user/{userid}/project/{projcode}/assistantaccess"
+            "/form/{formid}/{submissiona}/{submissionb}/media",
+            JSONGetSubmissionsMedia,
+            None,
         )
     )
 

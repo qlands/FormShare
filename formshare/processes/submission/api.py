@@ -131,7 +131,9 @@ def get_gps_points_from_form(
     return True, {"points": data}
 
 
-def get_submission_media_files(request, project, form):
+def get_submission_media_files(request, project, form, just_for_submissions=None):
+    if just_for_submissions is None:
+        just_for_submissions = []
     _ = request.translate
     uid = str(uuid.uuid4())
     form_directory = get_form_directory(request, project, form)
@@ -145,6 +147,9 @@ def get_submission_media_files(request, project, form):
         created = False
         for submission in submissions:
             submission_id = os.path.basename(submission).replace(".json", "")
+            if just_for_submissions:
+                if submission_id not in just_for_submissions:
+                    continue
             tmp_dir = os.path.join(odk_dir, *["tmp", uid, submission_id])
             os.makedirs(tmp_dir)
             submissions_path = os.path.join(

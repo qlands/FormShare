@@ -34,6 +34,8 @@ from formshare.processes.db import (
 )
 import logging
 import paginate
+from formshare.processes.submission.api import get_submission_media_files
+from pyramid.response import FileResponse
 
 log = logging.getLogger("formshare")
 
@@ -786,5 +788,55 @@ class JSONCompareSubmissions(AssistantView):
                 "submissionb": submission_b,
                 "formData": form_data,
             }
+        else:
+            raise HTTPNotFound()
+
+
+class JSONGetSubmissionsMedia(AssistantView):
+    def process_view(self):
+        self.returnRawViewResult = True
+        form_id = self.request.matchdict["formid"]
+        submission_a = self.request.matchdict["submissiona"]
+        submission_b = self.request.matchdict["submissionb"]
+
+        permissions = get_assistant_permissions_on_a_form(
+            self.request, self.userID, self.projectID, self.assistantID, form_id
+        )
+
+        if permissions["enum_canclean"] == 1:
+            submission_with_error = get_submission_error_details(
+                self.request, self.projectID, form_id, submission_a
+            )
+            if submission_with_error is None:
+                raise HTTPNotFound()
+            submission_in_db = get_submission_details(
+                                self.request, self.projectID, form_id, submission_b
+                            )
+            if submission_in_db is not None:
+                created, file = get_submission_media_files(
+                    self.request, self.projectID, form_id, [submission_a, submission_b]
+                )
+            else:
+                created, file = get_submission_media_files(
+                    self.request, self.projectID, form_id, [submission_a]
+                )
+            if created:
+                response = FileResponse(
+                    file, request=self.request, content_type="application/zip"
+                )
+                response.content_disposition = (
+                    'attachment; filename="' + form_id + '.zip"'
+                )
+                return response
+            else:
+                self.append_to_errors(file)
+                next_page = self.request.params.get("next") or self.request.route_url(
+                                    "errorlist",
+                                    userid=self.userID,
+                                    projcode=self.projectCode,
+                                    formid=form_id,
+                                )
+                return HTTPFound(location=next_page, headers={"FS_error": "true"})
+
         else:
             raise HTTPNotFound()

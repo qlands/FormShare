@@ -16,7 +16,12 @@
         </div>
         <div class="col-md-3">
             <div class="text-center">
-                {{ error.error.error }}
+                {% if error.error.maintable %}
+                    {{ error.json_file }}
+                    {{ _('Duplicated value') }} "{{ error.error.duplicated_value }}" {{ _('for primary key') }} "{{ error.error.primary_key }}". {{ _('The value is already in use by submission') }} <a style="color: #0a6aa1" class="compare_survey" urn="{{ request.route_url('comparejsons',userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id) }}" data-survey-id="{{ error.error.survey_id }}">{{ error.error.survey_id }}</a>
+                {% else %}
+                    {{ error.error.error }}
+                {% endif %}
             </div>
         </div>
         {% set disregard = false %}
@@ -78,6 +83,7 @@
             <div class="text-center">
                 {% if canclean %}
                     {% if error.status != 0 %}
+                        <a class="btn btn-default btn-sm action-buttons" href="" title="{{ _('Download media') }}"><i class="fas fa-images"></i></a>
                         {% if error.status == 1 and not disregard %}
                             <a class="btn btn-default btn-sm action-buttons" href="{{ request.route_url('comparejsons',userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id) }}" title="{{ _('Compare submission') }}"><i style="color: orange" class="fa fa-random"></i></a>
                             <a class="btn btn-primary btn-sm action-buttons action-required" data-title="{{ _('Check-out revision') }}" data-message="{{ _('Are you sure that you want to check-out this submission?') }}" urn="{{ request.route_url('checkoutjson', userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id) }}" title="{{ _('Check out file') }}"><i style="color: white" class="fa fa-arrow-right"></i></a>

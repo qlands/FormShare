@@ -660,7 +660,9 @@ class JSONDisregard(AssistantView):
                         "submissionid": submission_id,
                         "data": data,
                         "formData": form_data,
-                        "errorDesc": get_error_description_from_file(data["log_file"]),
+                        "errorDesc": get_error_description_from_file(
+                            self.request, self.projectID, form_id, data["log_file"]
+                        ),
                     }
                 else:
                     raise HTTPNotFound()
@@ -727,7 +729,9 @@ class JSONCancelDisregard(AssistantView):
                         "submissionid": submission_id,
                         "data": data,
                         "formData": form_data,
-                        "errorDesc": get_error_description_from_file(data["log_file"]),
+                        "errorDesc": get_error_description_from_file(
+                            self.request, self.projectID, form_id, data["log_file"]
+                        ),
                     }
                 else:
                     raise HTTPNotFound()

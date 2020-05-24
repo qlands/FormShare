@@ -133,6 +133,31 @@
         ias.extension(new IASSpinnerExtension());
 
         function ias_loaded(event) {
+            $('.compare_survey').click(function () {
+                var survey_id = $( this ).attr('data-survey-id');
+                var action_url = $(this).attr('urn');
+
+                var form = document.createElement('form');
+                form.setAttribute('method', 'post');
+                form.setAttribute('action', action_url);
+                form.style.display = 'hidden';
+
+                var csrf = document.createElement("input"); //input element, text
+                csrf.setAttribute('type', "text");
+                csrf.setAttribute('name', "csrf_token");
+                csrf.setAttribute('value', '{{ request.session.get_csrf_token() }}');
+                form.appendChild(csrf);
+
+                var survey_id_elem = document.createElement("input"); //input element, text
+                survey_id_elem.setAttribute('type', "text");
+                survey_id_elem.setAttribute('name', "submissionid");
+                survey_id_elem.setAttribute('value', survey_id);
+                form.appendChild(survey_id_elem);
+
+                document.body.appendChild(form);
+                form.submit();
+
+            });
             $('.action-required').click(function () {
                 var action_url = $( this ).attr('urn');
                 var title = $( this ).attr('data-title');
@@ -184,6 +209,32 @@
 
         $(document).ready(function() {
             new ClipboardJS('.clipboard');
+
+            $('.compare_survey').click(function () {
+                var survey_id = $( this ).attr('data-survey-id');
+                var action_url = $(this).attr('urn');
+
+                var form = document.createElement('form');
+                form.setAttribute('method', 'post');
+                form.setAttribute('action', action_url);
+                form.style.display = 'hidden';
+
+                var csrf = document.createElement("input"); //input element, text
+                csrf.setAttribute('type', "text");
+                csrf.setAttribute('name', "csrf_token");
+                csrf.setAttribute('value', '{{ request.session.get_csrf_token() }}');
+                form.appendChild(csrf);
+
+                var survey_id_elem = document.createElement("input"); //input element, text
+                survey_id_elem.setAttribute('type', "text");
+                survey_id_elem.setAttribute('name', "submissionid");
+                survey_id_elem.setAttribute('value', survey_id);
+                form.appendChild(survey_id_elem);
+
+                document.body.appendChild(form);
+                form.submit();
+
+            });
 
             $('.action-required').click(function () {
                 var action_url = $( this ).attr('urn');

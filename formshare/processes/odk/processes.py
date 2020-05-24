@@ -76,14 +76,54 @@ def get_form_directory(request, project, form):
     return form_data.form_directory
 
 
-def get_error_description_from_file(log_file):
+def get_form_schema(request, project, form):
+    form_data = (
+        request.dbsession.query(Form)
+        .filter(Form.project_id == project)
+        .filter(Form.form_id == form)
+        .one()
+    )
+    return form_data.form_schema
+
+
+def get_form_primary_key(request, project, form):
+    form_data = (
+        request.dbsession.query(Form)
+        .filter(Form.project_id == project)
+        .filter(Form.form_id == form)
+        .one()
+    )
+    return form_data.form_pkey
+
+
+def get_error_description_from_file(request, project, form, log_file):
     try:
         tree = etree.parse(log_file)
         root = tree.getroot()
         error = root.find(".//error")
         message = error.get("Error")
         if message.find("Duplicate entry") >= 0:
-            return {"duplicated": True, "error": error.get("Error")}
+            if message.find("maintable") >= 0:
+                message = message.replace("Duplicate entry ", "")
+                message = message.replace("'", "")
+                message_parts = message.split(" for key ")
+                if len(message_parts) == 2:
+                    schema = get_form_schema(request, project, form)
+                    primary_key = get_form_primary_key(request, project, form)
+                    sql = "SELECT surveyid from {}.maintable WHERE {} = '{}'".format(
+                        schema, primary_key, message_parts[0]
+                    )
+                    res = request.dbsession.execute(sql).fetchone()
+                    if res is not None:
+                        return {
+                            "duplicated": True,
+                            "error": error.get("Error"),
+                            "maintable": True,
+                            "survey_id": res[0],
+                            "primary_key": primary_key,
+                            "duplicated_value": message_parts[0],
+                        }
+            return {"duplicated": True, "error": error.get("Error"), "maintable": False}
         else:
             return {"duplicated": False, "error": error.get("Error")}
     except Exception as e:
@@ -307,7 +347,9 @@ def get_errors_by_assistant(
                 "log_id": error["log_id"],
                 "log_dtime": error["log_dtime"],
                 "json_file": error["json_file"],
-                "error": get_error_description_from_file(error["log_file"]),
+                "error": get_error_description_from_file(
+                    request, project, form, error["log_file"]
+                ),
                 "status": error["status"],
                 "lastentry": get_last_log_entry(
                     request, user, project, form, error["log_id"]

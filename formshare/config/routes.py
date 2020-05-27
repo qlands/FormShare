@@ -106,6 +106,7 @@ from ..views.assistant_views.jsonlogs import (
     JSONViewRevision,
     JSONCancelRevision,
     JSONPushRevision,
+    JSONPushSubmission,
     JSONDisregard,
     JSONCancelDisregard,
     JSONCompareSubmissions,
@@ -1047,6 +1048,16 @@ def load_routes(config):
             "/user/{userid}/project/{projcode}/assistantaccess"
             "/form/{formid}/{submissionid}/{revisionid}/push",
             JSONPushRevision,
+            None,
+        )
+    )
+
+    # TODO: Test
+    routes.append(
+        add_route(
+            "push_log_submission",
+            "/user/{userid}/project/{projcode}/assistantaccess/form/{formid}/{submissionid}/push",
+            JSONPushSubmission,
             None,
         )
     )

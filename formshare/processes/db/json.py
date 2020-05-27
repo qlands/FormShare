@@ -19,21 +19,45 @@ def add_json_log(
     project_of_assistant,
     assistant,
 ):
-    new_json_log = Jsonlog(
-        project_id=project,
-        form_id=form,
-        log_id=submission,
-        json_file=json_file,
-        log_file=log_file,
-        status=status,
-        enum_project=project_of_assistant,
-        coll_id=assistant,
-        log_dtime=datetime.datetime.now(),
+    res = (
+        request.dbsession.query(Jsonlog)
+        .filter(Jsonlog.project_id == project)
+        .filter(Jsonlog.form_id == form)
+        .filter(Jsonlog.log_id == submission)
+        .first()
     )
     try:
-        request.dbsession.add(new_json_log)
-        request.dbsession.flush()
-        return True, ""
+        if res is None:
+            new_json_log = Jsonlog(
+                project_id=project,
+                form_id=form,
+                log_id=submission,
+                json_file=json_file,
+                log_file=log_file,
+                status=status,
+                enum_project=project_of_assistant,
+                coll_id=assistant,
+                log_dtime=datetime.datetime.now(),
+            )
+            request.dbsession.add(new_json_log)
+            request.dbsession.flush()
+            return True, ""
+        else:
+            request.dbsession.query(Jsonlog).filter(
+                Jsonlog.project_id == project
+            ).filter(Jsonlog.form_id == form).filter(
+                Jsonlog.log_id == submission
+            ).update(
+                {
+                    "json_file": json_file,
+                    "log_file": log_file,
+                    "status": status,
+                    "enum_project": project_of_assistant,
+                    "coll_id": assistant,
+                    "log_dtime": datetime.datetime.now(),
+                }
+            )
+            return True, ""
     except IntegrityError as e:
         request.dbsession.rollback()
         log.debug(str(e))

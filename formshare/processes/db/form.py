@@ -179,7 +179,7 @@ def get_number_of_submissions_in_database(request, project, form):
         by = res.coll_id
         return total, last, in_db, in_db_from_logs, in_error, by
     else:
-        return 0, None, in_db, 0, 0, None
+        return 0, None, in_db, in_db_from_logs, in_error, None
 
 
 def get_number_of_submissions_by_assistant(

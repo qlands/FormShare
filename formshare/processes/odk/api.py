@@ -2563,7 +2563,7 @@ def restore_from_revision(request, project, form, submission, sequence):
         return 1, "Cannot restore from revision " + sequence
 
 
-def push_revision(request, user, project, form, submission):
+def push_revision(request, user, project, form, submission, project_of_assistant, assistant):
     odk_dir = get_odk_path(request)
     form_directory = get_form_directory(request, project, form)
     schema = get_form_schema(request, project, form)
@@ -2588,6 +2588,10 @@ def push_revision(request, user, project, form, submission):
     manifest_file = os.path.join(
         odk_dir, *["forms", form_directory, "repository", "manifest.xml"]
     )
+    uuid_file = os.path.join(
+        odk_dir, *["forms", form_directory, "submissions", "logs", submission + ".log",]
+    )
+
     args = []
     json_to_mysql = os.path.join(
         request.registry.settings["odktools.path"], *["JSONToMySQL", "jsontomysql"]
@@ -2633,11 +2637,13 @@ def push_revision(request, user, project, form, submission):
     args.append("-i " + imported_file)
     args.append("-M " + maps_directory)
     args.append("-m " + manifest_file)
+    args.append("-U " + uuid_file)
     args.append("-O m")
     args.append("-w")
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()
     if p.returncode == 0:
+
         # Add the JSON to the Elastic Search index
         project_code = get_project_code_from_id(request, user, project)
         create_dataset_index(request.registry.settings, user, project_code, form)
@@ -2654,6 +2660,23 @@ def push_revision(request, user, project, form, submission):
         add_dataset(
             request.registry.settings, user, project_code, form, submission, index_data,
         )
+
+        # Add the inserted records in the record index
+        create_record_index(request.registry.settings, user, project_code, form)
+        with open(uuid_file) as f:
+            lines = f.readlines()
+            for line in lines:
+                parts = line.split(",")
+                add_record(
+                    request.registry.settings,
+                    user,
+                    project_code,
+                    form,
+                    schema,
+                    parts[0],
+                    parts[1].replace("\n", ""),
+                )
+
         return 0, ""
     else:
         log.error(

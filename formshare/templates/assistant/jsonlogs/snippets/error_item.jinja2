@@ -10,14 +10,22 @@
     <div class="row">
         <div class="col-md-3">
             <div class="text-center">
-                <span title="{{ error.log_id }}">...-{{ error.log_short }}</span> <button class="btn btn-white btn-bitbucket clipboard" data-clipboard-text="{{ error.log_id }}" title="{{ _('Copy submission to clipboard') }}"><i class="far fa-copy"></i></button><br/>{{ _('by') }} {{ error.enum_name }}<br/>
+                <span title="{{ error.log_id }}">...-{{ error.log_short }}</span> <button class="btn btn-white btn-bitbucket clipboard" data-clipboard-text="{{ error.log_id }}" title="{{ _('Copy submission to clipboard') }}"><i class="far fa-copy"></i></button><br/>{% if error.error.moved %}{{ _('for') }}{% else %}{{ _('by') }}{% endif %} {{ error.enum_name }}<br/>
                 {{ error.log_dtime }}
             </div>
         </div>
         <div class="col-md-3">
             <div class="text-center">
                 {% if error.error.maintable %}
-                    {{ _('Duplicated value') }} "{{ error.error.duplicated_value }}" {{ _('for primary key') }} "{{ error.error.primary_key }}". {{ _('The value is already in use by submission') }} <a style="color: #0a6aa1" class="compare_survey" urn="{{ request.route_url('comparejsons',userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id) }}" data-survey-id="{{ error.error.survey_id }}">{{ error.error.survey_id }}</a>
+                    {% if error.error.duplicated_exists %}
+                        {% if error.log_id != error.error.survey_id %}
+                            {{ _('Duplicated value') }} "{{ error.error.duplicated_value }}" {{ _('for primary key') }} "{{ error.error.primary_key }}". {{ _('The value is already in use by submission') }} <a style="color: #0a6aa1" class="compare_survey" urn="{{ request.route_url('comparejsons',userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id) }}" data-survey-id="{{ error.error.survey_id }}">{{ error.error.survey_id }}</a>
+                        {% else %}
+                            {{ error.error.error }}
+                        {% endif %}
+                    {% else %}
+                        {{ _('The duplicated submission cannot be found. It may have been moved to the logs or deleted. You can push this submission into the database') }}
+                    {% endif %}
                 {% else %}
                     {{ error.error.error }}
                 {% endif %}
@@ -73,7 +81,7 @@
                     <span title="{{ _('Disregarded date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
                 {% endif %}
                 {% if error.status == 0 %}
-                    <b style="color: green">{{ _('Fixed') }}</b> {{ _('by') }} {{ error.lastentry.enum_name }} {{ _('in revision') }} <a href="{{ request.route_url('viewrevision', userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id,revisionid=error.lastentry.log_commit,_query={'pushed': true}) }}">{{ error.lastentry.log_commit }}</a><br/>
+                    <b style="color: green">{{ _('Fixed') }}</b> {{ _('by') }} {{ error.lastentry.enum_name }} {% if error.lastentry.log_commit != None %}{{ _('in revision') }} <a href="{{ request.route_url('viewrevision', userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id,revisionid=error.lastentry.log_commit,_query={'pushed': true}) }}">{{ error.lastentry.log_commit }}</a>{% endif %}<br/>
                     <span title="{{ _('Fixed date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
                 {% endif %}
             </div>
@@ -82,10 +90,15 @@
             <div class="text-center">
                 {% if canclean %}
                     {% if error.status != 0 %}
-                        {% if error.error.maintable %}
+                        {% if error.error.maintable and error.error.survey_id != None %}
                             <a class="btn btn-default btn-sm action-buttons" href="{{ request.route_url('get_submissions_media',userid=userid,projcode=projcode,formid=formid,submissiona=error.log_id,submissionb=error.error.survey_id) }}" title="{{ _('Download associated media') }}"><i class="fas fa-images"></i></a>
                         {% else %}
                             <a class="btn btn-default btn-sm action-buttons" href="{{ request.route_url('get_submissions_media',userid=userid,projcode=projcode,formid=formid,submissiona=error.log_id,submissionb='None') }}" title="{{ _('Download associated media') }}"><i class="fas fa-images"></i></a>
+                        {% endif %}
+                        {% if error.status != 3 %}
+                            {% if (error.error.maintable and error.error.survey_id == None) or error.error.moved %}
+                                <a class="btn btn-primary btn-sm action-buttons action-required"  data-title="{{ _('Push submission into the repository') }}" data-message="{{ _('Are you sure that you want to push this submission?') }}" urn="{{ request.route_url('push_log_submission', userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id) }}" title="{{ _('Push submission') }}"><i style="color: white" class="fa fa-arrow-left"></i></a>
+                            {% endif %}
                         {% endif %}
                         {% if error.status == 1 and not disregard %}
                             <a class="btn btn-default btn-sm action-buttons" href="{{ request.route_url('comparejsons',userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id) }}" title="{{ _('Compare submission') }}"><i style="color: orange" class="fa fa-random"></i></a>
@@ -107,7 +120,7 @@
                         {% if error.status == 3 %}
                             <a class="btn btn-default btn-sm action-buttons" href="{{ request.route_url('comparejsons',userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id) }}" title="{{ _('Compare submission') }}"><i style="color: orange" class="fa fa-random"></i></a>
                             {% if error.lastentry.enum_id == activeAssistant.login %}
-                                <a class="btn btn-primary btn-sm action-buttons action-required"  data-title="{{ _('Apply revision to the repository') }}" data-message="{{ _('Are you sure that you want to apply this revision?') }}" urn="{{ request.route_url('pushrevision', userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id,revisionid=error.lastentry.log_commit) }}" title="{{ _('Apply revision') }}"><i style="color: white" class="fa fa-arrow-left"></i></a>
+                                <a class="btn btn-primary btn-sm action-buttons action-required"  data-title="{{ _('Push revision into the repository') }}" data-message="{{ _('Are you sure that you want to push this revision?') }}" urn="{{ request.route_url('pushrevision', userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id,revisionid=error.lastentry.log_commit) }}" title="{{ _('Push revision') }}"><i style="color: white" class="fa fa-arrow-left"></i></a>
                                 <a class="btn btn-default btn-sm action-buttons action-required" data-title="{{ _('Cancel revision') }}" data-message="{{ _('Are you sure that you want to cancel this revision?') }}" urn="{{ request.route_url('cancelrevision', userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id,revisionid=error.lastentry.log_commit) }}" title="{{ _('Cancel revision') }}" ><i style="color: red" class="fa fa-ban"></i></a>
                             {% endif %}
                         {% endif %}

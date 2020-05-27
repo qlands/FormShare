@@ -8,6 +8,7 @@ from formshare.processes.db import (
     get_form_directory,
     get_form_xml_create_file,
     get_project_form_colors,
+    add_json_log,
 )
 from formshare.processes.odk import get_odk_path
 from formshare.processes.elasticsearch.repository_index import (
@@ -946,7 +947,17 @@ def update_data(request, user, project, form, table_name, row_uuid, field, value
         return {"fieldErrors": [{"name": field, "status": "Unknown error"}]}
 
 
-def delete_submission(request, user, project, form, row_uuid, project_code):
+def delete_submission(
+    request,
+    user,
+    project,
+    form,
+    row_uuid,
+    project_code,
+    move_to_logs=False,
+    project_of_assistant=None,
+    assistant=None,
+):
     schema = get_form_schema(request, project, form)
     sql = (
         "SELECT surveyid FROM "
@@ -957,35 +968,28 @@ def delete_submission(request, user, project, form, row_uuid, project_code):
     )
     records = request.dbsession.execute(sql).fetchone()
     submission_id = records.surveyid
+
+    odk_dir = get_odk_path(request)
+    form_directory = get_form_directory(request, project, form)
+
+    # Remove the submissions from the submission DB created by ODK Tools
+    # So the submission could enter later on
+    paths = ["forms", form_directory, "submissions", "logs", "imported.sqlite"]
+    imported_db = os.path.join(odk_dir, *paths)
+    sqlite_engine = "sqlite:///{}".format(imported_db)
+    engine = create_engine(sqlite_engine)
     try:
-        odk_dir = get_odk_path(request)
-        form_directory = get_form_directory(request, project, form)
+        engine.execute(
+            "DELETE FROM submissions WHERE submission_id ='{}'".format(submission_id)
+        )
+    except Exception as e:
+        log.error("Error {} removing submission {} from {}").format(
+            str(e), submission_id, imported_db
+        )
+        return False
+    engine.dispose()
 
-        # Remove the submissions from the submission DB created by ODK Tools
-        paths = ["forms", form_directory, "submissions", "logs", "imported.sqlite"]
-        imported_db = os.path.join(odk_dir, *paths)
-        sqlite_engine = "sqlite:///{}".format(imported_db)
-        engine = create_engine(sqlite_engine)
-        try:
-            engine.execute(
-                "DELETE FROM submissions WHERE submission_id ='{}'".format(
-                    submission_id
-                )
-            )
-        except Exception as e:
-            log.error("Error {} removing submission {} from {}").format(
-                str(e), submission_id, imported_db
-            )
-        engine.dispose()
-
-        # Remove the submission from the database
-        request.dbsession.query(Submission).filter(
-            Submission.project_id == project
-        ).filter(Submission.form_id == form).filter(
-            Submission.submission_id == submission_id
-        ).delete()
-        mark_changed(request.dbsession)
-
+    if not move_to_logs:
         # Try to remove all associated files
         try:
             paths = ["forms", form_directory, "submissions", submission_id]
@@ -1008,7 +1012,12 @@ def delete_submission(request, user, project, form, row_uuid, project_code):
                 )
             )
         try:
-            paths = ["forms", form_directory, "submissions", submission_id + ".json"]
+            paths = [
+                "forms",
+                form_directory,
+                "submissions",
+                submission_id + ".json",
+            ]
             json_file = os.path.join(odk_dir, *paths)
             os.remove(json_file)
         except Exception as e:
@@ -1032,42 +1041,109 @@ def delete_submission(request, user, project, form, row_uuid, project_code):
                     submission_id, str(e)
                 )
             )
-        try:
-            paths = ["forms", form_directory, "submissions", submission_id + ".log"]
-            log_file = os.path.join(odk_dir, *paths)
 
-            with open(log_file) as f:
-                lines = f.readlines()
-                for line in lines:
-                    parts = line.split(",")
+        # Final steps. Delete indexes and data
+
+        # Delete the record indices
+
+        paths = ["forms", form_directory, "submissions", submission_id + ".log"]
+        log_file = os.path.join(odk_dir, *paths)
+
+        with open(log_file) as f:
+            lines = f.readlines()
+            for line in lines:
+                parts = line.split(",")
+                try:
                     delete_from_record_index(
                         request.registry.settings, user, project_code, form, parts[1]
                     )
+                except Exception as e:
+                    log.error(
+                        "Error while deleting record index for id {}. User:{}. "
+                        "Project: {}. Form: {}. Rowuuid: {}. Error: {}.".format(
+                            submission_id, user, project_code, form, parts[1], str(e),
+                        )
+                    )
+        os.remove(log_file)
 
-            os.remove(log_file)
-        except Exception as e:
-            log.error(
-                "Error deleting submission row logging file for id {}. Error: {}".format(
-                    submission_id, str(e)
-                )
-            )
-
+    # Delete the dataset index
+    try:
         delete_from_dataset_index(
             request.registry.settings, user, project_code, form, submission_id
         )
-
-        # Finally remove the submission from the repository database
-        sql = "DELETE FROM " + schema + ".maintable WHERE rowuuid = '" + row_uuid + "'"
-        request.dbsession.execute(sql)
-        mark_changed(request.dbsession)
-        return True
     except Exception as e:
         log.error(
-            "Unable to remove submission {} using rowuuid {}. Error {}".format(
-                submission_id, row_uuid, str(e)
+            "Error wile deleting dataset index. User: {}. Project: {}. "
+            "Form: {}. Submission: {}. Error: {}".format(
+                user, project_code, form, submission_id, str(e)
             )
         )
-    return False
+
+    # Remove the submission from the repository database
+    sql = "DELETE FROM " + schema + ".maintable WHERE rowuuid = '" + row_uuid + "'"
+    request.dbsession.execute(sql)
+
+    if not move_to_logs:
+        # Remove the submission from FormShare
+        request.dbsession.query(Submission).filter(Submission.project_id == project).filter(
+            Submission.form_id == form
+        ).filter(Submission.submission_id == submission_id).delete()
+
+    # If the submission goes to longs then create a log file for it
+    # and add it to the logs
+    if move_to_logs:
+        paths = [
+            "forms",
+            form_directory,
+            "submissions",
+            "logs",
+            submission_id + ".xml",
+        ]
+        new_log_file = os.path.join(odk_dir, *paths)
+        paths = [
+            "forms",
+            form_directory,
+            "submissions",
+            submission_id + ".json",
+        ]
+        submission_file = os.path.join(odk_dir, *paths)
+
+        root = etree.Element("XMLErrorLog")
+        errors = etree.Element("errors")
+        an_error = etree.Element(
+            "error",
+            FileUUID=submission_id,
+            Error="Moved to logs by {}".format(user),
+            Table="maintable",
+            JSONVariable="",
+            Notes="",
+            RowInJSON="1",
+        )
+        an_error.text = "Moved to logs by {}".format(user)
+        errors.append(an_error)
+        root.append(errors)
+        tree = etree.ElementTree(root)
+        tree.write(
+            new_log_file, pretty_print=True, xml_declaration=True, encoding="utf-8",
+        )
+        added, message = add_json_log(
+            request,
+            project,
+            form,
+            submission_id,
+            submission_file,
+            new_log_file,
+            1,
+            project_of_assistant,
+            assistant,
+        )
+
+        if not added:
+            log.error(message)
+            return False
+        else:
+            return True
+    return True
 
 
 def delete_all_submission(request, user, project, form, project_code):

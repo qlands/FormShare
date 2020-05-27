@@ -5,6 +5,7 @@ from formshare.processes.db import (
     get_project_id_from_name,
     get_project_owner,
     get_form_details,
+    get_all_assistants,
 )
 from formshare.config.auth import get_user_data
 import json
@@ -46,11 +47,20 @@ class ManageSubmissions(PrivateView):
             raise HTTPNotFound
 
         form_data = get_form_details(self.request, user_id, project_id, form_id)
+        assistants = get_all_assistants(self.request, project_id, self.user.login)
         if form_data is not None:
             if form_data["form_schema"] is None:
                 raise HTTPNotFound
-            if form_data["submissions"] <= 0:
-                raise HTTPNotFound
+            if form_data["indb"] <= 0:
+                self.returnRawViewResult = True
+                return HTTPFound(
+                    location=self.request.route_url(
+                        "form_details",
+                        userid=project_details["owner"],
+                        projcode=project_code,
+                        formid=form_id,
+                    )
+                )
 
             fields, checked = get_fields_from_table(
                 self.request, project_id, form_id, "maintable", []
@@ -61,6 +71,7 @@ class ManageSubmissions(PrivateView):
                 "formDetails": form_data,
                 "userid": user_id,
                 "fields": fields,
+                "assistants": assistants,
             }
         else:
             raise HTTPNotFound
@@ -319,6 +330,31 @@ class DeleteFormSubmission(PrivateView):
                         form_id,
                         request_data.get("id"),
                         project_code,
+                    )
+            else:
+                if "move_submission" in request_data.keys():
+                    if request_data.get("rowuuid", "") != "":
+                        assistant_data = request_data.get("coll_id", "").split("|")
+                        if len(assistant_data) == 2:
+                            delete_submission(
+                                self.request,
+                                user_id,
+                                project_id,
+                                form_id,
+                                request_data.get("rowuuid", ""),
+                                project_code,
+                                True,
+                                assistant_data[0],
+                                assistant_data[1],
+                            )
+                    self.returnRawViewResult = True
+                    return HTTPFound(
+                        location=self.request.route_url(
+                            "manageSubmissions",
+                            userid=project_details["owner"],
+                            projcode=project_code,
+                            formid=form_id,
+                        )
                     )
             return {}
         else:

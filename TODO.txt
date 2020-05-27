@@ -9,7 +9,6 @@
 - Handle sharing of private products with token keys.
     - Token management and API
     - Token extension. After token, before token-
-- Download media from outside submissions
 - Add version to publishable products
 - Store create XML structure in database
 - Allow to tag fields in database

@@ -8,6 +8,7 @@ from formshare.processes.odk.processes import (
     cancel_checkout,
     cancel_revision,
     fix_revision,
+    fix_submission,
     fail_revision,
     disregard_revision,
     cancel_disregard_revision,
@@ -559,15 +560,17 @@ class JSONPushRevision(AssistantView):
             if data is not None:
                 if data["status"] == 3:
                     if self.request.method == "POST":
+                        project_of_assistant = get_project_from_assistant(
+                            self.request, self.userID, self.projectID, self.assistantID
+                        )
                         res_code, message = push_revision(
                             self.request,
                             self.userID,
                             self.projectID,
                             form_id,
                             submission_id,
-                        )
-                        project_of_assistant = get_project_from_assistant(
-                            self.request, self.userID, self.projectID, self.assistantID
+                            project_of_assistant,
+                            self.assistantID,
                         )
                         if res_code == 0:
                             fix_revision(
@@ -588,6 +591,68 @@ class JSONPushRevision(AssistantView):
                                 project_of_assistant,
                                 self.assistantID,
                                 revision_id,
+                            )
+                        return HTTPFound(
+                            location=self.request.route_url(
+                                "errorlist",
+                                userid=self.userID,
+                                projcode=self.projectCode,
+                                formid=form_id,
+                            )
+                        )
+                    else:
+                        raise HTTPNotFound()
+                else:
+                    raise HTTPNotFound()
+            else:
+                raise HTTPNotFound()
+        else:
+            raise HTTPNotFound()
+
+
+class JSONPushSubmission(AssistantView):
+    def __init__(self, request):
+        AssistantView.__init__(self, request)
+        self.checkCrossPost = False
+
+    def process_view(self):
+        self.returnRawViewResult = True
+        form_id = self.request.matchdict["formid"]
+        submission_id = self.request.matchdict["submissionid"]
+
+        permissions = get_assistant_permissions_on_a_form(
+            self.request, self.userID, self.projectID, self.assistantID, form_id
+        )
+
+        if is_form_blocked(self.request, self.projectID, form_id):
+            raise HTTPNotFound()
+        if permissions["enum_canclean"] == 1:
+            data = get_submission_error_details(
+                self.request, self.projectID, form_id, submission_id
+            )
+            if data is not None:
+                if data["status"] == 1:
+                    if self.request.method == "POST":
+                        project_of_assistant = get_project_from_assistant(
+                            self.request, self.userID, self.projectID, self.assistantID
+                        )
+                        res_code, message = push_revision(
+                            self.request,
+                            self.userID,
+                            self.projectID,
+                            form_id,
+                            submission_id,
+                            project_of_assistant,
+                            self.assistantID,
+                        )
+                        if res_code == 0:
+                            fix_submission(
+                                self.request,
+                                self.projectID,
+                                form_id,
+                                submission_id,
+                                project_of_assistant,
+                                self.assistantID,
                             )
                         return HTTPFound(
                             location=self.request.route_url(
@@ -810,8 +875,8 @@ class JSONGetSubmissionsMedia(AssistantView):
             if submission_with_error is None:
                 raise HTTPNotFound()
             submission_in_db = get_submission_details(
-                                self.request, self.projectID, form_id, submission_b
-                            )
+                self.request, self.projectID, form_id, submission_b
+            )
             if submission_in_db is not None:
                 created, file = get_submission_media_files(
                     self.request, self.projectID, form_id, [submission_a, submission_b]
@@ -831,11 +896,11 @@ class JSONGetSubmissionsMedia(AssistantView):
             else:
                 self.append_to_errors(file)
                 next_page = self.request.params.get("next") or self.request.route_url(
-                                    "errorlist",
-                                    userid=self.userID,
-                                    projcode=self.projectCode,
-                                    formid=form_id,
-                                )
+                    "errorlist",
+                    userid=self.userID,
+                    projcode=self.projectCode,
+                    formid=form_id,
+                )
                 return HTTPFound(location=next_page, headers={"FS_error": "true"})
 
         else:

@@ -1,0 +1,36 @@
+<div class="modal inmodal" id="move_dialog" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content animated bounceInDown">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">{{ _('Close') }}</span></button>
+                <i class="fas fa-minus-square modal-icon"></i>
+                <h4 class="modal-title">{{ _('Move submission to the logs') }}</h4>
+            </div>
+            <form id="member_form" role="form" method="post" action="{{ request.route_url('deleteFormSubmission', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}">
+                {{ form.secure_form(request) }}
+                <input type="hidden" id="rowuuid" name="rowuuid" value="">
+                <div class="modal-body">
+                    <p>{{ _('You are moving submission') }} <span id="txt_sub_id">xxxx</span> {{ _('from the repository to the logs. You need to indicate which assistant will be in charge of handling the log entry') }}</p>
+                    <div class="form-group">
+                        <label class="col-sm-2 col-form-label">{{ _('Assistant') }}</label>
+                        <div class="col-sm-10">
+                            <select name="coll_id" style="width: 100%; !important;" class="collaborator-list form-control">
+                                {% for project in assistants %}
+                                    <optgroup label="{{ project.project_desc }}">
+                                        {% for assistant in project.assistants %}
+                                            <option value="{{ assistant.code }}">{{ assistant.name }}</option>
+                                        {% endfor %}
+                                    </optgroup>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" name="move_submission" class="btn btn-primary">{{ _('Move') }}</button>
+                    <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Close') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

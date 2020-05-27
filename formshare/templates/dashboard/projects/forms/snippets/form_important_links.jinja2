@@ -20,7 +20,7 @@
                     </div>
                     </a>
                 </div>
-                {% if formDetails.submissions > 0 %}
+                {% if formDetails.indb > 0 %}
                     <div class="col-lg-2">
                         <a target="_blank" href="{{ request.route_url('clean', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}" title="{{ _('Clean data using the browser') }}">
                             <div class="widget navy-bg p-lg text-center" style="padding: 20px">

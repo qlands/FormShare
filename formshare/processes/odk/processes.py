@@ -122,12 +122,38 @@ def get_error_description_from_file(request, project, form, log_file):
                             "survey_id": res[0],
                             "primary_key": primary_key,
                             "duplicated_value": message_parts[0],
+                            "duplicated_exists": True,
+                            "moved": False,
                         }
-            return {"duplicated": True, "error": error.get("Error"), "maintable": False}
+                    else:
+                        return {
+                            "duplicated": True,
+                            "error": error.get("Error"),
+                            "maintable": True,
+                            "survey_id": None,
+                            "primary_key": primary_key,
+                            "duplicated_value": message_parts[0],
+                            "duplicated_exists": False,
+                            "moved": False,
+                        }
+
+            return {
+                "duplicated": True,
+                "error": error.get("Error"),
+                "maintable": False,
+                "moved": False,
+            }
         else:
-            return {"duplicated": False, "error": error.get("Error")}
+            if message.find("Moved to logs by") >= 0:
+                return {"duplicated": False, "error": error.get("Error"), "moved": True}
+            else:
+                return {
+                    "duplicated": False,
+                    "error": error.get("Error"),
+                    "moved": False,
+                }
     except Exception as e:
-        return {"duplicated": False, "error": str(e)}
+        return {"duplicated": False, "error": str(e), "moved": False}
 
 
 def get_last_log_entry(request, user, project, form, submission_id):
@@ -739,6 +765,25 @@ def fix_revision(
         enum_project=project_of_assistant,
         coll_id=assistant,
         log_commit=revision,
+    )
+    request.dbsession.add(new_record)
+
+
+def fix_submission(request, project, form, submission, project_of_assistant, assistant):
+    request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
+        Jsonlog.form_id == form, Jsonlog.log_id == submission
+    ).update({"status": 0})
+    sequence = str(uuid.uuid4())
+    sequence = sequence[-12:]
+    new_record = Jsonhistory(
+        project_id=project,
+        form_id=form,
+        log_id=submission,
+        log_sequence=sequence,
+        log_dtime=datetime.datetime.now(),
+        log_action=0,
+        enum_project=project_of_assistant,
+        coll_id=assistant,
     )
     request.dbsession.add(new_record)
 

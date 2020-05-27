@@ -24,13 +24,15 @@
                                 <li><a data-toggle="modal" data-target="#upload_form"><i class="fas fa-code-branch"></i> {{ _('Merge new version') }}</a></li>
                             {% endif %}
                             <li><a title="{{ numsensitive }} {{ request.h.pluralize(_('field'),numsensitive,request.locale_name) }} {{ _('marked as sensitive among ') }}{{ numtables }} {{ request.h.pluralize(_('table'),numtables,request.locale_name) }}" href="{{ request.route_url('editDictTables', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fas fa-eye-slash"></i><span style="color: red"> {{ _('Anonymize fields') }}</span></a></li>
-                            {% if formDetails.submissions > 0 %}
+                            {% if formDetails.indb > 0 %}
                                 {% if projectDetails.access_type < 3 %}
                                     <li><a href="{{ request.route_url('manageSubmissions', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fas fa-tasks"></i> {{ _('Manage submissions') }}</a></li>
                                 {% endif %}
                             {% endif %}
                             <li><a href="{{ request.route_url('import_data', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" class="btn btn-xs btn-white"><i class="fas fa-file-import"></i> {{ _('Import external data') }} </a></li>
-                            <li><a href="{{ request.route_url('viewAudit', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fas fa-shield-alt"></i> {{ _('Review the history of changes') }}</a></li>
+                            {% if formDetails.indb > 0 %}
+                                <li><a href="{{ request.route_url('viewAudit', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fas fa-shield-alt"></i> {{ _('Review the history of changes') }}</a></li>
+                            {% endif %}
                         {% endblock repo_tab_tools %}
                         {% block repo_tab_tools_extra %}
 

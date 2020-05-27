@@ -75,28 +75,32 @@
             </div>
         </div>
     {% endif %}
-    <div class="modal inmodal" id="deleteAll" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content animated bounceInRight">
-                <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                    <i class="far fa-dizzy modal-icon"></i>
-                    <h4 class="modal-title">{{ _('Delete all submissions') }}</h4>
+    {% if formDetails.form_accsub == 0 %}
+        <div class="modal inmodal" id="deleteAll" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content animated bounceInRight">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <i class="far fa-dizzy modal-icon"></i>
+                        <h4 class="modal-title">{{ _('Delete all submissions') }}</h4>
+                    </div>
+                    <form role="form" method="post" enctype="multipart/form-data" action="{{ request.route_url('deleteAllSubmissions', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}">
+                        {{ form.secure_form(request) }}
+                        <div class="modal-body">
+                            <p><strong style="color: red">{{ _('You are going to delete all the submissions') }}</strong>. {{ _('Unless you want to start all over again, this is something that you should not do!') }}</p>
+                            <div class="form-group"><label>{{ _('Confirm your email address:') }}</label> <input type="email" name="owner_email" placeholder="{{ _('Enter your email') }}" class="form-control"></div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
+                            <button type="submit" class="btn btn-danger">{{ _('Delete all submissions') }}</button>
+                        </div>
+                    </form>
                 </div>
-                <form role="form" method="post" enctype="multipart/form-data" action="{{ request.route_url('deleteAllSubmissions', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}">
-                    {{ form.secure_form(request) }}
-                    <div class="modal-body">
-                        <p><strong style="color: red">{{ _('You are going to delete all the submissions') }}</strong>. {{ _('Unless you want to start all over again, this is something that you should not do!') }}</p>
-                        <div class="form-group"><label>{{ _('Confirm your email address:') }}</label> <input type="email" name="owner_email" placeholder="{{ _('Enter your email') }}" class="form-control"></div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
-                        <button type="submit" class="btn btn-danger">{{ _('Delete all submissions') }}</button>
-                    </div>
-                </form>
             </div>
         </div>
-    </div>
+        {% include 'dashboard/projects/forms/submissions/snippets/move_to_logs.jinja2' %}
+
+    {% endif %}
 
 
 {% endblock mainsection %}
@@ -132,10 +136,10 @@
             $('#jqGrid').navGrid('#jqGridPager',
                 // the buttons to appear on the toolbar of the grid
                 { edit: false, add: false, {% if formDetails.form_accsub == 0 %}del: true,{% else %}del: false,{% endif %} search: true, refresh: false, view: false, position: "left", cloneToTop: false,
-                    deltitle: "{{ _('Delete selected row') }}",
+                    deltitle: "{{ _('Delete selected submission') }}",
                     searchtitle: "{{ _('Find records') }}",
                     alertcap: "{{ _('Warning') }}",
-                    alerttext: "{{ _('Please, select row') }}"
+                    alerttext: "{{ _('Please select a submission') }}"
                 },
                 {},
                 {},
@@ -156,6 +160,24 @@
                     odata: [{ oper:'like', text:"{{ _('like') }}"}, { oper:'notlike', text:"{{ _('not like') }}"}],
                 });
 
+            {% if formDetails.form_accsub == 0 %}
+                $("#jqGrid").navButtonAdd('#jqGridPager', {
+                    caption: "",
+                    title: "{{ _('Move submission to the logs') }}",
+                    buttonicon: "fas fa-minus-square",
+                    onClickButton: function() {
+                        var selRowIds = $("#jqGrid").jqGrid("getGridParam", "selrow");
+                        if (selRowIds != null)
+                        {
+                            var submission_id = $("#jqGrid").jqGrid ('getCell', selRowIds, 'surveyid');
+                            $('#txt_sub_id').text(submission_id);
+                            $('#rowuuid').val(selRowIds)
+                            $('#move_dialog').modal('show');
+                        }
+                    },
+                    position: "first"
+                });
+            {% endif %}
 
         });
 

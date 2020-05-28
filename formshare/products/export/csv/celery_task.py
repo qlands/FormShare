@@ -12,6 +12,7 @@ from pandas import json_normalize
 from collections import OrderedDict
 import pandas as pd
 from lxml import etree
+from formshare.processes.email.send_async_email import send_async_email
 
 log = logging.getLogger("formshare")
 
@@ -276,7 +277,7 @@ def build_csv(
 
             p = Popen(args, stdout=PIPE, stderr=PIPE)
 
-            p.communicate()
+            stdout, stderr = p.communicate()
             if p.returncode == 0:
                 dataframe_array = []
 
@@ -312,13 +313,44 @@ def build_csv(
                 join = join.iloc[1:]
                 send_task_status_to_form(settings, task_id, _("Saving CSV"))
                 join.to_csv(csv_file, index=False, encoding="utf-8")
-
             else:
+                email_from = settings.get("mail.from", None)
+                email_to = settings.get("mail.error", None)
+                send_async_email(
+                    settings,
+                    email_from,
+                    email_to,
+                    "Error while creating the dummy JSON file",
+                    "Error: "
+                    + stderr.decode("utf-8")
+                    + "-"
+                    + stdout.decode("utf-8")
+                    + ":"
+                    + " ".join(args),
+                    None,
+                    locale,
+                )
                 raise DummyError(_("Error while creating the dummy JSON file"))
 
         else:
             raise EmptyFileError(_("The ODK form does not contain any submissions"))
     else:
+        email_from = settings.get("mail.from", None)
+        email_to = settings.get("mail.error", None)
+        send_async_email(
+            settings,
+            email_from,
+            email_to,
+            "MySQLDenormalize Error",
+            "Error: "
+            + stderr.decode("utf-8")
+            + "-"
+            + stdout.decode("utf-8")
+            + ":"
+            + " ".join(args),
+            None,
+            locale,
+        )
         log.error(
             "MySQLDenormalize Error: "
             + stderr.decode("utf-8")

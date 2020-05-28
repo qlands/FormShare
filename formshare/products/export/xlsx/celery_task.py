@@ -5,6 +5,7 @@ from subprocess import Popen, PIPE
 import os
 import uuid
 import gettext
+from formshare.processes.email.send_async_email import send_async_email
 
 log = logging.getLogger("formshare")
 
@@ -83,6 +84,22 @@ def build_xlsx(
     if p.returncode == 0:
         return True, xlsx_file
     else:
+        email_from = settings.get("mail.from", None)
+        email_to = settings.get("mail.error", None)
+        send_async_email(
+            settings,
+            email_from,
+            email_to,
+            "MySQLToXLSX Error",
+            "Error: "
+            + stderr.decode("utf-8")
+            + "-"
+            + stdout.decode("utf-8")
+            + ":"
+            + " ".join(args),
+            None,
+            locale,
+        )
         log.error(
             "MySQLToXLSX Error: "
             + stderr.decode()

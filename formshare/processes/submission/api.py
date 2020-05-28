@@ -1085,9 +1085,11 @@ def delete_submission(
 
     if not move_to_logs:
         # Remove the submission from FormShare
-        request.dbsession.query(Submission).filter(Submission.project_id == project).filter(
-            Submission.form_id == form
-        ).filter(Submission.submission_id == submission_id).delete()
+        request.dbsession.query(Submission).filter(
+            Submission.project_id == project
+        ).filter(Submission.form_id == form).filter(
+            Submission.submission_id == submission_id
+        ).delete()
 
     # If the submission goes to longs then create a log file for it
     # and add it to the logs

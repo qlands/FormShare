@@ -1080,6 +1080,8 @@ def delete_submission(
         )
 
     # Remove the submission from the repository database
+    sql = "SET @odktools_current_user = '" + user + "'"
+    request.dbsession.execute(sql)
     sql = "DELETE FROM " + schema + ".maintable WHERE rowuuid = '" + row_uuid + "'"
     request.dbsession.execute(sql)
 
@@ -1171,6 +1173,8 @@ def delete_all_submission(request, user, project, form, project_code):
         paths = ["forms", form_directory, "submissions", "maps"]
         os.makedirs(os.path.join(odk_dir, *paths))
 
+        sql = "SET @odktools_current_user = '" + user + "'"
+        request.dbsession.execute(sql)
         sql = "DELETE FROM " + schema + ".maintable"
         request.dbsession.execute(sql)
         mark_changed(request.dbsession)

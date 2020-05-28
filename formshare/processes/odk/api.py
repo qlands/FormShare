@@ -2563,7 +2563,9 @@ def restore_from_revision(request, project, form, submission, sequence):
         return 1, "Cannot restore from revision " + sequence
 
 
-def push_revision(request, user, project, form, submission, project_of_assistant, assistant):
+def push_revision(
+    request, user, project, form, submission, project_of_assistant, assistant
+):
     odk_dir = get_odk_path(request)
     form_directory = get_form_directory(request, project, form)
     schema = get_form_schema(request, project, form)

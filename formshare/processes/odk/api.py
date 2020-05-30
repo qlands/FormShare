@@ -665,7 +665,8 @@ def upload_odk_form(
         root = tree.getroot()
         nsmap = root.nsmap[None]
         h_nsmap = root.nsmap["h"]
-        eid = root.findall(".//{" + nsmap + "}" + parts[0])
+        # eid = root.findall(".//{" + nsmap + "}" + parts[0])
+        eid = root.findall(".//{" + nsmap + "}data")
         if eid:
             form_id = eid[0].get("id")
             if re.match(r"^[A-Za-z0-9_]+$", form_id):
@@ -977,7 +978,8 @@ def update_odk_form(request, user_id, project_id, for_form_id, odk_dir, form_dat
         root = tree.getroot()
         nsmap = root.nsmap[None]
         h_nsmap = root.nsmap["h"]
-        eid = root.findall(".//{" + nsmap + "}" + parts[0])
+        # eid = root.findall(".//{" + nsmap + "}" + parts[0])
+        eid = root.findall(".//{" + nsmap + "}data")
         if eid:
             form_id = eid[0].get("id")
             if re.match(r"^[A-Za-z0-9_]+$", form_id):

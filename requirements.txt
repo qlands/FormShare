@@ -122,8 +122,9 @@ python-dateutil==2.8.1
 python-docx==0.8.10
 python-editor==1.0.4
 pytz==2019.3
-PyUtilib==5.4.1
--e git+https://github.com/qlands/pyxform.git@formshare#egg=pyxform
+PyUtilib==5.8.0
+# Release 1.1.0 of PyXForm
+-e git+https://github.com/XLSForm/pyxform.git@3d2e6dddc7fd54e2b33c123a0018fb41a2859671#egg=pyxform
 PyYAML==5.3.1
 pyzmq==19.0.0
 qrcode==6.1

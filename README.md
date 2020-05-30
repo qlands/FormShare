@@ -251,7 +251,7 @@ You basically can extend FormShare to fit your need. We are working on proper do
 Localization
 ------------
 
-FormShare comes out of the box in English, Spanish, French (Google generated) and Portuguese (Google generated). It uses Babel for translation and you can help us by creating new translations or by correcting an existing one.
+FormShare comes out of the box in English, Spanish, French, and Portuguese (Google generated). It uses Babel for translation and you can help us by creating new translations or by correcting an existing one.
 
 To generate a new translation:
 

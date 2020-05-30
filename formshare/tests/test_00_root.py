@@ -69,6 +69,7 @@ class FunctionalTests(unittest.TestCase):
         self.assistantLoginKey = ""
         self.assistantGroupID = ""
         self.formID = ""
+        self.formMultiLanguageID = ""
         self.path = os.path.dirname(os.path.abspath(__file__))
 
     def test_all(self):
@@ -1463,6 +1464,55 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+        def test_multilanguage_odk():
+            # Upload a multi-language form succeeds
+            paths = ["resources", "forms", "multi_language", "spanish_english.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            self.formMultiLanguageID = "ADANIC_ALLMOD_20141020"
+
+            # Add an assistant to a form succeeds
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, self.project, self.formMultiLanguageID
+                ),
+                {
+                    "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
+                    "privilege": "3",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Generate the repository using celery fails due to language
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, self.project, self.formMultiLanguageID
+                ),
+                {"form_pkey": "QID", "start_stage1": ""},
+                status=200,
+            )
+            self.assertIn(b'form_deflang', res.body)
+
+            # Generate the repository using celery pass
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, self.project, self.formMultiLanguageID
+                ),
+                {"form_pkey": "QID", "start_stage2": "", "form_deflang": "Español",
+                 "LNG-English": "en", "LNG-Español": "es",
+                 "languages_string": '[{"code": "", "name": "English"}, {"code": "", "name": "Español"}]'},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
         def test_odk():
 
             # Upload a complex form succeeds
@@ -1659,6 +1709,56 @@ class FunctionalTests(unittest.TestCase):
             assert "FS_error" in res.headers
 
         def test_repository():
+            def mimic_create_repository_metalanguages():
+                from formshare.products.repository.celery_task import (
+                    create_mysql_repository,
+                )
+
+                form_details = get_form_details(
+                    self.server_config, self.projectID, self.formMultiLanguageID
+                )
+                form_directory = form_details["form_directory"]
+                form_reptask = form_details["form_reptask"]
+
+                form_schema = "FS" + str(uuid.uuid4()).replace("-", "_")
+
+                paths2 = [self.server_config["repository.path"], "odk"]
+                odk_dir = os.path.join(self.path, *paths2)
+
+                paths2 = [self.server_config["repository.path"], "odk", "forms", form_directory, "repository",
+                         "create.sql"]
+                create_sql = os.path.join(self.path, *paths2)
+
+                paths2 = [self.server_config["repository.path"], "odk", "forms", form_directory, "repository",
+                          "insert.sql"]
+                insert_sql = os.path.join(self.path, *paths2)
+
+                paths2 = [self.server_config["repository.path"], "odk", "forms", form_directory, "repository",
+                          "create.xml"]
+                create_xml = os.path.join(self.path, *paths2)
+
+                here = os.path.dirname(os.path.abspath(__file__)).split("/formshare/tests")[0]
+                paths2 = ["mysql.cnf"]
+                mysql_cnf = os.path.join(here, *paths2)
+                create_mysql_repository(
+                    self.server_config,
+                    self.randonLogin,
+                    self.projectID,
+                    self.project,
+                    self.formMultiLanguageID,
+                    odk_dir,
+                    form_directory,
+                    form_schema,
+                    "QID",
+                    mysql_cnf,
+                    create_sql,
+                    insert_sql,
+                    create_xml,
+                    "",
+                    "en",
+                    form_reptask,
+                )
+
             def mimic_create_repository():
                 from formshare.products.repository.celery_task import (
                     create_mysql_repository,
@@ -1672,26 +1772,38 @@ class FunctionalTests(unittest.TestCase):
 
                 form_schema = "FS" + str(uuid.uuid4()).replace("-", "_")
 
+                paths2 = [self.server_config["repository.path"], "odk"]
+                odk_dir = os.path.join(self.path, *paths2)
+
+                paths2 = [self.server_config["repository.path"], "odk", "forms", form_directory, "repository",
+                         "create.sql"]
+                create_sql = os.path.join(self.path, *paths2)
+
+                paths2 = [self.server_config["repository.path"], "odk", "forms", form_directory, "repository",
+                          "insert.sql"]
+                insert_sql = os.path.join(self.path, *paths2)
+
+                paths2 = [self.server_config["repository.path"], "odk", "forms", form_directory, "repository",
+                          "create.xml"]
+                create_xml = os.path.join(self.path, *paths2)
+
+                here = os.path.dirname(os.path.abspath(__file__)).split("/formshare/tests")[0]
+                paths2 = ["mysql.cnf"]
+                mysql_cnf = os.path.join(here, *paths2)
                 create_mysql_repository(
                     self.server_config,
                     self.randonLogin,
                     self.projectID,
                     self.project,
                     self.formID,
-                    "/home/cquiros/temp/formshare/odk",
+                    odk_dir,
                     form_directory,
                     form_schema,
                     "I_D",
-                    "/home/cquiros/data/projects2017/personal/software/FormShare/mysql.cnf",
-                    "/home/cquiros/temp/formshare/odk/forms/{}/repository/create.sql".format(
-                        form_directory
-                    ),
-                    "/home/cquiros/temp/formshare/odk/forms/{}/repository/insert.sql".format(
-                        form_directory
-                    ),
-                    "/home/cquiros/temp/formshare/odk/forms/{}/repository/create.xml".format(
-                        form_directory
-                    ),
+                    mysql_cnf,
+                    create_sql,
+                    insert_sql,
+                    create_xml,
                     "",
                     "en",
                     form_reptask,
@@ -1719,6 +1831,7 @@ class FunctionalTests(unittest.TestCase):
 
             # Mimic to create the repository again
             mimic_create_repository()
+            mimic_create_repository_metalanguages()
 
             # Get the details of a form. The form now should have a repository
             res = self.testapp.get(
@@ -3138,6 +3251,7 @@ class FunctionalTests(unittest.TestCase):
         test_assistant_groups()
         test_forms()
         test_odk()
+        test_multilanguage_odk()
         test_repository()
         test_repository_downloads()
         test_import_data()

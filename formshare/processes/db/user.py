@@ -1,3 +1,10 @@
+import datetime
+import logging
+
+import validators
+from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
+
 from ...models import (
     map_to_schema,
     User,
@@ -6,11 +13,6 @@ from ...models import (
     Odkform,
     Project,
 )
-from sqlalchemy.exc import IntegrityError
-import logging
-import validators
-import datetime
-from sqlalchemy import func
 
 __all__ = [
     "register_user",

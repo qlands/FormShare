@@ -1,6 +1,15 @@
+import datetime
+import glob
+import logging
 import os
+import re
+import uuid
+import zipfile
+
 from lxml import etree
-from formshare.models import Odkform as Form
+from sqlalchemy.event import listen
+
+from formshare.config.encdecdata import decode_data
 from formshare.models import (
     Collaborator,
     Submission,
@@ -11,16 +20,9 @@ from formshare.models import (
     Collingroup,
     Formgrpacces,
 )
-import datetime
-import glob
-import uuid
-import zipfile
-import re
-from formshare.config.encdecdata import decode_data
-from formshare.processes.db.form import get_assistant_forms
+from formshare.models import Odkform as Form
 from formshare.processes.db.assistant import get_project_from_assistant
-import logging
-from sqlalchemy.event import listen
+from formshare.processes.db.form import get_assistant_forms
 
 log = logging.getLogger("formshare")
 

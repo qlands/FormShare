@@ -1,5 +1,8 @@
-from .classes import PrivateView
+import json
+
 from pyramid.httpexceptions import HTTPNotFound
+from pyramid.response import Response
+
 from formshare.processes.db import get_form_data, get_project_id_from_name
 from formshare.processes.submission.api import (
     get_tables_from_form,
@@ -9,8 +12,7 @@ from formshare.processes.submission.api import (
     update_field_desc,
     update_field_sensitive,
 )
-from pyramid.response import Response
-import json
+from .classes import PrivateView
 
 
 class EditDictionaryTables(PrivateView):

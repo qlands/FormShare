@@ -1,7 +1,10 @@
 from __future__ import with_statement
-from alembic import context
-from sqlalchemy import engine_from_config, pool
+
 from logging.config import fileConfig
+
+from sqlalchemy import engine_from_config, pool
+
+from alembic import context
 from formshare.models.meta import Base
 
 # this is the Alembic Config object, which provides

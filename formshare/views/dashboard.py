@@ -1,5 +1,5 @@
-from formshare.views.classes import DashboardView
 from pyramid.httpexceptions import HTTPNotFound
+
 from formshare.processes.db import (
     is_collaborator,
     get_project_assistants,
@@ -15,6 +15,7 @@ from formshare.processes.elasticsearch.repository_index import (
     get_dataset_stats_for_project,
     get_number_of_datasets_with_gps_in_project,
 )
+from formshare.views.classes import DashboardView
 
 
 class UserDashBoardView(DashboardView):

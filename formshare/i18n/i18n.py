@@ -1,8 +1,10 @@
+import os
+import sys
+
+from babel.support import Translations
 from pyramid.i18n import get_localizer
 from pyramid.threadlocal import get_current_request
-from babel.support import Translations
-import sys
-import os
+
 import formshare.plugins as p
 
 

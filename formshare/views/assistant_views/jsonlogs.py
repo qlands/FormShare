@@ -1,4 +1,26 @@
-from formshare.views.classes import AssistantView
+import json
+import logging
+import os
+import uuid
+
+import paginate
+from pyramid.httpexceptions import HTTPNotFound, HTTPFound
+from pyramid.response import FileResponse
+from webhelpers2.html import literal
+
+from formshare.processes.db import (
+    get_form_data,
+    get_project_from_assistant,
+    is_form_blocked,
+)
+from formshare.processes.odk.api import (
+    generate_diff,
+    get_submission_file,
+    store_new_version,
+    get_html_from_diff,
+    restore_from_revision,
+    push_revision,
+)
 from formshare.processes.odk.processes import (
     get_assistant_permissions_on_a_form,
     get_errors_by_assistant,
@@ -15,28 +37,8 @@ from formshare.processes.odk.processes import (
     get_error_description_from_file,
     get_number_of_errors_by_assistant,
 )
-from formshare.processes.odk.api import (
-    generate_diff,
-    get_submission_file,
-    store_new_version,
-    get_html_from_diff,
-    restore_from_revision,
-    push_revision,
-)
-from pyramid.httpexceptions import HTTPNotFound, HTTPFound
-from webhelpers2.html import literal
-import os
-import uuid
-import json
-from formshare.processes.db import (
-    get_form_data,
-    get_project_from_assistant,
-    is_form_blocked,
-)
-import logging
-import paginate
 from formshare.processes.submission.api import get_submission_media_files
-from pyramid.response import FileResponse
+from formshare.views.classes import AssistantView
 
 log = logging.getLogger("formshare")
 

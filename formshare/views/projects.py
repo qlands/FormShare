@@ -1,4 +1,20 @@
-from formshare.views.classes import ProjectsView
+import base64
+import io
+import json
+import logging
+import os
+import re
+import uuid
+import zlib
+
+import qrcode
+from elasticfeeds.activity import Actor, Object, Activity
+from pyramid.httpexceptions import HTTPFound, HTTPNotFound
+from pyramid.response import FileResponse
+from pyramid.response import Response
+
+import formshare.plugins as p
+from formshare.config.elasticfeeds import get_manager
 from formshare.processes.db import (
     add_project,
     modify_project,
@@ -16,9 +32,11 @@ from formshare.processes.db import (
     get_by_details,
     set_project_as_active,
 )
-from pyramid.httpexceptions import HTTPFound, HTTPNotFound
-from formshare.config.elasticfeeds import get_manager
-from elasticfeeds.activity import Actor, Object, Activity
+from formshare.processes.elasticsearch.repository_index import (
+    get_dataset_stats_for_project,
+    delete_dataset_index_by_project,
+    get_number_of_datasets_with_gps_in_project,
+)
 from formshare.processes.storage import (
     store_file,
     get_stream,
@@ -26,24 +44,8 @@ from formshare.processes.storage import (
     delete_stream,
     delete_bucket,
 )
-from pyramid.response import Response
-import json
-import qrcode
-import zlib
-import base64
-import io
-import os
-import uuid
-from formshare.processes.elasticsearch.repository_index import (
-    get_dataset_stats_for_project,
-    delete_dataset_index_by_project,
-    get_number_of_datasets_with_gps_in_project,
-)
 from formshare.processes.submission.api import get_gps_points_from_project
-import re
-from pyramid.response import FileResponse
-import formshare.plugins as p
-import logging
+from formshare.views.classes import ProjectsView
 
 log = logging.getLogger("formshare")
 

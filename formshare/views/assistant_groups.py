@@ -1,4 +1,6 @@
-from formshare.views.classes import PrivateView
+from pyramid.httpexceptions import HTTPFound, HTTPNotFound
+
+from formshare.processes.db import get_all_assistants
 from formshare.processes.db import (
     get_project_id_from_name,
     get_project_groups,
@@ -10,8 +12,7 @@ from formshare.processes.db import (
     add_assistant_to_group,
     remove_assistant_from_group,
 )
-from formshare.processes.db import get_all_assistants
-from pyramid.httpexceptions import HTTPFound, HTTPNotFound
+from formshare.views.classes import PrivateView
 
 
 class GroupListView(PrivateView):

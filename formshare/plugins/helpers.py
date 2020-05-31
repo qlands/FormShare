@@ -5,13 +5,13 @@ Consists of functions to typically be used within templates, but also
 available to Controllers. This module is available to templates as 'request.h'.
 """
 
-import timeago
 import arrow
-from pattern.es import pluralize as pluralize_es
-from pattern.en import pluralize as pluralize_en
-import formshare.plugins as p
-import datetime
+import timeago
 import validators
+from pattern.en import pluralize as pluralize_en
+from pattern.es import pluralize as pluralize_es
+
+import formshare.plugins as p
 
 
 class HelperAttributeDict(dict):

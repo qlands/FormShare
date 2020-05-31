@@ -1,15 +1,30 @@
-from lxml import etree
-import os
+import datetime
+import glob
 import io
 import json
+import logging
 import mimetypes
+import os
+import re
 import shutil
-from hashlib import md5
-from pyramid.httpexceptions import HTTPNotFound
-from uuid import uuid4
-from subprocess import Popen, PIPE
-from pyramid.response import FileResponse
 import traceback
+import uuid
+import zipfile
+from hashlib import md5
+from subprocess import Popen, PIPE
+from uuid import uuid4
+
+from bs4 import BeautifulSoup
+from lxml import etree
+from pyramid.httpexceptions import HTTPNotFound
+from pyramid.response import FileResponse
+from pyramid.response import Response
+from pyxform import xls2xform
+from pyxform.errors import PyXFormError
+from pyxform.xls2json import parse_file_to_json
+
+import formshare.plugins as plugins
+from formshare.processes.color_hash import ColorHash
 from formshare.processes.db import (
     assistant_has_form,
     get_assistant_forms,
@@ -37,36 +52,23 @@ from formshare.processes.db import (
     add_file_to_form,
     add_submission_same_as,
 )
-import uuid
-import datetime
-import re
-from bs4 import BeautifulSoup
-from pyxform import xls2xform
-from pyxform.xls2json import parse_file_to_json
-from pyxform.errors import PyXFormError
+from formshare.processes.elasticsearch.record_index import (
+    create_record_index,
+    add_record,
+)
+from formshare.processes.elasticsearch.repository_index import (
+    create_dataset_index,
+    add_dataset,
+)
+from formshare.processes.odk.processes import update_form_repository_info
 from formshare.processes.storage import (
     get_stream,
     response_stream,
     store_file,
     delete_stream,
 )
-from pyramid.response import Response
-from formshare.processes.elasticsearch.repository_index import (
-    create_dataset_index,
-    add_dataset,
-)
-from formshare.processes.elasticsearch.record_index import (
-    create_record_index,
-    add_record,
-)
-import logging
-import zipfile
-import glob
 from formshare.products.fs1import.fs1import import formshare_one_import_json
-from formshare.processes.color_hash import ColorHash
 from formshare.products.repository import create_database_repository
-from formshare.processes.odk.processes import update_form_repository_info
-import formshare.plugins as plugins
 
 log = logging.getLogger("formshare")
 

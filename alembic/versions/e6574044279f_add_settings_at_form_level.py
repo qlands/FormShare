@@ -5,10 +5,10 @@ Revises: e7b061b1e13c
 Create Date: 2019-12-09 19:04:14.491917
 
 """
-from alembic import op
 import sqlalchemy as sa
-from formshare.models.formshare import JsonEncodedDict
 
+from alembic import op
+from formshare.models.formshare import JsonEncodedDict
 
 # revision identifiers, used by Alembic.
 revision = "e6574044279f"

@@ -1,8 +1,17 @@
 import os
+
+from pyramid.csrf import SessionCSRFStoragePolicy
+from pyramid_session_redis import session_factory_from_settings
+
 import formshare.plugins as p
+import formshare.plugins.helpers as helpers
 import formshare.products as prd
 import formshare.resources as r
 from formshare.models import add_column_to_schema
+from formshare.processes.elasticsearch.user_index import configure_user_index_manager
+from formshare.products.formshare_products import register_products
+from .api_routes import load_api_version_1_routes
+from .elasticfeeds import configure_manager
 from .jinja_extensions import (
     initialize,
     ExtendThis,
@@ -10,15 +19,7 @@ from .jinja_extensions import (
     JSResourceExtension,
 )
 from .mainresources import create_resources
-import formshare.plugins.helpers as helpers
 from .routes import load_routes
-from .api_routes import load_api_version_1_routes
-from pyramid.csrf import SessionCSRFStoragePolicy
-from .elasticfeeds import configure_manager
-from formshare.processes.elasticsearch.user_index import configure_user_index_manager
-from formshare.products.formshare_products import register_products
-
-from pyramid_session_redis import session_factory_from_settings
 
 main_policy_array = []
 

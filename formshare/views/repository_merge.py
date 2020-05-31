@@ -1,13 +1,15 @@
-from .classes import PrivateView
-from pyramid.httpexceptions import HTTPNotFound, HTTPFound
-from formshare.processes.db import get_project_id_from_name, update_form
-from formshare.processes.odk.processes import get_form_data
-from formshare.processes.odk.api import get_odk_path, merge_versions
-import os
 import logging
+import os
+
 from lxml import etree
+from pyramid.httpexceptions import HTTPNotFound, HTTPFound
+
+from formshare.processes.db import get_project_id_from_name, update_form
 from formshare.processes.email.send_email import send_error_to_technical_team
+from formshare.processes.odk.api import get_odk_path, merge_versions
+from formshare.processes.odk.processes import get_form_data
 from formshare.products.merge import merge_form
+from .classes import PrivateView
 
 log = logging.getLogger("formshare")
 

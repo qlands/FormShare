@@ -1,32 +1,34 @@
-from pyramid.security import remember
-from pyramid.httpexceptions import HTTPFound
-from ..config.auth import get_user_data, get_assistant_data, get_formshare_user_data
-from .classes import PublicView
-from pyramid.session import check_csrf_token
-from pyramid.httpexceptions import HTTPNotFound
+import datetime
+import logging
+import re
+import traceback
+import uuid
+from ast import literal_eval
+
+import validators
+from elasticfeeds.activity import Actor, Object, Activity
 from formencode.variabledecode import variable_decode
+from pyramid.httpexceptions import HTTPFound
+from pyramid.httpexceptions import HTTPNotFound
+from pyramid.response import Response
+from pyramid.security import remember
+from pyramid.session import check_csrf_token
+
 import formshare.plugins as p
+from formshare.config.elasticfeeds import get_manager
+from formshare.config.encdecdata import encode_data, decode_data
+from formshare.processes.avatar import Avatar
+from formshare.processes.elasticsearch.user_index import get_user_index_manager
+from formshare.processes.email.send_email import send_error_to_technical_team
+from formshare.processes.email.send_email import send_password_email
+from .classes import PublicView
+from ..config.auth import get_user_data, get_assistant_data, get_formshare_user_data
 from ..processes.db import (
     register_user,
     get_project_id_from_name,
     get_project_from_assistant,
     update_last_login,
 )
-from ast import literal_eval
-import datetime
-import uuid
-from formshare.config.encdecdata import encode_data, decode_data
-from formshare.config.elasticfeeds import get_manager
-from elasticfeeds.activity import Actor, Object, Activity
-from formshare.processes.elasticsearch.user_index import get_user_index_manager
-import validators
-import re
-import logging
-import traceback
-from formshare.processes.email.send_email import send_error_to_technical_team
-from formshare.processes.email.send_email import send_password_email
-from formshare.processes.avatar import Avatar
-from pyramid.response import Response
 
 log = logging.getLogger("formshare")
 

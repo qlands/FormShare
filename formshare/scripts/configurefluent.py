@@ -1,6 +1,7 @@
-import os
-from jinja2 import Environment, FileSystemLoader
 import argparse
+import os
+
+from jinja2 import Environment, FileSystemLoader
 
 
 def main():

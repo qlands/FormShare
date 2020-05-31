@@ -1,10 +1,11 @@
-from ofs.local import PTOFS
-from pairtree import PairtreeStorageClient, ObjectNotFoundException
-from ofs.base import BucketExists
-import os
-from pairtree import FileNotFoundException
-import mimetypes
 import logging
+import mimetypes
+import os
+
+from ofs.base import BucketExists
+from ofs.local import PTOFS
+from pairtree import FileNotFoundException
+from pairtree import PairtreeStorageClient, ObjectNotFoundException
 
 __all__ = [
     "store_file",

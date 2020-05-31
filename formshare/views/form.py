@@ -1,4 +1,14 @@
-from .classes import PrivateView
+import json
+import logging
+import os
+import shutil
+from hashlib import md5
+
+from lxml import etree
+from pyramid.httpexceptions import HTTPFound, HTTPNotFound
+from pyramid.response import FileResponse
+
+import formshare.plugins as plugins
 from formshare.processes.db import (
     get_project_id_from_name,
     get_form_details,
@@ -27,23 +37,12 @@ from formshare.processes.db import (
     get_task_status,
     get_output_by_task,
 )
-from formshare.processes.storage import store_file, delete_stream, delete_bucket
-from pyramid.httpexceptions import HTTPFound, HTTPNotFound
-import os
-from hashlib import md5
-import logging
+from formshare.processes.elasticsearch.record_index import delete_record_index
 from formshare.processes.elasticsearch.repository_index import (
     delete_dataset_index,
     get_number_of_datasets_with_gps,
 )
-from formshare.processes.elasticsearch.record_index import delete_record_index
-from pyramid.response import FileResponse
-from formshare.processes.submission.api import (
-    get_submission_media_files,
-    json_to_csv,
-    get_gps_points_from_form,
-    get_tables_from_form,
-)
+from formshare.processes.email.send_email import send_error_to_technical_team
 from formshare.processes.odk.api import (
     get_odk_path,
     upload_odk_form,
@@ -54,23 +53,26 @@ from formshare.processes.odk.api import (
     create_repository,
     merge_versions,
 )
-from formshare.products import stop_task
-from formshare.products import get_form_products
-import shutil
-from formshare.products.export.xlsx import (
-    generate_public_xlsx_file,
-    generate_private_xlsx_file,
+from formshare.processes.storage import store_file, delete_stream, delete_bucket
+from formshare.processes.submission.api import (
+    get_submission_media_files,
+    json_to_csv,
+    get_gps_points_from_form,
+    get_tables_from_form,
 )
-from formshare.products.export.media import generate_media_zip_file
-from formshare.products.export.kml import generate_kml_file
+from formshare.products import get_form_products
+from formshare.products import stop_task
 from formshare.products.export.csv import (
     generate_public_csv_file,
     generate_private_csv_file,
 )
-from formshare.processes.email.send_email import send_error_to_technical_team
-from lxml import etree
-import json
-import formshare.plugins as plugins
+from formshare.products.export.kml import generate_kml_file
+from formshare.products.export.media import generate_media_zip_file
+from formshare.products.export.xlsx import (
+    generate_public_xlsx_file,
+    generate_private_xlsx_file,
+)
+from .classes import PrivateView
 
 log = logging.getLogger("formshare")
 

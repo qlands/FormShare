@@ -1,10 +1,11 @@
-from formshare.config.celery_app import celeryApp
-from formshare.config.celery_class import CeleryTask
+import gettext
 import logging
-from subprocess import Popen, PIPE
 import os
 import uuid
-import gettext
+from subprocess import Popen, PIPE
+
+from formshare.config.celery_app import celeryApp
+from formshare.config.celery_class import CeleryTask
 from formshare.processes.email.send_async_email import send_async_email
 
 log = logging.getLogger("formshare")

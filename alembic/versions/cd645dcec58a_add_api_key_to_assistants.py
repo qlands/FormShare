@@ -5,12 +5,13 @@ Revises: 3932ad37cc0b
 Create Date: 2019-12-01 20:10:28.981417
 
 """
-from alembic import op
-import sqlalchemy as sa
-from formshare.models.formshare import Collaborator
-from sqlalchemy.orm.session import Session
 from uuid import uuid4
 
+import sqlalchemy as sa
+from sqlalchemy.orm.session import Session
+
+from alembic import op
+from formshare.models.formshare import Collaborator
 
 # revision identifiers, used by Alembic.
 revision = "cd645dcec58a"

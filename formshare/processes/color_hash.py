@@ -18,10 +18,10 @@ c.hex
 """
 
 from __future__ import division
+
+import sys
 from binascii import crc32
 from numbers import Number
-import sys
-
 
 PY2 = sys.version_info[0] <= 2
 

@@ -1,7 +1,8 @@
-from Crypto.Cipher import AES
 import base64
-from cryptography.fernet import Fernet
 import logging
+
+from Crypto.Cipher import AES
+from cryptography.fernet import Fernet
 
 log = logging.getLogger("formshare")
 

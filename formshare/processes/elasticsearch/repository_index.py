@@ -1,6 +1,6 @@
 from elasticsearch import Elasticsearch
-from elasticsearch.exceptions import RequestError
 from elasticsearch.exceptions import NotFoundError
+from elasticsearch.exceptions import RequestError
 
 
 def _get_dataset_index_definition(number_of_shards, number_of_replicas):

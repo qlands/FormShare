@@ -1,4 +1,11 @@
-from formshare.views.classes import ODKView
+from pyramid.response import Response
+
+from formshare.processes.db import (
+    get_project_id_from_name,
+    is_assistant_active,
+    get_assistant_password,
+    assistant_has_form,
+)
 from formshare.processes.odk.api import (
     get_manifest,
     get_media_file,
@@ -6,13 +13,7 @@ from formshare.processes.odk.api import (
     get_xml_form,
     store_submission,
 )
-from formshare.processes.db import (
-    get_project_id_from_name,
-    is_assistant_active,
-    get_assistant_password,
-    assistant_has_form,
-)
-from pyramid.response import Response
+from formshare.views.classes import ODKView
 
 
 class ODKFormList(ODKView):

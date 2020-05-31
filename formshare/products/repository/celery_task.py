@@ -1,11 +1,16 @@
-from formshare.config.celery_app import celeryApp
-from formshare.config.celery_class import CeleryTask
-import logging
-from subprocess import Popen, PIPE, check_call, CalledProcessError
+import gettext
 import glob
+import logging
 import os
 import shutil
+import traceback
+from subprocess import Popen, PIPE, check_call, CalledProcessError
+
 import transaction
+from sqlalchemy.orm import configure_mappers
+
+from formshare.config.celery_app import celeryApp
+from formshare.config.celery_class import CeleryTask
 from formshare.models import (
     get_engine,
     get_session_factory,
@@ -15,11 +20,8 @@ from formshare.models import (
     initialize_schema,
 )
 from formshare.processes.elasticsearch.repository_index import delete_dataset_index
-from sqlalchemy.orm import configure_mappers
-from formshare.processes.sse.messaging import send_task_status_to_form
-import gettext
 from formshare.processes.email.send_async_email import send_async_email
-import traceback
+from formshare.processes.sse.messaging import send_task_status_to_form
 
 log = logging.getLogger("formshare")
 

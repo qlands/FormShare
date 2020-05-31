@@ -1,4 +1,9 @@
-from formshare.views.classes import AssistantView
+import json
+import logging
+
+from pyramid.httpexceptions import HTTPNotFound, HTTPFound
+
+from formshare.processes.db import get_form_data, is_form_blocked
 from formshare.processes.odk.processes import get_assistant_permissions_on_a_form
 from formshare.processes.submission.api import (
     get_tables_from_form,
@@ -6,10 +11,7 @@ from formshare.processes.submission.api import (
     get_request_data_jqgrid,
     update_data,
 )
-from pyramid.httpexceptions import HTTPNotFound, HTTPFound
-from formshare.processes.db import get_form_data, is_form_blocked
-import json
-import logging
+from formshare.views.classes import AssistantView
 
 log = logging.getLogger("formshare")
 

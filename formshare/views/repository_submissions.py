@@ -1,5 +1,8 @@
-from .classes import PrivateView, AssistantAPIView
+import json
+
 from pyramid.httpexceptions import HTTPNotFound, HTTPFound
+
+from formshare.config.auth import get_user_data
 from formshare.processes.db import (
     get_form_data,
     get_project_id_from_name,
@@ -7,8 +10,8 @@ from formshare.processes.db import (
     get_form_details,
     get_all_assistants,
 )
-from formshare.config.auth import get_user_data
-import json
+from formshare.processes.elasticsearch.record_index import get_table
+from formshare.processes.odk.processes import get_assistant_permissions_on_a_form
 from formshare.processes.submission.api import (
     get_request_data_jqgrid,
     get_fields_from_table,
@@ -16,8 +19,7 @@ from formshare.processes.submission.api import (
     delete_all_submission,
     update_record_with_id,
 )
-from formshare.processes.elasticsearch.record_index import get_table
-from formshare.processes.odk.processes import get_assistant_permissions_on_a_form
+from .classes import PrivateView, AssistantAPIView
 
 
 class ManageSubmissions(PrivateView):

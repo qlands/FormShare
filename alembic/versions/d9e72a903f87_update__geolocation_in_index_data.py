@@ -5,16 +5,18 @@ Revises: e494ffd5ec8c
 Create Date: 2020-04-21 13:38:28.047231
 
 """
-from alembic import op
-from alembic import context
-from sqlalchemy.orm.session import Session
+import time
+
 from pyramid.paster import get_appsettings, setup_logging
+from sqlalchemy.orm.session import Session
+
+from alembic import context
+from alembic import op
 from formshare.models.formshare import Odkform
 from formshare.processes.elasticsearch.repository_index import (
     create_connection,
     get_all_datasets_with_gps,
 )
-import time
 
 # revision identifiers, used by Alembic.
 revision = "d9e72a903f87"

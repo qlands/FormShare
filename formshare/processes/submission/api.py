@@ -1,8 +1,26 @@
-import uuid
-import os
-import shutil
+import datetime
 import glob
+import json
+import logging
+import os
+import re
+import shutil
+import uuid
+from collections import OrderedDict
+from decimal import Decimal
 from subprocess import Popen, PIPE
+
+import paginate
+import pandas as pd
+from lxml import etree
+from pandas import json_normalize
+from sqlalchemy import create_engine
+from sqlalchemy import exc
+from webhelpers2.html import literal
+from zope.sqlalchemy import mark_changed
+
+from formshare.models.formshare import Submission, Jsonlog
+from formshare.processes.color_hash import ColorHash
 from formshare.processes.db import (
     get_form_schema,
     get_form_directory,
@@ -10,36 +28,19 @@ from formshare.processes.db import (
     get_project_form_colors,
     add_json_log,
 )
-from formshare.processes.odk import get_odk_path
-from formshare.processes.elasticsearch.repository_index import (
-    get_datasets_from_form,
-    get_datasets_from_project,
-)
-from formshare.processes.color_hash import ColorHash
-from formshare.models.formshare import Submission, Jsonlog
-import logging
-from sqlalchemy import exc
-from decimal import Decimal
-from zope.sqlalchemy import mark_changed
-from lxml import etree
-import datetime
-import re
-import json
-import paginate
-from sqlalchemy import create_engine
-from formshare.processes.elasticsearch.repository_index import (
-    delete_dataset_index,
-    delete_from_dataset_index,
-)
 from formshare.processes.elasticsearch.record_index import (
     delete_record_index,
     delete_from_record_index,
 )
-from webhelpers2.html import literal
-from pandas import json_normalize
-from collections import OrderedDict
-import pandas as pd
-
+from formshare.processes.elasticsearch.repository_index import (
+    delete_dataset_index,
+    delete_from_dataset_index,
+)
+from formshare.processes.elasticsearch.repository_index import (
+    get_datasets_from_form,
+    get_datasets_from_project,
+)
+from formshare.processes.odk import get_odk_path
 
 __all__ = [
     "get_submission_media_files",

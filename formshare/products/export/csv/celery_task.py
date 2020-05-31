@@ -1,18 +1,20 @@
-from formshare.config.celery_app import celeryApp
-from formshare.config.celery_class import CeleryTask
+import gettext
+import glob
+import json
 import logging
 import os
-import gettext
 import uuid
-from subprocess import Popen, PIPE
-import glob
-from formshare.processes.sse.messaging import send_task_status_to_form
-import json
-from pandas import json_normalize
 from collections import OrderedDict
+from subprocess import Popen, PIPE
+
 import pandas as pd
 from lxml import etree
+from pandas import json_normalize
+
+from formshare.config.celery_app import celeryApp
+from formshare.config.celery_class import CeleryTask
 from formshare.processes.email.send_async_email import send_async_email
+from formshare.processes.sse.messaging import send_task_status_to_form
 
 log = logging.getLogger("formshare")
 

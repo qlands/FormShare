@@ -1,3 +1,8 @@
+import logging
+import os
+
+import formshare.plugins as p
+from formshare.config.celery_app import celeryApp
 from ..processes.db import (
     add_product_instance,
     cancel_task,
@@ -6,10 +11,6 @@ from ..processes.db import (
     get_form_outputs,
     get_user_name,
 )
-from formshare.config.celery_app import celeryApp
-import formshare.plugins as p
-import logging
-import os
 
 __all__ = [
     "add_product",

@@ -1,7 +1,8 @@
+import os
+import uuid
+
 from formshare.products import register_product_instance
 from .celery_task import build_xlsx
-import uuid
-import os
 
 
 def generate_public_xlsx_file(

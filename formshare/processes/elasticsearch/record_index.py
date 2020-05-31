@@ -1,6 +1,7 @@
+from uuid import UUID
+
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import RequestError
-from uuid import UUID
 
 
 def _get_record_index_definition(number_of_shards, number_of_replicas):

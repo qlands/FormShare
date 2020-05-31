@@ -1,10 +1,11 @@
-from formshare.config.celery_app import celeryApp
-from formshare.config.celery_class import CeleryTask
-import smtplib
+import gettext
 import logging
+import smtplib
 from email.mime.text import MIMEText
 from email.utils import formatdate
-import gettext
+
+from formshare.config.celery_app import celeryApp
+from formshare.config.celery_class import CeleryTask
 
 log = logging.getLogger("formshare")
 

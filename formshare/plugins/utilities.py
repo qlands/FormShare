@@ -5,16 +5,17 @@ to manipulate the host behaviour without the trouble if dealing with it
 
 import inspect
 import os
-from formshare.views.classes import PublicView, PrivateView
+
+from pyramid.httpexceptions import HTTPNotFound
+
+from formshare.processes.db.project import get_project_id_from_name
 from formshare.processes.settings import (
     store_settings,
     update_settings,
     delete_settings,
     get_settings,
 )
-from formshare.processes.db.project import get_project_id_from_name
-from pyramid.httpexceptions import HTTPNotFound
-
+from formshare.views.classes import PublicView, PrivateView
 
 __all__ = [
     "add_templates_directory",

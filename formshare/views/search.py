@@ -1,6 +1,7 @@
-from formshare.views.classes import PrivateView
-from formshare.processes.elasticsearch.user_index import get_user_index_manager
 import paginate
+
+from formshare.processes.elasticsearch.user_index import get_user_index_manager
+from formshare.views.classes import PrivateView
 
 
 class APIUserSearchSelect2(PrivateView):

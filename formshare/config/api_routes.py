@@ -1,5 +1,5 @@
-from formshare.plugins.utilities import add_route
 import formshare.plugins as p
+from formshare.plugins.utilities import add_route
 from formshare.views.api import API1UploadFileToForm
 from ..views.repository_submissions import API1UpdateRepository
 

@@ -1,24 +1,26 @@
-from formshare.config.celery_app import celeryApp
-from formshare.config.celery_class import CeleryTask
-import os
+import datetime
+import gettext
 import glob
 import json
-import datetime
-from subprocess import Popen, PIPE
 import logging
-from sqlalchemy import create_engine
+import os
+import shutil
 from hashlib import md5
-from formshare.processes.elasticsearch.repository_index import (
-    create_dataset_index,
-    add_dataset,
-)
+from subprocess import Popen, PIPE
+
+from sqlalchemy import create_engine
+
+from formshare.config.celery_app import celeryApp
+from formshare.config.celery_class import CeleryTask
 from formshare.processes.elasticsearch.record_index import (
     create_record_index,
     add_record,
 )
+from formshare.processes.elasticsearch.repository_index import (
+    create_dataset_index,
+    add_dataset,
+)
 from formshare.processes.sse.messaging import send_task_status_to_form
-import gettext
-import shutil
 
 log = logging.getLogger("formshare")
 

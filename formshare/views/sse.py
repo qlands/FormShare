@@ -1,13 +1,13 @@
-from .classes import PrivateView
-from pyramid.httpexceptions import HTTPNotFound
-from formshare.processes.db import get_project_id_from_name
-from pyramid.response import Response
-import json
-import time
-import random
-import logging
 import datetime
+import json
+import logging
+import random
+import time
+
 import transaction
+from pyramid.httpexceptions import HTTPNotFound
+from pyramid.response import Response
+
 from formshare.models import (
     get_engine,
     get_session_factory,
@@ -15,7 +15,8 @@ from formshare.models import (
     TaskMessages,
     Product,
 )
-
+from formshare.processes.db import get_project_id_from_name
+from .classes import PrivateView
 
 log = logging.getLogger("formshare")
 

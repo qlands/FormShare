@@ -1,3 +1,13 @@
+import datetime
+import json
+import logging
+import mimetypes
+import os
+import uuid
+
+from sqlalchemy import or_
+from sqlalchemy.exc import IntegrityError
+
 from formshare.models import (
     map_from_schema,
     Odkform,
@@ -14,23 +24,14 @@ from formshare.models import (
     Project,
     Userproject,
 )
-import logging
-from sqlalchemy.exc import IntegrityError
-import uuid
-import datetime
-import mimetypes
+from formshare.processes.color_hash import ColorHash
 from formshare.processes.db.assistant import (
     get_project_from_assistant,
     get_assistant_data,
 )
-from sqlalchemy import or_
-import os
-import json
 from formshare.processes.elasticsearch.repository_index import (
     get_dataset_stats_for_form,
 )
-from formshare.processes.color_hash import ColorHash
-
 
 __all__ = [
     "get_form_details",

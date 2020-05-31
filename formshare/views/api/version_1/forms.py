@@ -1,15 +1,17 @@
-from formshare.views.classes import APIView
+import logging
+import os
+from hashlib import md5
+
 from pyramid.httpexceptions import HTTPNotFound
+
 from formshare.processes.db import (
     get_project_id_from_name,
     get_project_access_type,
     get_form_data,
     add_file_to_form,
 )
-import os
-from hashlib import md5
-import logging
 from formshare.processes.storage import store_file
+from formshare.views.classes import APIView
 
 __all__ = [
     "API1UploadFileToForm",

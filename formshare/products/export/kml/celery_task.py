@@ -1,9 +1,11 @@
+import gettext
+import logging
+
+import simplekml
+
 from formshare.config.celery_app import celeryApp
 from formshare.config.celery_class import CeleryTask
-import logging
 from formshare.models import get_engine
-import gettext
-import simplekml
 from formshare.processes.sse.messaging import send_task_status_to_form
 
 log = logging.getLogger("formshare")

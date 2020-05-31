@@ -1,13 +1,15 @@
-from .classes import PrivateView
-from formshare.processes.odk.processes import get_form_data
 import json
-from formshare.processes.db import get_project_id_from_name
-from pyramid.httpexceptions import HTTPNotFound, HTTPFound
-from formshare.processes.odk.api import create_repository, get_odk_path
+import logging
+
 from lxml import etree
+from pyramid.httpexceptions import HTTPNotFound, HTTPFound
+
+from formshare.processes.db import get_project_id_from_name
 from formshare.processes.elasticsearch.repository_index import delete_dataset_index
 from formshare.processes.email.send_email import send_error_to_technical_team
-import logging
+from formshare.processes.odk.api import create_repository, get_odk_path
+from formshare.processes.odk.processes import get_form_data
+from .classes import PrivateView
 
 log = logging.getLogger("formshare")
 

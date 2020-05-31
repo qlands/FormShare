@@ -1,8 +1,8 @@
-import os
-from random import randint
-from io import BytesIO
-from PIL import Image, ImageDraw, ImageFont
 import logging
+import os
+from io import BytesIO
+
+from PIL import Image, ImageDraw, ImageFont
 
 __all__ = ["Avatar"]
 log = logging.getLogger("formshare")

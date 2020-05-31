@@ -1,7 +1,9 @@
-from .meta import metadata
 import json
-from sqlalchemy import inspect
+
 from future.utils import iteritems
+from sqlalchemy import inspect
+
+from .meta import metadata
 
 __all__ = [
     "initialize_schema",

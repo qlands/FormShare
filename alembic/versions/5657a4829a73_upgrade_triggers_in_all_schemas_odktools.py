@@ -5,16 +5,17 @@ Revises: 713b00eed9c9
 Create Date: 2020-04-23 09:07:40.941358
 
 """
-from alembic import op
-from alembic import context
-from sqlalchemy.orm.session import Session
-from pyramid.paster import get_appsettings, setup_logging
-from formshare.models.formshare import Odkform
-import shutil
 import os
+import shutil
 from subprocess import Popen, PIPE
-from lxml import etree
 
+from lxml import etree
+from pyramid.paster import get_appsettings, setup_logging
+from sqlalchemy.orm.session import Session
+
+from alembic import context
+from alembic import op
+from formshare.models.formshare import Odkform
 
 # revision identifiers, used by Alembic.
 revision = "5657a4829a73"

@@ -1,9 +1,10 @@
-import os
-from jinja2 import Environment, FileSystemLoader
 import argparse
+import os
 import random
 import string
 import uuid
+
+from jinja2 import Environment, FileSystemLoader
 
 
 def random_password(size):

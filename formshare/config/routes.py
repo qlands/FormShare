@@ -1,5 +1,45 @@
-from ..plugins.utilities import add_route
+import logging
+
 import formshare.plugins as p
+from ..plugins.utilities import add_route
+from ..views.assistant_groups import (
+    GroupListView,
+    AddGroupView,
+    EditGroupView,
+    DeleteGroup,
+    GroupMembersView,
+    RemoveMember,
+)
+from ..views.assistant_views.clean import CleanInterface, PerformAction, DataRequest
+from ..views.assistant_views.forms import (
+    AssistantForms,
+    ChangeMyAssistantPassword,
+    GetQRCode,
+    ChangeMyAPIKey,
+)
+from ..views.assistant_views.jsonlogs import (
+    JSONList,
+    JSONCompare,
+    JSONCheckout,
+    JSONCancelCheckout,
+    JSONGetSubmission,
+    JSONCheckin,
+    JSONViewRevision,
+    JSONCancelRevision,
+    JSONPushRevision,
+    JSONPushSubmission,
+    JSONDisregard,
+    JSONCancelDisregard,
+    JSONCompareSubmissions,
+    JSONGetSubmissionsMedia,
+)
+from ..views.assistants import (
+    AssistantsListView,
+    AddAssistantsView,
+    EditAssistantsView,
+    DeleteAssistant,
+    ChangeAssistantPassword,
+)
 from ..views.basic_views import (
     NotFoundView,
     HomeView,
@@ -13,42 +53,12 @@ from ..views.basic_views import (
     ErrorView,
     Gravatar,
 )
-from ..views.dashboard import UserDashBoardView
-from ..views.projects import (
-    AddProjectView,
-    ProjectListView,
-    ProjectDetailsView,
-    ProjectStoredFileView,
-    EditProjectView,
-    DeleteProjectView,
-    AddFileToProject,
-    RemoveFileFromProject,
-    DownloadProjectGPSPoints,
-    ActivateProjectView,
-    GetProjectQRCode,
-)
-from ..views.profile import UserProfileView, EditProfileView
 from ..views.collaborators import (
     CollaboratorsListView,
     RemoveCollaborator,
     AcceptCollaboration,
 )
-from ..views.assistants import (
-    AssistantsListView,
-    AddAssistantsView,
-    EditAssistantsView,
-    DeleteAssistant,
-    ChangeAssistantPassword,
-)
-from ..views.search import APIUserSearchSelect2
-from ..views.assistant_groups import (
-    GroupListView,
-    AddGroupView,
-    EditGroupView,
-    DeleteGroup,
-    GroupMembersView,
-    RemoveMember,
-)
+from ..views.dashboard import UserDashBoardView
 from ..views.form import (
     FormDetails,
     AddNewForm,
@@ -88,32 +98,6 @@ from ..views.odk import (
     ODKSubmission,
     ODKXMLForm,
 )
-from ..views.repository import GenerateRepository
-from ..views.repository_dictionary import EditDictionaryTables, EditDictionaryFields
-from ..views.assistant_views.forms import (
-    AssistantForms,
-    ChangeMyAssistantPassword,
-    GetQRCode,
-    ChangeMyAPIKey,
-)
-from ..views.assistant_views.jsonlogs import (
-    JSONList,
-    JSONCompare,
-    JSONCheckout,
-    JSONCancelCheckout,
-    JSONGetSubmission,
-    JSONCheckin,
-    JSONViewRevision,
-    JSONCancelRevision,
-    JSONPushRevision,
-    JSONPushSubmission,
-    JSONDisregard,
-    JSONCancelDisregard,
-    JSONCompareSubmissions,
-    JSONGetSubmissionsMedia,
-)
-from ..views.assistant_views.clean import CleanInterface, PerformAction, DataRequest
-from ..views.sse import SSEventStream
 from ..views.products import (
     DownloadPrivateProduct,
     DownloadPublicProduct,
@@ -122,6 +106,23 @@ from ..views.products import (
     UnPublishProduct,
     DeleteProduct,
 )
+from ..views.profile import UserProfileView, EditProfileView
+from ..views.projects import (
+    AddProjectView,
+    ProjectListView,
+    ProjectDetailsView,
+    ProjectStoredFileView,
+    EditProjectView,
+    DeleteProjectView,
+    AddFileToProject,
+    RemoveFileFromProject,
+    DownloadProjectGPSPoints,
+    ActivateProjectView,
+    GetProjectQRCode,
+)
+from ..views.repository import GenerateRepository
+from ..views.repository_dictionary import EditDictionaryTables, EditDictionaryFields
+from ..views.repository_merge import RepositoryMergeForm
 from ..views.repository_submissions import (
     ManageSubmissions,
     GetFormSubmissions,
@@ -130,11 +131,9 @@ from ..views.repository_submissions import (
     GetFormAudit,
     ReviewAudit,
 )
-
-from ..views.repository_merge import RepositoryMergeForm
+from ..views.search import APIUserSearchSelect2
+from ..views.sse import SSEventStream
 from ..views.users import UsersListView, EditUserView, AddUserView
-
-import logging
 
 log = logging.getLogger("formshare")
 

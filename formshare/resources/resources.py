@@ -6,6 +6,7 @@
 """
 
 import os
+
 from lxml import etree
 
 __all__ = ["add_library", "add_js_resource", "add_css_resource", "need"]

@@ -1,5 +1,15 @@
-from formshare.views.classes import PrivateView
+import datetime
+import logging
+import re
+import uuid
+
+import validators
+from elasticfeeds.activity import Actor, Object, Activity
 from pyramid.httpexceptions import HTTPNotFound, HTTPFound
+
+import formshare.plugins as p
+from formshare.config.elasticfeeds import get_manager
+from formshare.config.encdecdata import encode_data
 from formshare.processes.db import (
     get_user_details,
     update_profile,
@@ -7,17 +17,9 @@ from formshare.processes.db import (
     user_exists,
     register_user,
 )
-from formshare.config.encdecdata import encode_data
 from formshare.processes.db.user import update_password
-import logging
-import validators
-import datetime
-import uuid
 from formshare.processes.elasticsearch.user_index import get_user_index_manager
-from formshare.config.elasticfeeds import get_manager
-from elasticfeeds.activity import Actor, Object, Activity
-import formshare.plugins as p
-import re
+from formshare.views.classes import PrivateView
 
 log = logging.getLogger("formshare")
 

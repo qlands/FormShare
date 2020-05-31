@@ -1,4 +1,14 @@
-from formshare.views.classes import AssistantView
+import base64
+import json
+import os
+import uuid
+import zlib
+
+import qrcode
+from pyramid.httpexceptions import HTTPFound, HTTPNotFound
+from pyramid.response import FileResponse
+
+from formshare.config.auth import check_assistant_login
 from formshare.processes.db import (
     get_assistant_forms_for_cleaning,
     get_project_forms,
@@ -9,15 +19,7 @@ from formshare.processes.db import (
     get_assistant_password,
     modify_assistant,
 )
-from pyramid.httpexceptions import HTTPFound, HTTPNotFound
-from formshare.config.auth import check_assistant_login
-import json
-import qrcode
-import zlib
-import base64
-from pyramid.response import FileResponse
-import os
-import uuid
+from formshare.views.classes import AssistantView
 
 
 class AssistantForms(AssistantView):

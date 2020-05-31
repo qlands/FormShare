@@ -1,8 +1,9 @@
-from formshare.models import Submission
-import logging
 import datetime
+import logging
+
 from sqlalchemy.exc import IntegrityError
 
+from formshare.models import Submission
 
 __all__ = ["get_submission_data", "add_submission", "add_submission_same_as"]
 

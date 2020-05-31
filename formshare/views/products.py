@@ -1,4 +1,9 @@
-from .classes import PrivateView, PublicView, APIView
+import os
+
+from pyramid.httpexceptions import HTTPNotFound, HTTPFound
+from pyramid.response import FileResponse
+
+import formshare.plugins as p
 from formshare.processes.db import (
     get_project_id_from_name,
     get_product_output,
@@ -8,10 +13,7 @@ from formshare.processes.db import (
     set_output_public_state,
     delete_product,
 )
-from pyramid.httpexceptions import HTTPNotFound, HTTPFound
-import formshare.plugins as p
-from pyramid.response import FileResponse
-import os
+from .classes import PrivateView, PublicView, APIView
 
 
 class DownloadPrivateProduct(PrivateView):

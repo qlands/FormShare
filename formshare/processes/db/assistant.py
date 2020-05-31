@@ -1,3 +1,11 @@
+import datetime
+import logging
+from uuid import uuid4
+
+from sqlalchemy.exc import IntegrityError
+
+from formshare.config.encdecdata import decode_data
+from formshare.config.encdecdata import encode_data
 from formshare.models import (
     Collaborator,
     Project,
@@ -8,12 +16,6 @@ from formshare.models import (
     Formgrpacces,
     Collingroup,
 )
-import logging
-import datetime
-from uuid import uuid4
-from sqlalchemy.exc import IntegrityError
-from formshare.config.encdecdata import encode_data
-from formshare.config.encdecdata import decode_data
 
 __all__ = [
     "get_project_assistants",

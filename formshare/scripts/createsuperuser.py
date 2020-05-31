@@ -1,16 +1,17 @@
-import sys
-import getpass
+import argparse
 import datetime
+import getpass
+import sys
 import uuid
+
 import transaction
 import validators
-import argparse
-
 from pyramid.paster import get_appsettings, setup_logging
-from formshare.models.meta import Base
-from formshare.models import get_engine, get_session_factory, get_tm_session
-from formshare.models import User
+
 from formshare.config.encdecdata import encode_data_with_key
+from formshare.models import User
+from formshare.models import get_engine, get_session_factory, get_tm_session
+from formshare.models.meta import Base
 
 
 def main():

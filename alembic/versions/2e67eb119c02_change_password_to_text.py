@@ -5,14 +5,15 @@ Revises: 7a782be521c1
 Create Date: 2019-10-02 21:57:30.066310
 
 """
-from alembic import op
-from alembic import context
 import sqlalchemy as sa
+from pyramid.paster import get_appsettings, setup_logging
 from sqlalchemy.dialects import mysql
 from sqlalchemy.orm.session import Session
-from pyramid.paster import get_appsettings, setup_logging
-from formshare.models.formshare import User, Collaborator
+
+from alembic import context
+from alembic import op
 from formshare.config.encdecdata import encode_data_with_key, old_decode_data_with_key
+from formshare.models.formshare import User, Collaborator
 
 # revision identifiers, used by Alembic.
 revision = "2e67eb119c02"

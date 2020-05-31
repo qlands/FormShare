@@ -5,12 +5,14 @@ Revises: 0d5b7b290d86
 Create Date: 2020-04-21 08:36:48.140455
 
 """
-from alembic import context
-from pyramid.paster import get_appsettings, setup_logging
 import os
-from pathlib import Path
 import shutil
+from pathlib import Path
+
 from lxml import etree
+from pyramid.paster import get_appsettings, setup_logging
+
+from alembic import context
 
 # revision identifiers, used by Alembic.
 revision = "7a31fe6e7d09"

@@ -1,12 +1,13 @@
-import unittest
-import time
-import uuid
-import os
 import datetime
-import shutil
-from sqlalchemy import create_engine
 import json
+import os
+import shutil
+import time
+import unittest
+import uuid
+
 import pkg_resources
+from sqlalchemy import create_engine
 
 """
 This testing module test all routes. It launch start the server and test all the routes and processes
@@ -1499,16 +1500,21 @@ class FunctionalTests(unittest.TestCase):
                 {"form_pkey": "QID", "start_stage1": ""},
                 status=200,
             )
-            self.assertIn(b'form_deflang', res.body)
+            self.assertIn(b"form_deflang", res.body)
 
             # Generate the repository using celery pass
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/repository/create".format(
                     self.randonLogin, self.project, self.formMultiLanguageID
                 ),
-                {"form_pkey": "QID", "start_stage2": "", "form_deflang": "Español",
-                 "LNG-English": "en", "LNG-Español": "es",
-                 "languages_string": '[{"code": "", "name": "English"}, {"code": "", "name": "Español"}]'},
+                {
+                    "form_pkey": "QID",
+                    "start_stage2": "",
+                    "form_deflang": "Español",
+                    "LNG-English": "en",
+                    "LNG-Español": "es",
+                    "languages_string": '[{"code": "", "name": "English"}, {"code": "", "name": "Español"}]',
+                },
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -1725,19 +1731,39 @@ class FunctionalTests(unittest.TestCase):
                 paths2 = [self.server_config["repository.path"], "odk"]
                 odk_dir = os.path.join(self.path, *paths2)
 
-                paths2 = [self.server_config["repository.path"], "odk", "forms", form_directory, "repository",
-                         "create.sql"]
+                paths2 = [
+                    self.server_config["repository.path"],
+                    "odk",
+                    "forms",
+                    form_directory,
+                    "repository",
+                    "create.sql",
+                ]
                 create_sql = os.path.join(self.path, *paths2)
 
-                paths2 = [self.server_config["repository.path"], "odk", "forms", form_directory, "repository",
-                          "insert.sql"]
+                paths2 = [
+                    self.server_config["repository.path"],
+                    "odk",
+                    "forms",
+                    form_directory,
+                    "repository",
+                    "insert.sql",
+                ]
                 insert_sql = os.path.join(self.path, *paths2)
 
-                paths2 = [self.server_config["repository.path"], "odk", "forms", form_directory, "repository",
-                          "create.xml"]
+                paths2 = [
+                    self.server_config["repository.path"],
+                    "odk",
+                    "forms",
+                    form_directory,
+                    "repository",
+                    "create.xml",
+                ]
                 create_xml = os.path.join(self.path, *paths2)
 
-                here = os.path.dirname(os.path.abspath(__file__)).split("/formshare/tests")[0]
+                here = os.path.dirname(os.path.abspath(__file__)).split(
+                    "/formshare/tests"
+                )[0]
                 paths2 = ["mysql.cnf"]
                 mysql_cnf = os.path.join(here, *paths2)
                 create_mysql_repository(
@@ -1775,19 +1801,39 @@ class FunctionalTests(unittest.TestCase):
                 paths2 = [self.server_config["repository.path"], "odk"]
                 odk_dir = os.path.join(self.path, *paths2)
 
-                paths2 = [self.server_config["repository.path"], "odk", "forms", form_directory, "repository",
-                         "create.sql"]
+                paths2 = [
+                    self.server_config["repository.path"],
+                    "odk",
+                    "forms",
+                    form_directory,
+                    "repository",
+                    "create.sql",
+                ]
                 create_sql = os.path.join(self.path, *paths2)
 
-                paths2 = [self.server_config["repository.path"], "odk", "forms", form_directory, "repository",
-                          "insert.sql"]
+                paths2 = [
+                    self.server_config["repository.path"],
+                    "odk",
+                    "forms",
+                    form_directory,
+                    "repository",
+                    "insert.sql",
+                ]
                 insert_sql = os.path.join(self.path, *paths2)
 
-                paths2 = [self.server_config["repository.path"], "odk", "forms", form_directory, "repository",
-                          "create.xml"]
+                paths2 = [
+                    self.server_config["repository.path"],
+                    "odk",
+                    "forms",
+                    form_directory,
+                    "repository",
+                    "create.xml",
+                ]
                 create_xml = os.path.join(self.path, *paths2)
 
-                here = os.path.dirname(os.path.abspath(__file__)).split("/formshare/tests")[0]
+                here = os.path.dirname(os.path.abspath(__file__)).split(
+                    "/formshare/tests"
+                )[0]
                 paths2 = ["mysql.cnf"]
                 mysql_cnf = os.path.join(here, *paths2)
                 create_mysql_repository(

@@ -1,18 +1,19 @@
+import datetime
+import gettext
+import glob
+import logging
+import os
+import shutil
+import traceback
+import uuid
+import zipfile
+from decimal import Decimal
+
 from formshare.config.celery_app import celeryApp
 from formshare.config.celery_class import CeleryTask
-import logging
 from formshare.models import get_engine
-import os
-import gettext
-import uuid
-import datetime
-from decimal import Decimal
-import glob
-import shutil
-from formshare.processes.sse.messaging import send_task_status_to_form
 from formshare.processes.email.send_async_email import send_async_email
-import traceback
-import zipfile
+from formshare.processes.sse.messaging import send_task_status_to_form
 
 log = logging.getLogger("formshare")
 

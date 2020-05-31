@@ -1,4 +1,7 @@
-from formshare.views.classes import PrivateView
+import re
+
+from pyramid.httpexceptions import HTTPFound, HTTPNotFound
+
 from formshare.processes.db import (
     get_project_assistants,
     get_project_id_from_name,
@@ -8,8 +11,7 @@ from formshare.processes.db import (
     delete_assistant,
     change_assistant_password,
 )
-from pyramid.httpexceptions import HTTPFound, HTTPNotFound
-import re
+from formshare.views.classes import PrivateView
 
 
 class AssistantsListView(PrivateView):

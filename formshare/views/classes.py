@@ -10,16 +10,19 @@
     :license: AGPL, see LICENSE for more details.
 """
 
-from ..config.auth import get_user_data, get_assistant_data
-from pyramid.httpexceptions import HTTPFound
-from pyramid.session import check_csrf_token
-from pyramid.httpexceptions import HTTPNotFound, exception_response
-from formencode.variabledecode import variable_decode
-from pyramid.response import Response
 import hashlib
-from babel import Locale
+import json
+import logging
 import uuid
 from ast import literal_eval
+
+from babel import Locale
+from formencode.variabledecode import variable_decode
+from pyramid.httpexceptions import HTTPFound
+from pyramid.httpexceptions import HTTPNotFound, exception_response
+from pyramid.response import Response
+from pyramid.session import check_csrf_token
+
 from formshare.processes.db import (
     get_project_id_from_name,
     user_exists,
@@ -30,9 +33,8 @@ from formshare.processes.db import (
     get_user_by_api_key,
     get_assistant_by_api_key,
 )
-import logging
-import json
 from .. import plugins as p
+from ..config.auth import get_user_data, get_assistant_data
 
 log = logging.getLogger("formshare")
 

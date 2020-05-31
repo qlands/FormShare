@@ -1,11 +1,10 @@
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from email.utils import formatdate
-from formshare.config.jinja_extensions import jinjaEnv, ExtendThis
-from jinja2 import ext
-import logging
-from formshare.plugins.helpers import readble_date
 import datetime
+import logging
+
+from jinja2 import ext
+
+from formshare.config.jinja_extensions import jinjaEnv, ExtendThis
+from formshare.plugins.helpers import readble_date
 from .send_async_email import send_async_email
 
 log = logging.getLogger("formshare")

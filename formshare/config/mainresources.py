@@ -1,5 +1,6 @@
-import formshare.resources as r
 import os
+
+import formshare.resources as r
 
 
 def create_resources(apppath, config):

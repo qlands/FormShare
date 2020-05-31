@@ -1,4 +1,7 @@
 # coding: utf-8
+import json
+
+import sqlalchemy.types as types
 from sqlalchemy import (
     Column,
     DateTime,
@@ -11,10 +14,9 @@ from sqlalchemy import (
     UnicodeText,
 )
 from sqlalchemy.ext import mutable
-import sqlalchemy.types as types
 from sqlalchemy.orm import relationship
+
 from .meta import Base
-import json
 
 metadata = Base.metadata
 

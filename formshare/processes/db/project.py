@@ -1,3 +1,10 @@
+import datetime
+import logging
+import uuid
+
+import dateutil.parser
+from sqlalchemy.exc import IntegrityError
+
 from formshare.models import (
     Project,
     Userproject,
@@ -8,15 +15,10 @@ from formshare.models import (
     Collaborator,
     ProjectFile,
 )
-import logging
-import datetime
-import uuid
-from sqlalchemy.exc import IntegrityError
+from formshare.processes.db.form import get_by_details, get_form_data
 from formshare.processes.elasticsearch.repository_index import (
     get_dataset_stats_for_project,
 )
-from formshare.processes.db.form import get_by_details, get_form_data
-import dateutil.parser
 
 __all__ = [
     "get_project_id_from_name",

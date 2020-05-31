@@ -1,7 +1,8 @@
+import os
+import uuid
+
 from formshare.products import register_product_instance
 from .celery_task import build_kml
-import uuid
-import os
 
 
 def generate_kml_file(request, user, project, form, form_schema, primary_key):

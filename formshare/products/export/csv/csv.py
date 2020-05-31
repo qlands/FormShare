@@ -1,7 +1,8 @@
+import os
+import uuid
+
 from formshare.products import register_product_instance
 from .celery_task import build_csv
-import uuid
-import os
 
 
 def generate_public_csv_file(request, user, project, form, form_schema, form_directory):

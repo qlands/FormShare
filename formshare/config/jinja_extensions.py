@@ -1,13 +1,14 @@
-from jinja2 import nodes
-from jinja2 import ext
 import logging
-from jinja2 import Environment
-from webhelpers2.html import literal
-from jinja2 import FileSystemLoader
 import os
 import re
-import formshare.resources as r
 
+from jinja2 import Environment
+from jinja2 import FileSystemLoader
+from jinja2 import ext
+from jinja2 import nodes
+from webhelpers2.html import literal
+
+import formshare.resources as r
 
 jinjaEnv = Environment()
 log = logging.getLogger("formshare")

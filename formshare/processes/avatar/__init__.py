@@ -71,7 +71,7 @@ class Avatar(object):
             elif len(string) <= 3:
                 return string.upper()
             else:
-                part = string.split(" ")
+                part = string.split()
                 if len(part) == 1:
                     data = part[0]
                     if len(data) >= 3:

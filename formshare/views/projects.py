@@ -124,7 +124,6 @@ class ProjectDetailsView(ProjectsView):
             collaborators, more_collaborators = get_project_collaborators(
                 self.request, project_id, None, 4, True
             )
-        user_details = get_user_details(self.request, user_id)
         forms = get_project_forms(self.request, user_id, project_id)
         active_forms = 0
         inactive_forms = 0
@@ -146,7 +145,6 @@ class ProjectDetailsView(ProjectsView):
             "moreAssistants": more_assistants,
             "groups": get_project_groups(self.request, project_id),
             "files": get_project_files(self.request, project_id),
-            "userDetails": user_details,
             "forms": forms,
             "activeforms": active_forms,
             "inactiveforms": inactive_forms,

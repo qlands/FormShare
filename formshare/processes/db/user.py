@@ -85,31 +85,26 @@ def get_user_stats(request, user):
         .distinct(User.user_id)
         .all()
     )
-
-    if len(my_collaborators) > 0:
+    if len(my_collaborators) > 0 and len(collaborators) > 0:
+        # print("*******************************888")
+        # print(my_collaborators)
+        # print("----------------------------------")
+        # print(collaborators)
+        # print("*******************************888")
         total_collaborators = my_collaborators
+        t_total_collaborators = total_collaborators.copy()
+        for c1 in collaborators:
+            found = False
+            for c2 in t_total_collaborators:
+                if c1["user_id"] == c2["user_id"]:
+                    found = True
+            if not found:
+                total_collaborators.append(c1)
     else:
-        total_collaborators = collaborators
-
-    for c1 in total_collaborators:
-        found = False
-        searched = False
-        for c2 in collaborators:
-            searched = True
-            if c1["user_id"] == c2["user_id"]:
-                found = True
-        if not found and searched:
-            total_collaborators.append(c1)
-
-    for c1 in total_collaborators:
-        found = False
-        searched = False
-        for c2 in my_collaborators:
-            searched = True
-            if c1["user_id"] == c2["user_id"]:
-                found = True
-        if not found and searched:
-            total_collaborators.append(c1)
+        if len(my_collaborators) > 0:
+            total_collaborators = my_collaborators
+        else:
+            total_collaborators = collaborators
 
     res["collaborators"] = total_collaborators
     return res

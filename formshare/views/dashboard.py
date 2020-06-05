@@ -61,7 +61,6 @@ class UserDashBoardView(DashboardView):
                 collaborators, more_collaborators = get_project_collaborators(
                     self.request, self.activeProject["project_id"], None, 4
                 )
-            user_details = get_user_details(self.request, user_id)
             owner = get_project_owner(self.request, self.activeProject["project_id"])
             forms = get_project_forms(
                 self.request, owner, self.activeProject["project_id"]
@@ -96,7 +95,6 @@ class UserDashBoardView(DashboardView):
                 "files": get_project_files(
                     self.request, self.activeProject["project_id"]
                 ),
-                "userDetails": user_details,
                 "forms": forms,
                 "activeforms": active_forms,
                 "inactiveforms": inactive_forms,

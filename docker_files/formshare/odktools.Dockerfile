@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:19.10
 
 MAINTAINER QLands Technology Consultants
 RUN apt-get update && apt-get -y upgrade

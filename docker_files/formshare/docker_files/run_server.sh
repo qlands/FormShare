@@ -1,7 +1,7 @@
 #! /bin/bash
 
 /wait
-mysql -h $MYSQL_HOST_NAME -u $MYSQL_USER_NAME --password=$MYSQL_USER_PASSWORD --ssl-mode=DISABLED --execute='CREATE SCHEMA IF NOT EXISTS formshare'
+mysql -h $MYSQL_HOST_NAME -u $MYSQL_USER_NAME --password=$MYSQL_USER_PASSWORD --execute='CREATE SCHEMA IF NOT EXISTS formshare'
 source /opt/formshare_env/bin/activate
 cd /opt/formshare
 elastic_search_ssl="${ELASTIC_SEARCH_SSL:=false}"

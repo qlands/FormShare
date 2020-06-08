@@ -104,8 +104,9 @@ def get_error_description_from_file(request, project, form, log_file):
         root = tree.getroot()
         error = root.find(".//error")
         message = error.get("Error")
+        table_name = error.get("Table")
         if message.find("Duplicate entry") >= 0:
-            if message.find("maintable") >= 0:
+            if table_name == "maintable":
                 message = message.replace("Duplicate entry ", "")
                 message = message.replace("'", "")
                 message_parts = message.split(" for key ")

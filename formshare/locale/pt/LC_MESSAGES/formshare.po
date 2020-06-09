@@ -4224,7 +4224,7 @@ msgstr "Este é um serviço gratuito* fornecido por"
 msgid ""
 "This could change in the future depending on the storage and processing demand."
 msgstr ""
-"Issp pode mudar no futuro a depender da demanda de armazenamento e "
+"Este pode mudar no futuro a depender da demanda de armazenamento e "
 "processamento."
 
 #: formshare/templates/landing/snippets/slider.jinja2:10

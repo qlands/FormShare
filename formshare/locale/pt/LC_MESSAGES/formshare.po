@@ -1313,7 +1313,7 @@ msgstr "Exibir configuração de QR"
 
 #: formshare/templates/dashboard/index.jinja2:33
 msgid "Welcome"
-msgstr "Bem-vindo"
+msgstr "Boas-vindas"
 
 # Please confirm source text
 #: formshare/templates/dashboard/index.jinja2:35
@@ -3853,7 +3853,7 @@ msgstr "Versão"
 #: formshare/templates/generic/recover_password.jinja2:7
 #: formshare/templates/landing/index.jinja2:4
 msgid "Welcome to FormShare"
-msgstr "Bem-vindo ao FormShare"
+msgstr "Boas-vindas ao FormShare"
 
 #: formshare/templates/dashboard/snippets/header.jinja2:128
 #: formshare/templates/dashboard/snippets/header_home.jinja2:57
@@ -4229,7 +4229,7 @@ msgstr ""
 
 #: formshare/templates/landing/snippets/slider.jinja2:10
 msgid "Welcome to"
-msgstr "Bem-vindo ao"
+msgstr "Boas-vindas ao"
 
 #: formshare/templates/landing/snippets/slider.jinja2:11
 msgid "The data management platform for mobile data collection"

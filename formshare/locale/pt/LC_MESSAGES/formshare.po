@@ -1313,7 +1313,7 @@ msgstr "Exibir configuração de QR"
 
 #: formshare/templates/dashboard/index.jinja2:33
 msgid "Welcome"
-msgstr "Boas-vindas"
+msgstr "Bem-vindo"
 
 # Please confirm source text
 #: formshare/templates/dashboard/index.jinja2:35
@@ -4229,7 +4229,7 @@ msgstr ""
 
 #: formshare/templates/landing/snippets/slider.jinja2:10
 msgid "Welcome to"
-msgstr "Boas-vindas ao"
+msgstr "Bem-vindo ao"
 
 #: formshare/templates/landing/snippets/slider.jinja2:11
 msgid "The data management platform for mobile data collection"

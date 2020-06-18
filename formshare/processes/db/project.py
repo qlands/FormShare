@@ -48,7 +48,6 @@ def get_project_id_from_name(request, user, project_code):
         .filter(Userproject.user_id == user)
         .filter(Project.project_code == project_code)
         .filter(Userproject.access_type == 1)
-        .filter(Userproject.project_accepted == 1)
         .first()
     )
     if res is not None:
@@ -76,7 +75,6 @@ def get_project_code_from_id(request, user, project_id):
         .filter(Userproject.user_id == user)
         .filter(Project.project_id == project_id)
         .filter(Userproject.access_type == 1)
-        .filter(Userproject.project_accepted == 1)
         .first()
     )
     if res is not None:
@@ -130,7 +128,6 @@ def get_project_owner(request, project):
         request.dbsession.query(Userproject.user_id)
         .filter(Userproject.project_id == project)
         .filter(Userproject.access_type == 1)
-        .filter(Userproject.project_accepted == 1)
         .first()
     )
     if res is not None:

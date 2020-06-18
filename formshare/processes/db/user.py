@@ -80,17 +80,11 @@ def get_user_stats(request, user):
         request.dbsession.query(User)
         .filter(Userproject.user_id == User.user_id)
         .filter(Userproject.access_type == 1)
-        .filter(Userproject.project_accepted == 1)
         .filter(Userproject.project_id.in_(not_my_projects))
         .distinct(User.user_id)
         .all()
     )
     if len(my_collaborators) > 0 and len(collaborators) > 0:
-        # print("*******************************888")
-        # print(my_collaborators)
-        # print("----------------------------------")
-        # print(collaborators)
-        # print("*******************************888")
         total_collaborators = my_collaborators
         t_total_collaborators = total_collaborators.copy()
         for c1 in collaborators:

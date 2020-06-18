@@ -3,6 +3,7 @@ import logging
 from uuid import uuid4
 
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import func
 
 from formshare.config.encdecdata import decode_data
 from formshare.config.encdecdata import encode_data
@@ -90,14 +91,22 @@ def get_assigned_assistants(request, project, form):
     return assistants
 
 
-def get_all_assistants(request, project, user):
+def get_all_assistants(request, project, project_user, active_user):
+
+    my_projects = (
+        request.dbsession.query(Userproject.project_id)
+        .filter(Userproject.user_id == active_user)
+        .filter(Userproject.project_accepted == 1)
+    )
+
     res = (
         request.dbsession.query(Project, Collaborator)
         .filter(Project.project_id == Collaborator.project_id)
         .filter(Project.project_id == Userproject.project_id)
-        .filter(Userproject.user_id == user)
-        .filter(Userproject.project_accepted == 1)
+        .filter(Userproject.user_id == project_user)
+        .filter(Userproject.access_type == 1)
         .filter(Project.project_id == project)
+        .filter(Userproject.project_id.in_(my_projects))
         .all()
     )
     project_assistants = map_from_schema(res)
@@ -106,10 +115,11 @@ def get_all_assistants(request, project, user):
         request.dbsession.query(Project, Collaborator)
         .filter(Project.project_id == Collaborator.project_id)
         .filter(Project.project_id == Userproject.project_id)
-        .filter(Userproject.user_id == user)
-        .filter(Userproject.project_accepted == 1)
-        .filter(Collaborator.coll_prjshare == 1)
+        .filter(Userproject.user_id == project_user)
+        .filter(Userproject.access_type == 1)
         .filter(Project.project_id != project)
+        .filter(Project.project_id == project)
+        .filter(Userproject.project_id.in_(my_projects))
         .all()
     )
     other_assistants = map_from_schema(res)
@@ -211,10 +221,26 @@ def delete_assistant(request, project, assistant):
         return False, str(e)
 
 
-def add_assistant(request, project, assistant_data):
-
+def add_assistant(request, user, project, assistant_data):
     _ = request.translate
-
+    res = (
+        request.dbsession.query(func.count(Collaborator.coll_id))
+        .filter(Collaborator.project_id == Userproject.project_id)
+        .filter(Userproject.user_id == user)
+        .filter(Userproject.access_type == 1)
+        .filter(Collaborator.coll_id == assistant_data["coll_id"])
+        .filter(Collaborator.project_id != project)
+        .first()
+    )
+    if res[0] != 0:
+        return (
+            False,
+            _(
+                "The assistant already exists in your account. "
+                "You don't need to duplicate assistants, "
+                'just mark them as "Share among projects" to use them across projects'
+            ),
+        )
     mapped_data = map_to_schema(Collaborator, assistant_data)
     mapped_data["coll_cdate"] = datetime.datetime.now()
     mapped_data["coll_active"] = 1
@@ -288,8 +314,7 @@ def get_project_from_assistant(request, user, requested_project, assistant):
         request.dbsession.query(Userproject, Collaborator)
         .filter(Userproject.project_id == Collaborator.project_id)
         .filter(Userproject.user_id == user)
-        .filter(Userproject.access_type <= 3)
-        .filter(Userproject.project_accepted == 1)
+        .filter(Userproject.access_type == 1)
         .filter(Collaborator.coll_id == assistant)
         .count()
     )
@@ -300,8 +325,7 @@ def get_project_from_assistant(request, user, requested_project, assistant):
                 request.dbsession.query(Collaborator)
                 .filter(Userproject.project_id == Collaborator.project_id)
                 .filter(Userproject.user_id == user)
-                .filter(Userproject.access_type <= 3)
-                .filter(Userproject.project_accepted == 1)
+                .filter(Userproject.access_type == 1)
                 .filter(Collaborator.coll_id == assistant)
                 .first()
             )
@@ -327,8 +351,7 @@ def is_assistant_active(request, user, project, assistant):
         request.dbsession.query(Userproject, Collaborator)
         .filter(Userproject.project_id == Collaborator.project_id)
         .filter(Userproject.user_id == user)
-        .filter(Userproject.access_type <= 3)
-        .filter(Userproject.project_accepted == 1)
+        .filter(Userproject.access_type == 1)
         .filter(Collaborator.coll_id == assistant)
         .count()
     )
@@ -339,8 +362,7 @@ def is_assistant_active(request, user, project, assistant):
                 request.dbsession.query(Collaborator)
                 .filter(Userproject.project_id == Collaborator.project_id)
                 .filter(Userproject.user_id == user)
-                .filter(Userproject.access_type <= 3)
-                .filter(Userproject.project_accepted == 1)
+                .filter(Userproject.access_type == 1)
                 .filter(Collaborator.coll_id == assistant)
                 .first()
             )

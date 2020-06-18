@@ -87,7 +87,6 @@ def get_project_code_from_id(request, user, project_id):
         .filter(Userproject.user_id == user)
         .filter(Project.project_id == project_id)
         .filter(Userproject.access_type == 1)
-        .filter(Userproject.project_accepted == 1)
         .first()
     )
     if res is not None:

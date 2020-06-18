@@ -99,7 +99,7 @@ class AddAssistantsView(PrivateView):
                                 "assistants", userid=user_id, projcode=project_code
                             )
                             added, message = add_assistant(
-                                self.request, project_id, assistant_data
+                                self.request, user_id, project_id, assistant_data
                             )
                             if added:
                                 self.request.session.flash(

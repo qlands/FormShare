@@ -27,7 +27,6 @@ from formshare.processes.db import (
     add_file_to_project,
     get_project_files,
     remove_file_from_project,
-    get_user_details,
     get_project_forms,
     get_by_details,
     set_project_as_active,

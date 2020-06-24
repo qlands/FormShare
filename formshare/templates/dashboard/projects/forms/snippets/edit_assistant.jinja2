@@ -12,14 +12,12 @@
                 {% block edit_assistant_form %}
                     {{ form.secure_form(request) }}
                     {% block edit_assistant_form_fields %}
-                        <input type="hidden" id="project_id" name="project_id" value="">
-                        <input type="hidden" id="coll_id" name="coll_id" value="">
                         <div class="form-group">
                             <label class="col-sm-2 col-form-label">{{ _('Privileges') }}</label>
                             <div class="col-sm-10">
-                                <label><input type="radio" checked value="1" id="role_submmit" name="privilege"> {{ _('Can Submit') }}</label><br/>
-                                <label><input type="radio" value="2" id="role_clean" name="privilege"> {{ _('Can clean') }}</label><br/>
-                                <label><input type="radio" value="3" id="role_both" name="privilege"> {{ _('Both') }}</label>
+                                <label><input type="radio" checked value="1" id="role_submmit" name="coll_privileges"> {{ _('Can Submit') }}</label><br/>
+                                <label><input type="radio" value="2" id="role_clean" name="coll_privileges"> {{ _('Can clean') }}</label><br/>
+                                <label><input type="radio" value="3" id="role_both" name="coll_privileges"> {{ _('Both') }}</label>
                             </div>
                         </div>
                     {% endblock edit_assistant_form_fields %}
@@ -29,7 +27,7 @@
                     {% block edit_assistant_form_actions %}
                         <div class="modal-footer">
                             <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
-                            <button type="submit" name="add_assistant" class="btn btn-primary">{{ _('Change role') }}</button>
+                            <button type="submit" name="add_assistant" class="btn btn-primary">{{ _('Change privileges') }}</button>
                         </div>
                     {% endblock edit_assistant_form_actions %}
                 {% endblock edit_assistant_form %}

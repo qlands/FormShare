@@ -29,6 +29,10 @@ __all__ = [
     "IFormDetailsView",
     "IUserAuthorization",
     "IAPIRoutes",
+    "IFormGroupAccess",
+    "IAssistant",
+    "IAssistantGroup",
+    "IFormAccess",
 ]
 
 
@@ -853,6 +857,370 @@ class ILogOut(Interface):
         :param user: User that disconnected
         :return: None
         """
+
+
+class IAssistant(Interface):
+    """
+        Allows to hook into the processes that create, update and delete assistants
+    """
+
+    def before_create(self, request, user, project, assistant_data):
+        """
+        Called by FormShare so plugins can perform actions before adding an assistant
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project: Project ID
+        :param assistant_data: Assistant information to be added
+        :return: Return a modified version of assistant_data, true or false if the assistant should be added.
+        If False then a message should state why. Example: return assistant_data, False, "My message"
+        """
+        raise NotImplementedError("before_create must be implemented in subclasses")
+
+    def after_create(self, request, user, project, assistant_data):
+        """
+        Called by FormShare so plugins can perform actions before adding an assistant
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project: project ID
+        :param assistant_data: Assistant information
+        :return: None
+        """
+        raise NotImplementedError("after_create must be implemented in subclasses")
+
+    def before_edit(self, request, user, project, assistant, assistant_data):
+        """
+        Called by FormShare so plugins can perform actions before editing an assistant
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project: Project ID
+        :param assistant: Assistant ID
+        :param assistant_data: Assistant information to be added
+        :return: Return a modified version of assistant_data, true or false if the assistant should be added.
+        If False then a message should state why. Example: return assistant_data, False, "My message"
+        """
+        raise NotImplementedError("before_create must be implemented in subclasses")
+
+    def after_edit(self, request, user, project, assistant, assistant_data):
+        """
+        Called by FormShare so plugins can perform actions before editing an assistant
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project: project ID
+        :param assistant: Assistant ID
+        :param assistant_data: Assistant information
+        :return: None
+        """
+        raise NotImplementedError("after_create must be implemented in subclasses")
+
+    def before_delete(self, request, user, project, assistant):
+        """
+        Called by FormShare so plugins can perform actions before deleting an assistant
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project: Project ID
+        :param assistant: Assistant ID
+        :return: Return True or false if the project should be deleted. If False then
+        a message should state why. Example: return False, "My message"
+        """
+        raise NotImplementedError("before_create must be implemented in subclasses")
+
+    def after_delete(self, request, user, project, assistant):
+        """
+        Called by FormShare so plugins can perform actions before deleting an assistant
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project: project ID
+        :param assistant: Assistant ID
+        :return: None
+        """
+        raise NotImplementedError("after_create must be implemented in subclasses")
+
+    def before_password_change(self, request, user, project, assistant, password):
+        """
+        Called by FormShare so plugins can perform actions changing the password an assistant
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project: Project ID
+        :param assistant: Assistant ID
+        :param password: Assistant password
+        :return: True or false if the password should be changed. If False then
+        a message should state why. Example: return False, "My message"
+        """
+        raise NotImplementedError("before_create must be implemented in subclasses")
+
+    def after_password_change(self, request, user, project, assistant, password):
+        """
+        Called by FormShare so plugins can perform actions before changing the password of an assistant
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project: project ID
+        :param assistant: Assistant ID
+        :param password: Assistant password
+        :return: None
+        """
+        raise NotImplementedError("after_create must be implemented in subclasses")
+
+
+class IAssistantGroup(Interface):
+    """
+        Allows to hook into the processes that create, update and delete assistant groups
+    """
+
+    def before_create(self, request, user, project, group_data):
+        """
+        Called by FormShare so plugins can perform actions before adding an assistant group
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project: Project ID
+        :param group_data: Group information to be added
+        :return: Return a modified version of group_data, true or false if the group should be added. If False then
+        a message should state why. Example: return group_data, False, "My message"
+        """
+        raise NotImplementedError("before_create must be implemented in subclasses")
+
+    def after_create(self, request, user, project, group_data):
+        """
+        Called by FormShare so plugins can perform actions before adding a group
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project: project ID
+        :param group_data: Group information
+        :return: None
+        """
+        raise NotImplementedError("after_create must be implemented in subclasses")
+
+    def before_edit(self, request, user, project, assistant, group_data):
+        """
+        Called by FormShare so plugins can perform actions before editing a group
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project: Project ID
+        :param assistant: Assistant ID
+        :param group_data: Group information to be added
+        :return: Return a modified version of group_data, true or false if the group should be edited. If False then
+        a message should state why. Example: return project_data, False, "My message"
+        """
+        raise NotImplementedError("before_edit must be group_data in subclasses")
+
+    def after_edit(self, request, user, project, assistant, group_data):
+        """
+        Called by FormShare so plugins can perform actions before editing an assistant
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project: project ID
+        :param assistant: Assistant ID
+        :param group_data: Group information
+        :return: None
+        """
+        raise NotImplementedError("after_edit must be implemented in subclasses")
+
+    def before_delete(self, request, user, project, group, group_data):
+        """
+        Called by FormShare so plugins can perform actions before deleting a group
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project: Project ID
+        :param group: Group ID
+        :param group_data: Information about the group
+        :return: True or false if the group should be deleted. If False then
+        a message should state why. Example: return False, "My message"
+        """
+        raise NotImplementedError("before_delete must be implemented in subclasses")
+
+    def after_delete(self, request, user, project, group, group_data):
+        """
+        Called by FormShare so plugins can perform actions before deleting a group
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project: project ID
+        :param group: Group ID
+        :param group_data: Group data
+        :return: None
+        """
+        raise NotImplementedError("after_delete must be implemented in subclasses")
+
+
+class IFormAccess(Interface):
+    """
+        Allows to hook into the processes that gives assistant access to a form
+    """
+
+    def before_giving_access(
+        self,
+        request,
+        user,
+        project,
+        form,
+        assistant_project,
+        assistant_id,
+        privilege_data,
+    ):
+        """
+        Called by FormShare so plugins can perform actions before giving access to an assistant
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project: Project ID
+        :param form: Form ID
+        :param assistant_project: The project ID of the assistant
+        :param assistant_id: Assistant ID
+        :param privilege_data: Privilege data
+        :return: A modified version of privilege_data plus True or false if the project should be added. If False then
+        a message should state why. Example: return privilege_data, False, "My message"
+        or return privilege_data, True, ""
+        """
+        raise NotImplementedError(
+            "before_giving_access must be implemented in subclasses"
+        )
+
+    def after_giving_access(
+        self,
+        request,
+        user,
+        project,
+        form,
+        assistant_project,
+        assistant_id,
+        privilege_data,
+    ):
+        """
+        Called by FormShare so plugins can perform actions after giving access an assistant
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project: project ID
+        :param form: Form ID
+        :param assistant_project: The project ID of the assistant
+        :param assistant_id: Assistant ID
+        :param privilege_data: Privilege data
+        :return: None
+        """
+        raise NotImplementedError(
+            "after_giving_access must be implemented in subclasses"
+        )
+
+    def before_editing_access(
+        self,
+        request,
+        user,
+        project,
+        form,
+        assistant_project,
+        assistant_id,
+        privilege_data,
+    ):
+        """
+        Called by FormShare so plugins can perform actions before editing access to an assistant
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project: Project ID
+        :param form: Form ID
+        :param assistant_project: The project ID of the assistant
+        :param assistant_id: Assistant ID
+        :param privilege_data: Privilege data
+        :return: A modified version of privilege_data plus True or false if the project should be added. If False then
+        a message should state why. Example: return privilege_data, False, "My message"
+        or return privilege_data, True, ""
+        """
+        raise NotImplementedError(
+            "before_editing_access must be implemented in subclasses"
+        )
+
+    def after_editing_access(
+        self,
+        request,
+        user,
+        project,
+        form,
+        assistant_project,
+        assistant_id,
+        privilege_data,
+    ):
+        """
+        Called by FormShare so plugins can perform actions after giving access an assistant
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project: project ID
+        :param form: Form ID
+        :param assistant_project: The project ID of the assistant
+        :param assistant_id: Assistant ID
+        :param privilege_data: Privilege data
+        :return: None
+        """
+        raise NotImplementedError(
+            "after_editing_access must be implemented in subclasses"
+        )
+
+    def before_revoking_access(
+        self, request, user, project, form, assistant_project, assistant_id
+    ):
+        """
+        Called by FormShare so plugins can perform actions before revoking access to an assistant
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project: Project ID
+        :param form: Form ID
+        :param assistant_project: The project ID of the assistant
+        :param assistant_id: Assistant ID
+        :return: True or false if the project should be added. If False then
+        a message should state why. Example: return False, "My message"
+        or return True, ""
+        """
+        raise NotImplementedError(
+            "before_giving_access must be implemented in subclasses"
+        )
+
+    def after_revoking_access(
+        self, request, user, project, form, assistant_project, assistant_id
+    ):
+        """
+        Called by FormShare so plugins can perform actions after giving access an assistant
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project: project ID
+        :param form: Form ID
+        :param assistant_project: The project ID of the assistant
+        :param assistant_id: Assistant ID
+        :return: None
+        """
+        raise NotImplementedError(
+            "after_giving_access must be implemented in subclasses"
+        )
+
+
+class IFormGroupAccess(Interface):
+    """
+        Allows to hook into the processes that gives group access to a form
+    """
+
+    def before_giving_access(
+        self, request, user, project, form, group_project, assistant_group
+    ):
+        """
+        Called by FormShare so plugins can perform actions before giving access to an assistant
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project: Project ID
+        :param form: Form ID
+        :param group_project: The project ID of the group
+        :param assistant_group: Group ID
+        :return: True or false if the project should be added. If False then
+        a message should state why. Example: return False, "My message"
+        """
+        raise NotImplementedError("before_create must be implemented in subclasses")
+
+    def after_giving_access(
+        self, request, user, project, form, group_project, group_id
+    ):
+        """
+        Called by FormShare so plugins can perform actions after giving access an assistant
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project: project ID
+        :param form: Form ID
+        :param group_project: The project ID of the group
+        :param group_id: Group ID
+        :return: None
+        """
+        raise NotImplementedError("after_create must be implemented in subclasses")
 
 
 class IPluginObserver(Interface):

@@ -8,7 +8,11 @@ import os
 
 from pyramid.httpexceptions import HTTPNotFound
 
-from formshare.processes.db.project import get_project_id_from_name
+from formshare.processes.db.project import (
+    get_project_id_from_name,
+    get_project_details,
+    get_form_data,
+)
 from formshare.processes.settings import (
     store_settings,
     update_settings,
@@ -26,13 +30,14 @@ __all__ = [
     "add_route",
     "add_field_to_user_schema",
     "add_field_to_project_schema",
-    "add_field_to_collaborator_schema",
-    "add_field_to_collaborator_group_schema",
+    "add_field_to_assistant_schema",
+    "add_field_to_assistant_group_schema",
     "add_field_to_form_schema",
     "FormSharePublicView",
     "FormSharePrivateView",
     "FormShareSettings",
     "FormShareFormEditorView",
+    "FormShareFormAdminView",
 ]
 
 
@@ -112,11 +117,11 @@ def add_field_to_project_schema(field_name, field_desc):
     return {"schema": "project", "fieldname": field_name, "fielddesc": field_desc}
 
 
-def add_field_to_collaborator_schema(field_name, field_desc):
+def add_field_to_assistant_schema(field_name, field_desc):
     return {"schema": "collaborator", "fieldname": field_name, "fielddesc": field_desc}
 
 
-def add_field_to_collaborator_group_schema(field_name, field_desc):
+def add_field_to_assistant_group_schema(field_name, field_desc):
     return {"schema": "collgroup", "fieldname": field_name, "fielddesc": field_desc}
 
 
@@ -176,6 +181,51 @@ class FormShareFormEditorView(PrivateView):
         self.project_code = project_code
         self.project_id = project_id
         self.form_id = form_id
+
+
+class FormShareFormAdminView(PrivateView):
+    """
+       A view class for plugins which require a private Form View with admin privileges.
+    """
+
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.checkCrossPost = False
+        self.privateOnly = True
+        self.user_id = ""
+        self.project_code = ""
+        self.project_id = ""
+        self.form_id = ""
+        self.project_details = None
+        self.form_details = None
+
+    def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        project_code = self.request.matchdict["projcode"]
+        form_id = self.request.matchdict["formid"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] >= 3:
+            raise HTTPNotFound  # Don't edit a public or a project that I am just a member
+        self.user_id = user_id
+        self.project_code = project_code
+        self.project_id = project_id
+        self.form_id = form_id
+        self.project_details = get_project_details(self.request, self.project_id)
+        self.form_details = get_form_data(self.request, self.project_id, self.form_id)
+        self.classResult["projectDetails"] = self.project_details
+        self.classResult["formDetails"] = self.form_details
 
 
 class FormShareSettings(object):

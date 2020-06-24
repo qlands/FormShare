@@ -394,6 +394,7 @@ class Formacces(Base):
     form_id = Column(Unicode(120), primary_key=True, nullable=False)
     coll_privileges = Column(INTEGER)
     access_date = Column(DateTime)
+    extras = Column(UnicodeText)
 
     odkform = relationship("Odkform")
     project = relationship("Collaborator")
@@ -422,6 +423,7 @@ class Formgrpacces(Base):
     form_id = Column(Unicode(120), primary_key=True, nullable=False)
     group_privileges = Column(INTEGER)
     access_date = Column(DateTime)
+    extras = Column(UnicodeText)
 
     odkform = relationship("Odkform")
     project = relationship("Collgroup")

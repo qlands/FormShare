@@ -183,7 +183,15 @@ def load_environment(settings, config, apppath, policy_array):
 
     # Call any connected plugins to add their modifications into the schema. Not all tables has extras so only
     # certain tables are allowed
-    schemas_allowed = ["fsuser", "project", "collaborator", "collgroup", "odkform"]
+    schemas_allowed = [
+        "fsuser",
+        "project",
+        "collaborator",
+        "collgroup",
+        "odkform",
+        "formaccess",
+        "formgrpaccess",
+    ]
     for plugin in p.PluginImplementations(p.ISchema):
         schema_fields = plugin.update_schema(config)
         for field in schema_fields:

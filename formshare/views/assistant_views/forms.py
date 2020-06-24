@@ -7,7 +7,7 @@ import zlib
 import qrcode
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from pyramid.response import FileResponse
-
+import formshare.plugins as p
 from formshare.config.auth import check_assistant_login
 from formshare.processes.db import (
     get_assistant_forms_for_cleaning,
@@ -70,6 +70,7 @@ class ChangeMyAssistantPassword(AssistantView):
 
     def process_view(self):
         if self.request.method == "POST":
+            user_id = self.request.matchdict["userid"]
             next_page = self.request.params.get("next") or self.request.route_url(
                 "assistant_forms", userid=self.userID, projcode=self.projectCode
             )
@@ -86,24 +87,51 @@ class ChangeMyAssistantPassword(AssistantView):
                         assistant_data["old_password"],
                         self.request,
                     ):
-
-                        changed, message = change_assistant_password(
-                            self.request,
-                            project_of_assistant,
-                            self.assistantID,
-                            assistant_data["coll_password"],
-                        )
-                        if changed:
-                            next_page = self.request.route_url(
-                                "assistant_logout",
-                                userid=self.userID,
-                                projcode=self.projectCode,
+                        continue_change = True
+                        for plugin in p.PluginImplementations(p.IAssistant):
+                            (
+                                continue_change,
+                                error_message,
+                            ) = plugin.before_password_change(
+                                self.request,
+                                user_id,
+                                project_of_assistant,
+                                self.assistantID,
+                                assistant_data["coll_password"],
                             )
-                            return HTTPFound(next_page)
+                            if not continue_change:
+                                self.add_error(error_message)
+                            break  # Only one plugging will be called to extend before_password_change
+                        if continue_change:
+                            changed, message = change_assistant_password(
+                                self.request,
+                                project_of_assistant,
+                                self.assistantID,
+                                assistant_data["coll_password"],
+                            )
+                            if changed:
+                                for plugin in p.PluginImplementations(p.IAssistant):
+                                    plugin.after_password_change(
+                                        self.request,
+                                        user_id,
+                                        project_of_assistant,
+                                        self.assistantID,
+                                        assistant_data["coll_password"],
+                                    )
+                                next_page = self.request.route_url(
+                                    "assistant_logout",
+                                    userid=self.userID,
+                                    projcode=self.projectCode,
+                                )
+                                return HTTPFound(next_page)
+                            else:
+                                self.add_error(
+                                    self._("Unable to change the password: ") + message
+                                )
+                                return HTTPFound(
+                                    next_page, headers={"FS_error": "true"}
+                                )
                         else:
-                            self.add_error(
-                                self._("Unable to change the password: ") + message
-                            )
                             return HTTPFound(next_page, headers={"FS_error": "true"})
                     else:
                         self.add_error(self._("The old password is not correct"))

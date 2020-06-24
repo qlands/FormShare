@@ -3,7 +3,7 @@ import logging
 import os
 import shutil
 from hashlib import md5
-
+import formshare.plugins as p
 from lxml import etree
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from pyramid.response import FileResponse
@@ -1211,24 +1211,68 @@ class AddAssistant(PrivateView):
             assistant_data = self.get_post_dict()
             if assistant_data.get("coll_id", "") != "":
                 parts = assistant_data["coll_id"].split("|")
-                privilege = assistant_data["privilege"]
+                assistant_data["project_id"] = parts[0]
+                assistant_data["coll_id"] = parts[1]
+                assistant_data.pop("coll_id", None)
                 if len(parts) == 2:
-                    added, message = add_assistant_to_form(
-                        self.request, project_id, form_id, parts[0], parts[1], privilege
-                    )
-                    if added:
-                        self.request.session.flash(
-                            self._("The assistant was added successfully")
+                    continue_creation = True
+                    for plugin in p.PluginImplementations(p.IFormAccess):
+                        (
+                            data,
+                            continue_creation,
+                            error_message,
+                        ) = plugin.before_giving_access(
+                            self.request,
+                            user_id,
+                            project_id,
+                            form_id,
+                            assistant_data["project_id"],
+                            assistant_data["coll_id"],
+                            assistant_data,
                         )
-                        next_page = self.request.route_url(
-                            "form_details",
-                            userid=user_id,
-                            projcode=project_code,
-                            formid=form_id,
+                        if not continue_creation:
+                            self.add_error(error_message)
+                        else:
+                            assistant_data = data
+                        break  # Only one plugging will be called to extend before_giving_access
+                    if continue_creation:
+                        added, message = add_assistant_to_form(
+                            self.request, project_id, form_id, assistant_data
                         )
-                        return HTTPFound(location=next_page)
+                        if added:
+                            for plugin in p.PluginImplementations(p.IFormAccess):
+                                plugin.after_giving_access(
+                                    self.request,
+                                    user_id,
+                                    project_id,
+                                    form_id,
+                                    assistant_data["project_id"],
+                                    assistant_data["coll_id"],
+                                    assistant_data,
+                                )
+
+                            self.request.session.flash(
+                                self._("The assistant was added successfully")
+                            )
+                            next_page = self.request.route_url(
+                                "form_details",
+                                userid=user_id,
+                                projcode=project_code,
+                                formid=form_id,
+                            )
+                            return HTTPFound(location=next_page)
+                        else:
+                            self.add_error(message)
+                            next_page = self.request.route_url(
+                                "form_details",
+                                userid=user_id,
+                                projcode=project_code,
+                                formid=form_id,
+                            )
+                            return HTTPFound(
+                                location=next_page, headers={"FS_error": "true"}
+                            )
                     else:
-                        self.add_error(message)
                         next_page = self.request.route_url(
                             "form_details",
                             userid=user_id,
@@ -1297,26 +1341,63 @@ class EditAssistant(PrivateView):
 
         if self.request.method == "POST":
             assistant_data = self.get_post_dict()
-            privilege = assistant_data["privilege"]
-            updated, message = update_assistant_privileges(
-                self.request,
-                project_id,
-                form_id,
-                assistant_project_id,
-                assistant_id,
-                privilege,
-            )
-            if updated:
-                self.request.session.flash(self._("The role was changed successfully"))
-                next_page = self.request.route_url(
-                    "form_details",
-                    userid=user_id,
-                    projcode=project_code,
-                    formid=form_id,
+            continue_editing = True
+            for plugin in p.PluginImplementations(p.IFormAccess):
+                data, continue_editing, error_message = plugin.before_editing_access(
+                    self.request,
+                    user_id,
+                    project_id,
+                    form_id,
+                    assistant_project_id,
+                    assistant_id,
+                    assistant_data,
                 )
-                return HTTPFound(location=next_page)
+                if not continue_editing:
+                    self.add_error(error_message)
+                else:
+                    assistant_data = data
+                break  # Only one plugging will be called to extend before_editing_access
+            if continue_editing:
+                updated, message = update_assistant_privileges(
+                    self.request,
+                    project_id,
+                    form_id,
+                    assistant_project_id,
+                    assistant_id,
+                    assistant_data,
+                )
+                if updated:
+                    for plugin in p.PluginImplementations(p.IFormAccess):
+                        plugin.after_editing_access(
+                            self.request,
+                            user_id,
+                            project_id,
+                            form_id,
+                            assistant_project_id,
+                            assistant_id,
+                            assistant_data,
+                        )
+
+                    self.request.session.flash(
+                        self._("The information was changed successfully")
+                    )
+                    next_page = self.request.route_url(
+                        "form_details",
+                        userid=user_id,
+                        projcode=project_code,
+                        formid=form_id,
+                    )
+                    return HTTPFound(location=next_page)
+                else:
+                    self.add_error(message)
+                    next_page = self.request.route_url(
+                        "form_details",
+                        userid=user_id,
+                        projcode=project_code,
+                        formid=form_id,
+                    )
+                    return HTTPFound(location=next_page, headers={"FS_error": "true"})
             else:
-                self.add_error(message)
                 next_page = self.request.route_url(
                     "form_details",
                     userid=user_id,
@@ -1362,22 +1443,57 @@ class RemoveAssistant(PrivateView):
             raise HTTPNotFound
 
         if self.request.method == "POST":
-            removed, message = remove_assistant_from_form(
-                self.request, project_id, form_id, assistant_project_id, assistant_id
-            )
-            if removed:
-                self.request.session.flash(
-                    self._("The assistant was removed successfully")
+            continue_remove = False
+            for plugin in p.PluginImplementations(p.IFormAccess):
+                continue_remove, error_message = plugin.before_revoking_access(
+                    self.request,
+                    user_id,
+                    project_id,
+                    form_id,
+                    assistant_project_id,
+                    assistant_id,
                 )
-                next_page = self.request.route_url(
-                    "form_details",
-                    userid=user_id,
-                    projcode=project_code,
-                    formid=form_id,
+                if not continue_remove:
+                    self.add_error(error_message)
+                break  # Only one plugging will be called to extend before_revoking_access
+            if continue_remove:
+                removed, message = remove_assistant_from_form(
+                    self.request,
+                    project_id,
+                    form_id,
+                    assistant_project_id,
+                    assistant_id,
                 )
-                return HTTPFound(location=next_page)
+                if removed:
+                    for plugin in p.PluginImplementations(p.IFormAccess):
+                        plugin.after_revoking_access(
+                            self.request,
+                            user_id,
+                            project_id,
+                            form_id,
+                            assistant_project_id,
+                            assistant_id,
+                        )
+                    self.request.session.flash(
+                        self._("The assistant was removed successfully")
+                    )
+                    next_page = self.request.route_url(
+                        "form_details",
+                        userid=user_id,
+                        projcode=project_code,
+                        formid=form_id,
+                    )
+                    return HTTPFound(location=next_page)
+                else:
+                    self.add_error(message)
+                    next_page = self.request.route_url(
+                        "form_details",
+                        userid=user_id,
+                        projcode=project_code,
+                        formid=form_id,
+                    )
+                    return HTTPFound(location=next_page, headers={"FS_error": "true"})
             else:
-                self.add_error(message)
                 next_page = self.request.route_url(
                     "form_details",
                     userid=user_id,

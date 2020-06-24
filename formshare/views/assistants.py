@@ -1,7 +1,7 @@
 import re
 
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
-
+import formshare.plugins as p
 from formshare.processes.db import (
     get_project_assistants,
     get_project_id_from_name,
@@ -93,22 +93,47 @@ class AddAssistantsView(PrivateView):
                     ):
                         assistant_data.pop("coll_password2")
                         if assistant_data["coll_password"] != "":
-                            next_page = self.request.params.get(
-                                "next"
-                            ) or self.request.route_url(
-                                "assistants", userid=user_id, projcode=project_code
-                            )
-                            added, message = add_assistant(
-                                self.request, user_id, project_id, assistant_data
-                            )
-                            if added:
-                                self.request.session.flash(
-                                    self._("The assistant was added to this project")
+                            continue_creation = True
+                            for plugin in p.PluginImplementations(p.IAssistant):
+                                (
+                                    data,
+                                    continue_creation,
+                                    error_message,
+                                ) = plugin.before_create(
+                                    self.request, user_id, project_id, assistant_data
                                 )
-                                self.returnRawViewResult = True
-                                return HTTPFound(next_page)
-                            else:
-                                self.append_to_errors(message)
+                                if not continue_creation:
+                                    self.append_to_errors(error_message)
+                                else:
+                                    assistant_data = data
+                                break  # Only one plugging will be called to extend before_create
+                            if continue_creation:
+                                next_page = self.request.params.get(
+                                    "next"
+                                ) or self.request.route_url(
+                                    "assistants", userid=user_id, projcode=project_code
+                                )
+                                added, message = add_assistant(
+                                    self.request, user_id, project_id, assistant_data
+                                )
+                                if added:
+                                    for plugin in p.PluginImplementations(p.IAssistant):
+                                        plugin.after_create(
+                                            self.request,
+                                            user_id,
+                                            project_id,
+                                            assistant_data,
+                                        )
+
+                                    self.request.session.flash(
+                                        self._(
+                                            "The assistant was added to this project"
+                                        )
+                                    )
+                                    self.returnRawViewResult = True
+                                    return HTTPFound(next_page)
+                                else:
+                                    self.append_to_errors(message)
                         else:
                             self.append_to_errors(
                                 self._("The password cannot be empty")
@@ -176,20 +201,39 @@ class EditAssistantsView(PrivateView):
             else:
                 assistant_data["coll_active"] = 0
             assistant_data.pop("coll_id")
-            next_page = self.request.params.get("next") or self.request.route_url(
-                "assistants", userid=user_id, projcode=project_code
-            )
-            edited, message = modify_assistant(
-                self.request, project_id, assistant_id, assistant_data
-            )
-            if edited:
-                self.request.session.flash(
-                    self._("The assistant was edited successfully")
+            continue_editing = True
+            for plugin in p.PluginImplementations(p.IAssistant):
+                (data, continue_editing, error_message,) = plugin.before_edit(
+                    self.request, user_id, project_id, assistant_id, assistant_data
                 )
-                self.returnRawViewResult = True
-                return HTTPFound(next_page)
-            else:
-                self.append_to_errors(message)
+                if not continue_editing:
+                    self.append_to_errors(error_message)
+                else:
+                    assistant_data = data
+                break  # Only one plugging will be called to extend before_create
+            if continue_editing:
+                next_page = self.request.params.get("next") or self.request.route_url(
+                    "assistants", userid=user_id, projcode=project_code
+                )
+                edited, message = modify_assistant(
+                    self.request, project_id, assistant_id, assistant_data
+                )
+                if edited:
+                    for plugin in p.PluginImplementations(p.IAssistant):
+                        plugin.after_edit(
+                            self.request,
+                            user_id,
+                            project_id,
+                            assistant_id,
+                            assistant_data,
+                        )
+                    self.request.session.flash(
+                        self._("The assistant was edited successfully")
+                    )
+                    self.returnRawViewResult = True
+                    return HTTPFound(next_page)
+                else:
+                    self.append_to_errors(message)
         else:
             assistant_data = get_assistant_data(self.request, project_id, assistant_id)
         return {
@@ -227,19 +271,38 @@ class DeleteAssistant(PrivateView):
         if self.request.method == "POST":
             self.returnRawViewResult = True
             assistant_id = self.request.matchdict["assistid"]
-            removed, message = delete_assistant(self.request, project_id, assistant_id)
+            continue_delete = True
             next_page = self.request.params.get("next") or self.request.route_url(
                 "assistants", userid=user_id, projcode=project_code
             )
-            if removed:
-                self.request.session.flash(
-                    self._("The assistant was deleted successfully")
+            for plugin in p.PluginImplementations(p.IAssistant):
+                (data, continue_delete, error_message,) = plugin.before_delete(
+                    self.request, user_id, project_id, assistant_id
                 )
-                return HTTPFound(next_page)
+                if not continue_delete:
+                    self.request.session.flash(
+                        self._("Unable to delete the assistant: ") + error_message
+                    )
+                break  # Only one plugging will be called to extend before_delete
+            if continue_delete:
+                removed, message = delete_assistant(
+                    self.request, project_id, assistant_id
+                )
+                if removed:
+                    for plugin in p.PluginImplementations(p.IAssistant):
+                        plugin.after_delete(
+                            self.request, user_id, project_id, assistant_id
+                        )
+                    self.request.session.flash(
+                        self._("The assistant was deleted successfully")
+                    )
+                    return HTTPFound(next_page)
+                else:
+                    self.request.session.flash(
+                        self._("Unable to delete the assistant: ") + message
+                    )
+                    return HTTPFound(next_page, headers={"FS_error": "true"})
             else:
-                self.request.session.flash(
-                    self._("Unable to delete the assistant: ") + message
-                )
                 return HTTPFound(next_page, headers={"FS_error": "true"})
 
         else:
@@ -277,25 +340,56 @@ class ChangeAssistantPassword(PrivateView):
             assistant_id = self.request.matchdict["assistid"]
             if assistant_data["coll_password"] != "":
                 if assistant_data["coll_password"] == assistant_data["coll_password2"]:
-                    changed, message = change_assistant_password(
-                        self.request,
-                        project_id,
-                        assistant_id,
-                        assistant_data["coll_password"],
-                    )
-                    if changed:
-                        self.request.session.flash(
-                            self._("The password was changed successfully")
+                    continue_change = True
+                    for plugin in p.PluginImplementations(p.IAssistant):
+                        (
+                            continue_change,
+                            error_message,
+                        ) = plugin.before_password_change(
+                            self.request,
+                            user_id,
+                            project_id,
+                            assistant_id,
+                            assistant_data["coll_password"],
                         )
-                        return HTTPFound(
-                            self.request.route_url(
-                                "assistants", userid=user_id, projcode=project_code
+                        if not continue_change:
+                            self.add_error(error_message)
+                        break  # Only one plugging will be called to extend before_password_change
+                    if continue_change:
+                        changed, message = change_assistant_password(
+                            self.request,
+                            project_id,
+                            assistant_id,
+                            assistant_data["coll_password"],
+                        )
+                        if changed:
+                            for plugin in p.PluginImplementations(p.IAssistant):
+                                plugin.after_password_change(
+                                    self.request,
+                                    user_id,
+                                    project_id,
+                                    assistant_id,
+                                    assistant_data["coll_password"],
+                                )
+                            self.request.session.flash(
+                                self._("The password was changed successfully")
                             )
-                        )
+                            return HTTPFound(
+                                self.request.route_url(
+                                    "assistants", userid=user_id, projcode=project_code
+                                )
+                            )
+                        else:
+                            self.add_error(
+                                self._("Unable to change the password: ") + message
+                            )
+                            return HTTPFound(
+                                self.request.route_url(
+                                    "assistants", userid=user_id, projcode=project_code
+                                ),
+                                headers={"FS_error": "true"},
+                            )
                     else:
-                        self.add_error(
-                            self._("Unable to change the password: ") + message
-                        )
                         return HTTPFound(
                             self.request.route_url(
                                 "assistants", userid=user_id, projcode=project_code

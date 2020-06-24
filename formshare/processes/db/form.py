@@ -1075,7 +1075,7 @@ def form_file_exists(request, project, form, file_name):
         return False
 
 
-def add_assistant_to_form(request, project, form, from_project, assistant, privilege):
+def add_assistant_to_form(request, project, form, privilege_data):
     _ = request.translate
     blocked = (
         request.dbsession.query(Odkform.form_blocked)
@@ -1085,14 +1085,11 @@ def add_assistant_to_form(request, project, form, from_project, assistant, privi
     )
     if blocked[0] == 0:
         try:
-            new_access = Formacces(
-                project_id=from_project,
-                coll_id=assistant,
-                form_project=project,
-                form_id=form,
-                coll_privileges=privilege,
-                access_date=datetime.datetime.now(),
-            )
+            privilege_data["access_date"] = datetime.datetime.now()
+            privilege_data["form_project"] = project
+            privilege_data["form_id"] = form
+            mapped_data = map_to_schema(Formacces, privilege_data)
+            new_access = Formacces(**mapped_data)
             request.dbsession.add(new_access)
             request.dbsession.flush()
             return True, ""
@@ -1101,7 +1098,11 @@ def add_assistant_to_form(request, project, form, from_project, assistant, privi
             log.error(
                 "Error {} while adding access to assistant {} of "
                 "project {} to form {} in project {}".format(
-                    str(e), assistant, from_project, project, form
+                    str(e),
+                    privilege_data["coll_id"],
+                    privilege_data["project_id"],
+                    project,
+                    form,
                 )
             )
             return False, "The assistant already exists in this form"
@@ -1110,7 +1111,11 @@ def add_assistant_to_form(request, project, form, from_project, assistant, privi
             log.error(
                 "Error {} while adding access to assistant {} of "
                 "project {} to form {} in project {}".format(
-                    str(e), assistant, from_project, project, form
+                    str(e),
+                    privilege_data["coll_id"],
+                    privilege_data["project_id"],
+                    project,
+                    form,
                 )
             )
             return False, str(e)
@@ -1132,7 +1137,7 @@ def get_form_assistants(request, project, form):
 
 
 def update_assistant_privileges(
-    request, project, form, from_project, assistant, privilege
+    request, project, form, from_project, assistant, privilege_data
 ):
     _ = request.translate
     blocked = (
@@ -1143,6 +1148,7 @@ def update_assistant_privileges(
     )
     if blocked[0] == 0:
         try:
+            mapped_data = map_to_schema(Formacces, privilege_data)
             request.dbsession.query(Formacces).filter(
                 Formacces.project_id == from_project
             ).filter(Formacces.coll_id == assistant).filter(
@@ -1150,7 +1156,7 @@ def update_assistant_privileges(
             ).filter(
                 Formacces.form_id == form
             ).update(
-                {"coll_privileges": privilege}
+                mapped_data
             )
             request.dbsession.flush()
             return True, ""

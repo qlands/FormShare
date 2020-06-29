@@ -36,6 +36,7 @@ __all__ = [
     "set_project_as_active",
     "get_project_owner",
     "get_project_access_type",
+    "get_owned_project",
 ]
 
 log = logging.getLogger("formshare")
@@ -148,6 +149,17 @@ def is_collaborator(request, user, project, accepted_status=1):
         return True
     else:
         return False
+
+
+def get_owned_project(request, user):
+    res = (
+        request.dbsession.query(Project)
+        .filter(Project.project_id == Userproject.project_id)
+        .filter(Userproject.user_id == user)
+        .filter(Userproject.access_type == 1)
+        .all()
+    )
+    return map_from_schema(res)
 
 
 def get_user_projects(request, user, logged_user, private=False):

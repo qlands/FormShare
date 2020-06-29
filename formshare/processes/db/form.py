@@ -75,9 +75,33 @@ __all__ = [
     "get_assistant_forms_for_cleaning",
     "update_form_directory",
     "get_last_clean_info",
+    "get_form_size",
 ]
 
 log = logging.getLogger("formshare")
+
+
+def _get_path_size(start_path="."):
+    total_size = 0
+    for dir_path, dir_names, file_names in os.walk(start_path):
+        for f in file_names:
+            fp = os.path.join(dir_path, f)
+            if not os.path.islink(fp):
+                total_size += os.path.getsize(fp)
+
+    return total_size
+
+
+def get_form_size(request, project_id, form_id):
+    repository_path = request.registry.settings["repository.path"]
+    if not os.path.exists(repository_path):
+        os.makedirs(repository_path)
+    odk_dir = os.path.join(repository_path, *["odk"])
+    form_directory = get_form_directory(request, project_id, form_id)
+    path = os.path.join(
+        odk_dir, *["forms", form_directory]
+    )
+    return _get_path_size(path)
 
 
 def get_project_code_from_id(request, user, project_id):

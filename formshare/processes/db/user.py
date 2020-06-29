@@ -25,6 +25,7 @@ __all__ = [
     "email_exists",
     "update_last_login",
     "get_user_id_with_email",
+    "get_users",
 ]
 
 log = logging.getLogger("formshare")
@@ -154,6 +155,12 @@ def user_exists(request, user, just_active=True):
     if res is None:
         return False
     return True
+
+
+def get_users(request):
+    res = request.dbsession.query(User).all()
+    res = map_from_schema(res)
+    return res
 
 
 def get_user_details(request, user, just_active=True):

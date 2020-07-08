@@ -128,7 +128,14 @@ def map_from_schema(data):
                                         for key2, value2 in iteritems(jsondata):
                                             mapped_data[key2] = value2
                     else:
-                        mapped_data[key] = value
+                        if key != "extras":
+                            mapped_data[key] = value
+                        else:
+                            if value is not None:
+                                jsondata = json.loads(value)
+                                if bool(jsondata):
+                                    for key2, value2 in iteritems(jsondata):
+                                        mapped_data[key2] = value2
 
         return mapped_data
     else:
@@ -160,7 +167,14 @@ def map_from_schema(data):
                                         for key2, value2 in iteritems(jsondata):
                                             temp[key2] = value2
                     else:
-                        temp[key] = value
+                        if key != "extras":
+                            temp[key] = value
+                        else:
+                            if value is not None:
+                                jsondata = json.loads(value)
+                                if bool(jsondata):
+                                    for key2, value2 in iteritems(jsondata):
+                                        temp[key2] = value2
 
             mapped_data.append(temp)
         return mapped_data

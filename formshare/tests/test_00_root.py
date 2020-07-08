@@ -1383,7 +1383,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
-                    "privilege": "1",
+                    "coll_privileges": "1",
                 },
                 status=302,
             )
@@ -1398,7 +1398,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.assistantLogin,
                 ),
-                {"privilege": "3"},
+                {"coll_privileges": "3"},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -1450,7 +1450,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/group/{}/edit".format(
                     self.randonLogin, self.project, "Justtest", self.assistantGroupID
                 ),
-                {"privilege": 3},
+                {"group_privilege": 3},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -1460,7 +1460,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/group/{}/remove".format(
                     self.randonLogin, self.project, "Justtest", self.assistantGroupID
                 ),
-                {"privilege": 3},
+                {"group_privilege": 3},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -1486,7 +1486,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
-                    "privilege": "3",
+                    "coll_privileges": "3",
                 },
                 status=302,
             )
@@ -1571,7 +1571,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
-                    "privilege": "3",
+                    "coll_privileges": "3",
                 },
                 status=302,
             )

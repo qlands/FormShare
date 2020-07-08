@@ -8,10 +8,11 @@ import os
 
 from pyramid.httpexceptions import HTTPNotFound
 
-from formshare.processes.db.project import (
+from formshare.processes.db import (
     get_project_id_from_name,
     get_project_details,
     get_form_data,
+    get_project_owner,
 )
 from formshare.processes.settings import (
     store_settings,
@@ -38,6 +39,8 @@ __all__ = [
     "FormShareSettings",
     "FormShareFormEditorView",
     "FormShareFormAdminView",
+    "add_field_to_form_access_schema",
+    "add_field_to_form_group_access_schema",
 ]
 
 
@@ -127,6 +130,14 @@ def add_field_to_assistant_group_schema(field_name, field_desc):
 
 def add_field_to_form_schema(field_name, field_desc):
     return {"schema": "odkform", "fieldname": field_name, "fielddesc": field_desc}
+
+
+def add_field_to_form_access_schema(field_name, field_desc):
+    return {"schema": "formaccess", "fieldname": field_name, "fielddesc": field_desc}
+
+
+def add_field_to_form_group_access_schema(field_name, field_desc):
+    return {"schema": "formgrpaccess", "fieldname": field_name, "fielddesc": field_desc}
 
 
 class FormSharePublicView(PublicView):
@@ -225,6 +236,7 @@ class FormShareFormAdminView(PrivateView):
         self.project_details = get_project_details(self.request, self.project_id)
         self.form_details = get_form_data(self.request, self.project_id, self.form_id)
         self.classResult["projectDetails"] = self.project_details
+        self.classResult["projectDetails"]["owner"] = get_project_owner(self.request, project["project_id"])
         self.classResult["formDetails"] = self.form_details
 
 

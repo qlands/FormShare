@@ -1213,7 +1213,6 @@ class AddAssistant(PrivateView):
                 parts = assistant_data["coll_id"].split("|")
                 assistant_data["project_id"] = parts[0]
                 assistant_data["coll_id"] = parts[1]
-                assistant_data.pop("coll_id", None)
                 if len(parts) == 2:
                     continue_creation = True
                     for plugin in p.PluginImplementations(p.IFormAccess):
@@ -1443,7 +1442,7 @@ class RemoveAssistant(PrivateView):
             raise HTTPNotFound
 
         if self.request.method == "POST":
-            continue_remove = False
+            continue_remove = True
             for plugin in p.PluginImplementations(p.IFormAccess):
                 continue_remove, error_message = plugin.before_revoking_access(
                     self.request,
@@ -1627,7 +1626,7 @@ class EditFormGroup(PrivateView):
 
         if self.request.method == "POST":
             assistant_data = self.get_post_dict()
-            privilege = assistant_data["privilege"]
+            privilege = assistant_data["group_privilege"]
             updated, message = update_group_privileges(
                 self.request, project_id, form_id, group_id, privilege
             )

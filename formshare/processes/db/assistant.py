@@ -418,7 +418,7 @@ def is_assistant_active(request, user, project, assistant):
         return False
 
 
-def get_assistant_password(request, user, project, assistant):
+def get_assistant_password(request, user, project, assistant, decrypt=True):
     project_assistant = get_project_from_assistant(request, user, project, assistant)
     enum = (
         request.dbsession.query(Collaborator)
@@ -426,5 +426,8 @@ def get_assistant_password(request, user, project, assistant):
         .filter(Collaborator.coll_id == assistant)
         .first()
     )
-    decrypted = decode_data(request, enum.coll_password.encode())
-    return decrypted
+    if decrypt:
+        decrypted = decode_data(request, enum.coll_password.encode())
+        return decrypted
+    else:
+        return enum.coll_password

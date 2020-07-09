@@ -106,7 +106,8 @@
                     data: function (params) {
                         return {
                             q: params.term, // search term
-                            page: params.page
+                            page: params.page,
+                            include_me: "True",
                         };
                     },
                     processResults: function (data, params) {

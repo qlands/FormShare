@@ -130,9 +130,7 @@ class EditUserView(PrivateView):
                             if res:
                                 for plugin in p.PluginImplementations(p.IUser):
                                     plugin.after_edit(
-                                        self.request,
-                                        user_to_modify,
-                                        user_details,
+                                        self.request, user_to_modify, user_details,
                                     )
 
                                 user_index = get_user_index_manager(self.request)
@@ -278,10 +276,11 @@ class AddUserView(PrivateView):
                                         if not added:
                                             self.append_to_errors(error_message)
                                         else:
-                                            for plugin in p.PluginImplementations(p.IUser):
+                                            for plugin in p.PluginImplementations(
+                                                p.IUser
+                                            ):
                                                 plugin.after_create(
-                                                    self.request,
-                                                    user_details,
+                                                    self.request, user_details,
                                                 )
                                             # Store the notifications
                                             feed_manager = get_manager(self.request)
@@ -298,9 +297,15 @@ class AddUserView(PrivateView):
                                                     )
                                                 )
                                             # The user join FormShare
-                                            actor = Actor(user_details["user_id"], "person")
-                                            feed_object = Object("formshare", "platform")
-                                            activity = Activity("join", actor, feed_object)
+                                            actor = Actor(
+                                                user_details["user_id"], "person"
+                                            )
+                                            feed_object = Object(
+                                                "formshare", "platform"
+                                            )
+                                            activity = Activity(
+                                                "join", actor, feed_object
+                                            )
                                             feed_manager.add_activity_feed(activity)
 
                                             # Add the user to the user index
@@ -332,7 +337,9 @@ class AddUserView(PrivateView):
                                                     if plugin_next_page != next_page:
                                                         next_page = plugin_next_page
                                             self.request.session.flash(
-                                                self._("The user was added successfully")
+                                                self._(
+                                                    "The user was added successfully"
+                                                )
                                             )
                                             self.returnRawViewResult = True
                                             return HTTPFound(location=next_page)

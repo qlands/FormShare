@@ -68,7 +68,7 @@ class EditUserView(PrivateView):
                 == "true"
             ):
                 raise HTTPNotFound
-        user_data = self.classResult["userDetails"]
+        user_data = get_user_details(self.request, user_to_modify)
         if self.request.method == "POST":
             action = None
             user_details = self.get_post_dict()
@@ -109,32 +109,52 @@ class EditUserView(PrivateView):
                                     user_details["user_apikey"],
                                 )
                             )
-
-                        res, message = update_profile(
-                            self.request, user_to_modify, user_details
-                        )
-                        if res:
-                            user_index = get_user_index_manager(self.request)
-
-                            user_index_data = user_details
-                            user_index_data.pop("user_apikey", None)
-                            user_index_data.pop("user_active", None)
-                            user_index_data.pop("csrf_token", None)
-                            user_index_data.pop("user_super", None)
-                            user_index_data.pop("modify", None)
-
-                            user_index.update_user(user_to_modify, user_index_data)
-                            self.request.session.flash(
-                                self._("The user has been updated")
+                        continue_edit = True
+                        for plugin in p.PluginImplementations(p.IUser):
+                            (
+                                data,
+                                continue_creation,
+                                error_message,
+                            ) = plugin.before_edit(
+                                self.request, user_to_modify, user_details
                             )
-                            self.returnRawViewResult = True
-                            return HTTPFound(
-                                location=self.request.route_url(
-                                    "manage_users", userid=user_id
+                            if not continue_creation:
+                                self.append_to_errors(error_message)
+                            else:
+                                user_details = data
+                            break  # Only one plugging will be called to extend before_create
+                        if continue_edit:
+                            res, message = update_profile(
+                                self.request, user_to_modify, user_details
+                            )
+                            if res:
+                                for plugin in p.PluginImplementations(p.IUser):
+                                    plugin.after_edit(
+                                        self.request,
+                                        user_to_modify,
+                                        user_details,
+                                    )
+
+                                user_index = get_user_index_manager(self.request)
+                                user_index_data = user_details
+                                user_index_data.pop("user_apikey", None)
+                                user_index_data.pop("user_active", None)
+                                user_index_data.pop("csrf_token", None)
+                                user_index_data.pop("user_super", None)
+                                user_index_data.pop("modify", None)
+
+                                user_index.update_user(user_to_modify, user_index_data)
+                                self.request.session.flash(
+                                    self._("The user has been updated")
                                 )
-                            )
-                        else:
-                            self.append_to_errors(message)
+                                self.returnRawViewResult = True
+                                return HTTPFound(
+                                    location=self.request.route_url(
+                                        "manage_users", userid=user_id
+                                    )
+                                )
+                            else:
+                                self.append_to_errors(message)
 
             if "changepass" in user_details.keys():
                 action = "changepass"
@@ -237,65 +257,85 @@ class AddUserView(PrivateView):
                                     user_details.pop("user_password2", None)
                                     user_details["user_cdate"] = datetime.datetime.now()
                                     user_details["user_apikey"] = str(uuid.uuid4())
-                                    added, error_message = register_user(
-                                        self.request, user_details
-                                    )
-                                    if not added:
-                                        self.append_to_errors(error_message)
-                                    else:
-                                        # Store the notifications
-                                        feed_manager = get_manager(self.request)
-                                        # The user follows himself
-                                        try:
-                                            feed_manager.follow(
-                                                user_details["user_id"],
-                                                user_details["user_id"],
-                                            )
-                                        except Exception as e:
-                                            log.warning(
-                                                "User {} was in FormShare at some point. Error: {}".format(
-                                                    user_details["user_id"], str(e)
+                                    continue_creation = True
+                                    for plugin in p.PluginImplementations(p.IUser):
+                                        (
+                                            data,
+                                            continue_creation,
+                                            error_message,
+                                        ) = plugin.before_create(
+                                            self.request, user_details
+                                        )
+                                        if not continue_creation:
+                                            self.append_to_errors(error_message)
+                                        else:
+                                            user_details = data
+                                        break  # Only one plugging will be called to extend before_create
+                                    if continue_creation:
+                                        added, error_message = register_user(
+                                            self.request, user_details
+                                        )
+                                        if not added:
+                                            self.append_to_errors(error_message)
+                                        else:
+                                            for plugin in p.PluginImplementations(p.IUser):
+                                                plugin.after_create(
+                                                    self.request,
+                                                    user_details,
                                                 )
-                                            )
-                                        # The user join FormShare
-                                        actor = Actor(user_details["user_id"], "person")
-                                        feed_object = Object("formshare", "platform")
-                                        activity = Activity("join", actor, feed_object)
-                                        feed_manager.add_activity_feed(activity)
+                                            # Store the notifications
+                                            feed_manager = get_manager(self.request)
+                                            # The user follows himself
+                                            try:
+                                                feed_manager.follow(
+                                                    user_details["user_id"],
+                                                    user_details["user_id"],
+                                                )
+                                            except Exception as e:
+                                                log.warning(
+                                                    "User {} was in FormShare at some point. Error: {}".format(
+                                                        user_details["user_id"], str(e)
+                                                    )
+                                                )
+                                            # The user join FormShare
+                                            actor = Actor(user_details["user_id"], "person")
+                                            feed_object = Object("formshare", "platform")
+                                            activity = Activity("join", actor, feed_object)
+                                            feed_manager.add_activity_feed(activity)
 
-                                        # Add the user to the user index
-                                        user_index = get_user_index_manager(
-                                            self.request
-                                        )
-                                        user_index_data = user_details
-                                        user_index_data.pop("user_apikey", None)
-                                        user_index_data.pop("user_password", None)
-                                        user_index_data.pop("user_active", None)
-                                        user_index_data.pop("user_cdate", None)
-                                        user_index_data.pop("csrf_token", None)
-                                        user_index.add_user(
-                                            user_details["user_id"], user_index_data
-                                        )
-                                        next_page = self.request.route_url(
-                                            "manage_users", userid=user_id
-                                        )
-                                        plugin_next_page = ""
-                                        for plugin in p.PluginImplementations(
-                                            p.IRegistration
-                                        ):
-                                            plugin_next_page = plugin.after_register(
-                                                self.request, user_details
+                                            # Add the user to the user index
+                                            user_index = get_user_index_manager(
+                                                self.request
                                             )
-                                            break  # Only one plugging will be called to extend after_register
-                                        if plugin_next_page is not None:
-                                            if plugin_next_page != "":
-                                                if plugin_next_page != next_page:
-                                                    next_page = plugin_next_page
-                                        self.request.session.flash(
-                                            self._("The user was added successfully")
-                                        )
-                                        self.returnRawViewResult = True
-                                        return HTTPFound(location=next_page)
+                                            user_index_data = user_details
+                                            user_index_data.pop("user_apikey", None)
+                                            user_index_data.pop("user_password", None)
+                                            user_index_data.pop("user_active", None)
+                                            user_index_data.pop("user_cdate", None)
+                                            user_index_data.pop("csrf_token", None)
+                                            user_index.add_user(
+                                                user_details["user_id"], user_index_data
+                                            )
+                                            next_page = self.request.route_url(
+                                                "manage_users", userid=user_id
+                                            )
+                                            plugin_next_page = ""
+                                            for plugin in p.PluginImplementations(
+                                                p.IRegistration
+                                            ):
+                                                plugin_next_page = plugin.after_register(
+                                                    self.request, user_details
+                                                )
+                                                break  # Only one plugging will be called to extend after_register
+                                            if plugin_next_page is not None:
+                                                if plugin_next_page != "":
+                                                    if plugin_next_page != next_page:
+                                                        next_page = plugin_next_page
+                                            self.request.session.flash(
+                                                self._("The user was added successfully")
+                                            )
+                                            self.returnRawViewResult = True
+                                            return HTTPFound(location=next_page)
                         else:
                             self.append_to_errors(
                                 self._(

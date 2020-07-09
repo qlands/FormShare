@@ -98,9 +98,7 @@ def get_form_size(request, project_id, form_id):
         os.makedirs(repository_path)
     odk_dir = os.path.join(repository_path, *["odk"])
     form_directory = get_form_directory(request, project_id, form_id)
-    path = os.path.join(
-        odk_dir, *["forms", form_directory]
-    )
+    path = os.path.join(odk_dir, *["forms", form_directory])
     return _get_path_size(path)
 
 

@@ -236,7 +236,9 @@ class FormShareFormAdminView(PrivateView):
         self.project_details = get_project_details(self.request, self.project_id)
         self.form_details = get_form_data(self.request, self.project_id, self.form_id)
         self.classResult["projectDetails"] = self.project_details
-        self.classResult["projectDetails"]["owner"] = get_project_owner(self.request, project["project_id"])
+        self.classResult["projectDetails"]["owner"] = get_project_owner(
+            self.request, project["project_id"]
+        )
         self.classResult["formDetails"] = self.form_details
 
 

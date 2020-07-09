@@ -33,6 +33,7 @@ __all__ = [
     "IAssistant",
     "IAssistantGroup",
     "IFormAccess",
+    "IUser",
 ]
 
 
@@ -1221,6 +1222,52 @@ class IFormGroupAccess(Interface):
         :return: None
         """
         raise NotImplementedError("after_create must be implemented in subclasses")
+
+
+class IUser(Interface):
+    """
+        Allows to hook into the processes that creates and updates users
+    """
+
+    def before_create(self, request, user_data):
+        """
+        Called by FormShare so plugins can perform actions before adding an user
+        :param request: ``pyramid.request`` object
+        :param user_data: User information to be added
+        :return: Return a modified version of user_data, true or false if the assistant should be added.
+        If False then a message should state why. Example: return user_data, False, "My message"
+        """
+        raise NotImplementedError("before_create must be implemented in subclasses")
+
+    def after_create(self, request, user_data):
+        """
+        Called by FormShare so plugins can perform actions before adding an user
+        :param request: ``pyramid.request`` object
+        :param user_data: User information
+        :return: None
+        """
+        raise NotImplementedError("after_create must be implemented in subclasses")
+
+    def before_edit(self, request, user, user_data):
+        """
+        Called by FormShare so plugins can perform actions before editing an assistant
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param user_data: user information to be edited
+        :return: Return a modified version of user_data, true or false if the assistant should be edited.
+        If False then a message should state why. Example: return user_data, False, "My message"
+        """
+        raise NotImplementedError("before_edit must be implemented in subclasses")
+
+    def after_edit(self, request, user, user_data):
+        """
+        Called by FormShare so plugins can perform actions before editing an user
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param user_data: User information
+        :return: None
+        """
+        raise NotImplementedError("after_edit must be implemented in subclasses")
 
 
 class IPluginObserver(Interface):

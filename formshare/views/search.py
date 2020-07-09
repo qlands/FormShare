@@ -8,6 +8,11 @@ class APIUserSearchSelect2(PrivateView):
     def process_view(self):
         index_manager = get_user_index_manager(self.request)
         q = self.request.params.get("q", "")
+        include_me = self.request.params.get("include_me", "False")
+        if include_me == "False":
+            include_me = False
+        else:
+            include_me = True
         if q == "":
             q = None
         current_page = self.request.params.get("page")
@@ -26,7 +31,7 @@ class APIUserSearchSelect2(PrivateView):
                 )
                 select2_result = []
                 for result in query_result:
-                    if result["user_id"] != self.userID:
+                    if result["user_id"] != self.userID or include_me:
                         select2_result.append(
                             {
                                 "id": result["user_id"],

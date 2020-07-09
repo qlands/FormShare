@@ -27,7 +27,7 @@ Releases
 ------------
 The current stable release is 2.6.6 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.6.6) 
 
-The database signature for stable 2.6.6 is be94ab1faa43
+The database signature for stable 2.6.6 is b1d4ed9b7aac
 
 The Docker image for stable 2.6.6 is 20200708
 

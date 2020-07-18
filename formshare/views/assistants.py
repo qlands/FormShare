@@ -276,13 +276,11 @@ class DeleteAssistant(PrivateView):
                 "assistants", userid=user_id, projcode=project_code
             )
             for plugin in p.PluginImplementations(p.IAssistant):
-                (data, continue_delete, error_message,) = plugin.before_delete(
+                (continue_delete, error_message,) = plugin.before_delete(
                     self.request, user_id, project_id, assistant_id
                 )
                 if not continue_delete:
-                    self.request.session.flash(
-                        self._("Unable to delete the assistant: ") + error_message
-                    )
+                    self.add_error(error_message)
                 break  # Only one plugging will be called to extend before_delete
             if continue_delete:
                 removed, message = delete_assistant(

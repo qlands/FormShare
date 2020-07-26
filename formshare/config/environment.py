@@ -210,6 +210,10 @@ def load_environment(settings, config, apppath, policy_array):
     # setup the jinjaEnv template's paths for the extensions
     initialize(config.registry.settings["templatesPaths"])
 
-    # Finally we load the routes
+    # We load the routes
     load_routes(config)
     load_api_version_1_routes(config)
+
+    # Finally called connected plugins to IEnvironment
+    for plugin in p.PluginImplementations(p.IEnvironment):
+        plugin.after_environment_load(settings)

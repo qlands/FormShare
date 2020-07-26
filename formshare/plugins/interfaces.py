@@ -34,6 +34,7 @@ __all__ = [
     "IAssistantGroup",
     "IFormAccess",
     "IUser",
+    "IEnvironment",
 ]
 
 
@@ -1268,6 +1269,18 @@ class IUser(Interface):
         :return: None
         """
         raise NotImplementedError("after_edit must be implemented in subclasses")
+
+
+class IEnvironment(Interface):
+    """
+        Allows to hook into the process that creates the FormShare environment
+    """
+
+    def after_environment_load(self, settings):
+        """
+        Called by FormShare after the environment is configured
+        :param settings: FormShare settings
+        """
 
 
 class IPluginObserver(Interface):

@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-06-18 14:51-0600\n"
-"PO-Revision-Date: 2020-06-18 14:58-0600\n"
+"POT-Creation-Date: 2020-07-27 08:48-0600\n"
+"PO-Revision-Date: 2020-07-27 08:51-0600\n"
 "Last-Translator: Carlos Quiros <cquiros@qlands.com>\n"
 "Language: es\n"
 "Language-Team: English <kde-i18n-doc@kde.org>\n"
@@ -26,9 +26,9 @@ msgid ""
 " assistants, just mark them as \"Share among projects\" to use them "
 "across projects"
 msgstr ""
-"El asistente ya existe en su cuenta. Usted no necesita duplicar asistentes,"
-" solo marque los como \"Compartir entre proyectos\" para usarlos entre"
-" proyectos"
+"El asistente ya existe en su cuenta. Usted no necesita duplicar "
+"asistentes, solo marque los como \"Compartir entre proyectos\" para "
+"usarlos entre proyectos"
 
 #: formshare/processes/db/assistant.py:257
 #: formshare/processes/db/assistant.py:280
@@ -58,16 +58,16 @@ msgid "The collaborator is already part of this project"
 msgstr "El colaborador ya es parte de este proyecto"
 
 # | msgid "The code must be unique and cannot be changed afterwards"
-#: formshare/processes/db/form.py:850 formshare/processes/db/form.py:904
-#: formshare/processes/db/form.py:935 formshare/processes/db/form.py:1032
-#: formshare/processes/db/form.py:1061 formshare/processes/db/form.py:1118
-#: formshare/processes/db/form.py:1167 formshare/processes/db/form.py:1199
-#: formshare/processes/db/form.py:1238 formshare/processes/db/form.py:1283
-#: formshare/processes/db/form.py:1313
+#: formshare/processes/db/form.py:872 formshare/processes/db/form.py:926
+#: formshare/processes/db/form.py:957 formshare/processes/db/form.py:1054
+#: formshare/processes/db/form.py:1083 formshare/processes/db/form.py:1145
+#: formshare/processes/db/form.py:1195 formshare/processes/db/form.py:1227
+#: formshare/processes/db/form.py:1266 formshare/processes/db/form.py:1311
+#: formshare/processes/db/form.py:1341
 msgid "This form is blocked and cannot be changed at the moment."
 msgstr "Este formulario está bloqueado y no se puede cambiar en este momento."
 
-#: formshare/processes/db/form.py:1011 formshare/processes/db/project.py:472
+#: formshare/processes/db/form.py:1033 formshare/processes/db/project.py:484
 msgid "The file {} already exist"
 msgstr "El archivo {} ya existe"
 
@@ -79,29 +79,29 @@ msgstr "No se pudo borrar el producto"
 msgid "Output does not exists"
 msgstr "La salida no existe"
 
-#: formshare/processes/db/project.py:336
+#: formshare/processes/db/project.py:348
 msgid "Error allocating access"
 msgstr "Error al dar acceso"
 
-#: formshare/processes/db/project.py:349
+#: formshare/processes/db/project.py:361
 msgid "The project already exist"
 msgstr "El proyecto ha sido creado"
 
-#: formshare/processes/db/project.py:361
+#: formshare/processes/db/project.py:373
 msgid "A project with name '{}' already exists in your account"
 msgstr "Un proyecto con nombre '{}' ya existe en su cuenta"
 
-#: formshare/processes/db/project.py:414
+#: formshare/processes/db/project.py:426
 msgid "If you have forms with submissions. First you need to delete such forms"
 msgstr ""
 "Si usted tiene formularios con envíos. Primero tendría que borrar los "
 "formularios"
 
-#: formshare/processes/db/user.py:127
+#: formshare/processes/db/user.py:128
 msgid "Username is already taken"
 msgstr "Este usuario ya esta en uso"
 
-#: formshare/processes/db/user.py:138 formshare/processes/db/user.py:141
+#: formshare/processes/db/user.py:139 formshare/processes/db/user.py:142
 msgid "Email is invalid"
 msgstr "El correo electrónico es inválido"
 
@@ -658,9 +658,9 @@ msgstr "Confirmación"
 #: formshare/templates/dashboard/projects/forms/dictionary/snippets/change_field_name.jinja2:23
 #: formshare/templates/dashboard/projects/forms/dictionary/snippets/change_table_name.jinja2:23
 #: formshare/templates/dashboard/projects/forms/dictionary/snippets/set_field_as_sensitive.jinja2:27
-#: formshare/templates/dashboard/projects/forms/snippets/add_assistant.jinja2:41
+#: formshare/templates/dashboard/projects/forms/snippets/add_assistant.jinja2:40
 #: formshare/templates/dashboard/projects/forms/snippets/add_group.jinja2:36
-#: formshare/templates/dashboard/projects/forms/snippets/edit_assistant.jinja2:31
+#: formshare/templates/dashboard/projects/forms/snippets/edit_assistant.jinja2:29
 #: formshare/templates/dashboard/projects/forms/snippets/edit_group.jinja2:29
 #: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:142
 #: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:168
@@ -1772,7 +1772,7 @@ msgstr "Añadir asistente"
 
 #: formshare/templates/dashboard/projects/assistant_groups/members/member_list.jinja2:90
 #: formshare/templates/dashboard/projects/forms/import_data/import_form.jinja2:53
-#: formshare/templates/dashboard/projects/forms/snippets/add_assistant.jinja2:14
+#: formshare/templates/dashboard/projects/forms/snippets/add_assistant.jinja2:13
 #: formshare/templates/dashboard/projects/forms/submissions/snippets/move_to_logs.jinja2:15
 msgid "Assistant"
 msgstr "Asistente"
@@ -1782,7 +1782,7 @@ msgstr "Asistente"
 #: formshare/templates/dashboard/projects/assistants/assistant_list.jinja2:45
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2:52
 #: formshare/templates/dashboard/projects/assistants/snippets/brdcrbs_assistadd.jinja2:2
-#: formshare/templates/dashboard/projects/forms/snippets/add_assistant.jinja2:42
+#: formshare/templates/dashboard/projects/forms/snippets/add_assistant.jinja2:41
 msgid "Add assistant"
 msgstr "Añadir asistente"
 
@@ -2017,7 +2017,6 @@ msgstr "Buscar por nombre de usuario, nombre completo o correo electrónico"
 #: formshare/templates/dashboard/projects/collaborators/collaborator_list.jinja2:86
 #: formshare/templates/dashboard/projects/collaborators/collaborator_list.jinja2:104
 #: formshare/templates/dashboard/projects/collaborators/snippets/collaborator_item.jinja2:33
-#: formshare/templates/dashboard/projects/forms/snippets/edit_assistant.jinja2:32
 #: formshare/templates/dashboard/projects/forms/snippets/edit_group.jinja2:30
 msgid "Change role"
 msgstr "Cambiar role"
@@ -2321,30 +2320,30 @@ msgstr "Seleccione un asistente"
 msgid "Import data from FormShare 1.0 or ODK BriefCase"
 msgstr "Importar datos de FormShare 1.0 o ODK BriefCase"
 
-#: formshare/templates/dashboard/projects/forms/snippets/add_assistant.jinja2:28
+#: formshare/templates/dashboard/projects/forms/snippets/add_assistant.jinja2:27
 #: formshare/templates/dashboard/projects/forms/snippets/add_group.jinja2:23
-#: formshare/templates/dashboard/projects/forms/snippets/edit_assistant.jinja2:18
+#: formshare/templates/dashboard/projects/forms/snippets/edit_assistant.jinja2:16
 #: formshare/templates/dashboard/projects/forms/snippets/edit_group.jinja2:16
 msgid "Privileges"
 msgstr "Privilegios"
 
-#: formshare/templates/dashboard/projects/forms/snippets/add_assistant.jinja2:30
+#: formshare/templates/dashboard/projects/forms/snippets/add_assistant.jinja2:29
 #: formshare/templates/dashboard/projects/forms/snippets/add_group.jinja2:25
-#: formshare/templates/dashboard/projects/forms/snippets/edit_assistant.jinja2:20
+#: formshare/templates/dashboard/projects/forms/snippets/edit_assistant.jinja2:18
 #: formshare/templates/dashboard/projects/forms/snippets/edit_group.jinja2:18
 msgid "Can Submit"
 msgstr "Puede enviar"
 
-#: formshare/templates/dashboard/projects/forms/snippets/add_assistant.jinja2:31
+#: formshare/templates/dashboard/projects/forms/snippets/add_assistant.jinja2:30
 #: formshare/templates/dashboard/projects/forms/snippets/add_group.jinja2:26
-#: formshare/templates/dashboard/projects/forms/snippets/edit_assistant.jinja2:21
+#: formshare/templates/dashboard/projects/forms/snippets/edit_assistant.jinja2:19
 #: formshare/templates/dashboard/projects/forms/snippets/edit_group.jinja2:19
 msgid "Can clean"
 msgstr "Puede limpiar"
 
-#: formshare/templates/dashboard/projects/forms/snippets/add_assistant.jinja2:32
+#: formshare/templates/dashboard/projects/forms/snippets/add_assistant.jinja2:31
 #: formshare/templates/dashboard/projects/forms/snippets/add_group.jinja2:27
-#: formshare/templates/dashboard/projects/forms/snippets/edit_assistant.jinja2:22
+#: formshare/templates/dashboard/projects/forms/snippets/edit_assistant.jinja2:20
 #: formshare/templates/dashboard/projects/forms/snippets/edit_group.jinja2:20
 msgid "Both"
 msgstr "Ambos"
@@ -2633,6 +2632,11 @@ msgstr ""
 #: formshare/templates/dashboard/projects/forms/snippets/edit_assistant.jinja2:7
 #: formshare/templates/dashboard/projects/forms/snippets/edit_group.jinja2:7
 msgid "Change privilege"
+msgstr "Cambiar privilegios"
+
+#: formshare/templates/dashboard/projects/forms/snippets/edit_assistant.jinja2:30
+#| msgid "Change privilege"
+msgid "Change privileges"
 msgstr "Cambiar privilegios"
 
 #: formshare/templates/dashboard/projects/forms/snippets/edit_form.jinja2:8
@@ -4455,7 +4459,7 @@ msgstr "El grupo fue eliminado satisfactoriamente"
 msgid "Unable to delete the group: "
 msgstr "No se pudo borrar el grupo:"
 
-#: formshare/views/assistant_groups.py:262 formshare/views/form.py:1221
+#: formshare/views/assistant_groups.py:262 formshare/views/form.py:1254
 msgid "The assistant was added successfully"
 msgstr "El asistente fue añadido satisfactoriamente"
 
@@ -4464,55 +4468,55 @@ msgstr "El asistente fue añadido satisfactoriamente"
 msgid "You need to specify an assistant"
 msgstr "Usted necesita indicar un asistente"
 
-#: formshare/views/assistants.py:106
+#: formshare/views/assistants.py:129
 msgid "The assistant was added to this project"
 msgstr "El asistente fue añadido a este proyecto"
 
-#: formshare/views/assistant_views/forms.py:117
-#: formshare/views/assistants.py:114 formshare/views/assistants.py:316
-#: formshare/views/basic_views.py:519 formshare/views/users.py:175
-#: formshare/views/users.py:306
+#: formshare/views/assistant_views/forms.py:145
+#: formshare/views/assistants.py:139 formshare/views/assistants.py:408
+#: formshare/views/basic_views.py:519 formshare/views/users.py:193
+#: formshare/views/users.py:353
 msgid "The password cannot be empty"
 msgstr "La contraseña no puede ser vacía"
 
-#: formshare/views/assistant_views/forms.py:113
-#: formshare/views/assistants.py:118 formshare/views/assistants.py:307
-#: formshare/views/basic_views.py:499 formshare/views/users.py:172
-#: formshare/views/users.py:301
+#: formshare/views/assistant_views/forms.py:141
+#: formshare/views/assistants.py:143 formshare/views/assistants.py:399
+#: formshare/views/basic_views.py:499 formshare/views/users.py:190
+#: formshare/views/users.py:348
 msgid "The password and its confirmation are not the same"
 msgstr "La contraseña y su confirmación no son iguales"
 
 # | msgid "The user id has invalid characters. Only _ - and . are allowed"
-#: formshare/views/assistants.py:122 formshare/views/basic_views.py:510
-#: formshare/views/users.py:311
+#: formshare/views/assistants.py:147 formshare/views/basic_views.py:510
+#: formshare/views/users.py:358
 msgid "The user id has invalid characters. Only underscore and dot are allowed"
 msgstr ""
 "El usuario posee caracteres inválidos. Solo guion bajo y punto son "
 "permitidos"
 
 # | msgid "You need to specify an user name"
-#: formshare/views/assistants.py:128
+#: formshare/views/assistants.py:153
 msgid "You need to specify an user id"
 msgstr "Debe especificar una identificación de usuario"
 
-#: formshare/views/assistants.py:187
+#: formshare/views/assistants.py:231
 msgid "The assistant was edited successfully"
 msgstr "El asistente fue editado satisfactoriamente"
 
-#: formshare/views/assistants.py:236
+#: formshare/views/assistants.py:295
 msgid "The assistant was deleted successfully"
 msgstr "El asistente fue eliminado satisfactoriamente"
 
-#: formshare/views/assistants.py:241
+#: formshare/views/assistants.py:300
 msgid "Unable to delete the assistant: "
 msgstr "No se pudo borrar el asistente:"
 
-#: formshare/views/assistants.py:288
+#: formshare/views/assistants.py:373
 msgid "The password was changed successfully"
 msgstr "La contraseña fue cambiada satisfactoriamente"
 
-#: formshare/views/assistant_views/forms.py:105
-#: formshare/views/assistants.py:297
+#: formshare/views/assistant_views/forms.py:129
+#: formshare/views/assistants.py:382
 msgid "Unable to change the password: "
 msgstr "No se pudo cambiar la contraseña:"
 
@@ -4745,52 +4749,57 @@ msgstr "El formulario fue desactivado satisfactoriamente"
 
 # | msgid "The role was changed"
 # | msgid "No file was attached"
-#: formshare/views/form.py:1037 formshare/views/projects.py:503
+#: formshare/views/form.py:1037 formshare/views/projects.py:502
 msgid "No files were attached"
 msgstr "No adjuntó ningún archivo"
 
 #: formshare/views/form.py:1041 formshare/views/form.py:1048
-#: formshare/views/projects.py:507 formshare/views/projects.py:514
+#: formshare/views/projects.py:506 formshare/views/projects.py:513
 msgid "Error {} encountered. A log entry has been produced"
 msgstr ""
 "Se encontró el error {}. Se ha agregado una entrada en la bitácora de "
 "errores"
 
-#: formshare/views/form.py:1054 formshare/views/projects.py:521
+#: formshare/views/form.py:1054 formshare/views/projects.py:520
 msgid "The file was uploaded successfully"
 msgstr "El archivo fue subido satisfactoriamente"
 
-#: formshare/views/form.py:1058 formshare/views/projects.py:525
+#: formshare/views/form.py:1058 formshare/views/projects.py:524
 msgid "The files were uploaded successfully"
 msgstr "Los archivos fueron subidos satisfactoriamente"
 
-#: formshare/views/form.py:1119 formshare/views/projects.py:575
+#: formshare/views/form.py:1119 formshare/views/projects.py:574
 msgid "The files was removed successfully"
 msgstr "Los archivos fueron eliminados satisfactoriamente"
 
-#: formshare/views/form.py:1310 formshare/views/form.py:1519
-msgid "The role was changed successfully"
-msgstr "El role fue cambiado satisfactoriamente"
+#: formshare/views/form.py:1381
+#| msgid "The role was changed successfully"
+msgid "The information was changed successfully"
+msgstr "La información fue cambiada satisfactoriamente"
 
-#: formshare/views/form.py:1370
+#: formshare/views/form.py:1477
 msgid "The assistant was removed successfully"
 msgstr "El asistente fue eliminado satisfactoriamente"
 
-#: formshare/views/form.py:1437
+#: formshare/views/form.py:1552
 msgid "The group was added successfully"
 msgstr "El grupo fue añadido satisfactoriamente"
 
-#: formshare/views/form.py:1577
+#: formshare/views/form.py:1634
+msgid "The role was changed successfully"
+msgstr "El role fue cambiado satisfactoriamente"
+
+#: formshare/views/form.py:1692
 msgid "The group was removed successfully"
 msgstr "El grupo fue eliminado satisfactoriamente"
 
-#: formshare/views/form.py:2183 formshare/views/form.py:2252
-#: formshare/views/form.py:2321
+#: formshare/views/form.py:2298 formshare/views/form.py:2367
+#: formshare/views/form.py:2436
 msgid "The process was stopped successfully"
 msgstr "El proceso fue detenido satisfactoriamente"
 
-#: formshare/views/form.py:2189 formshare/views/form.py:2258
-#: formshare/views/form.py:2327
+#: formshare/views/form.py:2304 formshare/views/form.py:2373
+#: formshare/views/form.py:2442
 msgid "FormShare was not able to stop the process"
 msgstr "FormShare no pudo detener el proceso"
 
@@ -4806,7 +4815,7 @@ msgstr "No se pudo borrar el producto:"
 msgid "The profile has been updated"
 msgstr "El perfil se ha actualizado"
 
-#: formshare/views/profile.py:85 formshare/views/projects.py:336
+#: formshare/views/profile.py:85 formshare/views/projects.py:335
 msgid "The name cannot be empty"
 msgstr "El nombre no puede ser vacío"
 
@@ -4830,38 +4839,38 @@ msgstr "Usted necesita indicar una nueva contraseña"
 msgid "You need to specify the old password"
 msgstr "Usted necesita indicar la contraseña anterior"
 
-#: formshare/views/projects.py:259
+#: formshare/views/projects.py:258
 msgid "The project has been created"
 msgstr "El proyecto ha sido creado"
 
 # | msgid "The project has invalid characters. Only underscore (_) is allowed"
-#: formshare/views/projects.py:267
+#: formshare/views/projects.py:266
 msgid "The project code has invalid characters. Only underscore (_) is allowed"
 msgstr ""
 "El código del proyecto tiene caracteres no válidos. Solo se permite el "
 "subrayado (_)"
 
-#: formshare/views/projects.py:272
+#: formshare/views/projects.py:271
 msgid "The project code cannot be empty"
 msgstr "El código de proyecto no puede ser vacío"
 
-#: formshare/views/projects.py:330
+#: formshare/views/projects.py:329
 msgid "The project has been modified"
 msgstr "El proyecto has sido modificado"
 
-#: formshare/views/projects.py:370
+#: formshare/views/projects.py:369
 msgid "The active project has changed"
 msgstr "El proyecto activo ha cambiado"
 
-#: formshare/views/projects.py:373
+#: formshare/views/projects.py:372
 msgid "Error activating project: "
 msgstr "Error activando el proyecto:"
 
-#: formshare/views/projects.py:426
+#: formshare/views/projects.py:425
 msgid "The project was deleted successfully"
 msgstr "El proyecto fue eliminado satisfactoriamente"
 
-#: formshare/views/projects.py:430
+#: formshare/views/projects.py:429
 msgid "Unable to delete the project: "
 msgstr "No se pudo borrar el proyecto:"
 
@@ -4941,30 +4950,30 @@ msgstr "No se encontró el Rowuuid indicado"
 msgid "You need to indicate a rowuuid"
 msgstr "Usted tiene que indicar un rowuuid"
 
-#: formshare/views/users.py:82 formshare/views/users.py:218
+#: formshare/views/users.py:82 formshare/views/users.py:236
 msgid "Such email address is not valid"
 msgstr "El correo electrónico no es válido"
 
-#: formshare/views/users.py:88 formshare/views/users.py:227
+#: formshare/views/users.py:88 formshare/views/users.py:245
 msgid "Such email address already belongs to another account"
 msgstr "El correo electrónico ya esta en uso por otro usuario"
 
 # | msgid "The profile has been updated"
-#: formshare/views/users.py:128
+#: formshare/views/users.py:146
 msgid "The user has been updated"
 msgstr "El usuario se ha actualizado"
 
-#: formshare/views/users.py:158
+#: formshare/views/users.py:176
 msgid "The password for {} was modified"
 msgstr "La contraseña para {} fue modificada"
 
 # | msgid "The form was added successfully"
-#: formshare/views/users.py:295
+#: formshare/views/users.py:340
 msgid "The user was added successfully"
 msgstr "El usuario fue añadido satisfactoriamente"
 
 # | msgid "The project already exist"
-#: formshare/views/users.py:308
+#: formshare/views/users.py:355
 msgid "Such user already exists"
 msgstr "El usuario ya existe"
 
@@ -4988,12 +4997,12 @@ msgstr "Usted no ató ningún archivo"
 msgid "The file was uploaded"
 msgstr "El archivo fue subido satisfactoriamente"
 
-#: formshare/views/assistant_views/forms.py:109
+#: formshare/views/assistant_views/forms.py:137
 msgid "The old password is not correct"
 msgstr "La antigua contraseña es incorrecta"
 
 # | msgid "Unable to change the password: "
-#: formshare/views/assistant_views/forms.py:147
+#: formshare/views/assistant_views/forms.py:175
 msgid "Unable to change the key: "
 msgstr "No se pudo cambiar la llave API:"
 

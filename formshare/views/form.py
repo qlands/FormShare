@@ -446,9 +446,7 @@ class FormDetails(PrivateView):
         if form_data is not None:
             form_files = get_form_files(self.request, project_id, form_id)
             if self.user is not None:
-                assistants = get_all_assistants(
-                    self.request, project_id, user_id, self.user.id
-                )
+                assistants = get_all_assistants(self.request, user_id)
             else:
                 assistants = []
             form_assistants = get_form_assistants(self.request, project_id, form_id)

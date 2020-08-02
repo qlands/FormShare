@@ -239,7 +239,7 @@ class GroupMembersView(PrivateView):
             raise HTTPNotFound
 
         members = get_members(self.request, project_id, group_id)
-        assistants = get_all_assistants(self.request, project_id, user_id, self.user.id)
+        assistants = get_all_assistants(self.request, user_id)
         group_data = get_group_data(self.request, project_id, group_id)
 
         if self.request.method == "POST":

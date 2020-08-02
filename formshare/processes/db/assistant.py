@@ -91,40 +91,17 @@ def get_assigned_assistants(request, project, form):
     return assistants
 
 
-def get_all_assistants(request, project, project_user, active_user):
-
-    my_projects = (
-        request.dbsession.query(Userproject.project_id)
-        .filter(Userproject.user_id == active_user)
-        .filter(Userproject.project_accepted == 1)
-    )
-
+def get_all_assistants(request, project_user):
     res = (
         request.dbsession.query(Project, Collaborator)
         .filter(Project.project_id == Collaborator.project_id)
         .filter(Project.project_id == Userproject.project_id)
         .filter(Userproject.user_id == project_user)
         .filter(Userproject.access_type == 1)
-        .filter(Project.project_id == project)
-        .filter(Userproject.project_id.in_(my_projects))
+        .filter(Collaborator.coll_prjshare == 1)
         .all()
     )
-    project_assistants = map_from_schema(res)
-
-    res = (
-        request.dbsession.query(Project, Collaborator)
-        .filter(Project.project_id == Collaborator.project_id)
-        .filter(Project.project_id == Userproject.project_id)
-        .filter(Userproject.user_id == project_user)
-        .filter(Userproject.access_type == 1)
-        .filter(Project.project_id != project)
-        .filter(Project.project_id == project)
-        .filter(Userproject.project_id.in_(my_projects))
-        .all()
-    )
-    other_assistants = map_from_schema(res)
-
-    all_assistants = project_assistants + other_assistants
+    all_assistants = map_from_schema(res)
 
     assistants = []
     for item in all_assistants:

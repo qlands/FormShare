@@ -8,19 +8,18 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-07-27 08:48-0600\n"
+"POT-Creation-Date: 2020-08-06 13:51-0600\n"
 "PO-Revision-Date: 2020-07-27 08:51-0600\n"
 "Last-Translator: Carlos Quiros <cquiros@qlands.com>\n"
 "Language: es\n"
 "Language-Team: English <kde-i18n-doc@kde.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.8.0\n"
-"X-Generator: Lokalize 19.12.3\n"
 
-#: formshare/processes/db/assistant.py:238
+#: formshare/processes/db/assistant.py:215
 msgid ""
 "The assistant already exists in your account. You don't need to duplicate"
 " assistants, just mark them as \"Share among projects\" to use them "
@@ -30,8 +29,8 @@ msgstr ""
 "asistentes, solo marque los como \"Compartir entre proyectos\" para "
 "usarlos entre proyectos"
 
+#: formshare/processes/db/assistant.py:234
 #: formshare/processes/db/assistant.py:257
-#: formshare/processes/db/assistant.py:280
 msgid "The assistant is already part of this project"
 msgstr "El asistente ya es parte de este proyecto"
 
@@ -200,8 +199,7 @@ msgstr ""
 
 #: formshare/processes/odk/api.py:529
 msgid "The following tables have more than 64 selects: "
-msgstr ""
-"Las siguientes tablas tienen mas de 64 opciones de selección (selects):"
+msgstr "Las siguientes tablas tienen mas de 64 opciones de selección (selects):"
 
 #: formshare/processes/odk/api.py:537
 msgid " with "
@@ -324,8 +322,7 @@ msgstr ""
 
 #: formshare/processes/settings/settings.py:28
 msgid "Error storing setting for key {}. Key already exits"
-msgstr ""
-"Error al almacenar la configuración para la llave {}. La llave ya existe"
+msgstr "Error al almacenar la configuración para la llave {}. La llave ya existe"
 
 #: formshare/processes/submission/api.py:171
 msgid "There are no media files to download"
@@ -2176,8 +2173,7 @@ msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/dictionary/edit_tables.jinja2:68
 msgid "Lookup tables: Contain the description of categorical variables."
-msgstr ""
-"Tablas de búsqueda: Contienen la descripción de las variables categóricas"
+msgstr "Tablas de búsqueda: Contienen la descripción de las variables categóricas"
 
 #: formshare/templates/dashboard/projects/forms/dictionary/edit_tables.jinja2:79
 msgid "Filter by table type"
@@ -2457,8 +2453,7 @@ msgstr "Pase por cada actualización en la lista y envíelos a FormShare"
 #: formshare/templates/dashboard/projects/forms/snippets/api_examples.jinja2:67
 #: formshare/templates/dashboard/projects/forms/snippets/api_examples.jinja2:139
 msgid "Create a Python Dict structure. In this example this will look like"
-msgstr ""
-"Cree una estructura Dict en Python. En este ejemplo el resultado va ha ser"
+msgstr "Cree una estructura Dict en Python. En este ejemplo el resultado va ha ser"
 
 #: formshare/templates/dashboard/projects/forms/snippets/api_examples.jinja2:68
 msgid "This will tell FormShare to look for"
@@ -2515,8 +2510,7 @@ msgstr ""
 "en el rowuuid"
 
 #: formshare/templates/dashboard/projects/forms/snippets/api_examples.jinja2:120
-msgid ""
-"Python program: Read the list of changes and push the update to FormShare"
+msgid "Python program: Read the list of changes and push the update to FormShare"
 msgstr ""
 "Programa en Python. Lea la lista de cambios y envié las actualizaciones a"
 " FormShare"
@@ -2634,8 +2628,8 @@ msgstr ""
 msgid "Change privilege"
 msgstr "Cambiar privilegios"
 
+# | msgid "Change privilege"
 #: formshare/templates/dashboard/projects/forms/snippets/edit_assistant.jinja2:30
-#| msgid "Change privilege"
 msgid "Change privileges"
 msgstr "Cambiar privilegios"
 
@@ -3321,8 +3315,7 @@ msgstr "Subir nueva versión"
 
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:13
 msgid "Warning: Uploading a new version will remove any test data"
-msgstr ""
-"Advertencia: Al subir una nueva versión usted borrará los datos de prueba"
+msgstr "Advertencia: Al subir una nueva versión usted borrará los datos de prueba"
 
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:24
 msgid "Choose file"
@@ -3681,8 +3674,7 @@ msgid "FormShare will perform more checks on"
 msgstr "FormShare realizará más verificaciones en"
 
 #: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:31
-msgid ""
-"and report whether or not is possible to merge it into the repository of"
+msgid "and report whether or not is possible to merge it into the repository of"
 msgstr "e informar si es posible o no fusionarlo en el repositorio de"
 
 #: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:31
@@ -4129,8 +4121,7 @@ msgstr "Por favor responda a"
 
 #: formshare/templates/email/collaborate_email.jinja2:12
 msgid "if you think you got this email by mistake."
-msgstr ""
-"si usted considera que este correo electrónico le fue enviado por error."
+msgstr "si usted considera que este correo electrónico le fue enviado por error."
 
 # | msgid "Disregarded"
 #: formshare/templates/email/collaborate_email.jinja2:15
@@ -4459,7 +4450,7 @@ msgstr "El grupo fue eliminado satisfactoriamente"
 msgid "Unable to delete the group: "
 msgstr "No se pudo borrar el grupo:"
 
-#: formshare/views/assistant_groups.py:262 formshare/views/form.py:1254
+#: formshare/views/assistant_groups.py:262 formshare/views/form.py:1252
 msgid "The assistant was added successfully"
 msgstr "El asistente fue añadido satisfactoriamente"
 
@@ -4690,8 +4681,7 @@ msgstr "Faltan los siguientes archivos y debe adjuntarlos:"
 
 #: formshare/views/form.py:306
 msgid "There was an error while processing some of the XML resource files:"
-msgstr ""
-"Se produjo un error al procesar algunos de los archivos de recursos XML:"
+msgstr "Se produjo un error al procesar algunos de los archivos de recursos XML:"
 
 # | msgid "The following variables are have invalid names:"
 #: formshare/views/form.py:329
@@ -4700,8 +4690,7 @@ msgstr "Los siguientes archivos de recursos CSV tienen caracteres no válidos:"
 
 #: formshare/views/form.py:336
 msgid "There was an error while processing some of the CSV resource files:"
-msgstr ""
-"Se produjo un error al procesar algunos de los archivos de recursos CSV:"
+msgstr "Se produjo un error al procesar algunos de los archivos de recursos CSV:"
 
 # | msgid "Email is invalid"
 #: formshare/views/form.py:360 formshare/views/repository.py:300
@@ -4719,87 +4708,87 @@ msgstr "Las siguientes opciones están duplicadas en su ODK:"
 msgid "with the following duplicates:"
 msgstr "con los siguientes duplicados:"
 
-#: formshare/views/form.py:592
+#: formshare/views/form.py:590
 msgid "The form was added successfully"
 msgstr "El formulario fue añadido satisfactoriamente"
 
-#: formshare/views/form.py:610 formshare/views/form.py:681
+#: formshare/views/form.py:608 formshare/views/form.py:679
 msgid "Unable to upload the form: "
 msgstr "No se pudo añadir el formulario:"
 
-#: formshare/views/form.py:671
+#: formshare/views/form.py:669
 msgid "The ODK form was successfully updated"
 msgstr "El formulario ODK fue actualizado satisfactoriamente"
 
-#: formshare/views/form.py:732
+#: formshare/views/form.py:730
 msgid "The form was edited successfully"
 msgstr "El formulario fue editando satisfactoriamente"
 
-#: formshare/views/form.py:839
+#: formshare/views/form.py:837
 msgid "The form was deleted successfully"
 msgstr "El formulario fue eliminado satisfactoriamente"
 
-#: formshare/views/form.py:898
+#: formshare/views/form.py:896
 msgid "The form was activated successfully"
 msgstr "El formulario fue activado satisfactoriamente"
 
-#: formshare/views/form.py:951
+#: formshare/views/form.py:949
 msgid "The form was deactivated successfully"
 msgstr "El formulario fue desactivado satisfactoriamente"
 
 # | msgid "The role was changed"
 # | msgid "No file was attached"
-#: formshare/views/form.py:1037 formshare/views/projects.py:502
+#: formshare/views/form.py:1035 formshare/views/projects.py:502
 msgid "No files were attached"
 msgstr "No adjuntó ningún archivo"
 
-#: formshare/views/form.py:1041 formshare/views/form.py:1048
+#: formshare/views/form.py:1039 formshare/views/form.py:1046
 #: formshare/views/projects.py:506 formshare/views/projects.py:513
 msgid "Error {} encountered. A log entry has been produced"
 msgstr ""
 "Se encontró el error {}. Se ha agregado una entrada en la bitácora de "
 "errores"
 
-#: formshare/views/form.py:1054 formshare/views/projects.py:520
+#: formshare/views/form.py:1052 formshare/views/projects.py:520
 msgid "The file was uploaded successfully"
 msgstr "El archivo fue subido satisfactoriamente"
 
-#: formshare/views/form.py:1058 formshare/views/projects.py:524
+#: formshare/views/form.py:1056 formshare/views/projects.py:524
 msgid "The files were uploaded successfully"
 msgstr "Los archivos fueron subidos satisfactoriamente"
 
-#: formshare/views/form.py:1119 formshare/views/projects.py:574
+#: formshare/views/form.py:1117 formshare/views/projects.py:574
 msgid "The files was removed successfully"
 msgstr "Los archivos fueron eliminados satisfactoriamente"
 
-#: formshare/views/form.py:1381
-#| msgid "The role was changed successfully"
+# | msgid "The role was changed successfully"
+#: formshare/views/form.py:1379
 msgid "The information was changed successfully"
 msgstr "La información fue cambiada satisfactoriamente"
 
-#: formshare/views/form.py:1477
+#: formshare/views/form.py:1475
 msgid "The assistant was removed successfully"
 msgstr "El asistente fue eliminado satisfactoriamente"
 
-#: formshare/views/form.py:1552
+#: formshare/views/form.py:1550
 msgid "The group was added successfully"
 msgstr "El grupo fue añadido satisfactoriamente"
 
-#: formshare/views/form.py:1634
+#: formshare/views/form.py:1632
 msgid "The role was changed successfully"
 msgstr "El role fue cambiado satisfactoriamente"
 
-#: formshare/views/form.py:1692
+#: formshare/views/form.py:1690
 msgid "The group was removed successfully"
 msgstr "El grupo fue eliminado satisfactoriamente"
 
-#: formshare/views/form.py:2298 formshare/views/form.py:2367
-#: formshare/views/form.py:2436
+#: formshare/views/form.py:2296 formshare/views/form.py:2365
+#: formshare/views/form.py:2434
 msgid "The process was stopped successfully"
 msgstr "El proceso fue detenido satisfactoriamente"
 
-#: formshare/views/form.py:2304 formshare/views/form.py:2373
-#: formshare/views/form.py:2442
+#: formshare/views/form.py:2302 formshare/views/form.py:2371
+#: formshare/views/form.py:2440
 msgid "FormShare was not able to stop the process"
 msgstr "FormShare no pudo detener el proceso"
 

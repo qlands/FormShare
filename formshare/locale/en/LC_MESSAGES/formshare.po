@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-07-27 08:48-0600\n"
+"POT-Creation-Date: 2020-08-06 13:51-0600\n"
 "PO-Revision-Date: 2017-11-15 22:40-0600\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -18,15 +18,15 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.8.0\n"
 
-#: formshare/processes/db/assistant.py:238
+#: formshare/processes/db/assistant.py:215
 msgid ""
 "The assistant already exists in your account. You don't need to duplicate"
 " assistants, just mark them as \"Share among projects\" to use them "
 "across projects"
 msgstr ""
 
+#: formshare/processes/db/assistant.py:234
 #: formshare/processes/db/assistant.py:257
-#: formshare/processes/db/assistant.py:280
 msgid "The assistant is already part of this project"
 msgstr ""
 
@@ -4125,7 +4125,7 @@ msgstr ""
 msgid "Unable to delete the group: "
 msgstr ""
 
-#: formshare/views/assistant_groups.py:262 formshare/views/form.py:1254
+#: formshare/views/assistant_groups.py:262 formshare/views/form.py:1252
 msgid "The assistant was added successfully"
 msgstr ""
 
@@ -4344,82 +4344,82 @@ msgstr ""
 msgid "with the following duplicates:"
 msgstr ""
 
-#: formshare/views/form.py:592
+#: formshare/views/form.py:590
 msgid "The form was added successfully"
 msgstr ""
 
-#: formshare/views/form.py:610 formshare/views/form.py:681
+#: formshare/views/form.py:608 formshare/views/form.py:679
 msgid "Unable to upload the form: "
 msgstr ""
 
-#: formshare/views/form.py:671
+#: formshare/views/form.py:669
 msgid "The ODK form was successfully updated"
 msgstr ""
 
-#: formshare/views/form.py:732
+#: formshare/views/form.py:730
 msgid "The form was edited successfully"
 msgstr ""
 
-#: formshare/views/form.py:839
+#: formshare/views/form.py:837
 msgid "The form was deleted successfully"
 msgstr ""
 
-#: formshare/views/form.py:898
+#: formshare/views/form.py:896
 msgid "The form was activated successfully"
 msgstr ""
 
-#: formshare/views/form.py:951
+#: formshare/views/form.py:949
 msgid "The form was deactivated successfully"
 msgstr ""
 
-#: formshare/views/form.py:1037 formshare/views/projects.py:502
+#: formshare/views/form.py:1035 formshare/views/projects.py:502
 msgid "No files were attached"
 msgstr ""
 
-#: formshare/views/form.py:1041 formshare/views/form.py:1048
+#: formshare/views/form.py:1039 formshare/views/form.py:1046
 #: formshare/views/projects.py:506 formshare/views/projects.py:513
 msgid "Error {} encountered. A log entry has been produced"
 msgstr ""
 
-#: formshare/views/form.py:1054 formshare/views/projects.py:520
+#: formshare/views/form.py:1052 formshare/views/projects.py:520
 msgid "The file was uploaded successfully"
 msgstr ""
 
-#: formshare/views/form.py:1058 formshare/views/projects.py:524
+#: formshare/views/form.py:1056 formshare/views/projects.py:524
 msgid "The files were uploaded successfully"
 msgstr ""
 
-#: formshare/views/form.py:1119 formshare/views/projects.py:574
+#: formshare/views/form.py:1117 formshare/views/projects.py:574
 msgid "The files was removed successfully"
 msgstr ""
 
-#: formshare/views/form.py:1381
+#: formshare/views/form.py:1379
 msgid "The information was changed successfully"
 msgstr ""
 
-#: formshare/views/form.py:1477
+#: formshare/views/form.py:1475
 msgid "The assistant was removed successfully"
 msgstr ""
 
-#: formshare/views/form.py:1552
+#: formshare/views/form.py:1550
 msgid "The group was added successfully"
 msgstr ""
 
-#: formshare/views/form.py:1634
+#: formshare/views/form.py:1632
 msgid "The role was changed successfully"
 msgstr ""
 
-#: formshare/views/form.py:1692
+#: formshare/views/form.py:1690
 msgid "The group was removed successfully"
 msgstr ""
 
-#: formshare/views/form.py:2298 formshare/views/form.py:2367
-#: formshare/views/form.py:2436
+#: formshare/views/form.py:2296 formshare/views/form.py:2365
+#: formshare/views/form.py:2434
 msgid "The process was stopped successfully"
 msgstr ""
 
-#: formshare/views/form.py:2304 formshare/views/form.py:2373
-#: formshare/views/form.py:2442
+#: formshare/views/form.py:2302 formshare/views/form.py:2371
+#: formshare/views/form.py:2440
 msgid "FormShare was not able to stop the process"
 msgstr ""
 

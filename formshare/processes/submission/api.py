@@ -172,13 +172,14 @@ def get_submission_media_files(request, project, form, just_for_submissions=None
 
 
 def gather_array_sizes(data, array_dict):
-    for key, value in data.items():
-        if type(value) is list:
-            current_size = array_dict.get(key, 0)
-            if len(value) > current_size:
-                array_dict[key] = len(value)
-            for an_item in value:
-                gather_array_sizes(an_item, array_dict)
+    if type(data) is dict:
+        for key, value in data.items():
+            if type(value) is list:
+                current_size = array_dict.get(key, 0)
+                if len(value) > current_size:
+                    array_dict[key] = len(value)
+                for an_item in value:
+                    gather_array_sizes(an_item, array_dict)
 
 
 def flatten_json(y, separator="/"):
@@ -256,6 +257,11 @@ def json_to_csv(request, project, form):
         for aFile in files:
             with open(aFile) as json_file:
                 data = json.load(json_file)
+                print("*****************************888")
+                print(json_file)
+                print("--------------------------------")
+                print(data)
+                print("888*****************************")
                 gather_array_sizes(data, array_dict)
                 separate_multi_selects(data, "maintable", root_create)
                 new_data = data

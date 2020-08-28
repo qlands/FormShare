@@ -247,6 +247,11 @@ What can you do through extension plug-ins? Some ideas:
 
 You basically can extend FormShare to fit your need. We are working on proper documentation for this.
 
+Some examples of plug-ins are:
+
+- [OData](https://github.com/qlands/formshare_odata_plugin). This plug-in will create [OData](https://www.odata.org/) services for each FormShare repository that you have. An OData service has many advantages but most importantly it allows you to access your data in real time from platforms like [Tableau](https://public.tableau.com/en-us/s/) and [Power BI](https://powerbi.microsoft.com/en-us/). You can also use it to [clean data from Excel](https://github.com/mrbotcr/MrBot-OData-Client).
+- [Enketo](https://github.com/qlands/formshare_enketo_plugin). This plug-in will allow you to collect ODK data using the Internet Browser through [Enketo](https://enketo.org/). This plug-in is useful for users that cannot use ODK Collect.
+
 
 Localization
 ------------

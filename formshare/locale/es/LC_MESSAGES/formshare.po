@@ -8,16 +8,17 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-08-06 13:51-0600\n"
-"PO-Revision-Date: 2020-07-27 08:51-0600\n"
+"POT-Creation-Date: 2020-09-03 17:16-0600\n"
+"PO-Revision-Date: 2020-09-03 17:19-0600\n"
 "Last-Translator: Carlos Quiros <cquiros@qlands.com>\n"
 "Language: es\n"
 "Language-Team: English <kde-i18n-doc@kde.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.8.0\n"
+"X-Generator: Lokalize 19.12.3\n"
 
 #: formshare/processes/db/assistant.py:215
 msgid ""
@@ -199,7 +200,8 @@ msgstr ""
 
 #: formshare/processes/odk/api.py:529
 msgid "The following tables have more than 64 selects: "
-msgstr "Las siguientes tablas tienen mas de 64 opciones de selección (selects):"
+msgstr ""
+"Las siguientes tablas tienen mas de 64 opciones de selección (selects):"
 
 #: formshare/processes/odk/api.py:537
 msgid " with "
@@ -322,13 +324,14 @@ msgstr ""
 
 #: formshare/processes/settings/settings.py:28
 msgid "Error storing setting for key {}. Key already exits"
-msgstr "Error al almacenar la configuración para la llave {}. La llave ya existe"
+msgstr ""
+"Error al almacenar la configuración para la llave {}. La llave ya existe"
 
 #: formshare/processes/submission/api.py:171
 msgid "There are no media files to download"
 msgstr "No hay multimedios para descargar"
 
-#: formshare/processes/submission/api.py:281
+#: formshare/processes/submission/api.py:287
 msgid ""
 "This form was uploaded using an old version of ODK Tools. Please upload "
 "it again."
@@ -337,42 +340,42 @@ msgstr ""
 "favor súbalo nuevamente."
 
 # | msgid "Error while creating the dummy JSON file"
-#: formshare/processes/submission/api.py:338
+#: formshare/processes/submission/api.py:344
 msgid "Error while creating dummy file"
 msgstr "Error al crear el archivo de platilla JSON"
 
-#: formshare/processes/submission/api.py:340
+#: formshare/processes/submission/api.py:346
 msgid "There are not submissions to download"
 msgstr "No hay envíos para descargar"
 
-#: formshare/processes/submission/api.py:370
-#: formshare/processes/submission/api.py:402 formshare/products/products.py:120
+#: formshare/processes/submission/api.py:376
+#: formshare/processes/submission/api.py:408 formshare/products/products.py:120
 #: formshare/products/products.py:128
 msgid "Without description"
 msgstr "Sin descripción"
 
-#: formshare/processes/submission/api.py:576
+#: formshare/processes/submission/api.py:582
 #: formshare/templates/dashboard/projects/forms/dictionary/edit_fields.jinja2:255
 #: formshare/templates/dashboard/projects/forms/dictionary/edit_fields.jinja2:275
 msgid "Exclude it"
 msgstr "Exclúyelo"
 
-#: formshare/processes/submission/api.py:578
+#: formshare/processes/submission/api.py:584
 #: formshare/templates/dashboard/projects/forms/dictionary/edit_fields.jinja2:265
 msgid "Recode it"
 msgstr "Re-codifíquelo"
 
-#: formshare/processes/submission/api.py:580
+#: formshare/processes/submission/api.py:586
 msgid "Unlink it"
 msgstr "Desconéctelo"
 
-#: formshare/processes/submission/api.py:766
-#: formshare/processes/submission/api.py:884
+#: formshare/processes/submission/api.py:772
+#: formshare/processes/submission/api.py:890
 msgid "AJAX Data error. Report this error as an issue on "
 msgstr "Error interno en AJAX. Reporte este problema en"
 
-#: formshare/processes/submission/api.py:926
-#: formshare/processes/submission/api.py:940
+#: formshare/processes/submission/api.py:932
+#: formshare/processes/submission/api.py:946
 msgid "Cannot update value. Check the valid values in lookup table"
 msgstr ""
 "No se pudo actualizar el valor. Revise si el valor está en la tabla de "
@@ -2173,7 +2176,8 @@ msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/dictionary/edit_tables.jinja2:68
 msgid "Lookup tables: Contain the description of categorical variables."
-msgstr "Tablas de búsqueda: Contienen la descripción de las variables categóricas"
+msgstr ""
+"Tablas de búsqueda: Contienen la descripción de las variables categóricas"
 
 #: formshare/templates/dashboard/projects/forms/dictionary/edit_tables.jinja2:79
 msgid "Filter by table type"
@@ -2453,7 +2457,8 @@ msgstr "Pase por cada actualización en la lista y envíelos a FormShare"
 #: formshare/templates/dashboard/projects/forms/snippets/api_examples.jinja2:67
 #: formshare/templates/dashboard/projects/forms/snippets/api_examples.jinja2:139
 msgid "Create a Python Dict structure. In this example this will look like"
-msgstr "Cree una estructura Dict en Python. En este ejemplo el resultado va ha ser"
+msgstr ""
+"Cree una estructura Dict en Python. En este ejemplo el resultado va ha ser"
 
 #: formshare/templates/dashboard/projects/forms/snippets/api_examples.jinja2:68
 msgid "This will tell FormShare to look for"
@@ -2510,7 +2515,8 @@ msgstr ""
 "en el rowuuid"
 
 #: formshare/templates/dashboard/projects/forms/snippets/api_examples.jinja2:120
-msgid "Python program: Read the list of changes and push the update to FormShare"
+msgid ""
+"Python program: Read the list of changes and push the update to FormShare"
 msgstr ""
 "Programa en Python. Lea la lista de cambios y envié las actualizaciones a"
 " FormShare"
@@ -2899,9 +2905,10 @@ msgstr "XLSX no publicable"
 msgid "Map"
 msgstr "Mapa"
 
+# | msgid "This form is not georeferenced"
 #: formshare/templates/dashboard/projects/forms/snippets/form_map.jinja2:25
-msgid "This form is not georeferenced"
-msgstr "Este formulario no está georreferenciado"
+msgid "This form is not geo-referenced"
+msgstr "Este formulario no está geo-referenciado"
 
 #: formshare/templates/dashboard/projects/forms/snippets/form_map.jinja2:28
 msgid "No map is available at the moment. Waiting for submissions"
@@ -2988,13 +2995,15 @@ msgstr "Generando el repositorio..."
 msgid "Accept submissions"
 msgstr "Acepta envíos"
 
+# | msgid "Does't accept submissions"
 #: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:56
-msgid "Does't accept submissions"
+msgid "Doesn't accept submissions"
 msgstr "No acepta envíos"
 
+# | msgid "Georeferenced"
 #: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:59
 #: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:24
-msgid "Georeferenced"
+msgid "Geo-referenced"
 msgstr "Geo-referenciado"
 
 #: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:62
@@ -3315,7 +3324,8 @@ msgstr "Subir nueva versión"
 
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:13
 msgid "Warning: Uploading a new version will remove any test data"
-msgstr "Advertencia: Al subir una nueva versión usted borrará los datos de prueba"
+msgstr ""
+"Advertencia: Al subir una nueva versión usted borrará los datos de prueba"
 
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:24
 msgid "Choose file"
@@ -3674,7 +3684,8 @@ msgid "FormShare will perform more checks on"
 msgstr "FormShare realizará más verificaciones en"
 
 #: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:31
-msgid "and report whether or not is possible to merge it into the repository of"
+msgid ""
+"and report whether or not is possible to merge it into the repository of"
 msgstr "e informar si es posible o no fusionarlo en el repositorio de"
 
 #: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:31
@@ -3701,13 +3712,20 @@ msgstr "tienes repeat A y repeat C pero repeat B ahora está dentro de C."
 msgid "Change a string variable into integer."
 msgstr "Cambiar una variable de cadena a numérico."
 
+# | msgid "Change a variable from select one into select multiple and
+# | viceversa."
 #: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:36
-msgid "Change a variable from select one into select multiple and viceversa."
-msgstr "Carmbiar una variable de select one a select multiple y viceversa."
+msgid ""
+"Change a variable from select one into select multiple and the other way "
+"around."
+msgstr "Cambiar una variable de select one a select multiple y viceversa."
 
+# | msgid "Change a variable from categorical into continous and vicerversa."
 #: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:37
-msgid "Change a variable from categorical into continous and vicerversa."
-msgstr "Carmbiar una variable de categórica a continua y viceversa."
+msgid ""
+"Change a variable from categorical into continuous and the other way "
+"around."
+msgstr "Cambiar una variable de categórica a continua y viceversa."
 
 #: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:38
 msgid "Change the description of a option. For example: In"
@@ -3759,9 +3777,11 @@ msgstr ""
 "Cualquier formulario que use dicho repositorio no aceptará cambios hasta "
 "que se confirme la fusión o se revierta."
 
+# | msgid "" "There are changes in the descriptions of certian choice options.
+# | You can " "merge such changes at"
 #: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:63
 msgid ""
-"There are changes in the descriptions of certian choice options. You can "
+"There are changes in the descriptions of certain choice options. You can "
 "merge such changes at"
 msgstr ""
 "Hay cambios en las descripciones de ciertas opciones de selección. Puede "
@@ -4121,7 +4141,8 @@ msgstr "Por favor responda a"
 
 #: formshare/templates/email/collaborate_email.jinja2:12
 msgid "if you think you got this email by mistake."
-msgstr "si usted considera que este correo electrónico le fue enviado por error."
+msgstr ""
+"si usted considera que este correo electrónico le fue enviado por error."
 
 # | msgid "Disregarded"
 #: formshare/templates/email/collaborate_email.jinja2:15
@@ -4681,7 +4702,8 @@ msgstr "Faltan los siguientes archivos y debe adjuntarlos:"
 
 #: formshare/views/form.py:306
 msgid "There was an error while processing some of the XML resource files:"
-msgstr "Se produjo un error al procesar algunos de los archivos de recursos XML:"
+msgstr ""
+"Se produjo un error al procesar algunos de los archivos de recursos XML:"
 
 # | msgid "The following variables are have invalid names:"
 #: formshare/views/form.py:329
@@ -4690,7 +4712,8 @@ msgstr "Los siguientes archivos de recursos CSV tienen caracteres no válidos:"
 
 #: formshare/views/form.py:336
 msgid "There was an error while processing some of the CSV resource files:"
-msgstr "Se produjo un error al procesar algunos de los archivos de recursos CSV:"
+msgstr ""
+"Se produjo un error al procesar algunos de los archivos de recursos CSV:"
 
 # | msgid "Email is invalid"
 #: formshare/views/form.py:360 formshare/views/repository.py:300
@@ -5557,4 +5580,7 @@ msgstr ""
 
 #~ msgid "Registered in Costa Rica under number"
 #~ msgstr "Registrada en Costa Rica bajo el código"
+
+#~ msgid "Georeferenced"
+#~ msgstr "Geo-referenciado"
 

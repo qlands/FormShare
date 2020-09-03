@@ -53,10 +53,10 @@
                             {% if formDetails.form_accsub == 1 %}
                                 <li title="{{ _('Accept submissions') }}"><a style="background-color: #1c84c6; color: white; border-radius: 25px"> {{ _('Active') }}</a></li>
                             {% else %}
-                                <li title="{{ _('Does\'t accept submissions') }}"><a style="background-color: red; color: white; border-radius: 25px">{{ _('Inactive') }}</a></li>
+                                <li title="{{ _('Doesn\'t accept submissions') }}"><a style="background-color: red; color: white; border-radius: 25px">{{ _('Inactive') }}</a></li>
                             {% endif %}
                             {% if formDetails.form_geopoint != None %}
-                                <li><a style="border-radius: 25px">{{ _('Georeferenced') }}</a></li>
+                                <li><a style="border-radius: 25px">{{ _('Geo-referenced') }}</a></li>
                             {% endif %}
                             {% if formDetails.has_sub_version != None %}
                                 <li title='"{{ formDetails.has_sub_version.child_data.form_name }}" {{ _("is the sub-version of this form.") }}'><a href="{{ request.route_url('form_details',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.has_sub_version.child_form) }}" style="border-radius: 25px; background-color: #6f42c1; color: white">{{ _('With sub-version') }}</a></li>

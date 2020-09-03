@@ -16,7 +16,7 @@ FormShare was created because:
 
 FormShare 2 has been written from scratch (not a single line of code comes from Formhub, just ideas, and principles) using Python 3, [Pyramid](https://trypyramid.com/), MySQL, [ElasticSearch](https://www.elastic.co/elasticsearch/), and [PyUtilib](https://github.com/PyUtilib/pyutilib) to deliver a complete and extensible data management solution for ODK Data collection. It took us three years but is finally here :-) and it is Django free!
 
-FormShare **is for organizations** to install it in their server or cloud service to serve ODK XForms and collect and manage the submissions. FormShare is also available as a service at [https://formshare.org](https://formshare.org) for those organizations that lacks the capacity or resources to run their installation.
+FormShare **is for organizations** to install it in their server or cloud service to serve ODK XForms and collect and manage the submissions. FormShare is also available as a service at [https://formshare.org](https://formshare.org) for those organizations that lack the capacity or resources to run their installation.
 
 ScreenShot
 ----------
@@ -78,7 +78,7 @@ echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.d/60-vm-max_map_count.c
 cd /opt/formshare_docker_compose_20200813
 sudo docker-compose pull
 
-# Edit the docker-compose.yml file to set the mysql root and FormShare admin passwords
+# Edit the docker-compose.yml file to set the MySQL root and FormShare admin passwords
 sudo nano /opt/formshare_docker_compose_20200813/docker-compose.yml
 # Press Alt+Shit+3 to show the line numbers in Nano
 
@@ -118,7 +118,7 @@ sudo service apache2 stop
 # Start the Apache server
 sudo service apache2 start
 
-# Start the FormShare containers. The fist time you start the container FormShare will construct the database and apply all updates. This will take about 5 minutes.
+# Start the FormShare containers. The first time you start the container FormShare will construct the database and apply all updates. This will take about 5 minutes.
 # Subsequent start will take about 2 minutes. You can check the status with "sudo docker stats". 
 # FormShare will be ready for usage when the container reaches more than 500 kB of MEM USAGE
 # This is the only two commands you need to start FormShare after a server restart
@@ -171,7 +171,7 @@ mkdir /opt/formshare/plugins
 # Edit the file /opt/formshare/config/development.ini and disable all plug-ins
 sudo nano /opt/formshare/config/development.ini
 
-# Download the new version of formShare. Replace X for the version you want to use
+# Download the new version of FormShare. Replace X for the version you want to use
 cd /opt
 sudo git clone https://github.com/qlands/FormShare.git -b stable-2.X formshare_2.X_source
 
@@ -240,7 +240,7 @@ FormShare uses [PyUtilib Component Architecture](http://citeseerx.ist.psu.edu/vi
 What can you do through extension plug-ins? Some ideas:
 
 - Integrate the FormShare login with your company Windows Authentication.
-- Change the colors, logos and all aspects of the user interface.
+- Change the colors, logos, and all aspects of the user interface.
 - Integrate messaging services like WhatsApp to inform field agents when a new version of a form is up.
 - Collect data using USSD or IVR services with the same ODK form and store the data in the same repository no matter the source.
 - Implement longitudinal surveys where the data of a form is pulled to populate the options of another form.
@@ -249,7 +249,7 @@ You basically can extend FormShare to fit your need. We are working on proper do
 
 Some examples of plug-ins are:
 
-- [OData](https://github.com/qlands/formshare_odata_plugin). This plug-in will create [OData](https://www.odata.org/) services for each FormShare repository that you have. An OData service has many advantages but most importantly it allows you to access your data in real time from platforms like [Tableau](https://public.tableau.com/en-us/s/) and [Power BI](https://powerbi.microsoft.com/en-us/). You can also use it to [clean data from Excel](https://github.com/mrbotcr/MrBot-OData-Client).
+- [OData](https://github.com/qlands/formshare_odata_plugin). This plug-in will create [OData](https://www.odata.org/) services for each FormShare repository that you have. An OData service has many advantages but most importantly it allows you to access your data in real-time from platforms like [Tableau](https://public.tableau.com/en-us/s/) and [Power BI](https://powerbi.microsoft.com/en-us/). You can also use it to [clean data from Excel](https://github.com/qlands/MrBot-OData-Add-In).
 - [Enketo](https://github.com/qlands/formshare_enketo_plugin). This plug-in will allow you to collect ODK data using the Internet Browser through [Enketo](https://enketo.org/). This plug-in is useful for users that cannot use ODK Collect.
 
 

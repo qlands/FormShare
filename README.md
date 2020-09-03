@@ -84,10 +84,11 @@ sudo nano /opt/formshare_docker_compose_20200813/docker-compose.yml
 # Press Alt+Shit+3 to show the line numbers in Nano
 
 Edit line 7: Change the root password from "my_secure_password" to your password
-Edit line 74: Change the root password from "my_secure_password" to the same password of line 7
-Edit line 75: Change the admin user name (optional)
-Edit line 76: Change the admin email address
-Edit line 77: Change the admin user password from "my_secure_password" to your password
+Edit line 57: Change the root password from "my_secure_password" to the same password of line 7
+Edit line 58: Change the admin user name (optional)
+Edit line 59: Change the admin email address
+Edit line 60: Change the admin user password from "my_secure_password" to your password
+Edit line 65: Change the IP address for the IP address of the machine running the Docker service
 
 # Save the file with Ctlr+o Enter . Exit with Ctrl+x
 

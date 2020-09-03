@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-08-06 13:51-0600\n"
+"POT-Creation-Date: 2020-09-03 17:16-0600\n"
 "PO-Revision-Date: 2017-11-15 22:40-0600\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -276,48 +276,48 @@ msgstr ""
 msgid "There are no media files to download"
 msgstr ""
 
-#: formshare/processes/submission/api.py:281
+#: formshare/processes/submission/api.py:287
 msgid ""
 "This form was uploaded using an old version of ODK Tools. Please upload "
 "it again."
 msgstr ""
 
-#: formshare/processes/submission/api.py:338
+#: formshare/processes/submission/api.py:344
 msgid "Error while creating dummy file"
 msgstr ""
 
-#: formshare/processes/submission/api.py:340
+#: formshare/processes/submission/api.py:346
 msgid "There are not submissions to download"
 msgstr ""
 
-#: formshare/processes/submission/api.py:370
-#: formshare/processes/submission/api.py:402 formshare/products/products.py:120
+#: formshare/processes/submission/api.py:376
+#: formshare/processes/submission/api.py:408 formshare/products/products.py:120
 #: formshare/products/products.py:128
 msgid "Without description"
 msgstr ""
 
-#: formshare/processes/submission/api.py:576
+#: formshare/processes/submission/api.py:582
 #: formshare/templates/dashboard/projects/forms/dictionary/edit_fields.jinja2:255
 #: formshare/templates/dashboard/projects/forms/dictionary/edit_fields.jinja2:275
 msgid "Exclude it"
 msgstr ""
 
-#: formshare/processes/submission/api.py:578
+#: formshare/processes/submission/api.py:584
 #: formshare/templates/dashboard/projects/forms/dictionary/edit_fields.jinja2:265
 msgid "Recode it"
 msgstr ""
 
-#: formshare/processes/submission/api.py:580
+#: formshare/processes/submission/api.py:586
 msgid "Unlink it"
 msgstr ""
 
-#: formshare/processes/submission/api.py:766
-#: formshare/processes/submission/api.py:884
+#: formshare/processes/submission/api.py:772
+#: formshare/processes/submission/api.py:890
 msgid "AJAX Data error. Report this error as an issue on "
 msgstr ""
 
-#: formshare/processes/submission/api.py:926
-#: formshare/processes/submission/api.py:940
+#: formshare/processes/submission/api.py:932
+#: formshare/processes/submission/api.py:946
 msgid "Cannot update value. Check the valid values in lookup table"
 msgstr ""
 
@@ -2719,7 +2719,7 @@ msgid "Map"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/snippets/form_map.jinja2:25
-msgid "This form is not georeferenced"
+msgid "This form is not geo-referenced"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/snippets/form_map.jinja2:28
@@ -2803,12 +2803,12 @@ msgid "Accept submissions"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:56
-msgid "Does't accept submissions"
+msgid "Doesn't accept submissions"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:59
 #: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:24
-msgid "Georeferenced"
+msgid "Geo-referenced"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:62
@@ -3443,11 +3443,15 @@ msgid "Change a string variable into integer."
 msgstr ""
 
 #: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:36
-msgid "Change a variable from select one into select multiple and viceversa."
+msgid ""
+"Change a variable from select one into select multiple and the other way "
+"around."
 msgstr ""
 
 #: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:37
-msgid "Change a variable from categorical into continous and vicerversa."
+msgid ""
+"Change a variable from categorical into continuous and the other way "
+"around."
 msgstr ""
 
 #: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:38
@@ -3493,7 +3497,7 @@ msgstr ""
 
 #: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:63
 msgid ""
-"There are changes in the descriptions of certian choice options. You can "
+"There are changes in the descriptions of certain choice options. You can "
 "merge such changes at"
 msgstr ""
 
@@ -5285,5 +5289,17 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "Registered in Costa Rica under number"
+#~ msgstr ""
+
+#~ msgid "This form is not georeferenced"
+#~ msgstr ""
+
+#~ msgid "Change a variable from select one into select multiple and viceversa."
+#~ msgstr ""
+
+#~ msgid "Change a variable from categorical into continuous and vicerversa."
+#~ msgstr ""
+
+#~ msgid "Georeferenced"
 #~ msgstr ""
 

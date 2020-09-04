@@ -20,6 +20,7 @@ def add_json_log(
     status,
     project_of_assistant,
     assistant,
+    command_executed,
 ):
     res = (
         request.dbsession.query(Jsonlog)
@@ -40,6 +41,7 @@ def add_json_log(
                 enum_project=project_of_assistant,
                 coll_id=assistant,
                 log_dtime=datetime.datetime.now(),
+                command_executed=command_executed,
             )
             request.dbsession.add(new_json_log)
             request.dbsession.flush()
@@ -57,6 +59,7 @@ def add_json_log(
                     "enum_project": project_of_assistant,
                     "coll_id": assistant,
                     "log_dtime": datetime.datetime.now(),
+                    "command_executed": command_executed,
                 }
             )
             return True, ""

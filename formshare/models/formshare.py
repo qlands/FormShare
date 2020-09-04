@@ -451,6 +451,7 @@ class Jsonlog(Base):
     log_dtime = Column(DateTime)
     json_file = Column(UnicodeText)
     log_file = Column(UnicodeText)
+    command_executed = Column(UnicodeText)
     status = Column(INTEGER)
     enum_project = Column(Unicode(64), nullable=False)
     coll_id = Column(Unicode(120), nullable=False)

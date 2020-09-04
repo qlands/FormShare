@@ -1890,6 +1890,11 @@ def store_json_file(
                             return 1, message
 
                         if p.returncode == 2:
+                            log.error(
+                                "Submission ID {} did not enter the repository. Command executed: {}".format(
+                                    submission_id, " ".join(args)
+                                )
+                            )
                             added, message = add_json_log(
                                 request,
                                 project,
@@ -1900,6 +1905,7 @@ def store_json_file(
                                 1,
                                 project_of_assistant,
                                 assistant,
+                                " ".join(args),
                             )
                             if not added:
                                 log.error(message)

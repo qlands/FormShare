@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2020-09-03 17:16-0600\n"
+"POT-Creation-Date: 2020-09-04 09:32-0600\n"
 "PO-Revision-Date: 2017-11-15 22:40-0600\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -392,19 +392,19 @@ msgstr ""
 
 #: formshare/products/export/kml/celery_task.py:61
 #: formshare/products/export/media/celery_task.py:70
-#: formshare/products/fs1import/celery_task.py:375
+#: formshare/products/fs1import/celery_task.py:378
 msgid "25% processed"
 msgstr ""
 
 #: formshare/products/export/kml/celery_task.py:65
 #: formshare/products/export/media/celery_task.py:74
-#: formshare/products/fs1import/celery_task.py:379
+#: formshare/products/fs1import/celery_task.py:382
 msgid "50% processed"
 msgstr ""
 
 #: formshare/products/export/kml/celery_task.py:69
 #: formshare/products/export/media/celery_task.py:78
-#: formshare/products/fs1import/celery_task.py:383
+#: formshare/products/fs1import/celery_task.py:386
 msgid "75% processed"
 msgstr ""
 
@@ -746,7 +746,7 @@ msgstr ""
 
 #: formshare/templates/assistant/jsonlogs/cancel_disregard.jinja2:47
 #: formshare/templates/assistant/jsonlogs/snippets/brdcrbs_cancel_disregard.jinja2:11
-#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:129
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:130
 msgid "Cancel disregard"
 msgstr ""
 
@@ -755,7 +755,7 @@ msgstr ""
 #: formshare/templates/assistant/jsonlogs/checkin.jinja2:55
 #: formshare/templates/assistant/jsonlogs/snippets/brdcrbs_checkin.jinja2:2
 #: formshare/templates/assistant/jsonlogs/snippets/brdcrbs_checkin.jinja2:11
-#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:114
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:115
 #: formshare/templates/assistant/jsonlogs/snippets/error_table.jinja2:78
 msgid "Check-in new version"
 msgstr ""
@@ -847,7 +847,7 @@ msgstr ""
 #: formshare/templates/assistant/jsonlogs/snippets/brdcrbs_cancel_disregard.jinja2:2
 #: formshare/templates/assistant/jsonlogs/snippets/brdcrbs_disregard.jinja2:2
 #: formshare/templates/assistant/jsonlogs/snippets/brdcrbs_disregard.jinja2:11
-#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:106
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:107
 #: formshare/templates/assistant/jsonlogs/snippets/error_table.jinja2:73
 msgid "Disregard error"
 msgstr ""
@@ -1093,6 +1093,7 @@ msgid "Push submission into the repository"
 msgstr ""
 
 #: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:100
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:104
 msgid "Are you sure that you want to push this submission?"
 msgstr ""
 
@@ -1101,9 +1102,17 @@ msgid "Push submission"
 msgstr ""
 
 #: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:104
-#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:112
-#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:121
-#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:128
+msgid "Try to push submission into the repository again"
+msgstr ""
+
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:104
+msgid "Push submission again"
+msgstr ""
+
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:105
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:113
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:122
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:129
 #: formshare/templates/assistant/jsonlogs/snippets/error_table.jinja2:71
 #: formshare/templates/assistant/jsonlogs/snippets/error_table.jinja2:76
 #: formshare/templates/assistant/jsonlogs/snippets/error_table.jinja2:85
@@ -1111,66 +1120,66 @@ msgstr ""
 msgid "Compare submission"
 msgstr ""
 
-#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:105
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:106
 msgid "Check-out revision"
 msgstr ""
 
-#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:105
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:106
 msgid "Are you sure that you want to check-out this submission?"
 msgstr ""
 
-#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:105
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:106
 #: formshare/templates/assistant/jsonlogs/snippets/error_table.jinja2:72
 msgid "Check out file"
 msgstr ""
 
-#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:108
-#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:130
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:109
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:131
 #: formshare/templates/assistant/jsonlogs/snippets/error_table.jinja2:94
 msgid "See notes"
 msgstr ""
 
-#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:115
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:116
 #: formshare/templates/assistant/jsonlogs/snippets/error_table.jinja2:79
 msgid "Download current version"
 msgstr ""
 
-#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:116
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:117
 #: formshare/templates/assistant/jsonlogs/snippets/error_table.jinja2:80
 msgid "Open JSON editor"
 msgstr ""
 
-#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:117
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:118
 #: formshare/templates/assistant/jsonlogs/snippets/error_table.jinja2:81
 msgid "Cancel check-out"
 msgstr ""
 
-#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:117
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:118
 msgid "Are you sure that you want to cancel the check-out of this submission?"
 msgstr ""
 
-#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:123
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:124
 msgid "Push revision into the repository"
 msgstr ""
 
-#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:123
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:124
 msgid "Are you sure that you want to push this revision?"
 msgstr ""
 
-#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:123
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:124
 msgid "Push revision"
 msgstr ""
 
-#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:124
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:125
 #: formshare/templates/assistant/jsonlogs/snippets/error_table.jinja2:88
 msgid "Cancel revision"
 msgstr ""
 
-#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:124
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:125
 msgid "Are you sure that you want to cancel this revision?"
 msgstr ""
 
-#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:134
+#: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:135
 msgid "You do not have permissions to clean data"
 msgstr ""
 

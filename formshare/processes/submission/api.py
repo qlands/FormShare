@@ -1147,6 +1147,7 @@ def delete_submission(
             1,
             project_of_assistant,
             assistant,
+            "",
         )
 
         if not added:

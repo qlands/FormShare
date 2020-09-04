@@ -58,11 +58,12 @@ def add_json_log(
     status,
     project_of_assistant,
     assistant,
+    command_executed,
 ):
     try:
         engine.execute(
             "INSERT INTO jsonlog (form_id,project_id,log_id,log_dtime,json_file,log_file,status,"
-            "enum_project,coll_id) values ('{}','{}','{}','{}','{}','{}','{}','{}','{}')".format(
+            "enum_project,coll_id,command_executed) values ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')".format(
                 form,
                 project,
                 submission,
@@ -72,6 +73,7 @@ def add_json_log(
                 status,
                 project_of_assistant,
                 assistant,
+                command_executed.replace("'", "|"),
             )
         )
     except Exception as e:
@@ -262,6 +264,7 @@ def store_json_file(
                     1,
                     project_of_assistant,
                     assistant,
+                    " ".join(args),
                 )
                 if not added:
                     log.error(message)

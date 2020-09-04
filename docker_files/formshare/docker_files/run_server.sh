@@ -27,6 +27,7 @@ fi
 alembic upgrade head
 create_superuser --user_id $FORMSHARE_ADMIN_USER --user_email $FORMSHARE_ADMIN_EMAIL --user_password $FORMSHARE_ADMIN_PASSWORD ./development.ini -n
 deactivate
+/etc/init.d/celery_formshare stop
 /etc/init.d/celery_formshare start
 source /opt/formshare_env/bin/activate
 rm /opt/formshare_gunicorn/formshare.pid

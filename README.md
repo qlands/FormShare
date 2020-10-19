@@ -25,11 +25,11 @@ ScreenShot
 
 Releases
 ------------
-The current stable release is 2.6.9 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.6.9) 
+The current stable release is 2.6.10 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.6.10) 
 
-The database signature for stable 2.6.9 is 8ad53c7df321
+The database signature for stable 2.6.10 is 8ad53c7df321
 
-The Docker image for stable 2.6.9 is 20200904
+The Docker image for stable 2.6.10 is 20201019
 
 Installation
 ------------
@@ -49,11 +49,11 @@ sudo apt-get install -y docker-compose
 
 # Collect the FormShare source code
 cd /opt
-sudo git clone https://github.com/qlands/FormShare.git -b stable-2.6.9 formshare_source
+sudo git clone https://github.com/qlands/FormShare.git -b stable-2.6.10 formshare_source
 
 # Copy the docker compose file from the source to a new directory
-sudo mkdir formshare_docker_compose_20200904
-sudo cp ./formshare_source/docker_compose/docker-compose.yml ./formshare_docker_compose_20200904/
+sudo mkdir formshare_docker_compose_20201019
+sudo cp ./formshare_source/docker_compose/docker-compose.yml ./formshare_docker_compose_20201019/
 
 # Make the directory structure for FormShare
 sudo mkdir /opt/formshare
@@ -76,11 +76,11 @@ sudo sysctl -w vm.max_map_count=262144
 echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.d/60-vm-max_map_count.conf
 
 # Download all the required Docker Images
-cd /opt/formshare_docker_compose_20200904
+cd /opt/formshare_docker_compose_20201019
 sudo docker-compose pull
 
 # Edit the docker-compose.yml file to set the MySQL root and FormShare admin passwords
-sudo nano /opt/formshare_docker_compose_20200904/docker-compose.yml
+sudo nano /opt/formshare_docker_compose_20201019/docker-compose.yml
 # Press Alt+Shit+3 to show the line numbers in Nano
 
 Edit line 7: Change the root password from "my_secure_password" to your password
@@ -124,7 +124,7 @@ sudo service apache2 start
 # Subsequent start will take about 2 minutes. You can check the status with "sudo docker stats". 
 # FormShare will be ready for usage when the container reaches more than 500 kB of MEM USAGE
 # This is the only two commands you need to start FormShare after a server restart
-cd /opt/formshare_docker_compose_20200904
+cd /opt/formshare_docker_compose_20201019
 sudo docker-compose up -d
 
 # Browse to FormShare

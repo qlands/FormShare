@@ -1,4 +1,4 @@
-FROM qlands/odktools:20200904
+FROM qlands/odktools:20201019
 
 MAINTAINER QLands Technology Consultants
 
@@ -24,7 +24,7 @@ VOLUME /opt/formshare_odata
 RUN mkdir formshare_gunicorn
 RUN python3 -m venv formshare_env
 
-RUN git clone https://github.com/qlands/FormShare.git -b stable-2.6.9 formshare
+RUN git clone https://github.com/qlands/FormShare.git -b stable-2.6.10 formshare
 RUN . ./formshare_env/bin/activate && pip install wheel && pip install -r /opt/formshare/requirements.txt && python /opt/formshare/download_nltk_packages.py
 
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.6.0/wait /wait

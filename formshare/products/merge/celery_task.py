@@ -133,20 +133,20 @@ def make_database_changes(
         log.info(" ".join(args))
         with open(b_backup_file, "w") as backup_file:
             proc = Popen(args, stdin=PIPE, stderr=PIPE, stdout=backup_file)
-            output, error = proc.communicate()
+            output, error_str = proc.communicate()
             log.info("Result is {}".format(proc.returncode))
             if proc.returncode != 0:
                 error_message = "Error creating database backup \n"
                 error_message = error_message + "File: " + b_backup_file + "\n"
                 error_message = error_message + "Error: \n"
                 if error is not None:
-                    error_message = error_message + error.decode() + "\n"
+                    error_message = error_message + error_str.decode() + "\n"
                 error_message = error_message + "Output: \n"
                 if output is not None:
                     error_message = error_message + output.decode() + "\n"
                 log.error(error_message)
                 error = True
-    log.info("Error at this moment {}".format(error))
+
     if not error:
         log.info("Moving backup into new schema...")
         send_task_status_to_form(
@@ -155,13 +155,13 @@ def make_database_changes(
         args = ["mysql", "--defaults-file=" + cnf_file, a_schema]
         with open(b_backup_file) as input_file:
             proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)
-            output, error = proc.communicate()
+            output, error_str = proc.communicate()
             if proc.returncode != 0:
                 error_message = "Error creating database \n"
                 error_message = error_message + "File: " + b_backup_file + "\n"
                 error_message = error_message + "Error: \n"
                 if error is not None:
-                    error_message = error_message + error.decode() + "\n"
+                    error_message = error_message + error_str.decode() + "\n"
                 error_message = error_message + "Output: \n"
                 if output is not None:
                     error_message = error_message + output.decode() + "\n"
@@ -176,13 +176,13 @@ def make_database_changes(
         args = ["mysql", "--defaults-file=" + cnf_file, a_schema]
         with open(merge_create_file) as input_file:
             proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)
-            output, error = proc.communicate()
+            output, error_str = proc.communicate()
             if proc.returncode != 0:
                 error_message = "Error creating database \n"
                 error_message = error_message + "File: " + merge_create_file + "\n"
                 error_message = error_message + "Error: \n"
                 if error is not None:
-                    error_message = error_message + error.decode() + "\n"
+                    error_message = error_message + error_str.decode() + "\n"
                 error_message = error_message + "Output: \n"
                 if output is not None:
                     error_message = error_message + output.decode() + "\n"
@@ -197,13 +197,13 @@ def make_database_changes(
         args = ["mysql", "--defaults-file=" + cnf_file, a_schema]
         with open(merge_insert_file) as input_file:
             proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)
-            output, error = proc.communicate()
+            output, error_str = proc.communicate()
             if proc.returncode != 0:
                 error_message = "Error creating database \n"
                 error_message = error_message + "File: " + merge_insert_file + "\n"
                 error_message = error_message + "Error: \n"
                 if error is not None:
-                    error_message = error_message + error.decode() + "\n"
+                    error_message = error_message + error_str.decode() + "\n"
                 error_message = error_message + "Output: \n"
                 if output is not None:
                     error_message = error_message + output.decode() + "\n"
@@ -309,7 +309,7 @@ def make_database_changes(
                                 proc = Popen(
                                     args, stdin=input_file, stderr=PIPE, stdout=PIPE
                                 )
-                                output, error = proc.communicate()
+                                output, error_str = proc.communicate()
                                 if proc.returncode != 0:
                                     error_message = "Error loading audit triggers \n"
                                     error_message = (
@@ -318,7 +318,7 @@ def make_database_changes(
                                     error_message = error_message + "Error: \n"
                                     if error is not None:
                                         error_message = (
-                                            error_message + error.decode() + "\n"
+                                            error_message + error_str.decode() + "\n"
                                         )
                                     error_message = error_message + "Output: \n"
                                     if output is not None:

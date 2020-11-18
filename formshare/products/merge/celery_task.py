@@ -101,34 +101,7 @@ def make_database_changes(
         error = True
 
     if not error:
-        maria_db = False
-        args = ["mariadb_config", "--version"]
-        p = Popen(args, stdout=PIPE, stderr=PIPE)
-        stdout, stderr = p.communicate()
-        if p.returncode == 0:
-            maria_db = True
-            mysql_version = stdout.decode().replace("\n", "")
-        else:
-            args = ["mysql_config", "--version"]
-            p = Popen(args, stdout=PIPE, stderr=PIPE)
-            stdout, stderr = p.communicate()
-            if p.returncode == 0:
-                mysql_version = stdout.decode().replace("\n", "")
-            else:
-                raise MergeDataBaseError("Cannot determine the version of MySQL")
-        parts = mysql_version.split(".")
-        major_version = int(parts[0])
-
-        send_task_status_to_form(settings, task_id, _("Creating database backup..."))
-        log.info("Creating database backup...")
-        if major_version <= 5 or maria_db:
-            args = ["mysqldump", "--defaults-file=" + cnf_file, b_schema]
-        else:
-            args = [
-                "mysqldump",
-                "--column-statistics=0 --defaults-file=" + cnf_file,
-                b_schema,
-            ]
+        args = ["mysqldump", "--set-gtid-purged=OFF --defaults-file=" + cnf_file, b_schema]
         log.info(b_backup_file)
         log.info(" ".join(args))
         with open(b_backup_file, "w") as backup_file:

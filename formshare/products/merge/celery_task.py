@@ -157,8 +157,9 @@ def make_database_changes(
             proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)
             output, error_str = proc.communicate()
             if proc.returncode != 0:
-                error_message = "Error creating database \n"
+                error_message = "Error creating database {} \n".format(a_schema)
                 error_message = error_message + "File: " + b_backup_file + "\n"
+                error_message = error_message + "Command: " + " ".join(args) + "\n"
                 error_message = error_message + "Error: \n"
                 if error is not None:
                     error_message = error_message + error_str.decode() + "\n"

@@ -120,6 +120,7 @@ def make_database_changes(
         major_version = int(parts[0])
 
         send_task_status_to_form(settings, task_id, _("Creating database backup..."))
+        log.info("Creating database backup...")
         if major_version <= 5 or maria_db:
             args = ["mysqldump", "--defaults-file=" + cnf_file, b_schema]
         else:
@@ -144,6 +145,7 @@ def make_database_changes(
                 error = True
 
     if not error:
+        log.info("Moving backup into new schema...")
         send_task_status_to_form(
             settings, task_id, _("Moving backup into new schema...")
         )
@@ -164,6 +166,7 @@ def make_database_changes(
                 error = True
 
     if not error:
+        log.info("Applying structure changes in the new schema...")
         send_task_status_to_form(
             settings, task_id, _("Applying structure changes in the new schema...")
         )
@@ -184,6 +187,7 @@ def make_database_changes(
                 error = True
 
     if not error:
+        log.info("Applying lookup value changes in the new schema...")
         send_task_status_to_form(
             settings, task_id, _("Applying lookup value changes in the new schema...")
         )
@@ -218,6 +222,7 @@ def make_database_changes(
                         new_table_list.append(an_error.get("to"))
             if len(new_table_list) >= 0 or len(rebuild_table_list) >= 0:
                 if len(rebuild_table_list) > 0:
+                    log.info("Dropping old triggers")
                     send_task_status_to_form(
                         settings, task_id, _("Dropping old triggers")
                     )
@@ -292,6 +297,7 @@ def make_database_changes(
                                     "mysql_create_audit.sql",
                                 ]
                             )
+                            log.info("Creating new triggers")
                             send_task_status_to_form(
                                 settings, task_id, _("Creating new triggers")
                             )
@@ -469,6 +475,7 @@ def merge_into_repository(
             # in between the critical parts then all the involved forms are broken and then technical team will need
             # to deal with them. A log indicating the involved forms are posted
 
+            log.info("FINALIZING")
             send_task_status_to_form(settings, task_id, "FINALIZING")
             # Sleep for another five seconds because the FINALIZING will disable the cancellation of the task.
             # Just to be sure that the user cannot cancel the task beyond this point.
@@ -544,7 +551,7 @@ def merge_into_repository(
                             log.error(str(e))
             # Delete the dataset index
             delete_dataset_index(settings, user, project_code, a_form_id)
-
+            log.info("Merging successful")
         except Exception as e:
             if critical_part:
                 status = "Critical error with merging"

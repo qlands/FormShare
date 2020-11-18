@@ -1,13 +1,13 @@
 import gettext
 import glob
 import json
-import logging
 import os
 import shutil
 import time
 import traceback
 import uuid
 from subprocess import Popen, PIPE, check_call, CalledProcessError
+from celery.utils.log import get_task_logger
 
 import transaction
 from lxml import etree
@@ -28,7 +28,7 @@ from formshare.processes.elasticsearch.repository_index import delete_dataset_in
 from formshare.processes.email.send_async_email import send_async_email
 from formshare.processes.sse.messaging import send_task_status_to_form
 
-log = logging.getLogger("formshare")
+log = get_task_logger(__name__)
 
 
 class MergeDataBaseError(Exception):

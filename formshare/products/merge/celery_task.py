@@ -101,7 +101,7 @@ def make_database_changes(
         error = True
 
     if not error:
-        args = ["mysqldump", "--set-gtid-purged=OFF --defaults-file=" + cnf_file, b_schema]
+        args = ["mysqldump", "--set-gtid-purged=OFF", "--defaults-file=" + cnf_file, b_schema]
         log.info(b_backup_file)
         log.info(" ".join(args))
         with open(b_backup_file, "w") as backup_file:

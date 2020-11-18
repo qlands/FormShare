@@ -146,7 +146,7 @@ def make_database_changes(
                     error_message = error_message + output.decode() + "\n"
                 log.error(error_message)
                 error = True
-
+    log.info("Error at this moment {}".format(error))
     if not error:
         log.info("Moving backup into new schema...")
         send_task_status_to_form(

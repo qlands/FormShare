@@ -134,6 +134,7 @@ def make_database_changes(
         with open(b_backup_file, "w") as backup_file:
             proc = Popen(args, stdin=PIPE, stderr=PIPE, stdout=backup_file)
             output, error = proc.communicate()
+            log.info("Result is {}".format(proc.returncode))
             if proc.returncode != 0:
                 error_message = "Error creating database backup \n"
                 error_message = error_message + "File: " + b_backup_file + "\n"

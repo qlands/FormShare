@@ -129,6 +129,8 @@ def make_database_changes(
                 "--column-statistics=0 --defaults-file=" + cnf_file,
                 b_schema,
             ]
+        log.info(b_backup_file)
+        log.info(" ".join(args))
         with open(b_backup_file, "w") as backup_file:
             proc = Popen(args, stdin=PIPE, stderr=PIPE, stdout=backup_file)
             output, error = proc.communicate()

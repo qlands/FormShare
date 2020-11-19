@@ -130,7 +130,7 @@ sudo python3 -m venv formshare_env
 # Grab the FormShare source code
 # ---------------------BEGIN OF IMPORTANT NOTE-------------------------
 # To use the stable version of FormShare do:
-sudo git clone https://github.com/qlands/FormShare.git -b stable-2.6.10 formshare
+sudo git clone https://github.com/qlands/FormShare.git -b stable-2.6.11 formshare
 # To use the development version of FormShare do:
 sudo git clone https://github.com/qlands/FormShare.git formshare
 # ---------------------END OF IMPORTANT NOTE-------------------------

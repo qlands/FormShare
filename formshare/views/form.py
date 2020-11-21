@@ -36,6 +36,9 @@ from formshare.processes.db import (
     get_form_processing_products,
     get_task_status,
     get_output_by_task,
+    collect_maps_for_schema,
+    get_create_xml_for_schema,
+    get_insert_xml_for_schema,
 )
 from formshare.processes.elasticsearch.record_index import delete_record_index
 from formshare.processes.elasticsearch.repository_index import (
@@ -2094,14 +2097,20 @@ class DownloadPublicCSV(PrivateView):
         form_data = get_form_data(self.request, project_id, form_id)
         if form_data is None:
             raise HTTPNotFound
+        form_schema = form_data["form_schema"]
+        maps_directory = collect_maps_for_schema(self.request, form_schema)
+        create_xml_file = get_create_xml_for_schema(self.request, form_schema)
+        insert_xml_file = get_insert_xml_for_schema(self.request, form_schema)
 
         generate_public_csv_file(
             self.request,
             self.user.id,
             project_id,
             form_id,
-            form_data["form_schema"],
-            form_data["form_directory"],
+            form_schema,
+            maps_directory,
+            create_xml_file,
+            insert_xml_file,
         )
 
         next_page = self.request.params.get("next") or self.request.route_url(
@@ -2145,13 +2154,21 @@ class DownloadPrivateCSV(PrivateView):
         form_data = get_form_data(self.request, project_id, form_id)
         if form_data is None:
             raise HTTPNotFound
+
+        form_schema = form_data["form_schema"]
+        maps_directory = collect_maps_for_schema(self.request, form_schema)
+        create_xml_file = get_create_xml_for_schema(self.request, form_schema)
+        insert_xml_file = get_insert_xml_for_schema(self.request, form_schema)
+
         generate_private_csv_file(
             self.request,
             self.user.id,
             project_id,
             form_id,
             form_data["form_schema"],
-            form_data["form_directory"],
+            maps_directory,
+            create_xml_file,
+            insert_xml_file,
         )
 
         next_page = self.request.params.get("next") or self.request.route_url(

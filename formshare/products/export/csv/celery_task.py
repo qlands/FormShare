@@ -69,7 +69,9 @@ def gather_array_sizes(data, array_dict):
 @celeryApp.task(base=CeleryTask)
 def build_csv(
     settings,
-    form_directory,
+    maps_directory,
+    create_xml_file,
+    insert_xml_file,
     form_schema,
     csv_file,
     protect_sensitive,
@@ -186,9 +188,6 @@ def build_csv(
     es.install()
     _ = es.gettext
 
-    paths = ["odk", "forms", form_directory, "submissions", "maps"]
-    maps_path = os.path.join(settings["repository.path"], *paths)
-
     paths = ["utilities", "MySQLDenormalize", "mysqldenormalize"]
     mysql_denormalize = os.path.join(settings["odktools.path"], *paths)
 
@@ -202,11 +201,11 @@ def build_csv(
     out_path = os.path.join(settings["repository.path"], *paths)
     os.makedirs(out_path)
 
-    create_xml_file = os.path.join(
-        settings["repository.path"],
-        *["odk", "forms", form_directory, "repository", "create.xml"]
-    )
-
+    print("************************9999")
+    print(maps_directory)
+    print(create_xml_file)
+    print(insert_xml_file)
+    print("************************9999")
     args = [
         mysql_denormalize,
         "-H " + settings["mysql.host"],
@@ -216,7 +215,7 @@ def build_csv(
         "-s " + form_schema,
         "-t maintable",
         "-c " + create_xml_file,
-        "-m " + maps_path,
+        "-m " + maps_directory,
         "-o " + out_path,
         "-T " + temp_path,
         "-S",
@@ -247,11 +246,6 @@ def build_csv(
 
             paths = ["utilities", "createDummyJSON", "createdummyjson"]
             create_dummy_json = os.path.join(settings["odktools.path"], *paths)
-
-            insert_xml_file = os.path.join(
-                settings["repository.path"],
-                *["odk", "forms", form_directory, "repository", "insert.xml"]
-            )
 
             if protect_sensitive:
                 tree = etree.parse(create_xml_file)

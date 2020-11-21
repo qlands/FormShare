@@ -4,6 +4,8 @@ import logging
 import mimetypes
 import os
 import uuid
+import glob
+import shutil
 
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
@@ -76,9 +78,80 @@ __all__ = [
     "update_form_directory",
     "get_last_clean_info",
     "get_form_size",
+    "collect_maps_for_schema",
+    "get_create_xml_for_schema",
+    "get_insert_xml_for_schema",
+    "get_last_submission_date",
 ]
 
 log = logging.getLogger("formshare")
+
+
+def collect_maps_for_schema(request, schema):
+    """
+    Collect all maps for a schema and place them in a temporary directory
+    :param request: Pyramid request object
+    :param schema: Schema
+    :return: Temporary directory with map files
+    """
+    res = request.dbsession.query(Odkform).filter(Odkform.form_schema == schema).all()
+    settings = request.registry.settings
+
+    uid = str(uuid.uuid4())
+    paths = ["tmp", uid]
+    temp_path = os.path.join(settings["repository.path"], *paths)
+    os.makedirs(temp_path)
+
+    for a_form in res:
+        paths = ["odk", "forms", a_form.form_directory, "submissions", "maps", "*.xml"]
+        maps_path = os.path.join(settings["repository.path"], *paths)
+        files = glob.glob(maps_path)
+        if files:
+            for aFile in files:
+                shutil.copy(aFile, temp_path)
+    return temp_path
+
+
+def get_create_xml_for_schema(request, schema):
+    """
+    Returns the XML create file for the last form using a schema
+    :param request: Pyramid request object
+    :param schema: Schema
+    :return: Path to XML Create file
+    """
+    res = (
+        request.dbsession.query(Odkform)
+        .filter(Odkform.form_schema == schema)
+        .order_by(Odkform.form_cdate.desc())
+        .first()
+    )
+    settings = request.registry.settings
+    create_xml_file = os.path.join(
+        settings["repository.path"],
+        *["odk", "forms", res.form_directory, "repository", "create.xml"]
+    )
+    return create_xml_file
+
+
+def get_insert_xml_for_schema(request, schema):
+    """
+        Returns the XML insert file for the last form using a schema
+        :param request: Pyramid request object
+        :param schema: Schema
+        :return: Path to XML Insert file
+        """
+    res = (
+        request.dbsession.query(Odkform)
+        .filter(Odkform.form_schema == schema)
+        .order_by(Odkform.form_cdate.desc())
+        .first()
+    )
+    settings = request.registry.settings
+    insert_xml_file = os.path.join(
+        settings["repository.path"],
+        *["odk", "forms", res.form_directory, "repository", "insert.xml"]
+    )
+    return insert_xml_file
 
 
 def _get_path_size(start_path="."):
@@ -155,6 +228,21 @@ def get_last_clean_info(request, project, form):
             return "", ""
     else:
         return "NA", "NA"
+
+
+def get_last_submission_date(request, project, form):
+    schema = get_form_schema(request, project, form)
+    if schema is not None:
+        sql = "SELECT _submitted_date from {}.maintable ORDER BY _submitted_date DESC LIMIT 1".format(
+            schema
+        )
+        res = request.dbsession.execute(sql).fetchone()
+        if res is not None:
+            return res[0]
+        else:
+            return "NA"
+    else:
+        return "NA"
 
 
 def get_number_of_submissions_in_database(request, project, form):
@@ -360,6 +448,7 @@ def get_form_details(request, user, project, form):
             result["submissions"] = submissions
             result["last"] = last
             result["cleanedlast"] = "NA"
+            result["lastindb"] = "NA"
             result["cleanedby"] = "NA"
             result["by"] = by
             result["bydetails"] = get_by_details(request, user, project, by)
@@ -385,8 +474,10 @@ def get_form_details(request, user, project, form):
                 request, project, result["form_id"]
             )
             cleaned_last, cleaned_by = get_last_clean_info(request, project, form)
+            last_submission_in_db = get_last_submission_date(request, project, form)
             result["submissions"] = submissions
             result["last"] = last
+            result["lastindb"] = last_submission_in_db
             result["cleanedlast"] = cleaned_last
             cleaned_by_details = get_by_details(request, user, project, cleaned_by)
             if not cleaned_by_details:

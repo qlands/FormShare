@@ -44,13 +44,13 @@
                             {% endif %}
 
                             {% if formDetails.cleanedlast != "" %}
-                                {% if output.datetime_added > formDetails.last and output.datetime_added >formDetails.cleanedlast %}
+                                {% if output.datetime_added > formDetails.lastindb and output.datetime_added >formDetails.cleanedlast %}
                                     <span class="badge badge-success">{{ _('Up to date') }}</span>
                                 {% else %}
                                     <span title="{{ _('This product was created before the last submission and/or before the last data cleaning update') }}" class="badge badge-danger">{{ _('Outdated') }}</span>
                                 {% endif %}
                             {% else %}
-                                {% if output.datetime_added > formDetails.last %}
+                                {% if output.datetime_added > formDetails.lastindb %}
                                     <span class="badge badge-success">{{ _('Up to date') }}</span>
                                 {% else %}
                                     <span title="{{ _('This product was created before the last submission') }}" class="badge badge-danger">{{ _('Outdated') }}</span>

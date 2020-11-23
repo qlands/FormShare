@@ -777,6 +777,8 @@ def upload_odk_form(
                             form_data["form_xlsfile"] = final_xls
                             form_data["form_xmlfile"] = final_xml
                             form_data["form_jsonfile"] = final_survey
+                            form_data["form_createxmlfile"] = final_create_xml
+                            form_data["form_insertxmlfile"] = final_insert_xml
                             form_data["form_pubby"] = user_id
                             form_data["form_hexcolor"] = ColorHash(form_id).hex
                             if geopoint is not None:
@@ -1099,6 +1101,8 @@ def update_odk_form(request, user_id, project_id, for_form_id, odk_dir, form_dat
                                 form_data["form_lupdate"] = datetime.datetime.now()
                                 form_data["form_xlsfile"] = final_xls
                                 form_data["form_xmlfile"] = final_xml
+                                form_data["form_createxmlfile"] = final_create_xml
+                                form_data["form_insertxmlfile"] = final_insert_xml
                                 form_data["form_jsonfile"] = final_survey
                                 form_data["form_abletomerge"] = -1
                                 form_data["form_mergerrors"] = None
@@ -1596,6 +1600,9 @@ def create_repository(
                 create_xml_file = os.path.join(
                     odk_dir, *["forms", xform_directory, "repository", "create.xml"]
                 )
+                insert_xml_file = os.path.join(
+                    odk_dir, *["forms", xform_directory, "repository", "insert.xml"]
+                )
 
                 formshare_create_repository = True
                 cnf_file = request.registry.settings["mysql.cnf"]
@@ -1626,6 +1633,7 @@ def create_repository(
                         create_file,
                         insert_file,
                         create_xml_file,
+                        insert_xml_file,
                         " ".join(args),
                     )
                     form_data = {"form_reptask": task}

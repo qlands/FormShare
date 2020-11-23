@@ -186,6 +186,7 @@ def create_mysql_repository(
     create_file,
     insert_file,
     create_xml_file,
+    insert_xml_file,
     repository_string,
     locale,
     testing_task=None,
@@ -237,6 +238,7 @@ def create_mysql_repository(
             "form_schema": schema,
             "form_pkey": primary_key,
             "form_createxmlfile": create_xml_file,
+            "form_insertxmlfile": insert_xml_file,
         }
         update_form(db_session, project_id, form, form_data)
 

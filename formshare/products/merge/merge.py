@@ -1,5 +1,6 @@
 from formshare.products import register_product_instance
 from .celery_task import merge_into_repository
+from formshare.processes.db.form import get_form_xml_create_file
 
 
 def merge_form(
@@ -18,6 +19,7 @@ def merge_form(
         if isinstance(value, str):
             settings[key] = value
     project_code = request.matchdict["projcode"]
+    b_create_xml_file = get_form_xml_create_file(request, project_id, a_form_id)
     task = merge_into_repository.apply_async(
         (
             settings,
@@ -27,6 +29,7 @@ def merge_form(
             a_form_id,
             a_form_directory,
             b_form_directory,
+            b_create_xml_file,
             b_schema_name,
             odk_merge_string,
             b_hex_color,

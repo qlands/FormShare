@@ -234,6 +234,7 @@ class Odkform(Base):
     form_xmlfile = Column(UnicodeText)
     form_jsonfile = Column(UnicodeText)
     form_createxmlfile = Column(UnicodeText)
+    form_insertxmlfile = Column(UnicodeText)
     form_reqfiles = Column(UnicodeText)
     form_public = Column(INTEGER)
     form_geopoint = Column(UnicodeText)

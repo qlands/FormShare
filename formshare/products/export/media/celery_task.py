@@ -28,7 +28,7 @@ class BuildError(Exception):
 def build_media_zip(
     settings,
     odk_dir,
-    form_directory,
+    form_directories,
     form_schema,
     zip_file,
     primary_key,
@@ -94,6 +94,9 @@ def build_media_zip(
                     else:
                         if isinstance(key_value, datetime.timedelta):
                             key_value = str(key_value)
+                        else:
+                            if isinstance(key_value, int):
+                                key_value = str(key_value)
 
             key_value = key_value.replace(
                 "/", "_"
@@ -101,14 +104,20 @@ def build_media_zip(
             tmp_dir = os.path.join(repo_dir, *["tmp", uid, key_value])
             os.makedirs(tmp_dir)
             submission_id = submission.surveyid
-            submissions_path = os.path.join(
-                odk_dir, *["forms", form_directory, "submissions", submission_id, "*.*"]
-            )
-            files = glob.glob(submissions_path)
-            if files:
-                for file in files:
-                    shutil.copy(file, tmp_dir)
-                    created = True
+            for form_directory in form_directories:
+                submissions_dir = os.path.join(
+                    odk_dir, *["forms", form_directory, "submissions", submission_id]
+                )
+                submissions_path = os.path.join(
+                    odk_dir,
+                    *["forms", form_directory, "submissions", submission_id, "*.*"]
+                )
+                if os.path.exists(submissions_dir):
+                    files = glob.glob(submissions_path)
+                    if files:
+                        for file in files:
+                            shutil.copy(file, tmp_dir)
+                            created = True
     except Exception as e:
         email_from = settings.get("mail.from", None)
         email_to = settings.get("mail.error", None)
@@ -127,6 +136,7 @@ def build_media_zip(
         tmp_dir = os.path.join(repo_dir, *["tmp", uid])
         send_task_status_to_form(settings, task_id, _("Creating zip file"))
         shutil.make_archive(zip_file.replace(".zip", ""), "zip", tmp_dir)
+        shutil.rmtree(tmp_dir)
     else:
         # Write an empty zipFile
         send_task_status_to_form(settings, task_id, _("Creating empty zip file"))

@@ -64,16 +64,7 @@ class RepositoryMergeForm(PrivateView):
                 s_values_to_ignore = post_data["valuestoignore"]
 
             old_create_file = old_form_data["form_createxmlfile"]
-            if old_create_file is None:
-                old_create_file = os.path.join(
-                    odk_path,
-                    *["forms", old_form_data["directory"], "repository", "create.xml"]
-                )
-
-            old_insert_file = os.path.join(
-                odk_path,
-                *["forms", old_form_data["directory"], "repository", "insert.xml"]
-            )
+            old_insert_file = old_form_data["form_insertxmlfile"]
 
             new_create_file = os.path.join(
                 odk_path,

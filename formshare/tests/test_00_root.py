@@ -37,14 +37,15 @@ def store_task_status(task, config):
 def get_form_details(config, project, form):
     engine = create_engine(config["sqlalchemy.url"])
     result = engine.execute(
-        "SELECT form_directory,form_schema,form_reptask FROM odkform WHERE project_id = '{}' AND form_id = '{}'".format(
-            project, form
-        )
+        "SELECT form_directory,form_schema,form_reptask,form_createxmlfile,form_insertxmlfile "
+        "FROM odkform WHERE project_id = '{}' AND form_id = '{}'".format(project, form)
     ).fetchone()
     result = {
         "form_directory": result[0],
         "form_schema": result[1],
         "form_reptask": result[2],
+        "form_createxmlfile": result[3],
+        "form_insertxmlfile": result[4],
     }
     engine.dispose()
     return result
@@ -1761,6 +1762,16 @@ class FunctionalTests(unittest.TestCase):
                 ]
                 create_xml = os.path.join(self.path, *paths2)
 
+                paths2 = [
+                    self.server_config["repository.path"],
+                    "odk",
+                    "forms",
+                    form_directory,
+                    "repository",
+                    "insert.xml",
+                ]
+                insert_xml = os.path.join(self.path, *paths2)
+
                 here = os.path.dirname(os.path.abspath(__file__)).split(
                     "/formshare/tests"
                 )[0]
@@ -1780,6 +1791,7 @@ class FunctionalTests(unittest.TestCase):
                     create_sql,
                     insert_sql,
                     create_xml,
+                    insert_xml,
                     "",
                     "en",
                     form_reptask,
@@ -1831,6 +1843,16 @@ class FunctionalTests(unittest.TestCase):
                 ]
                 create_xml = os.path.join(self.path, *paths2)
 
+                paths2 = [
+                    self.server_config["repository.path"],
+                    "odk",
+                    "forms",
+                    form_directory,
+                    "repository",
+                    "insert.xml",
+                ]
+                insert_xml = os.path.join(self.path, *paths2)
+
                 here = os.path.dirname(os.path.abspath(__file__)).split(
                     "/formshare/tests"
                 )[0]
@@ -1850,6 +1872,7 @@ class FunctionalTests(unittest.TestCase):
                     create_sql,
                     insert_sql,
                     create_xml,
+                    insert_xml,
                     "",
                     "en",
                     form_reptask,
@@ -1990,7 +2013,18 @@ class FunctionalTests(unittest.TestCase):
                     self.server_config, self.projectID, self.formID
                 )
 
-                form_directory = form_details["form_directory"]
+                paths = [
+                    "odk",
+                    "forms",
+                    form_details["form_directory"],
+                    "submissions",
+                    "maps",
+                ]
+                maps_directory = os.path.join(
+                    self.server_config["repository.path"], *paths
+                )
+                create_xml_file = form_details["form_createxmlfile"]
+                insert_xml_file = form_details["form_insertxmlfile"]
                 form_schema = form_details["form_schema"]
                 task_id = str(uuid.uuid4())
                 sql = (
@@ -2014,7 +2048,9 @@ class FunctionalTests(unittest.TestCase):
                 engine.dispose()
                 build_csv(
                     self.server_config,
-                    form_directory,
+                    maps_directory,
+                    create_xml_file,
+                    insert_xml_file,
                     form_schema,
                     "/home/cquiros/{}.csv".format(task_id),
                     True,
@@ -2095,7 +2131,19 @@ class FunctionalTests(unittest.TestCase):
                     self.server_config, self.projectID, self.formID
                 )
 
-                form_directory = form_details["form_directory"]
+                paths = [
+                    "odk",
+                    "forms",
+                    form_details["form_directory"],
+                    "submissions",
+                    "maps",
+                ]
+                maps_directory = os.path.join(
+                    self.server_config["repository.path"], *paths
+                )
+                create_xml_file = form_details["form_createxmlfile"]
+                insert_xml_file = form_details["form_insertxmlfile"]
+
                 form_schema = form_details["form_schema"]
                 task_id = str(uuid.uuid4())
                 sql = (
@@ -2119,7 +2167,9 @@ class FunctionalTests(unittest.TestCase):
                 engine.dispose()
                 build_csv(
                     self.server_config,
-                    form_directory,
+                    maps_directory,
+                    create_xml_file,
+                    insert_xml_file,
                     form_schema,
                     "/home/cquiros/{}.csv".format(task_id),
                     False,
@@ -2158,6 +2208,8 @@ class FunctionalTests(unittest.TestCase):
                 )
                 form_directory = form_details["form_directory"]
                 form_schema = form_details["form_schema"]
+                create_xml_file = form_details["form_createxmlfile"]
+                insert_xml_file = form_details["form_insertxmlfile"]
                 task_id = str(uuid.uuid4())
 
                 sql = (
@@ -2185,6 +2237,8 @@ class FunctionalTests(unittest.TestCase):
                     form_directory,
                     form_schema,
                     self.formID,
+                    create_xml_file,
+                    insert_xml_file,
                     "/home/cquiros/{}.xlsx".format(task_id),
                     True,
                     "en",
@@ -2285,7 +2339,7 @@ class FunctionalTests(unittest.TestCase):
                 build_media_zip(
                     self.server_config,
                     self.server_config["repository.path"] + "/odk",
-                    form_directory,
+                    [form_directory],
                     form_schema,
                     "/home/cquiros/{}.zip".format(task_id),
                     "I_D",

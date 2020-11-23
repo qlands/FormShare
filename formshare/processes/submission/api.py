@@ -25,6 +25,7 @@ from formshare.processes.db import (
     get_form_schema,
     get_form_directory,
     get_form_xml_create_file,
+    get_form_xml_insert_file,
     get_project_form_colors,
     add_json_log,
 )
@@ -248,20 +249,18 @@ def json_to_csv(request, project, form):
     files = glob.glob(path)
     if files:
         array_dict = {}
-        create_xml_file = os.path.join(
-            odk_dir, *["forms", form_directory, "repository", "create.xml"]
-        )
+        create_xml_file = get_form_xml_create_file(request, project, form)
         tree_create = etree.parse(create_xml_file)
         root_create = tree_create.getroot()
 
         for aFile in files:
             with open(aFile) as json_file:
                 data = json.load(json_file)
-                print("*****************************888")
-                print(json_file)
-                print("--------------------------------")
-                print(data)
-                print("888*****************************")
+                # print("*****************************888")
+                # print(json_file)
+                # print("--------------------------------")
+                # print(data)
+                # print("888*****************************")
                 gather_array_sizes(data, array_dict)
                 separate_multi_selects(data, "maintable", root_create)
                 new_data = data
@@ -288,9 +287,7 @@ def json_to_csv(request, project, form):
                     "This form was uploaded using an old version of ODK Tools. Please upload it again."
                 ),
             )
-        insert_xml_file = os.path.join(
-            odk_dir, *["forms", form_directory, "repository", "insert.xml"]
-        )
+        insert_xml_file = get_form_xml_insert_file(request, project, form)
 
         paths = ["dummy.djson"]
         dummy_json = os.path.join(tmp_dir, *paths)
@@ -348,13 +345,7 @@ def json_to_csv(request, project, form):
 
 def get_tables_from_form(request, project, form):
     _ = request.translate
-    odk_dir = get_odk_path(request)
-    form_directory = get_form_directory(request, project, form)
     create_file = get_form_xml_create_file(request, project, form)
-    if create_file is None:
-        create_file = os.path.join(
-            odk_dir, *["forms", form_directory, "repository", "create.xml"]
-        )
     if not os.path.isfile(create_file):
         return []
     tree = etree.parse(create_file)
@@ -427,13 +418,7 @@ def get_tables_from_form(request, project, form):
 
 
 def update_table_desc(request, project, form, table_name, description):
-    odk_dir = get_odk_path(request)
-    form_directory = get_form_directory(request, project, form)
     create_file = get_form_xml_create_file(request, project, form)
-    if create_file is None:
-        create_file = os.path.join(
-            odk_dir, *["forms", form_directory, "repository", "create.xml"]
-        )
     if os.path.exists(create_file):
         tree = etree.parse(create_file)
         root = tree.getroot()
@@ -460,13 +445,7 @@ def update_table_desc(request, project, form, table_name, description):
 
 
 def update_field_desc(request, project, form, table_name, field_name, description):
-    odk_dir = get_odk_path(request)
-    form_directory = get_form_directory(request, project, form)
     create_file = get_form_xml_create_file(request, project, form)
-    if create_file is None:
-        create_file = os.path.join(
-            odk_dir, *["forms", form_directory, "repository", "create.xml"]
-        )
     if os.path.exists(create_file):
         tree = etree.parse(create_file)
         root = tree.getroot()
@@ -503,13 +482,7 @@ def update_field_sensitive(
     else:
         sensitive = "false"
         protection = "None"
-    odk_dir = get_odk_path(request)
-    form_directory = get_form_directory(request, project, form)
     create_file = get_form_xml_create_file(request, project, form)
-    if create_file is None:
-        create_file = os.path.join(
-            odk_dir, *["forms", form_directory, "repository", "create.xml"]
-        )
     if os.path.exists(create_file):
         tree = etree.parse(create_file)
         root = tree.getroot()
@@ -588,13 +561,7 @@ def get_protection_desc(request, protection_code):
 
 
 def get_fields_from_table(request, project, form, table_name, current_fields):
-    odk_dir = get_odk_path(request)
-    form_directory = get_form_directory(request, project, form)
     create_file = get_form_xml_create_file(request, project, form)
-    if create_file is None:
-        create_file = os.path.join(
-            odk_dir, *["forms", form_directory, "repository", "create.xml"]
-        )
     tree = etree.parse(create_file)
     root = tree.getroot()
     table = root.find(".//table[@name='" + table_name + "']")
@@ -648,13 +615,7 @@ def get_fields_from_table(request, project, form, table_name, current_fields):
 
 
 def get_table_desc(request, project, form, table_name):
-    odk_dir = get_odk_path(request)
-    form_directory = get_form_directory(request, project, form)
     create_file = get_form_xml_create_file(request, project, form)
-    if create_file is None:
-        create_file = os.path.join(
-            odk_dir, *["forms", form_directory, "repository", "create.xml"]
-        )
     tree = etree.parse(create_file)
     root = tree.getroot()
     table = root.find(".//table[@name='" + table_name + "']")
@@ -668,13 +629,7 @@ def is_field_key(request, project, form, table_name, field_name):
         return True
     if table_name == "maintable" and field_name == "originid":
         return True
-    odk_dir = get_odk_path(request)
-    form_directory = get_form_directory(request, project, form)
     create_file = get_form_xml_create_file(request, project, form)
-    if create_file is None:
-        create_file = os.path.join(
-            odk_dir, *["forms", form_directory, "repository", "create.xml"]
-        )
     tree = etree.parse(create_file)
     root = tree.getroot()
     table = root.find(".//table[@name='" + table_name + "']")

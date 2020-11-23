@@ -3,6 +3,10 @@ import uuid
 
 from formshare.products import register_product_instance
 from .celery_task import build_xlsx
+from formshare.processes.db.form import (
+    get_form_xml_create_file,
+    get_form_xml_insert_file,
+)
 
 
 def generate_public_xlsx_file(
@@ -18,6 +22,9 @@ def generate_public_xlsx_file(
     repo_dir = request.registry.settings["repository.path"]
     xlsx_file = os.path.join(repo_dir, *paths)
 
+    create_xml_file = get_form_xml_create_file(request, project, form)
+    insert_xml_file = get_form_xml_insert_file(request, project, form)
+
     task = build_xlsx.apply_async(
         (
             settings,
@@ -25,6 +32,8 @@ def generate_public_xlsx_file(
             form_directory,
             form_schema,
             form,
+            create_xml_file,
+            insert_xml_file,
             xlsx_file,
             True,
             request.locale_name,
@@ -57,6 +66,9 @@ def generate_private_xlsx_file(
     repo_dir = request.registry.settings["repository.path"]
     xlsx_file = os.path.join(repo_dir, *paths)
 
+    create_xml_file = get_form_xml_create_file(request, project, form)
+    insert_xml_file = get_form_xml_insert_file(request, project, form)
+
     task = build_xlsx.apply_async(
         (
             settings,
@@ -64,6 +76,8 @@ def generate_private_xlsx_file(
             form_directory,
             form_schema,
             form,
+            create_xml_file,
+            insert_xml_file,
             xlsx_file,
             False,
             request.locale_name,

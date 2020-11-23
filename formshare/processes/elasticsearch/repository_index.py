@@ -257,22 +257,23 @@ def get_dataset_stats_for_form(settings, user, project, form):
         raise RequestError("Cannot connect to ElasticSearch")
 
 
-def get_number_of_datasets_with_gps(settings, user, project, form):
-    index_name = get_index_name(user, project, form)
-    connection = create_connection(settings)
-    if connection is not None:
-        try:
-            es_result = connection.search(
-                index=index_name, body=get_datasets_with_gps()
-            )
-            if es_result["hits"]["total"] > 0:
-                return es_result["hits"]["total"]
-            else:
-                return 0
-        except NotFoundError:
-            return 0
-    else:
-        raise RequestError("Cannot connect to ElasticSearch")
+def get_number_of_datasets_with_gps(settings, user, project, forms):
+    res = 0
+    for a_form in forms:
+        index_name = get_index_name(user, project, a_form)
+        connection = create_connection(settings)
+        if connection is not None:
+            try:
+                es_result = connection.search(
+                    index=index_name, body=get_datasets_with_gps()
+                )
+                if es_result["hits"]["total"] > 0:
+                    res = res + es_result["hits"]["total"]
+            except NotFoundError:
+                pass
+        else:
+            raise RequestError("Cannot connect to ElasticSearch")
+    return res
 
 
 def get_all_datasets_with_gps(settings, index_name, size=0):

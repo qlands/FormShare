@@ -39,6 +39,8 @@ from formshare.processes.db import (
     collect_maps_for_schema,
     get_create_xml_for_schema,
     get_insert_xml_for_schema,
+    get_form_directories_for_schema,
+    get_forms_for_schema,
 )
 from formshare.processes.elasticsearch.record_index import delete_record_index
 from formshare.processes.elasticsearch.repository_index import (
@@ -103,7 +105,8 @@ class FormDetails(PrivateView):
         new_form_id,
         new_form_directory,
         old_form_id,
-        old_form_directory,
+        old_create_file,
+        old_insert_file,
         old_form_pkey,
         old_form_deflang,
         old_form_othlangs,
@@ -128,14 +131,6 @@ class FormDetails(PrivateView):
             )
             new_insert_file = os.path.join(
                 odk_path, *["forms", new_form_directory, "repository", "insert.xml"]
-            )
-
-            old_create_file = os.path.join(
-                odk_path, *["forms", old_form_directory, "repository", "create.xml"]
-            )
-
-            old_insert_file = os.path.join(
-                odk_path, *["forms", old_form_directory, "repository", "insert.xml"]
             )
 
             merged, output = merge_versions(
@@ -473,7 +468,8 @@ class FormDetails(PrivateView):
                     form_id,
                     form_data["form_directory"],
                     form_data["parent_form_data"]["form_id"],
-                    form_data["parent_form_data"]["form_directory"],
+                    form_data["parent_form_data"]["form_createxmlfile"],
+                    form_data["parent_form_data"]["form_insertxmlfile"],
                     form_data["parent_form_data"]["form_pkey"],
                     form_data["parent_form_data"]["form_deflang"],
                     form_data["parent_form_data"]["form_othlangs"],
@@ -508,7 +504,13 @@ class FormDetails(PrivateView):
             for a_table in dictionary_data:
                 num_tables = num_tables + 1
                 num_sensitive = num_sensitive + a_table.get("numsensitive", 0)
-
+            if form_data["form_schema"] is None:
+                forms = [form_id]
+            else:
+                forms = get_forms_for_schema(self.request, form_data["form_schema"])
+            number_with_gps = get_number_of_datasets_with_gps(
+                self.request.registry.settings, user_id, project_code, forms
+            )
             return {
                 "projectDetails": project_details,
                 "formid": form_id,
@@ -519,9 +521,7 @@ class FormDetails(PrivateView):
                 "formassistants": form_assistants,
                 "groups": groups,
                 "formgroups": form_groups,
-                "withgps": get_number_of_datasets_with_gps(
-                    self.request.registry.settings, user_id, project_code, form_id
-                ),
+                "withgps": number_with_gps,
                 "missingFiles": ", ".join(missing_files),
                 "taskdata": task_data,
                 "mergetaskdata": merge_task_data,
@@ -1958,6 +1958,9 @@ class DownloadSubmissionFiles(PrivateView):
                 )
                 return HTTPFound(location=next_page, headers={"FS_error": "true"})
         else:
+            get_form_directories = get_form_directories_for_schema(
+                self.request, form_data["form_schema"]
+            )
             odk_dir = get_odk_path(self.request)
             generate_media_zip_file(
                 self.request,
@@ -1965,7 +1968,7 @@ class DownloadSubmissionFiles(PrivateView):
                 project_id,
                 form_id,
                 odk_dir,
-                form_data["form_directory"],
+                get_form_directories,
                 form_data["form_schema"],
                 form_data["form_pkey"],
             )

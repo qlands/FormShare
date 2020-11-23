@@ -368,6 +368,7 @@ def merge_into_repository(
     a_form_id,
     a_form_directory,
     b_form_directory,
+    b_create_xml_file,
     b_schema_name,
     odk_merge_string,
     b_hex_color,
@@ -397,8 +398,8 @@ def merge_into_repository(
         odk_dir, *["forms", a_form_directory, "merging_files", "create.xml"]
     )
 
-    b_create_xml_file = os.path.join(
-        odk_dir, *["forms", b_form_directory, "repository", "create.xml"]
+    c_insert_xml_file = os.path.join(
+        odk_dir, *["forms", a_form_directory, "merging_files", "insert.xml"]
     )
 
     b_backup_directory = os.path.join(
@@ -490,6 +491,7 @@ def merge_into_repository(
                     "form_blocked": 0,
                     "form_schema": a_schema_name,
                     "form_createxmlfile": c_create_xml_file,
+                    "form_insertxmlfile": c_insert_xml_file,
                     "form_hexcolor": b_hex_color,
                 }
             )
@@ -498,6 +500,7 @@ def merge_into_repository(
                 "form_schema": a_schema_name,
                 "form_blocked": 0,
                 "form_createxmlfile": c_create_xml_file,
+                "form_insertxmlfile": c_insert_xml_file,
                 "form_hexcolor": b_hex_color,
             }
             update_form(db_session, project_id, a_form_id, form_data)

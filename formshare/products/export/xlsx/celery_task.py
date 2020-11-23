@@ -30,6 +30,8 @@ def build_xlsx(
     form_directory,
     form_schema,
     form_id,
+    create_xml,
+    insert_xml,
     xlsx_file,
     protect_sensitive,
     locale,
@@ -45,12 +47,6 @@ def build_xlsx(
     mysql_host = settings["mysql.host"]
     mysql_port = settings["mysql.port"]
     odk_tools_dir = settings["odktools.path"]
-
-    paths = ["forms", form_directory, "repository", "create.xml"]
-    create_xml = os.path.join(odk_dir, *paths)
-
-    paths = ["forms", form_directory, "repository", "insert.xml"]
-    insert_xml = os.path.join(odk_dir, *paths)
 
     paths = [odk_tools_dir, "utilities", "MySQLToXLSX", "mysqltoxlsx"]
     mysql_to_xlsx = os.path.join(odk_dir, *paths)

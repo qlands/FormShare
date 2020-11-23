@@ -15,6 +15,7 @@ def create_database_repository(
     create_file,
     insert_file,
     create_xml_file,
+    insert_xml_file,
     repository_string,
 ):
     settings = {}
@@ -37,6 +38,7 @@ def create_database_repository(
             create_file,
             insert_file,
             create_xml_file,
+            insert_xml_file,
             repository_string,
             request.locale_name,
         )

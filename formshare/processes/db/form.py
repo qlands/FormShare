@@ -41,6 +41,7 @@ __all__ = [
     "get_assistant_forms",
     "get_form_directory",
     "get_form_xml_create_file",
+    "get_form_xml_insert_file",
     "is_form_blocked",
     "add_new_form",
     "form_exists",
@@ -82,6 +83,8 @@ __all__ = [
     "get_create_xml_for_schema",
     "get_insert_xml_for_schema",
     "get_last_submission_date",
+    "get_form_directories_for_schema",
+    "get_forms_for_schema",
 ]
 
 log = logging.getLogger("formshare")
@@ -125,12 +128,7 @@ def get_create_xml_for_schema(request, schema):
         .order_by(Odkform.form_cdate.desc())
         .first()
     )
-    settings = request.registry.settings
-    create_xml_file = os.path.join(
-        settings["repository.path"],
-        *["odk", "forms", res.form_directory, "repository", "create.xml"]
-    )
-    return create_xml_file
+    return res.form_createxmlfile
 
 
 def get_insert_xml_for_schema(request, schema):
@@ -146,12 +144,23 @@ def get_insert_xml_for_schema(request, schema):
         .order_by(Odkform.form_cdate.desc())
         .first()
     )
-    settings = request.registry.settings
-    insert_xml_file = os.path.join(
-        settings["repository.path"],
-        *["odk", "forms", res.form_directory, "repository", "insert.xml"]
-    )
-    return insert_xml_file
+    return res.form_insertxmlfile
+
+
+def get_form_directories_for_schema(request, schema):
+    forms = request.dbsession.query(Odkform).filter(Odkform.form_schema == schema).all()
+    res = []
+    for a_form in forms:
+        res.append(a_form.form_directory)
+    return res
+
+
+def get_forms_for_schema(request, schema):
+    forms = request.dbsession.query(Odkform).filter(Odkform.form_schema == schema).all()
+    res = []
+    for a_form in forms:
+        res.append(a_form.form_id)
+    return res
 
 
 def _get_path_size(start_path="."):
@@ -774,6 +783,19 @@ def get_form_xml_create_file(request, project, form):
     )
     if form_data is not None:
         return form_data.form_createxmlfile
+    else:
+        return None
+
+
+def get_form_xml_insert_file(request, project, form):
+    form_data = (
+        request.dbsession.query(Odkform)
+        .filter(Odkform.project_id == project)
+        .filter(Odkform.form_id == form)
+        .first()
+    )
+    if form_data is not None:
+        return form_data.form_insertxmlfile
     else:
         return None
 

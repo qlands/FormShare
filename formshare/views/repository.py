@@ -64,12 +64,15 @@ class GenerateRepository(PrivateView):
         method = "get"
         stage = 1
         primary_key = ""
+        discard_testing_data = False
         if form_data:
             if form_data["schema"] is None:
                 if self.request.method == "POST":
                     method = "post"
                     postdata = self.get_post_dict()
                     run_process = True
+                    if "discard_testing_data" in postdata.keys():
+                        discard_testing_data = True
                     if "start_stage1" in postdata.keys():
                         stage = 1
                         if postdata.get("form_pkey", "") != "":
@@ -85,6 +88,8 @@ class GenerateRepository(PrivateView):
                         stage = 2
                         languages_string = postdata.get("languages_string", "")
                         primary_key = postdata.get("form_pkey")
+                        if "discard_testing_data" in postdata.keys():
+                            discard_testing_data = True
                         languages = json.loads(languages_string)
                         default_language = ""
                         if postdata.get("form_deflang", "") != "":
@@ -143,6 +148,7 @@ class GenerateRepository(PrivateView):
                                 odk_path,
                                 form_data["directory"],
                                 primary_key,
+                                discard_testing_data,
                             )
                         else:
                             result_code, message = create_repository(
@@ -153,6 +159,7 @@ class GenerateRepository(PrivateView):
                                 odk_path,
                                 form_data["directory"],
                                 primary_key,
+                                discard_testing_data,
                                 default_language_string,
                                 other_languages_string,
                             )
@@ -354,6 +361,7 @@ class GenerateRepository(PrivateView):
                     "languages": languages,
                     "languages_string": languages_string,
                     "primary_key": primary_key,
+                    "discard_testing_data": discard_testing_data,
                 }
 
             else:

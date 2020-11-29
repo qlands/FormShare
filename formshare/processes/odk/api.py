@@ -1497,6 +1497,7 @@ def create_repository(
     odk_dir,
     xform_directory,
     primary_key,
+    discard_testing_data,
     default_language=None,
     other_languages=None,
     for_merging=False,
@@ -1635,6 +1636,7 @@ def create_repository(
                         create_xml_file,
                         insert_xml_file,
                         " ".join(args),
+                        discard_testing_data,
                     )
                     form_data = {"form_reptask": task}
                     update_form(request, project, form, form_data)

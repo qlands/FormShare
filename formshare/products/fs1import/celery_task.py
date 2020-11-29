@@ -192,7 +192,10 @@ def store_json_file(
                 "diffs",
             ]
         )
-        os.makedirs(media_path)
+        try:
+            os.makedirs(media_path)
+        except FileExistsError:
+            pass
 
         log_file = os.path.join(
             odk_dir,
@@ -346,6 +349,7 @@ def import_json_files(
     locale,
     ignore_xform_check=False,
     test_task_id=None,
+    report_task=True,
 ):
     parts = __file__.split("/products/")
     this_file_path = parts[0] + "/locale"
@@ -375,15 +379,18 @@ def import_json_files(
         # We report chucks to not overload the messaging system
         if 25 <= percentage <= 50:
             if send_25:
-                send_task_status_to_form(settings, task_id, _("25% processed"))
+                if report_task:
+                    send_task_status_to_form(settings, task_id, _("25% processed"))
                 send_25 = False
         if 50 <= percentage <= 75:
             if send_50:
-                send_task_status_to_form(settings, task_id, _("50% processed"))
+                if report_task:
+                    send_task_status_to_form(settings, task_id, _("50% processed"))
                 send_50 = False
         if 75 <= percentage <= 100:
             if send_75:
-                send_task_status_to_form(settings, task_id, _("75% processed"))
+                if report_task:
+                    send_task_status_to_form(settings, task_id, _("75% processed"))
                 send_75 = False
         file_name = os.path.basename(file_to_import)
         submission_id = os.path.splitext(os.path.basename(file_to_import))[0]

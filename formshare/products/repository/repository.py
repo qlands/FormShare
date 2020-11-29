@@ -17,6 +17,7 @@ def create_database_repository(
     create_xml_file,
     insert_xml_file,
     repository_string,
+    discard_testing_data,
 ):
     settings = {}
     for key, value in request.registry.settings.items():
@@ -41,6 +42,7 @@ def create_database_repository(
             insert_xml_file,
             repository_string,
             request.locale_name,
+            discard_testing_data,
         )
     )
     register_product_instance(

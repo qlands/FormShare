@@ -1794,6 +1794,7 @@ class FunctionalTests(unittest.TestCase):
                     insert_xml,
                     "",
                     "en",
+                    False,
                     form_reptask,
                 )
 
@@ -1875,6 +1876,7 @@ class FunctionalTests(unittest.TestCase):
                     insert_xml,
                     "",
                     "en",
+                    True,
                     form_reptask,
                 )
 

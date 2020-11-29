@@ -3,6 +3,16 @@
 
 {% block titlesection %}{{ _('Creating repository') }} {% endblock titlesection %}
 
+{% block css %}
+    {{ super() }}
+    {% cssresource request,'formshare','switchery' %}
+{% endblock css %}
+
+{% block topScripts %}
+    {{ super() }}
+    {% jsresource request,'formshare','switchery' %}
+{% endblock topScripts %}
+
 {% block breadcrumbs %}
     {% include 'dashboard/projects/repository/snippets/brdcrbs_repository.jinja2' %}
 {% endblock breadcrumbs %}
@@ -42,6 +52,9 @@
                                             <input type="hidden" name="start_stage2">
                                             <input type="hidden" name="languages_string", value="{{ languages_string }}">
                                             <input type="hidden" name="form_pkey", value="{{ primary_key }}">
+                                            {% if discard_testing_data %}
+                                                <input type="hidden" name="discard_testing_data", value="">
+                                            {% endif %}
                                             <div class="form-group">
                                                 <label>{{ _('Primary language') }}</label>
                                                 <select style="width: 300px !important;" id="form_deflang" name="form_deflang" class="form-control">
@@ -163,6 +176,8 @@
     {{ super() }}
     <script>
         $(document).ready(function() {
+            var elem = document.querySelector('.js-switch');
+            var switchery = new Switchery(elem, { color: '#1AB394' });
             $('#repform').submit(function() {
                 $(this).find("button[type='submit']").prop('disabled',true);
             });

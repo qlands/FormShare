@@ -1,9 +1,15 @@
 <input type="hidden" name="csrf_token" value="{{ request.session.get_csrf_token() }}">
 <input type="hidden" name="start_stage1" value = "">
 <div class="form-group">
+    <label class="text-danger">{{ _('Discard / delete all testing data (No by default)') }}</label>
+    <input type="checkbox" name="discard_testing_data" class="js-switch"/>
+    <span class="form-text m-b-none text-warning">{{ _('Change the switch if you want to start with a clean repository') }}</span>
+</div>
+<hr>
+<div class="form-group">
     <label>{{ _('Which variable will be used as primary key') }}</label>
     <input id="form_pkey" name="form_pkey" type="text" class="form-control">
-    <span style="color: #026AA8" class="form-text m-b-none">{{ _('This variable will help in controlling duplicated data') }}</span>
+    <span style="color: #026AA8" class="form-text m-b-none">{{ _('This variable will help in controlling duplicated data. If you have more than one variable then use a calculate to concate them') }}</span>
 </div>
 <div class="form-actions">
     <button class="btn btn-primary" type="submit">

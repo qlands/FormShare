@@ -8,11 +8,13 @@ import traceback
 import uuid
 from subprocess import Popen, PIPE, check_call, CalledProcessError
 from celery.utils.log import get_task_logger
+from formshare.products.fs1import.celery_task import import_json_files
 
 import transaction
 from lxml import etree
 from sqlalchemy import create_engine
 from sqlalchemy.orm import configure_mappers
+from sqlalchemy import or_
 
 from formshare.config.celery_app import celeryApp
 from formshare.config.celery_class import CeleryTask
@@ -23,6 +25,9 @@ from formshare.models import (
     Odkform,
     map_to_schema,
     initialize_schema,
+    Formacces,
+    Formgrpacces,
+    Collingroup,
 )
 from formshare.processes.elasticsearch.repository_index import delete_dataset_index
 from formshare.processes.email.send_async_email import send_async_email
@@ -343,6 +348,46 @@ def make_database_changes(
         raise MergeDataBaseError(error_message)
 
 
+def get_geopoint_variable(db_session, project, form):
+    res = db_session.query(Odkform).filter(Odkform.project_id == project).filter(Odkform.form_id == form).first()
+    return res.form_geopoint
+
+
+def get_one_assistant(db_session, project, form):
+    res = (
+        db_session.query(Formacces)
+        .filter(Formacces.form_project == project)
+        .filter(Formacces.form_id == form)
+        .filter(or_(Formacces.coll_privileges == 1, Formacces.coll_privileges == 3))
+        .first()
+    )
+    if res is not None:
+        return res.coll_id, res.project_id
+    else:
+        res = (
+            db_session.query(Formgrpacces)
+            .filter(Formgrpacces.form_project == project)
+            .filter(Formgrpacces.form_id == form)
+            .filter(or_(Formgrpacces.group_privileges == 1, Formgrpacces.group_privileges == 3))
+            .first()
+        )
+        if res is not None:
+            project_id = res.project_id
+            group_id = res.group_id
+            res = (
+                db_session.query(Collingroup)
+                .filter(Collingroup.project_id == project_id)
+                .filter(Collingroup.group_id == group_id)
+                .first()
+            )
+            if res is not None:
+                return res.coll_id, res.enum_project,
+            else:
+                return None, None
+        else:
+            return None, None
+
+
 def update_form(db_session, project, form, form_data):
     mapped_data = map_to_schema(Odkform, form_data)
     try:
@@ -373,6 +418,7 @@ def merge_into_repository(
     odk_merge_string,
     b_hex_color,
     locale,
+    discard_testing_data,
 ):
     parts = __file__.split("/products/")
     this_file_path = parts[0] + "/locale"
@@ -504,34 +550,11 @@ def merge_into_repository(
                 "form_hexcolor": b_hex_color,
             }
             update_form(db_session, project_id, a_form_id, form_data)
-
+            if not discard_testing_data:
+                assistant, project_of_assistant = get_one_assistant(db_session, project_id, a_form_id)
+                geo_point_variable = get_geopoint_variable(db_session, project_id, a_form_id)
+            transaction.commit()
             critical_part = False
-            # Remove any test submissions if any. In try because nothing happens if they
-            # don't get removed... just junk files
-            submissions_path = os.path.join(
-                odk_dir, *["forms", a_form_directory, "submissions", "*.*"]
-            )
-            files = glob.glob(submissions_path)
-            if files:
-                for file in files:
-                    try:
-                        os.remove(file)
-                    except Exception as e:
-                        log.error(str(e))
-            submissions_path = os.path.join(
-                odk_dir, *["forms", a_form_directory, "submissions", "*/"]
-            )
-            files = glob.glob(submissions_path)
-            if files:
-                for file in files:
-                    if file[-5:] != "logs/" and file[-5:] != "maps/":
-                        try:
-                            shutil.rmtree(file)
-                        except Exception as e:
-                            log.error(str(e))
-            # Delete the dataset index
-            delete_dataset_index(settings, user, project_code, a_form_id)
-            log.info("Merging successful")
         except Exception as e:
             if critical_part:
                 status = "Critical error with merging"
@@ -564,3 +587,78 @@ def merge_into_repository(
             update_form(db_session, project_id, a_form_id, {"form_blocked": 0})
             transaction.commit()
             raise MergeDataBaseError(str(e))
+    # Delete the dataset index
+    delete_dataset_index(settings, user, project_code, a_form_id)
+    if discard_testing_data:
+        # Remove any test submissions if any
+        submissions_path = os.path.join(
+            odk_dir, *["forms", a_form_directory, "submissions", "*.*"]
+        )
+        files = glob.glob(submissions_path)
+        if files:
+            for file in files:
+                try:
+                    os.remove(file)
+                except Exception as e:
+                    log.error(str(e))
+        submissions_path = os.path.join(
+            odk_dir, *["forms", a_form_directory, "submissions", "*/"]
+        )
+        files = glob.glob(submissions_path)
+        if files:
+            for file in files:
+                if file[-5:] != "logs/" and file[-5:] != "maps/":
+                    try:
+                        shutil.rmtree(file)
+                    except Exception as e:
+                        log.error(str(e))
+    else:
+        unique_id = str(uuid.uuid4())
+        temp_path = os.path.join(
+            settings["repository.path"], *["tmp", unique_id]
+        )
+        os.makedirs(temp_path)
+
+        submissions_path = os.path.join(
+            odk_dir, *["forms", a_form_directory, "submissions", "*.json"]
+        )
+        files = glob.glob(submissions_path)
+        if files:
+            for file in files:
+                shutil.copy(file, temp_path)
+            if assistant is not None and project_of_assistant is not None:
+                import_json_files(
+                    user,
+                    project_id,
+                    a_form_id,
+                    odk_dir,
+                    a_form_directory,
+                    a_schema_name,
+                    assistant,
+                    temp_path,
+                    project_code,
+                    geo_point_variable,
+                    project_of_assistant,
+                    settings,
+                    locale,
+                    False,
+                    None,
+                    False,
+                )
+            else:
+                log.error("Error while importing testing files. "
+                          "The process was not able to find an assistant. "
+                          "The testing files are in {} You can import them later on".format(temp_path))
+                email_from = settings.get("mail.from", None)
+                email_to = settings.get("mail.error", None)
+                send_async_email(
+                    settings,
+                    email_from,
+                    email_to,
+                    "Error while importing testing files",
+                    "The process was not able to find an assistant. \n\n"
+                    "The testing files are in {}. You can import them later on".format(temp_path),
+                    None,
+                    locale,
+                )
+    log.info("Merging successful")

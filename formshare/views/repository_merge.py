@@ -57,9 +57,12 @@ class RepositoryMergeForm(PrivateView):
         error_type = 0
         values_to_ignore = []
         s_values_to_ignore = None
+        discard_testing_data = False
         if self.request.method == "POST":
             odk_path = get_odk_path(self.request)
             post_data = self.get_post_dict()
+            if "discard_testing_data" in post_data.keys():
+                discard_testing_data = True
             if "valuestoignore" in post_data.keys():
                 s_values_to_ignore = post_data["valuestoignore"]
 
@@ -97,6 +100,7 @@ class RepositoryMergeForm(PrivateView):
                     old_form_data["directory"],
                     output,
                     old_form_data["form_hexcolor"],
+                    discard_testing_data,
                 )
 
                 form_data = {"form_mergetask": task_id}

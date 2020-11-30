@@ -13,6 +13,7 @@ def merge_form(
     b_form_directory,
     odk_merge_string,
     b_hex_color,
+    discard_testing_data,
 ):
     settings = {}
     for key, value in request.registry.settings.items():
@@ -34,6 +35,7 @@ def merge_form(
             odk_merge_string,
             b_hex_color,
             request.locale_name,
+            discard_testing_data,
         )
     )
     register_product_instance(

@@ -20,7 +20,7 @@ CherryPy==18.6.0
 click==7.1.2
 cookiecutter==1.7.2
 coverage==5.1
-cryptography==2.9.2
+cryptography==3.2.1
 decorator==4.4.2
 docutils==0.16
 -e git+https://github.com/qlands/elasticfeeds.git@62d8c57b3e775b5c1a71b00d873dfb6204905d13#egg=elasticfeeds

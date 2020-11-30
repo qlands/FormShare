@@ -3,6 +3,16 @@
 
 {% block titlesection %}{{ _('Merge new version') }} {% endblock titlesection %}
 
+{% block css %}
+    {{ super() }}
+    {% cssresource request,'formshare','switchery' %}
+{% endblock css %}
+
+{% block topScripts %}
+    {{ super() }}
+    {% jsresource request,'formshare','switchery' %}
+{% endblock topScripts %}
+
 {% block breadcrumbs %}
     {% include 'dashboard/projects/repository/snippets/brdcrbs_merge.jinja2' %}
 {% endblock breadcrumbs %}
@@ -68,6 +78,11 @@
                                         {% if errortype == 1 %}
                                             <input type="hidden" name="valuestoignore" value="{{ valuestoignore }}">
                                         {% endif %}
+                                        <div class="form-group">
+                                            <label class="text-danger">{{ _('Discard all testing data (No by default)') }}</label>
+                                            <input type="checkbox" name="discard_testing_data" class="js-switch"/>
+                                            <span class="form-text m-b-none text-warning">{{ _('Change the switch if you DO NOT WANT to append the testing data into the repository') }}</span>
+                                        </div>
                                         {% block merge_form_actions %}
                                             {% if errortype != 1 %}
                                                 <button type="submit" style="margin-top: 10px" class="btn btn-primary">{{ _('Merge new version') }}</button>
@@ -90,6 +105,8 @@
     {{ super() }}
     <script>
         $(document).ready(function() {
+            var elem = document.querySelector('.js-switch');
+            var switchery = new Switchery(elem, { color: '#1AB394' });
             $('#form_update_form').submit(function() {
                 $(this).find("button[type='submit']").prop('disabled',true);
             });

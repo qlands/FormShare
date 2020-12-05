@@ -1,5 +1,5 @@
 from formshare.products import register_product_instance
-from .celery_task import import_json_files
+from formshare.products.fs1import.celery_task import import_json_files
 
 
 def formshare_one_import_json(

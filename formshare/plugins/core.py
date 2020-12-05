@@ -11,7 +11,7 @@ from pyutilib.component.core import implements
 from pyutilib.component.core import ExtensionPoint as PluginImplementations
 from pyutilib.component.core import SingletonPlugin as _pca_SingletonPlugin
 from pyutilib.component.core import Plugin as _pca_Plugin
-from .interfaces import IPluginObserver
+from formshare.plugins.interfaces import IPluginObserver
 
 __all__ = [
     "PluginImplementations",

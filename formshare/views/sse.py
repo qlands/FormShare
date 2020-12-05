@@ -16,7 +16,7 @@ from formshare.models import (
     Product,
 )
 from formshare.processes.db import get_project_id_from_name
-from .classes import PrivateView
+from formshare.views.classes import PrivateView
 
 log = logging.getLogger("formshare")
 

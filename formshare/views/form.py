@@ -77,7 +77,7 @@ from formshare.products.export.xlsx import (
     generate_public_xlsx_file,
     generate_private_xlsx_file,
 )
-from .classes import PrivateView
+from formshare.views.classes import PrivateView
 
 log = logging.getLogger("formshare")
 
@@ -512,6 +512,7 @@ class FormDetails(PrivateView):
             number_with_gps = get_number_of_datasets_with_gps(
                 self.request.registry.settings, user_id, project_code, forms
             )
+            products = get_form_products(self.request, project_id, form_id)
             return {
                 "projectDetails": project_details,
                 "formid": form_id,
@@ -528,7 +529,7 @@ class FormDetails(PrivateView):
                 "mergetaskdata": merge_task_data,
                 "numsensitive": num_sensitive,
                 "numtables": num_tables,
-                "products": get_form_products(self.request, project_id, form_id),
+                "products": products,
                 "processing": get_form_processing_products(
                     self.request, project_id, form_id, form_data["form_reptask"]
                 ),

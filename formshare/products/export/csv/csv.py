@@ -2,7 +2,7 @@ import os
 import uuid
 
 from formshare.products import register_product_instance
-from .celery_task import build_csv
+from formshare.products.export.csv.celery_task import build_csv
 
 
 def generate_public_csv_file(

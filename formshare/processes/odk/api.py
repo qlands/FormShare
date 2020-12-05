@@ -899,6 +899,7 @@ def upload_odk_form(
                 + "https://github.com/qlands/FormShare",
             )
     except PyXFormError as e:
+        traceback.print_exc()
         log.error(
             "Error {} while adding form {} in project {}".format(
                 str(e), input_file_name, project_id
@@ -906,6 +907,7 @@ def upload_odk_form(
         )
         return False, str(e).replace("'", "").replace('"', "").replace("\n", "")
     except Exception as e:
+        traceback.print_exc()
         log.error(
             "Error {} while adding form {} in project {}".format(
                 str(e), input_file_name, project_id

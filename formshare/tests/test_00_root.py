@@ -53,7 +53,7 @@ def get_form_details(config, project, form):
 
 class FunctionalTests(unittest.TestCase):
     def setUp(self):
-        from .config import server_config
+        from formshare.tests.config import server_config
         from formshare import main
 
         app = main(None, **server_config)
@@ -2414,7 +2414,15 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            time.sleep(10)  # Wait 5 seconds
+            time.sleep(10)  # Wait 5 seconds so celery finished this
+
+            # Get the details of a form. The form now should have a repository with products
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
 
             mimic_celery_public_csv_process()
             mimic_celery_private_csv_process()

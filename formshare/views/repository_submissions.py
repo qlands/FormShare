@@ -19,7 +19,7 @@ from formshare.processes.submission.api import (
     delete_all_submission,
     update_record_with_id,
 )
-from .classes import PrivateView, AssistantAPIView
+from formshare.views.classes import PrivateView, AssistantAPIView
 
 
 class ManageSubmissions(PrivateView):

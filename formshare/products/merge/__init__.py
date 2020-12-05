@@ -1,1 +1,1 @@
-from .merge import merge_form
+from formshare.products.merge.merge import merge_form

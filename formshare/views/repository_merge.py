@@ -9,7 +9,7 @@ from formshare.processes.email.send_email import send_error_to_technical_team
 from formshare.processes.odk.api import get_odk_path, merge_versions
 from formshare.processes.odk.processes import get_form_data
 from formshare.products.merge import merge_form
-from .classes import PrivateView
+from formshare.views.classes import PrivateView
 
 log = logging.getLogger("formshare")
 

@@ -1,1 +1,1 @@
-from .products import *
+from formshare.products.products import *

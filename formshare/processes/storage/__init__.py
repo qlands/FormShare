@@ -1,1 +1,1 @@
-from .local_storage import *
+from formshare.processes.storage.local_storage import *

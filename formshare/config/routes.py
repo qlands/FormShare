@@ -1,8 +1,8 @@
 import logging
 
 import formshare.plugins as p
-from ..plugins.utilities import add_route
-from ..views.assistant_groups import (
+from formshare.plugins.utilities import add_route
+from formshare.views.assistant_groups import (
     GroupListView,
     AddGroupView,
     EditGroupView,
@@ -10,14 +10,14 @@ from ..views.assistant_groups import (
     GroupMembersView,
     RemoveMember,
 )
-from ..views.assistant_views.clean import CleanInterface, PerformAction, DataRequest
-from ..views.assistant_views.forms import (
+from formshare.views.assistant_views.clean import CleanInterface, PerformAction, DataRequest
+from formshare.views.assistant_views.forms import (
     AssistantForms,
     ChangeMyAssistantPassword,
     GetQRCode,
     ChangeMyAPIKey,
 )
-from ..views.assistant_views.jsonlogs import (
+from formshare.views.assistant_views.jsonlogs import (
     JSONList,
     JSONCompare,
     JSONCheckout,
@@ -33,14 +33,14 @@ from ..views.assistant_views.jsonlogs import (
     JSONCompareSubmissions,
     JSONGetSubmissionsMedia,
 )
-from ..views.assistants import (
+from formshare.views.assistants import (
     AssistantsListView,
     AddAssistantsView,
     EditAssistantsView,
     DeleteAssistant,
     ChangeAssistantPassword,
 )
-from ..views.basic_views import (
+from formshare.views.basic_views import (
     NotFoundView,
     HomeView,
     log_out_view,
@@ -53,13 +53,13 @@ from ..views.basic_views import (
     ErrorView,
     Gravatar,
 )
-from ..views.collaborators import (
+from formshare.views.collaborators import (
     CollaboratorsListView,
     RemoveCollaborator,
     AcceptCollaboration,
 )
-from ..views.dashboard import UserDashBoardView
-from ..views.form import (
+from formshare.views.dashboard import UserDashBoardView
+from formshare.views.form import (
     FormDetails,
     AddNewForm,
     EditForm,
@@ -90,7 +90,7 @@ from ..views.form import (
     DownloadPrivateXLSData,
     StopMerge,
 )
-from ..views.odk import (
+from formshare.views.odk import (
     ODKFormList,
     ODKManifest,
     ODKMediaFile,
@@ -98,7 +98,7 @@ from ..views.odk import (
     ODKSubmission,
     ODKXMLForm,
 )
-from ..views.products import (
+from formshare.views.products import (
     DownloadPrivateProduct,
     DownloadPublicProduct,
     DownloadPrivateProductByAPI,
@@ -106,8 +106,8 @@ from ..views.products import (
     UnPublishProduct,
     DeleteProduct,
 )
-from ..views.profile import UserProfileView, EditProfileView
-from ..views.projects import (
+from formshare.views.profile import UserProfileView, EditProfileView
+from formshare.views.projects import (
     AddProjectView,
     ProjectListView,
     ProjectDetailsView,
@@ -120,10 +120,10 @@ from ..views.projects import (
     ActivateProjectView,
     GetProjectQRCode,
 )
-from ..views.repository import GenerateRepository
-from ..views.repository_dictionary import EditDictionaryTables, EditDictionaryFields
-from ..views.repository_merge import RepositoryMergeForm
-from ..views.repository_submissions import (
+from formshare.views.repository import GenerateRepository
+from formshare.views.repository_dictionary import EditDictionaryTables, EditDictionaryFields
+from formshare.views.repository_merge import RepositoryMergeForm
+from formshare.views.repository_submissions import (
     ManageSubmissions,
     GetFormSubmissions,
     DeleteFormSubmission,
@@ -131,9 +131,9 @@ from ..views.repository_submissions import (
     GetFormAudit,
     ReviewAudit,
 )
-from ..views.search import APIUserSearchSelect2
-from ..views.sse import SSEventStream
-from ..views.users import UsersListView, EditUserView, AddUserView
+from formshare.views.search import APIUserSearchSelect2
+from formshare.views.sse import SSEventStream
+from formshare.views.users import UsersListView, EditUserView, AddUserView
 
 log = logging.getLogger("formshare")
 

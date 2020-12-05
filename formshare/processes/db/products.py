@@ -5,7 +5,7 @@ import os
 from sqlalchemy import func
 
 from formshare.processes.db.celery import get_task_status
-from ...models import Product, FinishedTask, map_from_schema
+from formshare.models import Product, FinishedTask, map_from_schema
 
 __all__ = [
     "add_product_instance",

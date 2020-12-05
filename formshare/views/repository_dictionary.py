@@ -12,7 +12,7 @@ from formshare.processes.submission.api import (
     update_field_desc,
     update_field_sensitive,
 )
-from .classes import PrivateView
+from formshare.views.classes import PrivateView
 
 
 class EditDictionaryTables(PrivateView):

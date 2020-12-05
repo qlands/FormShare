@@ -1,1 +1,1 @@
-from .settings import *
+from formshare.processes.settings import *

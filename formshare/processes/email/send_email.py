@@ -5,7 +5,7 @@ from jinja2 import ext
 
 from formshare.config.jinja_extensions import jinjaEnv, ExtendThis
 from formshare.plugins.helpers import readble_date
-from .send_async_email import send_async_email
+from formshare.processes.email.send_async_email import send_async_email
 
 log = logging.getLogger("formshare")
 

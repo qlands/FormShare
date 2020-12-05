@@ -1,7 +1,7 @@
 import datetime
 
 from formshare.processes.db.user import get_user_name
-from ...models import FinishedTask, Product
+from formshare.models import FinishedTask, Product
 
 __all__ = ["cancel_task", "get_task_status", "task_exists", "get_output_by_task"]
 

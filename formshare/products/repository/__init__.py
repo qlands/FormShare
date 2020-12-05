@@ -1,1 +1,1 @@
-from .repository import create_database_repository
+from formshare.products.repository.repository import create_database_repository

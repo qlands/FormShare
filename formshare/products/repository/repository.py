@@ -1,5 +1,5 @@
 from formshare.products import register_product_instance
-from .celery_task import create_mysql_repository
+from formshare.products.repository.celery_task import create_mysql_repository
 
 
 def create_database_repository(

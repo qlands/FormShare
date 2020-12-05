@@ -2,7 +2,7 @@ import os
 import uuid
 
 from formshare.products import register_product_instance
-from .celery_task import build_xlsx
+from formshare.products.export.xlsx.celery_task import build_xlsx
 from formshare.processes.db.form import (
     get_form_xml_create_file,
     get_form_xml_insert_file,

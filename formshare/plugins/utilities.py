@@ -14,7 +14,7 @@ from formshare.processes.db import (
     get_form_data,
     get_project_owner,
 )
-from formshare.processes.settings import (
+from formshare.processes.settings.settings import (
     store_settings,
     update_settings,
     delete_settings,

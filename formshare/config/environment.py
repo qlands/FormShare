@@ -5,21 +5,21 @@ from pyramid_session_redis import session_factory_from_settings
 
 import formshare.plugins as p
 import formshare.plugins.helpers as helpers
-import formshare.products as prd
+from formshare.products import add_product
 import formshare.resources as r
 from formshare.models import add_column_to_schema
 from formshare.processes.elasticsearch.user_index import configure_user_index_manager
 from formshare.products.formshare_products import register_products
-from .api_routes import load_api_version_1_routes
-from .elasticfeeds import configure_manager
-from .jinja_extensions import (
+from formshare.config.api_routes import load_api_version_1_routes
+from formshare.config.elasticfeeds import configure_manager
+from formshare.config.jinja_extensions import (
     initialize,
     ExtendThis,
     CSSResourceExtension,
     JSResourceExtension,
 )
-from .mainresources import create_resources
-from .routes import load_routes
+from formshare.config.mainresources import create_resources
+from formshare.config.routes import load_routes
 
 main_policy_array = []
 
@@ -173,13 +173,13 @@ def load_environment(settings, config, apppath, policy_array):
 
     # Register FormShare build-in products
     for product in register_products():
-        prd.add_product(product)
+        add_product(product)
 
     # Call any connected plugins to add their products
     for plugin in p.PluginImplementations(p.IProduct):
         products = plugin.register_products(config)
         for product in products:
-            prd.add_product(product, True)
+            add_product(product, True)
 
     # Call any connected plugins to add their modifications into the schema. Not all tables has extras so only
     # certain tables are allowed

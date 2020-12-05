@@ -3,7 +3,7 @@ import os
 
 import formshare.plugins as p
 from formshare.config.celery_app import celeryApp
-from ..processes.db import (
+from formshare.processes.db import (
     add_product_instance,
     cancel_task,
     task_exists,

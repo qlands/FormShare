@@ -5,7 +5,7 @@ import validators
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
-from ...models import (
+from formshare.models import (
     map_to_schema,
     User,
     map_from_schema,

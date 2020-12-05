@@ -13,7 +13,7 @@ from formshare.processes.db import (
     set_output_public_state,
     delete_product,
 )
-from .classes import PrivateView, PublicView, APIView
+from formshare.views.classes import PrivateView, PublicView, APIView
 
 
 class DownloadPrivateProduct(PrivateView):

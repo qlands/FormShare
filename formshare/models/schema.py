@@ -3,7 +3,7 @@ import json
 from future.utils import iteritems
 from sqlalchemy import inspect
 
-from .meta import metadata
+from formshare.models.meta import metadata
 
 __all__ = [
     "initialize_schema",

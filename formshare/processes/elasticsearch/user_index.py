@@ -266,6 +266,9 @@ class UserIndexManager(object):
         connection = self.create_connection()
         if connection is not None:
             es_result = connection.search(index=self.index_name, body=query_dict)
+            print("***************************888")
+            print(es_result)
+            print("***************************888")
             if es_result["hits"]["total"] > 0:
                 total = es_result["hits"]["total"]
                 for hit in es_result["hits"]["hits"]:

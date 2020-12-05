@@ -9,7 +9,7 @@ from formshare.processes.elasticsearch.repository_index import delete_dataset_in
 from formshare.processes.email.send_email import send_error_to_technical_team
 from formshare.processes.odk.api import create_repository, get_odk_path
 from formshare.processes.odk.processes import get_form_data
-from .classes import PrivateView
+from formshare.views.classes import PrivateView
 
 log = logging.getLogger("formshare")
 

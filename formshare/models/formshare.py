@@ -16,7 +16,7 @@ from sqlalchemy import (
 from sqlalchemy.ext import mutable
 from sqlalchemy.orm import relationship
 
-from .meta import Base
+from formshare.models.meta import Base
 
 metadata = Base.metadata
 

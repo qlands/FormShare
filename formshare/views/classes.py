@@ -33,8 +33,8 @@ from formshare.processes.db import (
     get_user_by_api_key,
     get_assistant_by_api_key,
 )
-from .. import plugins as p
-from ..config.auth import get_user_data, get_assistant_data
+from formshare import plugins as p
+from formshare.config.auth import get_user_data, get_assistant_data
 
 log = logging.getLogger("formshare")
 

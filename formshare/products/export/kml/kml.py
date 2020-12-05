@@ -2,7 +2,7 @@ import os
 import uuid
 
 from formshare.products import register_product_instance
-from .celery_task import build_kml
+from formshare.products.export.kml.celery_task import build_kml
 
 
 def generate_kml_file(request, user, project, form, form_schema, primary_key):

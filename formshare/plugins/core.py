@@ -67,7 +67,7 @@ class SingletonPlugin(_pca_SingletonPlugin):
     """
 
 
-def get_plugin(plugin):
+def get_plugin(plugin):  # pragma: no cover  # Not used
     """
     Get an instance of a active plugin by name.  This is helpful for
     testing.
@@ -102,7 +102,7 @@ def load(*plugins):
 
     observers = PluginImplementations(IPluginObserver)
     for plugin in plugins:
-        if plugin in _PLUGINS:
+        if plugin in _PLUGINS:  # pragma: no cover
             raise Exception("Plugin `%s` already loaded" % plugin)
 
         service = _get_service(plugin)
@@ -133,7 +133,7 @@ def unload_all():
     unload(*reversed(_PLUGINS))
 
 
-def unload(*plugins):
+def unload(*plugins):  # pragma: no cover. Not used at the moment
     """
     Unload named plugin(s).
     :param plugins: List of plugins
@@ -161,7 +161,7 @@ def unload(*plugins):
             observer_plugin.after_unload(service)
 
 
-def plugin_loaded(name):
+def plugin_loaded(name):  # pragma: no cover. Not used at the moment
     """
     See if a particular plugin is loaded.
     :param name: Plugin name
@@ -172,7 +172,7 @@ def plugin_loaded(name):
     return False
 
 
-def _get_service(plugin_name):
+def _get_service(plugin_name):  # pragma: no cover. Not used at the moment
     """
     Return a service (ie an instance of a plugin class).
     :param plugin_name: the name of a plugin entry point

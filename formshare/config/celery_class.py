@@ -11,7 +11,15 @@ from formshare.config.celery_app import get_ini_value
 log = logging.getLogger("formshare")
 
 
-def send_sse_event(connection, task_id, task_name, message):
+def send_sse_event(connection, task_id, task_name, message):  # pragma: no cover
+    """
+    This function send the SSE Events for the Celery Class
+    :param connection: Connection to the MySQL Server
+    :param task_id: Task ID
+    :param task_name: Task name
+    :param message: Message
+    :return:
+    """
     res = connection.execute(
         "SELECT count(celery_taskid) FROM product WHERE celery_taskid = '{}'".format(
             task_id
@@ -41,7 +49,11 @@ def send_sse_event(connection, task_id, task_name, message):
             log.error("Task {} with ID {} failed.".format(task_name, task_id))
 
 
-class CeleryTask(Task):
+class CeleryTask(Task):  # pragma: no cover
+    """
+    This is the Celery Class used by all Celery decentralized processing. Out of Coverage because processes are
+    executed by Celery this not covered by the testing framework
+    """
     def run(self, *args, **kwargs):
         pass
 

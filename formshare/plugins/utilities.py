@@ -44,7 +44,7 @@ __all__ = [
 ]
 
 
-def __return_current_path():
+def __return_current_path(): # pragma: no cover - Tested by loading testing plugins but not Covered
     """
     This code is based on CKAN
     :Copyright (C) 2007 Open Knowledge Foundation
@@ -57,9 +57,13 @@ def __return_current_path():
     return os.path.dirname(filename)
 
 
-def add_templates_directory(config, relative_path, prepend=True):
-    caller_path = __return_current_path()
-    templates_path = os.path.join(caller_path, relative_path)
+def add_templates_directory(config, relative_path, prepend=True):  # pragma: no cover - Tested by loading
+    # testing plugins but not Covered
+    if not os.path.isabs(relative_path):
+        caller_path = __return_current_path()
+        templates_path = os.path.join(caller_path, relative_path)
+    else:
+        templates_path = relative_path
     if os.path.exists(templates_path):
         config.add_jinja2_search_path(searchpath=templates_path, prepend=prepend)
         if prepend:
@@ -70,9 +74,13 @@ def add_templates_directory(config, relative_path, prepend=True):
         raise Exception("Templates path {} does not exists".format(relative_path))
 
 
-def add_static_view(config, view_name, relative_path, cache_max_age=3600):
-    caller_path = __return_current_path()
-    static_path = os.path.join(caller_path, relative_path)
+def add_static_view(config, view_name, relative_path, cache_max_age=3600):  # pragma: no cover - Tested by loading
+    # testing plugins but not Covered
+    if not os.path.isabs(relative_path):
+        caller_path = __return_current_path()
+        static_path = os.path.join(caller_path, relative_path)
+    else:
+        static_path = relative_path
     if os.path.exists(static_path):
         introspector = config.introspector
         if introspector.get("static views", view_name, None) is None:
@@ -99,9 +107,12 @@ def add_css_resource(library_name, resource_id, resource_file, depends="CHAIN"):
     }
 
 
-def add_library(name, path):
-    caller_path = __return_current_path()
-    library_path = os.path.join(caller_path, path)
+def add_library(name, path):  # pragma: no cover - Tested by loading testing plugins but not Covered
+    if not os.path.isabs(path):
+        caller_path = __return_current_path()
+        library_path = os.path.join(caller_path, path)
+    else:
+        library_path = path
     if os.path.exists(library_path):
         return {"name": name, "path": library_path}
     else:
@@ -140,7 +151,7 @@ def add_field_to_form_group_access_schema(field_name, field_desc):
     return {"schema": "formgrpaccess", "fieldname": field_name, "fielddesc": field_desc}
 
 
-class FormSharePublicView(PublicView):
+class FormSharePublicView(PublicView):  # pragma: no cover - Tested by loading testing plugins but not Covered
     """
     A view class for plugins which require a public (not login required) view.
     """
@@ -149,13 +160,13 @@ class FormSharePublicView(PublicView):
         raise NotImplementedError("process_view must be implemented in subclasses")
 
 
-class FormSharePrivateView(PrivateView):
+class FormSharePrivateView(PrivateView):  # pragma: no cover - Tested by loading testing plugins but not Covered
     """
     A view class for plugins which require a private (login required) view.
     """
 
 
-class FormShareFormEditorView(PrivateView):
+class FormShareFormEditorView(PrivateView):  # pragma: no cover - Tested by loading testing plugins but not Covered
     """
        A view class for plugins which require a private Form View with editor+ privileges.
     """
@@ -194,7 +205,7 @@ class FormShareFormEditorView(PrivateView):
         self.form_id = form_id
 
 
-class FormShareFormAdminView(PrivateView):
+class FormShareFormAdminView(PrivateView):  # pragma: no cover - Tested by loading testing plugins but not Covered
     """
        A view class for plugins which require a private Form View with admin privileges.
     """
@@ -242,7 +253,7 @@ class FormShareFormAdminView(PrivateView):
         self.classResult["formDetails"] = self.form_details
 
 
-class FormShareSettings(object):
+class FormShareSettings(object):  # pragma: no cover - Tested by loading testing plugins but not Covered
     def __init__(self, request):
         self.request = request
 

@@ -169,7 +169,7 @@ def pluralize(noun, size, locale="en"):
 
 
 @core_helper
-def get_gravatar_url(request, name, size=45):
+def get_gravatar_url(request, name, size=45):  # pragma: no cover Cannot be tested due to request object
     """
     Return the gravatar based on a name
     :param request: pyramid request
@@ -208,11 +208,11 @@ def get_icon_from_mime_type(mime_type):
     :return: FontAwesome icon as string
     """
     icon = "far fa-file"
-    if mime_type.find("image") > 0:
+    if mime_type.find("image") >= 0:
         icon = "far fa-file-image"
-    if mime_type.find("video") > 0:
+    if mime_type.find("video") >= 0:
         icon = "far fa-file-video"
-    if mime_type.find("audio") > 0:
+    if mime_type.find("audio") >= 0:
         icon = "far fa-file-audio"
     if mime_type == "text/csv":
         icon = "fas fa-file-csv"

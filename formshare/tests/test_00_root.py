@@ -68,9 +68,11 @@ class FunctionalTests(unittest.TestCase):
         self.project = ""
         self.projectID = ""
         self.assistantLogin = ""
+        self.assistantLogin2 = ""
         self.assistantLoginKey = ""
         self.assistantGroupID = ""
         self.formID = ""
+        self.formID2 = ""
         self.formMultiLanguageID = ""
         self.path = os.path.dirname(os.path.abspath(__file__))
 
@@ -468,6 +470,18 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Adds a second project
+            res = self.testapp.post(
+                "/user/{}/projects/add".format(self.randonLogin),
+                {
+                    "project_code": "test002",
+                    "project_name": "Test project",
+                    "project_abstract": "",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
             # Add a project fails. The project already exists
             res = self.testapp.post(
                 "/user/{}/projects/add".format(self.randonLogin),
@@ -739,6 +753,7 @@ class FunctionalTests(unittest.TestCase):
 
             # Add an assistant succeed
             self.assistantLogin = "assistant001"
+            self.assistantLogin2 = "assistant002"
 
             res = self.testapp.post(
                 "/user/{}/project/{}/assistants/add".format(
@@ -848,6 +863,36 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            # Add a second assistant
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistants/add".format(
+                    self.randonLogin, self.project
+                ),
+                {
+                    "coll_id": "assistant002",
+                    "coll_password": "123",
+                    "coll_password2": "123",
+                    "coll_prjshare": 1,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Add a second assistant to other project fails as an assistant name cannot be repeated within an account
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistants/add".format(
+                    self.randonLogin, "test002"
+                ),
+                {
+                    "coll_id": "assistant002",
+                    "coll_password": "123",
+                    "coll_password2": "123",
+                    "coll_prjshare": 1,
+                },
+                status=200,
+            )
+            assert "FS_error" in res.headers
 
         def test_assistant_groups():
             # Add an assistant group fail. The description is empty
@@ -974,6 +1019,19 @@ class FunctionalTests(unittest.TestCase):
                 {
                     "add_assistant": "",
                     "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Add a second member to a group succeeds
+            res = self.testapp.post(
+                "/user/{}/project/{}/group/{}/members".format(
+                    self.randonLogin, self.project, self.assistantGroupID
+                ),
+                {
+                    "add_assistant": "",
+                    "coll_id": "{}|{}".format(self.projectID, self.assistantLogin2),
                 },
                 status=302,
             )
@@ -2568,6 +2626,35 @@ class FunctionalTests(unittest.TestCase):
                 store_task_status(task_id, self.server_config)
 
             # Test import a simple file
+
+            # Add a group to a form again
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/groups/add".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {"group_id": self.assistantGroupID, "group_privilege": 3},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Add an assistant to a form succeeds
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "coll_id": "{}|{}".format(self.projectID, self.assistantLogin2),
+                    "coll_privileges": "3",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/import".format(
+                    self.randonLogin, self.project, self.formID
+                ), status=200)
+
             paths = [
                 "resources",
                 "forms",
@@ -3351,6 +3438,60 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+        def test_helpers():
+            import formshare.plugins.helpers as helpers
+            import datetime
+            h = helpers.helper_functions
+            h.humanize_date(datetime.datetime.now())
+            h.get_version()
+            h.readble_date(datetime.datetime.now())
+            h.readble_date(datetime.datetime.now(), "es")
+            h.readble_date_with_time(datetime.datetime.now())
+            h.readble_date_with_time(datetime.datetime.now(), "es")
+            h.simple_date(datetime.datetime.now())
+            h.simple_date_usa(datetime.datetime.now())
+            h.pluralize("home", 1)
+            h.pluralize("home", 2)
+            h.pluralize("casa", 1, "es")
+            h.pluralize("casa", 2, "es")
+            h.is_valid_email("cquiros@qlands.com")
+            h.is_valid_url("https://formshare.org")
+            h.get_icon_from_mime_type("image")
+            h.get_icon_from_mime_type("video")
+            h.get_icon_from_mime_type("audio")
+            h.get_icon_from_mime_type("text/csv")
+            h.get_icon_from_mime_type("application/zip")
+
+        def test_utility_functions():
+            import formshare.plugins.utilities as u
+            u.add_js_resource("test", "test", "test")
+            u.add_css_resource("test", "test", "test")
+            u.add_route("test", "test", "test", None)
+            u.add_field_to_user_schema("test", "test")
+            u.add_field_to_project_schema("test", "test")
+            u.add_field_to_assistant_schema("test", "test")
+            u.add_field_to_assistant_group_schema("test", "test")
+            u.add_field_to_form_schema("test", "test")
+            u.add_field_to_form_access_schema("test", "test")
+            u.add_field_to_form_group_access_schema("test", "test")
+
+        def test_avatar_generator():
+            from formshare.processes.avatar import Avatar
+            Avatar.generate(45, "Carlos Quiros", "PNG")
+            Avatar.generate(45, "CarlosQurios", "PNG")
+            Avatar.generate(45, "CQC", "PNG")
+            Avatar.generate(45, "CQ", "PNG")
+            Avatar.generate(45, "C", "PNG")
+            Avatar.generate(45, "", "PNG")
+            Avatar.generate(45, "A B C", "PNG")
+            Avatar.generate(45, "A B", "PNG")
+
+        def test_color_hash_hex():
+            from formshare.processes.color_hash import ColorHash
+            color = ColorHash("FormShare")
+            a = color.hex
+            b = color.rgb
+
         test_root()
         test_login()
         test_dashboard()
@@ -3371,3 +3512,7 @@ class FunctionalTests(unittest.TestCase):
         test_audit()
         test_repository_tasks()
         test_collaborator_access()
+        test_helpers()
+        test_utility_functions()
+        test_avatar_generator()
+        test_color_hash_hex()

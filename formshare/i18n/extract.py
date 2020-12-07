@@ -10,11 +10,13 @@ jinja_extensions = """
                    """
 
 
-def jinja2_cleaner(fileobj, *args, **kw):
+def jinja2_cleaner(fileobj, *args, **kw):  # pragma: no cover
     """
     This function take badly formatted html with strings etc and make it beautiful
     generally remove surlus whitespace and kill \n this will break <code><pre>
     tags but they should not be being translated.
+
+    Not included in Coverage because is used by extract_messages and that is not part of the tests
 
     This code is based on CKAN
     Copyright (C) 2007 Open Knowledge Foundation
@@ -40,7 +42,7 @@ def jinja2_cleaner(fileobj, *args, **kw):
         yield lineno, func, message, finder
 
 
-def extract_formshare(fileobj, *args, **kw):
+def extract_formshare(fileobj, *args, **kw):  # pragma: no cover
 
     # This custom extractor is to support customs tags in the jinja2 extractions. Otherwise the normal extract fail
 

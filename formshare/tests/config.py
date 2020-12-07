@@ -52,4 +52,6 @@ server_config = {
     "redis.sessions.cookie_name": "formshare_session",
     "redis.sessions.host": "localhost",
     "redis.sessions.port": "6379",
+    "formshare.plugins": "formshare_test_plugin formshare_test_api_plugin formshare_assistant_plugin "
+                         "formshare_group_plugin formshare_user_plugin formshare_observer_plugin"
 }

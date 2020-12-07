@@ -13,6 +13,7 @@ from pyramid.authentication import AuthTktAuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid_authstack import AuthenticationStackPolicy
 from formshare.config.environment import load_environment
+from formshare.config.config_indexes import configure_indexes
 
 
 def main(global_config, **settings):
@@ -49,5 +50,6 @@ def main(global_config, **settings):
 
     config.include(".models")
     # Load and configure the host application
+    configure_indexes(settings)
     load_environment(settings, config, apppath, policy_array)
     return config.make_wsgi_app()

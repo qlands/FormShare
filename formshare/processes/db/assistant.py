@@ -49,7 +49,7 @@ def get_assigned_assistants(request, project, form):
             request.dbsession.query(Collaborator, Collingroup)
             .filter(Collingroup.enum_project == Collaborator.project_id)
             .filter(Collingroup.coll_id == Collaborator.coll_id)
-            .filter(Collingroup.project == group.project_id)
+            .filter(Collingroup.project_id == group.project_id)
             .filter(Collingroup.group_id == group.group_id)
             .all()
         )

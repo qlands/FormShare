@@ -22,7 +22,16 @@ def initialize(path_to_templates):
     jinjaEnv.add_extension(ExtendThis)
 
 
-def render_resource(request, library_name, resource_type, resource_id):
+def render_resource(request, library_name, resource_type, resource_id):  # pragma: no cover
+    """
+    This function will inject a resource from Jinja2 using the jsresource or cssresource tags. Not in Coverage
+    because Coverage cannot track them from Jinja2
+    :param request:
+    :param library_name:
+    :param resource_type:
+    :param resource_id:
+    :return:
+    """
     if resource_type == "JS" or resource_type == "CSS":
         if resource_type == "CSS":
             html = '<link href="{{ file }}" rel="stylesheet">'
@@ -47,7 +56,10 @@ def render_resource(request, library_name, resource_type, resource_id):
         return ""
 
 
-class ExtendThis(ext.Extension):
+class ExtendThis(ext.Extension):  # pragma: no cover
+    """
+    This class implements the extend_me tag. Not include in Coverage because Coverage cannot detect its call
+    """
     tags = ["extend_me"]
 
     def __init__(self, environment):
@@ -102,7 +114,7 @@ class ExtendThis(ext.Extension):
         return node
 
 
-class BaseExtension(ext.Extension):
+class BaseExtension(ext.Extension):  # pragma: no cover
     """
     Base class for creating custom jinja2 tags.
     parse expects a tag of the format
@@ -139,7 +151,7 @@ class BaseExtension(ext.Extension):
         return nodes.Output([make_call_node()]).set_lineno(tag.lineno)
 
 
-class JSResourceExtension(BaseExtension):
+class JSResourceExtension(BaseExtension):  # pragma: no cover
     tags = ["jsresource"]
 
     @classmethod
@@ -149,7 +161,7 @@ class JSResourceExtension(BaseExtension):
         return render_resource(args[0], args[1], "JS", args[2])
 
 
-class CSSResourceExtension(BaseExtension):
+class CSSResourceExtension(BaseExtension):  # pragma: no cover
     tags = ["cssresource"]
 
     @classmethod
@@ -159,7 +171,7 @@ class CSSResourceExtension(BaseExtension):
         return render_resource(args[0], args[1], "CSS", args[2])
 
 
-def regularise_html(html):
+def regularise_html(html):  # pragma: no cover
     """
     Take badly formatted html with strings
 

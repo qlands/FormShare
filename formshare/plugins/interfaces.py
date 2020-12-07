@@ -43,7 +43,7 @@ from inspect import isclass
 from pyutilib.component.core import Interface as _pca_Interface
 
 
-class Interface(_pca_Interface):
+class Interface(_pca_Interface):  # pragma: no cover
     """
         This code is based on CKAN
         :Copyright (C) 2007 Open Knowledge Foundation
@@ -65,7 +65,7 @@ class Interface(_pca_Interface):
             return False
 
 
-class IRoutes(Interface):
+class IRoutes(Interface):  # pragma: no cover
     """
     Plugin into the creation of routes.
 
@@ -92,7 +92,7 @@ class IRoutes(Interface):
         raise NotImplementedError("after_mapping must be implemented in subclasses")
 
 
-class IAPIRoutes(Interface):
+class IAPIRoutes(Interface):  # pragma: no cover
     """
     Plugin into the creation of API routes.
 
@@ -119,7 +119,7 @@ class IAPIRoutes(Interface):
         raise NotImplementedError("after_mapping must be implemented in subclasses")
 
 
-class IConfig(Interface):
+class IConfig(Interface):   # pragma: no cover
     """
     Allows the modification of the Pyramid config. For example to add new templates or static directories
     """
@@ -132,7 +132,7 @@ class IConfig(Interface):
         """
 
 
-class IResource(Interface):
+class IResource(Interface):   # pragma: no cover
     """
         Allows to hook into the creation of JS and CSS libraries or resources
     """
@@ -167,7 +167,7 @@ class IResource(Interface):
         raise NotImplementedError("add_css_resources must be implemented in subclasses")
 
 
-class IPluralize(Interface):
+class IPluralize(Interface):   # pragma: no cover
     """
         Allows to hook into the pluralization function so plugins can extend the pluralization of FormShare
     """
@@ -182,7 +182,7 @@ class IPluralize(Interface):
         """
 
 
-class ISchema(Interface):
+class ISchema(Interface):   # pragma: no cover
     """
         Allows to hook into the schema layer and add new fields into it.
         The schema is a layer on top of the database schema so plugin developers can
@@ -214,7 +214,7 @@ class ISchema(Interface):
         raise NotImplementedError("update_schema must be implemented in subclasses")
 
 
-class IDatabase(Interface):
+class IDatabase(Interface):  # pragma: no cover
     """
         Allows to hook into the database schema so plugins can add new tables
         After calling this
@@ -229,7 +229,7 @@ class IDatabase(Interface):
         """
 
 
-class IProject(Interface):
+class IProject(Interface):  # pragma: no cover
     """
         Allows to hook into the processes that create, update and delete projects
     """
@@ -256,7 +256,7 @@ class IProject(Interface):
         raise NotImplementedError("after_create must be implemented in subclasses")
 
 
-class IForm(Interface):
+class IForm(Interface):  # pragma: no cover
     """
         Allows to hook into the processes that create, update and delete forms
     """
@@ -368,7 +368,7 @@ class IForm(Interface):
         """
 
 
-class IRegistration(Interface):
+class IRegistration(Interface):  # pragma: no cover
     """
         Allows to hook into the user registration
     """
@@ -400,7 +400,7 @@ class IRegistration(Interface):
         )
 
 
-class IUserAuthentication(Interface):
+class IUserAuthentication(Interface):  # pragma: no cover
     """
         Allows to hook into the user authentication
     """
@@ -450,8 +450,19 @@ class IUserAuthentication(Interface):
             "on_authenticate_password must be implemented in subclasses"
         )
 
+    def after_collaborator_login(self, request, collaborator):
+        """
+        Called by FormShare so plugins can modify the login of assistants
+        :param request: ``pyramid.request`` object
+        :param collaborator: Assistant ID
+        :return: True, "" or False, "Why"
+        """
+        raise NotImplementedError(
+            "on_authenticate_password must be implemented in subclasses"
+        )
 
-class IUserAuthorization(Interface):
+
+class IUserAuthorization(Interface):  # pragma: no cover
     """
         Allows to hook into the user authorization.
     """
@@ -479,7 +490,7 @@ class IUserAuthorization(Interface):
         )
 
 
-class ITemplateHelpers(Interface):
+class ITemplateHelpers(Interface):  # pragma: no cover
     """
     Add custom template helper functions.
 
@@ -504,7 +515,7 @@ class ITemplateHelpers(Interface):
         """
 
 
-class IProduct(Interface):
+class IProduct(Interface):  # pragma: no cover
     """
         Allows to hook into FormShare's Celery task manager.
     """
@@ -586,7 +597,7 @@ class IProduct(Interface):
         )
 
 
-class IImportExternalData(Interface):
+class IImportExternalData(Interface):  # pragma: no cover
     """
         Allows to create new data imports
     """
@@ -634,7 +645,7 @@ class IImportExternalData(Interface):
         )
 
 
-class IRepository(Interface):
+class IRepository(Interface):  # pragma: no cover
     """
         Allows to hook into FormShare's repository process.
         Please note that there is no "After creating repository", this is because the creation of the repository
@@ -714,7 +725,7 @@ class IRepository(Interface):
         )
 
 
-class IPublicView(Interface):
+class IPublicView(Interface):  # pragma: no cover
     """
      Allows to hook into FormShare's view public class.
     """
@@ -741,7 +752,7 @@ class IPublicView(Interface):
         )
 
 
-class IPrivateView(Interface):
+class IPrivateView(Interface):  # pragma: no cover
     """
      Allows to hook into FormShare's private class.
     """
@@ -758,7 +769,7 @@ class IPrivateView(Interface):
         )
 
 
-class IDashBoardView(Interface):
+class IDashBoardView(Interface):  # pragma: no cover
     """
      Allows to hook into FormShare's dashboard view class.
     """
@@ -777,7 +788,7 @@ class IDashBoardView(Interface):
         )
 
 
-class IProjectDetailsView(Interface):
+class IProjectDetailsView(Interface):  # pragma: no cover
     """
      Allows to hook into FormShare's project details view class.
     """
@@ -796,7 +807,7 @@ class IProjectDetailsView(Interface):
         )
 
 
-class IFormDetailsView(Interface):
+class IFormDetailsView(Interface):  # pragma: no cover
     """
      Allows to hook into FormShare's form details view class.
     """
@@ -815,7 +826,7 @@ class IFormDetailsView(Interface):
         )
 
 
-class ITranslation(Interface):
+class ITranslation(Interface):  # pragma: no cover
     """
     Allows extensions to provide their own translation strings.
     """
@@ -839,7 +850,7 @@ class ITranslation(Interface):
         )
 
 
-class ILogOut(Interface):
+class ILogOut(Interface):  # pragma: no cover
     """
     Allow extensions to hook to the FormShare logout process
     """
@@ -861,7 +872,7 @@ class ILogOut(Interface):
         """
 
 
-class IAssistant(Interface):
+class IAssistant(Interface):  # pragma: no cover
     """
         Allows to hook into the processes that create, update and delete assistants
     """
@@ -963,7 +974,7 @@ class IAssistant(Interface):
         raise NotImplementedError("after_create must be implemented in subclasses")
 
 
-class IAssistantGroup(Interface):
+class IAssistantGroup(Interface):  # pragma: no cover
     """
         Allows to hook into the processes that create, update and delete assistant groups
     """
@@ -1042,7 +1053,7 @@ class IAssistantGroup(Interface):
         raise NotImplementedError("after_delete must be implemented in subclasses")
 
 
-class IFormAccess(Interface):
+class IFormAccess(Interface):  # pragma: no cover
     """
         Allows to hook into the processes that gives assistant access to a form
     """
@@ -1188,7 +1199,7 @@ class IFormAccess(Interface):
         )
 
 
-class IFormGroupAccess(Interface):
+class IFormGroupAccess(Interface):  # pragma: no cover
     """
         Allows to hook into the processes that gives group access to a form
     """
@@ -1225,7 +1236,7 @@ class IFormGroupAccess(Interface):
         raise NotImplementedError("after_create must be implemented in subclasses")
 
 
-class IUser(Interface):
+class IUser(Interface):  # pragma: no cover
     """
         Allows to hook into the processes that creates and updates users
     """
@@ -1271,7 +1282,7 @@ class IUser(Interface):
         raise NotImplementedError("after_edit must be implemented in subclasses")
 
 
-class IEnvironment(Interface):
+class IEnvironment(Interface):  # pragma: no cover
     """
         Allows to hook into the process that creates the FormShare environment
     """
@@ -1283,7 +1294,7 @@ class IEnvironment(Interface):
         """
 
 
-class IPluginObserver(Interface):
+class IPluginObserver(Interface):  # pragma: no cover
     """
     Plugin to the plugin loading mechanism
 

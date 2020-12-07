@@ -8,10 +8,8 @@ import formshare.plugins.helpers as helpers
 from formshare.products import add_product
 import formshare.resources as r
 from formshare.models import add_column_to_schema
-from formshare.processes.elasticsearch.user_index import configure_user_index_manager
 from formshare.products.formshare_products import register_products
 from formshare.config.api_routes import load_api_version_1_routes
-from formshare.config.elasticfeeds import configure_manager
 from formshare.config.jinja_extensions import (
     initialize,
     ExtendThis,
@@ -77,11 +75,6 @@ class RequestResources(object):
 def load_environment(settings, config, apppath, policy_array):
     for policy in policy_array:
         main_policy_array.append(policy)
-    # Load the feeds manager
-    configure_manager(settings)
-
-    # Load the user index manager
-    configure_user_index_manager(settings)
 
     # Add the session factory to the config
     session_factory = session_factory_from_settings(settings)

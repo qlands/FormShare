@@ -1643,7 +1643,7 @@ def create_repository(
                     form_data = {"form_reptask": task}
                     update_form(request, project, form, form_data)
                     for a_plugin in plugins.PluginImplementations(plugins.IRepository):
-                        a_plugin.on_creating_repository(request, project, form, task)
+                        a_plugin.on_creating_repository(request, user, project, form, task)
 
                 custom_repository_process = False
                 custom_task = None

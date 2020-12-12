@@ -1,9 +1,6 @@
 # .coveragerc to control coverage.py
 [run]
-concurrency = multiprocessing
-branch = True
 source = formshare
-# omit = bad_file.py
 
 [paths]
 source =

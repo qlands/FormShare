@@ -1,9 +1,10 @@
 import sys
+import os
 
-if sys.version_info[0] == 3 and sys.version_info[1] >= 6:
-    import gevent.monkey
-
-    gevent.monkey.patch_all()
+if os.environ.get('FORMSHARE_PYTEST_RUNNING', 'false') == 'false':
+    if sys.version_info[0] == 3 and sys.version_info[1] >= 6:
+        import gevent.monkey
+        gevent.monkey.patch_all()
 
 
 from pyramid.config import Configurator

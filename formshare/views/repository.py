@@ -276,7 +276,7 @@ class GenerateRepository(PrivateView):
                                 stage = 1
                                 self.append_to_errors(
                                     self._(
-                                        "The primary key was not found in the ODK form"
+                                        "The primary key was not found in the ODK form or is inside a repeat"
                                     )
                                 )
                             if result_code == 11 or result_code == 12:

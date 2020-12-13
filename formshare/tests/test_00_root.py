@@ -51,6 +51,15 @@ def get_form_details(config, project, form):
     return result
 
 
+def get_repository_task(config, project, form):
+    engine = create_engine(config["sqlalchemy.url"])
+    result = engine.execute(
+        "SELECT celery_taskid FROM product WHERE project_id = '{}' "
+        "AND form_id = '{}' AND product_id = 'repository'".format(project, form)
+    ).fetchone()
+    return result[0]
+
+
 class FunctionalTests(unittest.TestCase):
     def setUp(self):
         from formshare.tests.config import server_config
@@ -1955,6 +1964,26 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+            time.sleep(2.5)
+            get_repository_task(self.server_config, self.projectID, self.formID)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/stoprepository".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Generate the repository using celery
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {"form_pkey": "I_D", "start_stage1": ""},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
 
             time.sleep(10)  # Wait for Celery to finish
 
@@ -2475,7 +2504,7 @@ class FunctionalTests(unittest.TestCase):
             time.sleep(10)  # Wait 5 seconds so celery finished this
 
             # Get the details of a form. The form now should have a repository with products
-            res = self.testapp.get(
+            self.testapp.get(
                 "/user/{}/project/{}/form/{}".format(
                     self.randonLogin, self.project, self.formID
                 ),
@@ -2653,7 +2682,9 @@ class FunctionalTests(unittest.TestCase):
             self.testapp.get(
                 "/user/{}/project/{}/form/{}/import".format(
                     self.randonLogin, self.project, self.formID
-                ), status=200)
+                ),
+                status=200,
+            )
 
             paths = [
                 "resources",
@@ -3441,6 +3472,7 @@ class FunctionalTests(unittest.TestCase):
         def test_helpers():
             import formshare.plugins.helpers as helpers
             import datetime
+
             h = helpers.helper_functions
             h.humanize_date(datetime.datetime.now())
             h.get_version()
@@ -3464,6 +3496,7 @@ class FunctionalTests(unittest.TestCase):
 
         def test_utility_functions():
             import formshare.plugins.utilities as u
+
             u.add_js_resource("test", "test", "test")
             u.add_css_resource("test", "test", "test")
             u.add_route("test", "test", "test", None)
@@ -3477,6 +3510,7 @@ class FunctionalTests(unittest.TestCase):
 
         def test_avatar_generator():
             from formshare.processes.avatar import Avatar
+
             Avatar.generate(45, "Carlos Quiros", "PNG")
             Avatar.generate(45, "CarlosQurios", "PNG")
             Avatar.generate(45, "CQC", "PNG")
@@ -3488,6 +3522,7 @@ class FunctionalTests(unittest.TestCase):
 
         def test_color_hash_hex():
             from formshare.processes.color_hash import ColorHash
+
             color = ColorHash("FormShare")
             a = color.hex
             b = color.rgb
@@ -3540,9 +3575,7 @@ class FunctionalTests(unittest.TestCase):
 
             # Add assistant
             res = self.testapp.post(
-                "/user/{}/project/{}/assistants/add".format(
-                    random_login, "test001"
-                ),
+                "/user/{}/project/{}/assistants/add".format(random_login, "test001"),
                 {
                     "coll_id": "assistant001",
                     "coll_password": "123",
@@ -3614,9 +3647,7 @@ class FunctionalTests(unittest.TestCase):
 
             # Ass assistant to project 2
             res = self.testapp.post(
-                "/user/{}/project/{}/assistants/add".format(
-                    random_login, "test002"
-                ),
+                "/user/{}/project/{}/assistants/add".format(random_login, "test002"),
                 {
                     "coll_id": "assistant002",
                     "coll_password": "123",

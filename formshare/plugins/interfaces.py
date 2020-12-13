@@ -119,7 +119,7 @@ class IAPIRoutes(Interface):  # pragma: no cover
         raise NotImplementedError("after_mapping must be implemented in subclasses")
 
 
-class IConfig(Interface):   # pragma: no cover
+class IConfig(Interface):  # pragma: no cover
     """
     Allows the modification of the Pyramid config. For example to add new templates or static directories
     """
@@ -132,7 +132,7 @@ class IConfig(Interface):   # pragma: no cover
         """
 
 
-class IResource(Interface):   # pragma: no cover
+class IResource(Interface):  # pragma: no cover
     """
         Allows to hook into the creation of JS and CSS libraries or resources
     """
@@ -167,7 +167,7 @@ class IResource(Interface):   # pragma: no cover
         raise NotImplementedError("add_css_resources must be implemented in subclasses")
 
 
-class IPluralize(Interface):   # pragma: no cover
+class IPluralize(Interface):  # pragma: no cover
     """
         Allows to hook into the pluralization function so plugins can extend the pluralization of FormShare
     """
@@ -182,7 +182,7 @@ class IPluralize(Interface):   # pragma: no cover
         """
 
 
-class ISchema(Interface):   # pragma: no cover
+class ISchema(Interface):  # pragma: no cover
     """
         Allows to hook into the schema layer and add new fields into it.
         The schema is a layer on top of the database schema so plugin developers can

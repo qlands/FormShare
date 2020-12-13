@@ -54,6 +54,7 @@ class CeleryTask(Task):  # pragma: no cover
     This is the Celery Class used by all Celery decentralized processing. Out of Coverage because processes are
     executed by Celery this not covered by the testing framework
     """
+
     def run(self, *args, **kwargs):
         pass
 

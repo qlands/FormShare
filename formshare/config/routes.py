@@ -10,7 +10,11 @@ from formshare.views.assistant_groups import (
     GroupMembersView,
     RemoveMember,
 )
-from formshare.views.assistant_views.clean import CleanInterface, PerformAction, DataRequest
+from formshare.views.assistant_views.clean import (
+    CleanInterface,
+    PerformAction,
+    DataRequest,
+)
 from formshare.views.assistant_views.forms import (
     AssistantForms,
     ChangeMyAssistantPassword,
@@ -121,7 +125,10 @@ from formshare.views.projects import (
     GetProjectQRCode,
 )
 from formshare.views.repository import GenerateRepository
-from formshare.views.repository_dictionary import EditDictionaryTables, EditDictionaryFields
+from formshare.views.repository_dictionary import (
+    EditDictionaryTables,
+    EditDictionaryFields,
+)
 from formshare.views.repository_merge import RepositoryMergeForm
 from formshare.views.repository_submissions import (
     ManageSubmissions,

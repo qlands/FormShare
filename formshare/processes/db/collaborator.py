@@ -17,50 +17,16 @@ __all__ = [
 log = logging.getLogger("formshare")
 
 
-def get_project_collaborators(
-    request, project, current_user=None, retrieve_max=0, accepted_only=False
-):
-    if not accepted_only:
-        if current_user is not None:
-            res = (
-                request.dbsession.query(User, Userproject)
-                .filter(Userproject.user_id == User.user_id)
-                .filter(Userproject.project_id == project)
-                .filter(Userproject.user_id != current_user)
-                .order_by(Userproject.access_date.desc())
-                .all()
-            )
-        else:
-            res = (
-                request.dbsession.query(User, Userproject)
-                .filter(Userproject.user_id == User.user_id)
-                .filter(Userproject.project_id == project)
-                .filter(Userproject.access_type != 1)
-                .order_by(Userproject.access_date.desc())
-                .all()
-            )
-    else:
-        if current_user is not None:
-            res = (
-                request.dbsession.query(User, Userproject)
-                .filter(Userproject.user_id == User.user_id)
-                .filter(Userproject.project_id == project)
-                .filter(Userproject.user_id != current_user)
-                .filter(Userproject.project_accepted == 1)
-                .order_by(Userproject.access_date.desc())
-                .all()
-            )
-        else:
-            res = (
-                request.dbsession.query(User, Userproject)
-                .filter(Userproject.user_id == User.user_id)
-                .filter(Userproject.project_id == project)
-                .filter(Userproject.access_type != 1)
-                .filter(Userproject.project_accepted == 1)
-                .order_by(Userproject.access_date.desc())
-                .all()
-            )
-
+def get_project_collaborators(request, project, current_user, retrieve_max=0):
+    res = (
+        request.dbsession.query(User, Userproject)
+        .filter(Userproject.user_id == User.user_id)
+        .filter(Userproject.project_id == project)
+        .filter(Userproject.user_id != current_user)
+        .filter(Userproject.project_accepted == 1)
+        .order_by(Userproject.access_date.desc())
+        .all()
+    )
     mapped_data = map_from_schema(res)
     if retrieve_max <= 0:
         return mapped_data, 0

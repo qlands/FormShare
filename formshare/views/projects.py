@@ -117,12 +117,10 @@ class ProjectDetailsView(ProjectsView):
         )
         if self.user is not None:
             collaborators, more_collaborators = get_project_collaborators(
-                self.request, project_id, self.user.login, 4, True
+                self.request, project_id, self.user.login, 4
             )
         else:
-            collaborators, more_collaborators = get_project_collaborators(
-                self.request, project_id, None, 4, True
-            )
+            raise HTTPNotFound
         forms = get_project_forms(self.request, user_id, project_id)
         active_forms = 0
         inactive_forms = 0

@@ -349,7 +349,12 @@ def make_database_changes(
 
 
 def get_geopoint_variable(db_session, project, form):
-    res = db_session.query(Odkform).filter(Odkform.project_id == project).filter(Odkform.form_id == form).first()
+    res = (
+        db_session.query(Odkform)
+        .filter(Odkform.project_id == project)
+        .filter(Odkform.form_id == form)
+        .first()
+    )
     return res.form_geopoint
 
 
@@ -368,7 +373,12 @@ def get_one_assistant(db_session, project, form):
             db_session.query(Formgrpacces)
             .filter(Formgrpacces.form_project == project)
             .filter(Formgrpacces.form_id == form)
-            .filter(or_(Formgrpacces.group_privileges == 1, Formgrpacces.group_privileges == 3))
+            .filter(
+                or_(
+                    Formgrpacces.group_privileges == 1,
+                    Formgrpacces.group_privileges == 3,
+                )
+            )
             .first()
         )
         if res is not None:
@@ -381,7 +391,10 @@ def get_one_assistant(db_session, project, form):
                 .first()
             )
             if res is not None:
-                return res.coll_id, res.enum_project,
+                return (
+                    res.coll_id,
+                    res.enum_project,
+                )
             else:
                 return None, None
         else:
@@ -551,8 +564,12 @@ def merge_into_repository(
             }
             update_form(db_session, project_id, a_form_id, form_data)
             if not discard_testing_data:
-                assistant, project_of_assistant = get_one_assistant(db_session, project_id, a_form_id)
-                geo_point_variable = get_geopoint_variable(db_session, project_id, a_form_id)
+                assistant, project_of_assistant = get_one_assistant(
+                    db_session, project_id, a_form_id
+                )
+                geo_point_variable = get_geopoint_variable(
+                    db_session, project_id, a_form_id
+                )
             transaction.commit()
             critical_part = False
         except Exception as e:
@@ -614,9 +631,7 @@ def merge_into_repository(
                         log.error(str(e))
     else:
         unique_id = str(uuid.uuid4())
-        temp_path = os.path.join(
-            settings["repository.path"], *["tmp", unique_id]
-        )
+        temp_path = os.path.join(settings["repository.path"], *["tmp", unique_id])
         os.makedirs(temp_path)
 
         submissions_path = os.path.join(
@@ -646,9 +661,13 @@ def merge_into_repository(
                     False,
                 )
             else:
-                log.error("Error while importing testing files. "
-                          "The process was not able to find an assistant. "
-                          "The testing files are in {} You can import them later on".format(temp_path))
+                log.error(
+                    "Error while importing testing files. "
+                    "The process was not able to find an assistant. "
+                    "The testing files are in {} You can import them later on".format(
+                        temp_path
+                    )
+                )
                 email_from = settings.get("mail.from", None)
                 email_to = settings.get("mail.error", None)
                 send_async_email(
@@ -657,7 +676,9 @@ def merge_into_repository(
                     email_to,
                     "Error while importing testing files",
                     "The process was not able to find an assistant. \n\n"
-                    "The testing files are in {}. You can import them later on".format(temp_path),
+                    "The testing files are in {}. You can import them later on".format(
+                        temp_path
+                    ),
                     None,
                     locale,
                 )

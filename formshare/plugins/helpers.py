@@ -169,7 +169,9 @@ def pluralize(noun, size, locale="en"):
 
 
 @core_helper
-def get_gravatar_url(request, name, size=45):  # pragma: no cover Cannot be tested due to request object
+def get_gravatar_url(
+    request, name, size=45
+):  # pragma: no cover Cannot be tested due to request object
     """
     Return the gravatar based on a name
     :param request: pyramid request

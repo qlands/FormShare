@@ -22,7 +22,11 @@ from formshare.processes.elasticsearch.user_index import get_user_index_manager
 from formshare.processes.email.send_email import send_error_to_technical_team
 from formshare.processes.email.send_email import send_password_email
 from formshare.views.classes import PublicView
-from formshare.config.auth import get_user_data, get_assistant_data, get_formshare_user_data
+from formshare.config.auth import (
+    get_user_data,
+    get_assistant_data,
+    get_formshare_user_data,
+)
 from formshare.processes.db import (
     register_user,
     get_project_id_from_name,

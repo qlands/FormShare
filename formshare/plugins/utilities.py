@@ -44,7 +44,7 @@ __all__ = [
 ]
 
 
-def __return_current_path(): # pragma: no cover - Tested by loading testing plugins but not Covered
+def __return_current_path():  # pragma: no cover - Tested by loading testing plugins but not Covered
     """
     This code is based on CKAN
     :Copyright (C) 2007 Open Knowledge Foundation
@@ -57,7 +57,9 @@ def __return_current_path(): # pragma: no cover - Tested by loading testing plug
     return os.path.dirname(filename)
 
 
-def add_templates_directory(config, relative_path, prepend=True):  # pragma: no cover - Tested by loading
+def add_templates_directory(
+    config, relative_path, prepend=True
+):  # pragma: no cover - Tested by loading
     # testing plugins but not Covered
     if not os.path.isabs(relative_path):
         caller_path = __return_current_path()
@@ -74,7 +76,9 @@ def add_templates_directory(config, relative_path, prepend=True):  # pragma: no 
         raise Exception("Templates path {} does not exists".format(relative_path))
 
 
-def add_static_view(config, view_name, relative_path, cache_max_age=3600):  # pragma: no cover - Tested by loading
+def add_static_view(
+    config, view_name, relative_path, cache_max_age=3600
+):  # pragma: no cover - Tested by loading
     # testing plugins but not Covered
     if not os.path.isabs(relative_path):
         caller_path = __return_current_path()
@@ -107,7 +111,9 @@ def add_css_resource(library_name, resource_id, resource_file, depends="CHAIN"):
     }
 
 
-def add_library(name, path):  # pragma: no cover - Tested by loading testing plugins but not Covered
+def add_library(
+    name, path
+):  # pragma: no cover - Tested by loading testing plugins but not Covered
     if not os.path.isabs(path):
         caller_path = __return_current_path()
         library_path = os.path.join(caller_path, path)
@@ -151,7 +157,9 @@ def add_field_to_form_group_access_schema(field_name, field_desc):
     return {"schema": "formgrpaccess", "fieldname": field_name, "fielddesc": field_desc}
 
 
-class FormSharePublicView(PublicView):  # pragma: no cover - Tested by loading testing plugins but not Covered
+class FormSharePublicView(
+    PublicView
+):  # pragma: no cover - Tested by loading testing plugins but not Covered
     """
     A view class for plugins which require a public (not login required) view.
     """
@@ -160,13 +168,17 @@ class FormSharePublicView(PublicView):  # pragma: no cover - Tested by loading t
         raise NotImplementedError("process_view must be implemented in subclasses")
 
 
-class FormSharePrivateView(PrivateView):  # pragma: no cover - Tested by loading testing plugins but not Covered
+class FormSharePrivateView(
+    PrivateView
+):  # pragma: no cover - Tested by loading testing plugins but not Covered
     """
     A view class for plugins which require a private (login required) view.
     """
 
 
-class FormShareFormEditorView(PrivateView):  # pragma: no cover - Tested by loading testing plugins but not Covered
+class FormShareFormEditorView(
+    PrivateView
+):  # pragma: no cover - Tested by loading testing plugins but not Covered
     """
        A view class for plugins which require a private Form View with editor+ privileges.
     """
@@ -205,7 +217,9 @@ class FormShareFormEditorView(PrivateView):  # pragma: no cover - Tested by load
         self.form_id = form_id
 
 
-class FormShareFormAdminView(PrivateView):  # pragma: no cover - Tested by loading testing plugins but not Covered
+class FormShareFormAdminView(
+    PrivateView
+):  # pragma: no cover - Tested by loading testing plugins but not Covered
     """
        A view class for plugins which require a private Form View with admin privileges.
     """
@@ -253,7 +267,9 @@ class FormShareFormAdminView(PrivateView):  # pragma: no cover - Tested by loadi
         self.classResult["formDetails"] = self.form_details
 
 
-class FormShareSettings(object):  # pragma: no cover - Tested by loading testing plugins but not Covered
+class FormShareSettings(
+    object
+):  # pragma: no cover - Tested by loading testing plugins but not Covered
     def __init__(self, request):
         self.request = request
 

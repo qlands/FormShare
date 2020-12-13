@@ -22,7 +22,9 @@ def initialize(path_to_templates):
     jinjaEnv.add_extension(ExtendThis)
 
 
-def render_resource(request, library_name, resource_type, resource_id):  # pragma: no cover
+def render_resource(
+    request, library_name, resource_type, resource_id
+):  # pragma: no cover
     """
     This function will inject a resource from Jinja2 using the jsresource or cssresource tags. Not in Coverage
     because Coverage cannot track them from Jinja2
@@ -60,6 +62,7 @@ class ExtendThis(ext.Extension):  # pragma: no cover
     """
     This class implements the extend_me tag. Not include in Coverage because Coverage cannot detect its call
     """
+
     tags = ["extend_me"]
 
     def __init__(self, environment):

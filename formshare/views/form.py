@@ -290,7 +290,11 @@ class FormDetails(PrivateView):
 
             if created == 10:
                 # Primary key not found
-                errors.append(self._("The primary key was not found in the ODK form or is inside a repeat"))
+                errors.append(
+                    self._(
+                        "The primary key was not found in the ODK form or is inside a repeat"
+                    )
+                )
             if created == 11 or created == 12:
                 # Parsing XML error
                 if created == 11:

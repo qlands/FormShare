@@ -58,9 +58,7 @@ class UserDashBoardView(DashboardView):
                     self.request, self.activeProject["project_id"], self.user.login, 4
                 )
             else:
-                collaborators, more_collaborators = get_project_collaborators(
-                    self.request, self.activeProject["project_id"], None, 4
-                )
+                raise HTTPNotFound
             owner = get_project_owner(self.request, self.activeProject["project_id"])
             forms = get_project_forms(
                 self.request, owner, self.activeProject["project_id"]

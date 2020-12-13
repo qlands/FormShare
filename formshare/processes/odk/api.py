@@ -1610,17 +1610,17 @@ def create_repository(
                 formshare_create_repository = True
                 cnf_file = request.registry.settings["mysql.cnf"]
                 for a_plugin in plugins.PluginImplementations(plugins.IRepository):
-                    if formshare_create_repository:
-                        formshare_create_repository = a_plugin.before_creating_repository(
-                            request,
-                            user,
-                            project,
-                            form,
-                            cnf_file,
-                            create_file,
-                            insert_file,
-                            schema,
-                        )
+                    formshare_create_repository = a_plugin.before_creating_repository(
+                        request,
+                        user,
+                        project,
+                        form,
+                        cnf_file,
+                        create_file,
+                        insert_file,
+                        schema,
+                    )
+                    break
                 if formshare_create_repository:
                     # Calls the Celery task
                     task = create_database_repository(
@@ -1644,28 +1644,26 @@ def create_repository(
                     update_form(request, project, form, form_data)
                     for a_plugin in plugins.PluginImplementations(plugins.IRepository):
                         a_plugin.on_creating_repository(request, user, project, form, task)
+                else:
+                    custom_task = None
+                    for a_plugin in plugins.PluginImplementations(plugins.IRepository):
+                        custom_task = a_plugin.custom_repository_process(
+                            request,
+                            user,
+                            project,
+                            form,
+                            odk_dir,
+                            xform_directory,
+                            schema,
+                            primary_key,
+                            cnf_file,
+                            create_file,
+                            insert_file,
+                            create_xml_file,
+                            " ".join(args),
+                        )
+                        break  # Only one plugin implementing custom_repository_process will be called
 
-                custom_repository_process = False
-                custom_task = None
-                for a_plugin in plugins.PluginImplementations(plugins.IRepository):
-                    custom_task = a_plugin.custom_repository_process(
-                        request,
-                        user,
-                        project,
-                        form,
-                        odk_dir,
-                        xform_directory,
-                        schema,
-                        primary_key,
-                        cnf_file,
-                        create_file,
-                        insert_file,
-                        create_xml_file,
-                        " ".join(args),
-                    )
-                    custom_repository_process = True
-                    break  # Only one plugin implementing custom_repository_process will be called
-                if custom_repository_process:
                     form_data = {"form_reptask": custom_task}
                     update_form(request, project, form, form_data)
                     for a_plugin in plugins.PluginImplementations(plugins.IRepository):

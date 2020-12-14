@@ -17,7 +17,8 @@ log = logging.getLogger("formshare")
 
 def send_task_status_to_form(settings, task_id, status):
     try:
-        session_factory = get_session_factory(get_engine(settings))
+        engine = get_engine(settings)
+        session_factory = get_session_factory(engine)
         with transaction.manager:
             dict_body = {"task": task_id, "status": status}
             body_string = json.dumps(dict_body)
@@ -40,6 +41,6 @@ def send_task_status_to_form(settings, task_id, status):
                     )
                 )
                 return False, str(e)
-
+        engine.dispose()
     except Exception as e:
         print(str(e))

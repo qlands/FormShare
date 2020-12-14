@@ -47,7 +47,8 @@ def message_generator(settings, project_id, form_id):
     since = datetime.datetime.now() - datetime.timedelta(hours=24)
     while True and not safe_exit(generator_start_time, project_id, form_id):
         try:
-            session_factory = get_session_factory(get_engine(settings))
+            engine = get_engine(settings)
+            session_factory = get_session_factory(engine)
             with transaction.manager:
                 db_session = get_tm_session(session_factory, transaction.manager)
                 last_message = (
@@ -81,6 +82,7 @@ def message_generator(settings, project_id, form_id):
                     msg = "data: %s\n\n" % json.dumps({"message": None})
                     yield msg.encode()
                     time.sleep(random.randint(1, 10))
+            engine.dispose()
         except Exception as e:
             log.error(
                 "Error in SSE generator for project {}, form {}. Error: {}".format(

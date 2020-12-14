@@ -1586,6 +1586,7 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+            time.sleep(30)
 
         def test_odk():
 
@@ -1988,8 +1989,8 @@ class FunctionalTests(unittest.TestCase):
             time.sleep(40)  # Wait for Celery to finish
 
             # Mimic to create the repository again
-            mimic_create_repository()
-            mimic_create_repository_metalanguages()
+            # mimic_create_repository()
+            # mimic_create_repository_metalanguages()
 
             # Get the details of a form. The form now should have a repository
             res = self.testapp.get(
@@ -2511,11 +2512,11 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
 
-            mimic_celery_public_csv_process()
-            mimic_celery_private_csv_process()
-            mimic_celery_xlsx_process()
-            mimic_celery_kml_process()
-            mimic_celery_media_process()
+            # mimic_celery_public_csv_process()
+            # mimic_celery_private_csv_process()
+            # mimic_celery_xlsx_process()
+            # mimic_celery_kml_process()
+            # mimic_celery_media_process()
 
         def test_import_data():
             def mimic_celery_test_import():
@@ -2724,7 +2725,7 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            mimic_celery_test_import()
+            # mimic_celery_test_import()
 
         def test_repository_tasks():
             time.sleep(5)  # Wait 5 seconds to other tests to finish
@@ -3986,6 +3987,60 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+        def test_group_assistant():
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistants/add".format(
+                    self.randonLogin, self.project
+                ),
+                {
+                    "coll_id": "agrpssistant001",
+                    "coll_password": "123",
+                    "coll_password2": "123",
+                    "coll_prjshare": 1,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Add an assistant group again
+            res = self.testapp.post(
+                "/user/{}/project/{}/groups/add".format(self.randonLogin, self.project),
+                {"group_desc": "Test if an assistant group", "group_id": "assgrp003"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Add a member to a group succeeds
+            res = self.testapp.post(
+                "/user/{}/project/{}/group/{}/members".format(
+                    self.randonLogin, self.project, "assgrp003"
+                ),
+                {
+                    "add_assistant": "",
+                    "coll_id": "{}|{}".format(self.projectID, "agrpssistant001"),
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Add a group to a form succeeds
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/groups/add".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                {"group_id": "assgrp003", "group_privilege": 1},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get(
+                "/user/{}/project/{}/formList".format(self.randonLogin, self.project),
+                status=200,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="agrpssistant001"
+                ),
+            )
+
         test_root()
         test_login()
         test_dashboard()
@@ -3998,18 +4053,22 @@ class FunctionalTests(unittest.TestCase):
         test_odk()
         test_multilanguage_odk()
         test_repository()
+        time.sleep(45)
         test_repository_downloads()
-        test_import_data()
-        test_assistant_access()
-        test_json_logs()
-        test_clean_interface()
-        test_audit()
-        test_repository_tasks()
-        test_collaborator_access()
-        test_helpers()
-        test_utility_functions()
-        test_avatar_generator()
-        test_color_hash_hex()
-        test_one_user_assistant()
-        test_five_collaborators()
-        test_form_merge()
+        # time.sleep(45)
+        # test_import_data()
+        # time.sleep(45)
+        # test_assistant_access()
+        # test_json_logs()
+        # test_clean_interface()
+        # test_audit()
+        # test_repository_tasks()
+        # test_collaborator_access()
+        # test_helpers()
+        # test_utility_functions()
+        # test_avatar_generator()
+        # test_color_hash_hex()
+        # test_one_user_assistant()
+        # test_five_collaborators()
+        # test_form_merge()
+        # test_group_assistant()

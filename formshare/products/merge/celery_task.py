@@ -476,7 +476,8 @@ def merge_into_repository(
     task_id = merge_into_repository.request.id
     cnf_file = settings["mysql.cnf"]
 
-    session_factory = get_session_factory(get_engine(settings))
+    engine = get_engine(settings)
+    session_factory = get_session_factory(engine)
     critical_part = False
     form_with_changes = []
     with transaction.manager:
@@ -605,6 +606,7 @@ def merge_into_repository(
             transaction.commit()
             raise MergeDataBaseError(str(e))
     # Delete the dataset index
+    engine.dispose()
     delete_dataset_index(settings, user, project_code, a_form_id)
     if discard_testing_data:
         # Remove any test submissions if any

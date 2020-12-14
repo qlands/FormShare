@@ -118,6 +118,7 @@ def build_media_zip(
                         for file in files:
                             shutil.copy(file, tmp_dir)
                             created = True
+        engine.dispose()
     except Exception as e:
         email_from = settings.get("mail.from", None)
         email_to = settings.get("mail.error", None)

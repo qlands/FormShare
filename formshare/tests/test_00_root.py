@@ -1985,7 +1985,7 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            time.sleep(10)  # Wait for Celery to finish
+            time.sleep(40)  # Wait for Celery to finish
 
             # Mimic to create the repository again
             mimic_create_repository()
@@ -3717,6 +3717,275 @@ class FunctionalTests(unittest.TestCase):
                 ),
             )
 
+        def test_five_collaborators():
+            collaborators = []
+            collaborator_to_remove = ""
+            for n in range(5):
+                random_login = str(uuid.uuid4())
+                random_login = random_login[-12:]
+                collaborators.append(random_login)
+                res = self.testapp.post(
+                    "/join",
+                    {
+                        "user_address": "Costa Rica",
+                        "user_email": random_login + "@qlands.com",
+                        "user_password": "123",
+                        "user_id": random_login,
+                        "user_password2": "123",
+                        "user_name": "Testing",
+                        "user_super": "1",
+                        "user_apikey": str(uuid.uuid4()),
+                    },
+                    status=302,
+                )
+                assert "FS_error" not in res.headers
+                if n == 3:
+                    collaborator_to_remove = random_login
+
+            self.testapp.get("/logout", status=302)
+
+            res = self.testapp.post(
+                "/login",
+                {"user": "", "email": self.randonLogin, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            for a_collaborator in collaborators:
+                # Add a collaborator succeed
+                res = self.testapp.post(
+                    "/user/{}/project/{}/collaborators".format(
+                        self.randonLogin, self.project
+                    ),
+                    {"add_collaborator": "", "collaborator": a_collaborator},
+                    status=302,
+                )
+                assert "FS_error" not in res.headers
+
+            self.testapp.get("/logout", status=302)
+
+            res = self.testapp.post(
+                "/login",
+                {"user": "", "email": collaborator_to_remove, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Add a new projec to the collaborator to be removed
+            res = self.testapp.post(
+                "/user/{}/projects/add".format(collaborator_to_remove),
+                {
+                    "project_code": "test001",
+                    "project_name": "Test project",
+                    "project_abstract": "",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Sets the original project as active
+            res = self.testapp.post(
+                "/user/{}/project/{}/setactive".format(self.randonLogin, self.project),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get("/logout", status=302)
+
+            res = self.testapp.post(
+                "/login",
+                {"user": "", "email": self.randonLogin, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Gets the details of a project
+            res = self.testapp.get(
+                "/user/{}/project/{}".format(self.randonLogin, self.project), status=200
+            )
+            assert "FS_error" not in res.headers
+
+            # Remove the collaborator
+            res = self.testapp.post(
+                "/user/{}/project/{}/collaborator/{}/remove".format(
+                    self.randonLogin, self.project, collaborator_to_remove
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+        def test_form_merge():
+            paths = ["resources", "forms", "merge", "A", "A.xls"]
+            a_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                status=302,
+                upload_files=[("xlsx", a_resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            paths = ["resources", "forms", "merge", "A", "cantones.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, self.project, "tormenta20201105"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            paths = ["resources", "forms", "merge", "A", "distritos.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, self.project, "tormenta20201105"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Generate the repository using celery
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, self.project, "tormenta20201105"
+                ),
+                {"form_pkey": "numero_de_cedula", "start_stage1": ""},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            time.sleep(10)  # Wait for celery to generate the repository
+
+            # TODO: We need to test forms that cannot merge for different reasons
+
+            # Upload B***********************************************
+
+            paths = ["resources", "forms", "merge", "B", "B.xls"]
+            b_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {
+                    "for_merging": "",
+                    "parent_project": self.projectID,
+                    "parent_form": "tormenta20201105",
+                },
+                status=302,
+                upload_files=[("xlsx", b_resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, "tormenta20201117"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"Merge check pending" in res.body)
+
+            paths = ["resources", "forms", "merge", "B", "cantones.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, self.project, "tormenta20201117"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            paths = ["resources", "forms", "merge", "B", "distritos.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, self.project, "tormenta20201117"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, "tormenta20201117"
+                ),
+                status=200,
+            )
+            self.assertFalse(b"Merge check pending" in res.body)
+
+            # Show the merge repository page
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}/merge/into/{}".format(
+                    self.randonLogin,
+                    self.project,
+                    "tormenta20201117",
+                    "tormenta20201105",
+                ),
+                status=200,
+            )
+            assert "FS_error" not in res.headers
+
+            # Merge the repository using celery
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/merge/into/{}".format(
+                    self.randonLogin,
+                    self.project,
+                    "tormenta20201117",
+                    "tormenta20201105",
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            time.sleep(60)  # Wait for the merge to finish
+
+            # Get the details of a form tormenta20201117
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, "tormenta20201117"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"This is the sub-version of" in res.body)
+
+            # Get the details of a form tormenta20201105
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, "tormenta20201105"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"is the sub-version of this form" in res.body)
+
+            # Gets the details of a project
+            res = self.testapp.get(
+                "/user/{}/project/{}".format(self.randonLogin, self.project), status=200
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/edit".format(
+                    self.randonLogin, self.project, "tormenta20201105"
+                ),
+                {"form_target": "", "form_hexcolor": "#c18097"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/edit".format(
+                    self.randonLogin, self.project, "tormenta20201117"
+                ),
+                {"form_target": "", "form_hexcolor": "#c18097"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
         test_root()
         test_login()
         test_dashboard()
@@ -3742,3 +4011,5 @@ class FunctionalTests(unittest.TestCase):
         test_avatar_generator()
         test_color_hash_hex()
         test_one_user_assistant()
+        test_five_collaborators()
+        test_form_merge()

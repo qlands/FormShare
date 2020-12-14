@@ -105,7 +105,8 @@ def set_collaborator_role(request, project, collaborator, role):
 def add_collaborator_to_project(request, project, collaborator):
     _ = request.translate
     active_projects = (
-        request.dbsession.query(Userproject).filter(Userproject.user_id == collaborator)
+        request.dbsession.query(Userproject)
+        .filter(Userproject.user_id == collaborator)
         .filter(Userproject.project_active == 1)
         .first()
     )

@@ -198,28 +198,6 @@ def get_project_code_from_id(request, user, project_id):
     return None
 
 
-def _get_odk_path(request):
-    repository_path = request.registry.settings["repository.path"]
-    if not os.path.exists(repository_path):
-        os.makedirs(repository_path)
-    return os.path.join(repository_path, *["odk"])
-
-
-def modification_date(filename):
-    t = os.path.getmtime(filename)
-    return datetime.datetime.fromtimestamp(t)
-
-
-def get_submission_by(filename):
-    with open(filename, "r") as f:
-        json_metadata = json.load(f)
-        try:
-            submission_by = json_metadata["_submitted_by"]
-        except KeyError:
-            return None
-    return submission_by
-
-
 def get_number_of_submissions(request, user, project, form):
     return get_dataset_stats_for_form(request.registry.settings, user, project, form)
 
@@ -550,6 +528,7 @@ def get_project_forms(request, user, project):
             form["last"] = last
             form["by"] = by
             form["bydetails"] = get_by_details(request, user, form["project_id"], by)
+            form["size"] = get_form_size(request, form["project_id"], form["form_id"])
             form["indb"] = 0
             form["inlogs"] = 0
             form["has_sub_version"] = None
@@ -960,9 +939,9 @@ def update_form(request, project, form, form_data):
         if "form_hexcolor" in form_data.keys():
             this_form_schema = get_form_schema(request, project, form)
             if this_form_schema is not None:
-                if simple_form_has_subversion(
-                    request, project, form
-                ) or form_has_parent(request, project, form):
+                has_subversion = simple_form_has_subversion(request, project, form)
+                has_parent = form_has_parent(request, project, form)
+                if has_subversion or has_parent:
                     this_form_color = form_data["form_hexcolor"]
                     update_form_color_by_database(
                         request, this_form_schema, this_form_color

@@ -82,8 +82,10 @@ def build_kml(settings, form_schema, kml_file, primary_key, locale, test_task_id
                             submission[primary_key], str(e)
                         )
                     )
+        engine.dispose()
         kml.save(kml_file)
     else:
+        engine.dispose()
         raise EmptyFileError(
             _("The ODK form does not contain any submissions with GPS coordinates")
         )

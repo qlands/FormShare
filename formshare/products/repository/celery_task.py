@@ -288,7 +288,8 @@ def create_mysql_repository(
         )
         raise BuildDataBaseError(str(e))
 
-    session_factory = get_session_factory(get_engine(settings))
+    engine = get_engine(settings)
+    session_factory = get_session_factory(engine)
 
     with transaction.manager:
         db_session = get_tm_session(session_factory, transaction.manager)
@@ -306,7 +307,7 @@ def create_mysql_repository(
                 db_session, project_id, form
             )
             geo_point_variable = get_geopoint_variable(db_session, project_id, form)
-
+    engine.dispose()
     delete_dataset_index(settings, user, project_code, form)
     if discard_testing_data:
         # Remove any test submissions if any.

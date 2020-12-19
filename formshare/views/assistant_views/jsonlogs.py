@@ -163,7 +163,7 @@ class JSONCompare(AssistantView):
                     if self.request.method == "POST":
                         post_data = self.get_post_dict()
                         if post_data["submissionid"] != submission_id:
-                            comp_code = post_data["submissionid"]
+                            comp_code = post_data["submissionid"].strip()
                             comp_data = get_submission_details(
                                 self.request, self.projectID, form_id, comp_code
                             )
@@ -813,8 +813,8 @@ class JSONCancelDisregard(AssistantView):
 class JSONCompareSubmissions(AssistantView):
     def process_view(self):
         form_id = self.request.matchdict["formid"]
-        submission_a = self.request.matchdict["submissiona"]
-        submission_b = self.request.matchdict["submissionb"]
+        submission_a = self.request.matchdict["submissiona"].strip()
+        submission_b = self.request.matchdict["submissionb"].strip()
 
         permissions = get_assistant_permissions_on_a_form(
             self.request, self.userID, self.projectID, self.assistantID, form_id

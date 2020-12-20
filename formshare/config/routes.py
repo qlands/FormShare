@@ -1,5 +1,5 @@
 import logging
-
+import os
 import formshare.plugins as p
 from formshare.plugins.utilities import add_route
 from formshare.views.assistant_groups import (
@@ -141,6 +141,8 @@ from formshare.views.repository_submissions import (
 from formshare.views.search import APIUserSearchSelect2
 from formshare.views.sse import SSEventStream
 from formshare.views.users import UsersListView, EditUserView, AddUserView
+
+from formshare.views.testing import TestOwnedProjectView
 
 log = logging.getLogger("formshare")
 
@@ -1197,6 +1199,17 @@ def load_routes(config):
             None,
         )
     )
+
+    # Testing routes
+    if os.environ.get("FORMSHARE_PYTEST_RUNNING", "false") == "true":
+        routes.append(
+            add_route(
+                "TestOwnedProjectView",
+                "/test/{userid}",
+                TestOwnedProjectView,
+                "generic/testing.jinja2",
+            )
+        )
 
     append_to_routes(routes)
 

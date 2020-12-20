@@ -143,9 +143,7 @@ class DownloadPrivateProductByAPI(APIView):
         output_id = self.request.matchdict["outputid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
 
-        api_projects = get_user_projects(
-            self.request, user_id, self.user["user_id"], True
-        )
+        api_projects = get_user_projects(self.request, user_id, self.user["user_id"])
         project_found = False
         project_details = {}
         for project in api_projects:

@@ -12,7 +12,6 @@ from formshare.models import (
     map_from_schema,
     Submission,
     Odkform,
-    Collaborator,
     ProjectFile,
 )
 from formshare.processes.db.form import get_by_details, get_form_data
@@ -99,31 +98,6 @@ def get_project_submissions(request, project):
     return total
 
 
-def get_last_submission(request, project):
-    res = (
-        request.dbsession.query(
-            Submission.submission_dtime,
-            Odkform.form_name,
-            Collaborator.coll_name,
-            Project.project_id,
-            Project.project_name,
-        )
-        .filter(
-            Submission.project_id == Odkform.project_id,
-            Submission.form_id == Odkform.form_id,
-        )
-        .filter(
-            Submission.enum_project == Collaborator.project_id,
-            Submission.coll_id == Collaborator.coll_id,
-        )
-        .filter(Collaborator.project_id == Project.project_id)
-        .filter(Submission.project_id == project)
-        .order_by(Submission.submission_dtime.desc())
-        .first()
-    )
-    return map_from_schema(res)
-
-
 def get_project_owner(request, project):
     res = (
         request.dbsession.query(Userproject.user_id)
@@ -162,61 +136,50 @@ def get_owned_project(request, user):
     return map_from_schema(res)
 
 
-def get_user_projects(request, user, logged_user, private=False):
-    if private:
-        if user == logged_user:
-            # The logged account is the user account = Seeing my projects
-            res = (
-                request.dbsession.query(Project, Userproject)
-                .filter(Project.project_id == Userproject.project_id)
-                .filter(Userproject.user_id == user)
-                .filter(Userproject.project_accepted == 1)
-                .all()
-            )
-            projects = map_from_schema(res)
-        else:
-            projects = []
-            # The logged account is different as the user account =  Seeing someone else projects
-
-            # Get all the projects of that user
-            all_user_projects = (
-                request.dbsession.query(Project)
-                .filter(Project.project_id == Userproject.project_id)
-                .filter(Userproject.user_id == user)
-                .filter(Userproject.project_accepted == 1)
-                .all()
-            )
-            all_user_projects = map_from_schema(all_user_projects)
-            for project in all_user_projects:
-                # Check each project to see if the logged user collaborate with it
-                res = (
-                    request.dbsession.query(Project, Userproject)
-                    .filter(Project.project_id == Userproject.project_id)
-                    .filter(Userproject.user_id == logged_user)
-                    .filter(Userproject.project_id == project["project_id"])
-                    .filter(Userproject.project_accepted == 1)
-                    .first()
-                )
-                collaborative_project = map_from_schema(res)
-                if collaborative_project:
-                    collaborative_project["collaborate"] = True
-                    collaborative_project["user_id"] = user
-                    projects.append(collaborative_project)
-                else:
-                    if project["project_public"] == 1:
-                        project["collaborate"] = False
-                        project["access_type"] = 5
-                        projects.append(project)
-    else:
+def get_user_projects(request, user, logged_user):
+    if user == logged_user:
+        # The logged account is the user account = Seeing my projects
         res = (
             request.dbsession.query(Project, Userproject)
             .filter(Project.project_id == Userproject.project_id)
             .filter(Userproject.user_id == user)
-            .filter(Project.project_public == 1)
             .filter(Userproject.project_accepted == 1)
             .all()
         )
         projects = map_from_schema(res)
+    else:
+        projects = []
+        # The logged account is different as the user account =  Seeing someone else projects
+
+        # Get all the projects of that user
+        all_user_projects = (
+            request.dbsession.query(Project)
+            .filter(Project.project_id == Userproject.project_id)
+            .filter(Userproject.user_id == user)
+            .filter(Userproject.project_accepted == 1)
+            .all()
+        )
+        all_user_projects = map_from_schema(all_user_projects)
+        for project in all_user_projects:
+            # Check each project to see if the logged user collaborate with it
+            res = (
+                request.dbsession.query(Project, Userproject)
+                .filter(Project.project_id == Userproject.project_id)
+                .filter(Userproject.user_id == logged_user)
+                .filter(Userproject.project_id == project["project_id"])
+                .filter(Userproject.project_accepted == 1)
+                .first()
+            )
+            collaborative_project = map_from_schema(res)
+            if collaborative_project:
+                collaborative_project["collaborate"] = True
+                collaborative_project["user_id"] = user
+                projects.append(collaborative_project)
+            else:
+                if project["project_public"] == 1:
+                    project["collaborate"] = False
+                    project["access_type"] = 5
+                    projects.append(project)
 
     for project in projects:
         submissions, last, by, form = get_dataset_stats_for_project(
@@ -236,11 +199,8 @@ def get_user_projects(request, user, logged_user, private=False):
             request, project["project_id"], form
         )
         project["total_forms"] = get_forms_number(request, project["project_id"])
-        if private:
-            project["owner"] = get_project_owner(request, project["project_id"])
-        else:
-            project["owner"] = get_project_owner(request, project["project_id"])
-            project["access_type"] = 5
+        project["owner"] = get_project_owner(request, project["project_id"])
+
     projects = sorted(projects, key=lambda prj: project["project_cdate"], reverse=True)
     return projects
 
@@ -255,14 +215,15 @@ def get_active_project(request, user):
         .first()
     )
     mapped_data = map_from_schema(res)
-    user_projects = get_user_projects(request, user, user, True)
+    user_projects = get_user_projects(request, user, user)
     if res is not None:
         for project in user_projects:
             if project["project_id"] == mapped_data["project_id"]:
                 mapped_data["access_type"] = project["access_type"]
                 mapped_data["owner"] = project["owner"]
     else:
-        if len(user_projects) > 0:
+        if len(user_projects) > 0:  # pragma: no cover   . TODO: Monitor if error appears in logs
+            log.error("Possible unused code used. URL {}".format(request.url))
             last_project = (
                 request.dbsession.query(Userproject)
                 .filter(Userproject.user_id == user)

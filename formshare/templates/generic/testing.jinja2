@@ -1,0 +1,23 @@
+{% extends 'base.jinja2' %}
+
+{% block titlesection %}{{ _('Testing') }}{% endblock titlesection %}
+
+{% block css %}
+    {% cssresource request,'formshare','style' %}
+{% endblock css %}
+
+{% block bodyclass %}gray-bg{% endblock bodyclass %}
+
+{% block body %}
+    {% block error_message %}
+        <div class="middle-box text-center animated fadeInDown">
+            <h1>404</h1>
+            <h3 class="font-bold">{{ _('Testing page') }}</h3>
+
+            <div class="error-desc">
+                {{ _('This page is user by the testing framework. Ignore it otherwise') }}
+            </div>
+        </div>
+    {% endblock error_message %}
+    {% jsresource request,'formshare','bootstrap' %}
+{% endblock body %}

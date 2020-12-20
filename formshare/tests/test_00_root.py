@@ -4126,6 +4126,447 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+        def test_api():
+            # Add a file to a form using API
+            paths = ["resources", "api_test.dat"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/api/1/upload_file_to_form",
+                {
+                    "apikey": self.randonLoginKey,
+                    "user_id": self.randonLogin,
+                    "project_code": self.project,
+                    "form_id": "Justtest",
+                },
+                upload_files=[("file_to_upload", resource_file)],
+                status=200,
+            )
+
+        def test_plugin_utility_functions():
+            self.testapp.get(
+                "/test/{}".format(self.randonLogin), status=200,
+            )
+
+        def test_collaborator_projects():
+            # Create collaborator 1
+            collaborator_1 = str(uuid.uuid4())
+            collaborator_1_key = collaborator_1
+            collaborator_1 = collaborator_1[-12:]
+
+            res = self.testapp.post(
+                "/join",
+                {
+                    "user_address": "Costa Rica",
+                    "user_email": collaborator_1 + "@qlands.com",
+                    "user_password": "123",
+                    "user_id": collaborator_1,
+                    "user_password2": "123",
+                    "user_name": "Testing",
+                    "user_super": "1",
+                    "user_apikey": collaborator_1_key,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Add a project succeed.
+            res = self.testapp.post(
+                "/user/{}/projects/add".format(collaborator_1),
+                {
+                    "project_code": "collaborator_1_prj001",
+                    "project_name": "Test project",
+                    "project_abstract": "",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get("/logout", status=302)
+
+            # Create collaborator 2
+            collaborator_2 = str(uuid.uuid4())
+            collaborator_2_key = collaborator_2
+            collaborator_2 = collaborator_2[-12:]
+
+            res = self.testapp.post(
+                "/join",
+                {
+                    "user_address": "Costa Rica",
+                    "user_email": collaborator_2 + "@qlands.com",
+                    "user_password": "123",
+                    "user_id": collaborator_2,
+                    "user_password2": "123",
+                    "user_name": "Testing",
+                    "user_super": "1",
+                    "user_apikey": collaborator_2_key,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Add a project succeed.
+            res = self.testapp.post(
+                "/user/{}/projects/add".format(collaborator_2),
+                {
+                    "project_code": "collaborator_2_prj001",
+                    "project_name": "Test project",
+                    "project_abstract": "",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get("/logout", status=302)
+
+            # Collaborator 1 login
+            res = self.testapp.post(
+                "/login",
+                {"user": "", "email": collaborator_1, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Collaborator 1 add Collaborator 2
+            res = self.testapp.post(
+                "/user/{}/project/{}/collaborators".format(
+                    collaborator_1, "collaborator_1_prj001"
+                ),
+                {"add_collaborator": "", "collaborator": collaborator_2},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Sets Collaborator 2 as Admin
+            res = self.testapp.post(
+                "/user/{}/project/{}/collaborators".format(
+                    collaborator_1, "collaborator_1_prj001"
+                ),
+                {
+                    "change_role": "",
+                    "collaborator_id": collaborator_2,
+                    "role_collaborator": 2,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get("/logout", status=302)
+
+            # Collaborator 2 login
+            res = self.testapp.post(
+                "/login",
+                {"user": "", "email": collaborator_2, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Collaborator remove itself as collaborator
+            # Remove the collaborator
+            res = self.testapp.post(
+                "/user/{}/project/{}/collaborator/{}/remove".format(
+                    collaborator_1, "collaborator_1_prj001", collaborator_2
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.get("/user/{}".format(collaborator_2), status=200)
+            assert "FS_error" not in res.headers
+
+        def test_collaborator_projects_2():
+            # Create collaborator 1
+            collaborator_1 = str(uuid.uuid4())
+            collaborator_1_key = collaborator_1
+            collaborator_1 = collaborator_1[-12:]
+
+            res = self.testapp.post(
+                "/join",
+                {
+                    "user_address": "Costa Rica",
+                    "user_email": collaborator_1 + "@qlands.com",
+                    "user_password": "123",
+                    "user_id": collaborator_1,
+                    "user_password2": "123",
+                    "user_name": "Testing",
+                    "user_super": "1",
+                    "user_apikey": collaborator_1_key,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Add a project succeed.
+            res = self.testapp.post(
+                "/user/{}/projects/add".format(collaborator_1),
+                {
+                    "project_code": "collaborator_1_prj001",
+                    "project_name": "Test project",
+                    "project_abstract": "",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get("/logout", status=302)
+
+            # Create collaborator 2
+            collaborator_2 = str(uuid.uuid4())
+            collaborator_2_key = collaborator_2
+            collaborator_2 = collaborator_2[-12:]
+
+            res = self.testapp.post(
+                "/join",
+                {
+                    "user_address": "Costa Rica",
+                    "user_email": collaborator_2 + "@qlands.com",
+                    "user_password": "123",
+                    "user_id": collaborator_2,
+                    "user_password2": "123",
+                    "user_name": "Testing",
+                    "user_super": "1",
+                    "user_apikey": collaborator_2_key,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get("/logout", status=302)
+
+            # Collaborator 1 login
+            res = self.testapp.post(
+                "/login",
+                {"user": "", "email": collaborator_1, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Collaborator 1 add Collaborator 2
+            res = self.testapp.post(
+                "/user/{}/project/{}/collaborators".format(
+                    collaborator_1, "collaborator_1_prj001"
+                ),
+                {"add_collaborator": "", "collaborator": collaborator_2},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Sets Collaborator 2 as Admin
+            res = self.testapp.post(
+                "/user/{}/project/{}/collaborators".format(
+                    collaborator_1, "collaborator_1_prj001"
+                ),
+                {
+                    "change_role": "",
+                    "collaborator_id": collaborator_2,
+                    "role_collaborator": 2,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get("/logout", status=302)
+
+            # Collaborator 2 login
+            res = self.testapp.post(
+                "/login",
+                {"user": "", "email": collaborator_2, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Collaborator remove itself as collaborator
+            # Remove the collaborator
+            res = self.testapp.post(
+                "/user/{}/project/{}/collaborator/{}/remove".format(
+                    collaborator_1, "collaborator_1_prj001", collaborator_2
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.get("/user/{}".format(collaborator_2), status=200)
+            assert "FS_error" not in res.headers
+
+        def test_collaborator_projects_3():
+            # Create collaborator 1
+            collaborator_1 = str(uuid.uuid4())
+            collaborator_1_key = collaborator_1
+            collaborator_1 = collaborator_1[-12:]
+
+            res = self.testapp.post(
+                "/join",
+                {
+                    "user_address": "Costa Rica",
+                    "user_email": collaborator_1 + "@qlands.com",
+                    "user_password": "123",
+                    "user_id": collaborator_1,
+                    "user_password2": "123",
+                    "user_name": "Testing",
+                    "user_super": "1",
+                    "user_apikey": collaborator_1_key,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Add a project succeed.
+            res = self.testapp.post(
+                "/user/{}/projects/add".format(collaborator_1),
+                {
+                    "project_code": "collaborator_1_prj001",
+                    "project_name": "Test project",
+                    "project_abstract": "",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get("/logout", status=302)
+
+            # Create collaborator 2
+            collaborator_2 = str(uuid.uuid4())
+            collaborator_2_key = collaborator_2
+            collaborator_2 = collaborator_2[-12:]
+
+            res = self.testapp.post(
+                "/join",
+                {
+                    "user_address": "Costa Rica",
+                    "user_email": collaborator_2 + "@qlands.com",
+                    "user_password": "123",
+                    "user_id": collaborator_2,
+                    "user_password2": "123",
+                    "user_name": "Testing",
+                    "user_super": "1",
+                    "user_apikey": collaborator_2_key,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get("/logout", status=302)
+
+            # Collaborator 1 login
+            res = self.testapp.post(
+                "/login",
+                {"user": "", "email": collaborator_1, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Collaborator 1 add Collaborator 2
+            res = self.testapp.post(
+                "/user/{}/project/{}/collaborators".format(
+                    collaborator_1, "collaborator_1_prj001"
+                ),
+                {"add_collaborator": "", "collaborator": collaborator_2},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get("/logout", status=302)
+
+            # Collaborator 2 login
+            res = self.testapp.post(
+                "/login",
+                {"user": "", "email": collaborator_2, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get("/logout", status=302)
+
+            # Collaborator 1 login
+            res = self.testapp.post(
+                "/login",
+                {"user": "", "email": collaborator_1, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Collaborator 1 removes collaborator 2
+            # Remove the collaborator
+            res = self.testapp.post(
+                "/user/{}/project/{}/collaborator/{}/remove".format(
+                    collaborator_1, "collaborator_1_prj001", collaborator_2
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get("/logout", status=302)
+
+            # Collaborator 2 login
+            res = self.testapp.post(
+                "/login",
+                {"user": "", "email": collaborator_2, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.get("/user/{}".format(collaborator_2), status=200)
+            assert "FS_error" not in res.headers
+
+        def test_delete_active_project():
+            # Create collaborator 1
+            collaborator_1 = str(uuid.uuid4())
+            collaborator_1_key = collaborator_1
+            collaborator_1 = collaborator_1[-12:]
+
+            res = self.testapp.post(
+                "/join",
+                {
+                    "user_address": "Costa Rica",
+                    "user_email": collaborator_1 + "@qlands.com",
+                    "user_password": "123",
+                    "user_id": collaborator_1,
+                    "user_password2": "123",
+                    "user_name": "Testing",
+                    "user_super": "1",
+                    "user_apikey": collaborator_1_key,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Add a first project
+            res = self.testapp.post(
+                "/user/{}/projects/add".format(collaborator_1),
+                {
+                    "project_code": "collaborator_1_prj001",
+                    "project_name": "Test project",
+                    "project_abstract": "",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Add a second project
+            res = self.testapp.post(
+                "/user/{}/projects/add".format(collaborator_1),
+                {
+                    "project_code": "collaborator_1_prj002",
+                    "project_name": "Test project",
+                    "project_abstract": "",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Delete a project
+            res = self.testapp.post(
+                "/user/{}/project/{}/delete".format(collaborator_1, "collaborator_1_prj002"),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Delete a project
+            res = self.testapp.post(
+                "/user/{}/project/{}/delete".format(collaborator_1, "collaborator_1_prj001"),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
         test_root()
         test_login()
         test_dashboard()
@@ -4158,3 +4599,9 @@ class FunctionalTests(unittest.TestCase):
         test_form_merge()
         test_group_assistant()
         test_delete_form_with_repository()
+        test_api()
+        test_plugin_utility_functions()
+        test_collaborator_projects()
+        test_collaborator_projects_2()
+        test_collaborator_projects_3()
+        test_delete_active_project()

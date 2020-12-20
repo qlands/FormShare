@@ -255,7 +255,6 @@ class PrivateView(object):
         self.viewResult = {}
         self.returnRawViewResult = False
         self.privateOnly = True
-        self.guestAccess = False
         self.viewingSelfAccount = True
         self.showWelcome = False
         self.checkCrossPost = True
@@ -342,7 +341,6 @@ class PrivateView(object):
         if not user_exists(self.request, self.userID):
             raise HTTPNotFound()
         self.classResult["userDetails"] = get_user_details(self.request, self.userID)
-        self.guestAccess = False
 
         i_user_authorization = p.PluginImplementations(p.IUserAuthorization)
         continue_authorization = True
@@ -373,26 +371,22 @@ class PrivateView(object):
                     )
                 )
 
-        if not self.guestAccess:
-            self.classResult["activeUser"] = self.user
-            if self.user.login != self.userID:
-                self.viewingSelfAccount = False
-        else:
-            self.classResult["activeUser"] = None
+        self.classResult["activeUser"] = self.user
+        if self.user.login != self.userID:
             self.viewingSelfAccount = False
 
         if self.queryProjects:
             if self.user is not None:
                 if self.userID == self.user.login:
                     self.user_projects = get_user_projects(
-                        self.request, self.userID, self.userID, True
+                        self.request, self.userID, self.userID
                     )
                 else:
                     self.user_projects = get_user_projects(
-                        self.request, self.userID, self.user.login, True
+                        self.request, self.userID, self.user.login
                     )
             else:
-                self.user_projects = get_user_projects(self.request, self.userID, None)
+                raise HTTPNotFound()
             self.classResult["userProjects"] = self.user_projects
         else:
             self.classResult["userProjects"] = []
@@ -414,7 +408,6 @@ class PrivateView(object):
                 {
                     "returnRawViewResult": self.returnRawViewResult,
                     "privateOnly": self.privateOnly,
-                    "guestAccess": self.guestAccess,
                     "viewingSelfAccount": self.viewingSelfAccount,
                     "showWelcome": self.showWelcome,
                     "checkCrossPost": self.checkCrossPost,
@@ -435,7 +428,6 @@ class PrivateView(object):
                             {
                                 "returnRawViewResult": self.returnRawViewResult,
                                 "privateOnly": self.privateOnly,
-                                "guestAccess": self.guestAccess,
                                 "viewingSelfAccount": self.viewingSelfAccount,
                                 "showWelcome": self.showWelcome,
                                 "checkCrossPost": self.checkCrossPost,
@@ -454,7 +446,6 @@ class PrivateView(object):
                             {
                                 "returnRawViewResult": self.returnRawViewResult,
                                 "privateOnly": self.privateOnly,
-                                "guestAccess": self.guestAccess,
                                 "viewingSelfAccount": self.viewingSelfAccount,
                                 "showWelcome": self.showWelcome,
                                 "checkCrossPost": self.checkCrossPost,
@@ -471,7 +462,6 @@ class PrivateView(object):
                             {
                                 "returnRawViewResult": self.returnRawViewResult,
                                 "privateOnly": self.privateOnly,
-                                "guestAccess": self.guestAccess,
                                 "viewingSelfAccount": self.viewingSelfAccount,
                                 "showWelcome": self.showWelcome,
                                 "checkCrossPost": self.checkCrossPost,

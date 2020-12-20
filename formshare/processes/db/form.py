@@ -1,5 +1,4 @@
 import datetime
-import json
 import logging
 import mimetypes
 import os
@@ -67,11 +66,9 @@ __all__ = [
     "get_number_of_submissions_in_database",
     "get_by_details",
     "get_form_geopoint",
-    "get_primary_key",
     "get_number_of_submissions_by_assistant",
     "get_media_files",
     "set_form_status",
-    "get_form_primary_key",
     "get_form_survey_file",
     "get_project_form_colors",
     "reset_form_repository",
@@ -715,18 +712,6 @@ def get_form_geopoint(request, project, form):
     return None
 
 
-def get_form_primary_key(request, project, form):
-    res = (
-        request.dbsession.query(Odkform)
-        .filter(Odkform.project_id == project)
-        .filter(Odkform.form_id == form)
-        .first()
-    )
-    if res is not None:
-        return res.form_pkey
-    return None
-
-
 def get_form_directory(request, project, form):
     form_data = (
         request.dbsession.query(Odkform)
@@ -827,19 +812,6 @@ def get_form_schema(request, project, form):
     )
     if form_data is not None:
         return form_data.form_schema
-    else:
-        return None
-
-
-def get_primary_key(request, project, form):
-    form_data = (
-        request.dbsession.query(Odkform)
-        .filter(Odkform.project_id == project)
-        .filter(Odkform.form_id == form)
-        .first()
-    )
-    if form_data is not None:
-        return form_data.form_pkey
     else:
         return None
 

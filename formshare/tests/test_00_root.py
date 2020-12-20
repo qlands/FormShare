@@ -4126,7 +4126,6 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-
         test_root()
         test_login()
         test_dashboard()

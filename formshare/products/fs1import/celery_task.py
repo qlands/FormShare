@@ -26,13 +26,21 @@ log = logging.getLogger("formshare")
 
 
 def add_submission(
-    engine, project, form, project_of_assistant, assistant, submission, md5sum, status
+    engine,
+    project,
+    form,
+    project_of_assistant,
+    assistant,
+    submission,
+    md5sum,
+    original_md5,
+    status,
 ):
     try:
         engine.execute(
             "INSERT INTO submission (project_id,form_id,submission_id,submission_dtime,submission_status,"
-            "enum_project,coll_id,md5sum)"
-            " VALUES ('{}','{}','{}','{}','{}','{}','{}','{}')".format(
+            "enum_project,coll_id,md5sum,original_md5sum)"
+            " VALUES ('{}','{}','{}','{}','{}','{}','{}','{}','{}')".format(
                 project,
                 form,
                 submission,
@@ -41,6 +49,7 @@ def add_submission(
                 project_of_assistant,
                 assistant,
                 md5sum,
+                original_md5,
             )
         )
     except Exception as e:
@@ -107,7 +116,8 @@ def store_json_file(
     json_to_mysql = os.path.join(
         settings["odktools.path"], *["JSONToMySQL", "jsontomysql"]
     )
-
+    original_file = json_file.replace(".json", ".original.json")
+    shutil.copyfile(temp_json_file, original_file)
     # Add the controlling fields to the JSON file
     with open(temp_json_file, "r") as f:
         submission_data = json.load(f)
@@ -163,6 +173,7 @@ def store_json_file(
     args = ["jq", "-S", ".", temp_json_file]
     final = open(ordered_json_file, "w")
     md5sum = md5(open(json_file, "rb").read()).hexdigest()
+    original_md5 = md5(open(original_file, "rb").read()).hexdigest()
     p = Popen(args, stdout=final, stderr=PIPE)
     stdout, stderr = p.communicate()
     final.close()
@@ -249,6 +260,7 @@ def store_json_file(
                 assistant,
                 submission_id,
                 md5sum,
+                original_md5,
                 p.returncode,
             )
 

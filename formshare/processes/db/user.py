@@ -1,7 +1,6 @@
 import datetime
 import logging
 
-import validators
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
@@ -109,36 +108,29 @@ def register_user(request, user_data):
     _ = request.translate
     user_data.pop("user_password2", None)
     mapped_data = map_to_schema(User, user_data)
-    email_valid = validators.email(mapped_data["user_email"])
-    if email_valid:
-        res = (
-            request.dbsession.query(User)
-            .filter(User.user_email == mapped_data["user_email"])
-            .first()
-        )
-        if res is None:
-            new_user = User(**mapped_data)
-            try:
-                request.dbsession.add(new_user)
-                request.dbsession.flush()
-                return True, ""
-            except IntegrityError:
-                request.dbsession.rollback()
-                log.error("Duplicated user {}".format(mapped_data["user_id"]))
-                return False, _("Username is already taken")
-            except Exception as e:
-                request.dbsession.rollback()
-                log.error(
-                    "Error {} when inserting user {}".format(
-                        str(e), mapped_data["user_id"]
-                    )
-                )
-                return False, str(e)
-        else:
-            log.error("Duplicated user with email {}".format(mapped_data["user_email"]))
-            return False, _("Email is invalid")
+    res = (
+        request.dbsession.query(User)
+        .filter(User.user_email == mapped_data["user_email"])
+        .first()
+    )
+    if res is None:
+        new_user = User(**mapped_data)
+        try:
+            request.dbsession.add(new_user)
+            request.dbsession.flush()
+            return True, ""
+        except IntegrityError:
+            request.dbsession.rollback()
+            log.error("Duplicated user {}".format(mapped_data["user_id"]))
+            return False, _("Username is already taken")
+        except Exception as e:
+            request.dbsession.rollback()
+            log.error(
+                "Error {} when inserting user {}".format(str(e), mapped_data["user_id"])
+            )
+            return False, str(e)
     else:
-        log.error("Email {} is not valid".format(mapped_data["user_email"]))
+        log.error("Duplicated user with email {}".format(mapped_data["user_email"]))
         return False, _("Email is invalid")
 
 

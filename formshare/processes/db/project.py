@@ -10,7 +10,6 @@ from formshare.models import (
     Userproject,
     map_to_schema,
     map_from_schema,
-    Submission,
     Odkform,
     ProjectFile,
 )
@@ -85,15 +84,6 @@ def get_project_code_from_id(request, user, project_id):
 def get_forms_number(request, project):
     total = (
         request.dbsession.query(Odkform).filter(Odkform.project_id == project).count()
-    )
-    return total
-
-
-def get_project_submissions(request, project):
-    total = (
-        request.dbsession.query(Submission)
-        .filter(Submission.project_id == project)
-        .count()
     )
     return total
 
@@ -222,7 +212,9 @@ def get_active_project(request, user):
                 mapped_data["access_type"] = project["access_type"]
                 mapped_data["owner"] = project["owner"]
     else:
-        if len(user_projects) > 0:  # pragma: no cover   . TODO: Monitor if error appears in logs
+        if (
+            len(user_projects) > 0
+        ):  # pragma: no cover   . TODO: Monitor if error appears in logs
             log.error("Possible unused code used. URL {}".format(request.url))
             last_project = (
                 request.dbsession.query(Userproject)

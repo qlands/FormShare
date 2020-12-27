@@ -149,6 +149,21 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" in res.headers
 
+            # Register fail. Invalid email
+            res = self.testapp.post(
+                "/join",
+                {
+                    "user_address": "Costa Rica",
+                    "user_email": "@test",
+                    "user_password": "123",
+                    "user_id": "test",
+                    "user_password2": "123",
+                    "user_name": "Testing",
+                },
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
             # Register fail. Passwords not the same
             res = self.testapp.post(
                 "/join",
@@ -2027,6 +2042,28 @@ class FunctionalTests(unittest.TestCase):
             )
 
             time.sleep(5)  # Wait for ElasticSearch to store this
+
+            # Test submission storing a second identical submission to mimic an incomplete submission
+            paths = ["resources", "forms", "complex_form", "submission001B.xml"]
+            submission_file = os.path.join(self.path, *paths)
+
+            paths = ["resources", "forms", "complex_form", "image002.png"]
+            image_file = os.path.join(self.path, *paths)
+
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, self.project),
+                status=201,
+                upload_files=[
+                    ("filetoupload", submission_file),
+                    ("image2", image_file),
+                ],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            time.sleep(5)  # Wait for ElasticSearch to store this
+
             # Gets the GPS Points of a project
             res = self.testapp.get(
                 "/user/{}/project/{}/download/gpspoints".format(
@@ -2064,7 +2101,7 @@ class FunctionalTests(unittest.TestCase):
             )
 
             # Test submitting the same data into the repository storing it into the logs
-            paths = ["resources", "forms", "complex_form", "submission001.xml"]
+            paths = ["resources", "forms", "complex_form", "submission003.xml"]
             submission_file = os.path.join(self.path, *paths)
 
             paths = ["resources", "forms", "complex_form", "image001.png"]
@@ -2195,6 +2232,17 @@ class FunctionalTests(unittest.TestCase):
                     status=200,
                 )
 
+                self.testapp.get(
+                    "/user/{}/project/{}/form/{}/public_download/{}/output/{}".format(
+                        self.randonLogin,
+                        self.project,
+                        self.formID,
+                        "csv_public_export",
+                        "latest",
+                    ),
+                    status=200,
+                )
+
                 # Unpublish the product
                 res2 = self.testapp.post(
                     "/user/{}/project/{}/form/{}/products/{}/output/{}/unpublish".format(
@@ -2283,6 +2331,16 @@ class FunctionalTests(unittest.TestCase):
                         self.formID,
                         "csv_private_export",
                         task_id[-12:],
+                    ),
+                    status=200,
+                )
+                self.testapp.get(
+                    "/user/{}/project/{}/form/{}/private_download/{}/output/{}".format(
+                        self.randonLogin,
+                        self.project,
+                        self.formID,
+                        "csv_private_export",
+                        "latest",
                     ),
                     status=200,
                 )
@@ -3028,7 +3086,7 @@ class FunctionalTests(unittest.TestCase):
 
             res = engine.execute(
                 "SELECT submission_id FROM formshare.submission "
-                "WHERE submission_status = 2 AND project_id = '{}'".format(
+                "WHERE submission_status = 2 AND sameas IS NULL AND project_id = '{}'".format(
                     self.projectID
                 )
             ).first()
@@ -3421,13 +3479,6 @@ class FunctionalTests(unittest.TestCase):
                 status=401,
             )
 
-            print("********************************999")
-            print(self.assistantLoginKey)
-            print("********************************---")
-            print(row_uuid)
-            print("***********************************")
-            print("{}-{}{}".format(self.randonLogin, self.project, self.formID))
-            print("********************************999")
             #  Change data using API passes
             self.testapp.post_json(
                 "/user/{}/project/{}/form/{}/api_update".format(
@@ -4507,6 +4558,143 @@ class FunctionalTests(unittest.TestCase):
             res = self.testapp.get("/user/{}".format(collaborator_2), status=200)
             assert "FS_error" not in res.headers
 
+        def test_collaborator_projects_4():
+            # Create collaborator 1
+            collaborator_1 = str(uuid.uuid4())
+            collaborator_1_key = collaborator_1
+            collaborator_1 = collaborator_1[-12:]
+
+            res = self.testapp.post(
+                "/join",
+                {
+                    "user_address": "Costa Rica",
+                    "user_email": collaborator_1 + "@qlands.com",
+                    "user_password": "123",
+                    "user_id": collaborator_1,
+                    "user_password2": "123",
+                    "user_name": "Testing",
+                    "user_super": "1",
+                    "user_apikey": collaborator_1_key,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Add a project succeed.
+            res = self.testapp.post(
+                "/user/{}/projects/add".format(collaborator_1),
+                {
+                    "project_code": "collaborator_1_prj001",
+                    "project_name": "Test project",
+                    "project_abstract": "",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get("/logout", status=302)
+
+            # Create collaborator 2
+            collaborator_2 = str(uuid.uuid4())
+            collaborator_2_key = collaborator_2
+            collaborator_2 = collaborator_2[-12:]
+
+            res = self.testapp.post(
+                "/join",
+                {
+                    "user_address": "Costa Rica",
+                    "user_email": collaborator_2 + "@qlands.com",
+                    "user_password": "123",
+                    "user_id": collaborator_2,
+                    "user_password2": "123",
+                    "user_name": "Testing",
+                    "user_super": "1",
+                    "user_apikey": collaborator_2_key,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Add a project succeed to collaborator2.
+            res = self.testapp.post(
+                "/user/{}/projects/add".format(collaborator_2),
+                {
+                    "project_code": "collaborator_2_prj001",
+                    "project_name": "Test project",
+                    "project_abstract": "",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get("/logout", status=302)
+
+            # Collaborator 1 login
+            res = self.testapp.post(
+                "/login",
+                {"user": "", "email": collaborator_1, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Collaborator 1 add Collaborator 2
+            res = self.testapp.post(
+                "/user/{}/project/{}/collaborators".format(
+                    collaborator_1, "collaborator_1_prj001"
+                ),
+                {"add_collaborator": "", "collaborator": collaborator_2},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get("/logout", status=302)
+
+            # Collaborator 2 login
+            res = self.testapp.post(
+                "/login",
+                {"user": "", "email": collaborator_2, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Collaborator 2 add Collaborator 1
+            res = self.testapp.post(
+                "/user/{}/project/{}/collaborators".format(
+                    collaborator_2, "collaborator_2_prj001"
+                ),
+                {"add_collaborator": "", "collaborator": collaborator_1},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get("/logout", status=302)
+
+            # Collaborator 1 login
+            res = self.testapp.post(
+                "/login",
+                {"user": "", "email": collaborator_1, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.get("/user/{}".format(collaborator_1), status=200)
+            assert "FS_error" not in res.headers
+
+            self.testapp.get("/logout", status=302)
+
+            # Collaborator 2 login
+            res = self.testapp.post(
+                "/login",
+                {"user": "", "email": collaborator_2, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.get("/user/{}".format(collaborator_2), status=200)
+            assert "FS_error" not in res.headers
+
+            self.testapp.get("/logout", status=302)
+
         def test_delete_active_project():
             # Create collaborator 1
             collaborator_1 = str(uuid.uuid4())
@@ -4555,14 +4743,18 @@ class FunctionalTests(unittest.TestCase):
 
             # Delete a project
             res = self.testapp.post(
-                "/user/{}/project/{}/delete".format(collaborator_1, "collaborator_1_prj002"),
+                "/user/{}/project/{}/delete".format(
+                    collaborator_1, "collaborator_1_prj002"
+                ),
                 status=302,
             )
             assert "FS_error" not in res.headers
 
             # Delete a project
             res = self.testapp.post(
-                "/user/{}/project/{}/delete".format(collaborator_1, "collaborator_1_prj001"),
+                "/user/{}/project/{}/delete".format(
+                    collaborator_1, "collaborator_1_prj001"
+                ),
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -4604,4 +4796,5 @@ class FunctionalTests(unittest.TestCase):
         test_collaborator_projects()
         test_collaborator_projects_2()
         test_collaborator_projects_3()
+        test_collaborator_projects_4()
         test_delete_active_project()

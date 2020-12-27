@@ -1728,6 +1728,8 @@ def store_json_file(
         if schema != "":
             # Add the controlling fields to the JSON file
             project_code = get_project_code_from_id(request, user, project)
+            original_file = ordered_json_file.replace(".ordered.json", ".original.json")
+            shutil.copyfile(temp_json_file, original_file)
             with open(temp_json_file, "r") as f:
                 submission_data = json.load(f)
                 submission_data["_submitted_by"] = assistant
@@ -1795,8 +1797,9 @@ def store_json_file(
 
                 # Get the MD5Sum of the JSON file and looks for it in the submissions
                 # This will get an exact match that will not move into the database
+                original_md5 = md5(open(original_file, "rb").read()).hexdigest()
                 md5sum = md5(open(json_file, "rb").read()).hexdigest()
-                sameas = get_submission_data(request, project, form, md5sum)
+                sameas = get_submission_data(request, project, form, original_md5)
                 if sameas is None:
                     # Third we try to move the JSON data into the database
                     mysql_user = request.registry.settings["mysql.user"]
@@ -1894,6 +1897,7 @@ def store_json_file(
                             assistant,
                             submission_id,
                             md5sum,
+                            original_md5,
                             p.returncode,
                         )
 
@@ -2196,27 +2200,34 @@ def store_submission(request, user, project, assistant):
     xml_file = ""
     for key in request.POST.keys():
         try:
-            filename = request.POST[key].filename
-            if os.path.isabs(filename):
-                filename = os.path.basename(filename)
-            slash_index = filename.find("\\")
-            if slash_index >= 0:
-                filename = filename[slash_index + 1 :]
-            if filename.upper().find(".XML") >= 0:
-                filename = str(unique_id) + ".xml"
-            else:
-                if filename == "xml_submission_file":
+            if key != "*isIncomplete*":
+                filename = request.POST[key].filename
+                if os.path.isabs(filename):
+                    filename = os.path.basename(filename)
+                slash_index = filename.find("\\")
+                if slash_index >= 0:
+                    filename = filename[slash_index + 1 :]
+                if filename.upper().find(".XML") >= 0:
                     filename = str(unique_id) + ".xml"
-            input_file = request.POST[key].file
-            file_path = os.path.join(path, filename)
-            if file_path.upper().find(".XML") >= 0:
-                xml_file = file_path
-            temp_file_path = file_path + "~"
-            input_file.seek(0)
-            with open(temp_file_path, "wb") as output_file:
-                shutil.copyfileobj(input_file, output_file)
-            # Now that we know the file has been fully saved to disk move it into place.
-            os.rename(temp_file_path, file_path)
+                else:
+                    if filename == "xml_submission_file":
+                        filename = str(unique_id) + ".xml"
+                input_file = request.POST[key].file
+                file_path = os.path.join(path, filename)
+                if file_path.upper().find(".XML") >= 0:
+                    xml_file = file_path
+                temp_file_path = file_path + "~"
+                input_file.seek(0)
+                with open(temp_file_path, "wb") as output_file:
+                    shutil.copyfileobj(input_file, output_file)
+                # Now that we know the file has been fully saved to disk move it into place.
+                os.rename(temp_file_path, file_path)
+            else:
+                log.error(
+                    "Incomplete submission {} in project {} of user {} with assistant {}".format(
+                        unique_id, project, user, assistant
+                    )
+                )
         except Exception as e:
             log.error(
                 "Submission "

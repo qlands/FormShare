@@ -10,12 +10,12 @@ __all__ = ["get_submission_data", "add_submission", "add_submission_same_as"]
 log = logging.getLogger("formshare")
 
 
-def get_submission_data(request, project, form, md5sum):
+def get_submission_data(request, project, form, original_md5sum):
     res = (
         request.dbsession.query(Submission)
         .filter(Submission.project_id == project)
         .filter(Submission.form_id == form)
-        .filter(Submission.md5sum == md5sum)
+        .filter(Submission.original_md5sum == original_md5sum)
         .order_by(Submission.submission_dtime.asc())
         .first()
     )
@@ -23,7 +23,15 @@ def get_submission_data(request, project, form, md5sum):
 
 
 def add_submission(
-    request, project, form, project_of_assistant, assistant, submission, md5sum, status
+    request,
+    project,
+    form,
+    project_of_assistant,
+    assistant,
+    submission,
+    md5sum,
+    original_md5sum,
+    status,
 ):
     new_submission = Submission(
         submission_id=submission,
@@ -34,6 +42,7 @@ def add_submission(
         enum_project=project_of_assistant,
         coll_id=assistant,
         md5sum=md5sum,
+        original_md5sum=original_md5sum,
     )
     try:
         request.dbsession.add(new_submission)

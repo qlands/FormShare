@@ -485,6 +485,7 @@ class Submission(Base):
     enum_project = Column(Unicode(64), nullable=False)
     coll_id = Column(Unicode(120), nullable=False)
     md5sum = Column(Unicode(120))
+    original_md5sum = Column(Unicode(120))
     sameas = Column(Unicode(64))
 
     collaborator = relationship("Collaborator")

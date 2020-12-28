@@ -197,7 +197,9 @@ class Odkform(Base):
     __tablename__ = "odkform"
     __table_args__ = (
         ForeignKeyConstraint(
-            ["parent_project", "parent_form"], ["odkform.project_id", "odkform.form_id"]
+            ["parent_project", "parent_form"],
+            ["odkform.project_id", "odkform.form_id"],
+            ondelete="CASCADE",
         ),
         Index("fk_form_form1_idx", "parent_project", "parent_form"),
     )

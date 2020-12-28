@@ -5,6 +5,7 @@ import shutil
 import time
 import unittest
 import uuid
+import sys
 
 import pkg_resources
 from sqlalchemy import create_engine
@@ -62,6 +63,8 @@ def get_repository_task(config, project, form):
 
 class FunctionalTests(unittest.TestCase):
     def setUp(self):
+        if os.environ.get("FORMSHARE_PYTEST_RUNNING", "false") == "false":
+            sys.exit(1)
         from formshare.tests.config import server_config
         from formshare import main
 
@@ -1819,7 +1822,7 @@ class FunctionalTests(unittest.TestCase):
                 form_directory = form_details["form_directory"]
                 form_reptask = form_details["form_reptask"]
 
-                form_schema = "FS" + str(uuid.uuid4()).replace("-", "_")
+                form_schema = "FS_" + str(uuid.uuid4()).replace("-", "_")
 
                 paths2 = [self.server_config["repository.path"], "odk"]
                 odk_dir = os.path.join(self.path, *paths2)
@@ -1901,7 +1904,7 @@ class FunctionalTests(unittest.TestCase):
                 form_directory = form_details["form_directory"]
                 form_reptask = form_details["form_reptask"]
 
-                form_schema = "FS" + str(uuid.uuid4()).replace("-", "_")
+                form_schema = "FS_" + str(uuid.uuid4()).replace("-", "_")
 
                 paths2 = [self.server_config["repository.path"], "odk"]
                 odk_dir = os.path.join(self.path, *paths2)
@@ -4197,6 +4200,12 @@ class FunctionalTests(unittest.TestCase):
             self.testapp.get(
                 "/test/{}".format(self.randonLogin), status=200,
             )
+            self.testapp.get(
+                "/test/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
 
         def test_collaborator_projects():
             # Create collaborator 1
@@ -4692,6 +4701,10 @@ class FunctionalTests(unittest.TestCase):
 
             res = self.testapp.get("/user/{}".format(collaborator_2), status=200)
             assert "FS_error" not in res.headers
+
+            self.testapp.get(
+                "/test/{}/remove".format(collaborator_2), status=200,
+            )
 
             self.testapp.get("/logout", status=302)
 

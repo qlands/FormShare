@@ -142,7 +142,7 @@ from formshare.views.search import APIUserSearchSelect2
 from formshare.views.sse import SSEventStream
 from formshare.views.users import UsersListView, EditUserView, AddUserView
 
-from formshare.views.testing import TestOwnedProjectView
+from formshare.views.testing import TestUserView, TestFormView, TestRemoveUserView
 
 log = logging.getLogger("formshare")
 
@@ -1206,7 +1206,23 @@ def load_routes(config):
             add_route(
                 "TestOwnedProjectView",
                 "/test/{userid}",
-                TestOwnedProjectView,
+                TestUserView,
+                "generic/testing.jinja2",
+            )
+        )
+        routes.append(
+            add_route(
+                "TestFormView",
+                "/test/{userid}/project/{projcode}/form/{formid}",
+                TestFormView,
+                "generic/testing.jinja2",
+            )
+        )
+        routes.append(
+            add_route(
+                "TestRemoveUserView",
+                "/test/{userid}/remove",
+                TestRemoveUserView,
                 "generic/testing.jinja2",
             )
         )

@@ -20,6 +20,7 @@ def _get_record_index_definition(number_of_shards, number_of_replicas):
 
        :return: A dict object with the definition of the dataset index.
     """
+    print("***************_get_record_index_definition*********************")
     _json = {
         "settings": {
             "index": {
@@ -100,22 +101,21 @@ def create_record_index(settings, user, project, form):
     connection = create_connection(settings)
     if connection is not None:
         index_name = get_index_name(user, project, form)
-        if not connection.indices.exists(index_name):
-            try:
-                connection.indices.create(
-                    index_name,
-                    body=_get_record_index_definition(
-                        number_of_shards, number_of_replicas
-                    ),
-                )
-            except RequestError as e:
-                if e.status_code == 400:
-                    if e.error.find("already_exists") >= 0:
-                        pass
-                    else:
-                        raise e
+        try:
+            connection.indices.create(
+                index_name,
+                body=_get_record_index_definition(number_of_shards, number_of_replicas),
+            )
+        except RequestError as e:
+            if e.status_code == 400:
+                if e.error.find("already_exists") >= 0:
+                    print("******************************XXX")
+                    print("Index {} already exists".format(index_name))
+                    print("******************************XXX")
                 else:
                     raise e
+            else:
+                raise e
     else:
         raise RequestError("Cannot connect to ElasticSearch")
 

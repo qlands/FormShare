@@ -437,7 +437,9 @@ def check_jxform_file(
                     + _("Please remove the duplicated choices and try again.")
                 )
             return 21, message
-        if p.returncode == 18:
+        if (
+            p.returncode == 18
+        ):  # pragma: no cover . This only happens with old versions of PyXForm
             log.error(
                 ". Error: "
                 + str(p.returncode)
@@ -1277,34 +1279,6 @@ def update_odk_form(request, user_id, project_id, for_form_id, odk_dir, form_dat
         return False, str(e)
 
 
-class FileIterator(object):
-    chunk_size = 4096
-
-    def __init__(self, filename):
-        self.filename = filename
-        self.fileobj = open(self.filename, "rb")
-
-    def __iter__(self):
-        return self
-
-    def next(self):
-        chunk = self.fileobj.read(self.chunk_size)
-        if not chunk:
-            raise StopIteration
-        return chunk
-
-    __next__ = next  # py3 compat
-
-
-# An Object containing the file download iterator
-class FileIterable(object):
-    def __init__(self, filename):
-        self.filename = filename
-
-    def __iter__(self):
-        return FileIterator(self.filename)
-
-
 def generate_form_list(project_array):
     root = etree.Element("xforms", xmlns="http://openrosa.org/xforms/xformsList")
     for project in project_array:
@@ -1414,20 +1388,6 @@ def get_submission_file(request, project, form, submission):
             raise HTTPNotFound()
     else:
         raise HTTPNotFound()
-
-
-class ChangeDir:
-    def __init__(self, new_path):
-        self.newPath = os.path.expanduser(new_path)
-
-    # Change directory with the new path
-    def __enter__(self):
-        self.savedPath = os.getcwd()
-        os.chdir(self.newPath)
-
-    # Return back to previous directory
-    def __exit__(self, etype, value, traceback):
-        os.chdir(self.savedPath)
 
 
 def merge_versions(
@@ -1646,7 +1606,7 @@ def create_repository(
                         a_plugin.on_creating_repository(
                             request, user, project, form, task
                         )
-                else:
+                else:  # pragma: no cover because we cannot test both at the same time
                     custom_task = None
                     for a_plugin in plugins.PluginImplementations(plugins.IRepository):
                         custom_task = a_plugin.custom_repository_process(
@@ -2039,6 +1999,8 @@ def store_json_file(
         # file are so big that separation is required
         try:
             shutil.move(temp_json_file, json_file)
+            original_file = json_file.replace(".json", ".original")
+            shutil.copyfile(json_file, original_file)
             project_code = get_project_code_from_id(request, user, project)
             with open(json_file, "r") as f:
                 submission_data = json.load(f)
@@ -2102,16 +2064,18 @@ def store_json_file(
                 outfile.write(json_string)
 
             submissions_path = os.path.join(
-                odk_dir, *["forms", xform_directory, "submissions", "*.json"]
+                odk_dir, *["forms", xform_directory, "submissions", "*.original"]
             )
             files = glob.glob(submissions_path)
-            md5sum = md5(open(json_file, "rb").read()).hexdigest()
+            md5sum = md5(open(original_file, "rb").read()).hexdigest()
             for aFile in files:
-                if aFile != json_file:
-                    othmd5sum = md5(open(aFile, "rb").read()).hexdigest()
-                    if md5sum == othmd5sum:
+                if aFile != original_file:
+                    other_md5sum = md5(open(aFile, "rb").read()).hexdigest()
+                    if md5sum == other_md5sum:
                         target_submission_id = os.path.basename(aFile)
-                        target_submission_id = target_submission_id.replace(".json", "")
+                        target_submission_id = target_submission_id.replace(
+                            ".original", ""
+                        )
                         move_media_files(
                             odk_dir,
                             xform_directory,

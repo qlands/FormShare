@@ -5,7 +5,7 @@ import shutil
 import time
 import unittest
 import uuid
-import sys
+import datetime
 
 import pkg_resources
 from sqlalchemy import create_engine
@@ -64,7 +64,10 @@ def get_repository_task(config, project, form):
 class FunctionalTests(unittest.TestCase):
     def setUp(self):
         if os.environ.get("FORMSHARE_PYTEST_RUNNING", "false") == "false":
-            sys.exit(1)
+            raise ValueError(
+                "Environment variable FORMSHARE_PYTEST_RUNNING must be true. "
+                "Do 'export FORMSHARE_PYTEST_RUNNING=true' before running PyTest"
+            )
         from formshare.tests.config import server_config
         from formshare import main
 
@@ -1615,6 +1618,152 @@ class FunctionalTests(unittest.TestCase):
             assert "FS_error" not in res.headers
             time.sleep(30)
 
+        def test_support_zip_file():
+            # Upload a form requiring support CSV files
+            paths = ["resources", "forms", "support_zip_file", "support_zip_file.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, "support_zip_file"
+                ),
+                status=200,
+            )
+
+            # Uploads a zip support file to the form
+            paths = ["resources", "forms", "support_zip_file", "support_file.zip"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, self.project, "support_zip_file"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, "support_zip_file"
+                ),
+                status=200,
+            )
+
+            # Add an assistant to a form succeeds
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, self.project, "support_zip_file"
+                ),
+                {
+                    "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
+                    "coll_privileges": "3",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Generate the repository using celery
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, self.project, "support_zip_file"
+                ),
+                {"form_pkey": "I_D", "start_stage1": ""},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+            time.sleep(30)
+
+        def test_external_select():
+            # Upload a form requiring support CSV files
+            paths = ["resources", "forms", "external", "select_one_external.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, "cascading_select_test"
+                ),
+                status=200,
+            )
+
+            # Update a form a succeeds with external selects
+            paths = ["resources", "forms", "external", "select_one_external.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, self.project, "cascading_select_test"
+                ),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, "cascading_select_test"
+                ),
+                status=200,
+            )
+
+        def test_update_form_missing_files():
+            # Upload a form requiring support CSV files
+            paths = ["resources", "forms", "support_zip_file", "support_zip_fileB.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, "support_zip_fileB"
+                ),
+                status=200,
+            )
+
+            # Update a form a succeeds even if support files are missing
+            paths = ["resources", "forms", "support_zip_file", "support_zip_fileB.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, self.project, "support_zip_fileB"
+                ),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, "support_zip_fileB"
+                ),
+                status=200,
+            )
+
         def test_odk():
 
             # Upload a complex form succeeds
@@ -1740,6 +1889,64 @@ class FunctionalTests(unittest.TestCase):
             )
 
             time.sleep(5)  # Wait for ElasticSearch to store this
+
+            # Test submission one again. Adding image2 to same place of image 1
+            paths = ["resources", "forms", "complex_form", "submission001.xml"]
+            submission_file = os.path.join(self.path, *paths)
+
+            paths = ["resources", "forms", "complex_form", "image001.png"]
+            image_file = os.path.join(self.path, *paths)
+
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, self.project),
+                status=201,
+                upload_files=[
+                    ("filetoupload", submission_file),
+                    ("image2", image_file),
+                ],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            time.sleep(5)  # Wait for ElasticSearch to store this
+
+            # Test submission without precision in GPS
+            paths = ["resources", "forms", "complex_form", "submission004.xml"]
+            submission_file = os.path.join(self.path, *paths)
+
+            paths = ["resources", "forms", "complex_form", "image001.png"]
+            image_file = os.path.join(self.path, *paths)
+
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, self.project),
+                status=201,
+                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            time.sleep(5)  # Wait for ElasticSearch to store this
+
+            # Test submission without elevation in GPS
+            paths = ["resources", "forms", "complex_form", "submission005.xml"]
+            submission_file = os.path.join(self.path, *paths)
+
+            paths = ["resources", "forms", "complex_form", "image001.png"]
+            image_file = os.path.join(self.path, *paths)
+
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, self.project),
+                status=201,
+                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            time.sleep(5)  # Wait for ElasticSearch to store this
+
             # Gets the GPS Points of a project
             res = self.testapp.get(
                 "/user/{}/project/{}/download/gpspoints".format(
@@ -2123,6 +2330,48 @@ class FunctionalTests(unittest.TestCase):
 
             # Add a second submission to test downloads
             paths = ["resources", "forms", "complex_form", "submission002.xml"]
+            submission_file2 = os.path.join(self.path, *paths)
+
+            paths = ["resources", "forms", "complex_form", "image001.png"]
+            image_file2 = os.path.join(self.path, *paths)
+
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, self.project),
+                status=201,
+                upload_files=[
+                    ("filetoupload", submission_file2),
+                    ("image", image_file2),
+                ],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            time.sleep(5)  # Wait for ElasticSearch to store this
+
+            # Add a third submission without GPS precision
+            paths = ["resources", "forms", "complex_form", "submission004.xml"]
+            submission_file2 = os.path.join(self.path, *paths)
+
+            paths = ["resources", "forms", "complex_form", "image001.png"]
+            image_file2 = os.path.join(self.path, *paths)
+
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, self.project),
+                status=201,
+                upload_files=[
+                    ("filetoupload", submission_file2),
+                    ("image", image_file2),
+                ],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            time.sleep(5)  # Wait for ElasticSearch to store this
+
+            # Add a forth submission without elevation
+            paths = ["resources", "forms", "complex_form", "submission005.xml"]
             submission_file2 = os.path.join(self.path, *paths)
 
             paths = ["resources", "forms", "complex_form", "image001.png"]
@@ -3080,19 +3329,25 @@ class FunctionalTests(unittest.TestCase):
                 self.server_config, self.projectID, self.formID
             )
             engine = create_engine(self.server_config["sqlalchemy.url"])
-            res = engine.execute(
-                "SELECT surveyid FROM {}.maintable WHERE i_d = '501890386'".format(
-                    form_details["form_schema"]
-                )
-            ).first()
+            sql = "SELECT surveyid FROM {}.maintable WHERE i_d = '501890386'".format(
+                form_details["form_schema"]
+            )
+            print("**********************************UUUUU")
+            print(sql)
+            print("**********************************UUUUU")
+            res = engine.execute(sql).first()
             survey_id = res[0]
 
-            res = engine.execute(
+            sql = (
                 "SELECT submission_id FROM formshare.submission "
                 "WHERE submission_status = 2 AND sameas IS NULL AND project_id = '{}'".format(
                     self.projectID
                 )
-            ).first()
+            )
+            print("**********************************WWW")
+            print(sql)
+            print("**********************************WWW")
+            res = engine.execute(sql).first()
             duplicated_id = res[0]
 
             engine.dispose()
@@ -3286,6 +3541,18 @@ class FunctionalTests(unittest.TestCase):
             os.remove(submission_file)
 
             # Loads the revision review page
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/view".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    duplicated_id,
+                    "23a243c95547",
+                ),
+                status=200,
+            )
+
+            # Loads the revision review page a second time
             self.testapp.get(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/view".format(
                     self.randonLogin,
@@ -4050,10 +4317,103 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            #  Merge C with an ignore string message *************************************
+            paths = ["resources", "forms", "merge", "C", "C.xls"]
+            c_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {
+                    "for_merging": "",
+                    "parent_project": self.projectID,
+                    "parent_form": "tormenta20201117",
+                },
+                status=302,
+                upload_files=[("xlsx", c_resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, "tormenta20201130"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"Merge check pending" in res.body)
+
+            paths = ["resources", "forms", "merge", "C", "cantones.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, self.project, "tormenta20201130"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            paths = ["resources", "forms", "merge", "C", "distritos.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, self.project, "tormenta20201130"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, "tormenta20201130"
+                ),
+                status=200,
+            )
+            self.assertFalse(b"Merge check pending" in res.body)
+
+            # Merge the repository using celery fails with message about values to ignore
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/merge/into/{}".format(
+                    self.randonLogin,
+                    self.project,
+                    "tormenta20201130",
+                    "tormenta20201117",
+                ),
+                status=200,
+            )
+            assert "FS_error" not in res.headers
+            self.assertTrue(b"There are changes in the descriptions" in res.body)
+
+            # Merge the repository using celery passes
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/merge/into/{}".format(
+                    self.randonLogin,
+                    self.project,
+                    "tormenta20201130",
+                    "tormenta20201117",
+                ),
+                {"valuestoignore": "lkplista_de_bancos:8"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            time.sleep(60)  # Wait for the merge to finish
+
+            # Get the details of a form tormenta20201117
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, "tormenta20201130"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"This is the sub-version of" in res.body)
+
             # Delete the form
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/delete".format(
-                    self.randonLogin, self.project, "tormenta20201117"
+                    self.randonLogin, self.project, "tormenta20201130"
                 ),
                 status=302,
             )
@@ -4772,6 +5132,7 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+        start_time = datetime.datetime.now()
         test_root()
         test_login()
         test_dashboard()
@@ -4783,6 +5144,9 @@ class FunctionalTests(unittest.TestCase):
         test_forms()
         test_odk()
         test_multilanguage_odk()
+        test_support_zip_file()
+        test_external_select()
+        test_update_form_missing_files()
         test_repository()
         time.sleep(45)
         test_repository_downloads()
@@ -4811,3 +5175,9 @@ class FunctionalTests(unittest.TestCase):
         test_collaborator_projects_3()
         test_collaborator_projects_4()
         test_delete_active_project()
+
+        end_time = datetime.datetime.now()
+        time_delta = end_time - start_time
+        total_seconds = time_delta.total_seconds()
+        minutes = total_seconds / 60
+        print("Finished in {} minutes".format(minutes))

@@ -20,7 +20,6 @@ def _get_record_index_definition(number_of_shards, number_of_replicas):
 
        :return: A dict object with the definition of the dataset index.
     """
-    print("***************_get_record_index_definition*********************")
     _json = {
         "settings": {
             "index": {
@@ -109,9 +108,7 @@ def create_record_index(settings, user, project, form):
         except RequestError as e:
             if e.status_code == 400:
                 if e.error.find("already_exists") >= 0:
-                    print("******************************XXX")
-                    print("Index {} already exists".format(index_name))
-                    print("******************************XXX")
+                    pass
                 else:
                     raise e
             else:

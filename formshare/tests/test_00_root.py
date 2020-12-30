@@ -1,4 +1,3 @@
-import datetime
 import json
 import os
 import shutil
@@ -2223,8 +2222,8 @@ class FunctionalTests(unittest.TestCase):
             time.sleep(40)  # Wait for Celery to finish
 
             # Mimic to create the repository again
-            mimic_create_repository()
-            mimic_create_repository_metalanguages()
+            # mimic_create_repository() TODO: Need to happend with another form
+            # mimic_create_repository_metalanguages() TODO: Need to happend with another form
 
             # Get the details of a form. The form now should have a repository
             res = self.testapp.get(
@@ -3340,8 +3339,8 @@ class FunctionalTests(unittest.TestCase):
 
             sql = (
                 "SELECT submission_id FROM formshare.submission "
-                "WHERE submission_status = 2 AND sameas IS NULL AND project_id = '{}'".format(
-                    self.projectID
+                "WHERE submission_status = 2 AND sameas IS NULL AND project_id = '{}' AND form_id = '{}'".format(
+                    self.projectID, self.formID
                 )
             )
             print("**********************************WWW")
@@ -3649,6 +3648,124 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 status=200,
             )
+
+        def test_json_logs_2():
+            # Upload submission 6
+            paths = ["resources", "forms", "complex_form", "submission006.xml"]
+            submission_file = os.path.join(self.path, *paths)
+            paths = ["resources", "forms", "complex_form", "image001.png"]
+            image_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, self.project),
+                status=201,
+                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+            time.sleep(5)  # Wait for ElasticSearch to store this
+
+            # Upload submission 7 and goes to the logs
+            paths = ["resources", "forms", "complex_form", "submission007.xml"]
+            submission_file = os.path.join(self.path, *paths)
+            paths = ["resources", "forms", "complex_form", "image001.png"]
+            image_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, self.project),
+                status=201,
+                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+            time.sleep(5)  # Wait for ElasticSearch to store this
+
+            # Upload submission 8 and goes to the logs
+            paths = ["resources", "forms", "complex_form", "submission008.xml"]
+            submission_file = os.path.join(self.path, *paths)
+            paths = ["resources", "forms", "complex_form", "image001.png"]
+            image_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, self.project),
+                status=201,
+                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+            time.sleep(5)  # Wait for ElasticSearch to store this
+
+            engine = create_engine(self.server_config["sqlalchemy.url"])
+            sql = (
+                "SELECT submission_id FROM formshare.submission "
+                "WHERE submission_status = 2 AND sameas IS NULL AND project_id = '{}' AND form_id = '{}'".format(
+                    self.projectID, self.formID
+                )
+            )
+            res = engine.execute(sql).fetchall()
+            duplicated_ids = []
+            for a_duplicate in res:
+                duplicated_ids.append(a_duplicate[0])
+            engine.dispose()
+            index = 0
+            print("******************************FFFFF")
+            print(duplicated_ids)
+            print("******************************FFFFF")
+            for a_duplicate in duplicated_ids:
+                index = index + 1
+                res = self.testapp.post(
+                    "/user/{}/project/{}/assistantaccess/form/{}/{}/checkout".format(
+                        self.randonLogin, self.project, self.formID, a_duplicate
+                    ),
+                    status=302,
+                )
+                assert "FS_error" not in res.headers
+
+                res = self.testapp.get(
+                    "/user/{}/project/{}/assistantaccess/form/{}/{}/get".format(
+                        self.randonLogin, self.project, self.formID, a_duplicate
+                    ),
+                    status=200,
+                )
+                data = json.loads(res.body)
+                data[
+                    "si_participa/section_household_info/RespondentDetails/I_D"
+                ] = "109750690B{}".format(index)
+                paths = ["tmp", a_duplicate + ".json"]
+                submission_file = os.path.join(self.path, *paths)
+
+                with open(submission_file, "w", encoding="utf-8") as f:
+                    json.dump(data, f, ensure_ascii=False, indent=4)
+
+                sequence_id = str(uuid.uuid4())
+                sequence_id = sequence_id[-12:]
+
+                # Checkin the file
+                res = self.testapp.post(
+                    "/user/{}/project/{}/assistantaccess/form/{}/{}/checkin".format(
+                        self.randonLogin, self.project, self.formID, a_duplicate
+                    ),
+                    {"notes": "Some notes about the checkin", "sequence": sequence_id},
+                    status=302,
+                    upload_files=[("json", submission_file)],
+                )
+                assert "FS_error" not in res.headers
+
+                os.remove(submission_file)
+
+                # Push the revision.
+                res = self.testapp.post(
+                    "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/push".format(
+                        self.randonLogin,
+                        self.project,
+                        self.formID,
+                        a_duplicate,
+                        sequence_id,
+                    ),
+                    status=302,
+                )
+                assert "FS_error" not in res.headers
+                time.sleep(5)  # Wait for ElasticSearch to store this
 
         def test_clean_interface():
             # Load the clean page
@@ -4544,7 +4661,7 @@ class FunctionalTests(unittest.TestCase):
             # Add a file to a form using API
             paths = ["resources", "api_test.dat"]
             resource_file = os.path.join(self.path, *paths)
-            res = self.testapp.post(
+            self.testapp.post(
                 "/api/1/upload_file_to_form",
                 {
                     "apikey": self.randonLoginKey,
@@ -5155,6 +5272,7 @@ class FunctionalTests(unittest.TestCase):
         time.sleep(45)
         test_assistant_access()
         test_json_logs()
+        test_json_logs_2()
         test_clean_interface()
         test_audit()
         test_repository_tasks()

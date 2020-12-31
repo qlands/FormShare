@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<XMLSchemaStructure version="2.0">
+ <lkptables>
+  <table name="lkpplanted_units" xmlcode="" desc="Lookup table for list name “planted_units”">
+   <field name="planted_units_cod" decsize="0" odktype="" key="true" type="varchar" size="2" desc="Code" xmlcode=""/>
+   <field name="planted_units_des" decsize="0" odktype="" type="varchar" size="16" desc="Description" xmlcode=""/>
+   <field name="rowuuid" decsize="0" odktype="" type="varchar" size="80" desc="Unique Row Identifier (UUID)" xmlcode="NONE"/>
+  </table>
+  <table name="lkpaves" xmlcode="" desc="Lookup table for list name “aves”">
+   <field name="aves_cod" decsize="0" odktype="" key="true" type="varchar" size="7" desc="Code" xmlcode=""/>
+   <field name="aves_des" decsize="0" odktype="" type="varchar" size="15" desc="Description" xmlcode=""/>
+   <field name="rowuuid" decsize="0" odktype="" type="varchar" size="80" desc="Unique Row Identifier (UUID)" xmlcode="NONE"/>
+  </table>
+  <table name="lkparea_units" xmlcode="" desc="Lookup table for list name “area_units”">
+   <field name="area_units_cod" decsize="0" odktype="" key="true" type="varchar" size="7" desc="Code" xmlcode=""/>
+   <field name="area_units_des" decsize="0" odktype="" type="varchar" size="9" desc="Description" xmlcode=""/>
+   <field name="rowuuid" decsize="0" odktype="" type="varchar" size="80" desc="Unique Row Identifier (UUID)" xmlcode="NONE"/>
+  </table>
+  <table name="lkpwho_family" xmlcode="" desc="Lookup table for list name “who_family”">
+   <field name="who_family_cod" decsize="0" odktype="" key="true" type="varchar" size="21" desc="Code" xmlcode=""/>
+   <field name="who_family_des" decsize="0" odktype="" type="varchar" size="35" desc="Description" xmlcode=""/>
+   <field name="rowuuid" decsize="0" odktype="" type="varchar" size="80" desc="Unique Row Identifier (UUID)" xmlcode="NONE"/>
+  </table>
+  <table name="lkpagua" xmlcode="" desc="Lookup table for list name “agua”">
+   <field name="agua_cod" decsize="0" odktype="" key="true" type="varchar" size="21" desc="Code" xmlcode=""/>
+   <field name="agua_des" decsize="0" odktype="" type="varchar" size="19" desc="Description" xmlcode=""/>
+   <field name="rowuuid" decsize="0" odktype="" type="varchar" size="80" desc="Unique Row Identifier (UUID)" xmlcode="NONE"/>
+  </table>
+  <table name="lkpagua_disp" xmlcode="" desc="Lookup table for list name “agua_disp”">
+   <field name="agua_disp_cod" decsize="0" odktype="" key="true" type="varchar" size="10" desc="Code" xmlcode=""/>
+   <field name="agua_disp_des" decsize="0" odktype="" type="varchar" size="33" desc="Description" xmlcode=""/>
+   <field name="rowuuid" decsize="0" odktype="" type="varchar" size="80" desc="Unique Row Identifier (UUID)" xmlcode="NONE"/>
+  </table>
+  <table name="lkplivestock_list" xmlcode="" desc="Lookup table for list name “livestock_list”">
+   <field name="livestock_list_cod" decsize="0" odktype="" key="true" type="varchar" size="14" desc="Code" xmlcode=""/>
+   <field name="livestock_list_des" decsize="0" odktype="" type="varchar" size="25" desc="Description" xmlcode=""/>
+   <field name="rowuuid" decsize="0" odktype="" type="varchar" size="80" desc="Unique Row Identifier (UUID)" xmlcode="NONE"/>
+  </table>
+  <table name="lkpcrop_list" xmlcode="" desc="Lookup table for list name “crop_list”">
+   <field name="crop_list_cod" decsize="0" odktype="" key="true" type="varchar" size="28" desc="Code" xmlcode=""/>
+   <field name="crop_list_des" decsize="0" odktype="" type="varchar" size="28" desc="Description" xmlcode=""/>
+   <field name="rowuuid" decsize="0" odktype="" type="varchar" size="80" desc="Unique Row Identifier (UUID)" xmlcode="NONE"/>
+  </table>
+  <table name="lkpganaderia" xmlcode="" desc="Lookup table for list name “ganaderia”">
+   <field name="ganaderia_cod" decsize="0" odktype="" key="true" type="varchar" size="7" desc="Code" xmlcode=""/>
+   <field name="ganaderia_des" decsize="0" odktype="" type="varchar" size="28" desc="Description" xmlcode=""/>
+   <field name="rowuuid" decsize="0" odktype="" type="varchar" size="80" desc="Unique Row Identifier (UUID)" xmlcode="NONE"/>
+  </table>
+  <table name="lkpunidad_ensilaje" xmlcode="" desc="Lookup table for list name “unidad_ensilaje”">
+   <field name="unidad_ensilaje_cod" decsize="0" odktype="" key="true" type="varchar" size="9" desc="Code" xmlcode=""/>
+   <field name="unidad_ensilaje_des" decsize="0" odktype="" type="varchar" size="16" desc="Description" xmlcode=""/>
+   <field name="rowuuid" decsize="0" odktype="" type="varchar" size="80" desc="Unique Row Identifier (UUID)" xmlcode="NONE"/>
+  </table>
+  <table name="lkpland_tenure" xmlcode="" desc="Lookup table for list name “land_tenure”">
+   <field name="land_tenure_cod" decsize="0" odktype="" key="true" type="varchar" size="13" desc="Code" xmlcode=""/>
+   <field name="land_tenure_des" decsize="0" odktype="" type="varchar" size="64" desc="Description" xmlcode=""/>
+   <field name="rowuuid" decsize="0" odktype="" type="varchar" size="80" desc="Unique Row Identifier (UUID)" xmlcode="NONE"/>
+  </table>
+  <table name="lkpprovincia" xmlcode="" desc="Lookup table for list name “provincia”">
+   <field name="provincia_cod" decsize="0" odktype="" key="true" type="int" size="1" desc="Code" xmlcode=""/>
+   <field name="provincia_des" decsize="0" odktype="" type="varchar" size="10" desc="Description" xmlcode=""/>
+   <field name="rowuuid" decsize="0" odktype="" type="varchar" size="80" desc="Unique Row Identifier (UUID)" xmlcode="NONE"/>
+  </table>
+  <table name="lkpproporcion" xmlcode="" desc="Lookup table for list name “proporcion”">
+   <field name="proporcion_cod" decsize="0" odktype="" key="true" type="varchar" size="16" desc="Code" xmlcode=""/>
+   <field name="proporcion_des" decsize="0" odktype="" type="varchar" size="16" desc="Description" xmlcode=""/>
+   <field name="rowuuid" decsize="0" odktype="" type="varchar" size="80" desc="Unique Row Identifier (UUID)" xmlcode="NONE"/>
+  </table>
+  <table name="lkpyes_no" xmlcode="" desc="Lookup table for list name “yes_no”">
+   <field name="yes_no_cod" decsize="0" odktype="" key="true" type="varchar" size="1" desc="Code" xmlcode=""/>
+   <field name="yes_no_des" decsize="0" odktype="" type="varchar" size="2" desc="Description" xmlcode=""/>
+   <field name="rowuuid" decsize="0" odktype="" type="varchar" size="80" desc="Unique Row Identifier (UUID)" xmlcode="NONE"/>
+  </table>
+  <table name="lkpcanton" xmlcode="" desc="Lookup table for list name “canton”">
+   <field name="canton_cod" decsize="0" odktype="" key="true" type="int" size="2" desc="Code" xmlcode=""/>
+   <field name="canton_des" decsize="0" odktype="" type="varchar" size="19" desc="Description" xmlcode=""/>
+   <field name="rowuuid" decsize="0" odktype="" type="varchar" size="80" desc="Unique Row Identifier (UUID)" xmlcode="NONE"/>
+  </table>
+  <table name="lkpwork_away" xmlcode="" desc="Lookup table for list name “work_away”">
+   <field name="work_away_cod" decsize="0" odktype="" key="true" type="varchar" size="16" desc="Code" xmlcode=""/>
+   <field name="work_away_des" decsize="0" odktype="" type="varchar" size="30" desc="Description" xmlcode=""/>
+   <field name="rowuuid" decsize="0" odktype="" type="varchar" size="80" desc="Unique Row Identifier (UUID)" xmlcode="NONE"/>
+  </table>
+  <table name="lkpdistrito" xmlcode="" desc="Lookup table for list name “distrito”">
+   <field name="distrito_cod" decsize="0" odktype="" key="true" type="int" size="3" desc="Code" xmlcode=""/>
+   <field name="distrito_des" decsize="0" odktype="" type="varchar" size="28" desc="Description" xmlcode=""/>
+   <field name="rowuuid" decsize="0" odktype="" type="varchar" size="80" desc="Unique Row Identifier (UUID)" xmlcode="NONE"/>
+  </table>
+  <table name="lkphouseholdtype" xmlcode="" desc="Lookup table for list name “householdtype”">
+   <field name="householdtype_cod" decsize="0" odktype="" key="true" type="varchar" size="12" desc="Code" xmlcode=""/>
+   <field name="householdtype_des" decsize="0" odktype="" type="varchar" size="45" desc="Description" xmlcode=""/>
+   <field name="rowuuid" decsize="0" odktype="" type="varchar" size="80" desc="Unique Row Identifier (UUID)" xmlcode="NONE"/>
+  </table>
+  <table name="lkpmale_female" xmlcode="" desc="Lookup table for list name “male_female”">
+   <field name="male_female_cod" decsize="0" odktype="" key="true" type="varchar" size="1" desc="Code" xmlcode=""/>
+   <field name="male_female_des" decsize="0" odktype="" type="varchar" size="6" desc="Description" xmlcode=""/>
+   <field name="rowuuid" decsize="0" odktype="" type="varchar" size="80" desc="Unique Row Identifier (UUID)" xmlcode="NONE"/>
+  </table>
+  <table name="lkphh_position" xmlcode="" desc="Lookup table for list name “hh_position”">
+   <field name="hh_position_cod" decsize="0" odktype="" key="true" type="varchar" size="12" desc="Code" xmlcode=""/>
+   <field name="hh_position_des" decsize="0" odktype="" type="varchar" size="39" desc="Description" xmlcode=""/>
+   <field name="rowuuid" decsize="0" odktype="" type="varchar" size="80" desc="Unique Row Identifier (UUID)" xmlcode="NONE"/>
+  </table>
+ </lkptables>
+ <tables>
+  <table name="maintable" xmlcode="main" desc="Main table - Set a description">
+   <field name="surveyid" decsize="0" odktype="" type="varchar" size="80" desc="Submission ID" xmlcode="NONE"/>
+   <field name="originid" decsize="0" odktype="" type="varchar" size="15" desc="Origin" xmlcode="NONE"/>
+   <field name="_submitted_by" decsize="0" odktype="text" type="varchar" size="255" desc="Submitted by" xmlcode="_submitted_by"/>
+   <field name="_xform_id_string" decsize="0" odktype="text" type="varchar" size="255" desc="XForm ID" xmlcode="_xform_id_string"/>
+   <field name="_submitted_date" decsize="0" odktype="datetime" type="datetime" size="0" desc="Submitted date" xmlcode="_submitted_date"/>
+   <field name="_geopoint" decsize="0" odktype="geopoint" type="varchar" size="80" desc="GPS point" xmlcode="_geopoint" sensitive="true" protection="exclude"/>
+   <field name="_longitude" decsize="0" odktype="decimal" type="double" size="0" desc="GPS Point Longitude" xmlcode="_longitude" sensitive="true" protection="exclude"/>
+   <field name="_latitude" decsize="0" odktype="decimal" type="double" size="0" desc="GPS Point Latitude" xmlcode="_latitude" sensitive="true" protection="exclude"/>
+   <field name="_elevation" decsize="3" odktype="decimal" type="decimal" size="9" desc="GPS Point Elevation" xmlcode="_elevation"/>
+   <field name="_precision" decsize="3" odktype="decimal" type="decimal" size="9" desc="GPS Point Precision" xmlcode="_precision"/>
+   <field name="i_d" decsize="0" odktype="text" key="true" type="varchar" size="255" desc="Cuál es su N° de cédula?" xmlcode="si_participa/section_household_info/RespondentDetails/I_D"/>
+   <field name="interviewername" decsize="0" odktype="text" type="text" size="255" desc="Nombre del entrevistador" xmlcode="SECTION_META/interviewername"/>
+   <field name="deviceid" decsize="0" odktype="deviceid" type="varchar" size="30" desc="Without label" xmlcode="SECTION_META/deviceid"/>
+   <field name="starttime_auto" decsize="0" odktype="start" type="datetime" size="255" desc="Without label" xmlcode="SECTION_META/starttime_auto"/>
+   <field name="starttime_calculated" decsize="0" odktype="calculate" type="text" size="255" desc="Without label" xmlcode="SECTION_META/starttime_calculated"/>
+   <field name="participation" decsize="0" rtable="lkpyes_no" rlookup="true" odktype="select one" rfield="yes_no_cod" type="varchar" size="1" desc="¿Esta usted de acuerdo en proveer información para esta encuesta?" xmlcode="agreement_group/participation" rname="fk_0fed853c_38a2_4ad5_a13a_1a0d6e895b30"/>
+   <field name="provincia" decsize="0" rtable="lkpprovincia" rlookup="true" odktype="select one" rfield="provincia_cod" type="int" size="1" desc="Seleccione una provincia" xmlcode="si_participa/ubicacion_finca/provincia" rname="fk_0297485e_9aa2_4d0a_ba21_66768c9a59a3"/>
+   <field name="canton" decsize="0" rtable="lkpcanton" rlookup="true" odktype="select one" rfield="canton_cod" type="int" size="2" desc="Seleccione un canton" xmlcode="si_participa/ubicacion_finca/canton" rname="fk_949145fa_c30b_40f3_8468_48116e9e7c54"/>
+   <field name="distrito" decsize="0" rtable="lkpdistrito" rlookup="true" odktype="select one" rfield="distrito_cod" type="int" size="3" desc="Seleccione un distrito" xmlcode="si_participa/ubicacion_finca/distrito" rname="fk_9ee8aee5_8a74_4987_8ae6_8a4b97bbf97b"/>
+   <field name="caserio_nombre" decsize="0" odktype="text" type="text" size="255" desc="Nombre del caserio direccion exacta" xmlcode="si_participa/ubicacion_finca/caserio_nombre"/>
+   <field name="respondentname" decsize="0" odktype="text" type="text" size="255" desc="¿Cuál es su nombre?" xmlcode="si_participa/section_household_info/RespondentDetails/respondentname"/>
+   <field name="respondentsex" decsize="0" rtable="lkpmale_female" rlookup="true" odktype="select one" rfield="male_female_cod" type="varchar" size="1" desc="¿El entrevistado es hombre o mujer?" xmlcode="si_participa/section_household_info/RespondentDetails/respondentsex" rname="fk_081c1303_25f6_4084_a555_7b62cc6d3ece"/>
+   <field name="respondent_is_head" decsize="0" rtable="lkpyes_no" rlookup="true" odktype="select one" rfield="yes_no_cod" type="varchar" size="1" desc="¿Es usted el/la jefe(a) de la familia?" xmlcode="si_participa/section_household_info/RespondentDetails/respondent_is_head" rname="fk_64aaaae1_2532_4367_b699_20a8defc94f1"/>
+   <field name="household_position" decsize="0" rtable="lkphh_position" rlookup="true" odktype="select one" rfield="hh_position_cod" type="varchar" size="12" desc="¿Cuál es su relacion con el/la jefe(a) del hogar?" xmlcode="si_participa/section_household_info/household_config/household_position" rname="fk_016c21d7_1a11_459b_83f1_6c0d61bfc906"/>
+   <field name="household_type" decsize="0" rtable="lkphouseholdtype" rlookup="true" odktype="select one" rfield="householdtype_cod" type="varchar" size="12" desc="La persona jefe del hogar, ¿es casada o tiene pareja ?" xmlcode="si_participa/section_household_info/household_config/household_type" rname="fk_5089dd30_f5ec_4278_a63d_c4528c86db5e"/>
+   <field name="casa_productor" decsize="0" rtable="lkpyes_no" rlookup="true" odktype="select one" rfield="yes_no_cod" type="varchar" size="1" desc="¿Vive el agricultor y su familia en la finca?" xmlcode="si_participa/section_household_info/household_config/Casa_productor" rname="fk_916fb03d_b607_4684_aaf1_8a41aae2bc33"/>
+   <field name="direccion_de_la_casa" decsize="0" odktype="text" type="text" size="255" desc="Dirección de la casa:" xmlcode="si_participa/section_household_info/household_config/direccion_de_la_casa"/>
+   <field name="numero_casa" decsize="0" odktype="integer" type="int" size="9" desc="Teléfono de la casa:" xmlcode="si_participa/section_household_info/household_config/numero_casa"/>
+   <field name="numero_movil" decsize="0" odktype="integer" type="int" size="9" desc="Teléfono móvil dueño finca:" xmlcode="si_participa/section_household_info/household_config/numero_movil"/>
+   <field name="work_away" decsize="0" rtable="lkpwork_away" rlookup="true" odktype="select one" rfield="work_away_cod" type="varchar" size="16" desc="El jefe de la familia (o su pareja), ¿trabajan y viven lejos de su hogar?" xmlcode="si_participa/section_household_info/household_config/work_away" rname="fk_5984122a_246f_4843_9441_bd3de9201e2b"/>
+   <field name="children_under_4" decsize="0" odktype="integer" type="int" size="9" desc="¿Cuántos niños de tres años o menos viven en su hogar?" xmlcode="si_participa/householdpopulation/aged_under4s/children_under_4"/>
+   <field name="children_4to10" decsize="0" odktype="integer" type="int" size="9" desc="¿Cuántos niños entre los 4 y 10 años viven en su hogar?" xmlcode="si_participa/householdpopulation/aged_4to10/children_4to10"/>
+   <field name="children_4to10_educacion" decsize="0" rtable="lkpyes_no" rlookup="true" odktype="select one" rfield="yes_no_cod" type="varchar" size="1" desc="¿Todos los niños entre 6 y 13 años que viven en su hogar, asisten a la escuela en el presente ciclo escolar ?" xmlcode="si_participa/householdpopulation/children_4to10_educacion" rname="fk_e78f8d52_7e94_48de_8a16_f2455b59ffd6"/>
+   <field name="males11to24" decsize="0" odktype="integer" type="int" size="9" desc="¿Cuántos varones entre 11 y 24 años viven en su hogar?" xmlcode="si_participa/householdpopulation/youthsgroup/males11to24"/>
+   <field name="females11to24" decsize="0" odktype="integer" type="int" size="9" desc="¿Cuantas mujeres entre 11 y 24 años viven en su hogar?" xmlcode="si_participa/householdpopulation/youthsgroup/females11to24"/>
+   <field name="males25to50" decsize="0" odktype="integer" type="int" size="9" desc="¿Cuántos hombres entre 25 y 50 años viven en su hogar?" xmlcode="si_participa/householdpopulation/adultsgroup/males25to50"/>
+   <field name="females25to50" decsize="0" odktype="integer" type="int" size="9" desc="¿Cuántas mujeres entre 25 y 50 años viven en su hogar?" xmlcode="si_participa/householdpopulation/adultsgroup/females25to50"/>
+   <field name="malesover50" decsize="0" odktype="integer" type="int" size="9" desc="¿Cuántos señores mayores de 50 años viven en su hogar?" xmlcode="si_participa/householdpopulation/eldersgroup/malesover50"/>
+   <field name="femalesover50" decsize="0" odktype="integer" type="int" size="9" desc="¿Cuántas señoras mayores de 50 años viven en su hogar?" xmlcode="si_participa/householdpopulation/eldersgroup/femalesover50"/>
+   <field name="adultsover65" decsize="0" odktype="integer" type="int" size="9" desc="¿Cuántos personas mayores de 65 años viven en su hogar?" xmlcode="si_participa/householdpopulation/goldengroup/adultsover65"/>
+   <field name="adultsover65_pension" decsize="0" rtable="lkpyes_no" rlookup="true" odktype="select one" rfield="yes_no_cod" type="varchar" size="1" desc="¿Alguna persona mayor de 65 años, recibe pensión de la C.C.S.S.?" xmlcode="si_participa/householdpopulation/goldengroup/adultsover65_pension" rname="fk_cd9fd432_69d2_4861_82d2_12649b97cf0b"/>
+   <field name="land_tenure" decsize="0" isMultiSelect="true" odktype="select all that apply" multiSelectTable="maintable_msel_land_tenure" type="varchar" size="49" desc="¿La finca es propia, alquilada o prestada?" xmlcode="si_participa/SECTION_Farm_size/land_tenure"/>
+   <field name="landowned" decsize="3" odktype="decimal" type="decimal" size="17" desc="¿Cuánta area tiene su finca?" xmlcode="si_participa/land_ownership_group/landowned"/>
+   <field name="unitland_owned" decsize="0" rtable="lkparea_units" rlookup="true" odktype="select one" rfield="area_units_cod" type="varchar" size="7" desc="Unidades de área:" xmlcode="si_participa/land_ownership_group/unitland_owned" rname="fk_33a2b392_90a1_49ec_b019_f7b6da9ccb5b"/>
+   <field name="land_ownership" decsize="0" isMultiSelect="true" odktype="select all that apply" multiSelectTable="maintable_msel_land_ownership" type="varchar" size="91" desc="¿Quien es el dueño de las tierras?" xmlcode="si_participa/land_ownership_group/land_ownership"/>
+   <field name="landrentin" decsize="3" odktype="decimal" type="decimal" size="17" desc="¿Qué superficie renta para trabajar?" xmlcode="si_participa/landrentals/landrentin"/>
+   <field name="unitland_rentin" decsize="0" rtable="lkparea_units" rlookup="true" odktype="select one" rfield="area_units_cod" type="varchar" size="7" desc="Unidades de área:" xmlcode="si_participa/landrentals/unitland_rentin" rname="fk_e81717a5_9ad6_49ca_8433_1f3d1950d5b9"/>
+   <field name="landrentout" decsize="3" odktype="decimal" type="decimal" size="17" desc="¿Qué superficie renta de sus tierras a otras personas ?" xmlcode="si_participa/landrentals/landrentout"/>
+   <field name="unitland_rentout" decsize="0" rtable="lkparea_units" rlookup="true" odktype="select one" rfield="area_units_cod" type="varchar" size="7" desc="Unidades de área:" xmlcode="si_participa/landrentals/unitland_rentout" rname="fk_9a7e4cca_b997_4961_a6ca_d5c5dc1b6cfe"/>
+   <field name="landcultivated" decsize="3" odktype="decimal" type="decimal" size="17" desc="¿Cuánto suma el área de todos los terrenos que utiliza para cultivar ?" xmlcode="si_participa/total_land_cult/landcultivated"/>
+   <field name="unitland" decsize="0" rtable="lkparea_units" rlookup="true" odktype="select one" rfield="area_units_cod" type="varchar" size="7" desc="Unidades de área:" xmlcode="si_participa/total_land_cult/unitland" rname="fk_2ba3aa96_188a_4d33_a26d_519c41149397"/>
+   <field name="areaunits_other" decsize="0" odktype="text" type="text" size="255" desc="Especifique las unidades si son distintas:" xmlcode="si_participa/areaunits_other"/>
+   <field name="agua_finca" decsize="0" rtable="lkpagua" rlookup="true" odktype="select one" rfield="agua_cod" type="varchar" size="21" desc="Como suple el agua a su finca?" xmlcode="si_participa/Agua_finca" rname="fk_0e9008e3_6a9a_48cf_b4a0_587108966b21"/>
+   <field name="agua_disponible" decsize="0" rtable="lkpagua_disp" rlookup="true" odktype="select one" rfield="agua_disp_cod" type="varchar" size="10" desc="Tiempo de disponibilidad de la fuente de agua" xmlcode="si_participa/agua_disponible" rname="fk_6cfe3ee6_bfe2_46fb_9497_fbead17f296c"/>
+   <field name="grow_crops" decsize="0" rtable="lkpyes_no" rlookup="true" odktype="select one" rfield="yes_no_cod" type="varchar" size="1" desc="¿Usted siembra algún cultivo?" xmlcode="si_participa/crop_intro/grow_crops" rname="fk_b26fad86_a937_4c6d_b98a_dba629f67484"/>
+   <field name="crops" decsize="0" isMultiSelect="true" odktype="select all that apply" multiSelectTable="maintable_msel_crops" type="varchar" size="671" desc="¿ACTUALMENTE, cuáles son los CUATRO cultivos más importantes que tiene en su finca?" xmlcode="si_participa/SECTION_Crop_Productivity/cropcatalogue/crops"/>
+   <field name="crop_count" decsize="0" odktype="calculate" type="text" size="255" desc="Without label" xmlcode="si_participa/SECTION_Crop_Productivity/crop_count"/>
+   <field name="crops_other1" decsize="0" odktype="text" type="text" size="255" desc="Especifíque otro cultivo No. 1" xmlcode="si_participa/SECTION_Crop_Productivity/crops_other_specify/crops_other1"/>
+   <field name="crops_other2" decsize="0" odktype="text" type="text" size="255" desc="Especifíque otro cultivo No. 2" xmlcode="si_participa/SECTION_Crop_Productivity/crops_other_specify/crops_other2"/>
+   <field name="crops_other3" decsize="0" odktype="text" type="text" size="255" desc="Especifíque otro cultivo No. 3" xmlcode="si_participa/SECTION_Crop_Productivity/crops_other_specify/crops_other3"/>
+   <field name="livestock_owners" decsize="0" rtable="lkpyes_no" rlookup="true" odktype="select one" rfield="yes_no_cod" type="varchar" size="1" desc="¿Tiene ganado u otros animales?" xmlcode="si_participa/livestock_owners" rname="fk_60511fb9_4fc6_4bf3_9507_e23de951a134"/>
+   <field name="livestock" decsize="0" isMultiSelect="true" odktype="select all that apply" multiSelectTable="maintable_msel_livestock" type="varchar" size="98" desc="¿Cuáles animales tienen en su finca?" xmlcode="si_participa/livestock"/>
+   <field name="livestock_count" decsize="0" odktype="calculate" type="text" size="255" desc="Without label" xmlcode="si_participa/livestock_count"/>
+   <field name="tiene_ensilaje" decsize="0" rtable="lkpyes_no" rlookup="true" odktype="select one" rfield="yes_no_cod" type="varchar" size="1" desc="Tiene ensilaje?" xmlcode="si_participa/tiene_ensilaje" rname="fk_705460e8_cd66_4f17_b492_25af027c19e5"/>
+   <field name="ensilaje" decsize="3" odktype="decimal" type="decimal" size="17" desc="Cantidad ensilada" xmlcode="si_participa/grp_tensilaje/ensilaje"/>
+   <field name="ensilaje_unit" decsize="0" rtable="lkpunidad_ensilaje" rlookup="true" odktype="select one" rfield="unidad_ensilaje_cod" type="varchar" size="9" desc="Unidad" xmlcode="si_participa/grp_tensilaje/ensilaje_unit" rname="fk_1d48a9d8_d26d_42e6_b84c_cb8afc7609a3"/>
+   <field name="offfarm_incomes_any" decsize="0" rtable="lkpyes_no" rlookup="true" odktype="select one" rfield="yes_no_cod" type="varchar" size="1" desc="¿Tiene algúna fuente de ingresos aparte de lo que obtiene de la venta de los productos de la finca?" xmlcode="si_participa/offfarm_inc_intro/offfarm_incomes_any" rname="fk_64db155f_1b60_4af8_9b00_73fceedbc72d"/>
+   <field name="offfarm_income_ag" decsize="0" rtable="lkpproporcion" rlookup="true" odktype="select one" rfield="proporcion_cod" type="varchar" size="16" desc="¿Qué tanto de esos ingresos son relacionados a agricultura? E.g., Jornalero agricola" xmlcode="si_participa/offfarm_income_sources/offfarm_income_ag" rname="fk_fc5e043b_4025_4b39_9323_7e0551127ddf"/>
+   <field name="prop_onfarm" decsize="0" rtable="lkpproporcion" rlookup="true" odktype="select one" rfield="proporcion_cod" type="varchar" size="16" desc="Del ingreso total cuanto proviene de la finca" xmlcode="si_participa/prop_onfarm" rname="fk_8ab4565f_059c_483c_980b_b878003f1c7d"/>
+   <field name="prop_crops" decsize="0" rtable="lkpproporcion" rlookup="true" odktype="select one" rfield="proporcion_cod" type="varchar" size="16" desc="Del ingreso total de la finca cuanto proviene cultivos" xmlcode="si_participa/prop_crops" rname="fk_4a23c8a3_51e3_420e_a970_b3e4452a5622"/>
+   <field name="gps" decsize="0" odktype="geopoint" type="varchar" size="80" desc="Coordenadas GPS de la Finca" xmlcode="si_participa/SECTION/GPS" sensitive="true" protection="exclude"/>
+   <field name="endtime_auto" decsize="0" odktype="end" type="datetime" size="255" desc="Without label" xmlcode="si_participa/SECTION/endtime_auto"/>
+   <field name="endtime_calculated" decsize="0" odktype="calculate" type="text" size="255" desc="Without label" xmlcode="si_participa/SECTION/endtime_calculated"/>
+   <field name="rowuuid" decsize="0" odktype="" type="varchar" size="80" desc="Unique Row Identifier (UUID)" xmlcode="NONE"/>
+   <table name="maintable_msel_land_tenure" xmlcode="NONE" desc="Table for multiple select of field land_tenure in table maintable">
+    <field name="i_d" decsize="0" rtable="maintable" odktype="" rfield="i_d" key="true" type="varchar" size="255" desc="Cuál es su N° de cédula?" xmlcode="NONE" rname="fk_5416c2cd_fb48_4367_a24d_1eb0edd704ba"/>
+    <field name="land_tenure" decsize="0" rtable="lkpland_tenure" rlookup="true" odktype="" rfield="land_tenure_cod" key="true" type="varchar" size="13" desc="¿La finca es propia, alquilada o prestada?" xmlcode="" rname="fk_2d0b06a3_6f26_4478_b0e5_93fa84f17eb5"/>
+    <field name="rowuuid" decsize="0" odktype="" type="varchar" size="80" desc="Unique Row Identifier (UUID)" xmlcode="NONE"/>
+   </table>
+   <table name="maintable_msel_land_ownership" xmlcode="NONE" desc="Table for multiple select of field land_ownership in table maintable">
+    <field name="i_d" decsize="0" rtable="maintable" odktype="" rfield="i_d" key="true" type="varchar" size="255" desc="Cuál es su N° de cédula?" xmlcode="NONE" rname="fk_88e21957_003a_4c6b_9bbf_21760c0b6392"/>
+    <field name="land_ownership" decsize="0" rtable="lkpwho_family" rlookup="true" odktype="" rfield="who_family_cod" key="true" type="varchar" size="21" desc="¿Quien es el dueño de las tierras?" xmlcode="" rname="fk_b8a36533_0e4d_4664_aadc_363ee0600de5"/>
+    <field name="rowuuid" decsize="0" odktype="" type="varchar" size="80" desc="Unique Row Identifier (UUID)" xmlcode="NONE"/>
+   </table>
+   <table name="maintable_msel_crops" xmlcode="NONE" desc="Table for multiple select of field crops in table maintable">
+    <field name="i_d" decsize="0" rtable="maintable" odktype="" rfield="i_d" key="true" type="varchar" size="255" desc="Cuál es su N° de cédula?" xmlcode="NONE" rname="fk_c95f9973_229a_4710_8c29_4d55dd861e9b"/>
+    <field name="crops" decsize="0" rtable="lkpcrop_list" rlookup="true" odktype="" rfield="crop_list_cod" key="true" type="varchar" size="28" desc="¿ACTUALMENTE, cuáles son los CUATRO cultivos más importantes que tiene en su finca?" xmlcode="" rname="fk_d487d078_ee89_454b_9d43_836cae9e4e07"/>
+    <field name="rowuuid" decsize="0" odktype="" type="varchar" size="80" desc="Unique Row Identifier (UUID)" xmlcode="NONE"/>
+   </table>
+   <table name="crop_repeat" xmlcode="si_participa/SECTION_Crop_Productivity/crop_repeat" desc="Detalles sobre cada cultivo (Loop)">
+    <field name="i_d" decsize="0" rtable="maintable" odktype="" rfield="i_d" key="true" type="varchar" size="255" desc="Cuál es su N° de cédula?" xmlcode="NONE" rname="fk_d956da6c_805a_4d6c_91c8_00c76ffaa99b"/>
+    <field name="crop_repeat_rowid" decsize="0" odktype="" key="true" type="int" size="3" desc="Unique Row ID" xmlcode="NONE"/>
+    <field name="crop_rep_number" decsize="0" odktype="calculate" type="text" size="255" desc="Without label" xmlcode="si_participa/SECTION_Crop_Productivity/crop_repeat/crop_rep_number"/>
+    <field name="crop_name" decsize="0" rtable="lkpcrop_list" rlookup="true" odktype="select one" rfield="crop_list_cod" type="varchar" size="28" desc="Le preguntaré sobre cada uno de los cultivos más importantes. Defina al cultivo número ${crop_rep_number}:" xmlcode="si_participa/SECTION_Crop_Productivity/crop_repeat/crop_name" rname="fk_166831df_cec0_4b4d_8b13_45a70a50902d"/>
+    <field name="crop_label" decsize="0" odktype="calculate" type="text" size="255" desc="Without label" xmlcode="si_participa/SECTION_Crop_Productivity/crop_repeat/crop_label"/>
+    <field name="crop_planted" decsize="3" odktype="decimal" type="decimal" size="17" desc="¿Canta area tiene sembrado del cultivo ${crop_label} ?" xmlcode="si_participa/SECTION_Crop_Productivity/crop_repeat/crop_details/crop_planted"/>
+    <field name="crop_yield_units" decsize="0" rtable="lkpplanted_units" rlookup="true" odktype="select one" rfield="planted_units_cod" type="varchar" size="2" desc="unidades:" xmlcode="si_participa/SECTION_Crop_Productivity/crop_repeat/crop_details/crop_yield_units" rname="fk_60f8f119_0e52_4bd0_9bc5_1f6b61e9ee5c"/>
+    <field name="crop_irrigated" decsize="0" rtable="lkpyes_no" rlookup="true" odktype="select one" rfield="yes_no_cod" type="varchar" size="1" desc="¿Tiene este cultivo bajo riego?" xmlcode="si_participa/SECTION_Crop_Productivity/crop_repeat/crop_details/crop_irrigated" rname="fk_887174d3_add7_4d48_b415_b2da5b94fb14"/>
+    <field name="fecha_siembra" decsize="0" odktype="date" type="date" size="255" desc="Cuando sembro el cultivo" xmlcode="si_participa/SECTION_Crop_Productivity/crop_repeat/crop_details/fecha_siembra"/>
+    <field name="rowuuid" decsize="0" odktype="" type="varchar" size="80" desc="Unique Row Identifier (UUID)" xmlcode="NONE"/>
+   </table>
+   <table name="maintable_msel_livestock" xmlcode="NONE" desc="Table for multiple select of field livestock in table maintable">
+    <field name="i_d" decsize="0" rtable="maintable" odktype="" rfield="i_d" key="true" type="varchar" size="255" desc="Cuál es su N° de cédula?" xmlcode="NONE" rname="fk_f315ff55_992f_43c8_b6c3_55ae39297c97"/>
+    <field name="livestock" decsize="0" rtable="lkplivestock_list" rlookup="true" odktype="" rfield="livestock_list_cod" key="true" type="varchar" size="14" desc="¿Cuáles animales tienen en su finca?" xmlcode="" rname="fk_80f3edb5_dfe7_4bef_8e10_87a08f7237df"/>
+    <field name="rowuuid" decsize="0" odktype="" type="varchar" size="80" desc="Unique Row Identifier (UUID)" xmlcode="NONE"/>
+   </table>
+   <table name="livestock_repeat" xmlcode="si_participa/livestock_repeat" desc="Detalles sobre cada animal (Loop)">
+    <field name="i_d" decsize="0" rtable="maintable" odktype="" rfield="i_d" key="true" type="varchar" size="255" desc="Cuál es su N° de cédula?" xmlcode="NONE" rname="fk_55a5388d_becb_4d4e_b2ad_d9cbaffdf518"/>
+    <field name="livestock_repeat_rowid" decsize="0" odktype="" key="true" type="int" size="3" desc="Unique Row ID" xmlcode="NONE"/>
+    <field name="live_rep_number" decsize="0" odktype="calculate" type="text" size="255" desc="Without label" xmlcode="si_participa/livestock_repeat/live_rep_number"/>
+    <field name="live_name" decsize="0" rtable="lkplivestock_list" rlookup="true" odktype="select one" rfield="livestock_list_cod" type="varchar" size="14" desc="Le preguntaré sobre cada uno de los animales más importantes. Defina al animal número ${live_rep_number}:" xmlcode="si_participa/livestock_repeat/live_name" rname="fk_3197a7b4_731b_4fa0_8490_211be86f444d"/>
+    <field name="live_label" decsize="0" odktype="calculate" type="text" size="255" desc="Without label" xmlcode="si_participa/livestock_repeat/live_label"/>
+    <field name="live_number" decsize="0" odktype="integer" type="int" size="9" desc="¿Cantos animales tiene de ${live_label} ?" xmlcode="si_participa/livestock_repeat/live_number"/>
+    <field name="bee_number" decsize="0" odktype="integer" type="int" size="9" desc="Cuantas colmenas tiene" xmlcode="si_participa/livestock_repeat/bee_number"/>
+    <field name="tipo_ganaderia" decsize="0" rtable="lkpganaderia" rlookup="true" odktype="select one" rfield="ganaderia_cod" type="varchar" size="7" desc="Que tipo de ganadería tiene?" xmlcode="si_participa/livestock_repeat/tipo_ganaderia" rname="fk_cc33b370_fcf8_471e_bd96_1b7970e3abdf"/>
+    <field name="tipo_aves" decsize="0" rtable="lkpaves" rlookup="true" odktype="select one" rfield="aves_cod" type="varchar" size="7" desc="Que tipo de avicultura tiene?" xmlcode="si_participa/livestock_repeat/tipo_aves" rname="fk_b40264ad_5bce_4fe5_93f3_f9ba765a63a7"/>
+    <field name="tiene_pastos" decsize="0" rtable="lkpyes_no" rlookup="true" odktype="select one" rfield="yes_no_cod" type="varchar" size="1" desc="Tiene pastos" xmlcode="si_participa/livestock_repeat/tiene_pastos" rname="fk_e8c0c819_cba6_4575_b9a6_3229731da836"/>
+    <field name="pasto_total" decsize="3" odktype="decimal" type="decimal" size="17" desc="Área de pastos total" xmlcode="si_participa/livestock_repeat/grp_pastos/grp_pasto_total/pasto_total"/>
+    <field name="pasto_total_unit" decsize="0" rtable="lkparea_units" rlookup="true" odktype="select one" rfield="area_units_cod" type="varchar" size="7" desc="Unidad del area" xmlcode="si_participa/livestock_repeat/grp_pastos/grp_pasto_total/pasto_total_unit" rname="fk_bc391344_dd8b_4527_b2ad_3813f710c171"/>
+    <field name="pasto_piso" decsize="3" odktype="decimal" type="decimal" size="17" desc="Área de pastos de piso naturalizado" xmlcode="si_participa/livestock_repeat/grp_pastos/grp_pasto_piso/pasto_piso"/>
+    <field name="pasto_piso_unit" decsize="0" rtable="lkparea_units" rlookup="true" odktype="select one" rfield="area_units_cod" type="varchar" size="7" desc="Unidad del area" xmlcode="si_participa/livestock_repeat/grp_pastos/grp_pasto_piso/pasto_piso_unit" rname="fk_75e46ac4_5f84_42bc_af5e_ff563f72d962"/>
+    <field name="pasto_mejorado" decsize="3" odktype="decimal" type="decimal" size="17" desc="Área de pastos de piso mejorado" xmlcode="si_participa/livestock_repeat/grp_pastos/grp_pasto_mejorado/pasto_mejorado"/>
+    <field name="pasto_mejorado_unit" decsize="0" rtable="lkparea_units" rlookup="true" odktype="select one" rfield="area_units_cod" type="varchar" size="7" desc="Unidad del area" xmlcode="si_participa/livestock_repeat/grp_pastos/grp_pasto_mejorado/pasto_mejorado_unit" rname="fk_520c9954_b9d7_42dc_86bb_2d129acb4b74"/>
+    <field name="pasto_corte" decsize="3" odktype="decimal" type="decimal" size="17" desc="Área de pastos de corte" xmlcode="si_participa/livestock_repeat/grp_pastos/grp_pasto_corte/pasto_corte"/>
+    <field name="pasto_corte_unit" decsize="0" rtable="lkparea_units" rlookup="true" odktype="select one" rfield="area_units_cod" type="varchar" size="7" desc="Unidad del area" xmlcode="si_participa/livestock_repeat/grp_pastos/grp_pasto_corte/pasto_corte_unit" rname="fk_63cb155a_48f8_493d_a8b5_36fc1bf3b646"/>
+    <field name="ensilaje" decsize="3" odktype="decimal" type="decimal" size="17" desc="Área de pastos de ensilaje o henificación" xmlcode="si_participa/livestock_repeat/grp_pastos/grp_ensilaje/ensilaje"/>
+    <field name="ensilaje_unit" decsize="0" rtable="lkparea_units" rlookup="true" odktype="select one" rfield="area_units_cod" type="varchar" size="7" desc="Unidad del area" xmlcode="si_participa/livestock_repeat/grp_pastos/grp_ensilaje/ensilaje_unit" rname="fk_f2d6b9bc_6555_4c75_b06d_ca649c4a74df"/>
+    <field name="fecha_pasto" decsize="0" odktype="date" type="date" size="255" desc="Fecha de siembra del pasto de ensilaje o henificación" xmlcode="si_participa/livestock_repeat/grp_pastos/fecha_pasto"/>
+    <field name="rowuuid" decsize="0" odktype="" type="varchar" size="80" desc="Unique Row Identifier (UUID)" xmlcode="NONE"/>
+   </table>
+  </table>
+ </tables>
+</XMLSchemaStructure>

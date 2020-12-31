@@ -1,0 +1,743 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<insertValuesXML version="1.0">
+ <table name="lkpplanted_units" clmdesc="planted_units_des" clmcode="planted_units_cod">
+  <value description="Hectareas" code="ha"/>
+  <value description="Manzanas" code="mz"/>
+  <value description="Metros cuadrados" code="m2"/>
+ </table>
+ <table name="lkpaves" clmdesc="aves_des" clmcode="aves_cod">
+  <value description="Aves de postura" code="postura"/>
+  <value description="Aves de engorde" code="engorde"/>
+ </table>
+ <table name="lkparea_units" clmdesc="area_units_des" clmcode="area_units_cod">
+  <value description="Hectareas" code="hectare"/>
+  <value description="Manzanas" code="mz"/>
+ </table>
+ <table name="lkpwho_family" clmdesc="who_family_des" clmcode="who_family_cod">
+  <value description="Esposo" code="Male"/>
+  <value description="Esposa o jefa de hogar" code="Female"/>
+  <value description="Joven o niño varón" code="Male_Youth_or_Child"/>
+  <value description="Joven o niña mujer" code="Female_Youth_or_Child"/>
+  <value description="Otro miembro de la familia (hombre)" code="Other_family_male"/>
+  <value description="Otro miembro de la familia (mujer)" code="Other_family_female"/>
+ </table>
+ <table name="lkpagua" clmdesc="agua_des" clmcode="agua_cod">
+  <value description="Río o quebrada" code="fuente_Rio"/>
+  <value description="Pozo perforado" code="fuente_pozo"/>
+  <value description="Cosecha agua lluvia" code="fuente_lluvia"/>
+  <value description="Reservorio agua" code="fuente_reservorio"/>
+  <value description="Pozo artesanal" code="fuente_pozo_artesanal"/>
+  <value description="Cañeria" code="Fuente_Cañeria_ASADA"/>
+ </table>
+ <table name="lkpagua_disp" clmdesc="agua_disp_des" clmcode="agua_disp_cod">
+  <value description="Estacional (solo época de lluvia)" code="estacional"/>
+  <value description="Permanente" code="permanente"/>
+ </table>
+ <table name="lkplivestock_list" clmdesc="livestock_list_des" clmcode="livestock_list_cod">
+  <value description="Vacas, toros" code="cattle"/>
+  <value description="Cabras" code="goats"/>
+  <value description="Ovejas" code="sheep"/>
+  <value description="Cerdos" code="pigs"/>
+  <value description="Gallinas" code="chicken"/>
+  <value description="Otras aves" code="otherpoultry"/>
+  <value description="Conejos" code="rabbits"/>
+  <value description="Burros, mulas o similares" code="donkeys_horses"/>
+  <value description="Peces" code="fish"/>
+  <value description="Abejas" code="bees"/>
+  <value description="Otro N°1" code="other1"/>
+  <value description="Otro N°2" code="other2"/>
+  <value description="Otro N°3" code="other3"/>
+ </table>
+ <table name="lkpcrop_list" clmdesc="crop_list_des" clmcode="crop_list_cod">
+  <value description="Arroz" code="arroz"/>
+  <value description="aguacate" code="aguacate"/>
+  <value description="Arveja" code="arveja"/>
+  <value description="Avena" code="avena"/>
+  <value description="Ayote" code="ayote"/>
+  <value description="Banano Criollo" code="banano_criollo"/>
+  <value description="Datil" code="datil"/>
+  <value description="Red Macabu" code="red_macabu"/>
+  <value description="Cacao" code="cacao"/>
+  <value description="Café" code="cafe"/>
+  <value description="Camote" code="camote"/>
+  <value description="Caña de azúcar" code="cana_azucar"/>
+  <value description="Cebolla" code="cebolla"/>
+  <value description="Cebollino" code="cebollino"/>
+  <value description="Chayote" code="chayote"/>
+  <value description="Chile dulce" code="chile_dulce"/>
+  <value description="Chile picante" code="chile_picante"/>
+  <value description="Citricos" code="citricos"/>
+  <value description="Coco" code="coco"/>
+  <value description="Culantro" code="culantro"/>
+  <value description="Culantro coyote" code="culantro_coyote"/>
+  <value description="Cúrcuma" code="curcuma"/>
+  <value description="Flores tropicales" code="flores_tropicales"/>
+  <value description="Frijol" code="frijol"/>
+  <value description="Guánabana" code="guanabana"/>
+  <value description="Guayaba taiwanesa" code="guayaba_taiwanesa"/>
+  <value description="Jengibre" code="jengibre"/>
+  <value description="Lechuga" code="lechuga"/>
+  <value description="Limón Mesino" code="limon_mesino"/>
+  <value description="Limón Mandarina" code="limon_mandarina"/>
+  <value description="Macadamia" code="macadamia"/>
+  <value description="Maíz" code="maiz"/>
+  <value description="Maíz para elote" code="maiz_elote"/>
+  <value description="Malanga" code="malanga"/>
+  <value description="Mandarina" code="mandarina"/>
+  <value description="Mango" code="mango"/>
+  <value description="Mani" code="mani"/>
+  <value description="Manzana de agua" code="manzana_agua"/>
+  <value description="Maracuya" code="maracuya"/>
+  <value description="Naranja" code="naranja"/>
+  <value description="Nuevo cultivo" code="nuevo_cultivo"/>
+  <value description="Ñame" code="name"/>
+  <value description="Ñampí o Chamol" code="nampi"/>
+  <value description="Otras hortalizas" code="otras_hortalizas"/>
+  <value description="Palma aceitera" code="palma_aceitera"/>
+  <value description="Palmito" code="palmito"/>
+  <value description="Papa" code="papa"/>
+  <value description="Papaya" code="papaya"/>
+  <value description="Pejibaye" code="pejibaye"/>
+  <value description="Pepino" code="pepino"/>
+  <value description="Pimienta" code="pimienta"/>
+  <value description="Piña" code="pina"/>
+  <value description="Pipián" code="pipian"/>
+  <value description="Pithaya" code="pithaya"/>
+  <value description="Plantaciones forestales" code="plantaciones_forestales"/>
+  <value description="Plantas ornamentales follaje" code="plantas_ornamentales_follaje"/>
+  <value description="Platáno" code="platano"/>
+  <value description="Rambután" code="rambutan"/>
+  <value description="Raicilla" code="raicilla"/>
+  <value description="Repollo" code="repollo"/>
+  <value description="Sandia" code="sandia"/>
+  <value description="Sorgo" code="sorgo"/>
+  <value description="Tiquisque" code="tiquisque"/>
+  <value description="Tomate" code="tomate"/>
+  <value description="Vainica" code="vainica"/>
+  <value description="Yampi" code="yampi"/>
+  <value description="Yuca" code="yuca"/>
+  <value description="Yute" code="yute"/>
+  <value description="Otro 1" code="Otro_No.1"/>
+  <value description="Otro 2" code="Otro_No.2"/>
+  <value description="Otro 3" code="Otro_No.3"/>
+ </table>
+ <table name="lkpganaderia" clmdesc="ganaderia_des" clmcode="ganaderia_cod">
+  <value description="Ganadería de cría" code="cria"/>
+  <value description="Ganadería de doble propósito" code="doble"/>
+  <value description="Ganadería de leche" code="leche"/>
+  <value description="Ganadería de engorde" code="engorde"/>
+ </table>
+ <table name="lkpunidad_ensilaje" clmdesc="unidad_ensilaje_des" clmcode="unidad_ensilaje_cod">
+  <value description="Tonelada" code="toneladas"/>
+  <value description="Pacas 18 Kg" code="pacas"/>
+  <value description="Silopacas 400 kg" code="silopacas"/>
+ </table>
+ <table name="lkpland_tenure" clmdesc="land_tenure_des" clmcode="land_tenure_cod">
+  <value description="La tierra es propia" code="own_land"/>
+  <value description="Renta tierra para poder sembrar" code="rent_in_land"/>
+  <value description="Renta sus tierras a otras personas para que estos puedan sembrar" code="rent_out_land"/>
+  <value description="la tierra es prestada" code="borrowed_land"/>
+ </table>
+ <table name="lkpprovincia" clmdesc="provincia_des" clmcode="provincia_cod">
+  <value description="San Jose" code="4"/>
+  <value description="Alajuela" code="6"/>
+  <value description="Cartago" code="3"/>
+  <value description="Heredia" code="5"/>
+  <value description="Guanacaste" code="7"/>
+  <value description="Puntarenas" code="1"/>
+  <value description="Limon" code="2"/>
+ </table>
+ <table name="lkpproporcion" clmdesc="proporcion_des" clmcode="proporcion_cod">
+  <value description="Todo o casi todo" code="Todo o casi todo"/>
+  <value description="La mayoria" code="La mayoria"/>
+  <value description="La mitad" code="La mitad"/>
+  <value description="Algo" code="Algo"/>
+  <value description="Casi nada" code="Casi nada"/>
+ </table>
+ <table name="lkpyes_no" clmdesc="yes_no_des" clmcode="yes_no_cod">
+  <value description="Si" code="Y"/>
+  <value description="No" code="N"/>
+ </table>
+ <table name="lkpcanton" clmdesc="canton_des" clmcode="canton_cod">
+  <value description="AGUIRRE" code="1"/>
+  <value description="BUENOS AIRES" code="2"/>
+  <value description="CORREDORES" code="3"/>
+  <value description="COTO BRUS" code="4"/>
+  <value description="ESPARZA" code="5"/>
+  <value description="GARABITO" code="6"/>
+  <value description="GOLFITO" code="7"/>
+  <value description="MONTES DE ORO" code="8"/>
+  <value description="OSA" code="9"/>
+  <value description="PARRITA" code="10"/>
+  <value description="PUNTARENAS" code="11"/>
+  <value description="GUACIMO" code="12"/>
+  <value description="LIMON" code="13"/>
+  <value description="MATINA" code="14"/>
+  <value description="POCOCI" code="15"/>
+  <value description="SIQUIRRES" code="16"/>
+  <value description="TALAMANCA" code="17"/>
+  <value description="ALVARADO" code="18"/>
+  <value description="CARTAGO" code="19"/>
+  <value description="EL GUARCO" code="20"/>
+  <value description="JIMENEZ" code="21"/>
+  <value description="LA UNION" code="22"/>
+  <value description="OREAMUNO" code="23"/>
+  <value description="PARAISO" code="24"/>
+  <value description="TURRIALBA" code="25"/>
+  <value description="ACOSTA" code="26"/>
+  <value description="ALAJUELITA" code="27"/>
+  <value description="ASERRI" code="28"/>
+  <value description="CURRIDABAT" code="29"/>
+  <value description="DESAMPARADOS" code="30"/>
+  <value description="DOTA" code="31"/>
+  <value description="ESCAZU" code="32"/>
+  <value description="GOICOECHEA" code="33"/>
+  <value description="LEON CORTES" code="34"/>
+  <value description="MONTES DE OCA" code="35"/>
+  <value description="MORA" code="36"/>
+  <value description="MORAVIA" code="37"/>
+  <value description="PEREZ ZELEDON" code="38"/>
+  <value description="PURISCAL" code="39"/>
+  <value description="SAN JOSE" code="40"/>
+  <value description="SANTA ANA" code="41"/>
+  <value description="TARRAZU" code="42"/>
+  <value description="TIBAS" code="43"/>
+  <value description="TURRUBARES" code="44"/>
+  <value description="VAZQUEZ DE CORONADO" code="45"/>
+  <value description="BARVA" code="46"/>
+  <value description="BELEN" code="47"/>
+  <value description="FLORES" code="48"/>
+  <value description="HEREDIA" code="49"/>
+  <value description="SAN ISIDRO" code="50"/>
+  <value description="SAN PABLO" code="51"/>
+  <value description="SAN RAFAEL" code="52"/>
+  <value description="SANTA BARBARA" code="53"/>
+  <value description="SANTO DOMINGO" code="54"/>
+  <value description="SARAPIQUI" code="55"/>
+  <value description="ALAJUELA" code="56"/>
+  <value description="ATENAS" code="57"/>
+  <value description="GRECIA" code="58"/>
+  <value description="GUATUSO" code="59"/>
+  <value description="LOS CHILES" code="60"/>
+  <value description="NARANJO" code="61"/>
+  <value description="OROTINA" code="62"/>
+  <value description="PALMARES" code="63"/>
+  <value description="POAS" code="64"/>
+  <value description="SAN CARLOS" code="65"/>
+  <value description="SAN MATEO" code="66"/>
+  <value description="SAN RAMON" code="67"/>
+  <value description="UPALA" code="68"/>
+  <value description="VALVERDE VEGA" code="69"/>
+  <value description="ZARCERO" code="70"/>
+  <value description="ABANGARES" code="71"/>
+  <value description="BAGACES" code="72"/>
+  <value description="CARRILLO" code="73"/>
+  <value description="CAÑAS" code="74"/>
+  <value description="HOJANCHA" code="75"/>
+  <value description="LA CRUZ" code="76"/>
+  <value description="LIBERIA" code="77"/>
+  <value description="NANDAYURE" code="78"/>
+  <value description="NICOYA" code="79"/>
+  <value description="SANTA CRUZ" code="80"/>
+  <value description="TILARAN" code="81"/>
+ </table>
+ <table name="lkpwork_away" clmdesc="work_away_des" clmcode="work_away_cod">
+  <value description="No" code="none"/>
+  <value description="El hombre trabaja fuera" code="man_works_away"/>
+  <value description="La mujer trabaja fuera" code="woman_works_away"/>
+  <value description="Hombre y Mujer trabajan afuera" code="both_work_away"/>
+ </table>
+ <table name="lkpdistrito" clmdesc="distrito_des" clmcode="distrito_cod">
+  <value description="NARANJITO" code="1"/>
+  <value description="QUEPOS" code="2"/>
+  <value description="SAVEGRE" code="3"/>
+  <value description="BIOLLEY" code="4"/>
+  <value description="BORUCA" code="5"/>
+  <value description="BRUNKA" code="6"/>
+  <value description="BUENOS AIRES" code="7"/>
+  <value description="CHANGUENA" code="8"/>
+  <value description="COLINAS" code="9"/>
+  <value description="PILAS" code="10"/>
+  <value description="POTRERO GRANDE" code="11"/>
+  <value description="VOLCAN" code="12"/>
+  <value description="CANOAS" code="13"/>
+  <value description="CORREDOR" code="14"/>
+  <value description="LA CUESTA" code="15"/>
+  <value description="LAUREL" code="16"/>
+  <value description="AGUABUENA" code="17"/>
+  <value description="LIMONCITO" code="18"/>
+  <value description="PITTIER" code="19"/>
+  <value description="SABALITO" code="20"/>
+  <value description="SAN VITO" code="21"/>
+  <value description="ESPIRITU SANTO" code="22"/>
+  <value description="MACACONA" code="23"/>
+  <value description="SAN JERONIMO" code="24"/>
+  <value description="SAN JUAN GRANDE" code="25"/>
+  <value description="SAN RAFAEL" code="26"/>
+  <value description="JACO" code="27"/>
+  <value description="TARCOLES" code="28"/>
+  <value description="GOLFITO" code="29"/>
+  <value description="GUAYCARA" code="30"/>
+  <value description="PAVON" code="31"/>
+  <value description="PUERTO JIMENEZ" code="32"/>
+  <value description="LA UNION" code="33"/>
+  <value description="MIRAMAR" code="34"/>
+  <value description="SAN ISIDRO" code="35"/>
+  <value description="BAHIA BALLENA" code="36"/>
+  <value description="PALMAR" code="37"/>
+  <value description="PIEDRAS BLANCAS" code="38"/>
+  <value description="PUERTO CORTES" code="39"/>
+  <value description="SIERPE" code="40"/>
+  <value description="PARRITA" code="41"/>
+  <value description="ACAPULCO" code="42"/>
+  <value description="ARANCIBIA" code="43"/>
+  <value description="BARRANCA" code="44"/>
+  <value description="CHACARITA" code="45"/>
+  <value description="CHIRA" code="46"/>
+  <value description="CHOMES" code="47"/>
+  <value description="COBANO" code="48"/>
+  <value description="EL ROBLE" code="49"/>
+  <value description="GUACIMAL" code="50"/>
+  <value description="ISLA DEL COCO" code="51"/>
+  <value description="LEPANTO" code="52"/>
+  <value description="MANZANILLO" code="53"/>
+  <value description="MONTE VERDE" code="54"/>
+  <value description="PAQUERA" code="55"/>
+  <value description="PITAHAYA" code="56"/>
+  <value description="PUNTARENAS" code="57"/>
+  <value description="QUEPOS" code="58"/>
+  <value description="SIERPE" code="59"/>
+  <value description="DUACARI" code="60"/>
+  <value description="GUACIMO" code="61"/>
+  <value description="MERCEDES" code="62"/>
+  <value description="POCORA" code="63"/>
+  <value description="RIO JIMENES" code="64"/>
+  <value description="LIMON" code="65"/>
+  <value description="MATAMA" code="66"/>
+  <value description="RIO BLANCO" code="67"/>
+  <value description="VALLE DE LA ESTRELLA" code="68"/>
+  <value description="BATAN" code="69"/>
+  <value description="CARRANDI" code="70"/>
+  <value description="MATINA" code="71"/>
+  <value description="CARIARI" code="72"/>
+  <value description="COLORADO" code="73"/>
+  <value description="GUAPILES" code="74"/>
+  <value description="JIMENES" code="75"/>
+  <value description="RITA" code="76"/>
+  <value description="ROXANA" code="77"/>
+  <value description="EL CAIRO" code="78"/>
+  <value description="FLORIDA" code="79"/>
+  <value description="GERMANIA" code="80"/>
+  <value description="LA ALEGRIA" code="81"/>
+  <value description="PACUARITO" code="82"/>
+  <value description="SIQUIRRES" code="83"/>
+  <value description="BRATSI" code="84"/>
+  <value description="CAHUITA" code="85"/>
+  <value description="SIXAOLA" code="86"/>
+  <value description="TELIRE" code="87"/>
+  <value description="CAPELLADES" code="88"/>
+  <value description="CERVANTES" code="89"/>
+  <value description="PACAYAS" code="90"/>
+  <value description="AGUACALIENTE O SAN FRANCISCO" code="91"/>
+  <value description="CARMEN" code="92"/>
+  <value description="CORRALILLO" code="93"/>
+  <value description="DULCE NOMBRE" code="94"/>
+  <value description="GUADALUPE O ARENILLA" code="95"/>
+  <value description="LLANO GRANDE" code="96"/>
+  <value description="OCCIDENTAL" code="97"/>
+  <value description="ORIENTAL" code="98"/>
+  <value description="QUEBRADILLAS" code="99"/>
+  <value description="SAN NICOLAS" code="100"/>
+  <value description="TIERRA BLANCA" code="101"/>
+  <value description="EL TEJAR" code="102"/>
+  <value description="PATIO DE AGUA" code="103"/>
+  <value description="SAN ISIDRO" code="104"/>
+  <value description="TOBOSI" code="105"/>
+  <value description="JUAN VIÑAS" code="106"/>
+  <value description="PEJIBAYE" code="107"/>
+  <value description="TUCURRIQUE" code="108"/>
+  <value description="CONCEPCION" code="109"/>
+  <value description="DULCE NOMBRE" code="110"/>
+  <value description="RIO AZUL" code="111"/>
+  <value description="SAN DIEGO" code="112"/>
+  <value description="SAN JUAN" code="113"/>
+  <value description="SAN RAFAEL" code="114"/>
+  <value description="SAN RAMON" code="115"/>
+  <value description="TRES RIOS" code="116"/>
+  <value description="CIPRESES" code="117"/>
+  <value description="COT" code="118"/>
+  <value description="POTRERO CERRADO" code="119"/>
+  <value description="SAN RAFAEL" code="120"/>
+  <value description="SANTA ROSA" code="121"/>
+  <value description="CACHI" code="122"/>
+  <value description="LLANOS DE SANTA LUCIA" code="123"/>
+  <value description="OROSI" code="124"/>
+  <value description="PARAISO" code="125"/>
+  <value description="SANTIAGO" code="126"/>
+  <value description="CHIRRIPO" code="127"/>
+  <value description="LA ISABEL" code="128"/>
+  <value description="LA SUIZA" code="129"/>
+  <value description="PAVONES" code="130"/>
+  <value description="PERALTA" code="131"/>
+  <value description="SANTA CRUZ" code="132"/>
+  <value description="SANTA ROSA" code="133"/>
+  <value description="SANTA TERESITA" code="134"/>
+  <value description="TAYUTIC" code="135"/>
+  <value description="TRES EQUIS" code="136"/>
+  <value description="TUIS" code="137"/>
+  <value description="TURRIALBA" code="138"/>
+  <value description="CANGREJAL" code="139"/>
+  <value description="GUAITIL" code="140"/>
+  <value description="PALMICHAL" code="141"/>
+  <value description="SABANILLAS" code="142"/>
+  <value description="SAN IGNACIO" code="143"/>
+  <value description="ALAJUELITA" code="144"/>
+  <value description="CONCEPCION" code="145"/>
+  <value description="SAN ANTONIO" code="146"/>
+  <value description="SAN FELIPE" code="147"/>
+  <value description="SAN JOSECITO" code="148"/>
+  <value description="ASERRI" code="149"/>
+  <value description="LEGUA" code="150"/>
+  <value description="MONTERREY" code="151"/>
+  <value description="SALITRILLOS" code="152"/>
+  <value description="SAN GABRIEL" code="153"/>
+  <value description="TARBACA" code="154"/>
+  <value description="VUELTA DE JORCO" code="155"/>
+  <value description="CURRIDABAT" code="156"/>
+  <value description="GRANADILLA" code="157"/>
+  <value description="SANCHEZ" code="158"/>
+  <value description="TIRRASES" code="159"/>
+  <value description="DAMAS" code="160"/>
+  <value description="DESAMPARADOS" code="161"/>
+  <value description="FRAILES" code="162"/>
+  <value description="GRAVILIAS" code="163"/>
+  <value description="LOS GUIDO" code="164"/>
+  <value description="PATARRA" code="165"/>
+  <value description="ROSARIO" code="166"/>
+  <value description="SAN ANTONIO" code="167"/>
+  <value description="SAN CRISTOBAL" code="168"/>
+  <value description="SAN JUAN DE DIOS" code="169"/>
+  <value description="SAN MIGUEL" code="170"/>
+  <value description="SAN RAFAEL ABAJO" code="171"/>
+  <value description="SAN RAFAEL ARRIBA" code="172"/>
+  <value description="COPEY" code="173"/>
+  <value description="JARDIN" code="174"/>
+  <value description="SANTA MARIA" code="175"/>
+  <value description="ESCAZU" code="176"/>
+  <value description="SAN ANTONIO" code="177"/>
+  <value description="SAN RAFAEL" code="178"/>
+  <value description="CALLE BLANCOS" code="179"/>
+  <value description="GUADALUPE" code="180"/>
+  <value description="IPIS" code="181"/>
+  <value description="MATA DE PLATANO" code="182"/>
+  <value description="PURRAL" code="183"/>
+  <value description="RANCHO REDONDO" code="184"/>
+  <value description="SAN FRANCISCO" code="185"/>
+  <value description="LLANO BONITO" code="186"/>
+  <value description="SAN ANDRES" code="187"/>
+  <value description="SAN ANTONIO" code="188"/>
+  <value description="SAN ISIDRO" code="189"/>
+  <value description="SAN PABLO" code="190"/>
+  <value description="SANTA CRUZ" code="191"/>
+  <value description="MERCEDES" code="192"/>
+  <value description="SABANILLA" code="193"/>
+  <value description="SAN PEDRO" code="194"/>
+  <value description="SAN RAFAEL" code="195"/>
+  <value description="COLON" code="196"/>
+  <value description="GUAYABO" code="197"/>
+  <value description="PICAGRES" code="198"/>
+  <value description="PIEDRAS NEGRAS" code="199"/>
+  <value description="TABARCIA" code="200"/>
+  <value description="LA TRINIDAD" code="201"/>
+  <value description="SAN JERONIMO" code="202"/>
+  <value description="SAN VICENTE" code="203"/>
+  <value description="BARU" code="204"/>
+  <value description="CAJON" code="205"/>
+  <value description="DANIEL FLORES" code="206"/>
+  <value description="EL GENERAL" code="207"/>
+  <value description="PARAMO" code="208"/>
+  <value description="PEJIBAYE" code="209"/>
+  <value description="PLATANARES" code="210"/>
+  <value description="RIO NUEVO" code="211"/>
+  <value description="RIVAS" code="212"/>
+  <value description="SAN ISIDRO DEL GENERAL" code="213"/>
+  <value description="SAN PEDRO" code="214"/>
+  <value description="BARBACOAS" code="215"/>
+  <value description="CANDELARITA" code="216"/>
+  <value description="CHIRES" code="217"/>
+  <value description="DESAMPARADITOS" code="218"/>
+  <value description="GRIFO ALTO" code="219"/>
+  <value description="MERCEDES SUR" code="220"/>
+  <value description="SAN ANTONIO" code="221"/>
+  <value description="SAN RAFAEL" code="222"/>
+  <value description="SANTIAGO" code="223"/>
+  <value description="CATEDRAL" code="224"/>
+  <value description="EL CARMEN" code="225"/>
+  <value description="HATILLO" code="226"/>
+  <value description="HOSPITAL" code="227"/>
+  <value description="MATA REDONDA" code="228"/>
+  <value description="MERCED" code="229"/>
+  <value description="PAVAS" code="230"/>
+  <value description="SAN FRANCISCO DE DOS RIOS" code="231"/>
+  <value description="SAN SEBASTIAN" code="232"/>
+  <value description="URUCA" code="233"/>
+  <value description="ZAPOTE" code="234"/>
+  <value description="BRASIL" code="235"/>
+  <value description="PIEDADES" code="236"/>
+  <value description="POZOS" code="237"/>
+  <value description="SALITRAL" code="238"/>
+  <value description="SANTA ANA" code="239"/>
+  <value description="URUCA" code="240"/>
+  <value description="SAN CARLOS" code="241"/>
+  <value description="SAN LORENZO" code="242"/>
+  <value description="SAN MARCOS" code="243"/>
+  <value description="ANSELMO LLORENTE" code="244"/>
+  <value description="CINCO ESQUINAS" code="245"/>
+  <value description="COLIMA" code="246"/>
+  <value description="LEON XIII" code="247"/>
+  <value description="SAN JUAN" code="248"/>
+  <value description="CARARA" code="249"/>
+  <value description="SAN JUAN DE MATA" code="250"/>
+  <value description="SAN LUIS" code="251"/>
+  <value description="SAN PABLO" code="252"/>
+  <value description="SAN PEDRO" code="253"/>
+  <value description="CASCAJAL" code="254"/>
+  <value description="DULCE NOMBRE DE JESUS" code="255"/>
+  <value description="PATALILLO" code="256"/>
+  <value description="SAN ISIDRO" code="257"/>
+  <value description="SAN RAFAEL" code="258"/>
+  <value description="BARVA" code="259"/>
+  <value description="SAN JOSE DE LA MONTAÑA" code="260"/>
+  <value description="SAN PABLO" code="261"/>
+  <value description="SAN PEDRO" code="262"/>
+  <value description="SAN ROQUE" code="263"/>
+  <value description="SANTA LUCIA" code="264"/>
+  <value description="LA ASUNCION" code="265"/>
+  <value description="LA RIBERA" code="266"/>
+  <value description="SAN ANTONIO" code="267"/>
+  <value description="BARRANTES" code="268"/>
+  <value description="LLORENTE" code="269"/>
+  <value description="SAN JOAQUIN" code="270"/>
+  <value description="HEREDIA" code="271"/>
+  <value description="MERCEDES" code="272"/>
+  <value description="SAN FRANCISCO" code="273"/>
+  <value description="ULLOA" code="274"/>
+  <value description="VARABLANCA" code="275"/>
+  <value description="CONCEPCION" code="276"/>
+  <value description="SAN FRANCISCO" code="277"/>
+  <value description="SAN ISIDRO" code="278"/>
+  <value description="SAN JOSE" code="279"/>
+  <value description="RINCON DE SABANILLA" code="280"/>
+  <value description="SAN PABLO" code="281"/>
+  <value description="ANGELES" code="282"/>
+  <value description="CONCEPCION" code="283"/>
+  <value description="SAN JOSECITO" code="284"/>
+  <value description="SAN RAFAEL" code="285"/>
+  <value description="SANTIAGO" code="286"/>
+  <value description="JESUS" code="287"/>
+  <value description="PURABA" code="288"/>
+  <value description="SAN JUAN" code="289"/>
+  <value description="SAN PEDRO" code="290"/>
+  <value description="SANTA BARBARA" code="291"/>
+  <value description="SANTO DOMINGO" code="292"/>
+  <value description="PARA" code="293"/>
+  <value description="PARACITO" code="294"/>
+  <value description="SAN MIGUEL" code="295"/>
+  <value description="SAN VICENTE" code="296"/>
+  <value description="SANTA ROSA" code="297"/>
+  <value description="SANTO DOMINGO" code="298"/>
+  <value description="SANTO TOMAS" code="299"/>
+  <value description="TURES" code="300"/>
+  <value description="CUREÑA" code="301"/>
+  <value description="LA VIRGEN" code="302"/>
+  <value description="LAS HORQUETAS" code="303"/>
+  <value description="LLANURAS DEL GASPAR" code="304"/>
+  <value description="PUERTO VIEJO" code="305"/>
+  <value description="ALAJUELA" code="306"/>
+  <value description="CARRIZAL" code="307"/>
+  <value description="DESAMPARADOS" code="308"/>
+  <value description="GARITA" code="309"/>
+  <value description="GUACIMA" code="310"/>
+  <value description="RIO SEGUNDO" code="311"/>
+  <value description="SABANILLA" code="312"/>
+  <value description="SAN ANTONIO" code="313"/>
+  <value description="SAN ISIDRO" code="314"/>
+  <value description="SAN JOSE" code="315"/>
+  <value description="SAN RAFAEL" code="316"/>
+  <value description="SARAPIQUI" code="317"/>
+  <value description="TAMBOR" code="318"/>
+  <value description="TURRUCARES" code="319"/>
+  <value description="ATENAS" code="320"/>
+  <value description="CONCEPCION" code="321"/>
+  <value description="ESCOBAL" code="322"/>
+  <value description="JESUS" code="323"/>
+  <value description="MERCEDES" code="324"/>
+  <value description="SAN ISIDRO" code="325"/>
+  <value description="SAN JOSE" code="326"/>
+  <value description="SANTA EULALIA" code="327"/>
+  <value description="BOLIVAR" code="328"/>
+  <value description="GRECIA" code="329"/>
+  <value description="PUENTE DE PIEDRA" code="330"/>
+  <value description="RIO CUARTO" code="331"/>
+  <value description="SAN ISIDRO" code="332"/>
+  <value description="SAN JOSE" code="333"/>
+  <value description="SAN ROQUE" code="334"/>
+  <value description="TACARES" code="335"/>
+  <value description="BUENAVISTA" code="336"/>
+  <value description="COTE" code="337"/>
+  <value description="KATIRA" code="338"/>
+  <value description="SAN RAFAEL" code="339"/>
+  <value description="CAÑO NEGRO" code="340"/>
+  <value description="EL AMPARO" code="341"/>
+  <value description="LOS CHILES" code="342"/>
+  <value description="SAN JORGE" code="343"/>
+  <value description="CIRRI SUR" code="344"/>
+  <value description="EL ROSARIO" code="345"/>
+  <value description="NARANJO" code="346"/>
+  <value description="PALMITOS" code="347"/>
+  <value description="SAN JERONIMO" code="348"/>
+  <value description="SAN JOSE" code="349"/>
+  <value description="SAN JUAN" code="350"/>
+  <value description="SAN MIGUEL" code="351"/>
+  <value description="COYOLAR" code="352"/>
+  <value description="EL MASTATE" code="353"/>
+  <value description="HACIENDA VIEJA" code="354"/>
+  <value description="LA CEIBA" code="355"/>
+  <value description="OROTINA" code="356"/>
+  <value description="BUENOS AIRES" code="357"/>
+  <value description="CANDELARIA" code="358"/>
+  <value description="ESQUIPULAS" code="359"/>
+  <value description="LA GRANJA" code="360"/>
+  <value description="PALMARES" code="361"/>
+  <value description="SANTIAGO" code="362"/>
+  <value description="ZARAGOZA" code="363"/>
+  <value description="CARRILLOS" code="364"/>
+  <value description="SABANA REDONDA" code="365"/>
+  <value description="SAN JUAN" code="366"/>
+  <value description="SAN PEDRO" code="367"/>
+  <value description="SAN RAFAEL" code="368"/>
+  <value description="AGUAS ZARCAS" code="369"/>
+  <value description="BUENAVISTA" code="370"/>
+  <value description="CUTRIS" code="371"/>
+  <value description="FLORENCIA" code="372"/>
+  <value description="LA FORTUNA" code="373"/>
+  <value description="LA PALMERA" code="374"/>
+  <value description="LA TIGRA" code="375"/>
+  <value description="MONTERREY" code="376"/>
+  <value description="PITAL" code="377"/>
+  <value description="POCOSOL" code="378"/>
+  <value description="QUESADA" code="379"/>
+  <value description="VENADO" code="380"/>
+  <value description="VENECIA" code="381"/>
+  <value description="DESMONTE" code="382"/>
+  <value description="JESUS MARIA" code="383"/>
+  <value description="SAN MATEO" code="384"/>
+  <value description="ALFARO" code="385"/>
+  <value description="ANGELES" code="386"/>
+  <value description="CONCEPCION" code="387"/>
+  <value description="PEÑAS BLANCAS" code="388"/>
+  <value description="PIEDADES NORTE" code="389"/>
+  <value description="PIEDADES SUR" code="390"/>
+  <value description="SAN ISIDRO" code="391"/>
+  <value description="SAN JUAN" code="392"/>
+  <value description="SAN RAFAEL" code="393"/>
+  <value description="SAN RAMON" code="394"/>
+  <value description="SANTIAGO" code="395"/>
+  <value description="VOLIO" code="396"/>
+  <value description="ZAPOTAL" code="397"/>
+  <value description="AGUAS CLARAS" code="398"/>
+  <value description="BIJAGUA" code="399"/>
+  <value description="DELICIAS" code="400"/>
+  <value description="DOS RIOS" code="401"/>
+  <value description="SAN JOSE O PIZOTE" code="402"/>
+  <value description="UPALA" code="403"/>
+  <value description="YOLILLAL" code="404"/>
+  <value description="RODRIGUEZ" code="405"/>
+  <value description="SAN PEDRO" code="406"/>
+  <value description="SARCHI NORTE" code="407"/>
+  <value description="SARCHI SUR" code="408"/>
+  <value description="TORO AMARILLO" code="409"/>
+  <value description="BRISAS" code="410"/>
+  <value description="GUADALUPE" code="411"/>
+  <value description="LAGUNA" code="412"/>
+  <value description="PALMIRA" code="413"/>
+  <value description="TAPESCO" code="414"/>
+  <value description="ZAPOTE" code="415"/>
+  <value description="ZARCERO" code="416"/>
+  <value description="COLORADO" code="417"/>
+  <value description="LAS JUNTAS" code="418"/>
+  <value description="SAN JUAN" code="419"/>
+  <value description="SIERRA" code="420"/>
+  <value description="BAGACES" code="421"/>
+  <value description="LA FORTUNA" code="422"/>
+  <value description="MOGOTE" code="423"/>
+  <value description="RIO NARANJO" code="424"/>
+  <value description="BELEN" code="425"/>
+  <value description="FILADELFIA" code="426"/>
+  <value description="PALMIRA" code="427"/>
+  <value description="SARDINAL" code="428"/>
+  <value description="BEBEDERO" code="429"/>
+  <value description="CAÑAS" code="430"/>
+  <value description="PALMIRA" code="431"/>
+  <value description="POROZAL" code="432"/>
+  <value description="SAN MIGUEL" code="433"/>
+  <value description="HOJANCHA" code="434"/>
+  <value description="HUACAS" code="435"/>
+  <value description="MONTE ROMO" code="436"/>
+  <value description="PUERTO CARRILLO" code="437"/>
+  <value description="LA CRUZ" code="438"/>
+  <value description="LA GARITA" code="439"/>
+  <value description="SANTA CECILIA" code="440"/>
+  <value description="SANTA ELENA" code="441"/>
+  <value description="CAÑAS DULCES" code="442"/>
+  <value description="CURUBANDE" code="443"/>
+  <value description="LIBERIA" code="444"/>
+  <value description="MAYORGA" code="445"/>
+  <value description="NACASCOLO" code="446"/>
+  <value description="BEJUCO" code="447"/>
+  <value description="CARMONA" code="448"/>
+  <value description="PORVENIR" code="449"/>
+  <value description="SAN PABLO" code="450"/>
+  <value description="SANTA RITA" code="451"/>
+  <value description="ZAPOTAL" code="452"/>
+  <value description="BELEN DE NOSARITA" code="453"/>
+  <value description="MANSION" code="454"/>
+  <value description="NICOYA" code="455"/>
+  <value description="NOSARA" code="456"/>
+  <value description="QUEBRADA HONDA" code="457"/>
+  <value description="SAMARA" code="458"/>
+  <value description="SAN ANTONIO" code="459"/>
+  <value description="BOLSON" code="460"/>
+  <value description="CABO VELAS" code="461"/>
+  <value description="CARTAGENA" code="462"/>
+  <value description="CUAJINIQUIL" code="463"/>
+  <value description="DIRIA" code="464"/>
+  <value description="SANTA CRUZ" code="465"/>
+  <value description="TAMARINDO" code="466"/>
+  <value description="TEMPATE" code="467"/>
+  <value description="VEINTISIETE DE ABRIL" code="468"/>
+  <value description="ARENAL" code="469"/>
+  <value description="LIBANO" code="470"/>
+  <value description="QUEBRADA GRANDE" code="471"/>
+  <value description="SANTA ROSA" code="472"/>
+  <value description="TIERRAS MORENAS" code="473"/>
+  <value description="TILARAN" code="474"/>
+  <value description="TRONADORA" code="475"/>
+ </table>
+ <table name="lkphouseholdtype" clmdesc="householdtype_des" clmcode="householdtype_cod">
+  <value description="Tiene pareja (aún si no están casados)" code="couple"/>
+  <value description="Mujer sola (viuda o hombre ausente del hogar)" code="woman_single"/>
+  <value description="Hombre solo (viudo o mujer ausente del hogar)" code="man_single"/>
+ </table>
+ <table name="lkpmale_female" clmdesc="male_female_des" clmcode="male_female_cod">
+  <value description="Hombre" code="M"/>
+  <value description="Mujer" code="F"/>
+ </table>
+ <table name="lkphh_position" clmdesc="hh_position_des" clmcode="hh_position_cod">
+  <value description="Casado con el jefe cabeza del hogar" code="married_to"/>
+  <value description="Hijo del jefe cabeza del hogar" code="child"/>
+  <value description="Padre o Madre del jefe cabeza del Hogar" code="parent"/>
+  <value description="Otro miembro de la familia" code="family_other"/>
+  <value description="Mandador o administrador de la finca" code="nonfamily"/>
+ </table>
+</insertValuesXML>

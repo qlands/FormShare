@@ -209,9 +209,9 @@ def get_last_clean_info(request, project, form):
         if res is not None:
             return res[0], res[1]
         else:
-            return "", ""
+            return None, None
     else:
-        return "NA", "NA"
+        return None, None
 
 
 def get_last_submission_date(request, project, form):
@@ -224,9 +224,9 @@ def get_last_submission_date(request, project, form):
         if res is not None:
             return res[0]
         else:
-            return "NA"
+            return None
     else:
-        return "NA"
+        return None
 
 
 def get_number_of_submissions_in_database(request, project, form):
@@ -431,8 +431,8 @@ def get_form_details(request, user, project, form):
             )
             result["submissions"] = submissions
             result["last"] = last
-            result["cleanedlast"] = "NA"
-            result["lastindb"] = "NA"
+            result["cleanedlast"] = None
+            result["lastindb"] = None
             result["cleanedby"] = "NA"
             result["by"] = by
             result["bydetails"] = get_by_details(request, user, project, by)

@@ -1872,7 +1872,7 @@ class FunctionalTests(unittest.TestCase):
             )
 
             # Test submission
-            paths = ["resources", "forms", "complex_form", "submission001.xml"]
+            paths = ["resources", "forms", "complex_form", "submissions_norepo", "submission001.xml"]
             submission_file = os.path.join(self.path, *paths)
 
             paths = ["resources", "forms", "complex_form", "image001.png"]
@@ -1890,7 +1890,7 @@ class FunctionalTests(unittest.TestCase):
             time.sleep(5)  # Wait for ElasticSearch to store this
 
             # Test submission one again. Adding image2 to same place of image 1
-            paths = ["resources", "forms", "complex_form", "submission001.xml"]
+            paths = ["resources", "forms", "complex_form", "submissions_norepo", "submission001.xml"]
             submission_file = os.path.join(self.path, *paths)
 
             paths = ["resources", "forms", "complex_form", "image001.png"]
@@ -1911,7 +1911,7 @@ class FunctionalTests(unittest.TestCase):
             time.sleep(5)  # Wait for ElasticSearch to store this
 
             # Test submission without precision in GPS
-            paths = ["resources", "forms", "complex_form", "submission004.xml"]
+            paths = ["resources", "forms", "complex_form", "submissions_norepo", "submission002.xml"]
             submission_file = os.path.join(self.path, *paths)
 
             paths = ["resources", "forms", "complex_form", "image001.png"]
@@ -1929,7 +1929,7 @@ class FunctionalTests(unittest.TestCase):
             time.sleep(5)  # Wait for ElasticSearch to store this
 
             # Test submission without elevation in GPS
-            paths = ["resources", "forms", "complex_form", "submission005.xml"]
+            paths = ["resources", "forms", "complex_form", "submissions_norepo", "submission003.xml"]
             submission_file = os.path.join(self.path, *paths)
 
             paths = ["resources", "forms", "complex_form", "image001.png"]
@@ -1943,7 +1943,23 @@ class FunctionalTests(unittest.TestCase):
                     FS_for_testing="true", FS_user_for_testing=self.assistantLogin
                 ),
             )
+            time.sleep(5)  # Wait for ElasticSearch to store this
 
+            # Test duplicated submission that will be stored and then processed by the repository
+            paths = ["resources", "forms", "complex_form", "submissions_norepo", "submission004.xml"]
+            submission_file = os.path.join(self.path, *paths)
+
+            paths = ["resources", "forms", "complex_form", "image001.png"]
+            image_file = os.path.join(self.path, *paths)
+
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, self.project),
+                status=201,
+                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
             time.sleep(5)  # Wait for ElasticSearch to store this
 
             # Gets the GPS Points of a project
@@ -2017,142 +2033,51 @@ class FunctionalTests(unittest.TestCase):
             assert "FS_error" in res.headers
 
         def test_repository():
-            def mimic_create_repository_metalanguages():
-                from formshare.products.repository.celery_task import (
-                    create_mysql_repository,
-                )
-
-                form_details = get_form_details(
-                    self.server_config, self.projectID, self.formMultiLanguageID
-                )
-                form_directory = form_details["form_directory"]
-                form_reptask = form_details["form_reptask"]
-
-                form_schema = "FS_" + str(uuid.uuid4()).replace("-", "_")
-
-                paths2 = [self.server_config["repository.path"], "odk"]
-                odk_dir = os.path.join(self.path, *paths2)
-
-                paths2 = [
-                    self.server_config["repository.path"],
-                    "odk",
-                    "forms",
-                    form_directory,
-                    "repository",
-                    "create.sql",
-                ]
-                create_sql = os.path.join(self.path, *paths2)
-
-                paths2 = [
-                    self.server_config["repository.path"],
-                    "odk",
-                    "forms",
-                    form_directory,
-                    "repository",
-                    "insert.sql",
-                ]
-                insert_sql = os.path.join(self.path, *paths2)
-
-                paths2 = [
-                    self.server_config["repository.path"],
-                    "odk",
-                    "forms",
-                    form_directory,
-                    "repository",
-                    "create.xml",
-                ]
-                create_xml = os.path.join(self.path, *paths2)
-
-                paths2 = [
-                    self.server_config["repository.path"],
-                    "odk",
-                    "forms",
-                    form_directory,
-                    "repository",
-                    "insert.xml",
-                ]
-                insert_xml = os.path.join(self.path, *paths2)
-
-                here = os.path.dirname(os.path.abspath(__file__)).split(
-                    "/formshare/tests"
-                )[0]
-                paths2 = ["mysql.cnf"]
-                mysql_cnf = os.path.join(here, *paths2)
-                create_mysql_repository(
-                    self.server_config,
-                    self.randonLogin,
-                    self.projectID,
-                    self.project,
-                    self.formMultiLanguageID,
-                    odk_dir,
-                    form_directory,
-                    form_schema,
-                    "QID",
-                    mysql_cnf,
-                    create_sql,
-                    insert_sql,
-                    create_xml,
-                    insert_xml,
-                    "",
-                    "en",
-                    False,
-                    form_reptask,
-                )
-
             def mimic_create_repository():
-                from formshare.products.repository.celery_task import (
-                    create_mysql_repository,
+                from formshare.products.repository.celery_task import create_mysql_repository
+                # Adds a mimic project
+                mimic_project = "mimic"
+                mimic_project_id = str(uuid.uuid4())
+                mimic_res = self.testapp.post(
+                    "/user/{}/projects/add".format(self.randonLogin),
+                    {
+                        "project_id": mimic_project_id,
+                        "project_code": mimic_project,
+                        "project_name": "Test project",
+                        "project_abstract": "",
+                    },
+                    status=302,
                 )
+                assert "FS_error" not in mimic_res.headers
+                # Add the mimic form
+                mimic_paths = ["resources", "forms", "complex_form", "B.xlsx"]
+                resource_file = os.path.join(self.path, *mimic_paths)
+                mimic_res = self.testapp.post(
+                    "/user/{}/project/{}/forms/add".format(self.randonLogin, mimic_project),
+                    status=302,
+                    upload_files=[("xlsx", resource_file)],
+                )
+                assert "FS_error" not in mimic_res.headers
+                mimic_form = "LB_Sequia_MAG_20190123"
 
                 form_details = get_form_details(
-                    self.server_config, self.projectID, self.formID
+                    self.server_config, mimic_project_id, mimic_form
                 )
                 form_directory = form_details["form_directory"]
-                form_reptask = form_details["form_reptask"]
 
+                form_reptask = str(uuid.uuid4())
                 form_schema = "FS_" + str(uuid.uuid4()).replace("-", "_")
 
-                paths2 = [self.server_config["repository.path"], "odk"]
-                odk_dir = os.path.join(self.path, *paths2)
-
-                paths2 = [
-                    self.server_config["repository.path"],
-                    "odk",
-                    "forms",
-                    form_directory,
-                    "repository",
-                    "create.sql",
-                ]
+                paths2 = ["resources", "forms", "mimic_complex", "create.sql"]
                 create_sql = os.path.join(self.path, *paths2)
 
-                paths2 = [
-                    self.server_config["repository.path"],
-                    "odk",
-                    "forms",
-                    form_directory,
-                    "repository",
-                    "insert.sql",
-                ]
+                paths2 = ["resources", "forms", "mimic_complex", "insert.sql"]
                 insert_sql = os.path.join(self.path, *paths2)
 
-                paths2 = [
-                    self.server_config["repository.path"],
-                    "odk",
-                    "forms",
-                    form_directory,
-                    "repository",
-                    "create.xml",
-                ]
+                paths2 = ["resources", "forms", "mimic_complex", "create.xml"]
                 create_xml = os.path.join(self.path, *paths2)
 
-                paths2 = [
-                    self.server_config["repository.path"],
-                    "odk",
-                    "forms",
-                    form_directory,
-                    "repository",
-                    "insert.xml",
-                ]
+                paths2 = ["resources", "forms", "mimic_complex", "insert.xml"]
                 insert_xml = os.path.join(self.path, *paths2)
 
                 here = os.path.dirname(os.path.abspath(__file__)).split(
@@ -2160,12 +2085,16 @@ class FunctionalTests(unittest.TestCase):
                 )[0]
                 paths2 = ["mysql.cnf"]
                 mysql_cnf = os.path.join(here, *paths2)
+
+                paths2 = [self.server_config["repository.path"], "odk"]
+                odk_dir = os.path.join(self.path, *paths2)
+
                 create_mysql_repository(
                     self.server_config,
                     self.randonLogin,
-                    self.projectID,
-                    self.project,
-                    self.formID,
+                    mimic_project_id,
+                    mimic_project,
+                    mimic_form,
                     odk_dir,
                     form_directory,
                     form_schema,
@@ -2178,6 +2107,127 @@ class FunctionalTests(unittest.TestCase):
                     "",
                     "en",
                     True,
+                    form_reptask,
+                )
+
+            def mimic_create_repository_with_data():
+                from formshare.products.repository.celery_task import create_mysql_repository
+                # Adds a mimic2 project
+                mimic_project = "mimic2"
+                mimic_project_id = str(uuid.uuid4())
+                mimic_res = self.testapp.post(
+                    "/user/{}/projects/add".format(self.randonLogin),
+                    {
+                        "project_id": mimic_project_id,
+                        "project_code": mimic_project,
+                        "project_name": "Test project",
+                        "project_abstract": "",
+                    },
+                    status=302,
+                )
+                assert "FS_error" not in mimic_res.headers
+                # Add the mimic form
+                mimic_paths = ["resources", "forms", "complex_form", "B.xlsx"]
+                resource_file = os.path.join(self.path, *mimic_paths)
+                mimic_res = self.testapp.post(
+                    "/user/{}/project/{}/forms/add".format(self.randonLogin, mimic_project),
+                    status=302,
+                    upload_files=[("xlsx", resource_file)],
+                )
+                assert "FS_error" not in mimic_res.headers
+                mimic_form = "LB_Sequia_MAG_20190123"
+
+                mimic_res = self.testapp.post(
+                    "/user/{}/project/{}/assistants/add".format(
+                        self.randonLogin, mimic_project
+                    ),
+                    {
+                        "coll_id": "mimic001",
+                        "coll_password": "123",
+                        "coll_password2": "123",
+                        "coll_prjshare": 1,
+                    },
+                    status=302,
+                )
+                assert "FS_error" not in mimic_res.headers
+
+                # Add an assistant to a form succeeds
+                mimic_res = self.testapp.post(
+                    "/user/{}/project/{}/form/{}/assistants/add".format(
+                        self.randonLogin, mimic_project, mimic_form
+                    ),
+                    {
+                        "coll_id": "{}|{}".format(mimic_project_id, "mimic001"),
+                        "coll_privileges": "3",
+                    },
+                    status=302,
+                )
+                assert "FS_error" not in mimic_res.headers
+
+                # Test submission
+                paths = ["resources", "forms", "mimic_complex", "submission001.xml"]
+                submission_file = os.path.join(self.path, *paths)
+
+                paths = ["resources", "forms", "complex_form", "image001.png"]
+                image_file = os.path.join(self.path, *paths)
+
+                self.testapp.post(
+                    "/user/{}/project/{}/push".format(self.randonLogin, mimic_project),
+                    status=201,
+                    upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                    extra_environ=dict(
+                        FS_for_testing="true", FS_user_for_testing="mimic001"
+                    ),
+                )
+                time.sleep(5)  # Wait for ElasticSearch to store this
+
+                form_details = get_form_details(
+                    self.server_config, mimic_project_id, mimic_form
+                )
+                form_directory = form_details["form_directory"]
+
+                form_reptask = str(uuid.uuid4())
+                form_schema = "FS_" + str(uuid.uuid4()).replace("-", "_")
+
+                paths2 = ["resources", "forms", "mimic_complex", "create.sql"]
+                create_sql = os.path.join(self.path, *paths2)
+
+                paths2 = ["resources", "forms", "mimic_complex", "insert.sql"]
+                insert_sql = os.path.join(self.path, *paths2)
+
+                paths2 = ["resources", "forms", "mimic_complex", "create.xml"]
+                create_xml = os.path.join(self.path, *paths2)
+
+                paths2 = ["resources", "forms", "mimic_complex", "insert.xml"]
+                insert_xml = os.path.join(self.path, *paths2)
+
+                here = os.path.dirname(os.path.abspath(__file__)).split(
+                    "/formshare/tests"
+                )[0]
+                paths2 = ["mysql.cnf"]
+                mysql_cnf = os.path.join(here, *paths2)
+
+                paths2 = [self.server_config["repository.path"], "odk"]
+                odk_dir = os.path.join(self.path, *paths2)
+
+                create_mysql_repository(
+                    self.server_config,
+                    self.randonLogin,
+                    mimic_project_id,
+                    mimic_project,
+                    mimic_form,
+                    odk_dir,
+                    form_directory,
+                    form_schema,
+                    "I_D",
+                    mysql_cnf,
+                    create_sql,
+                    insert_sql,
+                    create_xml,
+                    insert_xml,
+                    "",
+                    "en",
+                    False,
                     form_reptask,
                 )
 
@@ -2221,10 +2271,6 @@ class FunctionalTests(unittest.TestCase):
 
             time.sleep(40)  # Wait for Celery to finish
 
-            # Mimic to create the repository again
-            # mimic_create_repository() TODO: Need to happend with another form
-            # mimic_create_repository_metalanguages() TODO: Need to happend with another form
-
             # Get the details of a form. The form now should have a repository
             res = self.testapp.get(
                 "/user/{}/project/{}/form/{}".format(
@@ -2235,7 +2281,7 @@ class FunctionalTests(unittest.TestCase):
             self.assertTrue(b"With repository" in res.body)
 
             # Test submission storing into repository
-            paths = ["resources", "forms", "complex_form", "submission001.xml"]
+            paths = ["resources", "forms", "complex_form", "submissions_repo", "submission001.xml"]
             submission_file = os.path.join(self.path, *paths)
 
             paths = ["resources", "forms", "complex_form", "image001.png"]
@@ -2253,7 +2299,7 @@ class FunctionalTests(unittest.TestCase):
             time.sleep(5)  # Wait for ElasticSearch to store this
 
             # Test submission storing a second identical submission to mimic an incomplete submission
-            paths = ["resources", "forms", "complex_form", "submission001B.xml"]
+            paths = ["resources", "forms", "complex_form", "submissions_repo", "submission001.xml"]
             submission_file = os.path.join(self.path, *paths)
 
             paths = ["resources", "forms", "complex_form", "image002.png"]
@@ -2310,7 +2356,7 @@ class FunctionalTests(unittest.TestCase):
             )
 
             # Test submitting the same data into the repository storing it into the logs
-            paths = ["resources", "forms", "complex_form", "submission003.xml"]
+            paths = ["resources", "forms", "complex_form", "submissions_repo", "submission004.xml"]
             submission_file = os.path.join(self.path, *paths)
 
             paths = ["resources", "forms", "complex_form", "image001.png"]
@@ -2328,7 +2374,7 @@ class FunctionalTests(unittest.TestCase):
             time.sleep(5)  # Wait for ElasticSearch to store this
 
             # Add a second submission to test downloads
-            paths = ["resources", "forms", "complex_form", "submission002.xml"]
+            paths = ["resources", "forms", "complex_form", "submissions_repo", "submission005.xml"]
             submission_file2 = os.path.join(self.path, *paths)
 
             paths = ["resources", "forms", "complex_form", "image001.png"]
@@ -2349,7 +2395,7 @@ class FunctionalTests(unittest.TestCase):
             time.sleep(5)  # Wait for ElasticSearch to store this
 
             # Add a third submission without GPS precision
-            paths = ["resources", "forms", "complex_form", "submission004.xml"]
+            paths = ["resources", "forms", "complex_form", "submissions_repo", "submission002.xml"]
             submission_file2 = os.path.join(self.path, *paths)
 
             paths = ["resources", "forms", "complex_form", "image001.png"]
@@ -2370,7 +2416,7 @@ class FunctionalTests(unittest.TestCase):
             time.sleep(5)  # Wait for ElasticSearch to store this
 
             # Add a forth submission without elevation
-            paths = ["resources", "forms", "complex_form", "submission005.xml"]
+            paths = ["resources", "forms", "complex_form", "submissions_repo", "submission003.xml"]
             submission_file2 = os.path.join(self.path, *paths)
 
             paths = ["resources", "forms", "complex_form", "image001.png"]
@@ -2387,8 +2433,9 @@ class FunctionalTests(unittest.TestCase):
                     FS_for_testing="true", FS_user_for_testing=self.assistantLogin
                 ),
             )
-
             time.sleep(5)  # Wait for ElasticSearch to store this
+            mimic_create_repository()
+            mimic_create_repository_with_data()
 
         def test_repository_downloads():
             def mimic_celery_public_csv_process():
@@ -2820,7 +2867,7 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            time.sleep(10)  # Wait 5 seconds so celery finished this
+            time.sleep(20)  # Wait 5 seconds so celery finished this
 
             # Get the details of a form. The form now should have a repository with products
             self.testapp.get(
@@ -2854,7 +2901,7 @@ class FunctionalTests(unittest.TestCase):
                     "forms",
                     "complex_form",
                     "for_import",
-                    "files",
+                    "files2",
                     "tmp",
                 ]
                 path_to_files = os.path.join(self.path, *file_paths)
@@ -2866,8 +2913,8 @@ class FunctionalTests(unittest.TestCase):
                         "forms",
                         "complex_form",
                         "for_import",
-                        "files",
-                        "file1.json",
+                        "files2",
+                        "file1B.json",
                     ]
                 )
                 file_to_import_target = os.path.join(
@@ -2877,9 +2924,9 @@ class FunctionalTests(unittest.TestCase):
                         "forms",
                         "complex_form",
                         "for_import",
-                        "files",
+                        "files2",
                         "tmp",
-                        "file1.json",
+                        "file1B.json",
                     ]
                 )
                 shutil.copyfile(file_to_import, file_to_import_target)
@@ -2891,8 +2938,8 @@ class FunctionalTests(unittest.TestCase):
                         "forms",
                         "complex_form",
                         "for_import",
-                        "files",
-                        "file2.json",
+                        "files2",
+                        "file2B.json",
                     ]
                 )
                 file_to_import_target = os.path.join(
@@ -2902,9 +2949,9 @@ class FunctionalTests(unittest.TestCase):
                         "forms",
                         "complex_form",
                         "for_import",
-                        "files",
+                        "files2",
                         "tmp",
-                        "file2.json",
+                        "file2B.json",
                     ]
                 )
                 shutil.copyfile(file_to_import, file_to_import_target)
@@ -2916,8 +2963,8 @@ class FunctionalTests(unittest.TestCase):
                         "forms",
                         "complex_form",
                         "for_import",
-                        "files",
-                        "file3.json",
+                        "files2",
+                        "file3B.json",
                     ]
                 )
                 file_to_import_target = os.path.join(
@@ -2927,9 +2974,34 @@ class FunctionalTests(unittest.TestCase):
                         "forms",
                         "complex_form",
                         "for_import",
-                        "files",
+                        "files2",
                         "tmp",
-                        "file3.json",
+                        "file3B.json",
+                    ]
+                )
+                shutil.copyfile(file_to_import, file_to_import_target)
+
+                file_to_import = os.path.join(
+                    self.path,
+                    *[
+                        "resources",
+                        "forms",
+                        "complex_form",
+                        "for_import",
+                        "files2",
+                        "file4B.json",
+                    ]
+                )
+                file_to_import_target = os.path.join(
+                    self.path,
+                    *[
+                        "resources",
+                        "forms",
+                        "complex_form",
+                        "for_import",
+                        "files2",
+                        "tmp",
+                        "file4B.json",
                     ]
                 )
                 shutil.copyfile(file_to_import, file_to_import_target)
@@ -3042,7 +3114,7 @@ class FunctionalTests(unittest.TestCase):
                 upload_files=[("file", resource_file)],
             )
             assert "FS_error" not in res.headers
-
+            time.sleep(20)
             mimic_celery_test_import()
 
         def test_repository_tasks():
@@ -3500,7 +3572,7 @@ class FunctionalTests(unittest.TestCase):
             data = json.loads(res.body)
             data[
                 "si_participa/section_household_info/RespondentDetails/I_D"
-            ] = "501890387B2"
+            ] = "501890387ABC2"
             paths = ["tmp", duplicated_id + ".json"]
             submission_file = os.path.join(self.path, *paths)
 
@@ -3595,7 +3667,7 @@ class FunctionalTests(unittest.TestCase):
             data = json.loads(res.body)
             data[
                 "si_participa/section_household_info/RespondentDetails/I_D"
-            ] = "501890387B2"
+            ] = "501890387ABC2"
             paths = ["tmp", duplicated_id + ".json"]
             submission_file = os.path.join(self.path, *paths)
 
@@ -3651,7 +3723,7 @@ class FunctionalTests(unittest.TestCase):
 
         def test_json_logs_2():
             # Upload submission 6
-            paths = ["resources", "forms", "complex_form", "submission006.xml"]
+            paths = ["resources", "forms", "complex_form", "submissions_logs2", "submission001.xml"]
             submission_file = os.path.join(self.path, *paths)
             paths = ["resources", "forms", "complex_form", "image001.png"]
             image_file = os.path.join(self.path, *paths)
@@ -3666,7 +3738,7 @@ class FunctionalTests(unittest.TestCase):
             time.sleep(5)  # Wait for ElasticSearch to store this
 
             # Upload submission 7 and goes to the logs
-            paths = ["resources", "forms", "complex_form", "submission007.xml"]
+            paths = ["resources", "forms", "complex_form", "submissions_logs2", "submission002.xml"]
             submission_file = os.path.join(self.path, *paths)
             paths = ["resources", "forms", "complex_form", "image001.png"]
             image_file = os.path.join(self.path, *paths)
@@ -3681,7 +3753,7 @@ class FunctionalTests(unittest.TestCase):
             time.sleep(5)  # Wait for ElasticSearch to store this
 
             # Upload submission 8 and goes to the logs
-            paths = ["resources", "forms", "complex_form", "submission008.xml"]
+            paths = ["resources", "forms", "complex_form", "submissions_logs2", "submission003.xml"]
             submission_file = os.path.join(self.path, *paths)
             paths = ["resources", "forms", "complex_form", "image001.png"]
             image_file = os.path.join(self.path, *paths)
@@ -3730,7 +3802,7 @@ class FunctionalTests(unittest.TestCase):
                 data = json.loads(res.body)
                 data[
                     "si_participa/section_household_info/RespondentDetails/I_D"
-                ] = "109750690B{}".format(index)
+                ] = "109750690ABC{}".format(index)
                 paths = ["tmp", a_duplicate + ".json"]
                 submission_file = os.path.join(self.path, *paths)
 
@@ -5265,14 +5337,11 @@ class FunctionalTests(unittest.TestCase):
         test_external_select()
         test_update_form_missing_files()
         test_repository()
-        time.sleep(45)
         test_repository_downloads()
-        time.sleep(45)
         test_import_data()
-        time.sleep(45)
         test_assistant_access()
         test_json_logs()
-        test_json_logs_2()
+        # test_json_logs_2()
         test_clean_interface()
         test_audit()
         test_repository_tasks()

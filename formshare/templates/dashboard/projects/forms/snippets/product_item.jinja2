@@ -42,19 +42,22 @@
                             {% if loop_index == 1 %}
                                 <span title="{{ _('This is the latest export of this product') }}" class="badge">{{ _('Latest') }}</span>
                             {% endif %}
-
-                            {% if formDetails.cleanedlast != "" %}
-                                {% if output.datetime_added > formDetails.lastindb and output.datetime_added >formDetails.cleanedlast %}
-                                    <span class="badge badge-success">{{ _('Up to date') }}</span>
+                            {% if formDetails.lastindb != None %}
+                                {% if formDetails.cleanedlast != None %}
+                                    {% if output.datetime_added > formDetails.lastindb and output.datetime_added >formDetails.cleanedlast %}
+                                        <span class="badge badge-success">{{ _('Up to date') }}</span>
+                                    {% else %}
+                                        <span title="{{ _('This product was created before the last submission and/or before the last data cleaning update') }}" class="badge badge-danger">{{ _('Outdated') }}</span>
+                                    {% endif %}
                                 {% else %}
-                                    <span title="{{ _('This product was created before the last submission and/or before the last data cleaning update') }}" class="badge badge-danger">{{ _('Outdated') }}</span>
+                                    {% if output.datetime_added > formDetails.lastindb %}
+                                        <span class="badge badge-success">{{ _('Up to date') }}</span>
+                                    {% else %}
+                                        <span title="{{ _('This product was created before the last submission') }}" class="badge badge-danger">{{ _('Outdated') }}</span>
+                                    {% endif %}
                                 {% endif %}
                             {% else %}
-                                {% if output.datetime_added > formDetails.lastindb %}
-                                    <span class="badge badge-success">{{ _('Up to date') }}</span>
-                                {% else %}
-                                    <span title="{{ _('This product was created before the last submission') }}" class="badge badge-danger">{{ _('Outdated') }}</span>
-                                {% endif %}
+                                <span title="{{ _('This product was created before submissions where deleted') }}" class="badge badge-danger">{{ _('Outdated') }}</span>
                             {% endif %}
                         {% endif %}
                     {% endif %}

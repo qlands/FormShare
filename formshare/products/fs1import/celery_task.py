@@ -344,8 +344,7 @@ def store_json_file(
         return 1, ""
 
 
-@celeryApp.task(base=CeleryTask)
-def import_json_files(
+def internal_import_json_files(
     user,
     project,
     form,
@@ -429,3 +428,42 @@ def import_json_files(
         )
         index = index + 1
     engine.dispose()
+
+
+@celeryApp.task(base=CeleryTask)
+def import_json_files(
+    user,
+    project,
+    form,
+    odk_dir,
+    form_directory,
+    schema,
+    assistant,
+    path_to_files,
+    project_code,
+    geopoint_variable,
+    project_of_assistant,
+    settings,
+    locale,
+    ignore_xform_check=False,
+    test_task_id=None,
+    report_task=True,
+):
+    internal_import_json_files(
+        user,
+        project,
+        form,
+        odk_dir,
+        form_directory,
+        schema,
+        assistant,
+        path_to_files,
+        project_code,
+        geopoint_variable,
+        project_of_assistant,
+        settings,
+        locale,
+        ignore_xform_check,
+        test_task_id,
+        report_task,
+    )

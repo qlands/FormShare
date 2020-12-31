@@ -230,8 +230,7 @@ def update_form(db_session, project, form, form_data):
         raise BuildDataBaseError(str(e))
 
 
-@celeryApp.task(base=CeleryTask)
-def create_mysql_repository(
+def internal_create_mysql_repository(
     settings,
     user,
     project_id,
@@ -251,6 +250,7 @@ def create_mysql_repository(
     discard_testing_data,
     testing_task=None,
 ):
+    log.info("Repository process for form {} in project {} has started".format(form, project_id))
     parts = __file__.split("/products/")
     this_file_path = parts[0] + "/locale"
     es = gettext.translation("formshare", localedir=this_file_path, languages=[locale])
@@ -385,3 +385,46 @@ def create_mysql_repository(
                     None,
                     locale,
                 )
+
+
+@celeryApp.task(base=CeleryTask)
+def create_mysql_repository(
+    settings,
+    user,
+    project_id,
+    project_code,
+    form,
+    odk_dir,
+    form_directory,
+    schema,
+    primary_key,
+    cnf_file,
+    create_file,
+    insert_file,
+    create_xml_file,
+    insert_xml_file,
+    repository_string,
+    locale,
+    discard_testing_data,
+    testing_task=None,
+):
+    internal_create_mysql_repository(
+        settings,
+        user,
+        project_id,
+        project_code,
+        form,
+        odk_dir,
+        form_directory,
+        schema,
+        primary_key,
+        cnf_file,
+        create_file,
+        insert_file,
+        create_xml_file,
+        insert_xml_file,
+        repository_string,
+        locale,
+        discard_testing_data,
+        testing_task,
+    )

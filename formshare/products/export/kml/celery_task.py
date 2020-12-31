@@ -17,8 +17,7 @@ class EmptyFileError(Exception):
     """
 
 
-@celeryApp.task(base=CeleryTask)
-def build_kml(settings, form_schema, kml_file, primary_key, locale, test_task_id=None):
+def internal_build_kml(settings, form_schema, kml_file, primary_key, locale, test_task_id=None):
     parts = __file__.split("/products/")
     this_file_path = parts[0] + "/locale"
     es = gettext.translation("formshare", localedir=this_file_path, languages=[locale])
@@ -89,3 +88,8 @@ def build_kml(settings, form_schema, kml_file, primary_key, locale, test_task_id
         raise EmptyFileError(
             _("The ODK form does not contain any submissions with GPS coordinates")
         )
+
+
+@celeryApp.task(base=CeleryTask)
+def build_kml(settings, form_schema, kml_file, primary_key, locale, test_task_id=None):
+    internal_build_kml(settings, form_schema, kml_file, primary_key, locale, test_task_id)

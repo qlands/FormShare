@@ -24,8 +24,7 @@ class BuildError(Exception):
     """
 
 
-@celeryApp.task(base=CeleryTask)
-def build_media_zip(
+def internal_build_media_zip(
     settings,
     odk_dir,
     form_directories,
@@ -143,3 +142,26 @@ def build_media_zip(
         send_task_status_to_form(settings, task_id, _("Creating empty zip file"))
         with zipfile.ZipFile(zip_file, "w") as file:
             file.writestr("empty.txt", _("There are no media files"))
+
+
+@celeryApp.task(base=CeleryTask)
+def build_media_zip(
+    settings,
+    odk_dir,
+    form_directories,
+    form_schema,
+    zip_file,
+    primary_key,
+    locale,
+    test_task_id=None,
+):
+    internal_build_media_zip(
+        settings,
+        odk_dir,
+        form_directories,
+        form_schema,
+        zip_file,
+        primary_key,
+        locale,
+        test_task_id,
+    )

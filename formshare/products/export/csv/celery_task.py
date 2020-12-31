@@ -66,8 +66,7 @@ def gather_array_sizes(data, array_dict):
                 gather_array_sizes(an_item, array_dict)
 
 
-@celeryApp.task(base=CeleryTask)
-def build_csv(
+def internal_build_csv(
     settings,
     maps_directory,
     create_xml_file,
@@ -361,3 +360,28 @@ def build_csv(
             + "-"
             + stdout.decode("utf-8")
         )
+
+
+@celeryApp.task(base=CeleryTask)
+def build_csv(
+    settings,
+    maps_directory,
+    create_xml_file,
+    insert_xml_file,
+    form_schema,
+    csv_file,
+    protect_sensitive,
+    locale,
+    test_task_id=None,
+):
+    internal_build_csv(
+        settings,
+        maps_directory,
+        create_xml_file,
+        insert_xml_file,
+        form_schema,
+        csv_file,
+        protect_sensitive,
+        locale,
+        test_task_id,
+    )

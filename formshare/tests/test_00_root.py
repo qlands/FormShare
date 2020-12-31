@@ -2034,7 +2034,7 @@ class FunctionalTests(unittest.TestCase):
 
         def test_repository():
             def mimic_create_repository():
-                from formshare.products.repository.celery_task import create_mysql_repository
+                from formshare.products.repository.celery_task import internal_create_mysql_repository
                 # Adds a mimic project
                 mimic_project = "mimic"
                 mimic_project_id = str(uuid.uuid4())
@@ -2089,7 +2089,7 @@ class FunctionalTests(unittest.TestCase):
                 paths2 = [self.server_config["repository.path"], "odk"]
                 odk_dir = os.path.join(self.path, *paths2)
 
-                create_mysql_repository(
+                internal_create_mysql_repository(
                     self.server_config,
                     self.randonLogin,
                     mimic_project_id,
@@ -2111,7 +2111,7 @@ class FunctionalTests(unittest.TestCase):
                 )
 
             def mimic_create_repository_with_data():
-                from formshare.products.repository.celery_task import create_mysql_repository
+                from formshare.products.repository.celery_task import internal_create_mysql_repository
                 # Adds a mimic2 project
                 mimic_project = "mimic2"
                 mimic_project_id = str(uuid.uuid4())
@@ -2210,7 +2210,7 @@ class FunctionalTests(unittest.TestCase):
                 paths2 = [self.server_config["repository.path"], "odk"]
                 odk_dir = os.path.join(self.path, *paths2)
 
-                create_mysql_repository(
+                internal_create_mysql_repository(
                     self.server_config,
                     self.randonLogin,
                     mimic_project_id,
@@ -2435,11 +2435,11 @@ class FunctionalTests(unittest.TestCase):
             )
             time.sleep(5)  # Wait for ElasticSearch to store this
             mimic_create_repository()
-            mimic_create_repository_with_data()
+            # mimic_create_repository_with_data()
 
         def test_repository_downloads():
             def mimic_celery_public_csv_process():
-                from formshare.products.export.csv.celery_task import build_csv
+                from formshare.products.export.csv.celery_task import internal_build_csv
 
                 engine = create_engine(self.server_config["sqlalchemy.url"])
 
@@ -2480,7 +2480,7 @@ class FunctionalTests(unittest.TestCase):
                 )
                 engine.execute(sql)
                 engine.dispose()
-                build_csv(
+                internal_build_csv(
                     self.server_config,
                     maps_directory,
                     create_xml_file,
@@ -2568,7 +2568,7 @@ class FunctionalTests(unittest.TestCase):
                 assert "FS_error" not in res2.headers
 
             def mimic_celery_private_csv_process():
-                from formshare.products.export.csv.celery_task import build_csv
+                from formshare.products.export.csv.celery_task import internal_build_csv
 
                 engine = create_engine(self.server_config["sqlalchemy.url"])
 
@@ -2610,7 +2610,7 @@ class FunctionalTests(unittest.TestCase):
                 )
                 engine.execute(sql)
                 engine.dispose()
-                build_csv(
+                internal_build_csv(
                     self.server_config,
                     maps_directory,
                     create_xml_file,
@@ -2655,7 +2655,7 @@ class FunctionalTests(unittest.TestCase):
                 )
 
             def mimic_celery_xlsx_process():
-                from formshare.products.export.xlsx.celery_task import build_xlsx
+                from formshare.products.export.xlsx.celery_task import internal_build_xlsx
 
                 engine = create_engine(self.server_config["sqlalchemy.url"])
                 form_details = get_form_details(
@@ -2686,7 +2686,7 @@ class FunctionalTests(unittest.TestCase):
                 )
                 engine.execute(sql)
                 engine.dispose()
-                build_xlsx(
+                internal_build_xlsx(
                     self.server_config,
                     self.server_config["repository.path"] + "/odk",
                     form_directory,
@@ -2711,7 +2711,7 @@ class FunctionalTests(unittest.TestCase):
                 )
 
             def mimic_celery_kml_process():
-                from formshare.products.export.kml.celery_task import build_kml
+                from formshare.products.export.kml.celery_task import internal_build_kml
 
                 engine = create_engine(self.server_config["sqlalchemy.url"])
 
@@ -2741,7 +2741,7 @@ class FunctionalTests(unittest.TestCase):
                 )
                 engine.execute(sql)
                 engine.dispose()
-                build_kml(
+                internal_build_kml(
                     self.server_config,
                     form_schema,
                     "/home/cquiros/{}.kml".format(task_id),
@@ -2762,7 +2762,7 @@ class FunctionalTests(unittest.TestCase):
                 )
 
             def mimic_celery_media_process():
-                from formshare.products.export.media.celery_task import build_media_zip
+                from formshare.products.export.media.celery_task import internal_build_media_zip
 
                 engine = create_engine(self.server_config["sqlalchemy.url"])
                 form_details = get_form_details(
@@ -2791,7 +2791,7 @@ class FunctionalTests(unittest.TestCase):
                 )
                 engine.execute(sql)
                 engine.dispose()
-                build_media_zip(
+                internal_build_media_zip(
                     self.server_config,
                     self.server_config["repository.path"] + "/odk",
                     [form_directory],
@@ -2876,7 +2876,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 status=200,
             )
-
+            time.sleep(30)
             mimic_celery_public_csv_process()
             mimic_celery_private_csv_process()
             mimic_celery_xlsx_process()
@@ -2885,7 +2885,7 @@ class FunctionalTests(unittest.TestCase):
 
         def test_import_data():
             def mimic_celery_test_import():
-                from formshare.products.fs1import.celery_task import import_json_files
+                from formshare.products.fs1import.celery_task import internal_import_json_files
 
                 engine = create_engine(self.server_config["sqlalchemy.url"])
                 form_details = get_form_details(
@@ -3026,7 +3026,7 @@ class FunctionalTests(unittest.TestCase):
                 engine.execute(sql)
                 engine.dispose()
 
-                import_json_files(
+                internal_import_json_files(
                     self.randonLogin,
                     self.projectID,
                     self.formID,
@@ -3722,56 +3722,177 @@ class FunctionalTests(unittest.TestCase):
             )
 
         def test_json_logs_2():
-            # Upload submission 6
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/logout".format(
+                    self.randonLogin, self.project
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Adds a mimic2 project
+            json2_project = "json2"
+            json2_project_id = str(uuid.uuid4())
+            mimic_res = self.testapp.post(
+                "/user/{}/projects/add".format(self.randonLogin),
+                {
+                    "project_id": json2_project_id,
+                    "project_code": json2_project,
+                    "project_name": "Test project",
+                    "project_abstract": "",
+                },
+                status=302,
+            )
+            assert "FS_error" not in mimic_res.headers
+            # Add the mimic form
+            mimic_paths = ["resources", "forms", "complex_form", "B.xlsx"]
+            resource_file = os.path.join(self.path, *mimic_paths)
+            mimic_res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, json2_project),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" not in mimic_res.headers
+            json2_form = "LB_Sequia_MAG_20190123"
+
+            # Uploads a file to the form
+            paths = ["resources", "forms", "complex_form", "cantones.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, json2_project, json2_form
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Uploads a file to the form
+            paths = ["resources", "forms", "complex_form", "distritos.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, json2_project, json2_form
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            mimic_res = self.testapp.post(
+                "/user/{}/project/{}/assistants/add".format(
+                    self.randonLogin, json2_project
+                ),
+                {
+                    "coll_id": "json2001",
+                    "coll_password": "123",
+                    "coll_password2": "123",
+                    "coll_prjshare": 1,
+                },
+                status=302,
+            )
+            assert "FS_error" not in mimic_res.headers
+
+            # Add an assistant to a form succeeds
+            mimic_res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, json2_project, json2_form
+                ),
+                {
+                    "coll_id": "{}|{}".format(json2_project_id, "json2001"),
+                    "coll_privileges": "3",
+                },
+                status=302,
+            )
+            assert "FS_error" not in mimic_res.headers
+
+            # Generate the repository using celery
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, json2_project, json2_form
+                ),
+                {"form_pkey": "I_D", "start_stage1": ""},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            time.sleep(40)  # Wait for Celery to finish
+
+            # Upload submission 1
             paths = ["resources", "forms", "complex_form", "submissions_logs2", "submission001.xml"]
             submission_file = os.path.join(self.path, *paths)
             paths = ["resources", "forms", "complex_form", "image001.png"]
             image_file = os.path.join(self.path, *paths)
             self.testapp.post(
-                "/user/{}/project/{}/push".format(self.randonLogin, self.project),
+                "/user/{}/project/{}/push".format(self.randonLogin, json2_project),
                 status=201,
                 upload_files=[("filetoupload", submission_file), ("image", image_file)],
                 extra_environ=dict(
-                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                    FS_for_testing="true", FS_user_for_testing="json2001"
                 ),
             )
             time.sleep(5)  # Wait for ElasticSearch to store this
 
-            # Upload submission 7 and goes to the logs
+            # Upload submission 2 goes to logs
             paths = ["resources", "forms", "complex_form", "submissions_logs2", "submission002.xml"]
             submission_file = os.path.join(self.path, *paths)
             paths = ["resources", "forms", "complex_form", "image001.png"]
             image_file = os.path.join(self.path, *paths)
             self.testapp.post(
-                "/user/{}/project/{}/push".format(self.randonLogin, self.project),
+                "/user/{}/project/{}/push".format(self.randonLogin, json2_project),
                 status=201,
                 upload_files=[("filetoupload", submission_file), ("image", image_file)],
                 extra_environ=dict(
-                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                    FS_for_testing="true", FS_user_for_testing="json2001"
                 ),
             )
             time.sleep(5)  # Wait for ElasticSearch to store this
 
-            # Upload submission 8 and goes to the logs
+            # Upload submission 3 goes to logs
             paths = ["resources", "forms", "complex_form", "submissions_logs2", "submission003.xml"]
             submission_file = os.path.join(self.path, *paths)
             paths = ["resources", "forms", "complex_form", "image001.png"]
             image_file = os.path.join(self.path, *paths)
             self.testapp.post(
-                "/user/{}/project/{}/push".format(self.randonLogin, self.project),
+                "/user/{}/project/{}/push".format(self.randonLogin, json2_project),
                 status=201,
                 upload_files=[("filetoupload", submission_file), ("image", image_file)],
                 extra_environ=dict(
-                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                    FS_for_testing="true", FS_user_for_testing="json2001"
                 ),
             )
             time.sleep(5)  # Wait for ElasticSearch to store this
+
+            # Upload submission 4 goes to logs
+            paths = ["resources", "forms", "complex_form", "submissions_logs2", "submission004.xml"]
+            submission_file = os.path.join(self.path, *paths)
+            paths = ["resources", "forms", "complex_form", "image001.png"]
+            image_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, json2_project),
+                status=201,
+                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="json2001"
+                ),
+            )
+            time.sleep(5)  # Wait for ElasticSearch to store this
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/login".format(
+                    self.randonLogin, json2_project
+                ),
+                {"login": "json2001", "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
 
             engine = create_engine(self.server_config["sqlalchemy.url"])
             sql = (
                 "SELECT submission_id FROM formshare.submission "
                 "WHERE submission_status = 2 AND sameas IS NULL AND project_id = '{}' AND form_id = '{}'".format(
-                    self.projectID, self.formID
+                    json2_project_id, json2_form
                 )
             )
             res = engine.execute(sql).fetchall()
@@ -3781,13 +3902,16 @@ class FunctionalTests(unittest.TestCase):
             engine.dispose()
             index = 0
             print("******************************FFFFF")
+            print(json2_project_id)
+            print(json2_form)
+            print("-----------------------------------")
             print(duplicated_ids)
             print("******************************FFFFF")
             for a_duplicate in duplicated_ids:
                 index = index + 1
                 res = self.testapp.post(
                     "/user/{}/project/{}/assistantaccess/form/{}/{}/checkout".format(
-                        self.randonLogin, self.project, self.formID, a_duplicate
+                        self.randonLogin, json2_project, json2_form, a_duplicate
                     ),
                     status=302,
                 )
@@ -3795,7 +3919,7 @@ class FunctionalTests(unittest.TestCase):
 
                 res = self.testapp.get(
                     "/user/{}/project/{}/assistantaccess/form/{}/{}/get".format(
-                        self.randonLogin, self.project, self.formID, a_duplicate
+                        self.randonLogin, json2_project, json2_form, a_duplicate
                     ),
                     status=200,
                 )
@@ -3815,7 +3939,7 @@ class FunctionalTests(unittest.TestCase):
                 # Checkin the file
                 res = self.testapp.post(
                     "/user/{}/project/{}/assistantaccess/form/{}/{}/checkin".format(
-                        self.randonLogin, self.project, self.formID, a_duplicate
+                        self.randonLogin, json2_project, json2_form, a_duplicate
                     ),
                     {"notes": "Some notes about the checkin", "sequence": sequence_id},
                     status=302,
@@ -3829,8 +3953,8 @@ class FunctionalTests(unittest.TestCase):
                 res = self.testapp.post(
                     "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/push".format(
                         self.randonLogin,
-                        self.project,
-                        self.formID,
+                        json2_project,
+                        json2_form,
                         a_duplicate,
                         sequence_id,
                     ),
@@ -3839,7 +3963,25 @@ class FunctionalTests(unittest.TestCase):
                 assert "FS_error" not in res.headers
                 time.sleep(5)  # Wait for ElasticSearch to store this
 
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/logout".format(
+                    self.randonLogin, json2_project
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
         def test_clean_interface():
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/login".format(
+                    self.randonLogin, self.project
+                ),
+                {"login": self.assistantLogin, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
             # Load the clean page
             self.testapp.get(
                 "/user/{}/project/{}/assistantaccess/form/{}/clean".format(
@@ -4377,7 +4519,7 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            time.sleep(10)  # Wait for celery to generate the repository
+            time.sleep(30)  # Wait for celery to generate the repository
 
             # TODO: We need to test forms that cannot merge for different reasons
 
@@ -5338,10 +5480,11 @@ class FunctionalTests(unittest.TestCase):
         test_update_form_missing_files()
         test_repository()
         test_repository_downloads()
+        time.sleep(60)
         test_import_data()
         test_assistant_access()
         test_json_logs()
-        # test_json_logs_2()
+        test_json_logs_2()
         test_clean_interface()
         test_audit()
         test_repository_tasks()

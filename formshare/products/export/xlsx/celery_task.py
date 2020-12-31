@@ -23,8 +23,7 @@ class SheetNameError(Exception):
     """
 
 
-@celeryApp.task(base=CeleryTask)
-def build_xlsx(
+def internal_build_xlsx(
     settings,
     odk_dir,
     form_directory,
@@ -121,3 +120,30 @@ def build_xlsx(
                     "Please report this error as an issue on https://github.com/qlands/FormShare"
                 )
             )
+
+
+@celeryApp.task(base=CeleryTask)
+def build_xlsx(
+    settings,
+    odk_dir,
+    form_directory,
+    form_schema,
+    form_id,
+    create_xml,
+    insert_xml,
+    xlsx_file,
+    protect_sensitive,
+    locale,
+):
+    internal_build_xlsx(
+        settings,
+        odk_dir,
+        form_directory,
+        form_schema,
+        form_id,
+        create_xml,
+        insert_xml,
+        xlsx_file,
+        protect_sensitive,
+        locale,
+    )

@@ -1089,6 +1089,18 @@ class FunctionalTests(unittest.TestCase):
             assert "FS_error" not in res.headers
 
         def test_forms():
+
+            # Uploads a form fails. Invalid format
+            paths = ["resources", "api_test.dat"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
             # Uploads a form fails. PyXForm conversion fails
             paths = ["resources", "forms", "form01.xlsx"]
             resource_file = os.path.join(self.path, *paths)
@@ -1212,6 +1224,19 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/profile".format(self.randonLogin), status=200
             )
             assert "FS_error" not in res.headers
+
+            # Update a form fails. The form file is not valid
+            paths = ["resources", "api_test.dat"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
 
             # Update a form fails. The form is not the same
             paths = ["resources", "forms", "form09.xlsx"]
@@ -1562,6 +1587,19 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Add an assistant to a form again
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                {
+                    "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
+                    "coll_privileges": "3",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
         def test_multilanguage_odk():
             # Upload a multi-language form succeeds
             paths = ["resources", "forms", "multi_language", "spanish_english.xlsx"]
@@ -1840,6 +1878,18 @@ class FunctionalTests(unittest.TestCase):
                     FS_for_testing="true", FS_user_for_testing=self.assistantLogin
                 ),
             )
+
+            # Get the manifest of a ODK without supporting files. Empty manifest
+            self.testapp.get(
+                "/user/{}/project/{}/{}/manifest".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                status=200,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
             # Get the manifest
             self.testapp.get(
                 "/user/{}/project/{}/{}/manifest".format(
@@ -2239,25 +2289,25 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
 
-            # Generate the repository using celery
-            res = self.testapp.post(
-                "/user/{}/project/{}/form/{}/repository/create".format(
-                    self.randonLogin, self.project, self.formID
-                ),
-                {"form_pkey": "I_D", "start_stage1": ""},
-                status=302,
-            )
-            assert "FS_error" not in res.headers
-            time.sleep(2.5)
-            get_repository_task(self.server_config, self.projectID, self.formID)
-
-            res = self.testapp.post(
-                "/user/{}/project/{}/form/{}/stoprepository".format(
-                    self.randonLogin, self.project, self.formID
-                ),
-                status=302,
-            )
-            assert "FS_error" not in res.headers
+            # # Generate the repository using celery
+            # res = self.testapp.post(
+            #     "/user/{}/project/{}/form/{}/repository/create".format(
+            #         self.randonLogin, self.project, self.formID
+            #     ),
+            #     {"form_pkey": "I_D", "start_stage1": ""},
+            #     status=302,
+            # )
+            # assert "FS_error" not in res.headers
+            # time.sleep(2.5)
+            # get_repository_task(self.server_config, self.projectID, self.formID)
+            #
+            # res = self.testapp.post(
+            #     "/user/{}/project/{}/form/{}/stoprepository".format(
+            #         self.randonLogin, self.project, self.formID
+            #     ),
+            #     status=302,
+            # )
+            # assert "FS_error" not in res.headers
 
             # Generate the repository using celery
             res = self.testapp.post(
@@ -3171,6 +3221,7 @@ class FunctionalTests(unittest.TestCase):
 
             # Test the download with the ID as sensitive with recode
             test_repository_downloads()
+            time.sleep(20)
 
             # Update the primary key as not sensitive
             self.testapp.post(
@@ -5463,6 +5514,190 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+        def test_osm():
+            pass  # TODO: We need to test Open Street Map
+
+        def test_form_access():
+
+            # Assistant logout succeeds.
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/logout".format(
+                    self.randonLogin, self.project
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Login succeed
+            res = self.testapp.post(
+                "/login",
+                {"user": "", "email": self.randonLogin, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Adds a mimic2 project
+            json2_project = "formaccess"
+            json2_project_id = str(uuid.uuid4())
+            mimic_res = self.testapp.post(
+                "/user/{}/projects/add".format(self.randonLogin),
+                {
+                    "project_id": json2_project_id,
+                    "project_code": json2_project,
+                    "project_name": "Test project",
+                    "project_abstract": "",
+                },
+                status=302,
+            )
+            assert "FS_error" not in mimic_res.headers
+            # Add the mimic form
+            mimic_paths = ["resources", "forms", "complex_form", "B.xlsx"]
+            resource_file = os.path.join(self.path, *mimic_paths)
+            mimic_res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, json2_project),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" not in mimic_res.headers
+            json2_form = "LB_Sequia_MAG_20190123"
+
+            # Uploads a file to the form
+            paths = ["resources", "forms", "complex_form", "cantones.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, json2_project, json2_form
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Uploads a file to the form
+            paths = ["resources", "forms", "complex_form", "distritos.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, json2_project, json2_form
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            access_assistant = str(uuid.uuid4())
+            access_assistant = access_assistant[-12:]
+
+            mimic_res = self.testapp.post(
+                "/user/{}/project/{}/assistants/add".format(
+                    self.randonLogin, json2_project
+                ),
+                {
+                    "coll_id": access_assistant,
+                    "coll_password": "123",
+                    "coll_password2": "123",
+                    "coll_prjshare": 1,
+                },
+                status=302,
+            )
+            assert "FS_error" not in mimic_res.headers
+
+            # Add an assistant to a form succeeds
+            mimic_res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, json2_project, json2_form
+                ),
+                {
+                    "coll_id": "{}|{}".format(json2_project_id, access_assistant),
+                    "coll_privileges": "2",
+                },
+                status=302,
+            )
+            assert "FS_error" not in mimic_res.headers
+
+            # Test getting the forms when the assistant does not have access
+            self.testapp.get(
+                "/user/{}/project/{}/formList".format(self.randonLogin, json2_project),
+                status=200,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=access_assistant
+                ),
+            )
+
+            # Upload submission fails assistant cannot submit
+            paths = ["resources", "forms", "complex_form", "submissions_logs2", "submission001.xml"]
+            submission_file = os.path.join(self.path, *paths)
+            paths = ["resources", "forms", "complex_form", "image001.png"]
+            image_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, json2_project),
+                status=404,
+                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=access_assistant
+                ),
+            )
+
+            # Set form as inactive
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/deactivate".format(
+                    self.randonLogin, json2_project, json2_form
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Upload submission fails the form is inactive
+            paths = ["resources", "forms", "complex_form", "submissions_logs2", "submission001.xml"]
+            submission_file = os.path.join(self.path, *paths)
+            paths = ["resources", "forms", "complex_form", "image001.png"]
+            image_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, json2_project),
+                status=404,
+                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=access_assistant
+                ),
+            )
+
+            # Set form as active
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/activate".format(
+                    self.randonLogin, json2_project, json2_form
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Upload submission fails the form does not exists
+            paths = ["resources", "forms", "complex_form", "submissions_logs2", "submission001_invalid.xml"]
+            submission_file = os.path.join(self.path, *paths)
+            paths = ["resources", "forms", "complex_form", "image001.png"]
+            image_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, json2_project),
+                status=404,
+                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=access_assistant
+                ),
+            )
+
+            # Upload submission fails the upload does not have an xml file
+            paths = ["resources", "api_test.dat"]
+            submission_file = os.path.join(self.path, *paths)
+            paths = ["resources", "forms", "complex_form", "image001.png"]
+            image_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, json2_project),
+                status=500,
+                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=access_assistant
+                ),
+            )
+
         start_time = datetime.datetime.now()
         test_root()
         test_login()
@@ -5505,6 +5740,7 @@ class FunctionalTests(unittest.TestCase):
         test_collaborator_projects_3()
         test_collaborator_projects_4()
         test_delete_active_project()
+        test_form_access()
 
         end_time = datetime.datetime.now()
         time_delta = end_time - start_time

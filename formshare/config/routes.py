@@ -88,11 +88,9 @@ from formshare.views.form import (
     ImportData,
     DownloadKML,
     StopTask,
-    StopRepository,
     DownloadPublicCSV,
     DownloadPrivateCSV,
     DownloadPrivateXLSData,
-    StopMerge,
 )
 from formshare.views.odk import (
     ODKFormList,
@@ -555,16 +553,6 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test
-    routes.append(
-        add_route(
-            "stop_repository",
-            "/user/{userid}/project/{projcode}/form/{formid}/stoprepository",
-            StopRepository,
-            None,
-        )
-    )
-
     routes.append(
         add_route(
             "deactivate_form",
@@ -832,16 +820,6 @@ def load_routes(config):
             "/user/{userid}/project/{projcode}/form/{formid}/merge/into/{oldformid}",
             RepositoryMergeForm,
             "dashboard/projects/repository/merge_new_version.jinja2",
-        )
-    )
-
-    # TODO: Test
-    routes.append(
-        add_route(
-            "stop_merge",
-            "/user/{userid}/project/{projcode}/form/{formid}/stopmerge",
-            StopMerge,
-            None,
         )
     )
 

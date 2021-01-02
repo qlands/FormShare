@@ -432,7 +432,11 @@ def internal_merge_into_repository(
     locale,
     discard_testing_data,
 ):
-    log.info("Merging process for form {} in project {} has started".format(a_form_id, project_id))
+    log.info(
+        "Merging process for form {} in project {} has started".format(
+            a_form_id, project_id
+        )
+    )
     parts = __file__.split("/products/")
     this_file_path = parts[0] + "/locale"
     es = gettext.translation("formshare", localedir=this_file_path, languages=[locale])

@@ -17,7 +17,9 @@ class EmptyFileError(Exception):
     """
 
 
-def internal_build_kml(settings, form_schema, kml_file, primary_key, locale, test_task_id=None):
+def internal_build_kml(
+    settings, form_schema, kml_file, primary_key, locale, test_task_id=None
+):
     parts = __file__.split("/products/")
     this_file_path = parts[0] + "/locale"
     es = gettext.translation("formshare", localedir=this_file_path, languages=[locale])
@@ -92,4 +94,6 @@ def internal_build_kml(settings, form_schema, kml_file, primary_key, locale, tes
 
 @celeryApp.task(base=CeleryTask)
 def build_kml(settings, form_schema, kml_file, primary_key, locale, test_task_id=None):
-    internal_build_kml(settings, form_schema, kml_file, primary_key, locale, test_task_id)
+    internal_build_kml(
+        settings, form_schema, kml_file, primary_key, locale, test_task_id
+    )

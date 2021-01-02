@@ -250,7 +250,11 @@ def internal_create_mysql_repository(
     discard_testing_data,
     testing_task=None,
 ):
-    log.info("Repository process for form {} in project {} has started".format(form, project_id))
+    log.info(
+        "Repository process for form {} in project {} has started".format(
+            form, project_id
+        )
+    )
     parts = __file__.split("/products/")
     this_file_path = parts[0] + "/locale"
     es = gettext.translation("formshare", localedir=this_file_path, languages=[locale])

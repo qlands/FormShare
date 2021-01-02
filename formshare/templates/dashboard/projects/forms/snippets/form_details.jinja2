@@ -138,9 +138,6 @@
                 <h4 class="text-center text-success">{{ _('FormShare is generating your repository.') }}</h4>
                 <h3 class="text-center repository_message">{{ _('Scheduling....') }}</h3>
                 <br/>
-                <div class="text-center">
-                    <button type="button" class="btn btn-w-m btn-danger cancel_repository" data-task-id="{{ formDetails.form_reptask }}">{{ _('Cancel') }}</button>
-                </div>
             </div>
         </div>
     {% endif %}
@@ -164,9 +161,6 @@
                 <h4 class="text-center text-success">{{ _('FormShare is merging this form.') }}</h4>
                 <h3 id="merge_message" class="text-center merge_message">{{ _('Scheduling....') }}</h3>
                 <br/>
-                <div class="text-center">
-                    <button id="cancel_merge" type="button" class="btn btn-w-m btn-danger cancel_merge" data-merge-task-id="{{ formDetails.form_mergetask }}">{{ _('Cancel') }}</button>
-                </div>
             </div>
         </div>
     {% endif %}

@@ -27,19 +27,6 @@ from formshare.processes.db.form import get_assistant_forms
 log = logging.getLogger("formshare")
 
 
-def get_assistant_name(request, project, assistant):
-    enum = (
-        request.dbsession.query(Collaborator)
-        .filter(Collaborator.project_id == project)
-        .filter(Collaborator.coll_id == assistant)
-        .first()
-    )
-    if enum is not None:
-        return enum.coll_name
-    else:
-        return ""
-
-
 def is_assistant_active(request, project, assistant):
     enum = (
         request.dbsession.query(Collaborator)

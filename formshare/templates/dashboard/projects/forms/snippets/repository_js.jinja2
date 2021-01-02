@@ -54,36 +54,6 @@ function fadeInOut () {
 }
 fadeInOut();
 
-$('.cancel_repository').click(function () {
-    swal({
-            title: "{{ _('Stop the generation of the repository') }}",
-            text: "{{ _('Are you sure that you want to stop this?') }}",
-            type: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#DD6B55",
-            confirmButtonText: "{{ _('Yes, stop the process') }}",
-            cancelButtonText: "{{ _('Oops!, cancel!') }}",
-            closeOnConfirm: true,
-            closeOnCancel: true },
-        function (isConfirm) {
-            if (isConfirm) {
-                var form = document.createElement('form');
-                form.setAttribute('method', 'post');
-                form.setAttribute('action', '{{ request.route_url('stop_repository',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}');
-                form.style.display = 'hidden';
-
-                var i = document.createElement("input"); //input element, text
-                i.setAttribute('type',"text");
-                i.setAttribute('name',"csrf_token");
-                i.setAttribute('value','{{ request.session.get_csrf_token() }}');
-                form.appendChild(i);
-
-                document.body.appendChild(form);
-                form.submit();
-            }
-        });
-});
-
 $('.cancel-task').click(function () {
     var action_url = $( this ).attr('urn');
     swal({

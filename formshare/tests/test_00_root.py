@@ -3627,10 +3627,9 @@ class FunctionalTests(unittest.TestCase):
 
             # Get the disregarded
             self.testapp.get(
-                "/user/{}/project/{}/assistantaccess/form/{}/errors".format(
+                "/user/{}/project/{}/assistantaccess/form/{}/errors?status=disregarded".format(
                     self.randonLogin, self.project, self.formID
                 ),
-                {"status": "disregarded"},
                 status=200,
             )
 
@@ -3858,7 +3857,6 @@ class FunctionalTests(unittest.TestCase):
             )
 
         def test_json_logs_2():
-
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/logout".format(
                     self.randonLogin, self.project
@@ -3938,6 +3936,60 @@ class FunctionalTests(unittest.TestCase):
                 {
                     "coll_id": "{}|{}".format(json2_project_id, "json2001"),
                     "coll_privileges": "3",
+                },
+                status=302,
+            )
+            assert "FS_error" not in mimic_res.headers
+
+            mimic_res = self.testapp.post(
+                "/user/{}/project/{}/assistants/add".format(
+                    self.randonLogin, json2_project
+                ),
+                {
+                    "coll_id": "json2002",
+                    "coll_password": "123",
+                    "coll_password2": "123",
+                    "coll_prjshare": 1,
+                },
+                status=302,
+            )
+            assert "FS_error" not in mimic_res.headers
+
+            # Add an assistant to a form succeeds
+            mimic_res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, json2_project, json2_form
+                ),
+                {
+                    "coll_id": "{}|{}".format(json2_project_id, "json2002"),
+                    "coll_privileges": "1",
+                },
+                status=302,
+            )
+            assert "FS_error" not in mimic_res.headers
+
+            mimic_res = self.testapp.post(
+                "/user/{}/project/{}/assistants/add".format(
+                    self.randonLogin, json2_project
+                ),
+                {
+                    "coll_id": "json2003",
+                    "coll_password": "123",
+                    "coll_password2": "123",
+                    "coll_prjshare": 1,
+                },
+                status=302,
+            )
+            assert "FS_error" not in mimic_res.headers
+
+            # Add an assistant to a form succeeds
+            mimic_res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, json2_project, json2_form
+                ),
+                {
+                    "coll_id": "{}|{}".format(json2_project_id, "json2003"),
+                    "coll_privileges": "2",
                 },
                 status=302,
             )
@@ -4048,7 +4100,24 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/errors?status=error".format(
+                    self.randonLogin, json2_project, json2_form
+                ),
+                status=200,
+            )
+
+            form_details = get_form_details(
+                self.server_config, json2_project_id, json2_form
+            )
+
             engine = create_engine(self.server_config["sqlalchemy.url"])
+            sql = "SELECT surveyid FROM {}.maintable WHERE i_d = '109750690'".format(
+                form_details["form_schema"]
+            )
+            res = engine.execute(sql).first()
+            survey_id = res[0]
+
             sql = (
                 "SELECT submission_id FROM formshare.submission "
                 "WHERE submission_status = 2 AND sameas IS NULL AND project_id = '{}' AND form_id = '{}'".format(
@@ -4077,6 +4146,13 @@ class FunctionalTests(unittest.TestCase):
                 )
                 assert "FS_error" not in res.headers
 
+                self.testapp.get(
+                    "/user/{}/project/{}/assistantaccess/form/{}/errors?status=checkout".format(
+                        self.randonLogin, json2_project, json2_form
+                    ),
+                    status=200,
+                )
+
                 res = self.testapp.get(
                     "/user/{}/project/{}/assistantaccess/form/{}/{}/get".format(
                         self.randonLogin, json2_project, json2_form, a_duplicate
@@ -4101,11 +4177,24 @@ class FunctionalTests(unittest.TestCase):
                     "/user/{}/project/{}/assistantaccess/form/{}/{}/checkin".format(
                         self.randonLogin, json2_project, json2_form, a_duplicate
                     ),
-                    {"notes": "Some notes about the checkin", "sequence": sequence_id},
+                    {
+                        "notes": "This is not the same as submission: {}. Corrected ID".format(
+                            survey_id
+                        ),
+                        "sequence": sequence_id,
+                    },
                     status=302,
                     upload_files=[("json", submission_file)],
                 )
                 assert "FS_error" not in res.headers
+
+                # Get all logs
+                self.testapp.get(
+                    "/user/{}/project/{}/assistantaccess/form/{}/errors".format(
+                        self.randonLogin, json2_project, json2_form
+                    ),
+                    status=200,
+                )
 
                 os.remove(submission_file)
 
@@ -4122,6 +4211,314 @@ class FunctionalTests(unittest.TestCase):
                 )
                 assert "FS_error" not in res.headers
                 time.sleep(5)  # Wait for ElasticSearch to store this
+
+            # Get all logs
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/errors".format(
+                    self.randonLogin, json2_project, json2_form
+                ),
+                status=200,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/errors?status=fixed".format(
+                    self.randonLogin, json2_project, json2_form
+                ),
+                status=200,
+            )
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/logout".format(
+                    self.randonLogin, json2_project
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/login".format(
+                    self.randonLogin, json2_project
+                ),
+                {"login": "json2002", "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/errors".format(
+                    self.randonLogin, json2_project, json2_form
+                ),
+                status=200,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/errors?status=fixed".format(
+                    self.randonLogin, json2_project, json2_form
+                ),
+                status=200,
+            )
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/logout".format(
+                    self.randonLogin, json2_project
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/login".format(
+                    self.randonLogin, json2_project
+                ),
+                {"login": "json2003", "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/errors".format(
+                    self.randonLogin, json2_project, json2_form
+                ),
+                status=200,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/errors?status=fixed".format(
+                    self.randonLogin, json2_project, json2_form
+                ),
+                status=200,
+            )
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/logout".format(
+                    self.randonLogin, json2_project
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # ---- Groups
+            # Add three groups
+            res = self.testapp.post(
+                "/user/{}/project/{}/groups/add".format(
+                    self.randonLogin, json2_project
+                ),
+                {"group_desc": "Test if a group 1", "group_id": "grp001"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/groups/add".format(
+                    self.randonLogin, json2_project
+                ),
+                {"group_desc": "Test if a group 2", "group_id": "grp002"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/groups/add".format(
+                    self.randonLogin, json2_project
+                ),
+                {"group_desc": "Test if a group 3", "group_id": "grp003"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Add three assistants
+            mimic_res = self.testapp.post(
+                "/user/{}/project/{}/assistants/add".format(
+                    self.randonLogin, json2_project
+                ),
+                {
+                    "coll_id": "jsongrp001",
+                    "coll_password": "123",
+                    "coll_password2": "123",
+                    "coll_prjshare": 1,
+                },
+                status=302,
+            )
+            assert "FS_error" not in mimic_res.headers
+
+            mimic_res = self.testapp.post(
+                "/user/{}/project/{}/assistants/add".format(
+                    self.randonLogin, json2_project
+                ),
+                {
+                    "coll_id": "jsongrp002",
+                    "coll_password": "123",
+                    "coll_password2": "123",
+                    "coll_prjshare": 1,
+                },
+                status=302,
+            )
+            assert "FS_error" not in mimic_res.headers
+
+            mimic_res = self.testapp.post(
+                "/user/{}/project/{}/assistants/add".format(
+                    self.randonLogin, json2_project
+                ),
+                {
+                    "coll_id": "jsongrp003",
+                    "coll_password": "123",
+                    "coll_password2": "123",
+                    "coll_prjshare": 1,
+                },
+                status=302,
+            )
+            assert "FS_error" not in mimic_res.headers
+
+            # Add each assistant to each group
+            res = self.testapp.post(
+                "/user/{}/project/{}/group/{}/members".format(
+                    self.randonLogin, json2_project, "grp001"
+                ),
+                {
+                    "add_assistant": "",
+                    "coll_id": "{}|{}".format(json2_project_id, "jsongrp001"),
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/group/{}/members".format(
+                    self.randonLogin, json2_project, "grp002"
+                ),
+                {
+                    "add_assistant": "",
+                    "coll_id": "{}|{}".format(json2_project_id, "jsongrp002"),
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/group/{}/members".format(
+                    self.randonLogin, json2_project, "grp003"
+                ),
+                {
+                    "add_assistant": "",
+                    "coll_id": "{}|{}".format(json2_project_id, "jsongrp003"),
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Add each group to the form with different privileges
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/groups/add".format(
+                    self.randonLogin, json2_project, json2_form
+                ),
+                {"group_id": "grp001", "group_privilege": 1},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/groups/add".format(
+                    self.randonLogin, json2_project, json2_form
+                ),
+                {"group_id": "grp002", "group_privilege": 2},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/groups/add".format(
+                    self.randonLogin, json2_project, json2_form
+                ),
+                {"group_id": "grp003", "group_privilege": 3},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Login and display with each assistant
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/login".format(
+                    self.randonLogin, json2_project
+                ),
+                {"login": "jsongrp001", "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/errors".format(
+                    self.randonLogin, json2_project, json2_form
+                ),
+                status=200,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/errors?status=fixed".format(
+                    self.randonLogin, json2_project, json2_form
+                ),
+                status=200,
+            )
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/logout".format(
+                    self.randonLogin, json2_project
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/login".format(
+                    self.randonLogin, json2_project
+                ),
+                {"login": "jsongrp002", "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/errors".format(
+                    self.randonLogin, json2_project, json2_form
+                ),
+                status=200,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/errors?status=fixed".format(
+                    self.randonLogin, json2_project, json2_form
+                ),
+                status=200,
+            )
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/logout".format(
+                    self.randonLogin, json2_project
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/login".format(
+                    self.randonLogin, json2_project
+                ),
+                {"login": "jsongrp003", "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/errors".format(
+                    self.randonLogin, json2_project, json2_form
+                ),
+                status=200,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/errors?status=fixed".format(
+                    self.randonLogin, json2_project, json2_form
+                ),
+                status=200,
+            )
 
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/logout".format(

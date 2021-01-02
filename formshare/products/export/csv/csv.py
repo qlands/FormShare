@@ -34,7 +34,8 @@ def generate_public_csv_file(
             csv_file,
             True,
             request.locale_name,
-        )
+        ),
+        queue="FormShare",
     )
     register_product_instance(
         request,
@@ -79,7 +80,8 @@ def generate_private_csv_file(
             csv_file,
             False,
             request.locale_name,
-        )
+        ),
+        queue="FormShare",
     )
     register_product_instance(
         request,

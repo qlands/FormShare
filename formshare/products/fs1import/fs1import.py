@@ -39,7 +39,8 @@ def formshare_one_import_json(
             settings,
             request.locale_name,
             ignore_xform_check,
-        )
+        ),
+        queue="FormShare",
     )
     register_product_instance(
         request, user, project, form, "fs1import", task.id, None, None, True

@@ -68,7 +68,6 @@ class JSONList(AssistantView):
                 number_of_errors = get_number_of_errors_by_assistant(
                     self.request, self.projectID, form_id, None, status_code
                 )
-
             else:
                 number_of_errors = get_number_of_errors_by_assistant(
                     self.request, self.projectID, form_id, self.assistantID, status_code

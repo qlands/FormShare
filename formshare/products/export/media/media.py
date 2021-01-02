@@ -27,7 +27,8 @@ def generate_media_zip_file(
             media_file,
             primary_key,
             request.locale_name,
-        )
+        ),
+        queue="FormShare",
     )
     register_product_instance(
         request,

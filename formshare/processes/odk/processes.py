@@ -1,15 +1,11 @@
 import datetime
-import glob
 import logging
-import os
 import re
 import uuid
-import zipfile
 
 from lxml import etree
 from sqlalchemy.event import listen
 
-from formshare.config.encdecdata import decode_data
 from formshare.models import (
     Collaborator,
     Submission,
@@ -22,47 +18,8 @@ from formshare.models import (
 )
 from formshare.models import Odkform as Form
 from formshare.processes.db.assistant import get_project_from_assistant
-from formshare.processes.db.form import get_assistant_forms
 
 log = logging.getLogger("formshare")
-
-
-def is_assistant_active(request, project, assistant):
-    enum = (
-        request.dbsession.query(Collaborator)
-        .filter(Collaborator.project_id == project)
-        .filter(Collaborator.coll_id == assistant)
-        .first()
-    )
-    if enum is not None:
-        if enum.coll_active == 1:
-            return True
-        else:
-            return False
-    else:
-        return False
-
-
-def get_assistant_password(request, project, assistant):
-    enum = (
-        request.dbsession.query(Collaborator)
-        .filter(Collaborator.project_id == project)
-        .filter(Collaborator.coll_id == assistant)
-        .first()
-    )
-    encoded_password = enum.coll_password
-    decoded_password = decode_data(request, encoded_password)
-    return decoded_password
-
-
-def get_form_directory(request, project, form):
-    form_data = (
-        request.dbsession.query(Form)
-        .filter(Form.project_id == project)
-        .filter(Form.form_id == form)
-        .one()
-    )
-    return form_data.form_directory
 
 
 def get_form_schema(request, project, form):
@@ -377,156 +334,6 @@ def get_errors_by_assistant(
     return result
 
 
-def get_submissions_by_assistant(dbsession, project, form, assistant):
-    total = (
-        dbsession.query(Submission)
-        .filter(Submission.project_id == project)
-        .filter(Submission.form_id == form)
-        .filter(Submission.coll_id == assistant)
-        .filter(Submission.sameas.is_(None))
-        .count()
-    )
-
-    in_db = (
-        dbsession.query(Submission)
-        .filter(Submission.project_id == project)
-        .filter(Submission.form_id == form)
-        .filter(Submission.coll_id == assistant)
-        .filter(Submission.submission_status == 0)
-        .filter(Submission.sameas.is_(None))
-        .count()
-    )
-
-    fixed = (
-        dbsession.query(Jsonlog)
-        .filter(Jsonlog.project_id == project)
-        .filter(Jsonlog.form_id == form)
-        .filter(Jsonlog.status == 0)
-        .filter(Jsonlog.coll_id == assistant)
-        .count()
-    )
-
-    in_db_from_logs = (
-        dbsession.query(Jsonlog)
-        .filter(Jsonlog.project_id == project)
-        .filter(Jsonlog.form_id == form)
-        .filter(Jsonlog.coll_id == assistant)
-        .count()
-    )
-
-    in_error = (
-        dbsession.query(Jsonlog)
-        .filter(Jsonlog.project_id == project)
-        .filter(Jsonlog.form_id == form)
-        .filter(Jsonlog.coll_id == assistant)
-        .filter(Jsonlog.status != 0, Jsonlog.status != 4)
-        .count()
-    )
-
-    res = (
-        dbsession.query(Submission)
-        .filter(Submission.project_id == project)
-        .filter(Submission.form_id == form)
-        .filter(Submission.coll_id == assistant)
-        .filter(Submission.sameas.is_(None))
-        .order_by(Submission.submission_dtime.desc())
-        .first()
-    )
-    if res is not None:
-        last = res.submission_dtime
-    else:
-        last = None
-
-    result = {
-        "total": total,
-        "totalInDB": in_db + fixed,
-        "totalInLogs": in_db_from_logs,
-        "totalInError": in_error,
-        "last": last,
-    }
-    return result
-
-
-def get_submissions_by_form(dbsession, project, form):
-    total = (
-        dbsession.query(Submission)
-        .filter(Submission.project_id == project)
-        .filter(Submission.form_id == form)
-        .filter(Submission.sameas.is_(None))
-        .count()
-    )
-
-    in_db = (
-        dbsession.query(Submission)
-        .filter(Submission.project_id == project)
-        .filter(Submission.form_id == form)
-        .filter(Submission.submission_status == 0)
-        .filter(Submission.sameas.is_(None))
-        .count()
-    )
-
-    in_db_from_logs = (
-        dbsession.query(Jsonlog)
-        .filter(Jsonlog.project_id == project)
-        .filter(Jsonlog.form_id == form)
-        .count()
-    )
-
-    fixed = (
-        dbsession.query(Jsonlog)
-        .filter(Jsonlog.project_id == project)
-        .filter(Jsonlog.form_id == form)
-        .filter(Jsonlog.status == 0)
-        .count()
-    )
-
-    in_error = (
-        dbsession.query(Jsonlog)
-        .filter(Jsonlog.project_id == project)
-        .filter(Jsonlog.form_id == form)
-        .filter(Jsonlog.status != 0, Jsonlog.status != 4)
-        .count()
-    )
-
-    res = (
-        dbsession.query(Submission)
-        .filter(Submission.project_id == project)
-        .filter(Submission.form_id == form)
-        .filter(Submission.sameas.is_(None))
-        .order_by(Submission.submission_dtime.desc())
-        .first()
-    )
-    if res is not None:
-        last = res.submission_dtime
-    else:
-        last = None
-
-    result = {
-        "total": total,
-        "totalInDB": in_db + fixed,
-        "totalInLogs": in_db_from_logs,
-        "totalInError": in_error,
-        "last": last,
-    }
-    return result
-
-
-def get_forms_by_assistant(request, user, project, assistant):
-    assistant_project = get_project_from_assistant(request, user, project, assistant)
-    assistant_forms = get_assistant_forms(
-        request, project, assistant_project, assistant
-    )
-
-    for a_form in assistant_forms:
-        a_form["formstats"] = get_submissions_by_form(
-            request.dbsession, a_form["project_id"], a_form["form_id"]
-        )
-        a_form["enumstats"] = get_submissions_by_assistant(
-            request.dbsession, a_form["project_id"], a_form["form_id"], assistant
-        )
-    return assistant_forms
-
-
 def get_assistant_permissions_on_a_form(
     request, user, requested_project, assistant, form
 ):
@@ -574,9 +381,9 @@ def get_assistant_permissions_on_a_form(
                 privileges = {"enum_cansubmit": 1, "enum_canclean": 1}
             else:
                 if res.group_privileges == 1:
-                    privileges["enum_cansubmit"] = 1
+                    privileges = {"enum_cansubmit": 1, "enum_canclean": 0}
                 else:
-                    privileges["enum_canclean"] = 2
+                    privileges = {"enum_cansubmit": 0, "enum_canclean": 1}
 
     return privileges
 
@@ -611,67 +418,6 @@ def get_form_data(project, form, request):
         res["form_insertxmlfile"] = data.form_insertxmlfile
         res["form_hexcolor"] = data.form_hexcolor
     return res
-
-
-def modification_date(filename):
-    t = os.path.getmtime(filename)
-    return datetime.datetime.fromtimestamp(t)
-
-
-def get_number_of_submissions(odk_dir, directory):
-    paths = ["forms", directory, "submissions", "*.json"]
-    path = os.path.join(odk_dir, *paths)
-    files = glob.glob(path)
-    if files:
-        files.sort(key=os.path.getmtime)
-        return len(files), modification_date(files[0])
-    else:
-        return 0, None
-
-
-def zipdir(path, ziph):
-    # ziph is zipfile handle
-    for root, dirs, files in os.walk(path):
-        for file in files:
-            if file.find(".json") >= 0:
-                ziph.write(
-                    os.path.join(root, file), os.path.basename(os.path.join(root, file))
-                )
-
-
-def zip_json_files(odk_dir, form):
-    try:
-        uid = str(uuid.uuid4())
-        paths = ["tmp", uid + ".zip"]
-        path = os.path.join(odk_dir, *paths)
-        zipf = zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED)
-        paths = ["forms", form, "submissions"]
-        source_path = os.path.join(odk_dir, *paths)
-        zipdir(source_path, zipf)
-        zipf.close()
-        return True, path
-    except Exception as e:
-        return False, str(e)
-
-
-def handle_uploaded_file(f, target_file):
-    max_size = 100
-    tmp_filepath = target_file + "~"
-    output_file = open(tmp_filepath, "wb")
-    current_size = 0
-    while True:
-        current_size = current_size + 1
-        # MB chunks
-        data = f.read(2 ** 20)
-        if not data:
-            break
-        output_file.write(data)
-        if current_size > max_size:
-            os.remove(tmp_filepath)
-            print("File upload too large")
-
-    output_file.close()
-    os.rename(tmp_filepath, target_file)
 
 
 def checkout_submission(

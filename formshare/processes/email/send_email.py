@@ -29,7 +29,8 @@ def send_email(request, email_from, email_to, subject, message, reply_to=None):
             message,
             reply_to,
             request.locale_name,
-        )
+        ),
+        queue="FormShare",
     )
     return True
 

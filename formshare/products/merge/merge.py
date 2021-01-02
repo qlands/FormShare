@@ -36,7 +36,8 @@ def merge_form(
             b_hex_color,
             request.locale_name,
             discard_testing_data,
-        )
+        ),
+        queue="FormShare",
     )
     register_product_instance(
         request, user, project_id, a_form_id, "merge_form", task.id, None, None, True

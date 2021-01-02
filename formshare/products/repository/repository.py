@@ -43,7 +43,8 @@ def create_database_repository(
             repository_string,
             request.locale_name,
             discard_testing_data,
-        )
+        ),
+        queue="FormShare",
     )
     register_product_instance(
         request, user, project, form, "repository", task.id, None, None, True

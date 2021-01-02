@@ -4130,12 +4130,6 @@ class FunctionalTests(unittest.TestCase):
                 duplicated_ids.append(a_duplicate[0])
             engine.dispose()
             index = 0
-            print("******************************FFFFF")
-            print(json2_project_id)
-            print(json2_form)
-            print("-----------------------------------")
-            print(duplicated_ids)
-            print("******************************FFFFF")
             for a_duplicate in duplicated_ids:
                 index = index + 1
                 res = self.testapp.post(
@@ -4527,6 +4521,9 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+        def test_json_logs_3():
+            pass
 
         def test_clean_interface():
 
@@ -6244,6 +6241,7 @@ class FunctionalTests(unittest.TestCase):
         test_assistant_access()
         test_json_logs()
         test_json_logs_2()
+        test_json_logs_3()
         test_clean_interface()
         test_audit()
         test_repository_tasks()

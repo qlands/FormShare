@@ -256,11 +256,6 @@ def json_to_csv(request, project, form):
         for aFile in files:
             with open(aFile) as json_file:
                 data = json.load(json_file)
-                # print("*****************************888")
-                # print(json_file)
-                # print("--------------------------------")
-                # print(data)
-                # print("888*****************************")
                 gather_array_sizes(data, array_dict)
                 separate_multi_selects(data, "maintable", root_create)
                 new_data = data

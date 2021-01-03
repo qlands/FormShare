@@ -200,11 +200,6 @@ def internal_build_csv(
     out_path = os.path.join(settings["repository.path"], *paths)
     os.makedirs(out_path)
 
-    # print("************************9999")
-    # print(maps_directory)
-    # print(create_xml_file)
-    # print(insert_xml_file)
-    # print("************************9999")
     args = [
         mysql_denormalize,
         "-H " + settings["mysql.host"],

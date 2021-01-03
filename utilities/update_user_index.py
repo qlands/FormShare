@@ -31,11 +31,6 @@ def main():
             user_index = configure_user_index_manager(settings)
             for a_user in users:
                 try:
-                    # print("****************************99")
-                    # print(a_user.user_id)
-                    # print(a_user.user_email)
-                    # print(a_user.user_name)
-                    # print("****************************99")
                     user_index.add_user(
                         a_user.user_id,
                         {

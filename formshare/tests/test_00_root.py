@@ -3539,9 +3539,6 @@ class FunctionalTests(unittest.TestCase):
             sql = "SELECT surveyid FROM {}.maintable WHERE i_d = '501890386'".format(
                 form_details["form_schema"]
             )
-            print("**********************************UUUUU")
-            print(sql)
-            print("**********************************UUUUU")
             res = engine.execute(sql).first()
             survey_id = res[0]
 
@@ -3551,9 +3548,6 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID, self.formID
                 )
             )
-            print("**********************************WWW")
-            print(sql)
-            print("**********************************WWW")
             res = engine.execute(sql).first()
             duplicated_id = res[0]
 
@@ -3783,6 +3777,68 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # -----------------------
+            # Checkout the submission again
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/checkout".format(
+                    self.randonLogin, self.project, self.formID, duplicated_id
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Gets the submission file again
+            res = self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/get".format(
+                    self.randonLogin, self.project, self.formID, duplicated_id
+                ),
+                status=200,
+            )
+            data = json.loads(res.body)
+            data["SECTION_META/interviewername"] = "CARLOS QUIROS CAMPOS"
+            paths = ["tmp", duplicated_id + ".json"]
+            submission_file = os.path.join(self.path, *paths)
+
+            with open(submission_file, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=4)
+
+            # Checkin the file again
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/checkin".format(
+                    self.randonLogin, self.project, self.formID, duplicated_id
+                ),
+                {"notes": "Some notes about the checkin", "sequence": "23a243c95548"},
+                status=302,
+                upload_files=[("json", submission_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            os.remove(submission_file)
+
+            # Push the revision. In this case the push fails
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/push".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    duplicated_id,
+                    "23a243c95548",
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the checkout
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/errors".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {"status": "fixed"},
+                status=200,
+            )
+
+            # ----------------------------
+
             # Checkout the submission again
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/checkout".format(
@@ -3814,7 +3870,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/checkin".format(
                     self.randonLogin, self.project, self.formID, duplicated_id
                 ),
-                {"notes": "Some notes about the checkin", "sequence": "23a243c95548"},
+                {"notes": "Some notes about the checkin", "sequence": "23a243c95549"},
                 status=302,
                 upload_files=[("json", submission_file)],
             )
@@ -3829,7 +3885,7 @@ class FunctionalTests(unittest.TestCase):
                     self.project,
                     self.formID,
                     duplicated_id,
-                    "23a243c95548",
+                    "23a243c95549",
                 ),
                 status=302,
             )
@@ -4181,6 +4237,7 @@ class FunctionalTests(unittest.TestCase):
                     upload_files=[("json", submission_file)],
                 )
                 assert "FS_error" not in res.headers
+                time.sleep(3)
 
                 # Get all logs
                 self.testapp.get(
@@ -4522,8 +4579,411 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+        def test_json_logs_4():
+            # Adds a mimic2 project
+            json4_project = "json4"
+            json4_project_id = str(uuid.uuid4())
+            mimic_res = self.testapp.post(
+                "/user/{}/projects/add".format(self.randonLogin),
+                {
+                    "project_id": json4_project_id,
+                    "project_code": json4_project,
+                    "project_name": "Test project",
+                    "project_abstract": "",
+                },
+                status=302,
+            )
+            assert "FS_error" not in mimic_res.headers
+            # Add the mimic form
+            mimic_paths = ["resources", "forms", "complex_form", "B.xlsx"]
+            resource_file = os.path.join(self.path, *mimic_paths)
+            mimic_res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, json4_project),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" not in mimic_res.headers
+            json4_form = "LB_Sequia_MAG_20190123"
+
+            # Uploads a file to the form
+            paths = ["resources", "forms", "complex_form", "cantones.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, json4_project, json4_form
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Uploads a file to the form
+            paths = ["resources", "forms", "complex_form", "distritos.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, json4_project, json4_form
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            mimic_res = self.testapp.post(
+                "/user/{}/project/{}/assistants/add".format(
+                    self.randonLogin, json4_project
+                ),
+                {
+                    "coll_id": "json4001",
+                    "coll_password": "123",
+                    "coll_password2": "123",
+                    "coll_prjshare": 1,
+                },
+                status=302,
+            )
+            assert "FS_error" not in mimic_res.headers
+
+            # Add an assistant to a form succeeds
+            mimic_res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, json4_project, json4_form
+                ),
+                {
+                    "coll_id": "{}|{}".format(json4_project_id, "json4001"),
+                    "coll_privileges": "3",
+                },
+                status=302,
+            )
+            assert "FS_error" not in mimic_res.headers
+
+            # Generate the repository using celery
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, json4_project, json4_form
+                ),
+                {"form_pkey": "I_D", "start_stage1": ""},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            time.sleep(40)  # Wait for Celery to finish
+
+            # Upload submission 1
+            paths = [
+                "resources",
+                "forms",
+                "complex_form",
+                "submissions_logs2",
+                "submission001.xml",
+            ]
+            submission_file = os.path.join(self.path, *paths)
+            paths = ["resources", "forms", "complex_form", "image001.png"]
+            image_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, json4_project),
+                status=201,
+                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="json4001"
+                ),
+            )
+            time.sleep(5)  # Wait for ElasticSearch to store this
+
+            # Upload submission 2 goes to logs
+            paths = [
+                "resources",
+                "forms",
+                "complex_form",
+                "submissions_logs2",
+                "submission003.xml",
+            ]
+            submission_file = os.path.join(self.path, *paths)
+            paths = ["resources", "forms", "complex_form", "image001.png"]
+            image_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, json4_project),
+                status=201,
+                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="json4001"
+                ),
+            )
+            time.sleep(5)  # Wait for ElasticSearch to store this
+
+            form_details = get_form_details(
+                self.server_config, json4_project_id, json4_form
+            )
+
+            engine = create_engine(self.server_config["sqlalchemy.url"])
+            sql = "SELECT rowuuid FROM {}.maintable WHERE i_d = '109750690'".format(
+                form_details["form_schema"]
+            )
+            res = engine.execute(sql).first()
+            row_uuid = res[0]
+
+            sql = (
+                "SELECT submission_id FROM formshare.submission "
+                "WHERE submission_status = 2 AND sameas IS NULL AND project_id = '{}' AND form_id = '{}'".format(
+                    json4_project_id, json4_form
+                )
+            )
+            res = engine.execute(sql).fetchall()
+            duplicated_ids = []
+            for a_duplicate in res:
+                duplicated_ids.append(a_duplicate[0])
+            engine.dispose()
+
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/submissions/delete".format(
+                    self.randonLogin, json4_project, json4_form
+                ),
+                {
+                    "move_submission": "",
+                    "rowuuid": row_uuid,
+                    "coll_id": "{}|{}".format(json4_project_id, "json4001"),
+                },
+                status=302,
+            )
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/login".format(
+                    self.randonLogin, json4_project
+                ),
+                {"login": "json4001", "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/errors".format(
+                    self.randonLogin, json4_project, json4_form
+                ),
+                status=200,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/errors?status=error".format(
+                    self.randonLogin, json4_project, json4_form
+                ),
+                status=200,
+            )
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/push".format(
+                    self.randonLogin, json4_project, json4_form, duplicated_ids[0]
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/logout".format(
+                    self.randonLogin, json4_project
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
         def test_json_logs_3():
-            pass
+            # Adds a mimic2 project
+            json3_project = "json3"
+            json3_project_id = str(uuid.uuid4())
+            mimic_res = self.testapp.post(
+                "/user/{}/projects/add".format(self.randonLogin),
+                {
+                    "project_id": json3_project_id,
+                    "project_code": json3_project,
+                    "project_name": "Test project",
+                    "project_abstract": "",
+                },
+                status=302,
+            )
+            assert "FS_error" not in mimic_res.headers
+            # Add the mimic form
+            mimic_paths = ["resources", "forms", "complex_form", "B.xlsx"]
+            resource_file = os.path.join(self.path, *mimic_paths)
+            mimic_res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, json3_project),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" not in mimic_res.headers
+            json3_form = "LB_Sequia_MAG_20190123"
+
+            # Uploads a file to the form
+            paths = ["resources", "forms", "complex_form", "cantones.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, json3_project, json3_form
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Uploads a file to the form
+            paths = ["resources", "forms", "complex_form", "distritos.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, json3_project, json3_form
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            mimic_res = self.testapp.post(
+                "/user/{}/project/{}/assistants/add".format(
+                    self.randonLogin, json3_project
+                ),
+                {
+                    "coll_id": "json3001",
+                    "coll_password": "123",
+                    "coll_password2": "123",
+                    "coll_prjshare": 1,
+                },
+                status=302,
+            )
+            assert "FS_error" not in mimic_res.headers
+
+            # Add an assistant to a form succeeds
+            mimic_res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, json3_project, json3_form
+                ),
+                {
+                    "coll_id": "{}|{}".format(json3_project_id, "json3001"),
+                    "coll_privileges": "3",
+                },
+                status=302,
+            )
+            assert "FS_error" not in mimic_res.headers
+
+            # Generate the repository using celery
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, json3_project, json3_form
+                ),
+                {"form_pkey": "I_D", "start_stage1": ""},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            time.sleep(40)  # Wait for Celery to finish
+
+            # Upload submission 1
+            paths = [
+                "resources",
+                "forms",
+                "complex_form",
+                "submissions_logs2",
+                "submission001.xml",
+            ]
+            submission_file = os.path.join(self.path, *paths)
+            paths = ["resources", "forms", "complex_form", "image001.png"]
+            image_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, json3_project),
+                status=201,
+                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="json3001"
+                ),
+            )
+            time.sleep(5)  # Wait for ElasticSearch to store this
+
+            # Upload submission 2 goes to logs
+            paths = [
+                "resources",
+                "forms",
+                "complex_form",
+                "submissions_logs2",
+                "submission003.xml",
+            ]
+            submission_file = os.path.join(self.path, *paths)
+            paths = ["resources", "forms", "complex_form", "image001.png"]
+            image_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, json3_project),
+                status=201,
+                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="json3001"
+                ),
+            )
+            time.sleep(5)  # Wait for ElasticSearch to store this
+
+            form_details = get_form_details(
+                self.server_config, json3_project_id, json3_form
+            )
+
+            engine = create_engine(self.server_config["sqlalchemy.url"])
+            sql = "SELECT rowuuid FROM {}.maintable WHERE i_d = '109750690'".format(
+                form_details["form_schema"]
+            )
+            res = engine.execute(sql).first()
+            row_uuid = res[0]
+
+            sql = (
+                "SELECT submission_id FROM formshare.submission "
+                "WHERE submission_status = 2 AND sameas IS NULL AND project_id = '{}' AND form_id = '{}'".format(
+                    json3_project_id, json3_form
+                )
+            )
+            res = engine.execute(sql).fetchall()
+            duplicated_ids = []
+            for a_duplicate in res:
+                duplicated_ids.append(a_duplicate[0])
+            engine.dispose()
+
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/submissions/delete".format(
+                    self.randonLogin, json3_project, json3_form
+                ),
+                {"oper": "del", "id": row_uuid},
+                status=200,
+            )
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/login".format(
+                    self.randonLogin, json3_project
+                ),
+                {"login": "json3001", "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/errors".format(
+                    self.randonLogin, json3_project, json3_form
+                ),
+                status=200,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/errors?status=error".format(
+                    self.randonLogin, json3_project, json3_form
+                ),
+                status=200,
+            )
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/push".format(
+                    self.randonLogin, json3_project, json3_form, duplicated_ids[0]
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/logout".format(
+                    self.randonLogin, json3_project
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
 
         def test_clean_interface():
 
@@ -6242,6 +6702,7 @@ class FunctionalTests(unittest.TestCase):
         test_json_logs()
         test_json_logs_2()
         test_json_logs_3()
+        test_json_logs_4()
         test_clean_interface()
         test_audit()
         test_repository_tasks()

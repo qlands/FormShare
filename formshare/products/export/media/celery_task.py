@@ -1,7 +1,7 @@
 import datetime
 import gettext
 import glob
-import logging
+from celery.utils.log import get_task_logger
 import os
 import shutil
 import traceback
@@ -15,7 +15,7 @@ from formshare.models import get_engine
 from formshare.processes.email.send_async_email import send_async_email
 from formshare.processes.sse.messaging import send_task_status_to_form
 
-log = logging.getLogger("formshare")
+log = get_task_logger(__name__)
 
 
 class BuildError(Exception):

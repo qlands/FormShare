@@ -190,6 +190,7 @@ class FunctionalTests(unittest.TestCase):
 
             #  random_login = "formshare"
             self.randonLogin = random_login
+            print("**************Random Login: {}".format(self.randonLogin))
 
             # Register succeed
             res = self.testapp.post(
@@ -3141,6 +3142,33 @@ class FunctionalTests(unittest.TestCase):
                 )
                 shutil.copyfile(file_to_import, file_to_import_target)
 
+                # -------------------
+                file_to_import = os.path.join(
+                    self.path,
+                    *[
+                        "resources",
+                        "forms",
+                        "complex_form",
+                        "for_import",
+                        "files2",
+                        "file5B.json",
+                    ]
+                )
+                file_to_import_target = os.path.join(
+                    self.path,
+                    *[
+                        "resources",
+                        "forms",
+                        "complex_form",
+                        "for_import",
+                        "files2",
+                        "tmp",
+                        "file5B.json",
+                    ]
+                )
+                shutil.copyfile(file_to_import, file_to_import_target)
+                # ---
+
                 sql = (
                     "INSERT INTO product (project_id,form_id,product_id,output_file,output_mimetype,"
                     "celery_taskid,datetime_added,created_by,output_id,process_only,publishable) "
@@ -3175,7 +3203,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.server_config,
                     "en",
-                    True,
+                    False,
                     task_id,
                 )
                 store_task_status(task_id, self.server_config)
@@ -3552,6 +3580,14 @@ class FunctionalTests(unittest.TestCase):
             duplicated_id = res[0]
 
             engine.dispose()
+
+            # Get the media files of the duplicated ID
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/media".format(
+                    self.randonLogin, self.project, self.formID, duplicated_id, "None"
+                ),
+                status=200,
+            )
 
             # Load compare submission
             self.testapp.get(
@@ -5021,6 +5057,46 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
 
+            # Loads the data for the grid using a like search pattern
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/request"
+                "?callback=jQuery31104503466642261382_1578424030318".format(
+                    self.randonLogin, self.project, self.formID, "maintable"
+                ),
+                {
+                    "_search": "false",
+                    "nd": "1578156795454",
+                    "rows": "10",
+                    "page": "1",
+                    "sidx": "",
+                    "sord": "asc",
+                    "searchField": "respondentname",
+                    "searchString": "ROGELIO",
+                    "searchOper": "like",
+                },
+                status=200,
+            )
+
+            # Loads the data for the grid using a not like search pattern
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/request"
+                "?callback=jQuery31104503466642261382_1578424030318".format(
+                    self.randonLogin, self.project, self.formID, "maintable"
+                ),
+                {
+                    "_search": "false",
+                    "nd": "1578156795454",
+                    "rows": "10",
+                    "page": "1",
+                    "sidx": "",
+                    "sord": "asc",
+                    "searchField": "respondentname",
+                    "searchString": "ROGELIO",
+                    "searchOper": "not like",
+                },
+                status=200,
+            )
+
             form_details = get_form_details(
                 self.server_config, self.projectID, self.formID
             )
@@ -5754,6 +5830,25 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
             self.assertTrue(b"This is the sub-version of" in res.body)
+
+            # Remove all submissions
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/submissions/deleteall".format(
+                    self.randonLogin, self.project, "tormenta20201130"
+                ),
+                {"owner_email": self.randonLogin + "@qlands.com"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form tormenta20201117
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, "tormenta20201130"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"Without submissions" in res.body)
 
             # Delete the form
             res = self.testapp.post(

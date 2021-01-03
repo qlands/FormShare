@@ -11,7 +11,6 @@ __all__ = [
     "store_file",
     "get_stream",
     "response_stream",
-    "stream_exists",
     "delete_stream",
     "delete_bucket",
 ]
@@ -82,23 +81,6 @@ def get_stream(request, bucket_id, file_name):
     return None
 
 
-def stream_exists(request, bucket_id, file_name):
-    storage_object = get_storage_object(request)
-    try:
-        storage_object.claim_bucket(bucket_id)
-    except BucketExists:
-        pass
-    try:
-        stream = storage_object.get_stream(bucket_id, file_name)
-        stream.seek(0, 2)
-        file_size = stream.tell()
-        stream.close()
-        return file_size
-    except FileNotFoundException:
-        pass
-    return -1
-
-
 def response_stream(stream, file_name, response):
     content_type, content_enc = mimetypes.guess_type(file_name)
     if content_type is None:
@@ -137,14 +119,3 @@ class FileIter(object):
 
     def close(self):
         self.file.close()
-
-
-def _guess_type(path):
-    content_type, content_encoding = mimetypes.guess_type(path, strict=False)
-    if content_type is None:
-        content_type = "application/octet-stream"
-    # str-ifying content_type is a workaround for a bug in Python 2.7.7
-    # on Windows where mimetypes.guess_type returns unicode for the
-    # content_type.
-    content_type = str(content_type)
-    return content_type, content_encoding

@@ -1,5 +1,5 @@
 import gettext
-import logging
+from celery.utils.log import get_task_logger
 
 import simplekml
 
@@ -8,7 +8,7 @@ from formshare.config.celery_class import CeleryTask
 from formshare.models import get_engine
 from formshare.processes.sse.messaging import send_task_status_to_form
 
-log = logging.getLogger("formshare")
+log = get_task_logger(__name__)
 
 
 class EmptyFileError(Exception):

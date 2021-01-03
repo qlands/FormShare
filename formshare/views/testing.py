@@ -9,6 +9,12 @@ from formshare.processes.db import get_project_id_from_name, get_form_details
 from pyramid.httpexceptions import HTTPNotFound
 from formshare.processes.elasticsearch.repository_index import get_all_datasets_with_gps
 from formshare.processes.elasticsearch.user_index import configure_user_index_manager
+from formshare.processes.settings import (
+    store_settings,
+    update_settings,
+    delete_settings,
+    get_settings,
+)
 
 
 class TestUserView(FormSharePrivateView):
@@ -18,7 +24,18 @@ class TestUserView(FormSharePrivateView):
         users = get_users(self.request)
         user_details = get_user_details(self.request, user_id)
         user = get_user_id_with_email(self.request, user_details["user_email"])
-        return {"owned_project": owned_project, "users": users, "user": user}
+        store_settings(self.request, "testing", {"test": "a_test_value"})
+        update_settings(self.request, "testing", {"test": "new_testing_value"})
+        settings = get_settings(self.request, "testing")
+        empty_settings = get_settings(self.request, "testing2")
+        delete_settings(self.request, "testing")
+        return {
+            "owned_project": owned_project,
+            "users": users,
+            "user": user,
+            "settings": settings,
+            "empty_settings": empty_settings,
+        }
 
 
 class TestFormView(FormSharePrivateView):

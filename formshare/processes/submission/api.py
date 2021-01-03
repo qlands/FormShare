@@ -54,8 +54,6 @@ __all__ = [
     "update_field_sensitive",
     "get_fields_from_table",
     "get_table_desc",
-    "is_field_key",
-    "get_request_data",
     "update_data",
     "get_request_data_jqgrid",
     "delete_submission",
@@ -617,124 +615,6 @@ def get_table_desc(request, project, form, table_name):
     if table is not None:
         return table.get("desc")
     return ""
-
-
-def is_field_key(request, project, form, table_name, field_name):
-    if table_name == "maintable" and field_name == "surveyid":
-        return True
-    if table_name == "maintable" and field_name == "originid":
-        return True
-    create_file = get_form_xml_create_file(request, project, form)
-    tree = etree.parse(create_file)
-    root = tree.getroot()
-    table = root.find(".//table[@name='" + table_name + "']")
-    if table is not None:
-        for field in table.getchildren():
-            if field.tag == "field":
-                if field.get("name") == field_name:
-                    if field.get("key") == "true":
-                        return True
-                    if field.get("odktype") == "geopoint":
-                        return True
-            else:
-                break
-    return False
-
-
-def get_request_data(
-    request,
-    project,
-    form,
-    table_name,
-    draw,
-    fields,
-    start,
-    length,
-    order_index,
-    order_direction,
-    search_value,
-):
-    _ = request.translate
-    schema = get_form_schema(request, project, form)
-    sql_fields = ",".join(fields)
-    not_null_fields_array = []
-    for a_field in fields:
-        not_null_fields_array.append("IFNULL(" + a_field + ",'')")
-    not_null_fields = ",".join(not_null_fields_array)
-    table_order = fields[order_index]
-
-    if search_value == "":
-        sql = "SELECT " + sql_fields + " FROM " + schema + "." + table_name
-        where_clause = ""
-    else:
-        sql = "SELECT " + sql_fields + " FROM " + schema + "." + table_name
-        sql = (
-            sql
-            + " WHERE LOWER(CONCAT("
-            + not_null_fields
-            + ")) like '%"
-            + search_value.lower()
-            + "%'"
-        )
-        where_clause = (
-            " WHERE LOWER(CONCAT("
-            + not_null_fields
-            + ")) like '%"
-            + search_value.lower()
-            + "%'"
-        )
-
-    sql = sql + " ORDER BY " + table_order + " " + order_direction
-    sql = sql + " LIMIT " + str(start) + "," + str(length)
-    count_sql = (
-        "SELECT count(*) as total FROM " + schema + "." + table_name + where_clause
-    )
-    mark_changed(request.dbsession)
-    records = request.dbsession.execute(sql).fetchall()
-    data = []
-    if records is not None:
-        for record in records:
-            a_record = {"DT_RowId": record.rowuuid}
-            for field in fields:
-                try:
-                    if (
-                        isinstance(record[field], datetime.datetime)
-                        or isinstance(record[field], datetime.date)
-                        or isinstance(record[field], datetime.time)
-                    ):
-                        a_record[field] = record[field].isoformat().replace("T", " ")
-                    else:
-                        if isinstance(record[field], float):
-                            a_record[field] = str(record[field])
-                        else:
-                            if isinstance(record[field], Decimal):
-                                a_record[field] = str(record[field])
-                            else:
-                                if isinstance(record[field], datetime.timedelta):
-                                    a_record[field] = str(record[field])
-                                else:
-                                    if field != "rowuuid":
-                                        a_record[field] = record[field]
-                                    else:
-                                        a_record[field] = record[field][-12:]
-                except Exception as e:
-                    a_record[field] = (
-                        _("AJAX Data error. Report this error as an issue on ")
-                        + "https://github.com/qlands/FormShare"
-                    )
-                    log.error("AJAX Error in field " + field + ". Error: " + str(e))
-            data.append(a_record)
-
-    records = request.dbsession.execute(count_sql).fetchone()
-    total = records.total
-
-    result = {
-        "draw": draw,
-        "recordsTotal": total,
-        "recordsFiltered": total,
-        "data": data,
-    }
-    return result
 
 
 def get_request_data_jqgrid(

@@ -1,5 +1,5 @@
 import gettext
-import logging
+from celery.utils.log import get_task_logger
 import os
 import uuid
 from subprocess import Popen, PIPE
@@ -8,7 +8,7 @@ from formshare.config.celery_app import celeryApp
 from formshare.config.celery_class import CeleryTask
 from formshare.processes.email.send_async_email import send_async_email
 
-log = logging.getLogger("formshare")
+log = get_task_logger(__name__)
 
 
 class BuildFileError(Exception):

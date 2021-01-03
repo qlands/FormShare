@@ -1,7 +1,7 @@
 import gettext
 import glob
 import json
-import logging
+from celery.utils.log import get_task_logger
 import os
 import uuid
 from collections import OrderedDict
@@ -16,7 +16,7 @@ from formshare.config.celery_class import CeleryTask
 from formshare.processes.email.send_async_email import send_async_email
 from formshare.processes.sse.messaging import send_task_status_to_form
 
-log = logging.getLogger("formshare")
+log = get_task_logger(__name__)
 
 
 class EmptyFileError(Exception):
@@ -113,23 +113,6 @@ def internal_build_csv(
             if a_field["name"] == field_name:
                 if a_field["protection"] == "exclude":
                     return "exclude"
-                for a_value in replace_values:
-                    if (
-                        a_value["table"] == from_table
-                        and a_value["field"] == field_name
-                        and a_value["value"] == field_value
-                    ):
-                        return a_value["new_value"]
-                unique_id = str(uuid.uuid4())
-                replace_values.append(
-                    {
-                        "table": from_table,
-                        "field": field_name,
-                        "value": field_value,
-                        "new_value": unique_id,
-                    }
-                )
-                return unique_id
         return field_value
 
     def protect_sensitive_fields(json_data, table_name):

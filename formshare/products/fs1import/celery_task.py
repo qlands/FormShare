@@ -2,7 +2,7 @@ import datetime
 import gettext
 import glob
 import json
-import logging
+from celery.utils.log import get_task_logger
 import os
 import shutil
 from hashlib import md5
@@ -22,7 +22,7 @@ from formshare.processes.elasticsearch.repository_index import (
 )
 from formshare.processes.sse.messaging import send_task_status_to_form
 
-log = logging.getLogger("formshare")
+log = get_task_logger(__name__)
 
 
 def add_submission(

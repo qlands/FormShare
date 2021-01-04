@@ -70,6 +70,17 @@ def move_changes(node_b, root_a):
                     target_table.set("desc", table_desc)
 
 
+def log_message(message, error_str, output, command):
+    if error_str is not None:
+        error_str = error_str.decode()
+    if output is not None:
+        output = output.decode()
+    log.error(
+        message
+        + "\nError: {} \n Output: {} \nCommand {}\n".format(error_str, output, command)
+    )
+
+
 def make_database_changes(
     settings,
     cnf_file,
@@ -114,17 +125,8 @@ def make_database_changes(
             output, error_str = proc.communicate()
             log.info("Result is {}".format(proc.returncode))
             if proc.returncode != 0:
-                error_message = "Error creating database backup \n"
-                error_message = error_message + "File: " + b_backup_file + "\n"
-                error_message = error_message + "Error: \n"
-                if error is not None:
-                    error_message = error_message + error_str.decode() + "\n"
-                error_message = error_message + "Output: \n"
-                if output is not None:
-                    error_message = error_message + output.decode() + "\n"
-                log.error(error_message)
+                log_message("Error creating backup", error_str, output, " ".join(args))
                 error = True
-
     if not error:
         log.info("Moving backup into new schema...")
         send_task_status_to_form(
@@ -135,16 +137,12 @@ def make_database_changes(
             proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)
             output, error_str = proc.communicate()
             if proc.returncode != 0:
-                error_message = "Error creating database {} \n".format(a_schema)
-                error_message = error_message + "File: " + b_backup_file + "\n"
-                error_message = error_message + "Command: " + " ".join(args) + "\n"
-                error_message = error_message + "Error: \n"
-                if error is not None:
-                    error_message = error_message + error_str.decode() + "\n"
-                error_message = error_message + "Output: \n"
-                if output is not None:
-                    error_message = error_message + output.decode() + "\n"
-                log.error(error_message)
+                log_message(
+                    "Error creating database from backup",
+                    error_str,
+                    output,
+                    " ".join(args),
+                )
                 error = True
 
     if not error:
@@ -157,15 +155,12 @@ def make_database_changes(
             proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)
             output, error_str = proc.communicate()
             if proc.returncode != 0:
-                error_message = "Error creating database \n"
-                error_message = error_message + "File: " + merge_create_file + "\n"
-                error_message = error_message + "Error: \n"
-                if error is not None:
-                    error_message = error_message + error_str.decode() + "\n"
-                error_message = error_message + "Output: \n"
-                if output is not None:
-                    error_message = error_message + output.decode() + "\n"
-                log.error(error_message)
+                log_message(
+                    "Error applying changes to schema",
+                    error_str,
+                    output,
+                    " ".join(args),
+                )
                 error = True
 
     if not error:
@@ -178,15 +173,12 @@ def make_database_changes(
             proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)
             output, error_str = proc.communicate()
             if proc.returncode != 0:
-                error_message = "Error creating database \n"
-                error_message = error_message + "File: " + merge_insert_file + "\n"
-                error_message = error_message + "Error: \n"
-                if error is not None:
-                    error_message = error_message + error_str.decode() + "\n"
-                error_message = error_message + "Output: \n"
-                if output is not None:
-                    error_message = error_message + output.decode() + "\n"
-                log.error(error_message)
+                log_message(
+                    "Error applying lookup changes to schema",
+                    error_str,
+                    output,
+                    " ".join(args),
+                )
                 error = True
 
     if not error:
@@ -228,17 +220,19 @@ def make_database_changes(
                                     try:
                                         engine.execute(sql)
                                     except Exception as e:
-                                        error_message = "Error {} while dropping trigger {} from database {}".format(
-                                            str(e), a_trigger[0], a_schema
+                                        log.error(
+                                            "Error {} while dropping trigger {} from database {}".format(
+                                                str(e), a_trigger[0], a_schema
+                                            )
                                         )
-                                        log.error(error_message)
                                         error = True
                                         break
                             except Exception as e:
-                                error_message = "Error {} while loading triggers from schema {}, table {}".format(
-                                    str(e), a_schema, a_table
+                                log.error(
+                                    "Error {} while loading triggers from schema {}, table {}".format(
+                                        str(e), a_schema, a_table
+                                    )
                                 )
-                                log.error(error_message)
                                 error = True
                     engine.dispose()
                     if not error:
@@ -290,38 +284,27 @@ def make_database_changes(
                                 )
                                 output, error_str = proc.communicate()
                                 if proc.returncode != 0:
-                                    error_message = "Error loading audit triggers \n"
-                                    error_message = (
-                                        error_message + "File: " + audit_file + "\n"
+                                    log_message(
+                                        "Error applying triggers",
+                                        error_str,
+                                        output,
+                                        " ".join(args),
                                     )
-                                    error_message = error_message + "Error: \n"
-                                    if error is not None:
-                                        error_message = (
-                                            error_message + error_str.decode() + "\n"
-                                        )
-                                    error_message = error_message + "Output: \n"
-                                    if output is not None:
-                                        error_message = (
-                                            error_message + output.decode() + "\n"
-                                        )
-                                    log.error(error_message)
                                     error = True
                         else:
-                            error = True
-                            error_message = (
-                                "Error while creating audit triggers: "
-                                + stdout.decode()
-                                + " - "
-                                + stderr.decode()
-                                + " - "
-                                + " ".join(args)
+                            log_message(
+                                "Error creating triggers",
+                                stderr,
+                                stdout,
+                                " ".join(args),
                             )
-                            log.error(error_message)
+                            error = True
         except Exception as e:
-            error_message = "Error processing merge log file: {}. Error: {}".format(
-                merge_log_file, str(e)
+            log.error(
+                "Error processing merge log file: {}. Error: {}".format(
+                    merge_log_file, str(e)
+                )
             )
-            log.error(error_message)
             error = True
 
     if not error:
@@ -339,10 +322,11 @@ def make_database_changes(
                 encoding="utf-8",
             )
         except Exception as e:
-            error_message = "Error while moving metadata changes from {} to {}. Error: {}".format(
-                b_create_xml_file, c_create_xml_file, str(e)
+            log.error(
+                "Error while moving metadata changes from {} to {}. Error: {}".format(
+                    b_create_xml_file, c_create_xml_file, str(e)
+                )
             )
-            log.error(error_message)
             error = True
     if error:
         raise MergeDataBaseError(error_message)

@@ -37,7 +37,7 @@ def store_task_status(task, config):
 def get_form_details(config, project, form):
     engine = create_engine(config["sqlalchemy.url"])
     result = engine.execute(
-        "SELECT form_directory,form_schema,form_reptask,form_createxmlfile,form_insertxmlfile "
+        "SELECT form_directory,form_schema,form_reptask,form_createxmlfile,form_insertxmlfile,form_hexcolor "
         "FROM odkform WHERE project_id = '{}' AND form_id = '{}'".format(project, form)
     ).fetchone()
     result = {
@@ -46,6 +46,7 @@ def get_form_details(config, project, form):
         "form_reptask": result[2],
         "form_createxmlfile": result[3],
         "form_insertxmlfile": result[4],
+        "form_hexcolor": result[5],
     }
     engine.dispose()
     return result
@@ -5859,6 +5860,681 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+        def test_form_merge_mimic():
+            # Adds a mimic2 project
+            merge_project = "mergemimic1"
+            merge_project_id = str(uuid.uuid4())
+            mimic_res = self.testapp.post(
+                "/user/{}/projects/add".format(self.randonLogin),
+                {
+                    "project_id": merge_project_id,
+                    "project_code": merge_project,
+                    "project_name": "Test project",
+                    "project_abstract": "",
+                },
+                status=302,
+            )
+            assert "FS_error" not in mimic_res.headers
+
+            paths = ["resources", "forms", "merge", "A", "A.xls"]
+            a_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, merge_project),
+                status=302,
+                upload_files=[("xlsx", a_resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            paths = ["resources", "forms", "merge", "A", "cantones.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, merge_project, "tormenta20201105"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            paths = ["resources", "forms", "merge", "A", "distritos.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, merge_project, "tormenta20201105"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            mimic_res = self.testapp.post(
+                "/user/{}/project/{}/assistants/add".format(
+                    self.randonLogin, merge_project
+                ),
+                {
+                    "coll_id": "merge001",
+                    "coll_password": "123",
+                    "coll_password2": "123",
+                    "coll_prjshare": 1,
+                },
+                status=302,
+            )
+            assert "FS_error" not in mimic_res.headers
+
+            # Generate the repository using celery
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, merge_project, "tormenta20201105"
+                ),
+                {"form_pkey": "numero_de_cedula", "start_stage1": ""},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            time.sleep(30)  # Wait for celery to generate the repository
+
+            # Upload B***********************************************
+
+            paths = ["resources", "forms", "merge", "B", "B.xls"]
+            b_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, merge_project),
+                {
+                    "for_merging": "",
+                    "parent_project": merge_project_id,
+                    "parent_form": "tormenta20201105",
+                },
+                status=302,
+                upload_files=[("xlsx", b_resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, merge_project, "tormenta20201117"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"Merge check pending" in res.body)
+
+            paths = ["resources", "forms", "merge", "B", "cantones.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, merge_project, "tormenta20201117"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            paths = ["resources", "forms", "merge", "B", "distritos.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, merge_project, "tormenta20201117"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Add an assistant to a form succeeds
+            mimic_res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, merge_project, "tormenta20201117"
+                ),
+                {
+                    "coll_id": "{}|{}".format(merge_project_id, "merge001"),
+                    "coll_privileges": "3",
+                },
+                status=302,
+            )
+            assert "FS_error" not in mimic_res.headers
+
+            # Upload submission 1
+            paths = [
+                "resources",
+                "forms",
+                "merge",
+                "submission001.xml",
+            ]
+            submission_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, merge_project),
+                status=201,
+                upload_files=[("filetoupload", submission_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="merge001"
+                ),
+            )
+            time.sleep(5)  # Wait for ElasticSearch to store this
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, merge_project, "tormenta20201117"
+                ),
+                status=200,
+            )
+            self.assertFalse(b"Merge check pending" in res.body)
+
+            # Show the merge repository page
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}/merge/into/{}".format(
+                    self.randonLogin,
+                    merge_project,
+                    "tormenta20201117",
+                    "tormenta20201105",
+                ),
+                status=200,
+            )
+            assert "FS_error" not in res.headers
+
+            from formshare.products.merge.celery_task import (
+                internal_merge_into_repository,
+            )
+
+            form_details_a = get_form_details(
+                self.server_config, merge_project_id, "tormenta20201117"
+            )
+
+            form_details_b = get_form_details(
+                self.server_config, merge_project_id, "tormenta20201105"
+            )
+            internal_merge_into_repository(
+                self.server_config,
+                self.randonLogin,
+                merge_project_id,
+                merge_project,
+                "tormenta20201117",
+                form_details_a["form_directory"],
+                form_details_b["form_directory"],
+                form_details_b["form_createxmlfile"],
+                form_details_b["form_schema"],
+                "",
+                form_details_b["form_hexcolor"],
+                "en",
+                False,
+            )
+
+            # Get the details of a form tormenta20201117
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, merge_project, "tormenta20201117"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"This is the sub-version of" in res.body)
+
+            # Get the details of a form tormenta20201105
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, merge_project, "tormenta20201105"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"is the sub-version of this form" in res.body)
+
+        def test_form_merge_mimic2():
+            # Adds a mimic2 project
+            merge_project = "mergemimic2"
+            merge_project_id = str(uuid.uuid4())
+            mimic_res = self.testapp.post(
+                "/user/{}/projects/add".format(self.randonLogin),
+                {
+                    "project_id": merge_project_id,
+                    "project_code": merge_project,
+                    "project_name": "Test project",
+                    "project_abstract": "",
+                },
+                status=302,
+            )
+            assert "FS_error" not in mimic_res.headers
+
+            paths = ["resources", "forms", "merge", "A", "A.xls"]
+            a_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, merge_project),
+                status=302,
+                upload_files=[("xlsx", a_resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            paths = ["resources", "forms", "merge", "A", "cantones.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, merge_project, "tormenta20201105"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            paths = ["resources", "forms", "merge", "A", "distritos.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, merge_project, "tormenta20201105"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            mimic_res = self.testapp.post(
+                "/user/{}/project/{}/assistants/add".format(
+                    self.randonLogin, merge_project
+                ),
+                {
+                    "coll_id": "merge002",
+                    "coll_password": "123",
+                    "coll_password2": "123",
+                    "coll_prjshare": 1,
+                },
+                status=302,
+            )
+            assert "FS_error" not in mimic_res.headers
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/groups/add".format(
+                    self.randonLogin, merge_project
+                ),
+                {"group_desc": "Merge group 1", "group_id": "grpmerge001"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/group/{}/members".format(
+                    self.randonLogin, merge_project, "grpmerge001"
+                ),
+                {
+                    "add_assistant": "",
+                    "coll_id": "{}|{}".format(merge_project_id, "merge002"),
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Generate the repository using celery
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, merge_project, "tormenta20201105"
+                ),
+                {"form_pkey": "numero_de_cedula", "start_stage1": ""},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            time.sleep(30)  # Wait for celery to generate the repository
+
+            # Upload B***********************************************
+
+            paths = ["resources", "forms", "merge", "B", "B.xls"]
+            b_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, merge_project),
+                {
+                    "for_merging": "",
+                    "parent_project": merge_project_id,
+                    "parent_form": "tormenta20201105",
+                },
+                status=302,
+                upload_files=[("xlsx", b_resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, merge_project, "tormenta20201117"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"Merge check pending" in res.body)
+
+            paths = ["resources", "forms", "merge", "B", "cantones.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, merge_project, "tormenta20201117"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            paths = ["resources", "forms", "merge", "B", "distritos.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, merge_project, "tormenta20201117"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Add an group to a form succeeds
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/groups/add".format(
+                    self.randonLogin, merge_project, "tormenta20201117"
+                ),
+                {"group_id": "grpmerge001", "group_privilege": 3},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Upload submission 1
+            paths = [
+                "resources",
+                "forms",
+                "merge",
+                "submission001.xml",
+            ]
+            submission_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, merge_project),
+                status=201,
+                upload_files=[("filetoupload", submission_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="merge002"
+                ),
+            )
+            time.sleep(5)  # Wait for ElasticSearch to store this
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, merge_project, "tormenta20201117"
+                ),
+                status=200,
+            )
+            self.assertFalse(b"Merge check pending" in res.body)
+
+            # Show the merge repository page
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}/merge/into/{}".format(
+                    self.randonLogin,
+                    merge_project,
+                    "tormenta20201117",
+                    "tormenta20201105",
+                ),
+                status=200,
+            )
+            assert "FS_error" not in res.headers
+
+            from formshare.products.merge.celery_task import (
+                internal_merge_into_repository,
+            )
+
+            form_details_a = get_form_details(
+                self.server_config, merge_project_id, "tormenta20201117"
+            )
+
+            form_details_b = get_form_details(
+                self.server_config, merge_project_id, "tormenta20201105"
+            )
+            internal_merge_into_repository(
+                self.server_config,
+                self.randonLogin,
+                merge_project_id,
+                merge_project,
+                "tormenta20201117",
+                form_details_a["form_directory"],
+                form_details_b["form_directory"],
+                form_details_b["form_createxmlfile"],
+                form_details_b["form_schema"],
+                "",
+                form_details_b["form_hexcolor"],
+                "en",
+                False,
+            )
+
+            # Get the details of a form tormenta20201117
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, merge_project, "tormenta20201117"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"This is the sub-version of" in res.body)
+
+            # Get the details of a form tormenta20201105
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, merge_project, "tormenta20201105"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"is the sub-version of this form" in res.body)
+
+        def test_form_merge_mimic3():
+            # Adds a mimic2 project
+            merge_project = "mergemimic3"
+            merge_project_id = str(uuid.uuid4())
+            mimic_res = self.testapp.post(
+                "/user/{}/projects/add".format(self.randonLogin),
+                {
+                    "project_id": merge_project_id,
+                    "project_code": merge_project,
+                    "project_name": "Test project",
+                    "project_abstract": "",
+                },
+                status=302,
+            )
+            assert "FS_error" not in mimic_res.headers
+
+            paths = ["resources", "forms", "merge", "A", "A.xls"]
+            a_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, merge_project),
+                status=302,
+                upload_files=[("xlsx", a_resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            paths = ["resources", "forms", "merge", "A", "cantones.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, merge_project, "tormenta20201105"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            paths = ["resources", "forms", "merge", "A", "distritos.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, merge_project, "tormenta20201105"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            mimic_res = self.testapp.post(
+                "/user/{}/project/{}/assistants/add".format(
+                    self.randonLogin, merge_project
+                ),
+                {
+                    "coll_id": "merge003",
+                    "coll_password": "123",
+                    "coll_password2": "123",
+                    "coll_prjshare": 1,
+                },
+                status=302,
+            )
+            assert "FS_error" not in mimic_res.headers
+
+            # Generate the repository using celery
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, merge_project, "tormenta20201105"
+                ),
+                {"form_pkey": "numero_de_cedula", "start_stage1": ""},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            time.sleep(30)  # Wait for celery to generate the repository
+
+            # Upload B***********************************************
+
+            paths = ["resources", "forms", "merge", "B", "B.xls"]
+            b_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, merge_project),
+                {
+                    "for_merging": "",
+                    "parent_project": merge_project_id,
+                    "parent_form": "tormenta20201105",
+                },
+                status=302,
+                upload_files=[("xlsx", b_resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, merge_project, "tormenta20201117"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"Merge check pending" in res.body)
+
+            paths = ["resources", "forms", "merge", "B", "cantones.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, merge_project, "tormenta20201117"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            paths = ["resources", "forms", "merge", "B", "distritos.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, merge_project, "tormenta20201117"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Add an assistant to a form succeeds
+            mimic_res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, merge_project, "tormenta20201117"
+                ),
+                {
+                    "coll_id": "{}|{}".format(merge_project_id, "merge003"),
+                    "coll_privileges": "3",
+                },
+                status=302,
+            )
+            assert "FS_error" not in mimic_res.headers
+
+            # Upload submission 1
+            paths = [
+                "resources",
+                "forms",
+                "merge",
+                "submission001.xml",
+            ]
+            submission_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, merge_project),
+                status=201,
+                upload_files=[("filetoupload", submission_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="merge003"
+                ),
+            )
+            time.sleep(5)  # Wait for ElasticSearch to store this
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, merge_project, "tormenta20201117"
+                ),
+                status=200,
+            )
+            self.assertFalse(b"Merge check pending" in res.body)
+
+            # Show the merge repository page
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}/merge/into/{}".format(
+                    self.randonLogin,
+                    merge_project,
+                    "tormenta20201117",
+                    "tormenta20201105",
+                ),
+                status=200,
+            )
+            assert "FS_error" not in res.headers
+
+            from formshare.products.merge.celery_task import (
+                internal_merge_into_repository,
+            )
+
+            form_details_a = get_form_details(
+                self.server_config, merge_project_id, "tormenta20201117"
+            )
+
+            form_details_b = get_form_details(
+                self.server_config, merge_project_id, "tormenta20201105"
+            )
+            internal_merge_into_repository(
+                self.server_config,
+                self.randonLogin,
+                merge_project_id,
+                merge_project,
+                "tormenta20201117",
+                form_details_a["form_directory"],
+                form_details_b["form_directory"],
+                form_details_b["form_createxmlfile"],
+                form_details_b["form_schema"],
+                "",
+                form_details_b["form_hexcolor"],
+                "en",
+                True,
+            )
+
+            # Get the details of a form tormenta20201117
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, merge_project, "tormenta20201117"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"This is the sub-version of" in res.body)
+
+            # Get the details of a form tormenta20201105
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, merge_project, "tormenta20201105"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"is the sub-version of this form" in res.body)
+
         def test_group_assistant():
             res = self.testapp.post(
                 "/user/{}/project/{}/assistants/add".format(
@@ -6809,6 +7485,9 @@ class FunctionalTests(unittest.TestCase):
         test_one_user_assistant()
         test_five_collaborators()
         test_form_merge()
+        test_form_merge_mimic()
+        test_form_merge_mimic2()
+        test_form_merge_mimic3()
         test_group_assistant()
         test_delete_form_with_repository()
         test_api()

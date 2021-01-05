@@ -1,20 +1,7 @@
 import configparser
-import logging
 import os
-import sys
-
+import argparse
 from jinja2 import Environment, FileSystemLoader
-
-log = logging.getLogger("formshare")
-
-
-def usage(argv):
-    cmd = os.path.basename(argv[0])
-    print(
-        "usage: %s <path_to_ini_file> <path_to_formshare> \n"
-        "(example: %s ./development.ini .)" % (cmd, cmd)
-    )
-    sys.exit(1)
 
 
 def get_ini_value(ini_file, key, default=None):
@@ -23,33 +10,43 @@ def get_ini_value(ini_file, key, default=None):
         config.read(ini_file)
         return config.get("app:formshare", key)
     except Exception as e:
-        log.warning(
-            "Warning: Unable to find key {}. {} . Default used".format(key, str(e))
-        )
+        print("Warning: Unable to find key {}. {} . Default used".format(key, str(e)))
         return default
 
 
-def main(argv=sys.argv):
-    if len(argv) != 3:
-        usage(argv)
-    if not os.path.exists(os.path.abspath(argv[1])):
+def main(raw_args=None):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("ini_path", help="Path to ini file")
+    parser.add_argument("formshare_path", help="Path to Formshare")
+    parser.add_argument(
+        "--alembic_ini_file",
+        default="",
+        help="Ini file to create. By default is [FormShare_path/alembic.ini]",
+    )
+    args = parser.parse_args(raw_args)
+    if not os.path.exists(os.path.abspath(args.ini_path)):
         print("Ini file does not exists")
-        sys.exit(1)
-    if not os.path.exists(os.path.abspath(argv[2])):
+        return 1
+    if not os.path.exists(os.path.abspath(args.formshare_path)):
         print("Path to FormShare does not exits")
-        sys.exit(1)
+        return 1
 
-    formshare_ini_file_path = os.path.abspath(argv[1])
-    formshare_path = os.path.abspath(argv[2])
+    formshare_ini_file_path = os.path.abspath(args.ini_path)
+    formshare_path = os.path.abspath(args.formshare_path)
 
-    alembic_ini_file = os.path.join(formshare_path, *["alembic.ini"])
+    if args.alembic_ini_file == "":
+        alembic_ini_file = os.path.join(formshare_path, *["alembic.ini"])
+    else:
+        alembic_ini_file = args.alembic_ini_file
 
     template_environment = Environment(
         autoescape=False,
         loader=FileSystemLoader(os.path.join(formshare_path, "templates")),
         trim_blocks=False,
     )
-    sqlalchemy_url = get_ini_value(os.path.abspath(argv[1]), "sqlalchemy.url", "empty")
+    sqlalchemy_url = get_ini_value(
+        os.path.abspath(args.ini_path), "sqlalchemy.url", "empty"
+    )
     context = {
         "sqlalchemy_url": sqlalchemy_url,
         "formshare_ini_file": formshare_ini_file_path,
@@ -61,3 +58,4 @@ def main(argv=sys.argv):
 
     with open(alembic_ini_file, "w") as f:
         f.write(rendered_template)
+    return 0

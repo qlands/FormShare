@@ -38,6 +38,17 @@ class BuildDataBaseError(Exception):
     """
 
 
+def log_message(message, error_str, output, command):
+    if error_str is not None:
+        error_str = error_str.decode()
+    if output is not None:
+        output = output.decode()
+    log.error(
+        message
+        + "\nError: {} \n Output: {} \nCommand {}\n".format(error_str, output, command)
+    )
+
+
 def get_odk_path(settings):
     repository_path = settings["repository.path"]
     return os.path.join(repository_path, *["odk"])
@@ -71,34 +82,25 @@ def build_database(
         args = ["mysql", "--defaults-file=" + cnf_file, schema]
         with open(create_file) as input_file:
             proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)
-            output, error = proc.communicate()
+            output, error_str = proc.communicate()
             if proc.returncode != 0:
-                error_message = "Error creating database \n"
-                error_message = error_message + "File: " + create_file + "\n"
-                error_message = error_message + "Error: \n"
-                if error is not None:
-                    error_message = error_message + error.decode() + "\n"
-                error_message = error_message + "Output: \n"
-                if output is not None:
-                    error_message = error_message + output.decode() + "\n"
-                log.error(error_message)
+                log_message(
+                    "Error creating new tables", error_str, output, " ".join(args)
+                )
                 error = True
 
     if not error:
         send_task_status_to_form(settings, task_id, _("Inserting lookup values..."))
         with open(insert_file) as input_file:
             proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)
-            output, error = proc.communicate()
+            output, error_str = proc.communicate()
             if proc.returncode != 0:
-                error_message = "Error loading lookup tables \n"
-                error_message = error_message + "File: " + insert_file + "\n"
-                error_message = error_message + "Error: \n"
-                if error is not None:
-                    error_message = error_message + error.decode() + "\n"
-                error_message = error_message + "Output: \n"
-                if output is not None:
-                    error_message = error_message + output.decode() + "\n"
-                log.error(error_message)
+                log_message(
+                    "Error inserting into lookup tables",
+                    error_str,
+                    output,
+                    " ".join(args),
+                )
                 error = True
     if not error:
         odk_dir = get_odk_path(settings)
@@ -131,29 +133,15 @@ def build_database(
             args = ["mysql", "--defaults-file=" + cnf_file, schema]
             with open(audit_file) as input_file:
                 proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)
-                output, error = proc.communicate()
+                output, error_str = proc.communicate()
                 if proc.returncode != 0:
-                    error_message = "Error loading audit triggers \n"
-                    error_message = error_message + "File: " + audit_file + "\n"
-                    error_message = error_message + "Error: \n"
-                    if error is not None:
-                        error_message = error_message + error.decode() + "\n"
-                    error_message = error_message + "Output: \n"
-                    if output is not None:
-                        error_message = error_message + output.decode() + "\n"
-                    log.error(error_message)
+                    log_message(
+                        "Error loading triggers", error_str, output, " ".join(args)
+                    )
                     error = True
         else:
             error = True
-            error_message = (
-                "Error while creating audit triggers: "
-                + stdout.decode()
-                + " - "
-                + stderr.decode()
-                + " - "
-                + " ".join(args)
-            )
-            log.error(error_message)
+            log_message("Error creating triggers", stderr, stdout, " ".join(args))
 
     if error:
         raise BuildDataBaseError(error_message)

@@ -2147,6 +2147,53 @@ class FunctionalTests(unittest.TestCase):
                 assert "FS_error" not in mimic_res.headers
                 mimic_form = "LB_Sequia_MAG_20190123"
 
+                mimic_res = self.testapp.post(
+                    "/user/{}/project/{}/assistants/add".format(
+                        self.randonLogin, mimic_project
+                    ),
+                    {
+                        "coll_id": "mimic000",
+                        "coll_password": "123",
+                        "coll_password2": "123",
+                        "coll_prjshare": 1,
+                    },
+                    status=302,
+                )
+                assert "FS_error" not in mimic_res.headers
+
+                # Add an assistant to a form succeeds
+                mimic_res = self.testapp.post(
+                    "/user/{}/project/{}/form/{}/assistants/add".format(
+                        self.randonLogin, mimic_project, mimic_form
+                    ),
+                    {
+                        "coll_id": "{}|{}".format(mimic_project_id, "mimic000"),
+                        "coll_privileges": "3",
+                    },
+                    status=302,
+                )
+                assert "FS_error" not in mimic_res.headers
+
+                # Test submission
+                paths = ["resources", "forms", "mimic_complex", "submission001.xml"]
+                submission_file = os.path.join(self.path, *paths)
+
+                paths = ["resources", "forms", "complex_form", "image001.png"]
+                image_file = os.path.join(self.path, *paths)
+
+                self.testapp.post(
+                    "/user/{}/project/{}/push".format(self.randonLogin, mimic_project),
+                    status=201,
+                    upload_files=[
+                        ("filetoupload", submission_file),
+                        ("image", image_file),
+                    ],
+                    extra_environ=dict(
+                        FS_for_testing="true", FS_user_for_testing="mimic000"
+                    ),
+                )
+                time.sleep(5)  # Wait for ElasticSearch to store this
+
                 form_details = get_form_details(
                     self.server_config, mimic_project_id, mimic_form
                 )
@@ -2326,6 +2373,155 @@ class FunctionalTests(unittest.TestCase):
                     form_reptask,
                 )
 
+            def mimic_create_repository_with_data_grp():
+                from formshare.products.repository.celery_task import (
+                    internal_create_mysql_repository,
+                )
+
+                # Adds a mimic3 project
+                mimic_grp_project = "mimic3"
+                mimic_grp_project_id = str(uuid.uuid4())
+                mimic_res = self.testapp.post(
+                    "/user/{}/projects/add".format(self.randonLogin),
+                    {
+                        "project_id": mimic_grp_project_id,
+                        "project_code": mimic_grp_project,
+                        "project_name": "Test project",
+                        "project_abstract": "",
+                    },
+                    status=302,
+                )
+                assert "FS_error" not in mimic_res.headers
+                # Add the mimic form
+                mimic_paths = ["resources", "forms", "complex_form", "B.xlsx"]
+                resource_file = os.path.join(self.path, *mimic_paths)
+                mimic_res = self.testapp.post(
+                    "/user/{}/project/{}/forms/add".format(
+                        self.randonLogin, mimic_grp_project
+                    ),
+                    status=302,
+                    upload_files=[("xlsx", resource_file)],
+                )
+                assert "FS_error" not in mimic_res.headers
+                mimic_form = "LB_Sequia_MAG_20190123"
+
+                mimic_res = self.testapp.post(
+                    "/user/{}/project/{}/assistants/add".format(
+                        self.randonLogin, mimic_grp_project
+                    ),
+                    {
+                        "coll_id": "mimic003",
+                        "coll_password": "123",
+                        "coll_password2": "123",
+                        "coll_prjshare": 1,
+                    },
+                    status=302,
+                )
+                assert "FS_error" not in mimic_res.headers
+
+                res = self.testapp.post(
+                    "/user/{}/project/{}/groups/add".format(
+                        self.randonLogin, mimic_grp_project
+                    ),
+                    {"group_desc": "Mimic group 1", "group_id": "grpmimic001"},
+                    status=302,
+                )
+                assert "FS_error" not in res.headers
+
+                res = self.testapp.post(
+                    "/user/{}/project/{}/group/{}/members".format(
+                        self.randonLogin, mimic_grp_project, "grpmimic001"
+                    ),
+                    {
+                        "add_assistant": "",
+                        "coll_id": "{}|{}".format(mimic_grp_project_id, "mimic003"),
+                    },
+                    status=302,
+                )
+                assert "FS_error" not in res.headers
+
+                # Add an group to a form succeeds
+                res = self.testapp.post(
+                    "/user/{}/project/{}/form/{}/groups/add".format(
+                        self.randonLogin, mimic_grp_project, "LB_Sequia_MAG_20190123"
+                    ),
+                    {"group_id": "grpmimic001", "group_privilege": 3},
+                    status=302,
+                )
+                assert "FS_error" not in res.headers
+
+                # Test submission
+                paths = ["resources", "forms", "mimic_complex", "submission001.xml"]
+                submission_file = os.path.join(self.path, *paths)
+
+                paths = ["resources", "forms", "complex_form", "image001.png"]
+                image_file = os.path.join(self.path, *paths)
+
+                self.testapp.post(
+                    "/user/{}/project/{}/push".format(
+                        self.randonLogin, mimic_grp_project
+                    ),
+                    status=201,
+                    upload_files=[
+                        ("filetoupload", submission_file),
+                        ("image", image_file),
+                    ],
+                    extra_environ=dict(
+                        FS_for_testing="true", FS_user_for_testing="mimic003"
+                    ),
+                )
+                time.sleep(5)  # Wait for ElasticSearch to store this
+
+                form_details = get_form_details(
+                    self.server_config, mimic_grp_project_id, mimic_form
+                )
+                form_directory = form_details["form_directory"]
+
+                form_reptask = str(uuid.uuid4())
+                form_schema = "FS_" + str(uuid.uuid4()).replace("-", "_")
+
+                paths2 = ["resources", "forms", "mimic_complex", "create.sql"]
+                create_sql = os.path.join(self.path, *paths2)
+
+                paths2 = ["resources", "forms", "mimic_complex", "insert.sql"]
+                insert_sql = os.path.join(self.path, *paths2)
+
+                paths2 = ["resources", "forms", "mimic_complex", "create.xml"]
+                create_xml = os.path.join(self.path, *paths2)
+
+                paths2 = ["resources", "forms", "mimic_complex", "insert.xml"]
+                insert_xml = os.path.join(self.path, *paths2)
+
+                here = os.path.dirname(os.path.abspath(__file__)).split(
+                    "/formshare/tests"
+                )[0]
+                paths2 = ["mysql.cnf"]
+                mysql_cnf = os.path.join(here, *paths2)
+
+                paths2 = [self.server_config["repository.path"], "odk"]
+                odk_dir = os.path.join(self.path, *paths2)
+
+                internal_create_mysql_repository(
+                    self.server_config,
+                    self.randonLogin,
+                    mimic_grp_project_id,
+                    mimic_grp_project,
+                    mimic_form,
+                    odk_dir,
+                    form_directory,
+                    form_schema,
+                    "I_D",
+                    mysql_cnf,
+                    create_sql,
+                    insert_sql,
+                    create_xml,
+                    insert_xml,
+                    "",
+                    "en",
+                    False,
+                    form_reptask,
+                )
+
             # Gets the repository page
             self.testapp.get(
                 "/user/{}/project/{}/form/{}/repository/create".format(
@@ -2333,26 +2529,6 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 status=200,
             )
-
-            # # Generate the repository using celery
-            # res = self.testapp.post(
-            #     "/user/{}/project/{}/form/{}/repository/create".format(
-            #         self.randonLogin, self.project, self.formID
-            #     ),
-            #     {"form_pkey": "I_D", "start_stage1": ""},
-            #     status=302,
-            # )
-            # assert "FS_error" not in res.headers
-            # time.sleep(2.5)
-            # get_repository_task(self.server_config, self.projectID, self.formID)
-            #
-            # res = self.testapp.post(
-            #     "/user/{}/project/{}/form/{}/stoprepository".format(
-            #         self.randonLogin, self.project, self.formID
-            #     ),
-            #     status=302,
-            # )
-            # assert "FS_error" not in res.headers
 
             # Generate the repository using celery
             res = self.testapp.post(
@@ -2566,7 +2742,8 @@ class FunctionalTests(unittest.TestCase):
             )
             time.sleep(5)  # Wait for ElasticSearch to store this
             mimic_create_repository()
-            # mimic_create_repository_with_data()
+            mimic_create_repository_with_data()
+            mimic_create_repository_with_data_grp()
 
         def test_repository_downloads():
             def mimic_celery_public_csv_process():
@@ -7248,9 +7425,6 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-        def test_osm():
-            pass  # TODO: We need to test Open Street Map
-
         def test_form_access():
 
             # Assistant logout succeeds.
@@ -7450,6 +7624,249 @@ class FunctionalTests(unittest.TestCase):
                 ),
             )
 
+        def test_create_super_user():
+            from formshare.scripts.createsuperuser import main as createsuperuser_main
+
+            here = os.path.dirname(os.path.abspath(__file__)).split("/formshare/tests")[
+                0
+            ]
+            paths2 = ["development.ini"]
+            ini_file = os.path.join(here, *paths2)
+
+            random_admin = str(uuid.uuid4())
+            random_admin = random_admin[-12:]
+            res = createsuperuser_main(
+                [
+                    "--user_id",
+                    random_admin,
+                    "--user_email",
+                    "info@qlandscom",
+                    "--user_password",
+                    "123",
+                    ini_file,
+                ]
+            )
+            assert res == 1
+            res = createsuperuser_main(
+                [
+                    "--user_id",
+                    random_admin,
+                    "--user_email",
+                    "{}@qlands.com".format(random_admin),
+                    "--user_password",
+                    "123",
+                    ini_file,
+                ]
+            )
+            assert res == 0
+            res = createsuperuser_main(
+                [
+                    "--user_id",
+                    random_admin,
+                    "--user_email",
+                    "{}@qlands.com".format(random_admin),
+                    "--user_password",
+                    "123",
+                    ini_file,
+                ]
+            )
+            assert res == 1
+            random_admin2 = str(uuid.uuid4())
+            random_admin2 = random_admin2[-12:]
+            res = createsuperuser_main(
+                [
+                    "--user_id",
+                    random_admin2,
+                    "--user_email",
+                    "{}@qlands.com".format(random_admin),
+                    "--user_password",
+                    "123",
+                    ini_file,
+                ]
+            )
+            assert res == 1
+
+        def test_configure_alembic():
+            from formshare.scripts.configurealembic import main as configurealembic_main
+            from pathlib import Path
+
+            here = os.path.dirname(os.path.abspath(__file__)).split("/formshare/tests")[
+                0
+            ]
+            paths2 = ["development.ini"]
+            ini_file = os.path.join(here, *paths2)
+
+            home = str(Path.home())
+            paths2 = ["alembic.ini"]
+            alembic_file = os.path.join(home, *paths2)
+
+            res = configurealembic_main(["/not_exists", "/not_exists"])
+            assert res == 1
+            res = configurealembic_main([ini_file, "/not_exists"])
+            assert res == 1
+            res = configurealembic_main(
+                ["--alembic_ini_file", alembic_file, ini_file, here]
+            )
+            assert res == 0
+            assert os.path.exists(alembic_file)
+
+        def test_configure_fluent():
+            from formshare.scripts.configurefluent import main as configurefluent_main
+            from pathlib import Path
+
+            here = os.path.dirname(os.path.abspath(__file__)).split("/formshare/tests")[
+                0
+            ]
+
+            home = str(Path.home())
+            paths2 = ["fluent.ini"]
+            fluent_file = os.path.join(home, *paths2)
+
+            res = configurefluent_main(
+                [
+                    "--formshare_path",
+                    here,
+                    "--formshare_log_file",
+                    "log.ini",
+                    "--elastic_search_host",
+                    "localhost",
+                    "--elastic_search_port",
+                    "9200",
+                    fluent_file,
+                ]
+            )
+            assert res == 0
+            assert os.path.exists(fluent_file)
+
+        def test_configure_mysql():
+            from formshare.scripts.configuremysql import main as configuremysql_main
+            from pathlib import Path
+
+            here = os.path.dirname(os.path.abspath(__file__)).split("/formshare/tests")[
+                0
+            ]
+            paths2 = ["development.ini"]
+            ini_file = os.path.join(here, *paths2)
+
+            home = str(Path.home())
+            paths2 = ["mysql.cnf"]
+            mysql_file = os.path.join(home, *paths2)
+
+            res = configuremysql_main(["/not_exists", "/not_exists"])
+            assert res == 1
+            res = configuremysql_main([ini_file, "/not_exists"])
+            assert res == 1
+            res = configuremysql_main(["--mysql_cnf_file", mysql_file, ini_file, here])
+            assert res == 0
+            assert os.path.exists(mysql_file)
+
+        def test_modify_config():
+            from formshare.scripts.modifyconfig import main as modifyconfig_main
+            from pathlib import Path
+
+            here = os.path.dirname(os.path.abspath(__file__)).split("/formshare/tests")[
+                0
+            ]
+            paths2 = ["development.ini"]
+            ini_file = os.path.join(here, *paths2)
+
+            home = str(Path.home())
+            paths2 = ["development.ini"]
+            target_file = os.path.join(home, *paths2)
+            shutil.copyfile(ini_file, target_file)
+
+            res = modifyconfig_main(
+                [
+                    "--ini_file",
+                    target_file,
+                    "--action",
+                    "SET",
+                    "--value",
+                    "123",
+                    "--section",
+                    "app:formshare",
+                    "--key",
+                    "test",
+                ]
+            )
+            assert res == 1
+
+            res = modifyconfig_main(
+                [
+                    "--ini_file",
+                    target_file,
+                    "--action",
+                    "ADD",
+                    "--section",
+                    "app:formshare",
+                    "--key",
+                    "test",
+                ]
+            )
+            assert res == 1
+
+            res = modifyconfig_main(
+                [
+                    "--ini_file",
+                    "/not_found.ini",
+                    "--action",
+                    "ADD",
+                    "--value",
+                    "123",
+                    "--section",
+                    "app:formshare",
+                    "--key",
+                    "test",
+                ]
+            )
+            assert res == 1
+
+            res = modifyconfig_main(
+                [
+                    "--ini_file",
+                    target_file,
+                    "--action",
+                    "ADD",
+                    "--value",
+                    "123",
+                    "--section",
+                    "notExist",
+                    "--key",
+                    "test",
+                ]
+            )
+            assert res == 1
+
+            res = modifyconfig_main(
+                [
+                    "--ini_file",
+                    target_file,
+                    "--action",
+                    "ADD",
+                    "--value",
+                    "123",
+                    "--section",
+                    "app:formshare",
+                    "--key",
+                    "test",
+                ]
+            )
+            assert res == 0
+
+            res = modifyconfig_main(
+                [
+                    "--ini_file",
+                    target_file,
+                    "--action",
+                    "REMOVE",
+                    "--section",
+                    "app:formshare",
+                    "--key",
+                    "test",
+                ]
+            )
+            assert res == 0
+
         start_time = datetime.datetime.now()
         test_root()
         test_login()
@@ -7498,6 +7915,11 @@ class FunctionalTests(unittest.TestCase):
         test_collaborator_projects_4()
         test_delete_active_project()
         test_form_access()
+        test_create_super_user()
+        test_configure_alembic()
+        test_configure_fluent()
+        test_configure_mysql()
+        test_modify_config()
 
         end_time = datetime.datetime.now()
         time_delta = end_time - start_time

@@ -1,7 +1,6 @@
 import argparse
 import datetime
 import getpass
-import sys
 import uuid
 
 import transaction
@@ -14,7 +13,7 @@ from formshare.models import get_engine, get_session_factory, get_tm_session
 from formshare.models.meta import Base
 
 
-def main():
+def main(raw_args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("ini_path", help="Path to ini file")
     parser.add_argument("--user_id", required=True, help="Superuser ID")
@@ -22,10 +21,7 @@ def main():
     parser.add_argument(
         "--user_password", default="", help="Superuser password. Prompt if it is empty"
     )
-    parser.add_argument(
-        "-n", "--not_fail", action="store_false", help="Not fail if Superuser exists"
-    )
-    args = parser.parse_args()
+    args = parser.parse_args(raw_args)
 
     config_uri = args.ini_path
 
@@ -34,17 +30,17 @@ def main():
         pass2 = getpass.getpass("Confirm the password:")
         if pass1 == "":
             print("The password cannot be empty")
-            sys.exit(1)
+            return 1
         if pass1 != pass2:
             print("The password and its confirmation are not the same")
-            sys.exit(1)
+            return 1
     else:
         pass1 = args.user_password
 
     email_valid = validators.email(args.user_email)
     if not email_valid:
         print("Invalid email")
-        sys.exit(1)
+        return 1
 
     setup_logging(config_uri)
     settings = get_appsettings(config_uri, "formshare")
@@ -85,19 +81,17 @@ def main():
                     )
                     print("ID: {}.".format(args.user_id))
                     print("Email: {}".format(args.user_email))
+                    error = 0
                 else:
-                    if args.not_fail:
-                        print(
-                            "An user with email '{}' already exists".format(
-                                args.user_email
-                            )
-                        )
-                        sys.exit(1)
+                    print(
+                        "An user with email '{}' already exists".format(args.user_email)
+                    )
+                    error = 1
             else:
-                if args.not_fail:
-                    print("An user with id '{}' already exists".format(args.user_id))
-                    sys.exit(1)
+                print("An user with id '{}' already exists".format(args.user_id))
+                error = 1
         except Exception as e:
             print(str(e))
-            sys.exit(1)
+            error = 1
     engine.dispose()
+    return error

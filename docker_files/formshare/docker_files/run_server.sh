@@ -25,7 +25,7 @@ if [ $configure_fluent = "true" ]; then
   fi
 fi
 alembic upgrade head
-create_superuser --user_id $FORMSHARE_ADMIN_USER --user_email $FORMSHARE_ADMIN_EMAIL --user_password $FORMSHARE_ADMIN_PASSWORD ./development.ini -n
+create_superuser --user_id $FORMSHARE_ADMIN_USER --user_email $FORMSHARE_ADMIN_EMAIL --user_password $FORMSHARE_ADMIN_PASSWORD ./development.ini
 deactivate
 /etc/init.d/celery_formshare stop
 /etc/init.d/celery_formshare start

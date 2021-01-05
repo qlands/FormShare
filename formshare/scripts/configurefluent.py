@@ -4,7 +4,7 @@ import os
 from jinja2 import Environment, FileSystemLoader
 
 
-def main():
+def main(raw_args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "fluent_conf_file", help="Path to fluent configuration file to create"
@@ -23,7 +23,7 @@ def main():
         "--elastic_search_ssl", action="store_true", help="ElasticSearch use SSL"
     )
 
-    args = parser.parse_args()
+    args = parser.parse_args(raw_args)
 
     template_environment = Environment(
         autoescape=False,
@@ -43,3 +43,5 @@ def main():
 
     with open(args.fluent_conf_file, "w") as f:
         f.write(rendered_template)
+
+    return 0

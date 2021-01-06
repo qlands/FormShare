@@ -33,10 +33,10 @@ class API1UploadFileToForm(APIView):
             project_user = self.request.POST.get("project_user", None)
             project_code = self.request.POST.get("project_code", None)
             form_id = self.request.POST.get("form_id", None)
-            project_id = get_project_id_from_name(self.request, project_user, project_code)
-            access_type = get_project_access_type(
-                self.request, user_id, project_id
+            project_id = get_project_id_from_name(
+                self.request, project_user, project_code
             )
+            access_type = get_project_access_type(self.request, user_id, project_id)
             if access_type is None:
                 self.return_error(
                     "authorization",

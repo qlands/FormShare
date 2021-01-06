@@ -926,6 +926,13 @@ class FunctionalTests(unittest.TestCase):
             assert "FS_error" in res.headers
 
         def test_assistant_groups():
+            # Show the add group page
+            res = self.testapp.get(
+                "/user/{}/project/{}/groups/add".format(self.randonLogin, self.project),
+                status=200,
+            )
+            assert "FS_error" not in res.headers
+
             # Add an assistant group fail. The description is empty
             res = self.testapp.post(
                 "/user/{}/project/{}/groups/add".format(self.randonLogin, self.project),
@@ -959,7 +966,7 @@ class FunctionalTests(unittest.TestCase):
             assert "FS_error" not in res.headers
             self.assistantGroupID = "grp001"
 
-            # Delete the assistant
+            # Delete the group
             res = self.testapp.post(
                 "/user/{}/project/{}/group/{}/delete".format(
                     self.randonLogin, self.project, self.assistantGroupID
@@ -967,6 +974,14 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            # Delete the group using get
+            self.testapp.get(
+                "/user/{}/project/{}/group/{}/delete".format(
+                    self.randonLogin, self.project, self.assistantGroupID
+                ),
+                status=404,
+            )
 
             # Add an assistant group again
             res = self.testapp.post(
@@ -1001,6 +1016,36 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
             assert "FS_error" in res.headers
+
+            # Edit the assistant group fails. Empty name
+            res = self.testapp.post(
+                "/user/{}/project/{}/group/{}/edit".format(
+                    self.randonLogin, self.project, self.assistantGroupID
+                ),
+                {"group_desc": "", "group_active": "1"},
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Edit the assistant group succeeds
+            res = self.testapp.post(
+                "/user/{}/project/{}/group/{}/edit".format(
+                    self.randonLogin, self.project, self.assistantGroupID
+                ),
+                {"group_desc": "Test if a group 3", "group_active": "1"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Edit the assistant group succeeds
+            res = self.testapp.post(
+                "/user/{}/project/{}/group/{}/edit".format(
+                    self.randonLogin, self.project, self.assistantGroupID
+                ),
+                {"group_desc": "Test if a group 3"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
 
             # Edit the assistant group succeeds
             res = self.testapp.post(
@@ -1089,6 +1134,18 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            # Remove a member using get
+            self.testapp.get(
+                "/user/{}/project/{}/group/{}/member/{}/of/{}/remove".format(
+                    self.randonLogin,
+                    self.project,
+                    self.assistantGroupID,
+                    self.assistantLogin,
+                    self.projectID,
+                ),
+                status=404,
+            )
 
         def test_forms():
 
@@ -6834,7 +6891,138 @@ class FunctionalTests(unittest.TestCase):
             assert "FS_error" not in res.headers
 
         def test_api():
-            # Add a file to a form using API
+
+            collaborator_1 = str(uuid.uuid4())
+            collaborator_1_key = collaborator_1
+            collaborator_1 = collaborator_1[-12:]
+
+            # Add a new collaborator
+            res = self.testapp.post(
+                "/join",
+                {
+                    "user_address": "Costa Rica",
+                    "user_email": collaborator_1 + "@qlands.com",
+                    "user_password": "123",
+                    "user_id": collaborator_1,
+                    "user_password2": "123",
+                    "user_name": "Testing",
+                    "user_super": "1",
+                    "user_apikey": collaborator_1_key,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # API Call fails. User cannot change this project
+            paths = ["resources", "api_test.dat"]
+            resource_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/api/1/upload_file_to_form",
+                {
+                    "apikey": collaborator_1_key,
+                    "user_id": collaborator_1,
+                    "project_user": self.randonLogin,
+                    "project_code": self.project,
+                    "form_id": "Justtest",
+                },
+                upload_files=[("file_to_upload", resource_file)],
+                status=400,
+            )
+
+            # New collaborator logout
+            self.testapp.get("/logout", status=302)
+
+            # Main user login
+            res = self.testapp.post(
+                "/login",
+                {"user": "", "email": self.randonLogin, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Add the collaborator to the project but just member
+            res = self.testapp.post(
+                "/user/{}/project/{}/collaborators".format(
+                    self.randonLogin, self.project
+                ),
+                {"add_collaborator": "", "collaborator": collaborator_1},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Main user logout
+            self.testapp.get("/logout", status=302)
+
+            # Collaborator login
+            res = self.testapp.post(
+                "/login",
+                {"user": "", "email": collaborator_1, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            print("**********************ZZZ")
+            print(self.projectID)
+            # API Call fails. User does not have editor or admin grants to this project
+            paths = ["resources", "api_test.dat"]
+            resource_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/api/1/upload_file_to_form",
+                {
+                    "apikey": collaborator_1_key,
+                    "user_id": collaborator_1,
+                    "project_user": self.randonLogin,
+                    "project_code": self.project,
+                    "form_id": "Justtest",
+                },
+                upload_files=[("file_to_upload", resource_file)],
+                status=400,
+            )
+            print("**********************ZZZ")
+
+            # Collaborator logout
+            self.testapp.get("/logout", status=302)
+
+            # Main user login
+            res = self.testapp.post(
+                "/login",
+                {"user": "", "email": self.randonLogin, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # API Call fails. Form not found
+            paths = ["resources", "api_test.dat"]
+            resource_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/api/1/upload_file_to_form",
+                {
+                    "apikey": self.randonLoginKey,
+                    "user_id": self.randonLogin,
+                    "project_user": self.randonLogin,
+                    "project_code": self.project,
+                    "form_id": "Justtest_not_found",
+                },
+                upload_files=[("file_to_upload", resource_file)],
+                status=400,
+            )
+
+            # API Call fails. No file to upload
+            paths = ["resources", "api_test.dat"]
+            resource_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/api/1/upload_file_to_form",
+                {
+                    "apikey": self.randonLoginKey,
+                    "user_id": self.randonLogin,
+                    "project_user": self.randonLogin,
+                    "project_code": self.project,
+                    "form_id": "Justtest",
+                },
+                status=400,
+            )
+
+            # API Call fails. project_user key is missing
             paths = ["resources", "api_test.dat"]
             resource_file = os.path.join(self.path, *paths)
             self.testapp.post(
@@ -6845,8 +7033,62 @@ class FunctionalTests(unittest.TestCase):
                     "project_code": self.project,
                     "form_id": "Justtest",
                 },
+                status=400,
+            )
+
+            # Add a file to a form using API pass
+            paths = ["resources", "api_test.dat"]
+            resource_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/api/1/upload_file_to_form",
+                {
+                    "apikey": self.randonLoginKey,
+                    "user_id": self.randonLogin,
+                    "project_user": self.randonLogin,
+                    "project_code": self.project,
+                    "form_id": "Justtest",
+                },
                 upload_files=[("file_to_upload", resource_file)],
                 status=200,
+            )
+
+            # Add a file again fails. No overwrite
+            paths = ["resources", "api_test.dat"]
+            resource_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/api/1/upload_file_to_form",
+                {
+                    "apikey": self.randonLoginKey,
+                    "user_id": self.randonLogin,
+                    "project_user": self.randonLogin,
+                    "project_code": self.project,
+                    "form_id": "Justtest",
+                },
+                upload_files=[("file_to_upload", resource_file)],
+                status=400,
+            )
+
+            # Add a file again pass. Overwrite
+            paths = ["resources", "api_test.dat"]
+            resource_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/api/1/upload_file_to_form",
+                {
+                    "apikey": self.randonLoginKey,
+                    "user_id": self.randonLogin,
+                    "project_user": self.randonLogin,
+                    "project_code": self.project,
+                    "form_id": "Justtest",
+                    "overwrite": "",
+                },
+                upload_files=[("file_to_upload", resource_file)],
+                status=200,
+            )
+
+            # 404 for a get
+            self.testapp.get(
+                "/api/1/upload_file_to_form?apikey={}".format(self.randonLoginKey),
+                status=404,
             )
 
         def test_plugin_utility_functions():
@@ -7867,6 +8109,185 @@ class FunctionalTests(unittest.TestCase):
             )
             assert res == 0
 
+        def test_unauthorized_access():
+
+            # Collaborator groups ----------------------------------------
+
+            # The assistant group does not exist
+            self.testapp.get(
+                "/user/{}/project/{}/groups".format(self.randonLogin, "NotExist"),
+                status=404,
+            )
+
+            # Show the add group page does not exist
+            self.testapp.get(
+                "/user/{}/project/{}/groups/add".format(self.randonLogin, "NotExist"),
+                status=404,
+            )
+
+            # Edits a group of a project that does not exist
+            self.testapp.get(
+                "/user/{}/project/{}/group/{}/edit".format(
+                    self.randonLogin, "NotExist", "NotExist"
+                ),
+                status=404,
+            )
+
+            # Delete a group of a project that does not exist
+            self.testapp.post(
+                "/user/{}/project/{}/group/{}/delete".format(
+                    self.randonLogin, "NotExist", "NotExist"
+                ),
+                status=404,
+            )
+
+            # List members of a project that does not exists
+            self.testapp.get(
+                "/user/{}/project/{}/group/{}/members".format(
+                    self.randonLogin, "NotExist", "NotExist"
+                ),
+                status=404,
+            )
+
+            # Add a member of a project that does not exists
+            self.testapp.post(
+                "/user/{}/project/{}/group/{}/members".format(
+                    self.randonLogin, "NotExist", "NotExist"
+                ),
+                status=404,
+            )
+
+            collaborator_1 = str(uuid.uuid4())
+            collaborator_1_key = collaborator_1
+            collaborator_1 = collaborator_1[-12:]
+
+            # Add a new collaborator
+            res = self.testapp.post(
+                "/join",
+                {
+                    "user_address": "Costa Rica",
+                    "user_email": collaborator_1 + "@qlands.com",
+                    "user_password": "123",
+                    "user_id": collaborator_1,
+                    "user_password2": "123",
+                    "user_name": "Testing",
+                    "user_super": "1",
+                    "user_apikey": collaborator_1_key,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # The user don't have access to such project
+            self.testapp.get(
+                "/user/{}/project/{}/groups".format(self.randonLogin, self.project),
+                status=404,
+            )
+
+            # The user don't have access to add a group in project project
+            self.testapp.get(
+                "/user/{}/project/{}/groups/add".format(self.randonLogin, self.project),
+                status=404,
+            )
+
+            # Get the assistant groups in edit mode
+            self.testapp.get(
+                "/user/{}/project/{}/group/{}/edit".format(
+                    self.randonLogin, self.project, "NotExist"
+                ),
+                status=404,
+            )
+
+            # Delete a group of a project that does not have access
+            self.testapp.post(
+                "/user/{}/project/{}/group/{}/delete".format(
+                    self.randonLogin, self.project, "NotExist"
+                ),
+                status=404,
+            )
+
+            # List members of a project that does not have access
+            self.testapp.get(
+                "/user/{}/project/{}/group/{}/members".format(
+                    self.randonLogin, self.project, "NotExist"
+                ),
+                status=404,
+            )
+
+            # Add a member of a project that does not have access
+            self.testapp.post(
+                "/user/{}/project/{}/group/{}/members".format(
+                    self.randonLogin, self.project, "NotExist"
+                ),
+                status=404,
+            )
+
+            # The collaborator logs out
+            self.testapp.get("/logout", status=302)
+
+            # Main user login
+            res = self.testapp.post(
+                "/login",
+                {"user": "", "email": self.randonLogin, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Main user add collaborator as member
+            res = self.testapp.post(
+                "/user/{}/project/{}/collaborators".format(
+                    self.randonLogin, self.project
+                ),
+                {"add_collaborator": "", "collaborator": collaborator_1},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Main user logs out
+            self.testapp.get("/logout", status=302)
+
+            # Collaborator logs in
+            res = self.testapp.post(
+                "/login",
+                {"user": "", "email": collaborator_1, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # The user don't have access to add a group in project project
+            self.testapp.get(
+                "/user/{}/project/{}/groups/add".format(self.randonLogin, self.project),
+                status=404,
+            )
+
+            # Get the assistant groups in edit mode
+            self.testapp.get(
+                "/user/{}/project/{}/group/{}/edit".format(
+                    self.randonLogin, self.project, "NotExist"
+                ),
+                status=404,
+            )
+
+            # Delete a group of a project that does not have grants
+            self.testapp.post(
+                "/user/{}/project/{}/group/{}/delete".format(
+                    self.randonLogin, self.project, "NotExist"
+                ),
+                status=404,
+            )
+
+            # --------------Finally ----------------
+            # New collaborator logout
+            self.testapp.get("/logout", status=302)
+
+            # Main user login
+            res = self.testapp.post(
+                "/login",
+                {"user": "", "email": self.randonLogin, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
         start_time = datetime.datetime.now()
         test_root()
         test_login()
@@ -7876,50 +8297,51 @@ class FunctionalTests(unittest.TestCase):
         test_collaborators()
         test_assistants()
         test_assistant_groups()
-        test_forms()
-        test_odk()
-        test_multilanguage_odk()
-        test_support_zip_file()
-        test_external_select()
-        test_update_form_missing_files()
-        test_repository()
-        test_repository_downloads()
-        time.sleep(60)
-        test_import_data()
-        test_assistant_access()
-        test_json_logs()
-        test_json_logs_2()
-        test_json_logs_3()
-        test_json_logs_4()
-        test_clean_interface()
-        test_audit()
-        test_repository_tasks()
-        test_collaborator_access()
-        test_helpers()
-        test_utility_functions()
-        test_avatar_generator()
-        test_color_hash_hex()
-        test_one_user_assistant()
-        test_five_collaborators()
-        test_form_merge()
-        test_form_merge_mimic()
-        test_form_merge_mimic2()
-        test_form_merge_mimic3()
-        test_group_assistant()
-        test_delete_form_with_repository()
-        test_api()
-        test_plugin_utility_functions()
-        test_collaborator_projects()
-        test_collaborator_projects_2()
-        test_collaborator_projects_3()
-        test_collaborator_projects_4()
-        test_delete_active_project()
-        test_form_access()
-        test_create_super_user()
-        test_configure_alembic()
-        test_configure_fluent()
-        test_configure_mysql()
-        test_modify_config()
+        # test_forms()
+        # test_odk()
+        # test_multilanguage_odk()
+        # test_support_zip_file()
+        # test_external_select()
+        # test_update_form_missing_files()
+        # test_repository()
+        # test_repository_downloads()
+        # time.sleep(60)
+        # test_import_data()
+        # test_assistant_access()
+        # test_json_logs()
+        # test_json_logs_2()
+        # test_json_logs_3()
+        # test_json_logs_4()
+        # test_clean_interface()
+        # test_audit()
+        # test_repository_tasks()
+        # test_collaborator_access()
+        # test_helpers()
+        # test_utility_functions()
+        # test_avatar_generator()
+        # test_color_hash_hex()
+        # test_one_user_assistant()
+        # test_five_collaborators()
+        # test_form_merge()
+        # test_form_merge_mimic()
+        # test_form_merge_mimic2()
+        # test_form_merge_mimic3()
+        # test_group_assistant()
+        # test_delete_form_with_repository()
+        # test_api()
+        # test_plugin_utility_functions()
+        # test_collaborator_projects()
+        # test_collaborator_projects_2()
+        # test_collaborator_projects_3()
+        # test_collaborator_projects_4()
+        # test_delete_active_project()
+        # test_form_access()
+        # test_create_super_user()
+        # test_configure_alembic()
+        # test_configure_fluent()
+        # test_configure_mysql()
+        # test_modify_config()
+        test_unauthorized_access()
 
         end_time = datetime.datetime.now()
         time_delta = end_time - start_time

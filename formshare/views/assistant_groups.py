@@ -24,10 +24,13 @@ class GroupListView(PrivateView):
         user_id = self.request.matchdict["userid"]
         project_code = self.request.matchdict["projcode"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        if self.activeProject["project_id"] == project_id:
-            self.set_active_menu("groups")
-        else:
+        if "project_id" not in self.activeProject.keys():
             self.set_active_menu("projects")
+        else:
+            if self.activeProject["project_id"] == project_id:
+                self.set_active_menu("groups")
+            else:
+                self.set_active_menu("projects")
         project_details = {}
         if project_id is not None:
             project_found = False
@@ -40,8 +43,8 @@ class GroupListView(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 5:
-            raise HTTPNotFound
+        # if project_details["access_type"] == 5:
+        #     raise HTTPNotFound
 
         groups = get_project_groups(self.request, project_id)
         return {"groups": groups, "projectDetails": project_details, "userid": user_id}
@@ -56,10 +59,13 @@ class AddGroupView(PrivateView):
         user_id = self.request.matchdict["userid"]
         project_code = self.request.matchdict["projcode"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        if self.activeProject["project_id"] == project_id:
-            self.set_active_menu("groups")
-        else:
+        if "project_id" not in self.activeProject.keys():
             self.set_active_menu("projects")
+        else:
+            if self.activeProject["project_id"] == project_id:
+                self.set_active_menu("groups")
+            else:
+                self.set_active_menu("projects")
         project_details = {}
         if project_id is not None:
             project_found = False
@@ -111,10 +117,13 @@ class EditGroupView(PrivateView):
         project_code = self.request.matchdict["projcode"]
         group_id = self.request.matchdict["groupid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        if self.activeProject["project_id"] == project_id:
-            self.set_active_menu("groups")
-        else:
+        if "project_id" not in self.activeProject.keys():
             self.set_active_menu("projects")
+        else:
+            if self.activeProject["project_id"] == project_id:
+                self.set_active_menu("groups")
+            else:
+                self.set_active_menu("projects")
         project_details = {}
         if project_id is not None:
             project_found = False
@@ -219,10 +228,13 @@ class GroupMembersView(PrivateView):
         project_code = self.request.matchdict["projcode"]
         group_id = self.request.matchdict["groupid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        if self.activeProject["project_id"] == project_id:
-            self.set_active_menu("groups")
-        else:
+        if "project_id" not in self.activeProject.keys():
             self.set_active_menu("projects")
+        else:
+            if self.activeProject["project_id"] == project_id:
+                self.set_active_menu("groups")
+            else:
+                self.set_active_menu("projects")
         project_details = {}
         if project_id is not None:
             project_found = False
@@ -233,9 +245,6 @@ class GroupMembersView(PrivateView):
             if not project_found:
                 raise HTTPNotFound
         else:
-            raise HTTPNotFound
-
-        if project_details["access_type"] == 5:
             raise HTTPNotFound
 
         members = get_members(self.request, project_id, group_id)

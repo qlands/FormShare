@@ -26,15 +26,16 @@ class API1UploadFileToForm(APIView):
 
     def process_view(self):
         if self.request.method == "POST":
-            required_keys = ["user_id", "project_code", "form_id"]
+            required_keys = ["user_id", "project_user", "project_code", "form_id"]
             self.check_keys(required_keys)
 
             user_id = self.request.POST.get("user_id", None)
+            project_user = self.request.POST.get("project_user", None)
             project_code = self.request.POST.get("project_code", None)
             form_id = self.request.POST.get("form_id", None)
-            project_id = get_project_id_from_name(self.request, user_id, project_code)
+            project_id = get_project_id_from_name(self.request, project_user, project_code)
             access_type = get_project_access_type(
-                self.request, self.user["user_id"], project_id
+                self.request, user_id, project_id
             )
             if access_type is None:
                 self.return_error(

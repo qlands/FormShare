@@ -5275,6 +5275,84 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
 
+            # Load the clean page with a table
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/clean?table=maintable".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+
+            # Load the clean page with a table that does not exist
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/clean?table=maintables".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+
+            # Load the clean page with a table and fields
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/clean?table=maintable&fields=provincia|canton".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+
+            # Request a table
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/clean".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {"loadtable": "", "table": "maintable",},
+                status=302,
+            )
+
+            # Request a table that does not exists
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/clean".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {"loadtable": "", "table": "maintables",},
+                status=302,
+            )
+
+            # Request one field
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/clean".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {"loadfields": "", "fields": "provincia",},
+                status=302,
+            )
+
+            # Request two fields
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/clean".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {"loadfields": "", "fields": ["provincia", "canton"],},
+                status=302,
+            )
+
+            # Request empty fields
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/clean".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {"loadfields": "", "fields": "",},
+                status=302,
+            )
+
+            # Request without fields
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/clean".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {"loadfields": "",},
+                status=302,
+            )
+
             # Loads the data for the grid
             self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/request"
@@ -8157,6 +8235,18 @@ class FunctionalTests(unittest.TestCase):
                 status=404,
             )
 
+            # Remove a member of a project that does not exist
+            self.testapp.post(
+                "/user/{}/project/{}/group/{}/member/{}/of/{}/remove".format(
+                    self.randonLogin,
+                    "NotExist",
+                    self.assistantGroupID,
+                    self.assistantLogin,
+                    self.projectID,
+                ),
+                status=404,
+            )
+
             collaborator_1 = str(uuid.uuid4())
             collaborator_1_key = collaborator_1
             collaborator_1 = collaborator_1[-12:]
@@ -8222,6 +8312,18 @@ class FunctionalTests(unittest.TestCase):
                 status=404,
             )
 
+            # Remove a member of a project that does not have access
+            self.testapp.post(
+                "/user/{}/project/{}/group/{}/member/{}/of/{}/remove".format(
+                    self.randonLogin,
+                    self.project,
+                    self.assistantGroupID,
+                    self.assistantLogin,
+                    self.projectID,
+                ),
+                status=404,
+            )
+
             # The collaborator logs out
             self.testapp.get("/logout", status=302)
 
@@ -8276,6 +8378,18 @@ class FunctionalTests(unittest.TestCase):
                 status=404,
             )
 
+            # Remove a member of a project that does not have grants
+            self.testapp.post(
+                "/user/{}/project/{}/group/{}/member/{}/of/{}/remove".format(
+                    self.randonLogin,
+                    self.project,
+                    self.assistantGroupID,
+                    self.assistantLogin,
+                    self.projectID,
+                ),
+                status=404,
+            )
+
             # --------------Finally ----------------
             # New collaborator logout
             self.testapp.get("/logout", status=302)
@@ -8297,22 +8411,22 @@ class FunctionalTests(unittest.TestCase):
         test_collaborators()
         test_assistants()
         test_assistant_groups()
-        # test_forms()
-        # test_odk()
-        # test_multilanguage_odk()
-        # test_support_zip_file()
-        # test_external_select()
-        # test_update_form_missing_files()
-        # test_repository()
-        # test_repository_downloads()
-        # time.sleep(60)
-        # test_import_data()
-        # test_assistant_access()
-        # test_json_logs()
-        # test_json_logs_2()
-        # test_json_logs_3()
-        # test_json_logs_4()
-        # test_clean_interface()
+        test_forms()
+        test_odk()
+        test_multilanguage_odk()
+        test_support_zip_file()
+        test_external_select()
+        test_update_form_missing_files()
+        test_repository()
+        test_repository_downloads()
+        time.sleep(60)
+        test_import_data()
+        test_assistant_access()
+        test_json_logs()
+        test_json_logs_2()
+        test_json_logs_3()
+        test_json_logs_4()
+        test_clean_interface()
         # test_audit()
         # test_repository_tasks()
         # test_collaborator_access()
@@ -8341,7 +8455,7 @@ class FunctionalTests(unittest.TestCase):
         # test_configure_fluent()
         # test_configure_mysql()
         # test_modify_config()
-        test_unauthorized_access()
+        # test_unauthorized_access()
 
         end_time = datetime.datetime.now()
         time_delta = end_time - start_time

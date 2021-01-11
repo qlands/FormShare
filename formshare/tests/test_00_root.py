@@ -3699,6 +3699,15 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
 
+            # Change the assistant password fails with get
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/changemypassword".format(
+                    self.randonLogin, self.project
+                ),
+                {"coll_password": ""},
+                status=404,
+            )
+
             # Change the assistant password fails. Empty password
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/changemypassword".format(
@@ -3758,6 +3767,15 @@ class FunctionalTests(unittest.TestCase):
             assert "FS_error" not in res.headers
 
             self.assistantLoginKey = str(uuid.uuid4())
+
+            # Change the assistant key fails with get
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/changemykey".format(
+                    self.randonLogin, self.project
+                ),
+                {"coll_apikey": self.assistantLoginKey},
+                status=404,
+            )
 
             # Change the assistant key.
             res = self.testapp.post(
@@ -3830,6 +3848,14 @@ class FunctionalTests(unittest.TestCase):
                     self.randonLogin, self.project, self.formID, duplicated_id
                 ),
                 status=200,
+            )
+
+            # Load compare submission with submissions that does not exists
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/compare".format(
+                    self.randonLogin, self.project, self.formID, "NotExist"
+                ),
+                status=404,
             )
 
             # Compare the against a submission fails. Same submission
@@ -4183,6 +4209,53 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
 
+            # Compare fails. Submission does not have a problem anymore
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/compare".format(
+                    self.randonLogin, self.project, self.formID, duplicated_id
+                ),
+                {"submissionid": survey_id},
+                status=404,
+            )
+
+            # Edit an assistant to clean only
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                {"coll_privileges": "1"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Compare fails. The assistant cannot clean anymore
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/compare".format(
+                    self.randonLogin, self.project, self.formID, duplicated_id
+                ),
+                {"submissionid": survey_id},
+                status=404,
+            )
+
+            # Edit an assistant to clean submmit and clean
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                {"coll_privileges": "3"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+
         def test_json_logs_2():
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/logout".format(
@@ -4426,6 +4499,22 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            # Assistant does not have access to a form
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/errors".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Load compare submission
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/compare".format(
+                    self.randonLogin, self.project, self.formID, ""
+                ),
+                status=404,
+            )
 
             self.testapp.get(
                 "/user/{}/project/{}/assistantaccess/form/{}/errors?status=error".format(
@@ -5353,6 +5442,39 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
 
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/request"
+                "?callback=jQuery31104503466642261382_1578424030318".format(
+                    self.randonLogin, self.project, self.formID, "maintable"
+                ),
+                {
+                    "_search": "false",
+                    "nd": "1578156795454",
+                    "rows": "10",
+                    "page": "1",
+                    "sidx": "",
+                    "sord": "asc",
+                },
+                status=404,
+            )
+
+            # Loads the data for the grid
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/request"
+                "?callback=jQuery31104503466642261382_1578424030318".format(
+                    self.randonLogin, self.project, self.formID, "maintable"
+                ),
+                {
+                    "_search": "false",
+                    "nd": "1578156795454",
+                    "rows": "10",
+                    "page": "1",
+                    "sidx": "respondentname",
+                    "sord": "asc",
+                },
+                status=200,
+            )
+
             # Loads the data for the grid
             self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/request"
@@ -5419,6 +5541,25 @@ class FunctionalTests(unittest.TestCase):
             ).first()
             row_uuid = res[0]
             engine.dispose()
+
+            # Emits a change into the database fails. Unknow operation
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/action".format(
+                    self.randonLogin, self.project, self.formID, "maintable"
+                ),
+                {"landcultivated": "13.000", "oper": "edits", "id": row_uuid},
+                status=404,
+            )
+
+            # Emits a change into the database fails wih get
+            res = self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/action".format(
+                    self.randonLogin, self.project, self.formID, "maintable"
+                ),
+                {"landcultivated": "13.000", "oper": "edit", "id": row_uuid},
+                status=200,
+            )
+            assert "FS_error" in res.headers
 
             # Emits a change into the database
             res = self.testapp.post(
@@ -5495,6 +5636,103 @@ class FunctionalTests(unittest.TestCase):
                 },
                 status=200,
             )
+
+        def test_clean_interface_unauthorized():
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistants/add".format(
+                    self.randonLogin, self.project
+                ),
+                {
+                    "coll_id": "clean001",
+                    "coll_password": "123",
+                    "coll_password2": "123",
+                    "coll_prjshare": 1,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "coll_id": "{}|{}".format(self.projectID, "clean001"),
+                    "coll_privileges": "1",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/login".format(
+                    self.randonLogin, self.project
+                ),
+                {"login": "clean001", "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Load the clean page
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/clean".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Loads the data for the grid
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/request"
+                "?callback=jQuery31104503466642261382_1578424030318".format(
+                    self.randonLogin, self.project, self.formID, "maintable"
+                ),
+                {
+                    "_search": "false",
+                    "nd": "1578156795454",
+                    "rows": "10",
+                    "page": "1",
+                    "sidx": "",
+                    "sord": "asc",
+                },
+                status=404,
+            )
+
+            form_details = get_form_details(
+                self.server_config, self.projectID, self.formID
+            )
+            engine = create_engine(self.server_config["sqlalchemy.url"])
+            res = engine.execute(
+                "SELECT rowuuid FROM {}.maintable".format(form_details["form_schema"])
+            ).first()
+            row_uuid = res[0]
+            engine.dispose()
+
+            # Emits a change into the database
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/action".format(
+                    self.randonLogin, self.project, self.formID, "maintable"
+                ),
+                {"landcultivated": "13.000", "oper": "edit", "id": row_uuid},
+                status=404,
+            )
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/logout".format(
+                    self.randonLogin, self.project
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/login".format(
+                    self.randonLogin, self.project
+                ),
+                {"login": self.assistantLogin, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
 
         def test_audit():
             # Load the audit page
@@ -8427,6 +8665,7 @@ class FunctionalTests(unittest.TestCase):
         test_json_logs_3()
         test_json_logs_4()
         test_clean_interface()
+        test_clean_interface_unauthorized()
         # test_audit()
         # test_repository_tasks()
         # test_collaborator_access()

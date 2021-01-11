@@ -3952,6 +3952,14 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Checkout the submission that does not exist
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/checkout".format(
+                    self.randonLogin, self.project, self.formID, "NotExist"
+                ),
+                status=404,
+            )
+
             # Checkout the submission
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/checkout".format(
@@ -3960,6 +3968,14 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            # Checkout fails with get
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/checkout".format(
+                    self.randonLogin, self.project, self.formID, duplicated_id
+                ),
+                status=404,
+            )
 
             # Get the checkout
             self.testapp.get(
@@ -4218,6 +4234,14 @@ class FunctionalTests(unittest.TestCase):
                 status=404,
             )
 
+            # Checkout the submission that does not have a problem
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/checkout".format(
+                    self.randonLogin, self.project, self.formID, duplicated_id
+                ),
+                status=404,
+            )
+
             # Edit an assistant to clean only
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
@@ -4241,6 +4265,14 @@ class FunctionalTests(unittest.TestCase):
                 status=404,
             )
 
+            # Checkout the submission fails. The assistant cannot clean anymore
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/checkout".format(
+                    self.randonLogin, self.project, self.formID, duplicated_id
+                ),
+                status=404,
+            )
+
             # Edit an assistant to clean submmit and clean
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
@@ -4254,7 +4286,6 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
-
 
         def test_json_logs_2():
             res = self.testapp.post(

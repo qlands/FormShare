@@ -255,6 +255,7 @@ class PerformAction(AssistantView):
                     return {}
                 else:
                     raise HTTPNotFound()
+            self.request.response.headers["FS_error"] = "true"
             return {}
         else:
             raise HTTPNotFound()

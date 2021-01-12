@@ -1712,7 +1712,7 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
-            time.sleep(30)
+            time.sleep(60)
 
         def test_support_zip_file():
             # Upload a form requiring support CSV files
@@ -1776,7 +1776,7 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
-            time.sleep(30)
+            time.sleep(60)
 
         def test_external_select():
             # Upload a form requiring support CSV files
@@ -2597,7 +2597,7 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            time.sleep(40)  # Wait for Celery to finish
+            time.sleep(60)  # Wait for Celery to finish
 
             # Get the details of a form. The form now should have a repository
             res = self.testapp.get(
@@ -3236,7 +3236,7 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            time.sleep(20)  # Wait 5 seconds so celery finished this
+            time.sleep(40)  # Wait 5 seconds so celery finished this
 
             # Get the details of a form. The form now should have a repository with products
             self.testapp.get(
@@ -3245,7 +3245,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 status=200,
             )
-            time.sleep(30)
+            time.sleep(40)
             mimic_celery_public_csv_process()
             mimic_celery_private_csv_process()
             mimic_celery_xlsx_process()
@@ -3512,7 +3512,7 @@ class FunctionalTests(unittest.TestCase):
                 upload_files=[("file", resource_file)],
             )
             assert "FS_error" not in res.headers
-            time.sleep(20)
+            time.sleep(40)
             mimic_celery_test_import()
 
         def test_repository_tasks():
@@ -4436,7 +4436,7 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            time.sleep(40)  # Wait for Celery to finish
+            time.sleep(60)  # Wait for Celery to finish
 
             # Upload submission 1
             paths = [
@@ -5057,7 +5057,7 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            time.sleep(40)  # Wait for Celery to finish
+            time.sleep(60)  # Wait for Celery to finish
 
             # Upload submission 1
             paths = [
@@ -5262,7 +5262,7 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            time.sleep(40)  # Wait for Celery to finish
+            time.sleep(60)  # Wait for Celery to finish
 
             # Upload submission 1
             paths = [
@@ -6191,7 +6191,7 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            time.sleep(30)  # Wait for celery to generate the repository
+            time.sleep(60)  # Wait for celery to generate the repository
 
             # TODO: We need to test forms that cannot merge for different reasons
 
@@ -6513,7 +6513,7 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            time.sleep(30)  # Wait for celery to generate the repository
+            time.sleep(60)  # Wait for celery to generate the repository
 
             # Upload B***********************************************
 
@@ -6753,7 +6753,7 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            time.sleep(30)  # Wait for celery to generate the repository
+            time.sleep(60)  # Wait for celery to generate the repository
 
             # Upload B***********************************************
 
@@ -6969,7 +6969,7 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            time.sleep(30)  # Wait for celery to generate the repository
+            time.sleep(60)  # Wait for celery to generate the repository
 
             # Upload B***********************************************
 

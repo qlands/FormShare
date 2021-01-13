@@ -35,8 +35,10 @@ def main(raw_args=None):
 
     formshare_path = os.path.abspath(args.formshare_path)
 
-    if args.mysql_cnf_file == "":
-        json_file = os.path.join(formshare_path, *["formshare", "tests", "test_config.json"])
+    if args.json_file == "":
+        json_file = os.path.join(
+            formshare_path, *["formshare", "tests", "test_config.json"]
+        )
     else:
         json_file = args.mysql_cnf_file
 
@@ -48,28 +50,48 @@ def main(raw_args=None):
         trim_blocks=False,
     )
     sqlalchemy_url = get_ini_value(os.path.abspath(args.ini_path), "sqlalchemy.url", "")
-    elasticfeeds_host = get_ini_value(os.path.abspath(args.ini_path), "elasticfeeds.host", "localhost")
+    elasticfeeds_host = get_ini_value(
+        os.path.abspath(args.ini_path), "elasticfeeds.host", "localhost"
+    )
 
-    elasticsearch_user_host = get_ini_value(os.path.abspath(args.ini_path), "elasticsearch.user.host", "localhost")
-    elasticsearch_repository_host = get_ini_value(os.path.abspath(args.ini_path), "elasticsearch.repository.host",
-                                                  "localhost")
+    elasticsearch_user_host = get_ini_value(
+        os.path.abspath(args.ini_path), "elasticsearch.user.host", "localhost"
+    )
+    elasticsearch_repository_host = get_ini_value(
+        os.path.abspath(args.ini_path), "elasticsearch.repository.host", "localhost"
+    )
 
-    elasticsearch_records_host = get_ini_value(os.path.abspath(args.ini_path), "elasticsearch.records.host",
-                                               "localhost")
+    elasticsearch_records_host = get_ini_value(
+        os.path.abspath(args.ini_path), "elasticsearch.records.host", "localhost"
+    )
 
-    repository_path = get_ini_value(os.path.abspath(args.ini_path), "repository.path", "")
+    repository_path = get_ini_value(
+        os.path.abspath(args.ini_path), "repository.path", ""
+    )
     odktools_path = get_ini_value(os.path.abspath(args.ini_path), "odktools.path", "")
 
-    mysql_host = get_ini_value(os.path.abspath(args.ini_path), "mysql.host", "localhost")
+    mysql_host = get_ini_value(
+        os.path.abspath(args.ini_path), "mysql.host", "localhost"
+    )
     mysql_port = get_ini_value(os.path.abspath(args.ini_path), "mysql.port", "3306")
     mysql_user = get_ini_value(os.path.abspath(args.ini_path), "mysql.user", "empty!")
-    mysql_password = get_ini_value(os.path.abspath(args.ini_path), "mysql.password", "empty!")
-    context = {"mysql_host": mysql_host, "mysql_port": mysql_port, "mysql_user": mysql_user,
-               "mysql_password": mysql_password, "sqlalchemy_url": sqlalchemy_url,
-               "elasticfeeds_host": elasticfeeds_host, "elasticsearch_user_host": elasticsearch_user_host,
-               "elasticsearch_repository_host": elasticsearch_repository_host,
-               "elasticsearch_records_host": elasticsearch_records_host, "repository_path": repository_path,
-               "odktools_path": odktools_path, "mysql_cnf": mysql_cnf}
+    mysql_password = get_ini_value(
+        os.path.abspath(args.ini_path), "mysql.password", "empty!"
+    )
+    context = {
+        "mysql_host": mysql_host,
+        "mysql_port": mysql_port,
+        "mysql_user": mysql_user,
+        "mysql_password": mysql_password,
+        "sqlalchemy_url": sqlalchemy_url,
+        "elasticfeeds_host": elasticfeeds_host,
+        "elasticsearch_user_host": elasticsearch_user_host,
+        "elasticsearch_repository_host": elasticsearch_repository_host,
+        "elasticsearch_records_host": elasticsearch_records_host,
+        "repository_path": repository_path,
+        "odktools_path": odktools_path,
+        "mysql_cnf": mysql_cnf,
+    }
 
     rendered_template = template_environment.get_template("test_config.jinja2").render(
         context

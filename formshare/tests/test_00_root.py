@@ -68,13 +68,16 @@ class FunctionalTests(unittest.TestCase):
                 "Environment variable FORMSHARE_PYTEST_RUNNING must be true. "
                 "Do 'export FORMSHARE_PYTEST_RUNNING=true' before running PyTest"
             )
-        config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), *["test_config.json"])
+        config_file = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)), *["test_config.json"]
+        )
         with open(config_file) as json_file:
             server_config = json.load(json_file)
 
         from formshare import main
 
         from pathlib import Path
+
         home = str(Path.home())
 
         paths2 = ["formshare_pytest"]

@@ -122,3 +122,4 @@ production.ini
 alembic.ini
 formshare.ini
 mysql.cnf
+test_config.json

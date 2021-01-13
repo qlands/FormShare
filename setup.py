@@ -186,6 +186,7 @@ setup(
             "configure_fluent = formshare.scripts.configurefluent:main",
             "modify_config = formshare.scripts.modifyconfig:main",
             "configure_tests = formshare.scripts.configuretests:main",
+            "disable_ssl = formshare.scripts.disablessl:main",
         ],
     },
 )

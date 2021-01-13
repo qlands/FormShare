@@ -14,6 +14,7 @@ ln -s /opt/formshare_config/development.ini ./development.ini
 python configure_celery.py ./development.ini
 python setup.py develop
 python setup.py compile_catalog
+disable_ssl ./development.ini
 configure_alembic ./development.ini .
 configure_mysql ./development.ini .
 configure_tests ./development.ini .

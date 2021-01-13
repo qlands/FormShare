@@ -11,6 +11,9 @@ RUN apt-get install -y build-essential qt5-default qtbase5-private-dev qtdeclara
 RUN npm install -g diff2html
 RUN npm install -g diff2html-cli
 
+# This is a patched MySQL Drivet to allow connections between Client 8.0 and Server 5.7.X
+COPY ./docker_files/sqldriver/libqsqlmysql.s_o /usr/lib/x86_64-linux-gnu/qt5/plugins/sqldrivers/libqsqlmysql.so
+
 WORKDIR /opt
 RUN git clone https://github.com/qlands/odktools.git
 

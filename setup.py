@@ -185,6 +185,7 @@ setup(
             "configure_alembic = formshare.scripts.configurealembic:main",
             "configure_fluent = formshare.scripts.configurefluent:main",
             "modify_config = formshare.scripts.modifyconfig:main",
+            "configure_tests = formshare.scripts.configuretests:main",
         ],
     },
 )

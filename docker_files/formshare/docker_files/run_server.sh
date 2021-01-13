@@ -16,6 +16,7 @@ python setup.py develop
 python setup.py compile_catalog
 configure_alembic ./development.ini .
 configure_mysql ./development.ini .
+configure_tests ./development.ini .
 configure_fluent="${CONFIGURE_FLUENT:=false}"
 if [ $configure_fluent = "true" ]; then
   if [ $elastic_search_ssl = "false" ]; then

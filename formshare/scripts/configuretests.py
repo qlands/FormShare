@@ -20,9 +20,9 @@ def main(raw_args=None):
     parser.add_argument("ini_path", help="Path to ini file")
     parser.add_argument("formshare_path", help="Path to Formshare")
     parser.add_argument(
-        "--mysql_cnf_file",
+        "--json_file",
         default="",
-        help="CNF file to create. By default is [FormShare_path/mysql.cnf]",
+        help="JSON file to create. By default is [FormShare_path/formshare/tests/test_config.json]",
     )
     args = parser.parse_args(raw_args)
 
@@ -33,29 +33,48 @@ def main(raw_args=None):
         print("Path to FormShare does not exits")
         return 1
 
-    formshare_ini_file_path = os.path.dirname(os.path.abspath(args.ini_path))
     formshare_path = os.path.abspath(args.formshare_path)
 
     if args.mysql_cnf_file == "":
-        mysql_cnf_file = os.path.join(formshare_ini_file_path, *["mysql.cnf"])
+        json_file = os.path.join(formshare_path, *["formshare", "tests", "test_config.json"])
     else:
-        mysql_cnf_file = args.mysql_cnf_file
+        json_file = args.mysql_cnf_file
+
+    mysql_cnf = os.path.join(formshare_path, *["mysql.cnf"])
 
     template_environment = Environment(
         autoescape=False,
         loader=FileSystemLoader(os.path.join(formshare_path, "templates")),
         trim_blocks=False,
     )
-    host = get_ini_value(os.path.abspath(args.ini_path), "mysql.host", "localhost")
-    port = get_ini_value(os.path.abspath(args.ini_path), "mysql.port", "3306")
-    user = get_ini_value(os.path.abspath(args.ini_path), "mysql.user", "empty!")
-    password = get_ini_value(os.path.abspath(args.ini_path), "mysql.password", "empty!")
-    context = {"host": host, "port": port, "user": user, "password": password}
+    sqlalchemy_url = get_ini_value(os.path.abspath(args.ini_path), "sqlalchemy.url", "")
+    elasticfeeds_host = get_ini_value(os.path.abspath(args.ini_path), "elasticfeeds.host", "localhost")
 
-    rendered_template = template_environment.get_template("mysql.jinja2").render(
+    elasticsearch_user_host = get_ini_value(os.path.abspath(args.ini_path), "elasticsearch.user.host", "localhost")
+    elasticsearch_repository_host = get_ini_value(os.path.abspath(args.ini_path), "elasticsearch.repository.host",
+                                                  "localhost")
+
+    elasticsearch_records_host = get_ini_value(os.path.abspath(args.ini_path), "elasticsearch.records.host",
+                                               "localhost")
+
+    repository_path = get_ini_value(os.path.abspath(args.ini_path), "repository.path", "")
+    odktools_path = get_ini_value(os.path.abspath(args.ini_path), "odktools.path", "")
+
+    mysql_host = get_ini_value(os.path.abspath(args.ini_path), "mysql.host", "localhost")
+    mysql_port = get_ini_value(os.path.abspath(args.ini_path), "mysql.port", "3306")
+    mysql_user = get_ini_value(os.path.abspath(args.ini_path), "mysql.user", "empty!")
+    mysql_password = get_ini_value(os.path.abspath(args.ini_path), "mysql.password", "empty!")
+    context = {"mysql_host": mysql_host, "mysql_port": mysql_port, "mysql_user": mysql_user,
+               "mysql_password": mysql_password, "sqlalchemy_url": sqlalchemy_url,
+               "elasticfeeds_host": elasticfeeds_host, "elasticsearch_user_host": elasticsearch_user_host,
+               "elasticsearch_repository_host": elasticsearch_repository_host,
+               "elasticsearch_records_host": elasticsearch_records_host, "repository_path": repository_path,
+               "odktools_path": odktools_path, "mysql_cnf": mysql_cnf}
+
+    rendered_template = template_environment.get_template("test_config.jinja2").render(
         context
     )
 
-    with open(mysql_cnf_file, "w") as f:
+    with open(json_file, "w") as f:
         f.write(rendered_template)
     return 0

@@ -68,8 +68,19 @@ class FunctionalTests(unittest.TestCase):
                 "Environment variable FORMSHARE_PYTEST_RUNNING must be true. "
                 "Do 'export FORMSHARE_PYTEST_RUNNING=true' before running PyTest"
             )
-        from formshare.tests.config import server_config
+        config_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), *["test_config.json"])
+        with open(config_file) as json_file:
+            server_config = json.load(json_file)
+
         from formshare import main
+
+        from pathlib import Path
+        home = str(Path.home())
+
+        paths2 = ["formshare_pytest"]
+        working_dir = os.path.join(home, *paths2)
+        if not os.path.exists(working_dir):
+            os.makedirs(working_dir)
 
         app = main(None, **server_config)
         from webtest import TestApp
@@ -90,6 +101,7 @@ class FunctionalTests(unittest.TestCase):
         self.formID2 = ""
         self.formMultiLanguageID = ""
         self.path = os.path.dirname(os.path.abspath(__file__))
+        self.working_dir = working_dir
 
     def test_all(self):
         def test_root():
@@ -2833,7 +2845,7 @@ class FunctionalTests(unittest.TestCase):
                         self.projectID,
                         self.formID,
                         "csv_public_export",
-                        "/home/cquiros/{}.csv".format(task_id),
+                        self.working_dir + "/{}.csv".format(task_id),
                         "text/csv",
                         task_id,
                         datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
@@ -2851,7 +2863,7 @@ class FunctionalTests(unittest.TestCase):
                     create_xml_file,
                     insert_xml_file,
                     form_schema,
-                    "/home/cquiros/{}.csv".format(task_id),
+                    self.working_dir + "/{}.csv".format(task_id),
                     True,
                     "en",
                     task_id,
@@ -2963,7 +2975,7 @@ class FunctionalTests(unittest.TestCase):
                         self.projectID,
                         self.formID,
                         "csv_private_export",
-                        "/home/cquiros/{}.csv".format(task_id),
+                        self.working_dir + "/{}.csv".format(task_id),
                         "text/csv",
                         task_id,
                         datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
@@ -2981,7 +2993,7 @@ class FunctionalTests(unittest.TestCase):
                     create_xml_file,
                     insert_xml_file,
                     form_schema,
-                    "/home/cquiros/{}.csv".format(task_id),
+                    self.working_dir + "/{}.csv".format(task_id),
                     False,
                     "en",
                     task_id,
@@ -3041,7 +3053,7 @@ class FunctionalTests(unittest.TestCase):
                         self.projectID,
                         self.formID,
                         "xlsx_public_export",
-                        "/home/cquiros/{}.xlsx".format(task_id),
+                        self.working_dir + "/{}.xlsx".format(task_id),
                         "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                         task_id,
                         datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
@@ -3061,7 +3073,7 @@ class FunctionalTests(unittest.TestCase):
                     self.formID,
                     create_xml_file,
                     insert_xml_file,
-                    "/home/cquiros/{}.xlsx".format(task_id),
+                    self.working_dir + "/{}.xlsx".format(task_id),
                     True,
                     "en",
                 )
@@ -3096,7 +3108,7 @@ class FunctionalTests(unittest.TestCase):
                         self.projectID,
                         self.formID,
                         "kml_export",
-                        "/home/cquiros/{}.kml".format(task_id),
+                        self.working_dir + "/{}.kml".format(task_id),
                         "application/vnd.google-earth.kml+xml",
                         task_id,
                         datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
@@ -3111,7 +3123,7 @@ class FunctionalTests(unittest.TestCase):
                 internal_build_kml(
                     self.server_config,
                     form_schema,
-                    "/home/cquiros/{}.kml".format(task_id),
+                    self.working_dir + "/{}.kml".format(task_id),
                     "I_D",
                     "en",
                     task_id,
@@ -3148,7 +3160,7 @@ class FunctionalTests(unittest.TestCase):
                         self.projectID,
                         self.formID,
                         "media_export",
-                        "/home/cquiros/{}.zip".format(task_id),
+                        self.working_dir + "/{}.zip".format(task_id),
                         "application/zip",
                         task_id,
                         datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
@@ -3165,7 +3177,7 @@ class FunctionalTests(unittest.TestCase):
                     self.server_config["repository.path"] + "/odk",
                     [form_directory],
                     form_schema,
-                    "/home/cquiros/{}.zip".format(task_id),
+                    self.working_dir + "/{}.zip".format(task_id),
                     "I_D",
                     "en",
                     task_id,
@@ -8349,6 +8361,28 @@ class FunctionalTests(unittest.TestCase):
             assert res == 0
             assert os.path.exists(mysql_file)
 
+        def test_configure_tests():
+            from formshare.scripts.configuretests import main as configuretests_main
+            from pathlib import Path
+
+            here = os.path.dirname(os.path.abspath(__file__)).split("/formshare/tests")[
+                0
+            ]
+            paths2 = ["development.ini"]
+            ini_file = os.path.join(here, *paths2)
+
+            home = str(Path.home())
+            paths2 = ["test_config.json"]
+            json_file = os.path.join(home, *paths2)
+
+            res = configuretests_main(["/not_exists", "/not_exists"])
+            assert res == 1
+            res = configuretests_main([ini_file, "/not_exists"])
+            assert res == 1
+            res = configuretests_main(["--json_file", json_file, ini_file, here])
+            assert res == 0
+            assert os.path.exists(json_file)
+
         def test_modify_config():
             from formshare.scripts.modifyconfig import main as modifyconfig_main
             from pathlib import Path
@@ -8724,6 +8758,7 @@ class FunctionalTests(unittest.TestCase):
         test_configure_alembic()
         test_configure_fluent()
         test_configure_mysql()
+        test_configure_tests()
         test_modify_config()
         test_unauthorized_access()
 

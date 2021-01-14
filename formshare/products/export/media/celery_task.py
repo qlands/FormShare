@@ -32,7 +32,7 @@ def internal_build_media_zip(
     zip_file,
     primary_key,
     locale,
-    test_task_id=None,
+    task_id,
 ):
 
     parts = __file__.split("/products/")
@@ -41,11 +41,6 @@ def internal_build_media_zip(
     es.install()
     _ = es.gettext
     try:
-        if test_task_id is None:
-            task_id = build_media_zip.request.id
-        else:
-            task_id = test_task_id
-
         created = False
         engine = get_engine(settings)
         sql = "SELECT count(surveyid) as total FROM " + form_schema + ".maintable"
@@ -155,6 +150,10 @@ def build_media_zip(
     locale,
     test_task_id=None,
 ):
+    if test_task_id is None:
+        task_id = build_media_zip.request.id
+    else:
+        task_id = test_task_id
     internal_build_media_zip(
         settings,
         odk_dir,
@@ -163,5 +162,5 @@ def build_media_zip(
         zip_file,
         primary_key,
         locale,
-        test_task_id,
+        task_id,
     )

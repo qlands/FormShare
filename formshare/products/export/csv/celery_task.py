@@ -75,12 +75,8 @@ def internal_build_csv(
     csv_file,
     protect_sensitive,
     locale,
-    test_task_id=None,
+    task_id,
 ):
-    if test_task_id is None:
-        task_id = build_csv.request.id
-    else:
-        task_id = test_task_id
     tables = {}
     keys = []
     replace_values = []
@@ -352,6 +348,10 @@ def build_csv(
     locale,
     test_task_id=None,
 ):
+    if test_task_id is None:
+        task_id = build_csv.request.id
+    else:
+        task_id = test_task_id
     internal_build_csv(
         settings,
         maps_directory,
@@ -361,5 +361,5 @@ def build_csv(
         csv_file,
         protect_sensitive,
         locale,
-        test_task_id,
+        task_id,
     )

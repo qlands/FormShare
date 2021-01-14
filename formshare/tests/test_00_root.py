@@ -2272,6 +2272,25 @@ class FunctionalTests(unittest.TestCase):
                 form_directory = form_details["form_directory"]
 
                 form_reptask = str(uuid.uuid4())
+
+                engine = create_engine(self.server_config["sqlalchemy.url"])
+                sql = (
+                    "INSERT INTO product (project_id,form_id,product_id,"
+                    "celery_taskid,datetime_added,created_by,process_only,output_id) "
+                    "VALUES ('{}','{}','{}','{}','{}','{}','{}','{}')".format(
+                        mimic_project_id,
+                        mimic_form,
+                        "repository",
+                        form_reptask,
+                        datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
+                        self.randonLogin,
+                        1,
+                        form_reptask[-12:]
+                    )
+                )
+                engine.execute(sql)
+                engine.dispose()
+
                 form_schema = "FS_" + str(uuid.uuid4()).replace("-", "_")
 
                 paths2 = ["resources", "forms", "mimic_complex", "create.sql"]
@@ -2401,6 +2420,25 @@ class FunctionalTests(unittest.TestCase):
                 form_directory = form_details["form_directory"]
 
                 form_reptask = str(uuid.uuid4())
+
+                engine = create_engine(self.server_config["sqlalchemy.url"])
+                sql = (
+                    "INSERT INTO product (project_id,form_id,product_id,"
+                    "celery_taskid,datetime_added,created_by,process_only,output_id) "
+                    "VALUES ('{}','{}','{}','{}','{}','{}','{}','{}')".format(
+                        mimic_project_id,
+                        mimic_form,
+                        "repository",
+                        form_reptask,
+                        datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
+                        self.randonLogin,
+                        1,
+                        form_reptask[-12:]
+                    )
+                )
+                engine.execute(sql)
+                engine.dispose()
+
                 form_schema = "FS_" + str(uuid.uuid4()).replace("-", "_")
 
                 paths2 = ["resources", "forms", "mimic_complex", "create.sql"]
@@ -2550,6 +2588,25 @@ class FunctionalTests(unittest.TestCase):
                 form_directory = form_details["form_directory"]
 
                 form_reptask = str(uuid.uuid4())
+
+                engine = create_engine(self.server_config["sqlalchemy.url"])
+                sql = (
+                    "INSERT INTO product (project_id,form_id,product_id,"
+                    "celery_taskid,datetime_added,created_by,process_only,output_id) "
+                    "VALUES ('{}','{}','{}','{}','{}','{}','{}','{}')".format(
+                        mimic_grp_project_id,
+                        mimic_form,
+                        "repository",
+                        form_reptask,
+                        datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
+                        self.randonLogin,
+                        1,
+                        form_reptask[-12:]
+                    )
+                )
+                engine.execute(sql)
+                engine.dispose()
+
                 form_schema = "FS_" + str(uuid.uuid4()).replace("-", "_")
 
                 paths2 = ["resources", "forms", "mimic_complex", "create.sql"]
@@ -6644,6 +6701,26 @@ class FunctionalTests(unittest.TestCase):
             form_details_b = get_form_details(
                 self.server_config, merge_project_id, "tormenta20201105"
             )
+
+            engine = create_engine(self.server_config["sqlalchemy.url"])
+            task_id = str(uuid.uuid4())
+            sql = (
+                "INSERT INTO product (project_id,form_id,product_id,"
+                "celery_taskid,datetime_added,created_by,process_only,output_id) "
+                "VALUES ('{}','{}','{}','{}','{}','{}','{}','{}')".format(
+                    merge_project_id,
+                    "tormenta20201117",
+                    "merge_form",
+                    task_id,
+                    datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
+                    self.randonLogin,
+                    1,
+                    task_id[-12:]
+                )
+            )
+            engine.execute(sql)
+            engine.dispose()
+
             internal_merge_into_repository(
                 self.server_config,
                 self.randonLogin,
@@ -6658,6 +6735,7 @@ class FunctionalTests(unittest.TestCase):
                 form_details_b["form_hexcolor"],
                 "en",
                 False,
+                task_id,
             )
 
             # Get the details of a form tormenta20201117
@@ -6881,6 +6959,26 @@ class FunctionalTests(unittest.TestCase):
             form_details_b = get_form_details(
                 self.server_config, merge_project_id, "tormenta20201105"
             )
+
+            engine = create_engine(self.server_config["sqlalchemy.url"])
+            task_id = str(uuid.uuid4())
+            sql = (
+                "INSERT INTO product (project_id,form_id,product_id,"
+                "celery_taskid,datetime_added,created_by,process_only,output_id) "
+                "VALUES ('{}','{}','{}','{}','{}','{}','{}','{}')".format(
+                    merge_project_id,
+                    "tormenta20201117",
+                    "merge_form",
+                    task_id,
+                    datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
+                    self.randonLogin,
+                    1,
+                    task_id[-12:]
+                )
+            )
+            engine.execute(sql)
+            engine.dispose()
+
             internal_merge_into_repository(
                 self.server_config,
                 self.randonLogin,
@@ -6895,6 +6993,7 @@ class FunctionalTests(unittest.TestCase):
                 form_details_b["form_hexcolor"],
                 "en",
                 False,
+                task_id,
             )
 
             # Get the details of a form tormenta20201117
@@ -7100,6 +7199,26 @@ class FunctionalTests(unittest.TestCase):
             form_details_b = get_form_details(
                 self.server_config, merge_project_id, "tormenta20201105"
             )
+
+            engine = create_engine(self.server_config["sqlalchemy.url"])
+            task_id = str(uuid.uuid4())
+            sql = (
+                "INSERT INTO product (project_id,form_id,product_id,"
+                "celery_taskid,datetime_added,created_by,process_only,output_id) "
+                "VALUES ('{}','{}','{}','{}','{}','{}','{}','{}')".format(
+                    merge_project_id,
+                    "tormenta20201117",
+                    "merge_form",
+                    task_id,
+                    datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
+                    self.randonLogin,
+                    1,
+                    task_id[-12:]
+                )
+            )
+            engine.execute(sql)
+            engine.dispose()
+
             internal_merge_into_repository(
                 self.server_config,
                 self.randonLogin,
@@ -7114,6 +7233,7 @@ class FunctionalTests(unittest.TestCase):
                 form_details_b["form_hexcolor"],
                 "en",
                 True,
+                task_id,
             )
 
             # Get the details of a form tormenta20201117

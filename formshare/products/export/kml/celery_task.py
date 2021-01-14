@@ -18,7 +18,7 @@ class EmptyFileError(Exception):
 
 
 def internal_build_kml(
-    settings, form_schema, kml_file, primary_key, locale, test_task_id=None
+    settings, form_schema, kml_file, primary_key, locale, task_id
 ):
     parts = __file__.split("/products/")
     this_file_path = parts[0] + "/locale"
@@ -26,10 +26,6 @@ def internal_build_kml(
     es.install()
     _ = es.gettext
 
-    if test_task_id is None:
-        task_id = build_kml.request.id
-    else:
-        task_id = test_task_id
     engine = get_engine(settings)
     sql = (
         "SELECT count(surveyid) as total FROM "
@@ -94,6 +90,10 @@ def internal_build_kml(
 
 @celeryApp.task(base=CeleryTask)
 def build_kml(settings, form_schema, kml_file, primary_key, locale, test_task_id=None):
+    if test_task_id is None:
+        task_id = build_kml.request.id
+    else:
+        task_id = test_task_id
     internal_build_kml(
-        settings, form_schema, kml_file, primary_key, locale, test_task_id
+        settings, form_schema, kml_file, primary_key, locale, task_id
     )

@@ -40,7 +40,7 @@ def main(raw_args=None):
             formshare_path, *["formshare", "tests", "test_config.json"]
         )
     else:
-        json_file = args.mysql_cnf_file
+        json_file = args.json_file
 
     mysql_cnf = os.path.join(formshare_path, *["mysql.cnf"])
 

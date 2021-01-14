@@ -415,6 +415,7 @@ def internal_merge_into_repository(
     b_hex_color,
     locale,
     discard_testing_data,
+    task_id,
 ):
     log.info(
         "Merging process for form {} in project {} has started".format(
@@ -461,7 +462,6 @@ def internal_merge_into_repository(
 
     a_schema_name = "FS_" + str(uuid.uuid4()).replace("-", "_")
 
-    task_id = merge_into_repository.request.id
     cnf_file = settings["mysql.cnf"]
 
     engine = get_engine(settings)
@@ -690,7 +690,12 @@ def merge_into_repository(
     b_hex_color,
     locale,
     discard_testing_data,
+    test_task_id=None
 ):
+    if test_task_id is None:
+        task_id = merge_into_repository.request.id
+    else:
+        task_id = test_task_id
     internal_merge_into_repository(
         settings,
         user,
@@ -705,4 +710,5 @@ def merge_into_repository(
         b_hex_color,
         locale,
         discard_testing_data,
+        task_id
     )

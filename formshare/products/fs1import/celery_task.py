@@ -359,7 +359,7 @@ def internal_import_json_files(
     settings,
     locale,
     ignore_xform_check=False,
-    test_task_id=None,
+    task_id=None,
     report_task=True,
 ):
     parts = __file__.split("/products/")
@@ -367,11 +367,6 @@ def internal_import_json_files(
     es = gettext.translation("formshare", localedir=this_file_path, languages=[locale])
     es.install()
     _ = es.gettext
-
-    if test_task_id is None:
-        task_id = import_json_files.request.id
-    else:
-        task_id = test_task_id
 
     engine = create_engine(settings["sqlalchemy.url"])
     list_of_files = path_to_files + "/**/*.json"
@@ -449,6 +444,10 @@ def import_json_files(
     test_task_id=None,
     report_task=True,
 ):
+    if test_task_id is None:
+        task_id = import_json_files.request.id
+    else:
+        task_id = test_task_id
     internal_import_json_files(
         user,
         project,
@@ -464,6 +463,6 @@ def import_json_files(
         settings,
         locale,
         ignore_xform_check,
-        test_task_id,
+        task_id,
         report_task,
     )

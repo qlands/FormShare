@@ -236,7 +236,7 @@ def internal_create_mysql_repository(
     repository_string,
     locale,
     discard_testing_data,
-    testing_task=None,
+    task_id,
 ):
     log.info(
         "Repository process for form {} in project {} has started".format(
@@ -249,10 +249,6 @@ def internal_create_mysql_repository(
     es.install()
     _ = es.gettext
 
-    if testing_task is None:
-        task_id = create_mysql_repository.request.id
-    else:
-        task_id = testing_task
     try:
         build_database(
             settings,
@@ -400,6 +396,10 @@ def create_mysql_repository(
     discard_testing_data,
     testing_task=None,
 ):
+    if testing_task is None:
+        task_id = create_mysql_repository.request.id
+    else:
+        task_id = testing_task
     internal_create_mysql_repository(
         settings,
         user,
@@ -418,5 +418,5 @@ def create_mysql_repository(
         repository_string,
         locale,
         discard_testing_data,
-        testing_task,
+        task_id,
     )

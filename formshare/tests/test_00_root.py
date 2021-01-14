@@ -4030,6 +4030,9 @@ class FunctionalTests(unittest.TestCase):
             data[
                 "si_participa/section_household_info/RespondentDetails/I_D"
             ] = "501890387ABC2"
+            tmp = os.path.join(self.path, *["tmp"])
+            if not os.path.exists(tmp):
+                os.makedirs(tmp)
             paths = ["tmp", duplicated_id + ".json"]
             submission_file = os.path.join(self.path, *paths)
 

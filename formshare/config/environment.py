@@ -2,7 +2,8 @@ import os
 
 from pyramid.csrf import SessionCSRFStoragePolicy
 from pyramid_session_redis import session_factory_from_settings
-
+from pyramid.session import SignedCookieSessionFactory
+import pyramid_session_multi
 import formshare.plugins as p
 import formshare.plugins.helpers as helpers
 from formshare.products import add_product
@@ -79,6 +80,15 @@ def load_environment(settings, config, apppath, policy_array):
     # Add the session factory to the config
     session_factory = session_factory_from_settings(settings)
     config.set_session_factory(session_factory)
+
+    # Adds a secondary session for not critical cookies that will not expire
+    config.include('pyramid_session_multi')
+    secondary_session_factory = SignedCookieSessionFactory(
+        "some", cookie_name="test", timeout=None,
+    )
+    pyramid_session_multi.register_session_factory(
+        config, 'secondary_session', secondary_session_factory
+    )
 
     config.set_csrf_storage_policy(SessionCSRFStoragePolicy())
     # config.set_default_csrf_options(require_csrf=True)

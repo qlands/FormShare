@@ -83,6 +83,7 @@ pyramid-jinja2==2.8
 pyramid-mako==1.1.0
 pyramid-retry==2.1.1
 pyramid-session-redis==1.5.2
+pyramid_session_multi==0.3.1
 pyramid-tm==2.4
 pytest==5.4.2
 pytest-cov==2.9.0

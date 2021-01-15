@@ -53,7 +53,10 @@ class JSONList(AssistantView):
         form_data = get_form_data(self.request, self.projectID, form_id)
         if permissions["enum_cansubmit"] == 1 or permissions["enum_canclean"] == 1:
             current_page = int(self.request.params.get("page", "1"))
-            status = self.request.params.get("status", "all")
+            status = self.request.params.get("status", None)
+            if status is None:
+                status = self.request.session_multi['secondary_session'].get('clean_status', "all")
+            self.request.session_multi['secondary_session']['clean_status'] = status
             status_code = None
             if status == "fixed":
                 status_code = 0
@@ -61,6 +64,8 @@ class JSONList(AssistantView):
                 status_code = 1
             if status == "checkout":
                 status_code = 2
+            if status == "checkin":
+                status_code = 3
             if status == "disregarded":
                 status_code = 4
 

@@ -879,29 +879,37 @@ def delete_submission(
                 )
             )
 
-        # Final steps. Delete indexes and data
+    # Final steps. Delete indexes and data
+    # Delete the record indices
 
-        # Delete the record indices
+    paths = ["forms", form_directory, "submissions", submission_id + ".log"]
+    log_file = os.path.join(odk_dir, *paths)
 
-        paths = ["forms", form_directory, "submissions", submission_id + ".log"]
-        log_file = os.path.join(odk_dir, *paths)
-
-        with open(log_file) as f:
-            lines = f.readlines()
-            for line in lines:
-                parts = line.split(",")
-                try:
-                    delete_from_record_index(
-                        request.registry.settings, user, project_code, form, parts[1]
+    with open(log_file) as f:
+        lines = f.readlines()
+        for line in lines:
+            parts = line.split(",")
+            try:
+                delete_from_record_index(
+                    request.registry.settings,
+                    user,
+                    project_code,
+                    form,
+                    parts[1].replace("\n", ""),
+                )
+            except Exception as e:
+                log.error(
+                    "Error while deleting record index for id {}. User:{}. "
+                    "Project: {}. Form: {}. Rowuuid: {}. Error: {}.".format(
+                        submission_id,
+                        user,
+                        project_code,
+                        form,
+                        parts[1].replace("\n", ""),
+                        str(e),
                     )
-                except Exception as e:
-                    log.error(
-                        "Error while deleting record index for id {}. User:{}. "
-                        "Project: {}. Form: {}. Rowuuid: {}. Error: {}.".format(
-                            submission_id, user, project_code, form, parts[1], str(e),
-                        )
-                    )
-        os.remove(log_file)
+                )
+    os.remove(log_file)
 
     # Delete the dataset index
     try:
@@ -1003,7 +1011,9 @@ def delete_all_submission(request, user, project, form, project_code):
         form_directory = get_form_directory(request, project, form)
         paths = ["forms", form_directory, "submissions"]
         submissions_dir = os.path.join(odk_dir, *paths)
-        shutil.rmtree(submissions_dir)
+        string_date = datetime.datetime.now().strftime("%Y_%m_%d:%H_%M_%S")
+        deleted_string = "_deleted_by_{}_on_{}".format(user, string_date)
+        shutil.move(submissions_dir, submissions_dir + deleted_string)
         paths = ["forms", form_directory, "submissions"]
         os.makedirs(os.path.join(odk_dir, *paths))
         paths = ["forms", form_directory, "submissions", "logs"]
@@ -1016,7 +1026,11 @@ def delete_all_submission(request, user, project, form, project_code):
         sql = "DELETE FROM " + schema + ".maintable"
         request.dbsession.execute(sql)
         mark_changed(request.dbsession)
-
+        log.info(
+            "ZapSubmissions: User {} has deleted all submissions in form {} for project {} on {}".format(
+                user, form, project, string_date
+            )
+        )
         delete_dataset_index(request.registry.settings, user, project_code, form)
         delete_record_index(request.registry.settings, user, project_code, form)
 

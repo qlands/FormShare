@@ -17,9 +17,7 @@ class EmptyFileError(Exception):
     """
 
 
-def internal_build_kml(
-    settings, form_schema, kml_file, primary_key, locale, task_id
-):
+def internal_build_kml(settings, form_schema, kml_file, primary_key, locale, task_id):
     parts = __file__.split("/products/")
     this_file_path = parts[0] + "/locale"
     es = gettext.translation("formshare", localedir=this_file_path, languages=[locale])
@@ -94,6 +92,4 @@ def build_kml(settings, form_schema, kml_file, primary_key, locale, test_task_id
         task_id = build_kml.request.id
     else:
         task_id = test_task_id
-    internal_build_kml(
-        settings, form_schema, kml_file, primary_key, locale, task_id
-    )
+    internal_build_kml(settings, form_schema, kml_file, primary_key, locale, task_id)

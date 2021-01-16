@@ -2285,7 +2285,7 @@ class FunctionalTests(unittest.TestCase):
                         datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
                         self.randonLogin,
                         1,
-                        form_reptask[-12:]
+                        form_reptask[-12:],
                     )
                 )
                 engine.execute(sql)
@@ -2433,7 +2433,7 @@ class FunctionalTests(unittest.TestCase):
                         datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
                         self.randonLogin,
                         1,
-                        form_reptask[-12:]
+                        form_reptask[-12:],
                     )
                 )
                 engine.execute(sql)
@@ -2601,7 +2601,7 @@ class FunctionalTests(unittest.TestCase):
                         datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
                         self.randonLogin,
                         1,
-                        form_reptask[-12:]
+                        form_reptask[-12:],
                     )
                 )
                 engine.execute(sql)
@@ -6715,7 +6715,7 @@ class FunctionalTests(unittest.TestCase):
                     datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
                     self.randonLogin,
                     1,
-                    task_id[-12:]
+                    task_id[-12:],
                 )
             )
             engine.execute(sql)
@@ -6973,7 +6973,7 @@ class FunctionalTests(unittest.TestCase):
                     datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
                     self.randonLogin,
                     1,
-                    task_id[-12:]
+                    task_id[-12:],
                 )
             )
             engine.execute(sql)
@@ -7213,7 +7213,7 @@ class FunctionalTests(unittest.TestCase):
                     datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
                     self.randonLogin,
                     1,
-                    task_id[-12:]
+                    task_id[-12:],
                 )
             )
             engine.execute(sql)

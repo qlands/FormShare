@@ -84,7 +84,7 @@ def load_environment(settings, config, apppath, policy_array):
     # Adds a secondary session for not critical cookies that will not expire
     config.include('pyramid_session_multi')
     secondary_session_factory = SignedCookieSessionFactory(
-        "some", cookie_name="test", timeout=None,
+        settings["auth.secondary.secret"], cookie_name=settings["auth.secondary.cookie"], timeout=None,
     )
     pyramid_session_multi.register_session_factory(
         config, 'secondary_session', secondary_session_factory

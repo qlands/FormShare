@@ -20,15 +20,16 @@ def main(raw_args=None):
     parser.add_argument("ini_path", help="Path to ini file")
     args = parser.parse_args(raw_args)
 
-    if not os.path.exists(os.path.abspath(args.ini_path)):
+    if not os.path.exists(args.ini_path):
         print("Ini file does not exists")
         return 1
+    formshare_ini_file_path = os.path.abspath(args.ini_path)
     config = configparser.ConfigParser()
-    config.read(args.ini_path)
+    config.read(formshare_ini_file_path)
     sqlalchemy_url = config.get("app:formshare", "sqlalchemy.url")
     if sqlalchemy_url.find("&ssl_disabled=True") == -1:
-        shutil.copyfile(args.ini_path, args.ini_path + ".bk.20210113")
+        shutil.copyfile(formshare_ini_file_path, formshare_ini_file_path + ".bk.20210113")
         sqlalchemy_url = sqlalchemy_url + "&ssl_disabled=True"
         config.set("app:formshare", "sqlalchemy.url", sqlalchemy_url)
-        with open(args.ini_path, "w") as configfile:
+        with open(formshare_ini_file_path, "w") as configfile:
             config.write(configfile)

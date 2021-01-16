@@ -7,7 +7,7 @@ import formshare.plugins as p
 from lxml import etree
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from pyramid.response import FileResponse
-
+import datetime
 import formshare.plugins as plugins
 from formshare.processes.db import (
     get_project_id_from_name,
@@ -827,8 +827,13 @@ class DeleteForm(PrivateView):
                                 paths = ["forms", form_directory]
                                 odk_dir = get_odk_path(self.request)
                                 form_directory = os.path.join(odk_dir, *paths)
+                                string_date = datetime.datetime.now().strftime("%Y_%m_%d:%H_%M_%S")
+                                deleted_string = "_deleted_by_{}_on_{}".format(self.userID, string_date)
                                 if os.path.exists(form_directory):
-                                    shutil.rmtree(form_directory)
+                                    shutil.move(form_directory, form_directory+deleted_string)
+                                log.info("FormDelete: Form {} in project {} of user {} was deleted by {} on {}".format(
+                                    form_id, project_id, user_id, self.userID, string_date
+                                ))
                             except Exception as e:
                                 log.error(
                                     "Error {} while removing form {} in project {}. Cannot delete directory {}".format(

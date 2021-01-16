@@ -55,8 +55,10 @@ class JSONList(AssistantView):
             current_page = int(self.request.params.get("page", "1"))
             status = self.request.params.get("status", None)
             if status is None:
-                status = self.request.session_multi['secondary_session'].get('clean_status', "all")
-            self.request.session_multi['secondary_session']['clean_status'] = status
+                status = self.request.session_multi["secondary_session"].get(
+                    "clean_status", "all"
+                )
+            self.request.session_multi["secondary_session"]["clean_status"] = status
             status_code = None
             if status == "fixed":
                 status_code = 0

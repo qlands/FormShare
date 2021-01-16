@@ -15,8 +15,8 @@ from formshare.scripts.modifyconfig import modify_ini_file
 
 
 # revision identifiers, used by Alembic.
-revision = '6b09c0218d0b'
-down_revision = 'b0d6a2d89fc7'
+revision = "6b09c0218d0b"
+down_revision = "b0d6a2d89fc7"
 branch_labels = None
 depends_on = None
 
@@ -52,9 +52,19 @@ def upgrade():
 
     secondary_sessions_secret = random_password(17).replace("%", "~")
     modify_ini_file(
-        config, "ADD", "app:formshare", "auth.secondary.secret", secondary_sessions_secret
+        config,
+        "ADD",
+        "app:formshare",
+        "auth.secondary.secret",
+        secondary_sessions_secret,
     )
-    modify_ini_file(config, "ADD", "app:formshare", "auth.secondary.cookie", "formshare_secondary_tkt")
+    modify_ini_file(
+        config,
+        "ADD",
+        "app:formshare",
+        "auth.secondary.cookie",
+        "formshare_secondary_tkt",
+    )
     with open(config_uri, "w") as configfile:
         config.write(configfile)
 

@@ -690,7 +690,7 @@ def merge_into_repository(
     b_hex_color,
     locale,
     discard_testing_data,
-    test_task_id=None
+    test_task_id=None,
 ):
     if test_task_id is None:
         task_id = merge_into_repository.request.id
@@ -710,5 +710,5 @@ def merge_into_repository(
         b_hex_color,
         locale,
         discard_testing_data,
-        task_id
+        task_id,
     )

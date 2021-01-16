@@ -15,7 +15,7 @@
             </dl>
             <dl class="row mb-0">
                 <div class="col-sm-4 text-sm-right"><dt>{{ _('Assistants') }}:</dt> </div>
-                <div class="col-sm-8 text-sm-left"> <dd class="mb-1"> {{ formassistants|length }} {% if formassistants|length == 0 and formgroups|length == 0 and projectDetails.access_type < 4 %} <span class="text-danger"><a data-toggle="modal" data-target="#add_assistant"> ({{ _('You need to assign one') }}</a>  )</span>{% endif %}</dd></div>
+                <div class="col-sm-8 text-sm-left"> <dd class="mb-1"> {{ formassistants|length }} {% if formassistants|length == 0 and formgroups|length == 0 and projectDetails.access_type < 4 %} <span class="text-danger"><a data-toggle="modal" data-target="#add_assistant"> ({{ _('You need to assign one') }}</a>  )</span>{% else %} {% if projectDetails.access_type < 4 %}<span class="text-success"><a data-toggle="modal" data-target="#add_assistant"> [{{ _('Assign another one') }}]</a></span>{% endif %}{% endif %}</dd></div>
             </dl>
             <dl class="row mb-0">
                 <div class="col-sm-4 text-sm-right"><dt>{{ _('Assistant groups') }}:</dt> </div>
@@ -76,18 +76,18 @@
                 </dl>
                 <dl class="row mb-0">
                     <div class="col-sm-4 text-sm-right">
-                        <dt>{{ _('In logs') }}:</dt>
-                    </div>
-                    <div class="col-sm-8 text-sm-left">
-                        <dd class="mb-1">{{ formDetails.inlogs }} {% if formDetails.inlogs > 0 %}<a target="_blank" href="{{ request.route_url('errorlist', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}">[{{ _('View logs') }}]</a>{% endif %}</dd>
-                    </div>
-                </dl>
-                <dl class="row mb-0">
-                    <div class="col-sm-4 text-sm-right">
                         <dt>{{ _('With errors') }}:</dt>
                     </div>
                     <div class="col-sm-8 text-sm-left">
                         <dd class="mb-1" {% if formDetails.inerror > 0 %}style="color: red"{% endif %}>{{ formDetails.inerror }} {% if formDetails.inerror > 0 %}<a style="color: red" target="_blank" href="{{ request.route_url('errorlist', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}">[{{ _('Manage errors') }}]</a>{% endif %}</dd>
+                    </div>
+                </dl>
+                <dl class="row mb-0">
+                    <div class="col-sm-4 text-sm-right">
+                        <dt>{{ _('Log entries') }}:</dt>
+                    </div>
+                    <div class="col-sm-8 text-sm-left">
+                        <dd class="mb-1">{{ formDetails.inlogs }} {% if formDetails.inlogs > 0 %}<a target="_blank" href="{{ request.route_url('errorlist', userid=projectDetails.owner, projcode=projectDetails.project_code,formid=formDetails.form_id) }}">[{{ _('View logs') }}]</a>{% endif %}</dd>
                     </div>
                 </dl>
             {% endblock form_details_submissions_db %}

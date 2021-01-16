@@ -223,7 +223,7 @@ def store_json_file(
             *["forms", xform_directory, "submissions", "logs", "imported.sqlite"]
         )
         uuid_file = os.path.join(
-            odk_dir, *["forms", xform_directory, "submissions", "logs", uuid_file_name]
+            odk_dir, *["forms", xform_directory, "submissions", uuid_file_name]
         )
         maps_directory = os.path.join(
             odk_dir, *["forms", xform_directory, "submissions", "maps"]

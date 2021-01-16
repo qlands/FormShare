@@ -1790,13 +1790,7 @@ def store_json_file(
                     )
                     uuid_file = os.path.join(
                         odk_dir,
-                        *[
-                            "forms",
-                            xform_directory,
-                            "submissions",
-                            "logs",
-                            uuid_file_name,
-                        ]
+                        *["forms", xform_directory, "submissions", uuid_file_name]
                     )
                     maps_directory = os.path.join(
                         odk_dir, *["forms", xform_directory, "submissions", "maps"]
@@ -2588,7 +2582,7 @@ def push_revision(
         odk_dir, *["forms", form_directory, "repository", "manifest.xml"]
     )
     uuid_file = os.path.join(
-        odk_dir, *["forms", form_directory, "submissions", "logs", submission + ".log",]
+        odk_dir, *["forms", form_directory, "submissions", submission + ".log"]
     )
 
     args = []

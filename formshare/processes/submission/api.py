@@ -905,32 +905,35 @@ def delete_submission(
 
     paths = ["forms", form_directory, "submissions", submission_id + ".log"]
     log_file = os.path.join(odk_dir, *paths)
-
-    with open(log_file) as f:
-        lines = f.readlines()
-        for line in lines:
-            parts = line.split(",")
-            try:
-                delete_from_record_index(
-                    request.registry.settings,
-                    user,
-                    project_code,
-                    form,
-                    parts[1].replace("\n", ""),
-                )
-            except Exception as e:
-                log.error(
-                    "Error while deleting record index for id {}. User:{}. "
-                    "Project: {}. Form: {}. Rowuuid: {}. Error: {}.".format(
-                        submission_id,
+    if os.path.exists(log_file):
+        with open(log_file) as f:
+            lines = f.readlines()
+            for line in lines:
+                parts = line.split(",")
+                try:
+                    delete_from_record_index(
+                        request.registry.settings,
                         user,
                         project_code,
                         form,
                         parts[1].replace("\n", ""),
-                        str(e),
                     )
-                )
-    os.remove(log_file)
+                except Exception as e:
+                    log.error(
+                        "Error while deleting record index for id {}. User:{}. "
+                        "Project: {}. Form: {}. Rowuuid: {}. Error: {}.".format(
+                            submission_id,
+                            user,
+                            project_code,
+                            form,
+                            parts[1].replace("\n", ""),
+                            str(e),
+                        )
+                    )
+        os.remove(log_file)
+    else:
+        log.error("Log file not found while deleting submission {} of form {} in project {} by user {}. "
+                  "Record index will not be synchronized".format(submission_id, form, project, deleted_by))
 
     # Delete the dataset index
     try:

@@ -83,11 +83,11 @@
                         {% block info_tab_content_actions %}
                             {% if projectDetails.access_type < 4 %}
                                 {% if formDetails.form_schema == None %}
-                                    {% if formDetails.parent_form == None %}
+                                    {% if formDetails.parent_form == None and (formassistants|length > 0 or formgroups|length > 0)%}
                                         <li><a href="{{ request.route_url('createrepository',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-database"></i> {{ _('Create repository') }} </a></li>
                                     {% else %}
                                         {% if formDetails.form_abletomerge == 1 %}
-                                            {% if formDetails.form_mergetask == None or (formDetails.form_mergetask != None and mergetaskdata.rescode > 0) %}
+                                            {% if formDetails.form_mergetask == None or (formDetails.form_mergetask != None and mergetaskdata.rescode > 0) and (formassistants|length > 0 or formgroups|length > 0)%}
                                                 <li><a href="{{ request.route_url('merge_new_version',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id,oldformid=formDetails.parent_form) }}" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-code-branch"></i> {{ _('Merge repository') }} </a></li>
                                             {% endif %}
                                         {% else %}

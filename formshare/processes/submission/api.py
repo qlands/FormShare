@@ -791,6 +791,7 @@ def delete_submission(
     form,
     row_uuid,
     project_code,
+    deleted_by,
     move_to_logs=False,
     project_of_assistant=None,
     assistant=None,
@@ -827,6 +828,11 @@ def delete_submission(
     engine.dispose()
 
     if not move_to_logs:
+        log.info(
+            "DeleteSubmission: Submission {} in form {} for project {} was deleted by {}".format(
+                submission_id, form, project, deleted_by
+            )
+        )
         # Try to remove all associated files
         try:
             paths = ["forms", form_directory, "submissions", submission_id]
@@ -869,6 +875,21 @@ def delete_submission(
                 form_directory,
                 "submissions",
                 submission_id + ".ordered.json",
+            ]
+            json_file = os.path.join(odk_dir, *paths)
+            os.remove(json_file)
+        except Exception as e:
+            log.error(
+                "Error deleting ordered submission json file for id {}. Error: {}".format(
+                    submission_id, str(e)
+                )
+            )
+        try:
+            paths = [
+                "forms",
+                form_directory,
+                "submissions",
+                submission_id + ".original.json",
             ]
             json_file = os.path.join(odk_dir, *paths)
             os.remove(json_file)
@@ -996,7 +1017,7 @@ def delete_submission(
     return True
 
 
-def delete_all_submission(request, user, project, form, project_code):
+def delete_all_submission(request, user, project, form, project_code, deleted_by):
     schema = get_form_schema(request, project, form)
     try:
         request.dbsession.query(Submission).filter(
@@ -1028,7 +1049,7 @@ def delete_all_submission(request, user, project, form, project_code):
         mark_changed(request.dbsession)
         log.info(
             "ZapSubmissions: User {} has deleted all submissions in form {} for project {} on {}".format(
-                user, form, project, string_date
+                deleted_by, form, project, string_date
             )
         )
         delete_dataset_index(request.registry.settings, user, project_code, form)

@@ -332,6 +332,7 @@ class DeleteFormSubmission(PrivateView):
                         form_id,
                         request_data.get("id"),
                         project_code,
+                        self.userID,
                     )
             else:
                 if "move_submission" in request_data.keys():
@@ -345,6 +346,7 @@ class DeleteFormSubmission(PrivateView):
                                 form_id,
                                 request_data.get("rowuuid", ""),
                                 project_code,
+                                self.userID,
                                 True,
                                 assistant_data[0],
                                 assistant_data[1],
@@ -404,7 +406,12 @@ class DeleteAllSubmissions(PrivateView):
             if request_data.get("owner_email", "") != "":
                 if user_data.email == request_data.get("owner_email", ""):
                     deleted, message = delete_all_submission(
-                        self.request, user_id, project_id, form_id, project_code
+                        self.request,
+                        user_id,
+                        project_id,
+                        form_id,
+                        project_code,
+                        self.userID,
                     )
                     if deleted:
                         return HTTPFound(

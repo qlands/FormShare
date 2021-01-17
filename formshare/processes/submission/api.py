@@ -932,8 +932,12 @@ def delete_submission(
                     )
         os.remove(log_file)
     else:
-        log.error("Log file not found while deleting submission {} of form {} in project {} by user {}. "
-                  "Record index will not be synchronized".format(submission_id, form, project, deleted_by))
+        log.error(
+            "Log file not found while deleting submission {} of form {} in project {} by user {}. "
+            "Record index will not be synchronized".format(
+                submission_id, form, project, deleted_by
+            )
+        )
 
     # Delete the dataset index
     try:

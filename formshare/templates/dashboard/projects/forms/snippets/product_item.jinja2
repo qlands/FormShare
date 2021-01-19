@@ -41,19 +41,26 @@
                                 <span title="{{ _('This is the latest export of this product') }}" class="badge">{{ _('Latest') }}</span>
                             {% endif %}
                             {% if formDetails.lastindb != None %}
+                                {% set product_outdated = False %}
+                                {% if formDetails.lastindb > output.datetime_added  %}
+                                    {% set product_outdated = True %}
+                                {% endif %}
                                 {% if formDetails.cleanedlast != None %}
-                                    {% if output.datetime_added > formDetails.lastindb and output.datetime_added >formDetails.cleanedlast %}
-                                        <span class="badge badge-success">{{ _('Up to date') }}</span>
-                                    {% else %}
-                                        <span title="{{ _('This product was created before the last submission and/or before the last data cleaning update') }}" class="badge badge-danger">{{ _('Outdated') }}</span>
-                                    {% endif %}
-                                {% else %}
-                                    {% if output.datetime_added > formDetails.lastindb %}
-                                        <span class="badge badge-success">{{ _('Up to date') }}</span>
-                                    {% else %}
-                                        <span title="{{ _('This product was created before the last submission') }}" class="badge badge-danger">{{ _('Outdated') }}</span>
+                                    {% if formDetails.cleanedlast > output.datetime_added %}
+                                         {% set product_outdated = True %}
                                     {% endif %}
                                 {% endif %}
+                                {% if formDetails.fixedlast != None %}
+                                    {% if formDetails.fixedlast > output.datetime_added %}
+                                         {% set product_outdated = True %}
+                                    {% endif %}
+                                {% endif %}
+                                {% if not product_outdated %}
+                                    <span class="badge badge-success">{{ _('Up to date') }}</span>
+                                {% else %}
+                                    <span title="{{ _('This product was created before the last submission and/or before the last data cleaning update and/or before the last fixed log entry') }}" class="badge badge-danger">{{ _('Outdated') }}</span>
+                                {% endif %}
+
                             {% else %}
                                 <span title="{{ _('This product was created before submissions where deleted') }}" class="badge badge-danger">{{ _('Outdated') }}</span>
                             {% endif %}

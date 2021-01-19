@@ -24,6 +24,7 @@ from formshare.models import (
     Jsonlog,
     Project,
     Userproject,
+    Jsonhistory,
 )
 from formshare.processes.color_hash import ColorHash
 from formshare.processes.db.assistant import (
@@ -82,9 +83,22 @@ __all__ = [
     "get_last_submission_date",
     "get_form_directories_for_schema",
     "get_forms_for_schema",
+    "get_last_fixed_date",
 ]
 
 log = logging.getLogger("formshare")
+
+
+def get_last_fixed_date(request, project, form):
+    res = request.dbsession.query(Jsonhistory.log_dtime).\
+        filter(Jsonhistory.project_id == project).\
+        filter(Jsonhistory.form_id == form).\
+        filter(Jsonhistory.log_action == 0).\
+        order_by(Jsonhistory.log_dtime.desc()).first()
+    if res is not None:
+        return res.log_dtime
+    else:
+        return None
 
 
 def collect_maps_for_schema(request, schema):
@@ -432,6 +446,7 @@ def get_form_details(request, user, project, form):
             result["submissions"] = submissions
             result["last"] = last
             result["cleanedlast"] = None
+            result["fixedlast"] = None
             result["lastindb"] = None
             result["cleanedby"] = "NA"
             result["by"] = by
@@ -459,10 +474,12 @@ def get_form_details(request, user, project, form):
             )
             cleaned_last, cleaned_by = get_last_clean_info(request, project, form)
             last_submission_in_db = get_last_submission_date(request, project, form)
+            fixed_last = get_last_fixed_date(request, project, form)
             result["submissions"] = submissions
             result["last"] = last
             result["lastindb"] = last_submission_in_db
             result["cleanedlast"] = cleaned_last
+            result["fixedlast"] = fixed_last
             cleaned_by_details = get_by_details(request, user, project, cleaned_by)
             if not cleaned_by_details:
                 result["cleanedby"] = cleaned_by

@@ -7446,7 +7446,6 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            print("**********************ZZZ")
             print(self.projectID)
             # API Call fails. User does not have editor or admin grants to this project
             paths = ["resources", "api_test.dat"]
@@ -7463,7 +7462,6 @@ class FunctionalTests(unittest.TestCase):
                 upload_files=[("file_to_upload", resource_file)],
                 status=400,
             )
-            print("**********************ZZZ")
 
             # Collaborator logout
             self.testapp.get("/logout", status=302)

@@ -95,13 +95,15 @@
                         {% else %}
                             <a class="btn btn-default btn-sm action-buttons" href="{{ request.route_url('get_submissions_media',userid=userid,projcode=projcode,formid=formid,submissiona=error.log_id,submissionb='None') }}" title="{{ _('Download associated media') }}"><i class="fas fa-images"></i></a>
                         {% endif %}
+                        {% set push_button_visible = False %}
                         {% if error.status != 3 %}
                             {% if (error.error.maintable and error.error.survey_id == None) or error.error.moved %}
+                                {% set push_button_visible = True %}
                                 <a class="btn btn-primary btn-sm action-buttons action-required" style="background-color: #1e7e34"  data-title="{{ _('Try to push submission into the repository again') }}" data-message="{{ _('Are you sure that you want to push this submission?') }}" urn="{{ request.route_url('push_log_submission', userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id) }}" title="{{ _('Push submission again') }}"><i style="color: white" class="fa fa-arrow-left"></i></a>
                             {% endif %}
                         {% endif %}
                         {% if error.status == 1 and not disregard %}
-                            {% if not error.error.moved %}
+                            {% if not error.error.moved and not push_button_visible%}
                                 <a class="btn btn-primary btn-sm action-buttons action-required" style="background-color: #1e7e34"  data-title="{{ _('Try to push submission into the repository again') }}" data-message="{{ _('Are you sure that you want to push this submission?') }}" urn="{{ request.route_url('push_log_submission', userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id) }}" title="{{ _('Push submission again') }}"><i style="color: white" class="fa fa-arrow-left"></i></a>
                             {% endif %}
                             <a class="btn btn-default btn-sm action-buttons" href="{{ request.route_url('comparejsons',userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id) }}" title="{{ _('Compare submission') }}"><i style="color: orange" class="fa fa-random"></i></a>

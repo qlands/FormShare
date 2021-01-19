@@ -32,7 +32,6 @@ from formshare.processes.db import (
     set_form_status,
     get_assigned_assistants,
     get_form_directory,
-    reset_form_repository,
     get_form_processing_products,
     get_task_status,
     get_output_by_task,

@@ -90,11 +90,14 @@ log = logging.getLogger("formshare")
 
 
 def get_last_fixed_date(request, project, form):
-    res = request.dbsession.query(Jsonhistory.log_dtime).\
-        filter(Jsonhistory.project_id == project).\
-        filter(Jsonhistory.form_id == form).\
-        filter(Jsonhistory.log_action == 0).\
-        order_by(Jsonhistory.log_dtime.desc()).first()
+    res = (
+        request.dbsession.query(Jsonhistory.log_dtime)
+        .filter(Jsonhistory.project_id == project)
+        .filter(Jsonhistory.form_id == form)
+        .filter(Jsonhistory.log_action == 0)
+        .order_by(Jsonhistory.log_dtime.desc())
+        .first()
+    )
     if res is not None:
         return res.log_dtime
     else:

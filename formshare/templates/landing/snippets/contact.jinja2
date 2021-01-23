@@ -44,8 +44,10 @@
         </div>
         <div class="row">
             <div class="col-lg-12 text-center m-t-lg m-b-lg">
-                <strong>{{ _('Version') }} {{ request.h.get_version() }}</strong>
-                <p><strong>&copy; 2020 QLands Technology Consultants</strong></p>
+                {% block version %}
+                    <strong>{{ _('Version') }} {{ request.h.get_version() }}</strong>
+                    <p><strong>&copy; 2021 QLands Technology Consultants</strong></p>
+                {% endblock version %}
                 {% block version_extra %}
 
                 {% endblock version_extra %}

@@ -11,18 +11,32 @@
                     {% endif %}
                 {% endblock upload_form_header %}
             </div>
-            <form id="form_upload_form" role="form" method="post" enctype="multipart/form-data" action="{{ action_url }}">
+            {% if not upload_for_merging %}
+                <form id="form_upload_form" role="form" method="post" enctype="multipart/form-data" action="{{ action_url }}">
+            {% else %}
+                <form id="form_upload_form" role="form" method="post" enctype="multipart/form-data" action="{{ request.route_url('form_merge', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}">
+            {% endif %}
                 {% block upload_form_form %}
                     {{ form.secure_form(request) }}
                     <div class="modal-body">
                         {% block upload_form_fields %}
-                            <div class="custom-file">
-                                <input id="xlsx" accept="*.xlsx" name="xlsx" type="file" class="custom-file-input">
-                                <label for="xlsx" class="custom-file-label">{{ _('Choose file...') }}</label>
+                            <div style="margin-top: 10px" class="form-group">
+                                <label><b>{{ _('Survey file (xls / xlsx)') }}</b></label>
+                                <div class="custom-file">
+                                    <input id="xlsx" accept="*.xlsx" name="xlsx" type="file" class="custom-file-input">
+                                    <label for="xlsx" class="custom-file-label">{{ _('Choose file...') }}</label>
+                                </div>
                             </div>
                             {% if not upload_for_merging %}
+                                <hr>
                                 <div style="margin-top: 10px" class="form-group">
-                                    <label>{{ _('Target number of submissions') }}</label>
+                                    <label><b>{{ _('Which variable will be used to control dupplicate submissions?') }}</b></label>
+                                    <input type="text" name="form_pkey" class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the Primary Key') }}')"  oninput="setCustomValidity('')">
+                                    <span class="form-text m-b-none text-success">{{ _('This will become the Primary Key of the repository. If you have more than one variable then use a calculate to join them.') }}</span>
+                                </div>
+                                <hr>
+                                <div style="margin-top: 10px" class="form-group">
+                                    <label><b>{{ _('Target number of submissions') }}</b></label>
                                     <input type="number" name="form_target" value="0" class="form-control">
                                     <span class="form-text m-b-none">{{ _('Leave blank or indicate 0 if there is no target ') }}</span>
                                 </div>

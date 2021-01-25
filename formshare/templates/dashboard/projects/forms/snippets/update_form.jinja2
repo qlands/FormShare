@@ -19,9 +19,17 @@
                     {{ form.secure_form(request) }}
                     {% block update_form_form_fields %}
                         <div class="modal-body">
-                            <div class="custom-file">
-                                <input type="file" name="xlsx" class="custom-file-input">
-                                <label class="custom-file-label" for="inputGroupFile01">{{ _('Choose file') }}</label>
+                            <div style="margin-top: 10px" class="form-group">
+                                <label><b>{{ _('Survey file (xls / xlsx)') }}</b></label>
+                                <div class="custom-file">
+                                    <input type="file" name="xlsx" class="custom-file-input">
+                                    <label class="custom-file-label" for="inputGroupFile01">{{ _('Choose file') }}</label>
+                                </div>
+                            </div>
+                            <div style="margin-top: 10px" class="form-group">
+                                <label><b>{{ _('Which variable will be used to control dupplicate submissions?') }}</b></label>
+                                <input type="text" name="form_pkey" {% if formDetails.form_pkey != None %}value="{{ formDetails.form_pkey }}" {% endif %} class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the Primary Key') }}')"  oninput="setCustomValidity('')">
+                                <span class="form-text m-b-none text-success">{{ _('This will become the Primary Key of the repository. If you have more than one variable then use a calculate to join them.') }}</span>
                             </div>
                         </div>
                     {% endblock update_form_form_fields %}

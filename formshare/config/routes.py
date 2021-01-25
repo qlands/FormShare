@@ -486,7 +486,15 @@ def load_routes(config):
         )
     )
 
-    # TODO: Test with merged forms
+    routes.append(
+        add_route(
+            "form_merge",
+            "/user/{userid}/project/{projcode}/form/{formid}/merge",
+            AddNewForm,
+            None,
+        )
+    )
+
     routes.append(
         add_route(
             "form_details",

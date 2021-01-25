@@ -57,6 +57,7 @@ from formshare.processes.odk.api import (
     create_repository,
     merge_versions,
 )
+from formshare.processes.odk.processes import get_form_primary_key
 from formshare.processes.storage import store_file, delete_stream, delete_bucket
 from formshare.processes.submission.api import (
     get_submission_media_files,
@@ -584,8 +585,30 @@ class AddNewForm(PrivateView):
             if form_data["form_target"] == "":
                 form_data["form_target"] = 0
 
+            if not for_merging:
+                if "form_pkey" not in form_data.keys():
+                    next_page = self.request.params.get(
+                        "next"
+                    ) or self.request.route_url(
+                        "project_details",
+                        userid=project_details["owner"],
+                        projcode=project_code,
+                    )
+                    self.add_error(self._("You need to indicate a primary key"))
+                    return HTTPFound(next_page, headers={"FS_error": "true"})
+            if for_merging:
+                form_id = self.request.matchdict["formid"]
+                primary_key = get_form_primary_key(self.request, project_id, form_id)
+            else:
+                primary_key = form_data.get("form_pkey", None)
             uploaded, message = upload_odk_form(
-                self.request, project_id, user_id, odk_path, form_data, for_merging
+                self.request,
+                project_id,
+                user_id,
+                odk_path,
+                form_data,
+                primary_key,
+                for_merging,
             )
 
             if uploaded:
@@ -656,11 +679,26 @@ class UploadNewVersion(PrivateView):
 
             form_data.pop("xlsx")
 
-            if form_data["form_target"] == "":
-                form_data["form_target"] = 0
+            if "form_pkey" not in form_data.keys():
+                next_page = self.request.route_url(
+                    "form_details",
+                    userid=project_details["owner"],
+                    projcode=project_code,
+                    formid=form_id,
+                )
+                self.add_error(self._("You need to specify a primary key"))
+                return HTTPFound(next_page, headers={"FS_error": "true"})
+
+            primary_key = form_data.get("form_pkey", None)
 
             updated, message = update_odk_form(
-                self.request, user_id, project_id, form_id, odk_path, form_data
+                self.request,
+                user_id,
+                project_id,
+                form_id,
+                odk_path,
+                form_data,
+                primary_key,
             )
 
             if updated:

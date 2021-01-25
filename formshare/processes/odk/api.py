@@ -280,7 +280,12 @@ def import_external_data(
 
 
 def check_jxform_file(
-    request, json_file, create_xml_file, insert_xml_file, external_file=None
+    request,
+    json_file,
+    create_xml_file,
+    insert_xml_file,
+    primary_key,
+    external_file=None,
 ):
     _ = request.translate
     jxform_to_mysql = os.path.join(
@@ -292,7 +297,7 @@ def check_jxform_file(
         "-C " + create_xml_file,
         "-I " + insert_xml_file,
         "-t maintable",
-        "-v dummy",
+        "-v " + primary_key,
         "-e " + os.path.join(os.path.dirname(json_file), *["tmp"]),
         "-o m",
         "-K",
@@ -323,6 +328,11 @@ def check_jxform_file(
             )
             return 0, ""
     else:
+        if p.returncode == 10:
+            return (
+                10,
+                _("The primary key variable does not exists or is inside a repeat"),
+            )
         if p.returncode == 19:
             log.error(
                 ". Error: "
@@ -600,7 +610,7 @@ def check_jxform_file(
 
 
 def upload_odk_form(
-    request, project_id, user_id, odk_dir, form_data, for_merging=False
+    request, project_id, user_id, odk_dir, form_data, primary_key, for_merging=False,
 ):
     _ = request.translate
     uid = str(uuid.uuid4())
@@ -677,7 +687,12 @@ def upload_odk_form(
                 form_title = root.findall(".//{" + h_nsmap + "}title")
                 if not form_exists(request, project_id, form_id):
                     error, message = check_jxform_file(
-                        request, survey_file, create_file, insert_file, itemsets_csv
+                        request,
+                        survey_file,
+                        create_file,
+                        insert_file,
+                        primary_key,
+                        itemsets_csv,
                     )
                     if error == 0:
                         continue_creation = True
@@ -918,7 +933,9 @@ def upload_odk_form(
         return False, str(e).replace("'", "").replace('"', "").replace("\n", "")
 
 
-def update_odk_form(request, user_id, project_id, for_form_id, odk_dir, form_data):
+def update_odk_form(
+    request, user_id, project_id, for_form_id, odk_dir, form_data, primary_key
+):
     _ = request.translate
     uid = str(uuid.uuid4())
     paths = ["tmp", uid]
@@ -995,7 +1012,12 @@ def update_odk_form(request, user_id, project_id, for_form_id, odk_dir, form_dat
                     form_title = root.findall(".//{" + h_nsmap + "}title")
                     if form_exists(request, project_id, form_id):
                         error, message = check_jxform_file(
-                            request, survey_file, create_file, insert_file, itemsets_csv
+                            request,
+                            survey_file,
+                            create_file,
+                            insert_file,
+                            primary_key,
+                            itemsets_csv,
                         )
                         if error == 0:
                             old_form_directory = get_form_directory(

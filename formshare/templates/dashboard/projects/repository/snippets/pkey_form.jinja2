@@ -6,11 +6,15 @@
     <span class="form-text m-b-none text-warning">{{ _('Change the switch if you want to start with a clean repository') }}</span>
 </div>
 <hr>
+{% if form_data.form_pkey == None %}
 <div class="form-group">
-    <label>{{ _('Which variable will be used to control the duplicates (primary key)') }}</label>
+    <label>{{ _('Which variable will be used to control dupplicate submissions?') }}</label>
     <input id="form_pkey" name="form_pkey" type="text" class="form-control">
-    <span style="color: #026AA8" class="form-text m-b-none">{{ _('This variable will help in controlling duplicated data. If you have more than one variable then use a calculate to concate them') }}</span>
+    <span style="color: #026AA8" class="form-text m-b-none">{{ _('This will become the Primary Key of the repository. If you have more than one variable then use a calculate to concate them.') }}</span>
 </div>
+{% else %}
+    <input id="form_pkey" name="form_pkey" value="{{ form_data.form_pkey }}" type="hidden" class="form-control">
+{% endif %}
 <div class="form-actions">
     <button class="btn btn-primary" type="submit">
         {{ _('Create repository') }}

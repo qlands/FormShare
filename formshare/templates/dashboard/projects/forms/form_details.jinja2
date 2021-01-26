@@ -150,6 +150,11 @@
                     {% include 'dashboard/projects/forms/snippets/merge_errors.jinja2' %}
                 {% endif %}
             {% endif %}
+            {% if formDetails.form_schema == None %}
+                {% if formDetails.form_repositorypossible == 0 %}
+                    {% include 'dashboard/projects/forms/snippets/repository_errors.jinja2' %}
+                {% endif %}
+            {% endif %}
         {% endif %}
         {% include 'dashboard/projects/forms/snippets/product_error.jinja2' %}
     {% else %}

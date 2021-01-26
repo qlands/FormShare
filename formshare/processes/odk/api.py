@@ -285,7 +285,7 @@ def check_jxform_file(
     create_xml_file,
     insert_xml_file,
     primary_key,
-    external_file=None,
+    external_files=[],
 ):
     _ = request.translate
     jxform_to_mysql = os.path.join(
@@ -302,8 +302,8 @@ def check_jxform_file(
         "-o m",
         "-K",
     ]
-    if external_file is not None:
-        args.append(external_file)
+    if external_files:
+        args.append(" ".join(external_files))
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()
 
@@ -686,13 +686,16 @@ def upload_odk_form(
             if re.match(r"^[A-Za-z0-9_]+$", form_id):
                 form_title = root.findall(".//{" + h_nsmap + "}title")
                 if not form_exists(request, project_id, form_id):
+                    external_files = []
+                    if itemsets_csv is not None:
+                        external_files.append(itemsets_csv)
                     error, message = check_jxform_file(
                         request,
                         survey_file,
                         create_file,
                         insert_file,
                         primary_key,
-                        itemsets_csv,
+                        external_files,
                     )
                     if error == 0:
                         continue_creation = True
@@ -806,6 +809,8 @@ def upload_odk_form(
                                 form_data["form_geopoint"] = form_geopoint
                             if message != "":
                                 form_data["form_reqfiles"] = message
+                            else:
+                                form_data["form_repositorypossible"] = 1
 
                             continue_adding = True
                             for a_plugin in plugins.PluginImplementations(
@@ -1011,13 +1016,16 @@ def update_odk_form(
                 if form_id == for_form_id:
                     form_title = root.findall(".//{" + h_nsmap + "}title")
                     if form_exists(request, project_id, form_id):
+                        external_files = []
+                        if itemsets_csv is not None:
+                            external_files.append(itemsets_csv)
                         error, message = check_jxform_file(
                             request,
                             survey_file,
                             create_file,
                             insert_file,
                             primary_key,
-                            itemsets_csv,
+                            external_files,
                         )
                         if error == 0:
                             old_form_directory = get_form_directory(
@@ -1141,6 +1149,8 @@ def update_odk_form(
                                     form_data["form_geopoint"] = form_geopoint
                                 if message != "":
                                     form_data["form_reqfiles"] = message
+                                else:
+                                    form_data["form_repositorypossible"] = 1
 
                                 continue_updating = True
                                 for a_plugin in plugins.PluginImplementations(

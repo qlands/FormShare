@@ -8,6 +8,8 @@ from lxml import etree
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from pyramid.response import FileResponse
 import datetime
+import uuid
+import glob
 import formshare.plugins as plugins
 from formshare.processes.db import (
     get_project_id_from_name,
@@ -40,6 +42,7 @@ from formshare.processes.db import (
     get_insert_xml_for_schema,
     get_form_directories_for_schema,
     get_forms_for_schema,
+    get_media_files,
 )
 from formshare.processes.elasticsearch.record_index import delete_record_index
 from formshare.processes.elasticsearch.repository_index import (
@@ -56,6 +59,8 @@ from formshare.processes.odk.api import (
     import_external_data,
     create_repository,
     merge_versions,
+    check_jxform_file,
+    store_file_in_directory,
 )
 from formshare.processes.odk.processes import get_form_primary_key
 from formshare.processes.storage import store_file, delete_stream, delete_bucket
@@ -96,6 +101,27 @@ class FormDetails(PrivateView):
             "project {}. \nAccount: {}\nError: {}\nMessage: {}\n".format(
                 form, project, user, error_code, message
             )
+        )
+
+    def check_repository(self, survey_file, primary_key, external_files):
+        odk_dir = get_odk_path(self.request)
+        uid = str(uuid.uuid4())
+        paths = ["tmp", uid]
+        os.makedirs(os.path.join(odk_dir, *paths))
+
+        paths = ["tmp", uid, "create.xml"]
+        create_file = os.path.join(odk_dir, *paths)
+
+        paths = ["tmp", uid, "insert.xml"]
+        insert_file = os.path.join(odk_dir, *paths)
+
+        return check_jxform_file(
+            self.request,
+            survey_file,
+            create_file,
+            insert_file,
+            primary_key,
+            external_files,
         )
 
     def check_merge(
@@ -462,6 +488,43 @@ class FormDetails(PrivateView):
                 )
             else:
                 missing_files = []
+
+            if (
+                len(missing_files) == 0
+                and form_data["form_reqfiles"] is not None
+                and form_data["form_schema"] is None
+                and form_data["form_repositorypossible"] == -1
+            ):
+                odk_dir = get_odk_path(self.request)
+                media_files = get_media_files(self.request, project_id, form_id)
+                tmp_uid = str(uuid.uuid4())
+                target_dir = os.path.join(odk_dir, *["tmp", tmp_uid])
+                os.makedirs(target_dir)
+                for media_file in media_files:
+                    store_file_in_directory(
+                        self.request,
+                        project_id,
+                        form_id,
+                        media_file.file_name,
+                        target_dir,
+                    )
+                path = os.path.join(odk_dir, *["tmp", tmp_uid, "*.*"])
+                files = glob.glob(path)
+                media_files = []
+                if files:
+                    for aFile in files:
+                        media_files.append(aFile)
+                error, message = self.check_repository(
+                    form_data["form_jsonfile"], form_data["form_pkey"], media_files
+                )
+                if error == 0:
+                    form_data["form_repositorypossible"] = 1
+                    form_update_data = {"form_repositorypossible": 1}
+                    update_form(self.request, project_id, form_id, form_update_data)
+                else:
+                    form_data["form_repoErrors"] = message
+                    form_data["form_repositorypossible"] = 0
+
             if (
                 len(missing_files) == 0
                 and form_data["form_abletomerge"] == -1

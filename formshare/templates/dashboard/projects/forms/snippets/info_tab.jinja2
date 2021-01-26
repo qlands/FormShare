@@ -84,7 +84,15 @@
                             {% if projectDetails.access_type < 4 %}
                                 {% if formDetails.form_schema == None %}
                                     {% if formDetails.parent_form == None and (formassistants|length > 0 or formgroups|length > 0)%}
-                                        <li><a href="{{ request.route_url('createrepository',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-database"></i> {{ _('Create repository') }} </a></li>
+                                        {% if formDetails.form_repositorypossible == 1 %}
+                                            <li><a href="{{ request.route_url('createrepository',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" class="btn btn-xs btn-white"><i style="color: #1c84c6" class="fas fa-database"></i> {{ _('Create repository') }} </a></li>
+                                        {% endif %}
+                                        {% if formDetails.form_repositorypossible == -1 %}
+                                            <li title="{{ _('The repository check will start once all required files are uploaded') }}"><a style="border-radius: 25px; background-color: #f8ac59; color: black">{{ _('Repository check pending') }}</a></li>
+                                        {% endif %}
+                                        {% if formDetails.form_repositorypossible == 0 %}
+                                            <li><a title='{{ _("This form has problems and cannot create a repository") }}' style="border-radius: 25px; background-color: red; color: white">{{ _('The form cannot create a repository') }}</a></li>
+                                        {% endif %}
                                     {% else %}
                                         {% if formDetails.form_abletomerge == 1 %}
                                             {% if formDetails.form_mergetask == None or (formDetails.form_mergetask != None and mergetaskdata.rescode > 0) and (formassistants|length > 0 or formgroups|length > 0)%}

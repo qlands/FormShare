@@ -524,7 +524,13 @@ class FormDetails(PrivateView):
                 else:
                     form_data["form_repoErrors"] = message
                     form_data["form_repositorypossible"] = 0
-
+            else:
+                if form_data["form_reqfiles"] is None:
+                    if form_data["form_repositorypossible"] == -1:
+                        form_data["form_repositorypossible"] = 1
+                        form_update_data = {"form_repositorypossible": 1}
+                        update_form(self.request, project_id, form_id, form_update_data)
+            
             if (
                 len(missing_files) == 0
                 and form_data["form_abletomerge"] == -1

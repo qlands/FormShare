@@ -493,6 +493,7 @@ class FormDetails(PrivateView):
                 len(missing_files) == 0
                 and form_data["form_reqfiles"] is not None
                 and form_data["form_schema"] is None
+                and form_data["form_pkey"] is not None
                 and form_data["form_repositorypossible"] == -1
             ):
                 odk_dir = get_odk_path(self.request)
@@ -525,12 +526,12 @@ class FormDetails(PrivateView):
                     form_data["form_repoErrors"] = message
                     form_data["form_repositorypossible"] = 0
             else:
-                if form_data["form_reqfiles"] is None:
-                    if form_data["form_repositorypossible"] == -1:
+                if form_data["form_reqfiles"] is None or form_data["form_pkey"] is None:
+                    if form_data["form_repositorypossible"] != 1:
                         form_data["form_repositorypossible"] = 1
                         form_update_data = {"form_repositorypossible": 1}
                         update_form(self.request, project_id, form_id, form_update_data)
-            
+
             if (
                 len(missing_files) == 0
                 and form_data["form_abletomerge"] == -1

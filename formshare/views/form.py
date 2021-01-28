@@ -519,9 +519,10 @@ class FormDetails(PrivateView):
                     form_data["form_jsonfile"], form_data["form_pkey"], media_files
                 )
                 if error == 0:
-                    form_data["form_repositorypossible"] = 1
-                    form_update_data = {"form_repositorypossible": 1}
-                    update_form(self.request, project_id, form_id, form_update_data)
+                    if message == "":
+                        form_data["form_repositorypossible"] = 1
+                        form_update_data = {"form_repositorypossible": 1}
+                        update_form(self.request, project_id, form_id, form_update_data)
                 else:
                     form_data["form_repoErrors"] = message
                     form_data["form_repositorypossible"] = 0

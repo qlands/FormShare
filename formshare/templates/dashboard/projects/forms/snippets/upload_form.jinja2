@@ -12,9 +12,9 @@
                 {% endblock upload_form_header %}
             </div>
             {% if not upload_for_merging %}
-                <form id="form_upload_form" role="form" method="post" enctype="multipart/form-data" action="{{ action_url }}">
+                <form id="form_upload_form" role="form" method="post" class="require_busy" enctype="multipart/form-data" action="{{ action_url }}">
             {% else %}
-                <form id="form_upload_form" role="form" method="post" enctype="multipart/form-data" action="{{ request.route_url('form_merge', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}">
+                <form id="form_upload_form" role="form" method="post" class="require_busy" enctype="multipart/form-data" action="{{ request.route_url('form_merge', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}">
             {% endif %}
                 {% block upload_form_form %}
                     {{ form.secure_form(request) }}

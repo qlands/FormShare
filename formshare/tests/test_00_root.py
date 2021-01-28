@@ -2788,6 +2788,15 @@ class FunctionalTests(unittest.TestCase):
             )
             self.assertTrue(b"With repository" in res.body)
 
+            # Removes a required file from a form fails as it is required by repository
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/uploads/{}/remove".format(
+                    self.randonLogin, self.project, self.formID, "distritos.csv"
+                ),
+                status=302,
+            )
+            assert "FS_error" in res.headers
+
             # Test submission storing into repository
             paths = [
                 "resources",

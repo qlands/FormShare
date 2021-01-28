@@ -302,8 +302,8 @@ def check_jxform_file(
         "-o m",
         "-K",
     ]
-    if external_files:
-        args.append(" ".join(external_files))
+    for a_file in external_files:
+        args.append(a_file)
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()
 

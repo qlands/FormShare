@@ -1241,6 +1241,18 @@ class RemoveFileFromForm(PrivateView):
 
         if self.request.method == "POST":
             self.returnRawViewResult = True
+            if form_data["form_reqfiles"] is not None:
+                if form_data["form_schema"] is not None:
+                    required_files = form_data["form_reqfiles"].split(",")
+                    if file_name in required_files:
+                        self.add_error(self._("You cannot remove this file because is required by the repository"))
+                        next_page = self.request.route_url(
+                            "form_details",
+                            userid=user_id,
+                            projcode=project_code,
+                            formid=form_id,
+                        )
+                        return HTTPFound(location=next_page, headers={"FS_error": "true"})
 
             next_page = self.request.route_url(
                 "form_details", userid=user_id, projcode=project_code, formid=form_id
@@ -1253,6 +1265,12 @@ class RemoveFileFromForm(PrivateView):
                 bucket_id = md5(bucket_id.encode("utf-8")).hexdigest()
                 delete_stream(self.request, bucket_id, file_name)
                 self.request.session.flash(self._("The files was removed successfully"))
+                if form_data["form_reqfiles"] is not None:
+                    required_files = form_data["form_reqfiles"].split(",")
+                    if file_name in required_files and form_data["form_schema"] is None:
+                        form_update_data = {"form_repositorypossible": -1}
+                        update_form(self.request, project_id, form_id, form_update_data)
+
                 return HTTPFound(location=next_page)
             else:
                 self.add_error(message)

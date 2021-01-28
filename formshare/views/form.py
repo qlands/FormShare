@@ -526,7 +526,11 @@ class FormDetails(PrivateView):
                     form_data["form_repoErrors"] = message
                     form_data["form_repositorypossible"] = 0
             else:
-                if form_data["form_reqfiles"] is None or form_data["form_pkey"] is None:
+                if (
+                    form_data["form_reqfiles"] is None
+                    or form_data["form_pkey"] is None
+                    or form_data["form_schema"] is not None
+                ):
                     if form_data["form_repositorypossible"] != 1:
                         form_data["form_repositorypossible"] = 1
                         form_update_data = {"form_repositorypossible": 1}

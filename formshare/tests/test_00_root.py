@@ -1164,12 +1164,24 @@ class FunctionalTests(unittest.TestCase):
 
         def test_forms():
 
+            # Uploads a form fails. No key
+            paths = ["resources", "api_test.dat"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
             # Uploads a form fails. Invalid format
             paths = ["resources", "api_test.dat"]
             resource_file = os.path.join(self.path, *paths)
 
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "test"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -1181,6 +1193,18 @@ class FunctionalTests(unittest.TestCase):
 
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "test"},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Upload a form a fails. Invalid key
+            paths = ["resources", "forms", "form08_OK.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "test"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -1192,6 +1216,7 @@ class FunctionalTests(unittest.TestCase):
 
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "hid"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -1203,6 +1228,7 @@ class FunctionalTests(unittest.TestCase):
 
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "hid"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -1214,6 +1240,7 @@ class FunctionalTests(unittest.TestCase):
 
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "hid"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -1225,6 +1252,7 @@ class FunctionalTests(unittest.TestCase):
 
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "hid"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -1236,6 +1264,7 @@ class FunctionalTests(unittest.TestCase):
 
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "hid"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -1247,6 +1276,7 @@ class FunctionalTests(unittest.TestCase):
 
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "hid"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -1258,6 +1288,7 @@ class FunctionalTests(unittest.TestCase):
 
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "hid"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -1269,6 +1300,7 @@ class FunctionalTests(unittest.TestCase):
 
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "hid"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -1307,6 +1339,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/updateodk".format(
                     self.randonLogin, self.project, "Justtest"
                 ),
+                {"form_pkey": "hid"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -1320,6 +1353,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/updateodk".format(
                     self.randonLogin, self.project, "Justtest"
                 ),
+                {"form_pkey": "hid"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -1333,6 +1367,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/updateodk".format(
                     self.randonLogin, self.project, "Justtest"
                 ),
+                {"form_pkey": "hid"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -1346,6 +1381,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/updateodk".format(
                     self.randonLogin, self.project, "Justtest"
                 ),
+                {"form_pkey": "hid"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -1359,6 +1395,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/updateodk".format(
                     self.randonLogin, self.project, "Justtest"
                 ),
+                {"form_pkey": "hid"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -1372,6 +1409,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/updateodk".format(
                     self.randonLogin, self.project, "Justtest"
                 ),
+                {"form_pkey": "hid"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -1385,6 +1423,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/updateodk".format(
                     self.randonLogin, self.project, "Justtest"
                 ),
+                {"form_pkey": "hid"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -1398,6 +1437,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/updateodk".format(
                     self.randonLogin, self.project, "Justtest"
                 ),
+                {"form_pkey": "hid"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -1411,6 +1451,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/updateodk".format(
                     self.randonLogin, self.project, "Justtest"
                 ),
+                {"form_pkey": "hid"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -1424,6 +1465,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/updateodk".format(
                     self.randonLogin, self.project, "Justtest"
                 ),
+                {"form_pkey": "hid"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -1472,6 +1514,7 @@ class FunctionalTests(unittest.TestCase):
 
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "hid"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -1681,6 +1724,7 @@ class FunctionalTests(unittest.TestCase):
 
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "QID"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -1736,6 +1780,7 @@ class FunctionalTests(unittest.TestCase):
 
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "I_D"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -1800,6 +1845,7 @@ class FunctionalTests(unittest.TestCase):
 
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "I_D"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -1841,6 +1887,7 @@ class FunctionalTests(unittest.TestCase):
 
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "I_D"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -1883,12 +1930,35 @@ class FunctionalTests(unittest.TestCase):
 
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "I_D"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
             assert "FS_error" not in res.headers
 
             self.formID = "LB_Sequia_MAG_20190123"
+
+            # Add an assistant to a form succeeds
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
+                    "coll_privileges": "3",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+            self.assertTrue(b"Repository check pending" in res.body)
 
             # Uploads a file to the form
             paths = ["resources", "forms", "complex_form", "cantones.csv"]
@@ -1914,24 +1984,59 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+            self.assertFalse(b"Repository check pending" in res.body)
+
+            # Remove a support file
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/uploads/{}/remove".format(
+                    self.randonLogin, self.project, self.formID, "distritos.csv"
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+            self.assertTrue(b"Repository check pending" in res.body)
+
+            # Uploads a file to the form
+            paths = ["resources", "forms", "complex_form", "distritos.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+            self.assertFalse(b"Repository check pending" in res.body)
+
             # Test getting the forms. Ask for credential
             self.testapp.get(
                 "/user/{}/project/{}/formList".format(self.randonLogin, self.project),
                 status=401,
             )
-
-            # Add an assistant to a form succeeds
-            res = self.testapp.post(
-                "/user/{}/project/{}/form/{}/assistants/add".format(
-                    self.randonLogin, self.project, self.formID
-                ),
-                {
-                    "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
-                    "coll_privileges": "3",
-                },
-                status=302,
-            )
-            assert "FS_error" not in res.headers
 
             # Test getting the forms.
             self.testapp.get(
@@ -2213,6 +2318,7 @@ class FunctionalTests(unittest.TestCase):
                     "/user/{}/project/{}/forms/add".format(
                         self.randonLogin, mimic_project
                     ),
+                    {"form_pkey": "I_D"},
                     status=302,
                     upload_files=[("xlsx", resource_file)],
                 )
@@ -2361,6 +2467,7 @@ class FunctionalTests(unittest.TestCase):
                     "/user/{}/project/{}/forms/add".format(
                         self.randonLogin, mimic_project
                     ),
+                    {"form_pkey": "I_D"},
                     status=302,
                     upload_files=[("xlsx", resource_file)],
                 )
@@ -2509,6 +2616,7 @@ class FunctionalTests(unittest.TestCase):
                     "/user/{}/project/{}/forms/add".format(
                         self.randonLogin, mimic_grp_project
                     ),
+                    {"form_pkey": "I_D"},
                     status=302,
                     upload_files=[("xlsx", resource_file)],
                 )
@@ -4390,6 +4498,7 @@ class FunctionalTests(unittest.TestCase):
             resource_file = os.path.join(self.path, *mimic_paths)
             mimic_res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, json2_project),
+                {"form_pkey": "I_D"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -5065,6 +5174,7 @@ class FunctionalTests(unittest.TestCase):
             resource_file = os.path.join(self.path, *mimic_paths)
             mimic_res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, json4_project),
+                {"form_pkey": "I_D"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -5270,6 +5380,7 @@ class FunctionalTests(unittest.TestCase):
             resource_file = os.path.join(self.path, *mimic_paths)
             mimic_res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, json3_project),
+                {"form_pkey": "I_D"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -6001,6 +6112,7 @@ class FunctionalTests(unittest.TestCase):
 
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(random_login, "test001"),
+                {"form_pkey": "hid"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -6229,6 +6341,7 @@ class FunctionalTests(unittest.TestCase):
 
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "numero_de_cedula"},
                 status=302,
                 upload_files=[("xlsx", a_resource_file)],
             )
@@ -6276,7 +6389,9 @@ class FunctionalTests(unittest.TestCase):
             b_resource_file = os.path.join(self.path, *paths)
 
             res = self.testapp.post(
-                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                "/user/{}/project/{}/form/{}/merge".format(
+                    self.randonLogin, self.project, "tormenta20201105"
+                ),
                 {
                     "for_merging": "",
                     "parent_project": self.projectID,
@@ -6400,7 +6515,9 @@ class FunctionalTests(unittest.TestCase):
             c_resource_file = os.path.join(self.path, *paths)
 
             res = self.testapp.post(
-                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                "/user/{}/project/{}/form/{}/merge".format(
+                    self.randonLogin, self.project, "tormenta20201117"
+                ),
                 {
                     "for_merging": "",
                     "parent_project": self.projectID,
@@ -6537,6 +6654,7 @@ class FunctionalTests(unittest.TestCase):
 
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, merge_project),
+                {"form_pkey": "numero_de_cedula"},
                 status=302,
                 upload_files=[("xlsx", a_resource_file)],
             )
@@ -6596,7 +6714,9 @@ class FunctionalTests(unittest.TestCase):
             b_resource_file = os.path.join(self.path, *paths)
 
             res = self.testapp.post(
-                "/user/{}/project/{}/forms/add".format(self.randonLogin, merge_project),
+                "/user/{}/project/{}/form/{}/merge".format(
+                    self.randonLogin, merge_project, "tormenta20201105"
+                ),
                 {
                     "for_merging": "",
                     "parent_project": merge_project_id,
@@ -6777,6 +6897,7 @@ class FunctionalTests(unittest.TestCase):
 
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, merge_project),
+                {"form_pkey": "numero_de_cedula"},
                 status=302,
                 upload_files=[("xlsx", a_resource_file)],
             )
@@ -6857,7 +6978,9 @@ class FunctionalTests(unittest.TestCase):
             b_resource_file = os.path.join(self.path, *paths)
 
             res = self.testapp.post(
-                "/user/{}/project/{}/forms/add".format(self.randonLogin, merge_project),
+                "/user/{}/project/{}/form/{}/merge".format(
+                    self.randonLogin, merge_project, "tormenta20201105"
+                ),
                 {
                     "for_merging": "",
                     "parent_project": merge_project_id,
@@ -7035,6 +7158,7 @@ class FunctionalTests(unittest.TestCase):
 
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, merge_project),
+                {"form_pkey": "numero_de_cedula"},
                 status=302,
                 upload_files=[("xlsx", a_resource_file)],
             )
@@ -7094,7 +7218,9 @@ class FunctionalTests(unittest.TestCase):
             b_resource_file = os.path.join(self.path, *paths)
 
             res = self.testapp.post(
-                "/user/{}/project/{}/forms/add".format(self.randonLogin, merge_project),
+                "/user/{}/project/{}/form/{}/merge".format(
+                    self.randonLogin, merge_project, "tormenta20201105"
+                ),
                 {
                     "for_merging": "",
                     "parent_project": merge_project_id,
@@ -8188,6 +8314,7 @@ class FunctionalTests(unittest.TestCase):
             resource_file = os.path.join(self.path, *mimic_paths)
             mimic_res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, json2_project),
+                {"form_pkey": "I_D"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )

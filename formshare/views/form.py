@@ -1245,14 +1245,20 @@ class RemoveFileFromForm(PrivateView):
                 if form_data["form_schema"] is not None:
                     required_files = form_data["form_reqfiles"].split(",")
                     if file_name in required_files:
-                        self.add_error(self._("You cannot remove this file because is required by the repository"))
+                        self.add_error(
+                            self._(
+                                "You cannot remove this file because is required by the repository"
+                            )
+                        )
                         next_page = self.request.route_url(
                             "form_details",
                             userid=user_id,
                             projcode=project_code,
                             formid=form_id,
                         )
-                        return HTTPFound(location=next_page, headers={"FS_error": "true"})
+                        return HTTPFound(
+                            location=next_page, headers={"FS_error": "true"}
+                        )
 
             next_page = self.request.route_url(
                 "form_details", userid=user_id, projcode=project_code, formid=form_id

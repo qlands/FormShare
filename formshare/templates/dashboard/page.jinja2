@@ -2,6 +2,29 @@
 
 {% block css %}
     {% cssresource request,'formshare','style' %}
+    <style>
+        .busy_overlay
+        {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255,255,255,0.6);
+            z-index:100000;
+        }
+        #busydiv
+        {
+            width: 200px;
+            height: 200px;
+            margin: auto;
+            position: fixed;
+            top: 0;
+            right: 0;
+            left: 0;
+            bottom: 0;
+        }
+    </style>
 {% endblock css %}
 
 {% block topScripts %}
@@ -96,9 +119,27 @@
             </div>
         {% endblock error_modal %}
 
+        {% block busy_screen %}
+            <div align="center" id="busy" class='busy_overlay' style="display: none;">
+                <div id='busydiv'>
+                    <img alt="image" src="{{ request.url_for_static('busy.gif') }}" style="height: 200px; width: 200px"/>
+                </div>
+            </div>
+        {% endblock busy_screen %}
+
         {% block body_end %}
 
         {% endblock body_end %}
+        {% block busy_script %}
+            <script>
+                $( ".require_busy" ).submit(function( event ) {
+                    $("#busy").show();
+                });
+                {#$('.require_busy').onsubmit = function() {#}
+                {#    $("#busy").show();#}
+
+            </script>
+        {% endblock busy_script %}
         {% block scripts %}
             {% jsresource request,'formshare','inspinia' %}
             <script>

@@ -1,0 +1,24 @@
+<style>
+    .busy_overlay
+    {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255,255,255,0.6);
+        z-index:100000;
+    }
+</style>
+
+<div align="center" id="busy" class='busy_overlay' style="display: none;">
+    <div id='busydiv'>
+        <img alt="image" src="{{ request.url_for_static('busy.gif') }}" style="height: 200px; width: 200px"/>
+    </div>
+</div>
+
+<script>
+    $('.require_busy').onsubmit = function() {
+        $("#busy").show();
+    };
+</script>

@@ -1867,6 +1867,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/updateodk".format(
                     self.randonLogin, self.project, "cascading_select_test"
                 ),
+                {"form_pkey": "I_D"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -1909,6 +1910,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/updateodk".format(
                     self.randonLogin, self.project, "support_zip_fileB"
                 ),
+                {"form_pkey": "I_D"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )

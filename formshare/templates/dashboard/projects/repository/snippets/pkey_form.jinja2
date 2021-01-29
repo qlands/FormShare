@@ -10,7 +10,7 @@
 <div class="form-group">
     <label>{{ _('Which variable will be used to control dupplicate submissions?') }}</label>
     <input id="form_pkey" name="form_pkey" type="text" class="form-control">
-    <span style="color: #026AA8" class="form-text m-b-none">{{ _('This will become the Primary Key of the repository. If you have more than one variable then use a calculate to concate them.') }}</span>
+    <span style="color: #026AA8" class="form-text m-b-none">{{ _('This will become the Primary Key of the repository. If you have more than one variable then use a calculate to join them.') }}</span>
 </div>
 {% else %}
     <input id="form_pkey" name="form_pkey" value="{{ form_data.form_pkey }}" type="hidden" class="form-control">

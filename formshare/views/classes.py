@@ -415,7 +415,7 @@ class PrivateView(object):
                     "user": self.user,
                 },
             )
-
+        self.request.response.headers.pop("FS_error", None)
         self.viewResult = self.process_view()
 
         if not self.returnRawViewResult:

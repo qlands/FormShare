@@ -27,6 +27,7 @@ wheels/
 *.egg
 MANIFEST
 .idea/
+tmp/
 .directory
 docker/
 

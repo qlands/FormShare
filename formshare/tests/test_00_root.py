@@ -4025,6 +4025,50 @@ class FunctionalTests(unittest.TestCase):
 
             engine.dispose()
 
+            # Get the media on an unknown submission goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/media".format(
+                    self.randonLogin, self.project, self.formID, "Not exist", "None"
+                ),
+                status=404,
+            )
+
+            # Change the assistant to submit only
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                {"coll_privileges": "1"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # The use cannot get the media goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/media".format(
+                    self.randonLogin, self.project, self.formID, duplicated_id, "None"
+                ),
+                status=404,
+            )
+
+            # Change the assistant to submit only
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                {"coll_privileges": "3"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
             # Get the media files of the duplicated ID
             self.testapp.get(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/media".format(
@@ -4097,6 +4141,52 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" in res.headers
 
+            # Change the assistant to submit only
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                {"coll_privileges": "1"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Assistant cannot disregard goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/disregard".format(
+                    self.randonLogin, self.project, self.formID, duplicated_id
+                ),
+                {"notes": "Some notes about the disregard"},
+                status=404,
+            )
+
+            # Change the assistant to both
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                {"coll_privileges": "3"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Disregard an unknown submission goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/disregard".format(
+                    self.randonLogin, self.project, self.formID, "Not_exist"
+                ),
+                {"notes": "Some notes about the disregard"},
+                status=404,
+            )
+
             # Disregard passes
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/disregard".format(
@@ -4106,6 +4196,15 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            # Disregard again goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/disregard".format(
+                    self.randonLogin, self.project, self.formID, duplicated_id
+                ),
+                {"notes": "Some notes about the disregard"},
+                status=404,
+            )
 
             # Get the disregarded
             self.testapp.get(
@@ -4133,6 +4232,52 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" in res.headers
 
+            # Change the assistant to submit only
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                {"coll_privileges": "1"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # The assistant cannot cancel disregard goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/canceldisregard".format(
+                    self.randonLogin, self.project, self.formID, duplicated_id
+                ),
+                {"notes": "Some notes about the disregard"},
+                status=404,
+            )
+
+            # Change the assistant to submit only
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                {"coll_privileges": "3"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Cancel an unknown submission goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/canceldisregard".format(
+                    self.randonLogin, self.project, self.formID, "Not_exists"
+                ),
+                {"notes": "Some notes about the disregard"},
+                status=404,
+            )
+
             # Cancel disregard passes
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/canceldisregard".format(
@@ -4142,6 +4287,15 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            # Cancel the disregard again goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/canceldisregard".format(
+                    self.randonLogin, self.project, self.formID, duplicated_id
+                ),
+                {"notes": "Some notes about the disregard"},
+                status=404,
+            )
 
             # Checkout the submission that does not exist
             self.testapp.post(
@@ -4782,6 +4936,46 @@ class FunctionalTests(unittest.TestCase):
                 {"status": "fixed"},
                 status=200,
             )
+
+            # Change the assistant to submit only
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                {"coll_privileges": "1"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # The assistant cannot load the page
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/compare".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    duplicated_id,
+                    survey_id,
+                ),
+                status=404,
+            )
+
+            # Change the assistant to both
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                {"coll_privileges": "3"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
 
             # Load the compare page
             self.testapp.get(

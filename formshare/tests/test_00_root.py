@@ -753,6 +753,16 @@ class FunctionalTests(unittest.TestCase):
             )
 
         def test_assistants():
+            # Shows th add page
+            res = self.testapp.get(
+                "/user/{}/project/{}/assistants/add".format(
+                    self.randonLogin, self.project
+                ),
+                {"coll_id": ""},
+                status=200,
+            )
+            assert "FS_error" not in res.headers
+
             # Add an assistant fail. The assistant in empty
             res = self.testapp.post(
                 "/user/{}/project/{}/assistants/add".format(
@@ -797,6 +807,20 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" in res.headers
 
+            # Add assistant to project that does not exist
+            self.testapp.post(
+                "/user/{}/project/{}/assistants/add".format(
+                    self.randonLogin, "Not exist"
+                ),
+                {
+                    "coll_id": "assistant001",
+                    "coll_password": "123",
+                    "coll_password2": "123",
+                    "coll_prjshare": 1,
+                },
+                status=404,
+            )
+
             # Add an assistant succeed
             self.assistantLogin = "assistant001"
             self.assistantLogin2 = "assistant002"
@@ -837,6 +861,27 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Get the assistants of not active project
+            res = self.testapp.get(
+                "/user/{}/project/{}/assistants".format(self.randonLogin, "test002"),
+                status=200,
+            )
+            assert "FS_error" not in res.headers
+
+            # 404 for assistant in a project that does not exist
+            self.testapp.get(
+                "/user/{}/project/{}/assistants".format(self.randonLogin, "not_exist"),
+                status=404,
+            )
+
+            # 404 for a project that does not exist
+            self.testapp.get(
+                "/user/{}/project/{}/assistant/{}/edit".format(
+                    self.randonLogin, "Not_exist", self.assistantLogin
+                ),
+                status=404,
+            )
+
             # Get the details of an assistant in edit mode
             res = self.testapp.get(
                 "/user/{}/project/{}/assistant/{}/edit".format(
@@ -852,6 +897,16 @@ class FunctionalTests(unittest.TestCase):
                     self.randonLogin, self.project, self.assistantLogin
                 ),
                 {"coll_active": "1", "coll_id": self.assistantLogin},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Edit an assistant
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistant/{}/edit".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                {"coll_prjshare": "", "coll_active": "1", "coll_id": self.assistantLogin},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -876,6 +931,24 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" in res.headers
 
+            # 404 for password change to a project that does not exist
+            self.testapp.post(
+                "/user/{}/project/{}/assistant/{}/change".format(
+                    self.randonLogin, "not_exist", self.assistantLogin
+                ),
+                {"coll_password": "123", "coll_password2": "123"},
+                status=404,
+            )
+
+            # 404 change password with get
+            self.testapp.get(
+                "/user/{}/project/{}/assistant/{}/change".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                {"coll_password": "123", "coll_password2": "123"},
+                status=404,
+            )
+
             # Change assistant succeeds
             res = self.testapp.post(
                 "/user/{}/project/{}/assistant/{}/change".format(
@@ -885,6 +958,22 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            # 404 delete assistant project do not exits
+            self.testapp.post(
+                "/user/{}/project/{}/assistant/{}/delete".format(
+                    self.randonLogin, "Not_exist", self.assistantLogin
+                ),
+                status=404,
+            )
+
+            # 404 delete assistant using get
+            self.testapp.get(
+                "/user/{}/project/{}/assistant/{}/delete".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                status=404,
+            )
 
             # Delete the assistant
             res = self.testapp.post(
@@ -9482,6 +9571,51 @@ class FunctionalTests(unittest.TestCase):
                 status=404,
             )
 
+            # The user don't have access to the collaborators
+            self.testapp.get(
+                "/user/{}/project/{}/assistants".format(self.randonLogin, self.project),
+                status=404,
+            )
+
+            # The user don't have access to add collaborators
+            self.testapp.post(
+                "/user/{}/project/{}/assistants/add".format(
+                    self.randonLogin, self.project
+                ),
+                {
+                    "coll_id": "assistant001",
+                    "coll_password": "123",
+                    "coll_password2": "123",
+                    "coll_prjshare": 1,
+                },
+                status=404,
+            )
+
+            # 404 cannot access the project
+            self.testapp.get(
+                "/user/{}/project/{}/assistant/{}/edit".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                status=404,
+            )
+
+            # 404 no access to project
+            self.testapp.post(
+                "/user/{}/project/{}/assistant/{}/delete".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                status=404,
+            )
+
+            # 404 not access to project
+            self.testapp.post(
+                "/user/{}/project/{}/assistant/{}/change".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                {"coll_password": "123", "coll_password2": "123"},
+                status=404,
+            )
+
             # The user don't have access to add a group in project project
             self.testapp.get(
                 "/user/{}/project/{}/groups/add".format(self.randonLogin, self.project),
@@ -9567,6 +9701,51 @@ class FunctionalTests(unittest.TestCase):
             # The user don't have access to add a group in project project
             self.testapp.get(
                 "/user/{}/project/{}/groups/add".format(self.randonLogin, self.project),
+                status=404,
+            )
+
+            # The user don have credentials for looking at assistants
+            self.testapp.get(
+                "/user/{}/project/{}/assistants".format(self.randonLogin, self.project),
+                status=404,
+            )
+
+            # 404 Not credentials to add
+            self.testapp.post(
+                "/user/{}/project/{}/assistants/add".format(
+                    self.randonLogin, self.project
+                ),
+                {
+                    "coll_id": "assistant001",
+                    "coll_password": "123",
+                    "coll_password2": "123",
+                    "coll_prjshare": 1,
+                },
+                status=404,
+            )
+
+            # 404 Not credentials to edit
+            self.testapp.get(
+                "/user/{}/project/{}/assistant/{}/edit".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                status=404,
+            )
+
+            # No credentials to remove
+            self.testapp.post(
+                "/user/{}/project/{}/assistant/{}/delete".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                status=404,
+            )
+
+            # No credentials to change password
+            self.testapp.post(
+                "/user/{}/project/{}/assistant/{}/change".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                {"coll_password": "123", "coll_password2": "123"},
                 status=404,
             )
 

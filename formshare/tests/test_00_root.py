@@ -4177,7 +4177,59 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
 
-            # Cancels the checkout
+            # Change the assistant to submit only
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                {"coll_privileges": "1"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Cancels the checkout goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/cancel".format(
+                    self.randonLogin, self.project, self.formID, duplicated_id
+                ),
+                status=404,
+            )
+
+            # Change the assistant to clean and submit
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                {"coll_privileges": "3"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Cancels the checkout for a unknown submission
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/cancel".format(
+                    self.randonLogin, self.project, self.formID, "Not_Exists"
+                ),
+                status=404,
+            )
+
+            # Cancels the checkout with get goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/cancel".format(
+                    self.randonLogin, self.project, self.formID, duplicated_id
+                ),
+                status=404,
+            )
+
+            # Cancels the checkout pass
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/cancel".format(
                     self.randonLogin, self.project, self.formID, duplicated_id
@@ -4185,6 +4237,22 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            # Cancels the checkout goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/cancel".format(
+                    self.randonLogin, self.project, self.formID, duplicated_id
+                ),
+                status=404,
+            )
+
+            # Gets the submission file that has not been checkout
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/get".format(
+                    self.randonLogin, self.project, self.formID, duplicated_id
+                ),
+                status=404,
+            )
 
             # Checkout the submission again
             res = self.testapp.post(
@@ -4194,6 +4262,50 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            # Change the assistant to submit only
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                {"coll_privileges": "1"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Gets the submission file goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/get".format(
+                    self.randonLogin, self.project, self.formID, duplicated_id
+                ),
+                status=404,
+            )
+
+            # Change the assistant to submit only
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                {"coll_privileges": "3"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Gets the submission file that does not exist
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/get".format(
+                    self.randonLogin, self.project, self.formID, "Not_exist"
+                ),
+                status=404,
+            )
 
             # Gets the submission file
             res = self.testapp.get(
@@ -4256,6 +4368,19 @@ class FunctionalTests(unittest.TestCase):
                     duplicated_id,
                     "23a243c95547",
                 ),
+                {"pushed": ""},
+                status=200,
+            )
+
+            # Loads the revision review page
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/view".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    duplicated_id,
+                    "23a243c95547",
+                ),
                 status=200,
             )
 
@@ -4271,6 +4396,93 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
 
+            # Change the assistant to submit only
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                {"coll_privileges": "1"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # View goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/view".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    duplicated_id,
+                    "23a243c95547",
+                ),
+                status=404,
+            )
+
+            # Cancel goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/cancel".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    duplicated_id,
+                    "23a243c95547",
+                ),
+                status=404,
+            )
+
+            # Change the assistant to submit only
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                {"coll_privileges": "3"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/view".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "Not_exist",
+                    "23a243c95547",
+                ),
+                status=404,
+            )
+
+            # Cancel goes to 404 duplicated does not exist
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/cancel".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "Not_exist",
+                    "23a243c95547",
+                ),
+                status=404,
+            )
+
+            # Cancel a revision with get goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/cancel".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    duplicated_id,
+                    "23a243c95547",
+                ),
+                status=404,
+            )
+
             # Cancel the revision.
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/cancel".format(
@@ -4283,6 +4495,18 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            # Cancel the revision again goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/cancel".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    duplicated_id,
+                    "23a243c95547",
+                ),
+                status=404,
+            )
 
             # -----------------------
             # Checkout the submission again
@@ -4306,23 +4530,163 @@ class FunctionalTests(unittest.TestCase):
             paths = ["tmp", duplicated_id + ".json"]
             submission_file = os.path.join(self.path, *paths)
 
+            paths_error = ["tmp", duplicated_id + "B.json"]
+            submission_file_error = os.path.join(self.path, *paths_error)
+
             with open(submission_file, "w", encoding="utf-8") as f:
                 json.dump(data, f, ensure_ascii=False, indent=4)
+
+            with open(submission_file_error, "w", encoding="utf-8") as f:
+                json.dump(data, f, ensure_ascii=False, indent=4)
+
+            # Checkin the file again with different file name
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/checkin".format(
+                    self.randonLogin, self.project, self.formID, duplicated_id
+                ),
+                {"notes": "Some notes about the checkin"},
+                status=200,
+                upload_files=[("json", submission_file_error)],
+            )
+            assert "FS_error" in res.headers
+
+            # Change the assistant to submit only
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                {"coll_privileges": "1"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Check in the file goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/checkin".format(
+                    self.randonLogin, self.project, self.formID, duplicated_id
+                ),
+                {"notes": "Some notes about the checkin"},
+                status=404,
+                upload_files=[("json", submission_file)],
+            )
+
+            # Change the assistant to both
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                {"coll_privileges": "3"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Check in the file for a submission that does not exist
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/checkin".format(
+                    self.randonLogin, self.project, self.formID, "Not_exist"
+                ),
+                {"notes": "Some notes about the checkin"},
+                status=404,
+                upload_files=[("json", submission_file)],
+            )
 
             # Checkin the file again
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/checkin".format(
                     self.randonLogin, self.project, self.formID, duplicated_id
                 ),
-                {"notes": "Some notes about the checkin", "sequence": "23a243c95548"},
+                {"notes": "Some notes about the checkin"},
                 status=302,
                 upload_files=[("json", submission_file)],
             )
             assert "FS_error" not in res.headers
 
-            os.remove(submission_file)
+            # Check in the file again goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/checkin".format(
+                    self.randonLogin, self.project, self.formID, duplicated_id
+                ),
+                {"notes": "Some notes about the checkin"},
+                status=404,
+                upload_files=[("json", submission_file)],
+            )
 
-            # Push the revision. In this case the push fails
+            os.remove(submission_file)
+            os.remove(submission_file_error)
+
+            # Change the assistant to submit only
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                {"coll_privileges": "1"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Push goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/push".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    duplicated_id,
+                    "23a243c95548",
+                ),
+                status=404,
+            )
+
+            # Change the assistant to both
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                {"coll_privileges": "3"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Push the revision. Goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/push".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "Not_exists",
+                    "23a243c95548",
+                ),
+                status=404,
+            )
+
+            # Push the revision. Get goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/push".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    duplicated_id,
+                    "23a243c95548",
+                ),
+                status=404,
+            )
+
+            # Push the revision. In this case the passes
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/push".format(
                     self.randonLogin,
@@ -4334,6 +4698,18 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            # Do it again goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/push".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    duplicated_id,
+                    "23a243c95548",
+                ),
+                status=404,
+            )
 
             # Get the checkout
             self.testapp.get(
@@ -4774,6 +5150,15 @@ class FunctionalTests(unittest.TestCase):
             index = 0
             for a_duplicate in duplicated_ids:
                 index = index + 1
+
+                # Checkout with get goes to 404
+                res = self.testapp.get(
+                    "/user/{}/project/{}/assistantaccess/form/{}/{}/checkout".format(
+                        self.randonLogin, json2_project, json2_form, a_duplicate
+                    ),
+                    status=404,
+                )
+
                 res = self.testapp.post(
                     "/user/{}/project/{}/assistantaccess/form/{}/{}/checkout".format(
                         self.randonLogin, json2_project, json2_form, a_duplicate
@@ -4824,6 +5209,14 @@ class FunctionalTests(unittest.TestCase):
                 )
                 assert "FS_error" not in res.headers
                 time.sleep(3)
+
+                # Get the checked in only
+                self.testapp.get(
+                    "/user/{}/project/{}/assistantaccess/form/{}/errors?status=checkin".format(
+                        self.randonLogin, json2_project, json2_form
+                    ),
+                    status=200,
+                )
 
                 # Get all logs
                 self.testapp.get(
@@ -5355,6 +5748,55 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
 
+            # Change the assistant to submit only
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    json4_project,
+                    json4_form,
+                    json4_project_id,
+                    "json4001",
+                ),
+                {"coll_privileges": "1"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/push".format(
+                    self.randonLogin, json4_project, json4_form, duplicated_ids[0]
+                ),
+                status=404,
+            )
+
+            # Change the assistant to both
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    json4_project,
+                    json4_form,
+                    json4_project_id,
+                    "json4001",
+                ),
+                {"coll_privileges": "3"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/push".format(
+                    self.randonLogin, json4_project, json4_form, "Not_exist"
+                ),
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/push".format(
+                    self.randonLogin, json4_project, json4_form, duplicated_ids[0]
+                ),
+                status=404,
+            )
+
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/push".format(
                     self.randonLogin, json4_project, json4_form, duplicated_ids[0]
@@ -5362,6 +5804,13 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/form/{}/{}/push".format(
+                    self.randonLogin, json4_project, json4_form, duplicated_ids[0]
+                ),
+                status=404,
+            )
 
             res = self.testapp.post(
                 "/user/{}/project/{}/assistantaccess/logout".format(

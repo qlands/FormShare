@@ -23,7 +23,7 @@ class AssistantsListView(PrivateView):
         user_id = self.request.matchdict["userid"]
         project_code = self.request.matchdict["projcode"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        if self.activeProject["project_id"] == project_id:
+        if self.activeProject.get("project_id", None) == project_id:
             self.set_active_menu("assistants")
         else:
             self.set_active_menu("projects")
@@ -39,7 +39,7 @@ class AssistantsListView(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] == 5:
+        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         assistants, more = get_project_assistants(self.request, project_id)
@@ -59,7 +59,7 @@ class AddAssistantsView(PrivateView):
         user_id = self.request.matchdict["userid"]
         project_code = self.request.matchdict["projcode"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        if self.activeProject["project_id"] == project_id:
+        if self.activeProject.get("project_id", None) == project_id:
             self.set_active_menu("assistants")
         else:
             self.set_active_menu("projects")
@@ -170,7 +170,7 @@ class EditAssistantsView(PrivateView):
         project_code = self.request.matchdict["projcode"]
         assistant_id = self.request.matchdict["assistid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        if self.activeProject["project_id"] == project_id:
+        if self.activeProject.get("project_id", None) == project_id:
             self.set_active_menu("assistants")
         else:
             self.set_active_menu("projects")

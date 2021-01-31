@@ -140,7 +140,7 @@ from formshare.views.search import APIUserSearchSelect2
 from formshare.views.sse import SSEventStream
 from formshare.views.users import UsersListView, EditUserView, AddUserView
 
-from formshare.views.testing import TestUserView, TestFormView, TestRemoveUserView
+from formshare.views.testing import TestUserView, TestFormView, TestRemoveUserView, TestErrorView
 
 log = logging.getLogger("formshare")
 
@@ -1213,12 +1213,21 @@ def load_routes(config):
             )
         )
 
+        routes.append(
+            add_route(
+                "TestErrorView",
+                "/test/{userid}/test_error",
+                TestErrorView,
+                "generic/testing.jinja2",
+            )
+        )
+
     append_to_routes(routes)
 
     # Add the not found route
     config.add_notfound_view(NotFoundView, renderer="generic/404.jinja2")
 
-    if log.level == logging.WARN:
+    if log.level == logging.WARN or os.environ.get("FORMSHARE_TEST_ERROR_PAGE", "false") == "true":
         config.add_view(ErrorView, context=Exception, renderer="generic/500.jinja2")
 
     # Call connected plugins to add any routes after FormShare

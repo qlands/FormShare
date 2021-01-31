@@ -72,3 +72,8 @@ class TestRemoveUserView(FormSharePrivateView):
         index_manager = configure_user_index_manager(self.request.registry.settings)
         index_manager.remove_user(user_id)
         return {}
+
+
+class TestErrorView(FormSharePrivateView):
+    def process_view(self):
+        return {"data": 1/0}

@@ -221,6 +221,7 @@ class PublicView(object):
         for plugin in i_public_view_implementations:
             plugin.before_processing(self.request)
 
+        self.request.response.headers.pop("FS_error", None)
         process_dict = self.process_view()
 
         for plugin in i_public_view_implementations:

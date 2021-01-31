@@ -127,7 +127,6 @@ class LoginView(PublicView):
                             location=self.request.route_url(
                                 "dashboard", userid=current_user.login
                             ),
-                            headers={"FS_error": "true"},
                         )
         else:
             if (
@@ -259,7 +258,7 @@ class AssistantLoginView(PublicView):
             login_data = policy.authenticated_userid(self.request)
             if login_data is not None:
                 login_data = literal_eval(login_data)
-                if login_data["group"] == "collaborator":
+                if login_data["group"] == "collaborators":
                     project_assistant = get_project_from_assistant(
                         self.request, user_id, project_id, login_data["login"]
                     )

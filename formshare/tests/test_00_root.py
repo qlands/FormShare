@@ -208,6 +208,39 @@ class FunctionalTests(unittest.TestCase):
             self.randonLogin = random_login
             print("**************Random Login: {}".format(self.randonLogin))
 
+            # Join goes to 404
+            self.testapp.post(
+                "/join",
+                {
+                    "user_address": "",
+                    "user_email": random_login + "@qlands.com",
+                    "user_password": "123",
+                    "user_id": random_login,
+                    "user_password2": "123",
+                    "user_name": "Testing",
+                    "user_super": "1",
+                    "user_apikey": self.randonLoginKey,
+                },
+                status=404,
+            )
+
+            # Register user fails. Password is too long
+            res = self.testapp.post(
+                "/join",
+                {
+                    "user_address": "Costa Rica",
+                    "user_email": random_login + "@qlands.com",
+                    "user_password": "qwNEDKztEmtv165VDdoE55UaW7ubx2fqWDOerGWwPyyjkJY7a1V8ESxRKA7G",
+                    "user_id": random_login,
+                    "user_password2": "qwNEDKztEmtv165VDdoE55UaW7ubx2fqWDOerGWwPyyjkJY7a1V8ESxRKA7G",
+                    "user_name": "Testing",
+                    "user_super": "1",
+                    "user_apikey": self.randonLoginKey,
+                },
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
             # Register succeed
             res = self.testapp.post(
                 "/join",
@@ -224,6 +257,13 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            # Recover goes to 404
+            self.testapp.post(
+                "/recover",
+                {"email": random_login + "@qlands.com", "user": "something"},
+                status=404,
+            )
 
             # Test recover the password
             res = self.testapp.post(
@@ -256,7 +296,49 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            res = self.testapp.get(
+                "/login",
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Logout
+            res = self.testapp.post(
+                "/logout",
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Login fails
+            self.testapp.post(
+                "/login",
+                {"user": "test", "email": random_login, "passwd": "123"},
+                status=404,
+            )
+
+            # Login fails wrong pass
+            res = self.testapp.post(
+                "/login",
+                {"user": "", "email": random_login, "passwd": "wrong_pass"},
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Login succeed
+            res = self.testapp.post(
+                "/login",
+                {"user": "", "email": random_login, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+
         def test_dashboard():
+
+            if os.environ.get("FORMSHARE_TEST_ERROR_PAGE", "false") == "true":
+                # Test error screen
+                self.testapp.get("/test/{}/test_error".format(self.randonLogin), status=500)
+
             # Test access to the dashboard
             res = self.testapp.get("/user/{}".format(self.randonLogin), status=200)
             assert "FS_error" not in res.headers
@@ -3913,6 +3995,14 @@ class FunctionalTests(unittest.TestCase):
 
         def test_assistant_access():
 
+            # 404 login to project that does not exist
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/login".format(
+                    self.randonLogin, "Not_exist"
+                ),
+                status=404,
+            )
+
             # Test accessing the login page
             self.testapp.get(
                 "/user/{}/project/{}/assistantaccess/login".format(
@@ -3947,6 +4037,15 @@ class FunctionalTests(unittest.TestCase):
                     self.randonLogin, self.project
                 ),
                 {"login": self.assistantLogin, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Login page goes to assistant dashboard
+            res = self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/login".format(
+                    self.randonLogin, self.project
+                ),
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -8949,6 +9048,7 @@ class FunctionalTests(unittest.TestCase):
             res = self.testapp.get("/user/{}".format(collaborator_2), status=200)
             assert "FS_error" not in res.headers
 
+            time.sleep(5)  # Wait for elastic to finish adding the collaborator
             self.testapp.get(
                 "/test/{}/remove".format(collaborator_2), status=200,
             )

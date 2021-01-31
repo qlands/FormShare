@@ -109,7 +109,8 @@ def internal_build_xlsx(
             raise SheetNameError(
                 _(
                     "A worksheet name has been repeated. Excel only allow 30 characters in the worksheet name. "
-                    "You can fix this by editing the dictionary and change the description of the tables to a maximum of "
+                    "You can fix this by editing the dictionary and change the description of the tables "
+                    "to a maximum of "
                     "30 characters."
                 )
             )

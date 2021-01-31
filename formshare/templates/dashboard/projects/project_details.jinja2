@@ -114,8 +114,8 @@
                 var text = "";
                 var title = "";
                 if (has_parent === "true") {
-                    text = "{{ _('Look, you are going to delete a form that is a subversion. This means that you will REMOVE ALL the data including its parents as well!!!') }}";
-                    title = "{{ _('Are you sure really really sure?') }}";
+                    text = "{{ _('Warning, you are going to delete a form that is a subversion of another form. This means that you will REMOVE ALL the data, including previous versions of the data as well!!!') }}";
+                    title = "{{ _('Are you sure, really really sure?') }}";
                 }
                 else {
                     text = "{{ _('All the data in this form will be deleted!') }}";

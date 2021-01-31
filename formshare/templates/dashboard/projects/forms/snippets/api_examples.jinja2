@@ -26,13 +26,13 @@
 python:
 import urllib.request
 
-# {{ _('Each private CSV product generated in FormShare has a API download link. Copy that link and place it below') }}
+# {{ _('Each private CSV product generated in FormShare has an API download link. Copy the link and place it below') }}
 url = "replace_me_with_the_API_url"
 
 request = urllib.request.urlopen(url)
 data_to_write = request.read()
 
-# {{ _('Where do you want to save the CSV file downloaded from FormShare') }}
+# {{ _('Where do you want to save the CSV file downloaded from FormShare?') }}
 destination_file = "C:/path/to/taget/directory/{{ formDetails.form_id }}.csv"
 
 with open(destination_file, "wb") as f:
@@ -41,10 +41,10 @@ end
 
 * {{ _('Define a dataset with the information that you want to update') }}.
 * {{ _('The dataset needs to have the following structure:') }}
-* rowuuid: {{ _('Each data row in FormShare has an unique rowuuid') }} .
+* rowuuid: {{ _('Each data row in FormShare has an unique row id (rowuuid)') }} .
 * variable_code: {{ _('The variable that you want to change') }}.
-* new_value: {{ _('This is the new value that you want to apply to the variable for the selected rowuuid') }} .
-* {{ _('In this example we will replace the variable income to read 1300 for the rowuuid') }}  94e84a4e-7a3a-45eb-b669-d98a8b720b50.
+* new_value: {{ _('This is the new value that you want to apply to the variable for the selected unique row id (rowuuid)') }} .
+* {{ _('In this example we will replace the variable income to read 1300 for the unique row id (rowuuid)') }}  94e84a4e-7a3a-45eb-b669-d98a8b720b50.
 input str40 rowuuid str120 variable_code new_value
 94e84a4e-7a3a-45eb-b669-d98a8b720b50 income 1300
 end
@@ -92,10 +92,10 @@ clear</textarea>
 BEGIN PROGRAM.
 import urllib
 
-# {{ _('Each private CSV product generated in FormShare has a API download link. Copy that link and place it below') }}.
+# {{ _('Each private CSV product generated in FormShare has an API download link. Copy the link and place it below') }}.
 url = "replace_me_with_the_API_url"
 
-# {{ _('Where do you want to save the CSV file') }}
+# {{ _('Where do you want to save the CSV file?') }}
 destination_file = "C:/path/to/target/directory/{{ formDetails.form_id }}.csv"
 
 testfile = urllib.URLopener()
@@ -105,11 +105,11 @@ END PROGRAM.
 
 * {{ _('Define a list with the information that you want to update') }}.
 * {{ _('The list needs to have the following structure') }}:.
-* rowuuid: {{ _('Each data row in FormShare has an unique rowuuid') }} .
+* rowuuid: {{ _('Each data row in FormShare has an unique row id (rowuuid)') }} .
 * variable_code: {{ _('The variable that you want to change') }}.
-* new_value: {{ _('This is the new value that you want to apply to the variable for the selected rowuuid') }}.
+* new_value: {{ _('This is the new value that you want to apply to the variable for the selected unique row id (rowuuid)') }}.
 
-* {{ _('In this example we will replace the variable income to read 1300 for the rowuuid ') }}  94e84a4e-7a3a-45eb-b669-d98a8b720b50.
+* {{ _('In this example we will replace the variable income to read 1300 for the unique row id (rowuuid)') }}  94e84a4e-7a3a-45eb-b669-d98a8b720b50.
 DATA LIST LIST
  / rowuuid (A40) variable_code (A120) new_value .
 BEGIN DATA.
@@ -137,7 +137,7 @@ dataCursor.close()
 # {{ _('Pass through each update in the list and push it to FormShare') }}
 for an_update in all_updates:
    # {{ _('Create a Python Dict structure. In this example this will look like') }}: {"api_key": "4e0c9025-7db5-42da-a7e5-245fc9171be0", "rowuuid": "94e84a4e-7a3a-45eb-b669-d98a8b720b50", "income": 1300}
-   # {{ _('This will tell FormShare to look for rowuuid') }} = 94e84a4e-7a3a-45eb-b669-d98a8b720b50 {{ _('and change the variable income to') }} 1300 {{ _('using the API key') }} 4e0c9025-7db5-42da-a7e5-245fc9171be0
+   # {{ _('This will tell FormShare to look for unique row id (rowuuid)') }} = 94e84a4e-7a3a-45eb-b669-d98a8b720b50 {{ _('and change the variable income to') }} 1300 {{ _('using the API key') }} 4e0c9025-7db5-42da-a7e5-245fc9171be0
    data = {"apikey":api_key, "rowuuid":an_update[0].strip(), an_update[1].strip():an_update[2]}
 
    # {{ _('Convert the data to string') }}
@@ -166,18 +166,18 @@ if("httr" %in% rownames(installed.packages()) == FALSE) {install.packages("httr"
 library(httr)
 
 # {{ _('Download a private CSV file using an access key') }}.
-# {{ _('Each private CSV product generated in FormShare has a API download link. Copy the link and place it below') }}
+# {{ _('Each private CSV product generated in FormShare has an API download link. Copy the link and place it below') }}
 csv_data <- read.csv("replace_me_with_the_API_url")
 
 # {{ _('Create a new data frame for the updates') }}
 # {{ _('The dataset needs to have the following structure:') }}
-#   rowuuid: {{ _('Each data row in FormShare has an unique rowuuid') }} .
+#   rowuuid: {{ _('Each data row in FormShare has an unique row id (rowuuid)') }} .
 #   variable_code: {{ _('The variable that you want to change') }}.
-#   new_value: {{ _('This is the new value that you want to apply to the variable for the selected rowuuid') }} .
+#   new_value: {{ _('This is the new value that you want to apply to the variable for the selected unique row id (rowuuid)') }} .
 data_updates <- data.frame(rowuuid=character(),variable_code=character(),new_value=double())
 
 # {{ _('Add a new row to the data frame') }}
-# {{ _('In this example we will replace the variable income to read 1300 for the rowuuid') }}  94e84a4e-7a3a-45eb-b669-d98a8b720b50.
+# {{ _('In this example we will replace the variable income to read 1300 for the unique row id (rowuuid)') }}  94e84a4e-7a3a-45eb-b669-d98a8b720b50.
 new_update <- list(rowuuid="94e84a4e-7a3a-45eb-b669-d98a8b720b50", variable_code="income", new_value=1300)
 # {{ _('Append the new update to the data frame of updates') }}
 data_updates = rbind(data_updates,new_update, stringsAsFactors=FALSE)

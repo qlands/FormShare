@@ -79,14 +79,14 @@ class EditUserView(PrivateView):
 
                 email_valid = validators.email(user_details["user_email"])
                 if not email_valid:
-                    self.append_to_errors(self._("Such email address is not valid"))
+                    self.append_to_errors(self._("This email address is not valid"))
                 else:
                     if email_exists(
                         self.request, user_to_modify, user_details["user_email"]
                     ):
                         self.append_to_errors(
                             self._(
-                                "Such email address already belongs to another account"
+                                "This email address already belongs to another account"
                             )
                         )
                     else:
@@ -233,7 +233,7 @@ class AddUserView(PrivateView):
                             email_valid = validators.email(user_details["user_email"])
                             if not email_valid:
                                 self.append_to_errors(
-                                    self._("Such email address is not valid")
+                                    self._("This email address is not valid")
                                 )
                             else:
                                 if email_exists(
@@ -243,7 +243,7 @@ class AddUserView(PrivateView):
                                 ):
                                     self.append_to_errors(
                                         self._(
-                                            "Such email address already belongs to another account"
+                                            "This email address already belongs to another account"
                                         )
                                     )
                                 else:
@@ -352,7 +352,7 @@ class AddUserView(PrivateView):
                     else:
                         self.append_to_errors(self._("The password cannot be empty"))
                 else:
-                    self.append_to_errors(self._("Such user already exists"))
+                    self.append_to_errors(self._("This user already exists"))
             else:
                 self.append_to_errors(
                     self._(

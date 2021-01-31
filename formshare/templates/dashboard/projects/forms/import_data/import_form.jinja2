@@ -73,7 +73,7 @@
                         </div>
                         <div class="hr-line-dashed"></div>
                         <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Ignore XForm ID check (False by default)') }}</label>
-                            <div class="col-sm-10"><input type="checkbox" name="ignore_xform" class="js-switch"/><span class="form-text text-danger m-b-none">{% block not_check_comment %}{{ _('Warning! Formshare checks by default if the XForm ID of the data that you are importing is "')}}<b>{{formDetails.form_name}}</b>{{_('". You can decide to ignore this check at your own risk but you might end with inconsistent data.') }}{% endblock not_check_comment %}</span></div>
+                            <div class="col-sm-10"><input type="checkbox" name="ignore_xform" class="js-switch"/><span class="form-text text-danger m-b-none">{% block not_check_comment %}{{ _('Warning! Formshare checks by default if the XForm ID of the data that you are importing is "')}}<b>{{formDetails.form_name}}</b>{{_('". You can decide to ignore this check at your own risk but you might end up with inconsistent data.') }}{% endblock not_check_comment %}</span></div>
                         </div>
                             <div class="hr-line-dashed"></div>
                         <div class="form-group row">

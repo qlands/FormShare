@@ -30,9 +30,9 @@
                             {% if not upload_for_merging %}
                                 <hr>
                                 <div style="margin-top: 10px" class="form-group">
-                                    <label><b>{{ _('Which variable will be used to control dupplicate submissions?') }}</b></label>
+                                    <label><b>{{ _('Which variable will be used to control duplicate submissions?') }}</b></label>
                                     <input type="text" name="form_pkey" class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the Primary Key') }}')"  oninput="setCustomValidity('')">
-                                    <span class="form-text m-b-none text-success">{{ _('This will become the Primary Key of the repository. If you have more than one variable then use a calculate to join them.') }}</span>
+                                    <span class="form-text m-b-none text-success">{{ _('This will become the Primary Key of the repository. If you have more than one variable then use an ODK Calculate to join them.') }}</span>
                                 </div>
                                 <hr>
                                 <div style="margin-top: 10px" class="form-group">

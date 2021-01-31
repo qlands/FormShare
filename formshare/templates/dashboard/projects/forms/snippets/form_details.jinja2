@@ -102,11 +102,11 @@
                 {% if formDetails.parent_form == None %}
                     <h4 class="text-center text-warning">{{ _('This form is in testing stage. This means that you can update it at all times and submissions are for testing purposes. ') }}</h4>
                     {% if formDetails.form_repositorypossible == 1 %}
-                        <h4 class="text-center text-warning">{{ _('When you finished testing it you can')}} <a href="{{ request.route_url('createrepository',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" style="color: #026AA8 !important;">{{ _('create a repository for it') }}</a> {{ _('and start collecting "real" data.') }}</h4>
+                        <h4 class="text-center text-warning">{{ _('When you finished testing the form you can')}} <a href="{{ request.route_url('createrepository',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" style="color: #026AA8 !important;">{{ _('create a repository for the form') }}</a> {{ _('and start collecting "real" data.') }}</h4>
                     {% else %}
                         {% if formDetails.form_repositorypossible == 0 %}
                             <br/>
-                            <h4 class="text-center"><span class="text-danger">{{ _('IMPORTANT NOTE:') }}</span> {{ _('FormShare has checked your form and its has problems. FormShare will not be able to create a repository from it.')}} <a data-toggle="modal" data-target="#repository_error_modal" style="color: #026AA8 !important;"><b style="color: red">{{ _('Click here to see the problems.') }}</b></a></h4>
+                            <h4 class="text-center"><span class="text-danger">{{ _('IMPORTANT NOTE:') }}</span> {{ _('FormShare has checked your form and it has problems. FormShare will not be able to create a repository from it.')}} <a data-toggle="modal" data-target="#repository_error_modal" style="color: #026AA8 !important;"><b style="color: red">{{ _('Click here to see the problems.') }}</b></a></h4>
                         {% else %}
                             <br/>
                             <h4 class="text-center"><span class="text-danger">{{ _('IMPORTANT NOTE:') }}</span> {{ _('FormShare needs you to upload all required files before it can check your form completely') }}</h4>
@@ -115,7 +115,7 @@
                 {% else %}
                     <h4 class="text-center text-warning">{{ _('This form is in testing stage. This means that you can update it at all times and submissions are for testing purposes. ') }}</h4>
                     {% if formDetails.form_abletomerge == 1 %}
-                        <h4 class="text-center text-warning">{{ _('When you finished testing it you can')}} <a href="{{ request.route_url('merge_new_version',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id,oldformid=formDetails.parent_form) }}" style="color: #026AA8 !important;">{{ _('merge it into the repository of ') }} "{{ formDetails.parent_form_data.form_name }}"</a> {{ _('and start collecting "real" data.') }}</h4>
+                        <h4 class="text-center text-warning">{{ _('When you finished testing the form you can')}} <a href="{{ request.route_url('merge_new_version',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id,oldformid=formDetails.parent_form) }}" style="color: #026AA8 !important;">{{ _('merge it into the repository of ') }} "{{ formDetails.parent_form_data.form_name }}"</a> {{ _('and start collecting "real" data.') }}</h4>
                     {% else %}
                         {% if formDetails.form_abletomerge == 0 %}
                             <h4 class="text-center">{{ _('However you')}} <a data-toggle="modal" data-target="#merge_error_modal" style="color: #026AA8 !important;"><b style="color: red">{{ _('cannot merge it') }}</b></a> {{ _('into the repository of') }} "{{ formDetails.parent_form_data.form_name }}"</h4>

@@ -43,7 +43,7 @@
             {% endif %}
         {% endif %}
         {% if error.status == 2 %}
-            Checked out by {{ error.lastentry.enum_name }}<br/>
+            {{ _('Checked-out by') }} {{ error.lastentry.enum_name }}<br/>
             <span title="{{ _('Check-out date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
         {% endif %}
         {% if error.status == 3 %}
@@ -69,7 +69,7 @@
             {% if error.status != 0 %}
                 {% if error.status == 1 and not disregard %}
                     <a class="btn btn-default btn-sm action-buttons" href="{{ request.route_url('comparejsons',pname=pname,formid=formid,submissionid=error.log_id) }}" title="{{ _('Compare submission') }}"><i style="color: orange" class="fa fa-random"></i></a>
-                    <a class="btn btn-primary btn-sm action-buttons" onclick="ShowConfirmModal('{{ request.route_url('checkoutjson', pname=pname,formid=formid,submissionid=error.log_id) }}','Are you sure that you want to check-out this submission?');" title="{{ _('Check out file') }}"><i class="fa fa-arrow-right"></i></a>
+                    <a class="btn btn-primary btn-sm action-buttons" onclick="ShowConfirmModal('{{ request.route_url('checkoutjson', pname=pname,formid=formid,submissionid=error.log_id) }}','Are you sure that you want to check-out this submission?');" title="{{ _('Check-out file') }}"><i class="fa fa-arrow-right"></i></a>
                     <a class="btn btn-danger btn-sm action-buttons" href="{{ request.route_url('disregard',pname=pname,formid=formid,submissionid=error.log_id) }}" title="{{ _('Disregard error') }}"><i class="fa fa-ban"></i></a>
                 {% endif %}
                 {% if error.status == 2 %}

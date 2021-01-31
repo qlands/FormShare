@@ -25,7 +25,7 @@ def store_settings(request, key, value):
         log.error("Duplicated setting key {}".format(key))
         return (
             False,
-            _("Error storing setting for key {}. Key already exits".format(key)),
+            _("Error storing setting for key {}. The key already exits.".format(key)),
         )
     except Exception as e:
         request.dbsession.rollback()

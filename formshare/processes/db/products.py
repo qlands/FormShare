@@ -113,7 +113,7 @@ def delete_product(request, project, form, product, output):
         else:
             return False, _("Unable to delete product file")
     else:
-        return False, _("Output does not exists")
+        return False, _("The output does not exist")
 
 
 def get_form_used_products(request, project, form):

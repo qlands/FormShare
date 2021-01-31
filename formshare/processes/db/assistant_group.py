@@ -129,7 +129,7 @@ def add_group(request, project, group_data):
             )
             return False, str(e)
     else:
-        return False, _("Such group already exists in this project")
+        return False, _("This group already exists in this project")
 
 
 def modify_group(request, project, group, group_data):
@@ -164,7 +164,7 @@ def modify_group(request, project, group, group_data):
             )
             return False, str(e)
     else:
-        return False, _("Such group already exists in this project")
+        return False, _("This group already exists in this project")
 
 
 def add_assistant_to_group(request, project, group, assistant_project, assistant):

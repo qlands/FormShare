@@ -311,7 +311,7 @@ def add_project(request, user, project_data):
         except IntegrityError:
             request.dbsession.rollback()
             log.error("Duplicated project {}".format(mapped_data["project_id"]))
-            return False, _("The project already exist")
+            return False, _("The project already exists")
         except Exception as e:
             request.dbsession.rollback()
             log.error(
@@ -377,7 +377,7 @@ def delete_project(request, user, project):
         return (
             False,
             _(
-                "If you have forms with submissions. First you need to delete such forms"
+                "If you have forms with submissions, first you need to delete such forms"
             ),
         )
     except Exception as e:

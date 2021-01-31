@@ -36,7 +36,7 @@
                     <div class="row">
                         <div class="col-md-12">
                             {% if method == "get" %}
-                                <h2>{{ _('Lets begin') }}</h2>
+                                <h2>{{ _("Let's begin") }}</h2>
                                 <form id="repform" class="dataset-form form-horizontal add-member-form" role="form" method="post" action="{{ request.url }}">
                                     {% include 'dashboard/projects/repository/snippets/pkey_form.jinja2' %}
                                 </form>
@@ -89,7 +89,7 @@
                                         {{ _('The process returned an unexpected error. An email has been sent to the technical team.') }}
                                     {% endif %}
                                     {% if result_code == 9 %}
-                                        <h2>{{ _('Your ODK have duplicated options') }}</h2>
+                                        <h2>{{ _('Your ODK form has duplicated options.') }}</h2>
                                         {{ _('You need to fix the below errors in CSV files, upload the new version and continue the process.') }}
                                         <UL>
                                             {% for aList in list_array %}
@@ -140,11 +140,11 @@
                                         <h2>{{ _('One of your resource CSV files cannot be used') }}</h2>
                                         {{ _('The file') }} {{ file_with_error }} {{ _('cannot be read or you are mixing select options in CSV with options in the choices sheet.') }}<br/>
                                         {{ _('You need to fix the problem before continuing the process.') }}<br/>
-                                        {{ _('Please check the CSV file and whether your are mixing select options in the choices sheet with options in a CSV for a single list_name and move all the select options to the CSV') }}
+                                        {{ _('Please check the CSV file and whether you are mixing select options in the choices sheet with options in a CSV for a single list_name and move all the select options to the CSV') }}
 
                                     {% endif %}
                                     {% if result_code == 21 %}
-                                        <h2>{{ _('Your ODK have duplicated list names in the choices sheet') }}</h2>
+                                        <h2>{{ _('Your ODK form has duplicated list names in the choices sheet') }}</h2>
                                         {{ _('You need to fix the below errors in the ODK form, upload the new version and continue the process.') }}
                                         <UL>
                                             {% for a_choice in duplicated_choices %}

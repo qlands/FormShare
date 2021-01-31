@@ -331,7 +331,7 @@ def check_jxform_file(
         if p.returncode == 10:
             return (
                 10,
-                _("The primary key variable does not exists or is inside a repeat"),
+                _("The primary key variable does not exist or is inside a repeat"),
             )
         if p.returncode == 19:
             log.error(
@@ -345,7 +345,7 @@ def check_jxform_file(
             root = etree.fromstring(stdout)
             duplicated_tables = root.findall(".//duplicatedTable")
             message = (
-                _("FormShare checks a little bit more your ODK for inconsistencies.")
+                _("FormShare thoroughly checks your ODK for inconsistencies.")
                 + "\n"
             )
             message = (
@@ -395,11 +395,11 @@ def check_jxform_file(
             root = etree.fromstring(stdout)
             invalid_names = root.findall(".//invalidName")
             message = (
-                _("FormShare checks a little bit more your ODK for inconsistencies.")
+                _("FormShare thoroughly checks your ODK for inconsistencies.")
                 + "\n"
             )
             message = (
-                message + _("The following variables are have invalid names:") + "\n"
+                message + _("The following variables have invalid names:") + "\n"
             )
             if invalid_names:
                 for a_name in invalid_names:
@@ -420,7 +420,7 @@ def check_jxform_file(
             root = etree.fromstring(stdout)
             duplicated_tables = root.findall(".//table")
             message = (
-                _("FormShare checks a little bit more your ODK for inconsistencies.")
+                _("FormShare thoroughly checks your ODK for inconsistencies.")
                 + "\n"
             )
             message = message + _("The following choices are identical:") + "\n"
@@ -461,7 +461,7 @@ def check_jxform_file(
             root = etree.fromstring(stdout)
             duplicated_tables = root.findall(".//duplicatedItem")
             message = (
-                _("FormShare checks a little bit more your ODK for inconsistencies.")
+                _("FormShare thoroughly checks your ODK for inconsistencies.")
                 + "\n"
             )
             message = (
@@ -496,7 +496,7 @@ def check_jxform_file(
             root = etree.fromstring(stdout)
             duplicated_items = root.findall(".//duplicatedItem")
             message = (
-                _("FormShare checks a little bit more your ODK for inconsistencies.")
+                _("FormShare thoroughly checks your ODK for inconsistencies.")
                 + "\n"
             )
             message = (
@@ -532,8 +532,7 @@ def check_jxform_file(
             message = (
                 "\n"
                 + _(
-                    "FormShare manage your data in a better way but by doing so it has more "
-                    "restrictions."
+                    "FormShare manages your data in a better way but by doing so it has more restrictions."
                 )
                 + "\n"
             )
@@ -557,7 +556,7 @@ def check_jxform_file(
             message = (
                 message
                 + _(
-                    "We tent to organize our ODK forms in sections with questions around a topic. "
+                    'We tend to organize our ODK forms in sections with questions around a topic. '
                     'For example: "livestock inputs" or "crops sales".'
                 )
                 + "\n\n"
@@ -573,12 +572,12 @@ def check_jxform_file(
             message = (
                 message
                 + _(
-                    "FormShare store repeats as separate tables (like different Excel sheets) however "
-                    "groups are not. FormShare store all items (questions, notes, calculations, etc.) "
-                    'outside repeats into a table called "maintable". Thus "maintable" usually end up '
-                    'with several items and if your ODK form have many selects then the "maintable" '
-                    "could potentially have more than 64 selects. FormShare can only handle 64 selects "
-                    "per table."
+                    'FormShare stores repeats as separate tables (like different Excel sheets) '
+                    'however groups are not stored as repeats. FormShare stores all items '
+                    '(questions, notes, calculations, etc.) outside repeats into a table called '
+                    '"maintable". Thus "maintable" usually end up with several items and if '
+                    'your ODK form has many selects, then the "maintable" could potentially '
+                    'have more than 64 selects. FormShare can only handle 64 selects per table.'
                 )
                 + "\n\n"
             )
@@ -586,10 +585,10 @@ def check_jxform_file(
                 message
                 + _(
                     "You can bypass this restriction by creating groups of items inside repeats "
-                    "BUT WITH repeat_count = 1. A repeat with repeat_count = 1 will behave in the same "
-                    "way as a group but FormShare will create a new table for it to store all its items. "
-                    "Eventually if you export the data to Excel your items will be organized in "
-                    "different sheets each representing a table."
+                    "BUT WITH repeat_count = 1. A repeat with repeat_count = 1 will behave "
+                    "in the same way as a group, but FormShare will create a new table for it "
+                    "to store all its items. Eventually if you export the data to Excel your "
+                    "items will be organized in different sheets each representing a table."
                 )
                 + "\n\n"
             )
@@ -917,7 +916,7 @@ def upload_odk_form(
         else:
             return (
                 False,
-                _("Cannot find XForm ID. Please post this ODK form in an issue on ")
+                _("Cannot find XForm ID. Please include this ODK form in an issue on  ")
                 + "https://github.com/qlands/FormShare",
             )
     except PyXFormError as e:
@@ -1271,13 +1270,13 @@ def update_odk_form(
                         else:
                             return False, message
                     else:
-                        return False, _("The form does not exists in this project")
+                        return False, _("The form does not exist in this project")
                 else:
                     return (
                         False,
                         _(
-                            'The "form_id" of the current form does not match the "form_id" of the one you '
-                            "uploaded. You cannot update a form with another form"
+                            'The "form_id" of the current form does not match the "form_id" of '
+                            'the one you uploaded. You cannot update a form with another form.'
                         ),
                     )
             else:

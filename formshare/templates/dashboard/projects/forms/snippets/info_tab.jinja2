@@ -91,7 +91,7 @@
                                             <li title="{{ _('The repository check will start once all required files are uploaded') }}"><a style="border-radius: 25px; background-color: #f8ac59; color: black">{{ _('Repository check pending') }}</a></li>
                                         {% endif %}
                                         {% if formDetails.form_repositorypossible == 0 %}
-                                            <li><a title='{{ _("This form has problems and cannot create a repository") }}' style="border-radius: 25px; background-color: red; color: white">{{ _('The form cannot create a repository') }}</a></li>
+                                            <li><a title='{{ _("This form has problems and cannot create a repository") }}' style="border-radius: 25px; background-color: red; color: white">{{ _('This form cannot create a repository') }}</a></li>
                                         {% endif %}
                                     {% else %}
                                         {% if formDetails.form_abletomerge == 1 %}

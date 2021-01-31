@@ -213,9 +213,9 @@ def add_assistant(request, user, project, assistant_data):
         return (
             False,
             _(
-                "The assistant already exists in your account. "
-                "You don't need to duplicate assistants, "
-                'just mark them as "Share among projects" to use them across projects'
+                'The assistant already exists in your account. '
+                'You do not need to duplicate assistants, '
+                'just mark them as "Share among projects" to use them across projects.'
             ),
         )
     mapped_data = map_to_schema(Collaborator, assistant_data)

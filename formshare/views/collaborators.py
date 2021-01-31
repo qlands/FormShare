@@ -82,8 +82,7 @@ class CollaboratorsListView(PrivateView):
                             self.request.session.flash(
                                 self._(
                                     "The collaborator was added to this project. "
-                                    "However, an email has been sent to him/her to accept "
-                                    "the collaboration"
+                                    "However, an email has been sent to him/her/they to accept the collaboration"
                                 )
                             )
                         self.returnRawViewResult = True

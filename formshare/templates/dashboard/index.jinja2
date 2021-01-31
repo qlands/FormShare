@@ -32,7 +32,7 @@
                             {% if viewingSelfAccount %}
                                 <h2 style="color: white">{{ _('Welcome') }}</h2>
                             {% else %}
-                                <h2>{{ _('Your are viewing others account') }}</h2>
+                                <h2>{{ _('You are viewing others account') }}</h2>
                             {% endif %}
                         {% endif %}
                         <h3 style="color:white;">{{ _('Recent activity in project') }} "<a style="color: white" href="{{ request.route_url('project_details', userid=activeProject.owner, projcode=activeProject.project_code) }}" >{{ activeProject.project_name }}</a>"</h3>
@@ -178,8 +178,8 @@
                     var text = "";
                     var title = "";
                     if (has_parent === "true") {
-                        text = "{{ _('Look, you are going to delete a form that is a subversion. This means that you will REMOVE ALL the data including its parents as well!!!') }}";
-                        title = "{{ _('Are you sure really really sure?') }}";
+                        text = "{{ _('Warning, you are going to delete a form that is a subversion of another form. This means that you will REMOVE ALL the data, including previous versions of the data as well!!!') }}";
+                        title = "{{ _('Are you sure, really really sure?') }}";
                     }
                     else {
                         text = "{{ _('All the data in this form will be deleted!') }}";

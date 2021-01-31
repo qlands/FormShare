@@ -1,7 +1,7 @@
 <div class="ibox">
     <div class="ibox-title">
         {% block links_tab_title %}
-            <h5>{% if formDetails.form_schema == None %}{{ _('Form links & downloads') }}{% else %}{{ _('Form links') }}{% endif %}</h5>
+            <h5>{% if formDetails.form_schema == None %}{{ _('Form links and downloads') }}{% else %}{{ _('Form links') }}{% endif %}</h5>
             <div class="ibox-tools">
                 {% block links_tab_tools %}
                     <a class="collapse-link">
@@ -43,7 +43,7 @@
         {% block links_qr_content %}
             <hr>
             <div style="text-align: center">
-                <span class="text-center">{{ _('Use this QR to configure ODK collect') }}</span><br/>
+                <span class="text-center">{{ _('Use this QR to configure ODK Collect') }}</span><br/>
                 <a title="{{ _('ODK settings') }}" href="{{ request.route_url('project_qr', userid=projectDetails.owner, projcode=projectDetails.project_code) }}"><img style="max-width: 150px" src="{{ request.route_url('project_qr', userid=projectDetails.owner, projcode=projectDetails.project_code) }}" class="img-fluid"></a>
             </div>
             ODK URL:<br/>

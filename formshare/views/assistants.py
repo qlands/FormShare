@@ -150,7 +150,7 @@ class AddAssistantsView(PrivateView):
                         )
                     )
             else:
-                self.append_to_errors(self._("You need to specify an user id"))
+                self.append_to_errors(self._("You need to specify a user id"))
         else:
             assistant_data = {}
         return {

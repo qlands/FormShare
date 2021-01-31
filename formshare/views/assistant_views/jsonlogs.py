@@ -201,7 +201,7 @@ class JSONCompare(AssistantView):
                                 )
                         else:
                             self.append_to_errors(
-                                self._("No point to compare to the same submission ID")
+                                self._("There is no point in comparing to the same submission ID")
                             )
 
                     return {
@@ -408,7 +408,7 @@ class JSONCheckin(AssistantView):
                                     else:
                                         self.append_to_errors(
                                             self._(
-                                                "You need to indicate a note to the checkin"
+                                                "You need to indicate a note to the check-in"
                                             )
                                         )
                                 except Exception as ex:

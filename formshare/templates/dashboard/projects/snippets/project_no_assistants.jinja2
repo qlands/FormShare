@@ -3,7 +3,7 @@
     {% block no_forms_info %}
         <h1><a href="{{ request.route_url('assistant_add',userid=projectDetails.owner,projcode=projectDetails.project_code,_query={'next': request.url}) }}"><i class="far fa-plus-square" style="color: #676a6c"></i></a></h1>
         <h3 class="font-bold">{{ _('There are no project level assistants') }}</h3>
-        <p class="font-bold">{{ _('Assistants helps you to collect and clean data') }}</p>
+        <p class="font-bold">{{ _('Assistants help you to collect and clean data') }}</p>
         <div class="error-desc">
             <a href="{{ request.route_url('assistant_add',userid=projectDetails.owner,projcode=projectDetails.project_code,_query={'next': request.url}) }}" type="button" class="btn btn-block btn-outline btn-primary">{{ _('Add an assistant') }}</a>
         </div>

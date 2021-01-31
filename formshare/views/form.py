@@ -1247,7 +1247,7 @@ class RemoveFileFromForm(PrivateView):
                     if file_name in required_files:
                         self.add_error(
                             self._(
-                                "You cannot remove this file because is required by the repository"
+                                "You cannot remove this file because it is required by the repository"
                             )
                         )
                         next_page = self.request.route_url(

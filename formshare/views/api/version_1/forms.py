@@ -52,12 +52,12 @@ class API1UploadFileToForm(APIView):
             form_data = get_form_data(self.request, project_id, form_id)
             if form_data is None:
                 self.return_error(
-                    "form_does_not_exist", self._("The form does not exists")
+                    "form_does_not_exist", self._("The form does not exist")
                 )
 
             if "file_to_upload" not in self.request.POST.keys():
                 self.return_error(
-                    "file_not_attached", self._("You did not attached any file")
+                    "file_not_attached", self._("You did not attach any file")
                 )
 
             if "overwrite" in self.request.POST.keys():

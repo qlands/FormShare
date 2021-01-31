@@ -333,7 +333,7 @@ def json_to_csv(request, project, form):
         else:
             return False, _("Error while creating dummy file")
     else:
-        return False, _("There are not submissions to download")
+        return False, _("There are no submissions to download")
 
 
 def get_tables_from_form(request, project, form):
@@ -760,8 +760,7 @@ def update_data(request, user, project, form, table_name, row_uuid, field, value
                         {
                             "name": field,
                             "status": _(
-                                "Cannot update value. Check the valid values in "
-                                "lookup table"
+                                "Cannot update value. Check the valid values in lookup table "
                             )
                             + '"'
                             + lookup

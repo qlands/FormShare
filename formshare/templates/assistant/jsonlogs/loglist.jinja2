@@ -49,8 +49,8 @@
             <button class="btn btn-primary" onclick="location.href='{{ request.route_url('errorlist', userid=userid,projcode=projcode,formid=formid,_query={'status':'fixed'}) }}';" type="button">{% if status == "fixed" %}<b>{{ _('Fixed') }}</b>{% else %}{{ _('Fixed') }}{% endif %}</button>
             <button class="btn btn-danger" onclick="location.href='{{ request.route_url('errorlist', userid=userid,projcode=projcode,formid=formid,_query={'status':'error'}) }}';" type="button">{% if status == "error" %}<b>{{ _('With error') }}</b>{% else %}{{ _('With error') }}{% endif %}</button>
             <button class="btn btn-warning" onclick="location.href='{{ request.route_url('errorlist', userid=userid,projcode=projcode,formid=formid,_query={'status':'disregarded'}) }}';" type="button">{% if status == "disregarded" %}<b>{{ _('Disregarded') }}</b>{% else %}{{ _('Disregarded') }}{% endif %}</button>
-            <button class="btn btn-info" onclick="location.href='{{ request.route_url('errorlist', userid=userid,projcode=projcode,formid=formid,_query={'status':'checkout'}) }}';" type="button">{% if status == "checkout" %}<b>{{ _('Checked out') }}</b>{% else %}{{ _('Checked out') }}{% endif %}</button>
-            <button class="btn" style="background: coral" onclick="location.href='{{ request.route_url('errorlist', userid=userid,projcode=projcode,formid=formid,_query={'status':'checkin'}) }}';" type="button">{% if status == "checkin" %}<b>{{ _('Checked in') }}</b>{% else %}{{ _('Checked in') }}{% endif %}</button>
+            <button class="btn btn-info" onclick="location.href='{{ request.route_url('errorlist', userid=userid,projcode=projcode,formid=formid,_query={'status':'checkout'}) }}';" type="button">{% if status == "checkout" %}<b>{{ _('Checked-out') }}</b>{% else %}{{ _('Checked-out') }}{% endif %}</button>
+            <button class="btn" style="background: coral" onclick="location.href='{{ request.route_url('errorlist', userid=userid,projcode=projcode,formid=formid,_query={'status':'checkin'}) }}';" type="button">{% if status == "checkin" %}<b>{{ _('Checked-in') }}</b>{% else %}{{ _('Checked-in') }}{% endif %}</button>
             <p>
             <h3>
                 {% if status == "all" %}
@@ -66,10 +66,10 @@
                     {{ _('Showing disregarded records') }}
                 {% endif %}
                 {% if status == "checkout" %}
-                    {{ _('Showing records that are checkout') }}
+                    {{ _('Showing records that are checked-out') }}
                 {% endif %}
                 {% if status == "checkin" %}
-                    {{ _('Showing records that are checked in') }}
+                    {{ _('Showing records that are checked-in') }}
                 {% endif %}
             </h3>
             </p>

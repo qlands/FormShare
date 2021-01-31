@@ -24,7 +24,7 @@
                             {{ error.error.error }}
                         {% endif %}
                     {% else %}
-                        {{ _('The duplicated submission cannot be found. It may have been moved to the logs or deleted. You can push this submission into the database') }}
+                        {{ _('The duplicated submission cannot be found. It may have been moved to the logs or deleted. You can push this submission into the database.') }}
                     {% endif %}
                 {% else %}
                     {{ error.error.error }}
@@ -65,11 +65,11 @@
                     {% endif %}
                 {% endif %}
                 {% if error.status == 2 %}
-                    {{ _('Checked out by') }} {{ error.lastentry.enum_name }}<br/>
+                    {{ _('Checked-out by') }} {{ error.lastentry.enum_name }}<br/>
                     <span title="{{ _('Check-out date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
                 {% endif %}
                 {% if error.status == 3 %}
-                    {{ error.lastentry.enum_name }} {{ _('checked in revision ID') }}: <a href="{{ request.route_url('viewrevision', userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id,revisionid=error.lastentry.log_commit) }}">{{ error.lastentry.log_commit }}</a><span class="label label-important" title="{{ _('To be pushed to the repository') }}">{{ _('To be pushed') }}</span> <br/>
+                    {{ error.lastentry.enum_name }} {{ _('checked-in revision ID') }}: <a href="{{ request.route_url('viewrevision', userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id,revisionid=error.lastentry.log_commit) }}">{{ error.lastentry.log_commit }}</a><span class="label label-important" title="{{ _('To be pushed to the repository') }}">{{ _('To be pushed') }}</span> <br/>
                     <span title="{{ _('Check-in date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
                 {% endif %}
                 {% if error.status == 5 %}
@@ -107,7 +107,7 @@
                                 <a class="btn btn-primary btn-sm action-buttons action-required" style="background-color: #1e7e34"  data-title="{{ _('Try to push submission into the repository again') }}" data-message="{{ _('Are you sure that you want to push this submission?') }}" urn="{{ request.route_url('push_log_submission', userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id) }}" title="{{ _('Push submission again') }}"><i style="color: white" class="fa fa-arrow-left"></i></a>
                             {% endif %}
                             <a class="btn btn-default btn-sm action-buttons" href="{{ request.route_url('comparejsons',userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id) }}" title="{{ _('Compare submission') }}"><i style="color: orange" class="fa fa-random"></i></a>
-                            <a class="btn btn-primary btn-sm action-buttons action-required" data-title="{{ _('Check-out revision') }}" data-message="{{ _('Are you sure that you want to check-out this submission?') }}" urn="{{ request.route_url('checkoutjson', userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id) }}" title="{{ _('Check out file') }}"><i style="color: white" class="fa fa-arrow-right"></i></a>
+                            <a class="btn btn-primary btn-sm action-buttons action-required" data-title="{{ _('Check-out revision') }}" data-message="{{ _('Are you sure that you want to check-out this submission?') }}" urn="{{ request.route_url('checkoutjson', userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id) }}" title="{{ _('Check-out file') }}"><i style="color: white" class="fa fa-arrow-right"></i></a>
                             <a class="btn btn-danger btn-sm action-buttons" href="{{ request.route_url('disregard',userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id) }}" title="{{ _('Disregard error') }}"><i class="fa fa-ban"></i></a>
                             {% if error.lastentry != None %}
                                 <a class="btn btn-default btn-sm action-buttons button-note" data-error="notes-{{ error.log_short }}" data-toggle="modal" data-target="#see_notes" onclick="ShowNotes('notes-');" title="{{ _('See notes') }}"><i class="fa fa-comment-o"></i></a>

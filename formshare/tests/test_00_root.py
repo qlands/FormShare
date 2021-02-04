@@ -296,17 +296,11 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            res = self.testapp.get(
-                "/login",
-                status=302,
-            )
+            res = self.testapp.get("/login", status=302,)
             assert "FS_error" not in res.headers
 
             # Logout
-            res = self.testapp.post(
-                "/logout",
-                status=302,
-            )
+            res = self.testapp.post("/logout", status=302,)
             assert "FS_error" not in res.headers
 
             # Login fails
@@ -332,12 +326,13 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-
         def test_dashboard():
 
             if os.environ.get("FORMSHARE_TEST_ERROR_PAGE", "false") == "true":
                 # Test error screen
-                self.testapp.get("/test/{}/test_error".format(self.randonLogin), status=500)
+                self.testapp.get(
+                    "/test/{}/test_error".format(self.randonLogin), status=500
+                )
 
             # Test access to the dashboard
             res = self.testapp.get("/user/{}".format(self.randonLogin), status=200)
@@ -988,7 +983,11 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/assistant/{}/edit".format(
                     self.randonLogin, self.project, self.assistantLogin
                 ),
-                {"coll_prjshare": "", "coll_active": "1", "coll_id": self.assistantLogin},
+                {
+                    "coll_prjshare": "",
+                    "coll_active": "1",
+                    "coll_id": self.assistantLogin,
+                },
                 status=302,
             )
             assert "FS_error" not in res.headers

@@ -275,9 +275,7 @@ def internal_build_csv(
                         cols.append(col.replace(".", ""))
                     temp.columns = cols
                     dataframe_array.append(temp)
-                send_task_status_to_form(
-                    settings, task_id, _("Joining submissions")
-                )
+                send_task_status_to_form(settings, task_id, _("Joining submissions"))
                 join = pd.concat(dataframe_array, sort=False)
                 join = join.iloc[1:]
                 send_task_status_to_form(settings, task_id, _("Saving CSV"))

@@ -345,8 +345,7 @@ def check_jxform_file(
             root = etree.fromstring(stdout)
             duplicated_tables = root.findall(".//duplicatedTable")
             message = (
-                _("FormShare thoroughly checks your ODK for inconsistencies.")
-                + "\n"
+                _("FormShare thoroughly checks your ODK for inconsistencies.") + "\n"
             )
             message = (
                 message
@@ -395,12 +394,9 @@ def check_jxform_file(
             root = etree.fromstring(stdout)
             invalid_names = root.findall(".//invalidName")
             message = (
-                _("FormShare thoroughly checks your ODK for inconsistencies.")
-                + "\n"
+                _("FormShare thoroughly checks your ODK for inconsistencies.") + "\n"
             )
-            message = (
-                message + _("The following variables have invalid names:") + "\n"
-            )
+            message = message + _("The following variables have invalid names:") + "\n"
             if invalid_names:
                 for a_name in invalid_names:
                     variable_name = a_name.get("name")
@@ -420,8 +416,7 @@ def check_jxform_file(
             root = etree.fromstring(stdout)
             duplicated_tables = root.findall(".//table")
             message = (
-                _("FormShare thoroughly checks your ODK for inconsistencies.")
-                + "\n"
+                _("FormShare thoroughly checks your ODK for inconsistencies.") + "\n"
             )
             message = message + _("The following choices are identical:") + "\n"
             if duplicated_tables:
@@ -461,8 +456,7 @@ def check_jxform_file(
             root = etree.fromstring(stdout)
             duplicated_tables = root.findall(".//duplicatedItem")
             message = (
-                _("FormShare thoroughly checks your ODK for inconsistencies.")
-                + "\n"
+                _("FormShare thoroughly checks your ODK for inconsistencies.") + "\n"
             )
             message = (
                 message
@@ -496,8 +490,7 @@ def check_jxform_file(
             root = etree.fromstring(stdout)
             duplicated_items = root.findall(".//duplicatedItem")
             message = (
-                _("FormShare thoroughly checks your ODK for inconsistencies.")
-                + "\n"
+                _("FormShare thoroughly checks your ODK for inconsistencies.") + "\n"
             )
             message = (
                 message
@@ -556,7 +549,7 @@ def check_jxform_file(
             message = (
                 message
                 + _(
-                    'We tend to organize our ODK forms in sections with questions around a topic. '
+                    "We tend to organize our ODK forms in sections with questions around a topic. "
                     'For example: "livestock inputs" or "crops sales".'
                 )
                 + "\n\n"
@@ -572,12 +565,12 @@ def check_jxform_file(
             message = (
                 message
                 + _(
-                    'FormShare stores repeats as separate tables (like different Excel sheets) '
-                    'however groups are not stored as repeats. FormShare stores all items '
-                    '(questions, notes, calculations, etc.) outside repeats into a table called '
+                    "FormShare stores repeats as separate tables (like different Excel sheets) "
+                    "however groups are not stored as repeats. FormShare stores all items "
+                    "(questions, notes, calculations, etc.) outside repeats into a table called "
                     '"maintable". Thus "maintable" usually end up with several items and if '
                     'your ODK form has many selects, then the "maintable" could potentially '
-                    'have more than 64 selects. FormShare can only handle 64 selects per table.'
+                    "have more than 64 selects. FormShare can only handle 64 selects per table."
                 )
                 + "\n\n"
             )
@@ -1276,7 +1269,7 @@ def update_odk_form(
                         False,
                         _(
                             'The "form_id" of the current form does not match the "form_id" of '
-                            'the one you uploaded. You cannot update a form with another form.'
+                            "the one you uploaded. You cannot update a form with another form."
                         ),
                     )
             else:

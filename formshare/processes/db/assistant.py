@@ -213,8 +213,8 @@ def add_assistant(request, user, project, assistant_data):
         return (
             False,
             _(
-                'The assistant already exists in your account. '
-                'You do not need to duplicate assistants, '
+                "The assistant already exists in your account. "
+                "You do not need to duplicate assistants, "
                 'just mark them as "Share among projects" to use them across projects.'
             ),
         )

@@ -187,9 +187,7 @@ class LoginView(PublicView):
             else:
                 log.error("User account {} does not exist".format(login))
                 self.append_to_errors(
-                    self._(
-                        "The user account does not exist or the password is invalid"
-                    )
+                    self._("The user account does not exist or the password is invalid")
                 )
         return {"next": next_page}
 

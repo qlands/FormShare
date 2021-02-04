@@ -76,4 +76,4 @@ class TestRemoveUserView(FormSharePrivateView):
 
 class TestErrorView(FormSharePrivateView):
     def process_view(self):
-        return {"data": 1/0}
+        return {"data": 1 / 0}

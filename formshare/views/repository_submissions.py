@@ -511,5 +511,6 @@ class API1UpdateRepository(AssistantAPIView):
                 return {"error": str(e), "error_type": "update_error"}
         else:
             self.return_error(
-                "rowuuid_missing", self._("You need to indicate a Unique Row ID (rowuuid)")
+                "rowuuid_missing",
+                self._("You need to indicate a Unique Row ID (rowuuid)"),
             )

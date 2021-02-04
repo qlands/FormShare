@@ -201,7 +201,9 @@ class JSONCompare(AssistantView):
                                 )
                         else:
                             self.append_to_errors(
-                                self._("There is no point in comparing to the same submission ID")
+                                self._(
+                                    "There is no point in comparing to the same submission ID"
+                                )
                             )
 
                     return {

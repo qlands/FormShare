@@ -5,16 +5,6 @@ import argparse
 import shutil
 
 
-def get_ini_value(ini_file, key, default=None):
-    try:
-        config = configparser.ConfigParser()
-        config.read(ini_file)
-        return config.get("app:formshare", key)
-    except Exception as e:
-        print("Warning: Unable to find key {}. {} . Default used".format(key, str(e)))
-        return default
-
-
 def main(raw_args=None):
     parser = argparse.ArgumentParser()
     parser.add_argument("ini_path", help="Path to ini file")

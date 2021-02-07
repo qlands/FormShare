@@ -9,11 +9,10 @@ from jinja2 import Environment, FileSystemLoader
 
 def random_password(size):
     """Generate a random password """
-    random_source = string.ascii_letters + string.digits + string.punctuation
+    random_source = string.ascii_letters + string.digits
     password = random.choice(string.ascii_lowercase)
     password += random.choice(string.ascii_uppercase)
     password += random.choice(string.digits)
-    password += random.choice(string.punctuation)
     for i in range(size):
         password += random.choice(random_source)
     password_list = list(password)

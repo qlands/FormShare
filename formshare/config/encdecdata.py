@@ -50,3 +50,13 @@ def encode_data_with_key(data, key):
     if not isinstance(data, bytes):
         data = data.encode()
     return f.encrypt(data)
+
+
+def decode_data_with_key(data, key):
+    key = base64.b64encode(key)
+    f = Fernet(key)
+    try:
+        return f.decrypt(data)
+    except Exception as e:
+        log.error("Error when decrypting a password. Error: {}".format(str(e)))
+        return ""

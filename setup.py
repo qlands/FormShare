@@ -187,6 +187,7 @@ setup(
             "modify_config = formshare.scripts.modifyconfig:main",
             "configure_tests = formshare.scripts.configuretests:main",
             "disable_ssl = formshare.scripts.disablessl:main",
+            "update_aes_key = formshare.scripts.updateaeskey:main",
         ],
     },
 )

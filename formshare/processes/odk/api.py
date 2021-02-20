@@ -2056,31 +2056,7 @@ def store_json_file(
                     except KeyError:
                         pass
 
-            # Adds the dataset to the Elastic Search index
-            create_dataset_index(request.registry.settings, user, project_code, form)
-            index_data = {
-                "_submitted_date": submission_data.get("_submitted_date", ""),
-                "_xform_id_string": submission_data.get("_xform_id_string", ""),
-                "_submitted_by": submission_data.get("_submitted_by", ""),
-                "_user_id": submission_data.get("_user_id", ""),
-                "_project_code": submission_data.get("_project_code", ""),
-                "_geopoint": submission_data.get("_geopoint", ""),
-            }
-            if submission_data.get("_geolocation", "") != "":
-                index_data["_geolocation"] = submission_data.get("_geolocation", "")
-            add_dataset(
-                request.registry.settings,
-                user,
-                project_code,
-                form,
-                submission_id,
-                index_data,
-            )
-
-            with open(json_file, "w") as outfile:
-                json_string = json.dumps(submission_data, indent=4, ensure_ascii=False)
-                outfile.write(json_string)
-
+            submission_exists = None
             submissions_path = os.path.join(
                 odk_dir, *["forms", xform_directory, "submissions", "*.original"]
             )
@@ -2090,17 +2066,56 @@ def store_json_file(
                 if aFile != original_file:
                     other_md5sum = md5(open(aFile, "rb").read()).hexdigest()
                     if md5sum == other_md5sum:
-                        target_submission_id = os.path.basename(aFile)
-                        target_submission_id = target_submission_id.replace(
-                            ".original", ""
-                        )
-                        move_media_files(
-                            odk_dir,
-                            xform_directory,
-                            target_submission_id,
-                            submission_id,
-                        )
-                        os.remove(aFile)
+                        submission_exists = aFile
+                        break
+
+            if submission_exists is None:
+                # Adds the dataset to the Elastic Search index
+                create_dataset_index(
+                    request.registry.settings, user, project_code, form
+                )
+                index_data = {
+                    "_submitted_date": submission_data.get("_submitted_date", ""),
+                    "_xform_id_string": submission_data.get("_xform_id_string", ""),
+                    "_submitted_by": submission_data.get("_submitted_by", ""),
+                    "_user_id": submission_data.get("_user_id", ""),
+                    "_project_code": submission_data.get("_project_code", ""),
+                    "_geopoint": submission_data.get("_geopoint", ""),
+                }
+                if submission_data.get("_geolocation", "") != "":
+                    index_data["_geolocation"] = submission_data.get("_geolocation", "")
+                add_dataset(
+                    request.registry.settings,
+                    user,
+                    project_code,
+                    form,
+                    submission_id,
+                    index_data,
+                )
+
+                with open(json_file, "w") as outfile:
+                    json_string = json.dumps(
+                        submission_data, indent=4, ensure_ascii=False
+                    )
+                    outfile.write(json_string)
+            else:
+                target_submission_id = os.path.basename(submission_exists)
+                target_submission_id = target_submission_id.replace(".original", "")
+                log.error(
+                    "Submission {source} and {target} are the same. Moving media from {source} to {target}".format(
+                        source=submission_id, target=target_submission_id
+                    )
+                )
+                move_media_files(
+                    odk_dir, xform_directory, submission_id, target_submission_id
+                )
+                # Remove the submission files because already exist
+                os.remove(original_file)
+                os.remove(json_file)
+                submission_path = os.path.join(
+                    odk_dir, *["forms", xform_directory, "submissions", submission_id]
+                )
+                shutil.rmtree(submission_path)
             return 0, ""
         except Exception as e:
             log.error(

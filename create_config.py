@@ -92,11 +92,11 @@ def main():
     args = parser.parse_args()
     formshare_path = "."
 
-    main_secret = random_password(13).replace("%", "~")
-    redis_sessions_secret = random_password(13).replace("%", "~")
-    assistant_secret = random_password(13).replace("%", "!")
-    auth_secret = random_password(13).replace("%", "#")
-    aes_key = random_password(28).replace("%", "#")
+    main_secret = random_password(14).replace("%", "~")
+    redis_sessions_secret = random_password(14).replace("%", "~")
+    assistant_secret = random_password(14).replace("%", "!")
+    auth_secret = random_password(14).replace("%", "#")
+    aes_key = random_password(29).replace("%", "#")
     auth_opaque = uuid.uuid4().hex
 
     template_environment = Environment(

@@ -35,22 +35,34 @@ def upgrade():
     settings = get_appsettings(config_uri, "formshare")
     repository_path = settings["repository.path"]
     session = Session(bind=op.get_bind())
-    forms = session.query(Odkform).filter(Odkform.form_createxmlfile.is_(None)).all()
+    forms = (
+        session.query(Odkform.form_directory, Odkform.project_id, Odkform.form_id)
+        .filter(Odkform.form_createxmlfile.is_(None))
+        .all()
+    )
     for a_form in forms:
         create_xml_file = os.path.join(
             repository_path,
             *["odk", "forms", a_form.form_directory, "repository", "create.xml"]
         )
-        session.query(Odkform).filter(Odkform.project_id == a_form.project_id).filter(
-            Odkform.form_id == a_form.form_id
-        ).update({"form_createxmlfile": create_xml_file})
+        session.query(Odkform.form_createxmlfile).filter(
+            Odkform.project_id == a_form.project_id
+        ).filter(Odkform.form_id == a_form.form_id).update(
+            {"form_createxmlfile": create_xml_file}
+        )
 
-    forms = session.query(Odkform).filter(Odkform.form_insertxmlfile.is_(None)).all()
+    forms = (
+        session.query(Odkform.form_createxmlfile, Odkform.project_id, Odkform.form_id)
+        .filter(Odkform.form_insertxmlfile.is_(None))
+        .all()
+    )
     for a_form in forms:
         insert_file = a_form.form_createxmlfile.replace("create.xml", "insert.xml")
-        session.query(Odkform).filter(Odkform.project_id == a_form.project_id).filter(
-            Odkform.form_id == a_form.form_id
-        ).update({"form_insertxmlfile": insert_file})
+        session.query(Odkform.form_insertxmlfile).filter(
+            Odkform.project_id == a_form.project_id
+        ).filter(Odkform.form_id == a_form.form_id).update(
+            {"form_insertxmlfile": insert_file}
+        )
 
     session.commit()
 

@@ -281,37 +281,30 @@ class FormDetails(PrivateView):
             if created == 9:
                 # Duplicated options
                 root = etree.fromstring(message)
-                xml_lists = root.findall(".//list")
+                duplicated_items = root.findall(".//duplicatedItem")
                 txt_message = (
-                    self._("The following choices have duplicated values:") + "\n"
+                    self._("FormShare thoroughly checks your ODK for inconsistencies.")
+                    + "\n"
                 )
-                if xml_lists:
-                    for aList in xml_lists:
+                txt_message = (
+                    txt_message
+                    + self._(
+                        "The following options are duplicated in the ODK you just submitted:"
+                    )
+                    + "\n"
+                )
+                if duplicated_items:
+                    for a_item in duplicated_items:
+                        variable_name = a_item.get("variableName")
+                        duplicated_option = a_item.get("duplicatedValue")
                         txt_message = (
                             txt_message
-                            + "- "
-                            + aList.get("name")
-                            + " "
-                            + self._("with values:")
-                        )
-                        xml_values = aList.findall(".//value")
-                        for aValue in xml_values:
-                            txt_message = txt_message + "\t" + aValue + "\n"
-                        xml_references = aList.findall(".//reference")
-                        txt_message = txt_message + "  " + self._("Used by:") + "\n"
-                        for aRef in xml_references:
-                            txt_message = (
-                                txt_message
-                                + "\t"
-                                + self._("Variable:")
-                                + " "
-                                + aRef.get("variable")
-                                + " "
-                                + self._("with option:")
-                                + " "
-                                + aRef.get("option")
+                            + "\t"
+                            + self._("Option {} in variable {}").format(
+                                duplicated_option, variable_name
                             )
-                        txt_message = txt_message + "\n"
+                            + "\n"
+                        )
                 errors.append(txt_message)
 
             if created == 10:
@@ -447,8 +440,8 @@ class FormDetails(PrivateView):
                 errors.append(txt_message)
 
         error_string = json.dumps({"errors": errors})
-        form_data = {"form_abletomerge": 0, "form_mergerrors": error_string}
-        update_form(self.request, project_id, new_form_id, form_data)
+        # form_data = {"form_abletomerge": 0, "form_mergerrors": error_string}
+        # update_form(self.request, project_id, new_form_id, form_data)
         return False, error_string
 
     def process_view(self):
@@ -1122,8 +1115,8 @@ class AddFileToForm(PrivateView):
         if project_details["access_type"] >= 4:
             raise HTTPNotFound  # Don't edit a public or a project that I am just a member
 
-        form_data = get_form_data(self.request, project_id, form_id)
-        if form_data is None:
+        current_form_data = get_form_data(self.request, project_id, form_id)
+        if current_form_data is None:
             raise HTTPNotFound
 
         if self.request.method == "POST":
@@ -1158,6 +1151,23 @@ class AddFileToForm(PrivateView):
                         bucket_id = project_id + form_id
                         bucket_id = md5(bucket_id.encode("utf-8")).hexdigest()
                         store_file(self.request, bucket_id, file_name, file.file)
+
+                        if current_form_data["form_reqfiles"] is not None:
+                            required_files = current_form_data["form_reqfiles"].split(
+                                ","
+                            )
+                            if (
+                                file_name in required_files
+                                and current_form_data["form_schema"] is None
+                            ):
+                                form_update_data = {"form_repositorypossible": -1, "form_reptask": None}
+                                if current_form_data["parent_form"] is not None:
+                                    form_update_data["form_abletomerge"] = -1
+                                    form_update_data["form_mergetask"] = None
+                                update_form(
+                                    self.request, project_id, form_id, form_update_data
+                                )
+
                     else:
                         error = True
                         break
@@ -1274,7 +1284,10 @@ class RemoveFileFromForm(PrivateView):
                 if form_data["form_reqfiles"] is not None:
                     required_files = form_data["form_reqfiles"].split(",")
                     if file_name in required_files and form_data["form_schema"] is None:
-                        form_update_data = {"form_repositorypossible": -1}
+                        form_update_data = {"form_repositorypossible": -1, "form_reptask": None}
+                        if form_data["parent_form"] is not None:
+                            form_update_data["form_abletomerge"] = -1
+                            form_update_data["form_mergetask"] = None
                         update_form(self.request, project_id, form_id, form_update_data)
 
                 return HTTPFound(location=next_page)

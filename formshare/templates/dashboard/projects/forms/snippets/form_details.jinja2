@@ -100,27 +100,29 @@
         <div class="row">
             <div class="col-lg-12">
                 {% if formDetails.parent_form == None %}
+                    <h2 class="text-center text-warning">{{ _("Important note!") }}</h2>
                     <h4 class="text-center text-warning">{{ _('This form is in testing stage. This means that you can update it at all times and submissions are for testing purposes. ') }}</h4>
                     {% if formDetails.form_repositorypossible == 1 %}
                         <h4 class="text-center text-warning">{{ _('When you finished testing the form you can')}} <a href="{{ request.route_url('createrepository',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" style="color: #026AA8 !important;">{{ _('create a repository for the form') }}</a> {{ _('and start collecting "real" data.') }}</h4>
                     {% else %}
                         {% if formDetails.form_repositorypossible == 0 %}
                             <br/>
-                            <h4 class="text-center"><span class="text-danger">{{ _('IMPORTANT NOTE:') }}</span> {{ _('FormShare has checked your form and it has problems. FormShare will not be able to create a repository from it.')}} <a data-toggle="modal" data-target="#repository_error_modal" style="color: #026AA8 !important;"><b style="color: red">{{ _('Click here to see the problems.') }}</b></a></h4>
+                            <h4 class="text-center"><span class="text-danger">{{ _('IMPORTANT INFORMATION:') }}</span> {{ _('FormShare has checked your form and it has problems. FormShare will not be able to create a repository from it.')}} <a data-toggle="modal" data-target="#repository_error_modal" style="color: #026AA8 !important;"><b style="color: red">{{ _('Click here to see the problems.') }}</b></a></h4>
                         {% else %}
                             <br/>
-                            <h4 class="text-center"><span class="text-danger">{{ _('IMPORTANT NOTE:') }}</span> {{ _('FormShare needs you to upload all required files before it can check your form completely') }}</h4>
+                            <h4 class="text-center"><span class="text-danger">{{ _('IMPORTANT INFORMATION:') }}</span> {{ _('FormShare needs you to upload all required files before it can check your form completely') }}</h4>
                         {% endif %}
                     {% endif %}
                 {% else %}
+                    <h2 class="text-center text-warning">{{ _("Important note!") }}</h2>
                     <h4 class="text-center text-warning">{{ _('This form is in testing stage. This means that you can update it at all times and submissions are for testing purposes. ') }}</h4>
                     {% if formDetails.form_abletomerge == 1 %}
                         <h4 class="text-center text-warning">{{ _('When you finished testing the form you can')}} <a href="{{ request.route_url('merge_new_version',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id,oldformid=formDetails.parent_form) }}" style="color: #026AA8 !important;">{{ _('merge it into the repository of ') }} "{{ formDetails.parent_form_data.form_name }}"</a> {{ _('and start collecting "real" data.') }}</h4>
                     {% else %}
                         {% if formDetails.form_abletomerge == 0 %}
-                            <h4 class="text-center">{{ _('However you')}} <a data-toggle="modal" data-target="#merge_error_modal" style="color: #026AA8 !important;"><b style="color: red">{{ _('cannot merge it') }}</b></a> {{ _('into the repository of') }} "{{ formDetails.parent_form_data.form_name }}"</h4>
+                            <h4 class="text-center">{{ _('However you will not be able merge it into the repository of') }} "{{ formDetails.parent_form_data.form_name }}". <a data-toggle="modal" data-target="#merge_error_modal" style="color: #026AA8 !important;"><b style="color: red">{{ _('Click here to see the problems') }}</b></a></h4>
                         {% else %}
-                            <h4 class="text-center text-warning">{{ _('FormShare needs you to upload all required files before it pre-checks the form for merging.') }}</h4>
+                            <h4 class="text-center"><span class="text-danger">{{ _('IMPORTANT INFORMATION:') }}</span> {{ _('FormShare needs you to upload all required files before it pre-checks the form for merging') }}</h4>
                         {% endif %}
                     {% endif %}
                 {% endif %}
@@ -132,8 +134,9 @@
     {% if formDetails.form_schema == None and formDetails.form_reptask != None and taskdata.rescode > 0 and projectDetails.access_type < 4 and (formassistants|length > 0 or formgroups|length > 0) %}
         <div class="row">
             <div class="col-lg-12">
-                    <h4 class="text-center text-danger">{{ _('This form is still in testing stage. Your last attempt to generate its repository reported an error. This is unexpected and an email has been sent to the technical team. A representative will contact you ASAP with a solution.') }} </h4>
-                <h4 class="text-center text-success">{{ _('If the problem has been corrected, update the ODK form and try again.') }}</h4>
+                <h2 class="text-center text-danger">{{ _("Important note!") }}</h2>
+                <h4 class="text-center text-danger">{{ _('This form is still in testing stage. Your last attempt to generate its repository reported an error. This is unexpected and an email has been sent to the technical team. A representative will contact you ASAP with a solution.') }} </h4>
+                <h4 class="text-center">{{ _('If the problem has been corrected please') }} <a href="{{ request.route_url('createrepository',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><span class="text-success">{{ _('try again') }}</span></a> </h4>
             </div>
         </div>
     {% endif %}
@@ -156,8 +159,9 @@
     {% if formDetails.form_schema == None and formDetails.form_mergetask != None and mergetaskdata.rescode > 0 and projectDetails.access_type < 4 %}
         <div class="row">
             <div class="col-lg-12">
+                <h2 class="text-center text-danger">{{ _("Important note!") }}</h2>
                 <h4 class="text-center text-danger">{{ _('This form is still in testing stage. Your last attempt to merge it reported an error. This is unexpected and an email has been sent to the technical team. A representative will contact you ASAP with a solution.') }} </h4>
-                <h4 class="text-center text-success">{{ _('If the problem has been corrected, update the ODK form and try again.') }}</h4>
+                <h4 class="text-center">{{ _('If the problem has been corrected please') }} <a href="{{ request.route_url('merge_new_version',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id,oldformid=formDetails.parent_form) }}" ><span class="text-success">{{ _('try again.') }}</span></a></h4>
             </div>
         </div>
     {% endif %}

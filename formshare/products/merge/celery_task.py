@@ -696,19 +696,35 @@ def merge_into_repository(
         task_id = merge_into_repository.request.id
     else:
         task_id = test_task_id
-    internal_merge_into_repository(
-        settings,
-        user,
-        project_id,
-        project_code,
-        a_form_id,
-        a_form_directory,
-        b_form_directory,
-        b_create_xml_file,
-        b_schema_name,
-        odk_merge_string,
-        b_hex_color,
-        locale,
-        discard_testing_data,
-        task_id,
-    )
+    try:
+        internal_merge_into_repository(
+            settings,
+            user,
+            project_id,
+            project_code,
+            a_form_id,
+            a_form_directory,
+            b_form_directory,
+            b_create_xml_file,
+            b_schema_name,
+            odk_merge_string,
+            b_hex_color,
+            locale,
+            discard_testing_data,
+            task_id,
+        )
+    except Exception as e:
+        email_from = settings.get("mail.from", None)
+        email_to = settings.get("mail.error", None)
+        send_async_email(
+            settings,
+            email_from,
+            email_to,
+            "Merge repository error",
+            "\n\nError: {}\n\nTraceback: {}\n\nMerge form {} in project {} of user {}".format(
+                str(e), traceback.format_exc(), a_form_id, project_id, user
+            ),
+            None,
+            locale,
+        )
+        raise MergeDataBaseError(str(e))

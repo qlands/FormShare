@@ -801,8 +801,6 @@ def upload_odk_form(
                                 form_data["form_geopoint"] = form_geopoint
                             if message != "":
                                 form_data["form_reqfiles"] = message
-                            else:
-                                form_data["form_repositorypossible"] = 1
 
                             continue_adding = True
                             for a_plugin in plugins.PluginImplementations(
@@ -1131,7 +1129,10 @@ def update_odk_form(
                                 form_data["form_insertxmlfile"] = final_insert_xml
                                 form_data["form_jsonfile"] = final_survey
                                 form_data["form_abletomerge"] = -1
+                                form_data["form_repositorypossible"] = -1
                                 form_data["form_mergerrors"] = None
+                                form_data["form_mergetask"] = None
+                                form_data["form_reptask"] = None
                                 if geopoint is not None:
                                     form_geopoint = (
                                         "/".join(parent_array) + "/" + geopoint
@@ -1141,8 +1142,6 @@ def update_odk_form(
                                     form_data["form_geopoint"] = form_geopoint
                                 if message != "":
                                     form_data["form_reqfiles"] = message
-                                else:
-                                    form_data["form_repositorypossible"] = 1
 
                                 continue_updating = True
                                 for a_plugin in plugins.PluginImplementations(

@@ -1160,7 +1160,10 @@ class AddFileToForm(PrivateView):
                                 file_name in required_files
                                 and current_form_data["form_schema"] is None
                             ):
-                                form_update_data = {"form_repositorypossible": -1, "form_reptask": None}
+                                form_update_data = {
+                                    "form_repositorypossible": -1,
+                                    "form_reptask": None,
+                                }
                                 if current_form_data["parent_form"] is not None:
                                     form_update_data["form_abletomerge"] = -1
                                     form_update_data["form_mergetask"] = None
@@ -1284,7 +1287,10 @@ class RemoveFileFromForm(PrivateView):
                 if form_data["form_reqfiles"] is not None:
                     required_files = form_data["form_reqfiles"].split(",")
                     if file_name in required_files and form_data["form_schema"] is None:
-                        form_update_data = {"form_repositorypossible": -1, "form_reptask": None}
+                        form_update_data = {
+                            "form_repositorypossible": -1,
+                            "form_reptask": None,
+                        }
                         if form_data["parent_form"] is not None:
                             form_update_data["form_abletomerge"] = -1
                             form_update_data["form_mergetask"] = None

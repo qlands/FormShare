@@ -43,11 +43,19 @@ def upgrade():
     es_connection.indices.put_mapping(
         new_mapping, index=user_index.index_name, doc_type="user"
     )
-    r = requests.post(
-        "http://{}:{}/{}/_update_by_query?conflicts=proceed".format(
-            user_index.host, user_index.port, user_index.index_name
+    use_ssl = settings.get("elasticsearch.user.use_ssl", "False")
+    if use_ssl == "False":
+        r = requests.post(
+            "http://{}:{}/{}/_update_by_query?conflicts=proceed".format(
+                user_index.host, user_index.port, user_index.index_name
+            )
         )
-    )
+    else:
+        r = requests.post(
+            "https://{}:{}/{}/_update_by_query?conflicts=proceed".format(
+                user_index.host, user_index.port, user_index.index_name
+            )
+        )
     if r.status_code != 200:
         print("Cannot update with query")
         exit(1)

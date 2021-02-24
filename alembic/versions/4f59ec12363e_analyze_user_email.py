@@ -54,35 +54,55 @@ def upgrade():
     settings = get_appsettings(config_uri, "formshare")
     user_index = configure_user_index_manager(settings)
     es_connection = user_index.create_connection()
+    use_ssl = settings.get("elasticsearch.user.use_ssl", "False")
 
     ready = False
     print("Waiting for ES to be ready")
     while not ready:
-        resp = requests.get(
-            "http://{}:{}/_cluster/health".format(user_index.host, user_index.port)
-        )
+        if use_ssl == "False":
+            resp = requests.get(
+                "http://{}:{}/_cluster/health".format(user_index.host, user_index.port)
+            )
+        else:
+            resp = requests.get(
+                "https://{}:{}/_cluster/health".format(user_index.host, user_index.port)
+            )
         data = resp.json()
         if data["status"] == "green":
             ready = True
         else:
             time.sleep(30)
     print("ES is ready")
-    r = requests.post(
-        "http://{}:{}/{}/_close".format(
-            user_index.host, user_index.port, user_index.index_name
+    if use_ssl == "False":
+        r = requests.post(
+            "http://{}:{}/{}/_close".format(
+                user_index.host, user_index.port, user_index.index_name
+            )
         )
-    )
+    else:
+        r = requests.post(
+            "https://{}:{}/{}/_close".format(
+                user_index.host, user_index.port, user_index.index_name
+            )
+        )
     if r.status_code != 200:
         print("Cannot close")
         exit(1)
     es_connection.indices.put_settings(
         email_analyzer, index=settings["elasticsearch.user.index_name"]
     )
-    r = requests.post(
-        "http://{}:{}/{}/_open".format(
-            user_index.host, user_index.port, user_index.index_name
+    if use_ssl == "False":
+        r = requests.post(
+            "http://{}:{}/{}/_open".format(
+                user_index.host, user_index.port, user_index.index_name
+            )
         )
-    )
+    else:
+        r = requests.post(
+            "https://{}:{}/{}/_open".format(
+                user_index.host, user_index.port, user_index.index_name
+            )
+        )
     if r.status_code != 200:
         print("Cannot open")
         exit(1)

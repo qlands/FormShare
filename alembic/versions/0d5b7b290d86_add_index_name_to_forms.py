@@ -15,6 +15,7 @@ from alembic import context
 from alembic import op
 from formshare.models.formshare import Odkform, Project, Userproject
 from formshare.processes.elasticsearch.repository_index import create_connection
+import requests
 
 # revision identifiers, used by Alembic.
 revision = "0d5b7b290d86"
@@ -33,14 +34,33 @@ def upgrade():
             "The parameter 'formshare.ini.file' must point to the full path of the FormShare ini file"
         )
         exit(1)
-    print("Waiting 3 minutes for ElasticSearch to start with all clusters ready")
-    time.sleep(180)  # Wait 3 minutes for ElasticSearch to finish start
+
     setup_logging(config_uri)
     settings = get_appsettings(config_uri, "formshare")
     es_connection = create_connection(settings)
     if es_connection is None:
         print("Cannot connect to ElasticSearch")
         exit(1)
+
+    es_host = settings["elasticsearch.repository.host"]
+    es_port = settings["elasticsearch.repository.port"]
+    use_ssl = settings.get("elasticsearch.repository.use_ssl", "False")
+
+    ready = False
+    print("Waiting for ES to be ready")
+    while not ready:
+        if use_ssl == "False":
+            resp = requests.get("http://{}:{}/_cluster/health".format(es_host, es_port))
+        else:
+            resp = requests.get(
+                "https://{}:{}/_cluster/health".format(es_host, es_port)
+            )
+        data = resp.json()
+        if data["status"] == "green":
+            ready = True
+        else:
+            time.sleep(30)
+    print("ES is ready")
 
     op.add_column("odkform", sa.Column("form_index", sa.UnicodeText(), nullable=True))
     # ### end Alembic commands ###

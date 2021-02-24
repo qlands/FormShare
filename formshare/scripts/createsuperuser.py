@@ -11,6 +11,11 @@ from formshare.config.encdecdata import encode_data_with_key
 from formshare.models import User
 from formshare.models import get_engine, get_session_factory, get_tm_session
 from formshare.models.meta import Base
+from elasticfeeds.activity import Actor, Object, Activity
+from formshare.config.elasticfeeds import configure_manager
+from formshare.processes.elasticsearch.user_index import configure_user_index_manager
+import requests
+import time
 
 
 def main(raw_args=None):
@@ -45,6 +50,25 @@ def main(raw_args=None):
     setup_logging(config_uri)
     settings = get_appsettings(config_uri, "formshare")
 
+    es_host = settings.get("elasticsearch.repository.host", "localhost")
+    es_port = settings.get("elasticsearch.repository.port", 9200)
+    use_ssl = settings.get("elasticsearch.repository.use_ssl", "False")
+    ready = False
+    print("Waiting for ES to be ready")
+    while not ready:
+        if use_ssl == "False":
+            resp = requests.get("http://{}:{}/_cluster/health".format(es_host, es_port))
+        else:
+            resp = requests.get(
+                "https://{}:{}/_cluster/health".format(es_host, es_port)
+            )
+        data = resp.json()
+        if data["status"] == "green":
+            ready = True
+        else:
+            time.sleep(30)
+    print("ES is ready")
+
     enc_pass = encode_data_with_key(pass1, settings["aes.key"].encode())
 
     engine = get_engine(settings)
@@ -76,6 +100,33 @@ def main(raw_args=None):
                         user_cdate=datetime.datetime.now(),
                     )
                     dbsession.add(new_user)
+
+                    feed_manager = configure_manager(settings)
+                    # The user follows himself
+                    try:
+                        feed_manager.follow(args.user_id, args.user_id)
+                    except Exception as e:
+                        print(
+                            "User {} was in FormShare at some point. Error: {}".format(
+                                args.user_id, str(e)
+                            )
+                        )
+
+                    user_details = {
+                        "user_id": args.user_id,
+                        "user_email": args.user_email,
+                        "user_name": "FormShare Administrator",
+                    }
+                    # The user join FormShare
+                    actor = Actor(user_details["user_id"], "person")
+                    feed_object = Object("formshare", "platform")
+                    activity = Activity("join", actor, feed_object)
+                    feed_manager.add_activity_feed(activity)
+
+                    # Add the user to the user index
+                    user_index = configure_user_index_manager(settings)
+                    user_index.add_user(user_details["user_id"], user_details)
+
                     print(
                         "The super user has been added with the following information:"
                     )

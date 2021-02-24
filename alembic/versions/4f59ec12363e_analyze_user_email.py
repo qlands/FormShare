@@ -52,20 +52,19 @@ def upgrade():
 
     setup_logging(config_uri)
     settings = get_appsettings(config_uri, "formshare")
-    user_index = configure_user_index_manager(settings)
-    es_connection = user_index.create_connection()
+
     use_ssl = settings.get("elasticsearch.user.use_ssl", "False")
+    es_host = settings.get("elasticsearch.user.host", "localhost")
+    es_port = settings.get("elasticsearch.user.port", 9200)
 
     ready = False
     print("Waiting for ES to be ready")
     while not ready:
         if use_ssl == "False":
-            resp = requests.get(
-                "http://{}:{}/_cluster/health".format(user_index.host, user_index.port)
-            )
+            resp = requests.get("http://{}:{}/_cluster/health".format(es_host, es_port))
         else:
             resp = requests.get(
-                "https://{}:{}/_cluster/health".format(user_index.host, user_index.port)
+                "https://{}:{}/_cluster/health".format(es_host, es_port)
             )
         data = resp.json()
         if data["status"] == "green":
@@ -73,39 +72,57 @@ def upgrade():
         else:
             time.sleep(30)
     print("ES is ready")
+
     if use_ssl == "False":
-        r = requests.post(
-            "http://{}:{}/{}/_close".format(
-                user_index.host, user_index.port, user_index.index_name
-            )
+        resp = requests.get(
+            "http://{}:{}/_cat/indices?format=json".format(es_host, es_port)
         )
     else:
-        r = requests.post(
-            "https://{}:{}/{}/_close".format(
-                user_index.host, user_index.port, user_index.index_name
-            )
+        resp = requests.get(
+            "https://{}:{}/_cat/indices?format=json".format(es_host, es_port)
         )
-    if r.status_code != 200:
-        print("Cannot close")
-        exit(1)
-    es_connection.indices.put_settings(
-        email_analyzer, index=settings["elasticsearch.user.index_name"]
-    )
-    if use_ssl == "False":
-        r = requests.post(
-            "http://{}:{}/{}/_open".format(
-                user_index.host, user_index.port, user_index.index_name
+    indexes = resp.json()
+    user_index_found = False
+    for an_index in indexes:
+        if an_index["index"] == settings["elasticsearch.user.index_name"]:
+            user_index_found = True
+
+    if user_index_found:
+        user_index = configure_user_index_manager(settings)
+        es_connection = user_index.create_connection()
+        if use_ssl == "False":
+            r = requests.post(
+                "http://{}:{}/{}/_close".format(
+                    user_index.host, user_index.port, user_index.index_name
+                )
             )
-        )
-    else:
-        r = requests.post(
-            "https://{}:{}/{}/_open".format(
-                user_index.host, user_index.port, user_index.index_name
+        else:
+            r = requests.post(
+                "https://{}:{}/{}/_close".format(
+                    user_index.host, user_index.port, user_index.index_name
+                )
             )
+        if r.status_code != 200:
+            print("Cannot close")
+            exit(1)
+        es_connection.indices.put_settings(
+            email_analyzer, index=settings["elasticsearch.user.index_name"]
         )
-    if r.status_code != 200:
-        print("Cannot open")
-        exit(1)
+        if use_ssl == "False":
+            r = requests.post(
+                "http://{}:{}/{}/_open".format(
+                    user_index.host, user_index.port, user_index.index_name
+                )
+            )
+        else:
+            r = requests.post(
+                "https://{}:{}/{}/_open".format(
+                    user_index.host, user_index.port, user_index.index_name
+                )
+            )
+        if r.status_code != 200:
+            print("Cannot open")
+            exit(1)
 
 
 def downgrade():

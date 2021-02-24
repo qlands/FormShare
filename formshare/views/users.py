@@ -68,7 +68,7 @@ class EditUserView(PrivateView):
                 == "true"
             ):
                 raise HTTPNotFound
-        user_data = get_user_details(self.request, user_to_modify)
+        user_data = get_user_details(self.request, user_to_modify, False)
         if self.request.method == "POST":
             action = None
             user_details = self.get_post_dict()

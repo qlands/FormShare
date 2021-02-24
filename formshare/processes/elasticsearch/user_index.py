@@ -256,7 +256,14 @@ class UserIndexManager(object):
 
     def query_user(self, q, query_from, query_size):
         query = q.replace("*", "")
-        query_dict = {"query": {"wildcard": {"all_data": {"value": "*" + query + "*"}}}}
+        if query.find("@") == -1:
+            query_dict = {
+                "query": {"wildcard": {"all_data": {"value": "*" + query + "*"}}}
+            }
+        else:
+            query_dict = {
+                "query": {"wildcard": {"user_email2": {"value": "*" + query + "*"}}}
+            }
         if query_from is not None:
             query_dict["from"] = query_from
         if query_size is not None:

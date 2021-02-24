@@ -37,67 +37,72 @@ def upgrade():
 
     setup_logging(config_uri)
     settings = get_appsettings(config_uri, "formshare")
-    es_connection = create_connection(settings)
-    if es_connection is None:
-        print("Cannot connect to ElasticSearch")
-        exit(1)
 
-    es_host = settings["elasticsearch.repository.host"]
-    es_port = settings["elasticsearch.repository.port"]
+    es_host = settings.get("elasticsearch.repository.host", "localhost")
+    es_port = settings.get("elasticsearch.repository.port", 9200)
     use_ssl = settings.get("elasticsearch.repository.use_ssl", "False")
-
-    ready = False
-    print("Waiting for ES to be ready")
-    while not ready:
-        if use_ssl == "False":
-            resp = requests.get("http://{}:{}/_cluster/health".format(es_host, es_port))
-        else:
-            resp = requests.get(
-                "https://{}:{}/_cluster/health".format(es_host, es_port)
-            )
-        data = resp.json()
-        if data["status"] == "green":
-            ready = True
-        else:
-            time.sleep(30)
-    print("ES is ready")
 
     op.add_column("odkform", sa.Column("form_index", sa.UnicodeText(), nullable=True))
     # ### end Alembic commands ###
     session = Session(bind=op.get_bind())
     forms = session.query(Odkform.project_id, Odkform.form_id).all()
-    for a_form in forms:
-        project_code = (
-            session.query(Project.project_code)
-            .filter(Project.project_id == a_form.project_id)
-            .first()
-        )
-        project_owner = (
-            session.query(Userproject.user_id)
-            .filter(Userproject.project_id == a_form.project_id)
-            .filter(Userproject.access_type == 1)
-            .first()
-        )
-        index_name = (
-            project_owner.user_id.lower()
-            + "_"
-            + project_code.project_code.lower()
-            + "_"
-            + a_form.form_id.lower()
-        )
-        session.query(Odkform).filter(Odkform.project_id == a_form.project_id).filter(
-            Odkform.form_id == a_form.form_id
-        ).update({"form_index": index_name})
-        if es_connection.indices.exists(index_name):
-            es_connection.indices.put_mapping(
-                {"properties": {"_geolocation": {"type": "geo_point"}}},
-                index_name,
-                "dataset",
-                request_timeout=1200,
+    if forms:
+        ready = False
+        print("Waiting for ES to be ready")
+        while not ready:
+            if use_ssl == "False":
+                resp = requests.get(
+                    "http://{}:{}/_cluster/health".format(es_host, es_port)
+                )
+            else:
+                resp = requests.get(
+                    "https://{}:{}/_cluster/health".format(es_host, es_port)
+                )
+            data = resp.json()
+            if data["status"] == "green":
+                ready = True
+            else:
+                time.sleep(30)
+        print("ES is ready")
+
+        es_connection = create_connection(settings)
+        if es_connection is None:
+            print("Cannot connect to ElasticSearch")
+            exit(1)
+        for a_form in forms:
+            project_code = (
+                session.query(Project.project_code)
+                .filter(Project.project_id == a_form.project_id)
+                .first()
             )
-            time.sleep(
-                10
-            )  # Allow ElasticSearch to replicate the mappings across shards
+            project_owner = (
+                session.query(Userproject.user_id)
+                .filter(Userproject.project_id == a_form.project_id)
+                .filter(Userproject.access_type == 1)
+                .first()
+            )
+            index_name = (
+                project_owner.user_id.lower()
+                + "_"
+                + project_code.project_code.lower()
+                + "_"
+                + a_form.form_id.lower()
+            )
+            session.query(Odkform).filter(
+                Odkform.project_id == a_form.project_id
+            ).filter(Odkform.form_id == a_form.form_id).update(
+                {"form_index": index_name}
+            )
+            if es_connection.indices.exists(index_name):
+                es_connection.indices.put_mapping(
+                    {"properties": {"_geolocation": {"type": "geo_point"}}},
+                    index_name,
+                    "dataset",
+                    request_timeout=1200,
+                )
+                time.sleep(
+                    10
+                )  # Allow ElasticSearch to replicate the mappings across shards
 
     session.commit()
 

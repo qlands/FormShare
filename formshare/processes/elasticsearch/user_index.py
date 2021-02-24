@@ -41,15 +41,34 @@ def _get_user_index_definition(number_of_shards, number_of_replicas):
             "index": {
                 "number_of_shards": number_of_shards,
                 "number_of_replicas": number_of_replicas,
-            }
+            },
+            "analysis": {
+                "filter": {
+                    "email": {
+                        "type": "pattern_capture",
+                        "preserve_original": True,
+                        "patterns": ["([^@]+)", "(\\p{L}+)", "(\\d+)", "@(.+)"],
+                    }
+                },
+                "analyzer": {
+                    "email": {
+                        "tokenizer": "uax_url_email",
+                        "filter": ["email", "lowercase", "unique"],
+                    }
+                },
+            },
         },
         "mappings": {
             "user": {
                 "properties": {
                     "user_id": {"type": "keyword", "copy_to": "all_data"},
-                    "user_email": {"type": "text", "copy_to": "all_data"},
+                    "user_email": {
+                        "type": "text",
+                        "copy_to": ["all_data", "user_email2"],
+                    },
                     "user_name": {"type": "text", "copy_to": "all_data"},
                     "all_data": {"type": "text", "analyzer": "standard"},
+                    "user_email2": {"type": "text", "analyzer": "email"},
                 }
             }
         },

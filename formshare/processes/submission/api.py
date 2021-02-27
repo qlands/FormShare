@@ -9,7 +9,7 @@ import uuid
 from collections import OrderedDict
 from decimal import Decimal
 from subprocess import Popen, PIPE
-
+import imghdr
 import paginate
 import pandas as pd
 from lxml import etree
@@ -18,7 +18,7 @@ from sqlalchemy import create_engine
 from sqlalchemy import exc
 from webhelpers2.html import literal
 from zope.sqlalchemy import mark_changed
-
+from PIL import Image
 from formshare.models.formshare import Submission, Jsonlog
 from formshare.processes.color_hash import ColorHash
 from formshare.processes.db import (
@@ -36,8 +36,6 @@ from formshare.processes.elasticsearch.record_index import (
 from formshare.processes.elasticsearch.repository_index import (
     delete_dataset_index,
     delete_from_dataset_index,
-)
-from formshare.processes.elasticsearch.repository_index import (
     get_datasets_from_form,
     get_datasets_from_project,
 )
@@ -59,9 +57,105 @@ __all__ = [
     "delete_submission",
     "delete_all_submission",
     "update_record_with_id",
+    "get_dataset_info_from_file",
+    "list_submission_media_files",
+    "get_submission_media_file",
 ]
 
 log = logging.getLogger("formshare")
+
+
+def get_submission_media_file(
+    request, project, form, submission, file_name, thumbnail=False
+):
+    form_directory = get_form_directory(request, project, form)
+    odk_dir = get_odk_path(request)
+    if not thumbnail:
+        submissions_file = os.path.join(
+            odk_dir, *["forms", form_directory, "submissions", submission, file_name]
+        )
+    else:
+        submissions_file = os.path.join(
+            odk_dir,
+            *[
+                "forms",
+                form_directory,
+                "submissions",
+                submission,
+                "thumbnails",
+                file_name,
+            ]
+        )
+    if os.path.exists(submissions_file):
+        return submissions_file
+    else:
+        return None
+
+
+def list_submission_media_files(request, project, form, submission):
+    form_directory = get_form_directory(request, project, form)
+    odk_dir = get_odk_path(request)
+    submissions_path = os.path.join(
+        odk_dir, *["forms", form_directory, "submissions", submission, "*.*"]
+    )
+
+    thumbnails_path = os.path.join(
+        odk_dir, *["forms", form_directory, "submissions", submission, "thumbnails"]
+    )
+    if not os.path.exists(thumbnails_path):
+        os.makedirs(thumbnails_path)
+
+    files_array = []
+    files = glob.glob(submissions_path)
+    if files:
+        for file in files:
+            image = imghdr.what(file)
+            if image is None:
+                image = False
+            else:
+                image = True
+            files_array.append({"file": os.path.basename(file), "image": image})
+            if image:
+                thumbnail_file = os.path.join(
+                    odk_dir,
+                    *[
+                        "forms",
+                        form_directory,
+                        "submissions",
+                        submission,
+                        "thumbnails",
+                        os.path.basename(file),
+                    ]
+                )
+                if not os.path.exists(thumbnail_file):
+                    try:
+                        im = Image.open(file)
+                        im.thumbnail((100, 100))
+                        im.save(thumbnail_file)
+                    except Exception as e:
+                        log.error(
+                            "Unable to create thumbnail file for {}. Error: {}".format(
+                                file, str(e)
+                            )
+                        )
+    return files_array
+
+
+def get_dataset_info_from_file(request, project_id, form, submission_id):
+    form_directory = get_form_directory(request, project_id, form)
+    odk_path = get_odk_path(request)
+    submission_file = os.path.join(
+        odk_path, *["forms", form_directory, "submissions", submission_id + ".json"]
+    )
+    if not os.path.exists(submission_file):
+        return None
+    result = {}
+    with open(submission_file) as json_file:
+        data = json.load(json_file)
+        for key, value in data.items():
+            if type(value) is not list:
+                result[key] = value
+    return result
 
 
 def get_gps_points_from_project(
@@ -553,7 +647,9 @@ def get_protection_desc(request, protection_code):
     return ""
 
 
-def get_fields_from_table(request, project, form, table_name, current_fields):
+def get_fields_from_table(
+    request, project, form, table_name, current_fields, get_values=True
+):
     create_file = get_form_xml_create_file(request, project, form)
     tree = etree.parse(create_file)
     root = tree.getroot()
@@ -582,6 +678,7 @@ def get_fields_from_table(request, project, form, table_name, current_fields):
                     "name": field.get("name"),
                     "desc": desc,
                     "type": field.get("type"),
+                    "xmlcode": field.get("xmlcode"),
                     "size": field.get("size"),
                     "decsize": field.get("decsize"),
                     "checked": found,
@@ -597,7 +694,7 @@ def get_fields_from_table(request, project, form, table_name, current_fields):
                     "editable": editable,
                 }
 
-                if data["rlookup"] == "true":
+                if data["rlookup"] == "true" and get_values:
                     data["lookupvalues"] = get_lookup_values(
                         request, project, form, data["rtable"], data["rfield"]
                     )

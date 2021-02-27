@@ -188,3 +188,12 @@ def create_resources(apppath, config):
     )
     r.add_js_resource("formshare", "showdown", "js/plugins/showdown/showdown.js", None)
     r.add_js_resource("formshare", "ias", "js/plugins/ias/jquery-ias.min.js", None)
+
+    # ---------------------------------- Gallery -----------------------------
+
+    r.add_css_resource(
+        "formshare", "blueimp", "css/plugins/blueimp/css/blueimp-gallery.min.css", None
+    )
+    r.add_js_resource(
+        "formshare", "blueimp", "js/plugins/blueimp/jquery.blueimp-gallery.min.js", None
+    )

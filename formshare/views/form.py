@@ -10,6 +10,7 @@ from pyramid.response import FileResponse
 import datetime
 import uuid
 import glob
+import mimetypes
 import formshare.plugins as plugins
 from formshare.processes.db import (
     get_project_id_from_name,
@@ -43,6 +44,7 @@ from formshare.processes.db import (
     get_form_directories_for_schema,
     get_forms_for_schema,
     get_media_files,
+    get_maintable_information,
 )
 from formshare.processes.elasticsearch.record_index import delete_record_index
 from formshare.processes.elasticsearch.repository_index import (
@@ -69,6 +71,10 @@ from formshare.processes.submission.api import (
     json_to_csv,
     get_gps_points_from_form,
     get_tables_from_form,
+    get_dataset_info_from_file,
+    get_fields_from_table,
+    list_submission_media_files,
+    get_submission_media_file,
 )
 from formshare.products import get_form_products
 from formshare.products import stop_task
@@ -2505,3 +2511,121 @@ class StopTask(PrivateView):
                 raise HTTPNotFound
         else:
             raise HTTPNotFound
+
+
+class GetSubMissionInfo(PrivateView):
+    def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        project_code = self.request.matchdict["projcode"]
+        form_id = self.request.matchdict["formid"]
+        submission_id = self.request.matchdict["submissionid"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] > 4:
+            raise HTTPNotFound
+
+        form_data = get_form_data(self.request, project_id, form_id)
+
+        fields, checked = get_fields_from_table(
+            self.request, project_id, form_id, "maintable", [], False
+        )
+        if form_data["form_schema"] is None:
+            submission_info = get_dataset_info_from_file(
+                self.request, project_id, form_id, submission_id
+            )
+        else:
+            submission_info = get_maintable_information(
+                self.request, project_id, form_id, submission_id
+            )
+
+        if submission_info is None:
+            raise HTTPNotFound
+
+        submission_data = []
+        for key, value in submission_info.items():
+            field_desc = None
+            for a_field in fields:
+                if a_field["xmlcode"] == key:
+                    field_desc = a_field["desc"]
+                    break
+            if field_desc is not None:
+                submission_data.append({"key": key, "desc": field_desc, "value": value})
+
+        media_files = list_submission_media_files(
+            self.request, project_id, form_id, submission_id
+        )
+        has_other_media = False
+        for a_file in media_files:
+            if not a_file["image"]:
+                has_other_media = True
+                break
+
+        return {
+            "formData": form_data,
+            "submissionData": submission_data,
+            "submissionID": submission_id,
+            "mediaFiles": media_files,
+            "userid": user_id,
+            "projcode": project_code,
+            "formid": form_id,
+            "submissionid": submission_id,
+            "hasOtherMedia": has_other_media,
+        }
+
+
+class GetMediaFile(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+        self.returnRawViewResult = True
+
+    def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        project_code = self.request.matchdict["projcode"]
+        form_id = self.request.matchdict["formid"]
+        submission_id = self.request.matchdict["submissionid"]
+        file_name = self.request.matchdict["filename"]
+        thumbnail = self.request.params.get("thumbnail", None)
+        if thumbnail is None:
+            thumbnail = False
+        else:
+            thumbnail = True
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] > 4:
+            raise HTTPNotFound
+
+        file = get_submission_media_file(
+            self.request, project_id, form_id, submission_id, file_name, thumbnail
+        )
+        if file is None:
+            raise HTTPNotFound
+        file_type = mimetypes.guess_type(file)[0]
+        if file_type is None:
+            file_type = "application/octet-stream"
+        response = FileResponse(file, request=self.request, content_type=file_type)
+        response.content_disposition = 'attachment; filename="' + os.path.basename(file)
+        return response

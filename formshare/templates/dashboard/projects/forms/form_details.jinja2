@@ -10,6 +10,7 @@
         {% cssresource request,'formshare','select2' %}
         {% if formDetails.form_geopoint != None %}
             {% cssresource request,'formshare','leaflet' %}
+            {% cssresource request,'formshare','blueimp' %}
         {% endif %}
         {% cssresource request,'formshare','codemirror-ambiance' %}
         {% if formDetails.form_schema != None %}
@@ -38,6 +39,7 @@
         {% jsresource request,'formshare','sse' %}
         {% if formDetails.form_geopoint != None %}
             {% jsresource request,'formshare','leaflet' %}
+            {% jsresource request,'formshare','blueimp' %}
         {% endif %}
         {% if formDetails.form_schema != None %}
             {% jsresource request,'formshare','popr' %}
@@ -157,6 +159,9 @@
             {% endif %}
         {% endif %}
         {% include 'dashboard/projects/forms/snippets/product_error.jinja2' %}
+        {% if formDetails.form_geopoint != None and formDetails.submissions > 0 and withgps > 0 %}
+            {% include 'dashboard/projects/forms/snippets/submission_info.jinja2' %}
+        {% endif %}
     {% else %}
         {% block form_mainsection_other %}
 
@@ -442,12 +447,25 @@
                             }
                         });
 
+                        function onMarkerClick(e) {
+                            //alert(e.target.submission_id);
+
+                            let info_url = "{{ request.route_url('get_submission_info', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, submissionid='to-change') }}";
+                            let info_url_final = info_url.replace("to-change", e.target.submission_id) + " #submission_content";
+                            $('#submission_content').load(info_url_final);
+
+                            $('#submission_info').modal('show');
+                            $('#maker_table_id').height('100px')
+                        }
+
                         $.getJSON("{{ request.route_url('form_download_gpspoints',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}", function( data ) {
                             var markers = [];
                             data.points.forEach(function(entry)
                             {
                                 var latlng = L.latLng({ lat: entry.lati, lng: entry.long });
                                 var marker = L.marker(latlng).addTo(mymap);
+                                marker.submission_id = entry.key
+                                marker.on('click', onMarkerClick);
                                 //marker.bindPopup("<b>" + entry.key + "</b>");
                                 markers.push(marker);
                             });

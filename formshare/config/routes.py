@@ -91,6 +91,8 @@ from formshare.views.form import (
     DownloadPublicCSV,
     DownloadPrivateCSV,
     DownloadPrivateXLSData,
+    GetSubMissionInfo,
+    GetMediaFile,
 )
 from formshare.views.odk import (
     ODKFormList,
@@ -811,6 +813,24 @@ def load_routes(config):
             "form_download_repo_private_csv",
             "/user/{userid}/project/{projcode}/form/{formid}/generate/repo_private_csv",
             DownloadPrivateCSV,
+            None,
+        )
+    )
+
+    routes.append(
+        add_route(
+            "get_submission_info",
+            "/user/{userid}/project/{projcode}/form/{formid}/{submissionid}/info",
+            GetSubMissionInfo,
+            "dashboard/projects/forms/map/marker_info.jinja2",
+        )
+    )
+
+    routes.append(
+        add_route(
+            "get_submission_media_file",
+            "/user/{userid}/project/{projcode}/form/{formid}/{submissionid}/media/{filename}/get",
+            GetMediaFile,
             None,
         )
     )

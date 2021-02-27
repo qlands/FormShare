@@ -5,6 +5,7 @@ import os
 import uuid
 import glob
 import shutil
+import json
 
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
@@ -84,6 +85,7 @@ __all__ = [
     "get_form_directories_for_schema",
     "get_forms_for_schema",
     "get_last_fixed_date",
+    "get_maintable_information",
 ]
 
 log = logging.getLogger("formshare")
@@ -244,6 +246,19 @@ def get_last_submission_date(request, project, form):
             return None
     else:
         return None
+
+
+def get_maintable_information(request, project, form, submission_id):
+    schema = get_form_schema(request, project, form)
+    sql = "SELECT * from {}.maintable WHERE surveyid = '{}'".format(
+        schema, submission_id
+    )
+    res = request.dbsession.execute(sql).fetchone()
+    if res is None:
+        return None
+    dict_data = dict(res)
+    json_data = json.dumps(dict_data, default=str)
+    return json.loads(json_data)
 
 
 def get_number_of_submissions_in_database(request, project, form):

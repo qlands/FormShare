@@ -1,0 +1,25 @@
+<div class="modal inmodal fade" id="submission_info" tabindex="-1" role="dialog"  aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                {% block submission_info_header %}
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">{{ _('Close') }}</span></button>
+                    <h4 class="modal-title">{{ _('Submission information') }}</h4>
+{#                    <small class="font-bold">Lorem Ipsum is simply dummy text of the printing and typesetting industry.</small>#}
+                {% endblock submission_info_header %}
+            </div>
+            <div class="modal-body" style="max-height: 600px">
+                {% block submission_info_body %}
+                    <div id="submission_content">
+
+                    </div>
+                {% endblock submission_info_body %}
+            </div>
+            <div class="modal-footer">
+                {% block submission_info_footer %}
+                    <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Close') }}</button>
+                {% endblock submission_info_footer %}
+            </div>
+        </div>
+    </div>
+</div>

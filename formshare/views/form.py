@@ -2555,12 +2555,22 @@ class GetSubMissionInfo(PrivateView):
         submission_data = []
         for key, value in submission_info.items():
             field_desc = None
+            primary_key = False
             for a_field in fields:
                 if a_field["xmlcode"] == key:
                     field_desc = a_field["desc"]
+                    if a_field["key"] == "true":
+                        primary_key = True
                     break
             if field_desc is not None:
-                submission_data.append({"key": key, "desc": field_desc, "value": value})
+                submission_data.append(
+                    {
+                        "key": key,
+                        "desc": field_desc,
+                        "value": value,
+                        "pkey": primary_key,
+                    }
+                )
 
         media_files = list_submission_media_files(
             self.request, project_id, form_id, submission_id

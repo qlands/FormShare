@@ -5,7 +5,7 @@ import time
 import unittest
 import uuid
 import datetime
-
+import glob
 import pkg_resources
 from sqlalchemy import create_engine
 
@@ -2463,6 +2463,65 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" in res.headers
 
+            form_details = get_form_details(
+                self.server_config, self.projectID, self.formID
+            )
+            form_directory = form_details["form_directory"]
+            paths2 = [self.server_config["repository.path"], "odk"]
+            odk_dir = os.path.join(self.path, *paths2)
+
+            submissions_path = os.path.join(
+                odk_dir, *["forms", form_directory, "submissions", "*.json"]
+            )
+            files = glob.glob(submissions_path)
+            a_submission = None
+            if files:
+                for file in files:
+                    a_submission = file
+                    break
+            submission_id = os.path.basename(a_submission)
+            submission_id = submission_id.replace(".json", "")
+            # Get the GeoInformation of the submission_id
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/{}/info".format(
+                    self.randonLogin, self.project, self.formID, submission_id
+                ),
+                status=200,
+            )
+
+            image_path = os.path.join(
+                odk_dir, *["forms", form_directory, "submissions", submission_id, "*.*"]
+            )
+            files = glob.glob(image_path)
+            media_file = None
+            if files:
+                for file in files:
+                    media_file = file
+                    break
+            media_file = os.path.basename(media_file)
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/{}/media/{}/get".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    submission_id,
+                    media_file,
+                ),
+                status=200,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/{}/media/{}/get".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    submission_id,
+                    "not_found",
+                ),
+                status=404,
+            )
+
         def test_repository():
             def mimic_create_repository():
                 from formshare.products.repository.celery_task import (
@@ -4211,6 +4270,22 @@ class FunctionalTests(unittest.TestCase):
             duplicated_id = res[0]
 
             engine.dispose()
+
+            # Get the GeoInformation of the duplicated ID
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/{}/info".format(
+                    self.randonLogin, self.project, self.formID, survey_id
+                ),
+                status=200,
+            )
+
+            # Get the GeoInformation of submission ID that does not exists
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/{}/info".format(
+                    self.randonLogin, self.project, self.formID, "not_exist"
+                ),
+                status=404,
+            )
 
             # Get the media on an unknown submission goes to 404
             self.testapp.get(

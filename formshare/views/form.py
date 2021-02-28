@@ -2581,6 +2581,12 @@ class GetSubMissionInfo(PrivateView):
                 has_other_media = True
                 break
 
+        has_images = False
+        for a_file in media_files:
+            if a_file["image"]:
+                has_images = True
+                break
+
         return {
             "formData": form_data,
             "submissionData": submission_data,
@@ -2591,6 +2597,7 @@ class GetSubMissionInfo(PrivateView):
             "formid": form_id,
             "submissionid": submission_id,
             "hasOtherMedia": has_other_media,
+            "hasImages": has_images,
         }
 
 

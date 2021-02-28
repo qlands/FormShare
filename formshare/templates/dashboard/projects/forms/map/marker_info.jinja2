@@ -33,19 +33,30 @@
                                                         <table class="table table-striped table-hover">
                                                             <thead>
                                                             <tr>
-                                                                <th><b>{{ _('Variable Name') }}</b></th>
-                                                                <th><b>{{ _('Variable Description') }}</b></th>
+                                                                <th><b>{{ _('Variable name') }}</b></th>
+                                                                <th><b>{{ _('Variable description') }}</b></th>
                                                                 <th><b>{{ _('Value') }}</b></th>
                                                             </tr>
                                                             </thead>
 
                                                             <tbody>
                                                             {% for a_variable in submissionData %}
-                                                                <tr>
-                                                                    <td>{{ a_variable.key }}</td>
-                                                                    <td>{{ a_variable.desc }}</td>
-                                                                    <td>{{ a_variable.value }}</td>
-                                                                </tr>
+                                                                {% if a_variable.pkey == true %}
+                                                                    <tr>
+                                                                        <td><b>{{ a_variable.key }}</b></td>
+                                                                        <td><b>{{ a_variable.desc }}</b></td>
+                                                                        <td><b>{{ a_variable.value }}</b></td>
+                                                                    </tr>
+                                                                {% endif %}
+                                                            {% endfor %}
+                                                            {% for a_variable in submissionData %}
+                                                                {% if a_variable.pkey == false %}
+                                                                    <tr>
+                                                                        <td>{{ a_variable.key }}</td>
+                                                                        <td>{{ a_variable.desc }}</td>
+                                                                        <td>{{ a_variable.value }}</td>
+                                                                    </tr>
+                                                                {% endif %}
                                                             {% endfor %}
                                                             </tbody>
                                                         </table>

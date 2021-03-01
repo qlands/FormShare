@@ -2557,11 +2557,18 @@ class GetSubMissionInfo(PrivateView):
             field_desc = None
             primary_key = False
             for a_field in fields:
-                if a_field["xmlcode"] == key:
-                    field_desc = a_field["desc"]
-                    if a_field["key"] == "true":
-                        primary_key = True
-                    break
+                if form_data["form_schema"] is None:
+                    if a_field["xmlcode"] == key:
+                        field_desc = a_field["desc"]
+                        if a_field["key"] == "true":
+                            primary_key = True
+                        break
+                else:
+                    if a_field["name"] == key:
+                        field_desc = a_field["desc"]
+                        if a_field["key"] == "true":
+                            primary_key = True
+                        break
             if field_desc is not None:
                 submission_data.append(
                     {

@@ -1,8 +1,8 @@
 version: '3'
 services:
-  fsmysql_20210219:
+  fsmysql_20210228:
     image: mysql:5.7.27
-    container_name: fs_mysql_20210219
+    container_name: fs_mysql_20210228
     environment:
       MYSQL_ROOT_PASSWORD: my_secure_password
     volumes:
@@ -11,9 +11,9 @@ services:
       fsnet:
         ipv4_address: 172.28.1.5
   
-  fselasticsearch_20210219:
+  fselasticsearch_20210228:
     image: docker.elastic.co/elasticsearch/elasticsearch:6.3.2
-    container_name: fs_elasticsearch_20210219
+    container_name: fs_elasticsearch_20210228
     environment:
       - cluster.name=docker-cluster
       - bootstrap.memory_lock=true
@@ -28,9 +28,9 @@ services:
     networks:
       fsnet:
         ipv4_address: 172.28.1.1
-  fselasticsearch2_20210219:
+  fselasticsearch2_20210228:
     image: docker.elastic.co/elasticsearch/elasticsearch:6.3.2
-    container_name: fs_elasticsearch2_20210219
+    container_name: fs_elasticsearch2_20210228
     environment:
       - cluster.name=docker-cluster
       - bootstrap.memory_lock=true
@@ -46,9 +46,9 @@ services:
     networks:
       fsnet:
         ipv4_address: 172.28.1.2
-  fselasticsearch_202102193:
+  fselasticsearch_202102283:
     image: docker.elastic.co/elasticsearch/elasticsearch:6.3.2
-    container_name: fs_elasticsearch3_20210219
+    container_name: fs_elasticsearch3_20210228
     environment:
       - cluster.name=docker-cluster
       - bootstrap.memory_lock=true
@@ -64,9 +64,9 @@ services:
     networks:
       fsnet:
         ipv4_address: 172.28.1.3
-  formshare_20210219:
-    image: qlands/formshare2:20210219
-    container_name: formshare_20210219
+  formshare_20210228:
+    image: qlands/formshare2:20210228
+    container_name: formshare_20210228
     environment:
       MYSQL_HOST_NAME: 172.28.1.5
       MYSQL_USER_NAME: root
@@ -97,9 +97,9 @@ services:
       fsnet: 
         ipv4_address: 172.28.1.4
 
-  fsfluentd_20210219:
+  fsfluentd_20210228:
     image: qlands/fluentd:v1.7.3-1.0
-    container_name: fsfluentd_20210219
+    container_name: fsfluentd_20210228
     environment:
       WAIT_HOSTS: 172.28.1.1:9200, 172.28.1.4:5900
       WAIT_HOSTS_TIMEOUT: 120
@@ -110,9 +110,9 @@ services:
       fsnet:
         ipv4_address: 172.28.1.6
 
-  fskibana_20210219:
+  fskibana_20210228:
     image: docker.elastic.co/kibana/kibana:6.3.2
-    container_name: fskibana_20210219
+    container_name: fskibana_20210228
     environment:
       ELASTICSEARCH_URL: http://172.28.1.1:9200
     ports:

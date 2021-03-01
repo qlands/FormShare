@@ -478,6 +478,22 @@ def check_jxform_file(
                     )
                 )
             return 18, message
+        if p.returncode == 14:
+            message = 'The following files have invalid characters like extra ". Only _ is allowed : \n'
+            root = etree.fromstring(stdout)
+            files_with_problems = root.findall(".//file")
+            if files_with_problems:
+                for a_file in files_with_problems:
+                    message = message + "\t" + os.path.basename(a_file.get("name","")) + "\n"
+            return 14, message
+        if p.returncode == 15:
+            message = 'The following files have an invalid structure: \n'
+            root = etree.fromstring(stdout)
+            files_with_problems = root.findall(".//file")
+            if files_with_problems:
+                for a_file in files_with_problems:
+                    message = message + "\t" + a_file.get("name","") + "\n"
+            return 14, message
         if p.returncode == 9:
             log.error(
                 ". Error: "

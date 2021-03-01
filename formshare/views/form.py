@@ -284,6 +284,22 @@ class FormDetails(PrivateView):
                         "An email has been sent to the technical team and they will contact you ASAP."
                     )
                 )
+            if created == 14:
+                txt_message = 'The following files have invalid characters like extra ". Only _ is allowed : \n'
+                root = etree.fromstring(message)
+                files_with_problems = root.findall(".//file")
+                if files_with_problems:
+                    for a_file in files_with_problems:
+                        txt_message = txt_message + "\t" + os.path.basename(a_file.get("name","")) + "\n"
+                errors.append(txt_message)
+            if created == 15:
+                txt_message = "The following files have an invalid structure: \n"
+                root = etree.fromstring(message)
+                files_with_problems = root.findall(".//file")
+                if files_with_problems:
+                    for a_file in files_with_problems:
+                        txt_message = txt_message + "\t" + a_file.get("name","") + "\n"
+                errors.append(txt_message)
             if created == 9:
                 # Duplicated options
                 root = etree.fromstring(message)

@@ -72,7 +72,7 @@
                                             {% for language in languages %}
                                                 <div class="form-group">
                                                     <label>{{ _('For') }} {{ language.name }}</label>
-                                                    <input class="form-control" style="width: 100px !important;" type="text" name="LNG-{{ language.name }}" value="{{ language.code }}">
+                                                    <input class="form-control" style="width: 100px !important;" type="text" maxlength="2" name="LNG-{{ language.name }}" value="{{ language.code }}">
                                                 </div>
                                             {% endfor %}
                                             <div class="form-actions">

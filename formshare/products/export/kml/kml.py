@@ -5,7 +5,7 @@ from formshare.products import register_product_instance
 from formshare.products.export.kml.celery_task import build_kml
 
 
-def generate_kml_file(request, user, project, form, form_schema, primary_key):
+def generate_kml_file(request, user, project, form, form_schema):
     settings = {}
     for key, value in request.registry.settings.items():
         if isinstance(value, str):
@@ -17,8 +17,7 @@ def generate_kml_file(request, user, project, form, form_schema, primary_key):
     kml_file = os.path.join(repo_dir, *paths)
 
     task = build_kml.apply_async(
-        (settings, form_schema, kml_file, primary_key, request.locale_name),
-        queue="FormShare",
+        (settings, form_schema, kml_file, request.locale_name), queue="FormShare",
     )
     register_product_instance(
         request,

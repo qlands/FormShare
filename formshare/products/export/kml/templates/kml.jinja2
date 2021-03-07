@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<kml xmlns="http://www.opengis.net/kml/2.2" xmlns:gx="http://www.google.com/kml/ext/2.2" xmlns:kml="http://www.opengis.net/kml/2.2" xmlns:atom="http://www.w3.org/2005/Atom">
+<Document id="root_doc">
+	<name>{{ form_id }}.kml</name>
+	<Schema name="{{ form_id }}" id="{{ form_id }}">
+        {% for a_field in fields %}
+            <SimpleField type="{{ a_field.type }}" name="{{ a_field.name }}"><displayName>{{ a_field.desc }}</displayName></SimpleField>
+        {% endfor %}
+	</Schema>
+	<Style id="s_ylw-pushpin_hl">
+		<IconStyle>
+			<scale>0.945455</scale>
+			<Icon>
+				<href>http://maps.google.com/mapfiles/kml/shapes/placemark_square_highlight.png</href>
+			</Icon>
+		</IconStyle>
+		<ListStyle>
+		</ListStyle>
+	</Style>
+	<StyleMap id="m_ylw-pushpin">
+		<Pair>
+			<key>normal</key>
+			<styleUrl>#s_ylw-pushpin</styleUrl>
+		</Pair>
+		<Pair>
+			<key>highlight</key>
+			<styleUrl>#s_ylw-pushpin_hl</styleUrl>
+		</Pair>
+	</StyleMap>
+	<Style id="s_ylw-pushpin">
+		<IconStyle>
+			<scale>0.8</scale>
+			<Icon>
+				<href>http://maps.google.com/mapfiles/kml/shapes/placemark_square.png</href>
+			</Icon>
+		</IconStyle>
+		<ListStyle>
+		</ListStyle>
+	</Style>
+	<Folder>
+		<name>{{ form_id }}</name>
+        {% for a_record in records %}
+            <Placemark>
+                <styleUrl>#m_ylw-pushpin</styleUrl>
+                <ExtendedData>
+                    <SchemaData schemaUrl="#{{ form_id }}">
+                        {% for a_field in a_record.fields %}
+                            <SimpleData name="{{ a_field.name }}">{{ a_field.value }}</SimpleData>
+                        {% endfor %}
+                    </SchemaData>
+                </ExtendedData>
+                <Point>
+                    <coordinates>{{ a_record.long }},{{ a_record.lati }},0</coordinates>
+                </Point>
+            </Placemark>
+        {% endfor %}
+	</Folder>
+</Document>
+</kml>

@@ -3532,9 +3532,7 @@ class FunctionalTests(unittest.TestCase):
                     self.server_config,
                     form_schema,
                     self.working_dir + "/{}.kml".format(task_id),
-                    "I_D",
                     "en",
-                    task_id,
                 )
                 store_task_status(task_id, self.server_config)
                 self.testapp.get(

@@ -290,7 +290,12 @@ class FormDetails(PrivateView):
                 files_with_problems = root.findall(".//file")
                 if files_with_problems:
                     for a_file in files_with_problems:
-                        txt_message = txt_message + "\t" + os.path.basename(a_file.get("name","")) + "\n"
+                        txt_message = (
+                            txt_message
+                            + "\t"
+                            + os.path.basename(a_file.get("name", ""))
+                            + "\n"
+                        )
                 errors.append(txt_message)
             if created == 15:
                 txt_message = "The following files have an invalid structure: \n"
@@ -298,7 +303,7 @@ class FormDetails(PrivateView):
                 files_with_problems = root.findall(".//file")
                 if files_with_problems:
                     for a_file in files_with_problems:
-                        txt_message = txt_message + "\t" + a_file.get("name","") + "\n"
+                        txt_message = txt_message + "\t" + a_file.get("name", "") + "\n"
                 errors.append(txt_message)
             if created == 9:
                 # Duplicated options
@@ -2252,12 +2257,7 @@ class DownloadKML(PrivateView):
             raise HTTPNotFound
 
         generate_kml_file(
-            self.request,
-            self.user.id,
-            project_id,
-            form_id,
-            form_data["form_schema"],
-            form_data["form_pkey"],
+            self.request, self.user.id, project_id, form_id, form_data["form_schema"],
         )
         next_page = self.request.params.get("next") or self.request.route_url(
             "form_details",

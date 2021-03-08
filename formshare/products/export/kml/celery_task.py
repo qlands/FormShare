@@ -1,11 +1,10 @@
 import gettext
 from celery.utils.log import get_task_logger
-from webhelpers2.html import literal
+from formshare.processes.sse.messaging import send_task_status_to_form
 from lxml import etree
 from formshare.config.celery_app import celeryApp
 from formshare.config.celery_class import CeleryTask
 from formshare.models import get_engine
-import json
 import os
 from jinja2 import Environment, FileSystemLoader
 
@@ -30,10 +29,10 @@ def get_lookup_values(engine, schema, rtable, rfield):
         + rtable
     )
     records = engine.execute(sql).fetchall()
-    res_dict = {"": ""}
+    res_dict = {}
     for record in records:
         res_dict[record[0]] = record[1]
-    return literal(json.dumps(res_dict))
+    return res_dict
 
 
 def get_fields_from_table(engine, schema, create_file):
@@ -72,7 +71,7 @@ def get_fields_from_table(engine, schema, create_file):
     return result
 
 
-def internal_build_kml(settings, form_schema, kml_file, locale):
+def internal_build_kml(settings, form_schema, kml_file, locale, task_id):
     parts = __file__.split("/products/")
     this_file_path = parts[0] + "/locale"
     es = gettext.translation("formshare", localedir=this_file_path, languages=[locale])
@@ -107,19 +106,83 @@ def internal_build_kml(settings, form_schema, kml_file, locale):
 
     sql = "SELECT * FROM " + form_schema + ".maintable WHERE _geopoint IS NOT NULL"
     submissions = engine.execute(sql).fetchall()
-    dict_data = dict(submissions)
-    json_data = json.dumps(dict_data, default=str)
-    submissions = json.loads(json_data)
-    print("*******************************999")
-    print(submissions)
-    print("*******************************999")
+    records = []
+
+    index = 0
+    send_25 = True
+    send_50 = True
+    send_75 = True
+
+    for a_submission in submissions:
+        index = index + 1
+        percentage = (index * 100) / total
+        # We report chucks to not overload the messaging system
+        if 25 <= percentage <= 50:
+            if send_25:
+                send_task_status_to_form(settings, task_id, _("25% processed"))
+                send_25 = False
+        if 50 <= percentage <= 75:
+            if send_50:
+                send_task_status_to_form(settings, task_id, _("50% processed"))
+                send_50 = False
+        if 75 <= percentage <= 100:
+            if send_75:
+                send_task_status_to_form(settings, task_id, _("75% processed"))
+                send_75 = False
+
+        dict_submission = dict(a_submission)
+        record_data = {
+            "long": dict_submission.get("_longitude", 0),
+            "lati": dict_submission.get("_latitude", 0),
+            "fields": [],
+        }
+        for key, value in dict_submission.items():
+            found = False
+            is_key = "false"
+            is_lookup = "false"
+            lookup_values = {}
+            for a_field in fields:
+                if a_field["name"] == key:
+                    found = True
+                    is_key = a_field["key"]
+                    is_lookup = a_field["rlookup"]
+                    lookup_values = a_field.get("lookupvalues", {})
+            if found:
+                if is_key == "true":
+                    if is_lookup == "false":
+                        field_value = value
+                    else:
+                        field_value = lookup_values.get(value)
+                    record_data["fields"].append({"name": key, "value": field_value})
+                    record_data["id"] = value
+        for key, value in dict_submission.items():
+            found = False
+            is_key = "false"
+            is_lookup = "false"
+            lookup_values = {}
+            for a_field in fields:
+                if a_field["name"] == key:
+                    found = True
+                    is_key = a_field["key"]
+                    is_lookup = a_field["rlookup"]
+                    lookup_values = a_field.get("lookupvalues", {})
+            if found:
+                if is_key == "false":
+                    if is_lookup == "false":
+                        field_value = value
+                    else:
+                        field_value = lookup_values.get(value)
+                    record_data["fields"].append({"name": key, "value": field_value})
+        records.append(record_data)
+
     context = {
         "form_id": form_id,
         "fields": fields,
-        "records": [],
+        "records": records,
     }
 
     if total > 0:
+        send_task_status_to_form(settings, task_id, _("Rendering KML file"))
         rendered_template = template_environment.get_template("kml.jinja2").render(
             context
         )
@@ -134,5 +197,9 @@ def internal_build_kml(settings, form_schema, kml_file, locale):
 
 
 @celeryApp.task(base=CeleryTask)
-def build_kml(settings, form_schema, kml_file, locale):
-    internal_build_kml(settings, form_schema, kml_file, locale)
+def build_kml(settings, form_schema, kml_file, locale, test_task_id=None):
+    if test_task_id is None:
+        task_id = build_kml.request.id
+    else:
+        task_id = test_task_id
+    internal_build_kml(settings, form_schema, kml_file, locale, task_id)

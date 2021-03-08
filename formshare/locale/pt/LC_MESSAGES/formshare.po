@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.1\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2021-02-28 07:50-0600\n"
-"PO-Revision-Date: 2021-02-28 08:13-0600\n"
+"POT-Creation-Date: 2021-03-08 07:07-0600\n"
+"PO-Revision-Date: 2021-03-08 07:10-0600\n"
 "Last-Translator: Carlos Quiros <cquiros@qlands.com>\n"
 "Language: pt\n"
 "Language-Team: English <kde-i18n-doc@kde.org>\n"
@@ -130,7 +130,7 @@ msgstr ""
 # | msgid "FormShare checks a little bit more your ODK for inconsistencies."
 #: formshare/processes/odk/api.py:348 formshare/processes/odk/api.py:397
 #: formshare/processes/odk/api.py:419 formshare/processes/odk/api.py:459
-#: formshare/processes/odk/api.py:493 formshare/views/form.py:292
+#: formshare/processes/odk/api.py:511 formshare/views/form.py:313
 msgid "FormShare thoroughly checks your ODK for inconsistencies."
 msgstr "FormShare verifica minuciosamente há inconsistências no seu ODK."
 
@@ -192,11 +192,11 @@ msgstr "As seguintes repetições estão duplicadas no ODK que você submeteu:"
 msgid "Repeat: {}"
 msgstr "Repetição: {}"
 
-#: formshare/processes/odk/api.py:497 formshare/views/form.py:297
+#: formshare/processes/odk/api.py:515 formshare/views/form.py:318
 msgid "The following options are duplicated in the ODK you just submitted:"
 msgstr "As seguintes opções estão duplicadas no ODK que você submeteu:"
 
-#: formshare/processes/odk/api.py:509 formshare/views/form.py:309
+#: formshare/processes/odk/api.py:527 formshare/views/form.py:330
 msgid "Option {} in variable {}"
 msgstr "Opção {} na variável {}"
 
@@ -207,7 +207,7 @@ msgstr "Opção {} na variável {}"
 # | msgid "" "FormShare manage your data in a better way but by doing so it
 # has
 # | more " "restrictions."
-#: formshare/processes/odk/api.py:527
+#: formshare/processes/odk/api.py:545
 msgid ""
 "FormShare manages your data in a better way but by doing so it has more "
 "restrictions."
@@ -216,25 +216,25 @@ msgstr ""
 " restrições."
 
 # Please explain "selects" to make sure the translation was accurate,
-#: formshare/processes/odk/api.py:533
+#: formshare/processes/odk/api.py:551
 msgid "The following tables have more than 64 selects: "
 msgstr "As seguintes tabelas têm mais de 64 seleções: "
 
-#: formshare/processes/odk/api.py:541
+#: formshare/processes/odk/api.py:559
 msgid " with "
 msgstr " com "
 
-#: formshare/processes/odk/api.py:541
+#: formshare/processes/odk/api.py:559
 msgid " selects"
 msgstr " seleções"
 
-#: formshare/processes/odk/api.py:546
+#: formshare/processes/odk/api.py:564
 msgid "Some information on this restriction and how to correct it:"
 msgstr "Mais informações sobre essa restrição e como corrigi-la:"
 
 # | msgid "" "We tent to organize our ODK forms in sections with questions
 # | around a " "topic. For example: \"livestock inputs\" or \"crops sales\"."
-#: formshare/processes/odk/api.py:551
+#: formshare/processes/odk/api.py:569
 msgid ""
 "We tend to organize our ODK forms in sections with questions around a "
 "topic. For example: \"livestock inputs\" or \"crops sales\"."
@@ -243,7 +243,7 @@ msgstr ""
 "sobre um assunto. Por exemplo: \"entradas de pecuária\" ou \"vendas de "
 "safra\"."
 
-#: formshare/processes/odk/api.py:559
+#: formshare/processes/odk/api.py:577
 msgid ""
 "These sections have type = \"begin/end group\". We also organize "
 "questions that must be repeated in sections with type = \"begin/end "
@@ -260,7 +260,7 @@ msgstr ""
 # | if your ODK form" " have many selects then the \"maintable\" could
 # | potentially have more " "than 64 selects. FormShare can only handle 64
 # | selects per table."
-#: formshare/processes/odk/api.py:567
+#: formshare/processes/odk/api.py:585
 msgid ""
 "FormShare stores repeats as separate tables (like different Excel sheets)"
 " however groups are not stored as repeats. FormShare stores all items "
@@ -287,7 +287,7 @@ msgstr ""
 # Excel"
 # | " your items will be organized in different sheets each representing a "
 # | "table."
-#: formshare/processes/odk/api.py:579
+#: formshare/processes/odk/api.py:597
 msgid ""
 "You can bypass this restriction by creating groups of items inside "
 "repeats BUT WITH repeat_count = 1. A repeat with repeat_count = 1 will "
@@ -303,7 +303,7 @@ msgstr ""
 "exportar os dados para o Excel, seus itens serão organizados em planilhas"
 " diferentes, cada uma representando uma tabela."
 
-#: formshare/processes/odk/api.py:588
+#: formshare/processes/odk/api.py:606
 msgid ""
 "Please edit your ODK XLSX/XLS file, group several items inside repeats "
 "with repeat_count = 1 and try to upload the form again."
@@ -312,19 +312,19 @@ msgstr ""
 "das repetições com repeat_count = 1 e tente carregar o formulário "
 "novamente."
 
-#: formshare/processes/odk/api.py:623 formshare/processes/odk/api.py:949
+#: formshare/processes/odk/api.py:641 formshare/processes/odk/api.py:967
 msgid "No file was attached"
 msgstr "Nenhum arquivo foi anexado"
 
-#: formshare/processes/odk/api.py:645 formshare/processes/odk/api.py:972
+#: formshare/processes/odk/api.py:663 formshare/processes/odk/api.py:990
 msgid "Invalid file type"
 msgstr "Tipo inválido de arquivo"
 
-#: formshare/processes/odk/api.py:899
+#: formshare/processes/odk/api.py:917
 msgid "The form already exists in this project"
 msgstr "Formulário já existente neste projeto"
 
-#: formshare/processes/odk/api.py:903 formshare/processes/odk/api.py:1277
+#: formshare/processes/odk/api.py:921 formshare/processes/odk/api.py:1295
 msgid ""
 "The form ID has especial characters. FormShare only allows letters, "
 "numbers and underscores(_)"
@@ -333,21 +333,21 @@ msgstr ""
 "apenas letras, números e underline (_)"
 
 # | msgid "Cannot find XForm ID. Please post this ODK form in an issue on "
-#: formshare/processes/odk/api.py:910
+#: formshare/processes/odk/api.py:928
 msgid "Cannot find XForm ID. Please include this ODK form in an issue on  "
 msgstr ""
 "Não foi possível localizar ID do XForm. Inclua este formulário ODK como "
 "problema em "
 
 # | msgid "The form does not exists in this project"
-#: formshare/processes/odk/api.py:1265
+#: formshare/processes/odk/api.py:1283
 msgid "The form does not exist in this project"
 msgstr "Formulário inexistente neste projeto"
 
 # | msgid "" "The \"form_id\" of the current form does not match the
 # \"form_id\"
 # | of the" " one you uploaded. You cannot update a form with another form"
-#: formshare/processes/odk/api.py:1269
+#: formshare/processes/odk/api.py:1287
 msgid ""
 "The \"form_id\" of the current form does not match the \"form_id\" of the"
 " one you uploaded. You cannot update a form with another form."
@@ -356,7 +356,7 @@ msgstr ""
 "formulário que você carregou. Você não pode atualizar um formulário com "
 "outro formulário."
 
-#: formshare/processes/odk/api.py:1284
+#: formshare/processes/odk/api.py:1302
 msgid "Cannot find XForm ID. Please post the form as an issue on "
 msgstr ""
 "Não é possível localizar o ID XForm. Favor publicar o formulário como "
@@ -498,25 +498,30 @@ msgstr "Erro ao criar o arquivo JSON protótipo"
 msgid "The ODK form does not contain any submissions"
 msgstr "O formulário ODK não contém submissões"
 
-#: formshare/products/export/kml/celery_task.py:56
+#: formshare/products/export/kml/celery_task.py:122
 #: formshare/products/export/media/celery_task.py:64
 #: formshare/products/fs1import/celery_task.py:389
 msgid "25% processed"
 msgstr "25% processado"
 
-#: formshare/products/export/kml/celery_task.py:60
+#: formshare/products/export/kml/celery_task.py:126
 #: formshare/products/export/media/celery_task.py:68
 #: formshare/products/fs1import/celery_task.py:394
 msgid "50% processed"
 msgstr "50% processado"
 
-#: formshare/products/export/kml/celery_task.py:64
+#: formshare/products/export/kml/celery_task.py:130
 #: formshare/products/export/media/celery_task.py:72
 #: formshare/products/fs1import/celery_task.py:399
 msgid "75% processed"
 msgstr "75% processado"
 
-#: formshare/products/export/kml/celery_task.py:85
+#: formshare/products/export/kml/celery_task.py:185
+#| msgid "Creating zip file"
+msgid "Rendering KML file"
+msgstr "Criando arquivo KML"
+
+#: formshare/products/export/kml/celery_task.py:195
 msgid "The ODK form does not contain any submissions with GPS coordinates"
 msgstr "O formulário ODK não contém submissões com coordenadas de GPS"
 
@@ -2405,33 +2410,33 @@ msgstr "Selecionar um assistente"
 msgid "Import data from FormShare 1.0 or ODK BriefCase"
 msgstr "Importar dados do FormShare 1.0 ou ODK BriefCase"
 
+# | msgid "submission"
 #: formshare/templates/dashboard/projects/forms/map/marker_info.jinja2:16
-#| msgid "submission"
 msgid "Submission ID"
 msgstr "ID de submissão"
 
+# | msgid "Import data"
 #: formshare/templates/dashboard/projects/forms/map/marker_info.jinja2:21
-#| msgid "Import data"
 msgid "Summary data"
 msgstr "Resumo de dados"
 
+# | msgid "Submission date"
 #: formshare/templates/dashboard/projects/forms/map/marker_info.jinja2:23
-#| msgid "Submission date"
 msgid "Submission media"
 msgstr "Multimídia na submissão"
 
+# | msgid "Variable: {}"
 #: formshare/templates/dashboard/projects/forms/map/marker_info.jinja2:36
-#| msgid "Variable: {}"
 msgid "Variable name"
 msgstr "Nome variável"
 
+# | msgid "Edit table description"
 #: formshare/templates/dashboard/projects/forms/map/marker_info.jinja2:37
-#| msgid "Edit table description"
 msgid "Variable description"
 msgstr "Descrição da variável"
 
+# | msgid "table"
 #: formshare/templates/dashboard/projects/forms/map/marker_info.jinja2:38
-#| msgid "table"
 msgid "Value"
 msgstr "Valor"
 
@@ -2439,8 +2444,8 @@ msgstr "Valor"
 msgid "Images"
 msgstr "Imagens"
 
+# | msgid "other"
 #: formshare/templates/dashboard/projects/forms/map/marker_info.jinja2:108
-#| msgid "other"
 msgid "Other media"
 msgstr "Outro multimídia"
 
@@ -3476,8 +3481,8 @@ msgstr "Importar dados externos"
 msgid "Review the history of changes"
 msgstr "Revisar histórico de mudanças"
 
+# | msgid "User information"
 #: formshare/templates/dashboard/projects/forms/snippets/submission_info.jinja2:7
-#| msgid "User information"
 msgid "Submission information"
 msgstr "Informação de submissão"
 
@@ -4666,7 +4671,7 @@ msgstr "O grupo foi excluído com sucesso"
 msgid "Unable to delete the group: "
 msgstr "Não foi possível excluir o grupo: "
 
-#: formshare/views/assistant_groups.py:271 formshare/views/form.py:1439
+#: formshare/views/assistant_groups.py:271 formshare/views/form.py:1460
 msgid "The assistant was added successfully"
 msgstr "O assistente foi adicionado com sucesso"
 
@@ -4849,9 +4854,9 @@ msgstr ""
 "suporte e eles entrarão em contato com você o quanto antes."
 
 #: formshare/views/form.py:261 formshare/views/form.py:272
-#: formshare/views/form.py:282 formshare/views/form.py:381
-#: formshare/views/form.py:395 formshare/views/form.py:406
-#: formshare/views/form.py:417
+#: formshare/views/form.py:282 formshare/views/form.py:402
+#: formshare/views/form.py:416 formshare/views/form.py:427
+#: formshare/views/form.py:438
 msgid ""
 "An unexpected error occurred while processing the merge. An email has "
 "been sent to the technical team and they will contact you ASAP."
@@ -4860,130 +4865,130 @@ msgstr ""
 "equipe técnica e eles entrarão em contato com você o quanto antes."
 
 # | msgid "The primary key was not found in the ODK form"
-#: formshare/views/form.py:319 formshare/views/repository.py:278
+#: formshare/views/form.py:340 formshare/views/repository.py:310
 msgid "The primary key was not found in the ODK form or is inside a repeat"
 msgstr ""
 "A chave primária não foi encontrada no formulário ODK ou está dentro de "
 "um \"repetição\""
 
-#: formshare/views/form.py:327 formshare/views/form.py:349
+#: formshare/views/form.py:348 formshare/views/form.py:370
 msgid "The following files are missing and you need to attach them:"
 msgstr "Os seguintes arquivos estão faltando e você precisa anexá-los:"
 
-#: formshare/views/form.py:334
+#: formshare/views/form.py:355
 msgid "There was an error while processing some of the XML resource files:"
 msgstr "Ocorreu um erro ao processar alguns dos arquivos XML de recurso:"
 
-#: formshare/views/form.py:357
+#: formshare/views/form.py:378
 msgid "The following CSV resource files have invalid characters:"
 msgstr "Os seguintes arquivos CSV de recurso tem caracteres inválidos:"
 
-#: formshare/views/form.py:364
+#: formshare/views/form.py:385
 msgid "There was an error while processing some of the CSV resource files:"
 msgstr "Ocorreu um erro ao processar alguns dos arquivos CSV de recurso:"
 
-#: formshare/views/form.py:388 formshare/views/repository.py:307
+#: formshare/views/form.py:409 formshare/views/repository.py:339
 msgid "The primary key is invalid."
 msgstr "Chave primária inválida."
 
-#: formshare/views/form.py:425
+#: formshare/views/form.py:446
 msgid "The following choices are duplicated in your ODK:"
 msgstr "As seguintes escolhas estão duplicadas no seu ODK:"
 
-#: formshare/views/form.py:436
+#: formshare/views/form.py:457
 msgid "with the following duplicates:"
 msgstr "com as seguintes réplicas:"
 
 # | msgid "You need to indicate the primary language"
-#: formshare/views/form.py:671
+#: formshare/views/form.py:692
 msgid "You need to indicate a primary key"
 msgstr "Você precisa indicar uma chave primária"
 
-#: formshare/views/form.py:695
+#: formshare/views/form.py:716
 msgid "The form was added successfully"
 msgstr "O formulário foi adicionado com sucesso"
 
-#: formshare/views/form.py:713 formshare/views/form.py:799
+#: formshare/views/form.py:734 formshare/views/form.py:820
 msgid "Unable to upload the form: "
 msgstr "Não foi possível carregar o formulário: "
 
 # | msgid "You need to specify an API key"
-#: formshare/views/form.py:763
+#: formshare/views/form.py:784
 msgid "You need to specify a primary key"
 msgstr "Você precisa especificar uma chave primária"
 
-#: formshare/views/form.py:789
+#: formshare/views/form.py:810
 msgid "The ODK form was successfully updated"
 msgstr "O formulário ODK foi atualizado com sucesso"
 
-#: formshare/views/form.py:850
+#: formshare/views/form.py:871
 msgid "The form was edited successfully"
 msgstr "O formulário foi editado com sucesso"
 
-#: formshare/views/form.py:974
+#: formshare/views/form.py:995
 msgid "The form was deleted successfully"
 msgstr "O formulário foi excluído com sucesso"
 
-#: formshare/views/form.py:1033
+#: formshare/views/form.py:1054
 msgid "The form was activated successfully"
 msgstr "O formulário foi ativado com sucesso"
 
-#: formshare/views/form.py:1086
+#: formshare/views/form.py:1107
 msgid "The form was deactivated successfully"
 msgstr "O formulário foi desativado com sucesso"
 
-#: formshare/views/form.py:1192 formshare/views/projects.py:500
+#: formshare/views/form.py:1213 formshare/views/projects.py:500
 msgid "No files were attached"
 msgstr "Nenhum arquivo foi anexado"
 
-#: formshare/views/form.py:1196 formshare/views/form.py:1203
+#: formshare/views/form.py:1217 formshare/views/form.py:1224
 #: formshare/views/projects.py:504 formshare/views/projects.py:511
 msgid "Error {} encountered. A log entry has been produced"
 msgstr "Erro {} encontrado. Uma entrada de registro foi produzida"
 
-#: formshare/views/form.py:1209 formshare/views/projects.py:518
+#: formshare/views/form.py:1230 formshare/views/projects.py:518
 msgid "The file was uploaded successfully"
 msgstr "O arquivo foi carregado com sucesso"
 
-#: formshare/views/form.py:1213 formshare/views/projects.py:522
+#: formshare/views/form.py:1234 formshare/views/projects.py:522
 msgid "The files were uploaded successfully"
 msgstr "Os arquivos foram carregados com sucesso"
 
-#: formshare/views/form.py:1268
+#: formshare/views/form.py:1289
 msgid "You cannot remove this file because it is required by the repository"
 msgstr ""
 "Você não pode remover este arquivo porque ele é exigido pelo repositório"
 
-#: formshare/views/form.py:1292 formshare/views/projects.py:572
+#: formshare/views/form.py:1313 formshare/views/projects.py:572
 msgid "The files was removed successfully"
 msgstr "Os arquivos foram removidos com sucesso"
 
 # | msgid "The role was changed successfully"
-#: formshare/views/form.py:1566
+#: formshare/views/form.py:1587
 msgid "The information was changed successfully"
 msgstr "A informação foi alterada com sucesso"
 
-#: formshare/views/form.py:1662
+#: formshare/views/form.py:1683
 msgid "The assistant was removed successfully"
 msgstr "O assistente foi removido com sucesso"
 
-#: formshare/views/form.py:1737
+#: formshare/views/form.py:1758
 msgid "The group was added successfully"
 msgstr "O grupo foi adicionado com sucesso"
 
-#: formshare/views/form.py:1819
+#: formshare/views/form.py:1840
 msgid "The role was changed successfully"
 msgstr "A função foi alterada com sucesso"
 
-#: formshare/views/form.py:1877
+#: formshare/views/form.py:1898
 msgid "The group was removed successfully"
 msgstr "O grupo foi removido com sucesso"
 
-#: formshare/views/form.py:2500
+#: formshare/views/form.py:2516
 msgid "The process was stopped successfully"
 msgstr "O processo foi interrompido com sucesso"
 
-#: formshare/views/form.py:2506
+#: formshare/views/form.py:2522
 msgid "FormShare was not able to stop the process"
 msgstr "O FormShare não conseguiu interromper o processo"
 

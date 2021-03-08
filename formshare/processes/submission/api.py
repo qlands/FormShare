@@ -1001,6 +1001,10 @@ def delete_submission(
 
     paths = ["forms", form_directory, "submissions", submission_id + ".log"]
     log_file = os.path.join(odk_dir, *paths)
+    if not os.path.exists(log_file):
+        paths = ["forms", form_directory, "submissions", "logs", submission_id + ".log"]
+        log_file = os.path.join(odk_dir, *paths)
+
     if os.path.exists(log_file):
         with open(log_file) as f:
             lines = f.readlines()
@@ -1016,8 +1020,8 @@ def delete_submission(
                     )
                 except Exception as e:
                     log.error(
-                        "Error while deleting record index for id {}. User:{}. "
-                        "Project: {}. Form: {}. Rowuuid: {}. Error: {}.".format(
+                        "Error while deleting record index without carry return for id {}. User:{}. "
+                        "Project: {}. Form: {}. Rowuuid: {}. Error: {}. Trying with carry return".format(
                             submission_id,
                             user,
                             project_code,
@@ -1026,6 +1030,26 @@ def delete_submission(
                             str(e),
                         )
                     )
+                    try:
+                        delete_from_record_index(
+                            request.registry.settings,
+                            user,
+                            project_code,
+                            form,
+                            parts[1],
+                        )
+                    except Exception as e:
+                        log.error(
+                            "Error while deleting record index for id {}. User:{}. "
+                            "Project: {}. Form: {}. Rowuuid: {}. Error: {}.".format(
+                                submission_id,
+                                user,
+                                project_code,
+                                form,
+                                parts[1].replace("\n", ""),
+                                str(e),
+                            )
+                        )
         os.remove(log_file)
     else:
         log.error(

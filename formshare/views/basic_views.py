@@ -145,7 +145,13 @@ class LoginView(PublicView):
                         self.request.remote_addr, self.request.user_agent
                     )
                 )
-                raise HTTPNotFound()
+                self.append_to_errors(
+                    self._(
+                        "FormShare thinks that you are a computer. "
+                        "Please type in all the information instead of using an autofill."
+                    )
+                )
+                return {}
             data.pop("user")
             login = data["email"]
             passwd = data["passwd"]
@@ -225,7 +231,13 @@ class RecoverPasswordView(PublicView):
                         self.request.remote_addr, self.request.user_agent
                     )
                 )
-                raise HTTPNotFound()
+                self.append_to_errors(
+                    self._(
+                        "FormShare thinks that you are a computer. "
+                        "Please type in all the information instead of using an autofill."
+                    )
+                )
+                return {}
             user = get_user_data(login, self.request)
             if user is not None:
                 user_data = get_formshare_user_data(self.request, user.email, True)
@@ -378,7 +390,13 @@ class RegisterView(PublicView):
                         self.request.remote_addr, self.request.user_agent
                     )
                 )
-                raise HTTPNotFound()
+                self.append_to_errors(
+                    self._(
+                        "FormShare thinks that you are a computer. "
+                        "Please type in all the information instead of using an autofill."
+                    )
+                )
+                return {"next": next, "userdata": data}
             data.pop("user_address")
 
             if validators.email(data["user_email"]):

@@ -148,7 +148,7 @@ class LoginView(PublicView):
                 self.append_to_errors(
                     self._(
                         "FormShare thinks that you are a computer. "
-                        "Please type in all the information instead of using an autofill."
+                        "Please type in all the information instead of using an autofill"
                     )
                 )
                 return {}
@@ -234,7 +234,7 @@ class RecoverPasswordView(PublicView):
                 self.append_to_errors(
                     self._(
                         "FormShare thinks that you are a computer. "
-                        "Please type in all the information instead of using an autofill."
+                        "Please type in all the information instead of using an autofill"
                     )
                 )
                 return {}
@@ -393,7 +393,7 @@ class RegisterView(PublicView):
                 self.append_to_errors(
                     self._(
                         "FormShare thinks that you are a computer. "
-                        "Please type in all the information instead of using an autofill."
+                        "Please type in all the information instead of using an autofill"
                     )
                 )
                 return {"next": next, "userdata": data}

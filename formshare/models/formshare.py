@@ -88,6 +88,7 @@ class Project(Base):
     project_cdate = Column(DateTime)
     project_public = Column(INTEGER)
     project_image = Column(UnicodeText)
+    project_case = Column(INTEGER, server_default=text("'0'"))
     extras = Column(UnicodeText)
     tags = Column(UnicodeText)
 
@@ -245,6 +246,11 @@ class Odkform(Base):
     form_reptask = Column(Unicode(64))
     form_index = Column(UnicodeText)
     form_type = Column(INTEGER, server_default=text("'1'"))
+    form_case = Column(INTEGER, server_default=text("'0'"))
+    form_casetype = Column(INTEGER)  # 1=Creator, 2= Follow up, 3= Deactivate, 4= Activate
+    form_caselabel = Column(Unicode(120))
+    form_caseselector = Column(Unicode(120))
+    form_caseselectorfilename = Column(Unicode(120))
     extras = Column(UnicodeText)
     tags = Column(UnicodeText)
 

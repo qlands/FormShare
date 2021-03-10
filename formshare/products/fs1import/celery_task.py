@@ -138,6 +138,7 @@ def store_json_file(
         submission_data.pop("_id", "")
         submission_data["_submission_id"] = submission_id
         submission_data["_project_code"] = project_code
+        submission_data["_active"] = 1
         if geopoint_variable is not None:
             if geopoint_variable in submission_data.keys():
                 submission_data["_geopoint"] = submission_data[geopoint_variable]

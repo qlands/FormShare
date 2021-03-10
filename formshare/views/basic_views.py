@@ -141,7 +141,7 @@ class LoginView(PublicView):
             user = data["user"]
             if user != "":
                 log.error(
-                    "Suspicious boot login from IP: {}. Agent: {}".format(
+                    "Suspicious bot login from IP: {}. Agent: {}".format(
                         self.request.remote_addr, self.request.user_agent
                     )
                 )
@@ -227,7 +227,7 @@ class RecoverPasswordView(PublicView):
             user = data["user"]
             if user != "":
                 log.error(
-                    "Suspicious boot password recovery from IP: {}. Agent: {}".format(
+                    "Suspicious bot password recovery from IP: {}. Agent: {}".format(
                         self.request.remote_addr, self.request.user_agent
                     )
                 )
@@ -386,7 +386,7 @@ class RegisterView(PublicView):
             user = data["user_address"]
             if user != "Costa Rica":
                 log.error(
-                    "Suspicious boot register from IP: {}. Agent: {}".format(
+                    "Suspicious bot register from IP: {}. Agent: {}".format(
                         self.request.remote_addr, self.request.user_agent
                     )
                 )

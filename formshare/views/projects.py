@@ -169,6 +169,11 @@ class AddProjectView(ProjectsView):
             else:
                 project_details["project_public"] = 0
 
+            if "project_case" in project_details.keys():
+                project_details["project_case"] = 1
+            else:
+                project_details["project_case"] = 0
+
             if project_details["project_abstract"] == "":
                 project_details["project_abstract"] = None
 
@@ -268,7 +273,7 @@ class AddProjectView(ProjectsView):
             else:
                 self.append_to_errors(self._("The project code cannot be empty"))
         else:
-            project_details = {"project_public": 1}
+            project_details = {"project_public": 1, "project_case": 0}
         return {"projectDetails": project_details}
 
 
@@ -296,12 +301,20 @@ class EditProjectView(ProjectsView):
         if project_details["access_type"] >= 4:
             raise HTTPNotFound  # Don't edit a public or a project that I am just a member
 
+        total_forms = project_details["total_forms"]
+
         if self.request.method == "POST":
             project_details = self.get_post_dict()
             if "project_public" in project_details.keys():
                 project_details["project_public"] = 1
             else:
                 project_details["project_public"] = 0
+
+            if "project_case" in project_details.keys():
+                project_details["project_case"] = 1
+            else:
+                if total_forms == 0:
+                    project_details["project_case"] = 0
 
             project_details["project_code"] = project_code
 

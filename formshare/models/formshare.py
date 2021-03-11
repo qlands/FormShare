@@ -247,7 +247,9 @@ class Odkform(Base):
     form_index = Column(UnicodeText)
     form_type = Column(INTEGER, server_default=text("'1'"))
     form_case = Column(INTEGER, server_default=text("'0'"))
-    form_casetype = Column(INTEGER)  # 1=Creator, 2= Follow up, 3= Deactivate, 4= Activate
+    form_casetype = Column(
+        INTEGER
+    )  # 1=Creator, 2= Follow up, 3= Deactivate, 4= Activate
     form_caselabel = Column(Unicode(120))
     form_caseselector = Column(Unicode(120))
     form_caseselectorfilename = Column(Unicode(120))

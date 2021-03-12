@@ -82,6 +82,7 @@ class UserDashBoardView(DashboardView):
             )
             return {
                 "projectData": project_data,
+                "projectDetails": project_data,
                 "userid": user_id,
                 "collaborators": collaborators,
                 "moreCollaborators": more_collaborators,
@@ -113,6 +114,7 @@ class UserDashBoardView(DashboardView):
                 raise HTTPNotFound()
             return {
                 "projectData": None,
+                "projectDetails": {},
                 "userid": user_id,
                 "collaborators": [],
                 "moreCollaborators": 0,

@@ -42,6 +42,20 @@ def get_form_primary_key(request, project, form):
     return form_data.form_pkey
 
 
+def get_form_case_params(request, project, form):
+    form_data = (
+        request.dbsession.query(Form)
+        .filter(Form.project_id == project)
+        .filter(Form.form_id == form)
+        .one()
+    )
+    return (
+        form_data.form_casetype,
+        form_data.form_caselabel,
+        form_data.form_caseselector,
+    )
+
+
 def get_error_description_from_file(request, project, form, log_file):
     try:
         tree = etree.parse(log_file)

@@ -25,9 +25,17 @@
                         {{ _('This form is not geo-referenced') }}
                     {% else %}
                         {% if formDetails.submissions == 0 %}
-                            {{ _('No map is available at the moment. Waiting for submissions') }}
+                            {% if formDetails.form_casetype != 1 %}
+                                {{ _('No map is available at the moment. Waiting for submissions') }}
+                            {% else %}
+                                {{ _('No map is available at the moment. Waiting for cases') }}
+                            {% endif %}
                         {% else %}
-                            {{ _('Waiting for submissions with GPS data') }}
+                            {% if formDetails.form_casetype != 1 %}
+                                {{ _('Waiting for submissions with GPS data') }}
+                            {% else %}
+                                {{ _('Waiting for cases with GPS data') }}
+                            {% endif %}
                         {% endif %}
                     {% endif %}
                 {% endif %}

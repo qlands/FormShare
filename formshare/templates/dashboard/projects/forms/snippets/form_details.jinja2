@@ -27,7 +27,11 @@
         {% block form_details_submissions %}
             <dl class="row mb-0">
                 <div class="col-sm-4 text-sm-right">
-                    <dt>{{ _('Last submission') }}:</dt>
+                    {% if formDetails.form_casetype != 1 %}
+                        <dt>{{ _('Last submission') }}:</dt>
+                    {% else %}
+                        <dt>{{ _('Last case') }}:</dt>
+                    {% endif %}
                 </div>
                 {% if formDetails.submissions > 0 %}
                     <div class="col-sm-8 text-sm-left">
@@ -35,7 +39,11 @@
                     </div>
                 {% else %}
                     <div class="col-sm-8 text-sm-left">
-                        <dd class="mb-1">{{ _('Without submissions') }}</dd>
+                        {% if formDetails.form_casetype != 1 %}
+                            <dd class="mb-1">{{ _('Without submissions') }}</dd>
+                        {% else %}
+                            <dd class="mb-1">{{ _('Without cases') }}</dd>
+                        {% endif %}
                     </div>
                 {% endif %}
             </dl>
@@ -57,7 +65,11 @@
             {% endif %}
             <dl class="row mb-0">
                 <div class="col-sm-4 text-sm-right">
-                    <dt>{{ _('Submissions') }}:</dt>
+                    {% if formDetails.form_casetype != 1 %}
+                        <dt>{{ _('Submissions') }}:</dt>
+                    {% else %}
+                        <dt>{{ _('Cases') }}:</dt>
+                    {% endif %}
                 </div>
                 <div class="col-sm-8 text-sm-left">
                     <dd class="mb-1">{{ formDetails.submissions }}</dd>
@@ -101,7 +113,11 @@
             <div class="col-lg-12">
                 {% if formDetails.parent_form == None %}
                     <h2 class="text-center text-warning">{{ _("Important note!") }}</h2>
-                    <h4 class="text-center text-warning">{{ _('This form is in testing stage. This means that you can update it at all times and submissions are for testing purposes. ') }}</h4>
+                    {% if formDetails.form_casetype != 1 %}
+                        <h4 class="text-center text-warning">{{ _('This form is in testing stage. This means that you can update it at all times and submissions are for testing purposes. ') }}</h4>
+                    {% else %}
+                        <h4 class="text-center text-warning">{{ _('This form is in testing stage. This means that you can update it at all times and cases are for testing purposes. ') }}</h4>
+                    {% endif %}
                     {% if formDetails.form_repositorypossible == 1 %}
                         <h4 class="text-center text-warning">{{ _('When you finished testing the form you can')}} <a href="{{ request.route_url('createrepository',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" style="color: #026AA8 !important;">{{ _('create a repository for the form') }}</a> {{ _('and start collecting "real" data.') }}</h4>
                     {% else %}
@@ -115,7 +131,11 @@
                     {% endif %}
                 {% else %}
                     <h2 class="text-center text-warning">{{ _("Important note!") }}</h2>
-                    <h4 class="text-center text-warning">{{ _('This form is in testing stage. This means that you can update it at all times and submissions are for testing purposes. ') }}</h4>
+                    {% if formDetails.form_casetype != 1 %}
+                        <h4 class="text-center text-warning">{{ _('This form is in testing stage. This means that you can update it at all times and submissions are for testing purposes. ') }}</h4>
+                    {% else %}
+                        <h4 class="text-center text-warning">{{ _('This form is in testing stage. This means that you can update it at all times and cases are for testing purposes. ') }}</h4>
+                    {% endif %}
                     {% if formDetails.form_abletomerge == 1 %}
                         <h4 class="text-center text-warning">{{ _('When you finished testing the form you can')}} <a href="{{ request.route_url('merge_new_version',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id,oldformid=formDetails.parent_form) }}" style="color: #026AA8 !important;">{{ _('merge it into the repository of ') }} "{{ formDetails.parent_form_data.form_name }}"</a> {{ _('and start collecting "real" data.') }}</h4>
                     {% else %}

@@ -2,7 +2,7 @@
 <div class="row m-b-sm m-t-sm">
     <div class="col-md-4">
         {% block project_item_details %}
-            <a href="{{ request.route_url('project_details', userid=project.owner, projcode=project.project_code) }}">{{ project.project_name }}</a>
+            <a href="{{ request.route_url('project_details', userid=project.owner, projcode=project.project_code) }}">{{ project.project_name }}</a> {% if project.project_case == 1 %}<span class="badge badge-info" title="{{ _('This project has a case/longitudinal workflow') }}">{{ _('Case') }}</span>{% endif %}
             <br/>
             <small>{{ _('Created') }} {{ request.h.humanize_date(project.project_cdate, request.locale_name) }} {% if project.user_id != project.owner %} by <a href="{{ request.route_url('dashboard',userid=project.owner) }}">{{ project.owner }}</a> {% endif %}</small>
         {% endblock project_item_details %}
@@ -13,7 +13,7 @@
                 {{ project.total_submissions }} {{ request.h.pluralize(_('submission'),project.total_submissions,request.locale_name) }} {{ _('within') }} {{ project.total_forms }} {{ request.h.pluralize(_('form'),project.total_forms,request.locale_name) }}<br/>
                 <small>{{ _('Last submission by') }} <a style="color: #0a6aa1">{{ project.last_submission_by_details.coll_name }}</a> in form <a href="{{ request.route_url('form_details',userid=project.owner,projcode=project.project_code,formid=project.last_submission_form) }}" style="color: #337ab7;">"{{ project.last_submission_form_details.form_name }}"</a> {{ request.h.humanize_date(project.last_submission, request.locale_name) }}</small>
             {% else %}
-                {{ _('Without submissions') }}
+                {{ _('Without submissions') }}{% if project.project_case == 1 %} <span>{{ _(' and without cases') }}</span>{% endif %}
             {% endif %}
         {% endblock project_item_submissions %}
     </div>

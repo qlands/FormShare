@@ -64,7 +64,7 @@ from formshare.processes.odk.api import (
     check_jxform_file,
     store_file_in_directory,
 )
-from formshare.processes.odk.processes import get_form_primary_key
+from formshare.processes.odk.processes import get_form_primary_key, get_form_case_params
 from formshare.processes.storage import store_file, delete_stream, delete_bucket
 from formshare.processes.submission.api import (
     get_submission_media_files,
@@ -691,11 +691,72 @@ class AddNewForm(PrivateView):
                     )
                     self.add_error(self._("You need to indicate a primary key"))
                     return HTTPFound(next_page, headers={"FS_error": "true"})
+            form_casetype = None
+            form_caselabel = None
+            form_caseselector = None
             if for_merging:
                 form_id = self.request.matchdict["formid"]
                 primary_key = get_form_primary_key(self.request, project_id, form_id)
+                if project_details["project_case"] == 1:
+                    (
+                        form_casetype,
+                        form_caselabel,
+                        form_caseselector,
+                    ) = get_form_case_params(self.request, project_id, form_id)
             else:
                 primary_key = form_data.get("form_pkey", None)
+                if project_details["project_case"] == 1:
+                    if project_details["total_forms"] == 0:
+                        form_casetype = 1
+                        form_caselabel = form_data.get("form_caselabel", "")
+                        if form_caselabel == "":
+                            next_page = self.request.params.get(
+                                "next"
+                            ) or self.request.route_url(
+                                "project_details",
+                                userid=project_details["owner"],
+                                projcode=project_code,
+                            )
+                            self.add_error(
+                                self._(
+                                    "You need to indicate a variable for labeling the cases"
+                                )
+                            )
+                            return HTTPFound(next_page, headers={"FS_error": "true"})
+                    else:
+                        form_casetype = int(form_data.get("form_casetype", "0"))
+                        if form_casetype == 0:
+                            next_page = self.request.params.get(
+                                "next"
+                            ) or self.request.route_url(
+                                "project_details",
+                                userid=project_details["owner"],
+                                projcode=project_code,
+                            )
+                            self.add_error(
+                                self._("You need to indicate a type of case form")
+                            )
+                            return HTTPFound(next_page, headers={"FS_error": "true"})
+                        else:
+                            form_caseselector = form_data.get("form_caseselector", "")
+                            if form_caseselector == "":
+                                next_page = self.request.params.get(
+                                    "next"
+                                ) or self.request.route_url(
+                                    "project_details",
+                                    userid=project_details["owner"],
+                                    projcode=project_code,
+                                )
+                                self.add_error(
+                                    self._(
+                                        "You need to indicate a variable for searching and "
+                                        "selecting cases"
+                                    )
+                                )
+                                return HTTPFound(
+                                    next_page, headers={"FS_error": "true"}
+                                )
+
             uploaded, message = upload_odk_form(
                 self.request,
                 project_id,
@@ -704,6 +765,10 @@ class AddNewForm(PrivateView):
                 form_data,
                 primary_key,
                 for_merging,
+                project_details["project_case"],
+                form_casetype,
+                form_caselabel,
+                form_caseselector,
             )
 
             if uploaded:
@@ -767,11 +832,7 @@ class UploadNewVersion(PrivateView):
         if self.request.method == "POST":
             self.returnRawViewResult = True
             odk_path = get_odk_path(self.request)
-
             form_data = self.get_post_dict()
-            if "form_target" not in form_data.keys():
-                form_data["form_target"] = 0
-
             form_data.pop("xlsx")
 
             if "form_pkey" not in form_data.keys():
@@ -785,6 +846,54 @@ class UploadNewVersion(PrivateView):
                 return HTTPFound(next_page, headers={"FS_error": "true"})
 
             primary_key = form_data.get("form_pkey", None)
+            form_casetype = None
+            form_caselabel = None
+            form_caseselector = None
+            if project_details["project_case"] == 1:
+                form_casetype = int(form_data.get("form_casetype", "0"))
+                if form_casetype == 1:
+                    form_caselabel = form_data.get("form_caselabel", "")
+                    if form_caselabel == "":
+                        next_page = self.request.route_url(
+                            "form_details",
+                            userid=project_details["owner"],
+                            projcode=project_code,
+                            formid=form_id,
+                        )
+                        self.add_error(
+                            self._(
+                                "You need to indicate a variable for labeling the cases"
+                            )
+                        )
+                        return HTTPFound(next_page, headers={"FS_error": "true"})
+                else:
+                    if form_casetype == 0:
+                        next_page = self.request.route_url(
+                            "form_details",
+                            userid=project_details["owner"],
+                            projcode=project_code,
+                            formid=form_id,
+                        )
+                        self.add_error(
+                            self._("You need to indicate a type of case form")
+                        )
+                        return HTTPFound(next_page, headers={"FS_error": "true"})
+                    if form_casetype > 1:
+                        form_caseselector = form_data.get("form_caseselector", "")
+                        if form_caseselector == "":
+                            next_page = self.request.route_url(
+                                "form_details",
+                                userid=project_details["owner"],
+                                projcode=project_code,
+                                formid=form_id,
+                            )
+                            self.add_error(
+                                self._(
+                                    "You need to indicate a variable for searching and "
+                                    "selecting cases"
+                                )
+                            )
+                            return HTTPFound(next_page, headers={"FS_error": "true"})
 
             updated, message = update_odk_form(
                 self.request,
@@ -794,6 +903,10 @@ class UploadNewVersion(PrivateView):
                 odk_path,
                 form_data,
                 primary_key,
+                project_details["project_case"],
+                form_casetype,
+                form_caselabel,
+                form_caseselector,
             )
 
             if updated:

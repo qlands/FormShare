@@ -27,13 +27,63 @@
                                 </div>
                             </div>
                             {% if formDetails.parent_form == None %}
-                                <div style="margin-top: 10px" class="form-group">
-                                    <label><b>{{ _('Which variable will be used to control duplicate submissions?') }}</b></label>
-                                    <input type="text" name="form_pkey" {% if formDetails.form_pkey != None %}value="{{ formDetails.form_pkey }}" {% endif %} class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the Primary Key') }}')"  oninput="setCustomValidity('')">
-                                    <span class="form-text m-b-none text-success">{{ _('This will become the Primary Key of the repository. If you have more than one variable then use an ODK Calculate to join them.') }}</span>
-                                </div>
+                                {% if projectDetails.project_case == 0 %}
+                                    <hr>
+                                    <div style="margin-top: 10px" class="form-group">
+                                        <label><b>{{ _('Which variable will be used to control duplicate submissions?') }}</b></label>
+                                        <input type="text" name="form_pkey" {% if formDetails.form_pkey != None %}value="{{ formDetails.form_pkey }}" {% endif %} class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the Primary Key') }}')"  oninput="setCustomValidity('')">
+                                        <span class="form-text m-b-none text-success">{{ _('This will become the Primary Key of the repository. If you have more than one variable then use an ODK Calculate to join them.') }}</span>
+                                    </div>
+                                {% else %}
+                                    {% if formDetails.form_casetype == 1 %}
+                                        <input type="hidden" name="form_casetype" value="{{ formDetails.form_casetype }}">
+                                        <hr>
+                                        <div style="margin-top: 10px" class="form-group">
+                                            <label><b>{{ _('Which variable will be used to identify each case?') }}</b></label>
+                                            <input type="text" name="form_pkey" {% if formDetails.form_pkey != None %}value="{{ formDetails.form_pkey }}" {% endif %} class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the case ID variable') }}')"  oninput="setCustomValidity('')">
+                                            <span class="form-text m-b-none text-success">{{ _('This will become the Primary Key of the repository for this form and the link with follow-up case forms.') }}</span>
+                                        </div>
+                                        <hr>
+                                        <div style="margin-top: 10px" class="form-group">
+                                            <label><b>{{ _('Which variable will be used to label each case?') }}</b></label>
+                                            <input type="text" name="form_caselabel" {% if formDetails.form_caselabel != None %}value="{{ formDetails.form_caselabel }}" {% endif %} class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the case label variable') }}')"  oninput="setCustomValidity('')">
+                                            <span class="form-text m-b-none text-success">{{ _('This will be used to search and select each case in follow-up forms. You can use a calculate to combine a name with other variables.') }}</span>
+                                        </div>
+                                    {% else %}
+                                        <hr>
+                                        <div style="margin-top: 10px" class="form-group">
+                                            <label><b>{{ _('Type of case form') }}</b></label>
+                                            <label><input type="radio" {% if formDetails.form_caselabel == 2 %}checked{% endif %} value="2" id="case_followup" name="form_casetype"> {{ _('Simple follow-up form') }}</label><br/>
+                                            <label><input type="radio" {% if formDetails.form_caselabel == 3 %}checked{% endif %} value="3" id="case_deactivate" name="form_casetype"> {{ _('Follow-up and deactivate case form') }}</label><br/>
+                                            <label><input type="radio" {% if formDetails.form_caselabel == 4 %}checked{% endif %} value="4" id="case_activate" name="form_casetype"> {{ _('Follow-up and activate case form') }}</label>
+                                            <span class="form-text m-b-none text-success">{{ _('Follow-up forms just attach information to a case. Deactivate and Activate forms change the status of a case. For example, a household that decides to exit a study so no more data should be collected afterwards about it.') }}</span>
+                                        </div>
+                                        <hr>
+                                        <div style="margin-top: 10px" class="form-group">
+                                            <label><b>{{ _('Which variable will be used to search and select a case?') }}</b></label>
+                                            <input type="text" name="form_caseselector" {% if formDetails.form_caseselector != None %}value="{{ formDetails.form_caseselector }}" {% endif %} class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the case selector variable') }}')"  oninput="setCustomValidity('')">
+                                            <span class="form-text m-b-none text-success">{{ _('This will be used to search and select each case in follow-up forms. This variable MUST BE a select_one_from_file. The file MUST BE CSV.') }} <a href="https://docs.getodk.org/form-datasets/" target="_blank">{{ _('Read here about it') }}</a></span>
+                                        </div>
+                                        <hr>
+                                        <div style="margin-top: 10px" class="form-group">
+                                            <label><b>{{ _('Which variable will be used to control duplicate submissions?') }}</b></label>
+                                            <input type="text" name="form_pkey" {% if formDetails.form_pkey != None %}value="{{ formDetails.form_pkey }}" {% endif %} class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the Primary Key') }}')"  oninput="setCustomValidity('')">
+                                            <span class="form-text m-b-none text-success">{{ _('This will become the Primary Key of the repository for this form. This MUST BE a calculate joining the the case selector variable with a datetime or other kind of variable/s.') }}</span>
+                                        </div>
+                                    {% endif %}
+                                {% endif %}
                             {% else %}
+                                {% if projectDetails.project_case == 0 %}
                                     <input type="hidden" name="form_pkey" value="{{ formDetails.parent_form_data.form_pkey }}">
+                                {% else %}
+                                    <input type="hidden" name="form_pkey" value="{{ formDetails.parent_form_data.form_pkey }}">
+                                    <input type="hidden" name="form_casetype" value="{{ formDetails.parent_form_data.form_casetype }}">
+                                    {% if formDetails.parent_form_data.form_casetype == 1 %}
+                                        <input type="hidden" name="form_caselabel" value="{{ formDetails.parent_form_data.form_caselabel }}">
+                                    {% else %}
+                                        <input type="hidden" name="form_caseselector" value="{{ formDetails.parent_form_data.form_caseselector }}">
+                                    {% endif %}
+                                {% endif %}
                             {% endif %}
                         </div>
                     {% endblock update_form_form_fields %}

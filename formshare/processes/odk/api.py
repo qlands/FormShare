@@ -99,6 +99,7 @@ __all__ = [
     "get_missing_support_files",
     "create_repository",
     "merge_versions",
+    "get_fields_from_table_in_file",
 ]
 
 _GPS_types = [
@@ -109,6 +110,40 @@ _GPS_types = [
     "q geopoint",
     "q location",
 ]
+
+
+def get_fields_from_table_in_file(create_file, table_name):
+    tree = etree.parse(create_file)
+    root = tree.getroot()
+    table = root.find(".//table[@name='" + table_name + "']")
+    result = []
+    if table is not None:
+        for field in table.getchildren():
+            if field.tag == "field":
+                desc = field.get("desc")
+                if desc == "" or desc == "Without label":
+                    desc = field.get("name") + " - Without description"
+                data = {
+                    "name": field.get("name"),
+                    "desc": desc,
+                    "type": field.get("type"),
+                    "xmlcode": field.get("xmlcode"),
+                    "size": field.get("size"),
+                    "odktype": field.get("odktype"),
+                    "selecttype": field.get("selecttype", "0"),
+                    "externalfilename": field.get("externalfilename", ""),
+                    "decsize": field.get("decsize"),
+                    "sensitive": field.get("sensitive"),
+                    "protection": field.get("protection", "None"),
+                    "key": field.get("key", "false"),
+                    "rlookup": field.get("rlookup", "false"),
+                    "rtable": field.get("rtable", "None"),
+                    "rfield": field.get("rfield", "None"),
+                }
+                result.append(data)
+            else:
+                break
+    return result
 
 
 def get_odk_path(request):
@@ -285,8 +320,10 @@ def check_jxform_file(
     create_xml_file,
     insert_xml_file,
     primary_key,
-    external_files=[],
+    external_files=None,
 ):
+    if external_files is None:
+        external_files = []
     _ = request.translate
     jxform_to_mysql = os.path.join(
         request.registry.settings["odktools.path"], *["JXFormToMysql", "jxformtomysql"]
@@ -620,7 +657,17 @@ def check_jxform_file(
 
 
 def upload_odk_form(
-    request, project_id, user_id, odk_dir, form_data, primary_key, for_merging=False,
+    request,
+    project_id,
+    user_id,
+    odk_dir,
+    form_data,
+    primary_key,
+    for_merging=False,
+    project_case=0,
+    form_casetype=None,
+    form_caselabel=None,
+    form_caseselector=None,
 ):
     _ = request.translate
     uid = str(uuid.uuid4())
@@ -689,7 +736,6 @@ def upload_odk_form(
         root = tree.getroot()
         nsmap = root.nsmap[None]
         h_nsmap = root.nsmap["h"]
-        # eid = root.findall(".//{" + nsmap + "}" + parts[0])
         eid = root.findall(".//{" + nsmap + "}data")
         if eid:
             form_id = eid[0].get("id")
@@ -707,6 +753,78 @@ def upload_odk_form(
                         primary_key,
                         external_files,
                     )
+                    form_caseselector_file = None
+                    if project_case == 1:
+                        if error == 0:
+                            if form_casetype == 1:
+                                fields = get_fields_from_table_in_file(
+                                    create_file, "maintable"
+                                )
+                                case_id_type_correct = False
+                                for a_field in fields:
+                                    if a_field["name"] == primary_key:
+                                        if (
+                                            a_field["type"] == "varchar"
+                                            or a_field["type"] == "text"
+                                            or (
+                                                a_field["type"] == "integer"
+                                                and a_field["decsize"] == 0
+                                            )
+                                        ):
+                                            case_id_type_correct = True
+                                if not case_id_type_correct:
+                                    error = 1
+                                    message = _(
+                                        "The variable {} used to identify the cases is invalid. "
+                                        "Only text, calculates or integers are allowed.".format(
+                                            form_caselabel
+                                        )
+                                    )
+
+                                case_label_found = False
+                                for a_field in fields:
+                                    if a_field["name"] == form_caselabel:
+                                        if (
+                                            a_field["type"] == "varchar"
+                                            or a_field["type"] == "text"
+                                            or (
+                                                a_field["type"] == "integer"
+                                                and a_field["decsize"] == 0
+                                            )
+                                        ):
+                                            case_label_found = True
+                                if not case_label_found:
+                                    error = 1
+                                    message = _(
+                                        "The variable {} used to label cases was not found or is invalid. "
+                                        "Only text, calculates or integers are allowed.".format(
+                                            form_caselabel
+                                        )
+                                    )
+                            else:
+                                fields = get_fields_from_table_in_file(
+                                    create_file, "maintable"
+                                )
+                                case_selector_found = False
+                                for a_field in fields:
+                                    if a_field["name"] == form_caseselector:
+                                        if (
+                                            a_field["odktype"] == "select one"
+                                            and a_field["selecttype"] == "3"
+                                        ):
+                                            case_selector_found = True
+                                            form_caseselector_file = a_field[
+                                                "externalfilename"
+                                            ]
+                                if not case_selector_found:
+                                    error = 1
+                                    message = _(
+                                        "The variable {} used to search a select cases was not found or is invalid. "
+                                        "The variable must be select_one_from_file using a CSV file.".format(
+                                            form_caselabel
+                                        )
+                                    )
+
                     if error == 0:
                         continue_creation = True
                         for a_plugin in plugins.PluginImplementations(plugins.IForm):
@@ -819,6 +937,15 @@ def upload_odk_form(
                                 form_data["form_geopoint"] = form_geopoint
                             if message != "":
                                 form_data["form_reqfiles"] = message
+
+                            if project_case == 1:
+                                form_data["form_case"] = 1
+                                form_data["form_casetype"] = form_casetype
+                                form_data["form_caselabel"] = form_caselabel
+                                form_data["form_caseselector"] = form_caseselector
+                                form_data[
+                                    "form_caseselectorfilename"
+                                ] = form_caseselector_file
 
                             continue_adding = True
                             for a_plugin in plugins.PluginImplementations(
@@ -947,7 +1074,17 @@ def upload_odk_form(
 
 
 def update_odk_form(
-    request, user_id, project_id, for_form_id, odk_dir, form_data, primary_key
+    request,
+    user_id,
+    project_id,
+    for_form_id,
+    odk_dir,
+    form_data,
+    primary_key,
+    project_case=0,
+    form_casetype=None,
+    form_caselabel=None,
+    form_caseselector=None,
 ):
     _ = request.translate
     uid = str(uuid.uuid4())
@@ -1016,7 +1153,6 @@ def update_odk_form(
         root = tree.getroot()
         nsmap = root.nsmap[None]
         h_nsmap = root.nsmap["h"]
-        # eid = root.findall(".//{" + nsmap + "}" + parts[0])
         eid = root.findall(".//{" + nsmap + "}data")
         if eid:
             form_id = eid[0].get("id")
@@ -1035,6 +1171,80 @@ def update_odk_form(
                             primary_key,
                             external_files,
                         )
+
+                        form_caseselector_file = None
+                        if project_case == 1:
+                            if error == 0:
+                                if form_casetype == 1:
+                                    fields = get_fields_from_table_in_file(
+                                        create_file, "maintable"
+                                    )
+                                    case_id_type_correct = False
+                                    for a_field in fields:
+                                        if a_field["name"] == primary_key:
+                                            if (
+                                                a_field["type"] == "varchar"
+                                                or a_field["type"] == "text"
+                                                or (
+                                                    a_field["type"] == "integer"
+                                                    and a_field["decsize"] == 0
+                                                )
+                                            ):
+                                                case_id_type_correct = True
+                                    if not case_id_type_correct:
+                                        error = 1
+                                        message = _(
+                                            "The variable {} used to identify the cases is invalid. "
+                                            "Only text, calculates or integers are allowed.".format(
+                                                form_caselabel
+                                            )
+                                        )
+
+                                    case_label_found = False
+                                    for a_field in fields:
+                                        if a_field["name"] == form_caselabel:
+                                            if (
+                                                a_field["type"] == "varchar"
+                                                or a_field["type"] == "text"
+                                                or (
+                                                    a_field["type"] == "integer"
+                                                    and a_field["decsize"] == 0
+                                                )
+                                            ):
+                                                case_label_found = True
+                                    if not case_label_found:
+                                        error = 1
+                                        message = _(
+                                            "The variable {} used to label cases was not found or is invalid. "
+                                            "Only text, calculates or integers are allowed.".format(
+                                                form_caselabel
+                                            )
+                                        )
+                                else:
+                                    fields = get_fields_from_table_in_file(
+                                        create_file, "maintable"
+                                    )
+                                    case_selector_found = False
+                                    for a_field in fields:
+                                        if a_field["name"] == form_caseselector:
+                                            if (
+                                                a_field["odktype"] == "select one"
+                                                and a_field["selecttype"] == "3"
+                                            ):
+                                                case_selector_found = True
+                                                form_caseselector_file = a_field[
+                                                    "externalfilename"
+                                                ]
+                                    if not case_selector_found:
+                                        error = 1
+                                        message = _(
+                                            "The variable {} used to search a select cases was not found or "
+                                            "is invalid. "
+                                            "The variable must be select_one_from_file using a CSV file.".format(
+                                                form_caselabel
+                                            )
+                                        )
+
                         if error == 0:
                             old_form_directory = get_form_directory(
                                 request, project_id, form_id
@@ -1160,6 +1370,15 @@ def update_odk_form(
                                     form_data["form_geopoint"] = form_geopoint
                                 if message != "":
                                     form_data["form_reqfiles"] = message
+
+                                if project_case == 1:
+                                    form_data["form_case"] = 1
+                                    form_data["form_casetype"] = form_casetype
+                                    form_data["form_caselabel"] = form_caselabel
+                                    form_data["form_caseselector"] = form_caseselector
+                                    form_data[
+                                        "form_caseselectorfilename"
+                                    ] = form_caseselector_file
 
                                 continue_updating = True
                                 for a_plugin in plugins.PluginImplementations(

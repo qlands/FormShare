@@ -34,7 +34,12 @@ def upgrade():
         "odkform",
         sa.Column("form_caseselectorfilename", sa.Unicode(length=120), nullable=True),
     )
-    op.add_column("odkform", sa.Column("form_casetype", sa.INTEGER(), nullable=True))
+    op.add_column(
+        "odkform",
+        sa.Column(
+            "form_casetype", sa.INTEGER(), server_default=sa.text("'0'"), nullable=True
+        ),
+    )
     op.add_column(
         "project",
         sa.Column(

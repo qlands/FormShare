@@ -135,6 +135,7 @@ class ProjectDetailsView(ProjectsView):
         bydetails = get_by_details(self.request, user_id, project_id, by)
         return {
             "projectData": project_data,
+            "projectDetails": project_data,
             "userid": user_id,
             "collaborators": collaborators,
             "moreCollaborators": more_collaborators,

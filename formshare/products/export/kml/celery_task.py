@@ -7,6 +7,7 @@ from formshare.config.celery_class import CeleryTask
 from formshare.models import get_engine
 import os
 from jinja2 import Environment, FileSystemLoader
+import html
 
 log = get_task_logger(__name__)
 
@@ -48,7 +49,7 @@ def get_fields_from_table(engine, schema, create_file):
                     desc = field.get("name") + " - Without description"
                 data = {
                     "name": field.get("name"),
-                    "desc": desc,
+                    "desc": html.escape(desc),
                     # "type": field.get("type"),
                     "type": "string",
                     "xmlcode": field.get("xmlcode"),
@@ -150,9 +151,12 @@ def internal_build_kml(settings, form_schema, kml_file, locale, task_id):
             if found:
                 if is_key == "true":
                     if is_lookup == "false":
-                        field_value = value
+                        if isinstance(value, str):
+                            field_value = html.escape(value)
+                        else:
+                            field_value = value
                     else:
-                        field_value = lookup_values.get(value)
+                        field_value = html.escape(lookup_values.get(value))
                     record_data["fields"].append({"name": key, "value": field_value})
                     record_data["id"] = value
         for key, value in dict_submission.items():
@@ -169,9 +173,12 @@ def internal_build_kml(settings, form_schema, kml_file, locale, task_id):
             if found:
                 if is_key == "false":
                     if is_lookup == "false":
-                        field_value = value
+                        if isinstance(value, str):
+                            field_value = html.escape(value)
+                        else:
+                            field_value = value
                     else:
-                        field_value = lookup_values.get(value)
+                        field_value = html.escape(lookup_values.get(value))
                     record_data["fields"].append({"name": key, "value": field_value})
         records.append(record_data)
 

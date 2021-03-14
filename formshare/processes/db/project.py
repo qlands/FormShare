@@ -35,6 +35,8 @@ __all__ = [
     "get_project_owner",
     "get_project_access_type",
     "get_owned_project",
+    "get_number_of_case_creators",
+    "get_number_of_case_creators_with_repository",
 ]
 
 log = logging.getLogger("formshare")
@@ -84,6 +86,27 @@ def get_project_code_from_id(request, user, project_id):
 def get_forms_number(request, project):
     total = (
         request.dbsession.query(Odkform).filter(Odkform.project_id == project).count()
+    )
+    return total
+
+
+def get_number_of_case_creators(request, project):
+    total = (
+        request.dbsession.query(Odkform)
+        .filter(Odkform.project_id == project)
+        .filter(Odkform.form_casetype == 1)
+        .count()
+    )
+    return total
+
+
+def get_number_of_case_creators_with_repository(request, project):
+    total = (
+        request.dbsession.query(Odkform)
+        .filter(Odkform.project_id == project)
+        .filter(Odkform.form_casetype == 1)
+        .filter(Odkform.form_schema.isnot(None))
+        .count()
     )
     return total
 
@@ -190,6 +213,12 @@ def get_user_projects(request, user, logged_user):
         )
         project["total_forms"] = get_forms_number(request, project["project_id"])
         project["owner"] = get_project_owner(request, project["project_id"])
+        project["total_case_creators"] = get_number_of_case_creators(
+            request, project["project_id"]
+        )
+        project[
+            "total_case_creators_with_repository"
+        ] = get_number_of_case_creators_with_repository(request, project["project_id"])
 
     projects = sorted(projects, key=lambda prj: project["project_cdate"], reverse=True)
     return projects

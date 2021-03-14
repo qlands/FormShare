@@ -72,17 +72,17 @@
                                     {% else %}
                                         <hr>
                                         <div style="margin-top: 10px" class="form-group">
-                                            <label><b>{{ _('Type of case form') }}</b></label>
-                                            <label><input type="radio" checked value="2" id="case_followup" name="form_casetype"> {{ _('Simple follow-up form') }}</label><br/>
-                                            <label><input type="radio" value="3" id="case_deactivate" name="form_casetype"> {{ _('Follow-up and deactivate case form') }}</label><br/>
-                                            <label><input type="radio" value="4" id="case_activate" name="form_casetype"> {{ _('Follow-up and activate case form') }}</label>
-                                            <span class="form-text m-b-none text-success">{{ _('Follow-up forms just attach information to a case. Deactivate and Activate forms change the status of a case. For example, a household that decides to exit a study so no more data should be collected afterwards about it.') }}</span>
+                                            <label><b>{{ _('Type of case form') }}</b></label><br/>
+                                            <label><input type="radio" checked value="2" id="case_followup" name="form_casetype"> {{ _('Simple follow-up') }}</label> <i title="{{ _('Follow-up forms just attach information to a case') }}" class="fas fa-info-circle"></i><br/>
+                                            <label><input type="radio" value="3" id="case_deactivate" name="form_casetype"> {{ _('Follow-up and deactivate') }}</label> <i title="{{ _('Deactivate forms change the status of a case to inactive.') }}&#10;{{ _('For example, a household that decides to exit a study') }}" class="fas fa-info-circle"></i><br/>
+                                            <label><input type="radio" value="4" id="case_activate" name="form_casetype"> {{ _('Follow-up and activate') }}</label> <i title="{{ _('Activate forms change the status of a case to active.') }}&#10;{{ _('For example, a household that decides to enter a study again') }}" class="fas fa-info-circle"></i><br/>
+{#                                            <span class="form-text m-b-none text-success">{{ _('Click on eac') }}</span>#}
                                         </div>
                                         <hr>
                                         <div style="margin-top: 10px" class="form-group">
                                             <label><b>{{ _('Which variable will be used to search and select a case?') }}</b></label>
                                             <input type="text" name="form_caseselector" class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the case selector variable') }}')"  oninput="setCustomValidity('')">
-                                            <span class="form-text m-b-none text-success">{{ _('This will be used to search and select each case in follow-up forms. This variable MUST BE a select_one_from_file. The file MUST BE CSV.') }} <a href="https://docs.getodk.org/form-datasets/" target="_blank">{{ _('Read here about it') }}</a></span>
+                                            <span class="form-text m-b-none text-success">{{ _('This will be used to search and select each case in follow-up forms. This variable MUST BE a "select_one_from_file". The file MUST BE CSV.') }}<br/><a style="color: orange" href="https://docs.getodk.org/form-datasets/" target="_blank">{{ _('Read here about it') }}</a></span>
                                         </div>
                                         <hr>
                                         <div style="margin-top: 10px" class="form-group">

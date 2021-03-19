@@ -12,7 +12,7 @@ services:
         ipv4_address: 172.28.1.5
   
   fselasticsearch_20210308:
-    image: docker.elastic.co/elasticsearch/elasticsearch:6.3.2
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.8.14
     container_name: fs_elasticsearch_20210308
     environment:
       - cluster.name=docker-cluster
@@ -29,7 +29,7 @@ services:
       fsnet:
         ipv4_address: 172.28.1.1
   fselasticsearch2_20210308:
-    image: docker.elastic.co/elasticsearch/elasticsearch:6.3.2
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.8.14
     container_name: fs_elasticsearch2_20210308
     environment:
       - cluster.name=docker-cluster
@@ -47,7 +47,7 @@ services:
       fsnet:
         ipv4_address: 172.28.1.2
   fselasticsearch_202103083:
-    image: docker.elastic.co/elasticsearch/elasticsearch:6.3.2
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.8.14
     container_name: fs_elasticsearch3_20210308
     environment:
       - cluster.name=docker-cluster
@@ -111,7 +111,7 @@ services:
         ipv4_address: 172.28.1.6
 
   fskibana_20210308:
-    image: docker.elastic.co/kibana/kibana:6.3.2
+    image: docker.elastic.co/kibana/kibana:6.8.14
     container_name: fskibana_20210308
     environment:
       ELASTICSEARCH_URL: http://172.28.1.1:9200

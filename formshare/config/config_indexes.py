@@ -2,6 +2,9 @@ from formshare.config.elasticfeeds import configure_manager
 from formshare.processes.elasticsearch.user_index import configure_user_index_manager
 import requests
 import time
+import logging
+
+log = logging.getLogger("formshare")
 
 
 def configure_indexes(settings):
@@ -23,6 +26,16 @@ def configure_indexes(settings):
         else:
             time.sleep(30)
     print("ES is ready")
+
+    resp = requests.get("http://{}:{}/".format(es_host, es_port))
+    data = resp.json()
+    version = data["version"]["number"].split(".")
+    if version[0] != "6":
+        log.error("This version of FormShare requires ElasticSearch version 6.8.X")
+    else:
+        if version[1] != "8":
+            log.error("This version of FormShare requires ElasticSearch version 6.8.X")
+
     # Load the feeds manager
     configure_manager(settings)
     # Load the user index manager

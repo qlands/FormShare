@@ -1,7 +1,7 @@
 version: '3'
 services:
   fsmysql_20210308:
-    image: mysql:5.7.27
+    image: mysql:8.0.23
     container_name: fs_mysql_20210308
     environment:
       MYSQL_ROOT_PASSWORD: my_secure_password

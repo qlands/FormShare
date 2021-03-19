@@ -156,7 +156,8 @@ def internal_build_kml(settings, form_schema, kml_file, locale, task_id):
                         else:
                             field_value = value
                     else:
-                        field_value = html.escape(lookup_values.get(value))
+                        if lookup_values.get(value) is not None:
+                            field_value = html.escape(lookup_values.get(value))
                     record_data["fields"].append({"name": key, "value": field_value})
                     record_data["id"] = value
         for key, value in dict_submission.items():
@@ -178,7 +179,8 @@ def internal_build_kml(settings, form_schema, kml_file, locale, task_id):
                         else:
                             field_value = value
                     else:
-                        field_value = html.escape(lookup_values.get(value))
+                        if lookup_values.get(value) is not None:
+                            field_value = html.escape(lookup_values.get(value))
                     record_data["fields"].append({"name": key, "value": field_value})
         records.append(record_data)
 

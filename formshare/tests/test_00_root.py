@@ -209,7 +209,7 @@ class FunctionalTests(unittest.TestCase):
             print("**************Random Login: {}".format(self.randonLogin))
 
             # Join goes to 404
-            self.testapp.post(
+            res = self.testapp.post(
                 "/join",
                 {
                     "user_address": "",
@@ -221,8 +221,9 @@ class FunctionalTests(unittest.TestCase):
                     "user_super": "1",
                     "user_apikey": self.randonLoginKey,
                 },
-                status=404,
+                status=200,
             )
+            assert "FS_error" in res.headers
 
             # Register user fails. Password is too long
             res = self.testapp.post(
@@ -259,11 +260,12 @@ class FunctionalTests(unittest.TestCase):
             assert "FS_error" not in res.headers
 
             # Recover goes to 404
-            self.testapp.post(
+            res = self.testapp.post(
                 "/recover",
                 {"email": random_login + "@qlands.com", "user": "something"},
-                status=404,
+                status=200,
             )
+            assert "FS_error" in res.headers
 
             # Test recover the password
             res = self.testapp.post(
@@ -304,11 +306,12 @@ class FunctionalTests(unittest.TestCase):
             assert "FS_error" not in res.headers
 
             # Login fails
-            self.testapp.post(
+            res = self.testapp.post(
                 "/login",
                 {"user": "test", "email": random_login, "passwd": "123"},
-                status=404,
+                status=200,
             )
+            assert "FS_error" in res.headers
 
             # Login fails wrong pass
             res = self.testapp.post(

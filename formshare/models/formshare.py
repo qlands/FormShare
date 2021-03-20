@@ -253,6 +253,7 @@ class Odkform(Base):
     form_caselabel = Column(Unicode(120))
     form_caseselector = Column(Unicode(120))
     form_caseselectorfilename = Column(Unicode(120))
+    form_hasdictionary = Column(INTEGER, server_default=text("'0'"))
     extras = Column(UnicodeText)
     tags = Column(UnicodeText)
 
@@ -579,7 +580,7 @@ class DictTable(Base):
     table_name = Column(Unicode(120), primary_key=True, nullable=False)
     table_desc = Column(UnicodeText, nullable=False)
     table_lkp = Column(INTEGER, server_default=text("'0'"), nullable=False)
-    table_inserttrigger = Column(Unicode(64), nullable=False)
+    table_inserttrigger = Column(Unicode(64))
     table_xmlcode = Column(UnicodeText)
     parent_project = Column(Unicode(64))
     parent_form = Column(Unicode(120))
@@ -615,5 +616,7 @@ class DictField(Base):
     field_externalfilename = Column(UnicodeText)
     field_size = Column(INTEGER, server_default=text("'0'"))
     field_decsize = Column(INTEGER, server_default=text("'0'"))
+    field_sensitive = Column(INTEGER, server_default=text("'0'"))
+    field_protection = Column(Unicode(64))
 
     dicttable = relationship("DictTable")

@@ -449,7 +449,7 @@ def get_tables_from_form(request, project, form):
             num_sensitive = 0
             for field in table.getchildren():
                 if field.tag == "field":
-                    desc = field.get("name", "")
+                    desc = field.get("desc", "")
                     if desc == "":
                         desc = _("Without description")
                     fields.append({"name": field.get("name"), "desc": desc})
@@ -481,7 +481,7 @@ def get_tables_from_form(request, project, form):
             num_sensitive = 0
             for field in table.getchildren():
                 if field.tag == "field":
-                    desc = field.get("name", "")
+                    desc = field.get("desc", "")
                     if desc == "":
                         desc = _("Without description")
                     fields.append({"name": field.get("name"), "desc": desc})

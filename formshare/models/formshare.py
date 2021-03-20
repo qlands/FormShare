@@ -551,3 +551,69 @@ class Jsonhistory(Base):
 
     collaborator = relationship("Collaborator")
     form = relationship("Jsonlog")
+
+
+class DictTable(Base):
+    __tablename__ = "dicttable"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["project_id", "form_id"],
+            ["odkform.project_id", "odkform.form_id"],
+            ondelete="CASCADE",
+        ),
+        ForeignKeyConstraint(
+            ["parent_project", "parent_form", "parent_table"],
+            ["dicttable.project_id", "dicttable.form_id", "dicttable.table_name"],
+            ondelete="CASCADE",
+        ),
+        Index(
+            "fk_dicttable_dicttable_idx",
+            "parent_project",
+            "parent_form",
+            "parent_table",
+        ),
+    )
+
+    project_id = Column(Unicode(64), primary_key=True, nullable=False)
+    form_id = Column(Unicode(120), primary_key=True, nullable=False)
+    table_name = Column(Unicode(120), primary_key=True, nullable=False)
+    table_desc = Column(UnicodeText, nullable=False)
+    table_lkp = Column(INTEGER, server_default=text("'0'"), nullable=False)
+    table_inserttrigger = Column(Unicode(64), nullable=False)
+    table_xmlcode = Column(UnicodeText)
+    parent_project = Column(Unicode(64))
+    parent_form = Column(Unicode(120))
+    parent_table = Column(Unicode(120))
+
+    parent = relationship("DictTable", remote_side=[project_id, form_id, table_name])
+    project = relationship("Odkform")
+
+
+class DictField(Base):
+    __tablename__ = "dictfield"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["project_id", "form_id", "table_name"],
+            ["dicttable.project_id", "dicttable.form_id", "dicttable.table_name"],
+            ondelete="CASCADE",
+        ),
+    )
+
+    project_id = Column(Unicode(64), primary_key=True, nullable=False)
+    form_id = Column(Unicode(120), primary_key=True, nullable=False)
+    table_name = Column(Unicode(120), primary_key=True, nullable=False)
+    field_name = Column(Unicode(120), primary_key=True, nullable=False)
+    field_desc = Column(UnicodeText)
+    field_xmlcode = Column(UnicodeText)
+    field_type = Column(Unicode(64))
+    field_odktype = Column(Unicode(64))
+    field_rtable = Column(Unicode(120))
+    field_rfield = Column(Unicode(120))
+    field_rlookup = Column(INTEGER, server_default=text("'0'"))
+    field_rname = Column(Unicode(64))
+    field_selecttype = Column(INTEGER, server_default=text("'0'"))
+    field_externalfilename = Column(UnicodeText)
+    field_size = Column(INTEGER, server_default=text("'0'"))
+    field_decsize = Column(INTEGER, server_default=text("'0'"))
+
+    dicttable = relationship("DictTable")

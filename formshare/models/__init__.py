@@ -27,6 +27,8 @@ from formshare.models.formshare import (
     Settings,
     ProjectSettings,
     FormSettings,
+    DictTable,
+    DictField,
 )
 from formshare.models.schema import *
 

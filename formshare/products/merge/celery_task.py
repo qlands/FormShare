@@ -697,6 +697,7 @@ def internal_merge_into_repository(
                 "form_hasdictionary": 1,
             }
             update_form(db_session, project_id, a_form_id, form_data)
+            transaction.commit()
             if not discard_testing_data:
                 log.info("Storing testing data")
                 send_task_status_to_form(settings, task_id, _("Storing testing data"))

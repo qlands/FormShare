@@ -8,3 +8,4 @@ from formshare.processes.db.products import *
 from formshare.processes.db.project import *
 from formshare.processes.db.submission import *
 from formshare.processes.db.user import *
+from formshare.processes.db.dictionary import *

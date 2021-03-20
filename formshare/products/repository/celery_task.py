@@ -7,11 +7,11 @@ import traceback
 import uuid
 from subprocess import Popen, PIPE, check_call, CalledProcessError
 from formshare.products.fs1import.celery_task import import_json_files
-
+from lxml import etree
 import transaction
 from sqlalchemy.orm import configure_mappers
 from sqlalchemy import or_
-
+from sqlalchemy.exc import IntegrityError
 from formshare.config.celery_app import celeryApp
 from formshare.config.celery_class import CeleryTask
 from formshare.models import (
@@ -24,6 +24,8 @@ from formshare.models import (
     Collingroup,
     map_to_schema,
     initialize_schema,
+    DictTable,
+    DictField,
 )
 from formshare.processes.elasticsearch.repository_index import delete_dataset_index
 from formshare.processes.email.send_async_email import send_async_email
@@ -200,6 +202,142 @@ def get_one_assistant(db_session, project, form):
             return None, None
 
 
+def update_dictionary_tables(db_session, project, form, xml_create_file):
+    def create_new_field_dict(a_table, a_field):
+        field_desc = a_field.get("desc", "")
+        field_rlookup = a_field.get("rlookup", "false")
+        if field_rlookup == "true":
+            field_rlookup = 1
+        else:
+            field_rlookup = 0
+        field_sensitive = a_field.get("sensitive", "false")
+        if field_sensitive == "true":
+            field_sensitive = 1
+        else:
+            field_sensitive = 0
+        if field_desc == "":
+            field_desc = "Without a description"
+        new_field_dict = {
+            "project_id": project,
+            "form_id": form,
+            "table_name": a_table.get("name"),
+            "field_name": a_field.get("name"),
+            "field_desc": field_desc,
+            "field_xmlcode": a_field.get("xmlcode"),
+            "field_type": a_field.get("type"),
+            "field_odktype": a_field.get("odktype"),
+            "field_rtable": a_field.get("rtable"),
+            "field_rfield": a_field.get("rfield"),
+            "field_rlookup": field_rlookup,
+            "field_rname": a_field.get("rname"),
+            "field_selecttype": a_field.get("selecttype"),
+            "field_externalfilename": a_field.get("externalfilename"),
+            "field_size": a_field.get("size", 0),
+            "field_decsize": a_field.get("decsize", 0),
+            "field_sensitive": field_sensitive,
+            "field_protection": a_field.get("protection"),
+        }
+        return new_field_dict
+
+    def store_tables(element, lookup):
+        tables = element.findall(".//table")
+        if tables:
+            for table in tables:
+                res = (
+                    db_session.query(DictTable.table_name)
+                    .filter(DictTable.project_id == project)
+                    .filter(DictTable.form_id == form)
+                    .filter(DictTable.table_name == table.get("name"))
+                    .count()
+                )
+                if res == 0:
+                    new_table_dict = {
+                        "project_id": project,
+                        "form_id": form,
+                        "table_name": table.get("name"),
+                        "table_desc": table.get("desc"),
+                        "table_lkp": lookup,
+                        "table_inserttrigger": table.get("inserttrigger"),
+                        "table_xmlcode": table.get("xmlcode"),
+                    }
+                    parent = table.getparent()
+                    if parent.tag == "table":
+                        new_table_dict["parent_project"] = project
+                        new_table_dict["parent_form"] = form
+                        new_table_dict["parent_table"] = parent.get("name")
+                    new_table = DictTable(**new_table_dict)
+                    try:
+                        db_session.add(new_table)
+                        for field in table.getchildren():
+                            if field.tag == "field":
+                                res = (
+                                    db_session.query(DictField.field_name)
+                                    .filter(DictField.project_id == project)
+                                    .filter(DictField.form_id == form)
+                                    .filter(DictField.table_name == table.get("name"))
+                                    .filter(DictField.field_name == field.get("name"))
+                                    .count()
+                                )
+                                if res == 0:
+                                    new_field_dict = create_new_field_dict(table, field)
+                                    new_field = DictField(**new_field_dict)
+                                    try:
+                                        db_session.add(new_field)
+                                    except IntegrityError:
+                                        log.error(
+                                            "Duplicated field {} in table {} in project {} form {}".format(
+                                                field.get("name"),
+                                                table.get("name"),
+                                                project,
+                                                form,
+                                            )
+                                        )
+                                        return False
+                    except IntegrityError:
+                        log.error(
+                            "Duplicated table {} in project {} form {}".format(
+                                table.get("name"), project, form
+                            )
+                        )
+                        return False
+                else:
+                    for field in table.getchildren():
+                        if field.tag == "field":
+                            res = (
+                                db_session.query(DictField.field_name)
+                                .filter(DictField.project_id == project)
+                                .filter(DictField.form_id == form)
+                                .filter(DictField.table_name == table.get("name"))
+                                .filter(DictField.field_name == field.get("name"))
+                                .count()
+                            )
+                            if res == 0:
+                                new_field_dict = create_new_field_dict(table, field)
+                                new_field = DictField(**new_field_dict)
+                                try:
+                                    db_session.add(new_field)
+                                except IntegrityError:
+                                    log.error(
+                                        "Duplicated field {} in table {} in project {} form {}".format(
+                                            field.get("name"),
+                                            table.get("name"),
+                                            project,
+                                            form,
+                                        )
+                                    )
+                                    return False
+        return True
+
+    if not os.path.isfile(xml_create_file):
+        return
+    tree = etree.parse(xml_create_file)
+    root = tree.getroot()
+    element_lkp_tables = root.find(".//lkptables")
+    element_tables = root.find(".//tables")
+    store_tables(element_lkp_tables, 1)
+    store_tables(element_tables, 0)
+
+
 def update_form(db_session, project, form, form_data):
     mapped_data = map_to_schema(Odkform, form_data)
     try:
@@ -288,6 +426,7 @@ def internal_create_mysql_repository(
             "form_pkey": primary_key,
             "form_createxmlfile": create_xml_file,
             "form_insertxmlfile": insert_xml_file,
+            "form_hasdictionary": 1,
         }
         update_form(db_session, project_id, form, form_data)
         if not discard_testing_data:
@@ -295,6 +434,7 @@ def internal_create_mysql_repository(
                 db_session, project_id, form
             )
             geo_point_variable = get_geopoint_variable(db_session, project_id, form)
+        update_dictionary_tables(db_session, project_id, form, create_xml_file)
     engine.dispose()
     delete_dataset_index(settings, user, project_code, form)
     if discard_testing_data:

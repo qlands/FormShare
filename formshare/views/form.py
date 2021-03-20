@@ -45,6 +45,7 @@ from formshare.processes.db import (
     get_forms_for_schema,
     get_media_files,
     get_maintable_information,
+    update_dictionary_tables,
 )
 from formshare.processes.elasticsearch.record_index import delete_record_index
 from formshare.processes.elasticsearch.repository_index import (
@@ -493,6 +494,15 @@ class FormDetails(PrivateView):
 
         form_data = get_form_details(self.request, user_id, project_id, form_id)
         if form_data is not None:
+            if form_data["form_schema"] is not None:
+                if form_data["form_hasdictionary"] == 0:
+                    updated = update_dictionary_tables(
+                        self.request, project_id, form_id
+                    )
+                    if updated:
+                        form_dict_data = {"form_hasdictionary": 1}
+                        update_form(self.request, project_id, form_id, form_dict_data)
+
             form_files = get_form_files(self.request, project_id, form_id)
             if self.user is not None:
                 assistants = get_all_assistants(self.request, user_id)

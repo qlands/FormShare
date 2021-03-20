@@ -11,6 +11,9 @@
                 {% else %}
                     {% if projectData.total_case_creators == 0 or (projectData.total_case_creators > 0 and projectData.total_case_creators_with_repository > 0) %}
                         <button id="add_form" data-toggle="modal" data-target="#upload_form" type="button" class="btn btn-block btn-outline btn-primary">{{ _('Add new form') }}</button>
+                        {% if projectData.total_case_creators > 0 and projectData.total_case_creators_with_repository > 0 %}
+                            <button type="button" class="btn btn-block btn-outline btn-warning">{{ _('View/edit case look-up table') }}</button>
+                        {% endif %}
                     {% else %}
                         <button type="button" class="btn btn-block btn-outline btn-default" title="{{ _('You cannot add new forms while you have a case creator form in testing stage.') }}">{{ _('Add new form (Inactive)') }}</button>
                     {% endif %}

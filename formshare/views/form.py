@@ -2792,3 +2792,44 @@ class GetMediaFile(PrivateView):
         response = FileResponse(file, request=self.request, content_type=file_type)
         response.content_disposition = 'attachment; filename="' + os.path.basename(file)
         return response
+
+
+class CaseLookUpTable(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+
+    def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        project_code = self.request.matchdict["projcode"]
+        form_id = self.request.matchdict["formid"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        if self.activeProject["project_id"] == project_id:
+            self.set_active_menu("assistants")
+        else:
+            self.set_active_menu("projects")
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] >= 4:
+            raise HTTPNotFound
+
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+
+        return {
+            "formData": form_data,
+            "projectDetails": project_details,
+            "userid": user_id,
+            "formid": form_id,
+        }

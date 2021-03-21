@@ -3,8 +3,12 @@ import json
 from pyramid.httpexceptions import HTTPNotFound
 from pyramid.response import Response
 
-from formshare.processes.db import get_form_data, get_project_id_from_name, \
-    update_dictionary_tables, update_form
+from formshare.processes.db import (
+    get_form_data,
+    get_project_id_from_name,
+    update_dictionary_tables,
+    update_form,
+)
 from formshare.processes.submission.api import (
     get_tables_from_form,
     update_table_desc,

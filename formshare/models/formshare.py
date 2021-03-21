@@ -618,6 +618,7 @@ class DictField(Base):
     field_rtable = Column(Unicode(120))
     field_rfield = Column(Unicode(120))
     field_rlookup = Column(INTEGER, server_default=text("'0'"))
+    field_key = Column(INTEGER, server_default=text("'0'"))
     field_rname = Column(Unicode(64))
     field_selecttype = Column(INTEGER, server_default=text("'0'"))
     field_externalfilename = Column(UnicodeText)
@@ -627,3 +628,16 @@ class DictField(Base):
     field_protection = Column(Unicode(64))
 
     dicttable = relationship("DictTable")
+
+
+class CaseLookUp(Base):
+    __tablename__ = "caselookup"
+
+    project_id = Column(
+        ForeignKey("project.project_id", ondelete="CASCADE"), primary_key=True
+    )
+    field_name = Column(Unicode(120), primary_key=True)
+    field_as = Column(Unicode(45))
+    field_editable = Column(INTEGER, server_default=text("'1'"))
+
+    project = relationship("Project")

@@ -3,7 +3,8 @@ import json
 from pyramid.httpexceptions import HTTPNotFound
 from pyramid.response import Response
 
-from formshare.processes.db import get_form_data, get_project_id_from_name
+from formshare.processes.db import get_form_data, get_project_id_from_name, \
+    update_dictionary_tables, update_form
 from formshare.processes.submission.api import (
     get_tables_from_form,
     update_table_desc,
@@ -45,6 +46,14 @@ class EditDictionaryTables(PrivateView):
         if form_data is not None:
             if form_data["form_schema"] is None:
                 raise HTTPNotFound
+            else:
+                if form_data["form_hasdictionary"] == 0:
+                    updated = update_dictionary_tables(
+                        self.request, project_id, form_id
+                    )
+                    if updated:
+                        form_dict_data = {"form_hasdictionary": 1}
+                        update_form(self.request, project_id, form_id, form_dict_data)
             if form_data["form_blocked"] != 0:
                 raise HTTPNotFound
 

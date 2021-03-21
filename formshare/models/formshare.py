@@ -8,6 +8,7 @@ from sqlalchemy import (
     ForeignKey,
     ForeignKeyConstraint,
     INTEGER,
+    BigInteger,
     Index,
     text,
     Unicode,
@@ -578,6 +579,9 @@ class DictTable(Base):
     project_id = Column(Unicode(64), primary_key=True, nullable=False)
     form_id = Column(Unicode(120), primary_key=True, nullable=False)
     table_name = Column(Unicode(120), primary_key=True, nullable=False)
+    table_index = Column(
+        BigInteger, index=True, autoincrement=True, unique=True, nullable=False
+    )
     table_desc = Column(UnicodeText, nullable=False)
     table_lkp = Column(INTEGER, server_default=text("'0'"), nullable=False)
     table_inserttrigger = Column(Unicode(64))
@@ -604,6 +608,9 @@ class DictField(Base):
     form_id = Column(Unicode(120), primary_key=True, nullable=False)
     table_name = Column(Unicode(120), primary_key=True, nullable=False)
     field_name = Column(Unicode(120), primary_key=True, nullable=False)
+    field_index = Column(
+        BigInteger, index=True, autoincrement=True, unique=True, nullable=False
+    )
     field_desc = Column(UnicodeText)
     field_xmlcode = Column(UnicodeText)
     field_type = Column(Unicode(64))

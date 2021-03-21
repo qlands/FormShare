@@ -2802,7 +2802,6 @@ class CaseLookUpTable(PrivateView):
     def process_view(self):
         user_id = self.request.matchdict["userid"]
         project_code = self.request.matchdict["projcode"]
-        form_id = self.request.matchdict["formid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         if self.activeProject["project_id"] == project_id:
             self.set_active_menu("assistants")
@@ -2823,13 +2822,19 @@ class CaseLookUpTable(PrivateView):
         if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
-        form_data = get_form_data(self.request, project_id, form_id)
-        if form_data is None:
+        if project_details["project_case"] == 0:
+            raise HTTPNotFound
+
+        if project_details["total_case_creators"] == 0:
+            raise HTTPNotFound
+
+        if (
+            project_details["total_case_creators"] > 0
+            and project_details["total_case_creators_with_repository"] == 0
+        ):
             raise HTTPNotFound
 
         return {
-            "formData": form_data,
             "projectDetails": project_details,
             "userid": user_id,
-            "formid": form_id,
         }

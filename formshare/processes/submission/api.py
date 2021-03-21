@@ -28,6 +28,8 @@ from formshare.processes.db import (
     get_form_xml_insert_file,
     get_project_form_colors,
     add_json_log,
+    get_dictionary_fields,
+    get_dictionary_table_desc,
 )
 from formshare.processes.elasticsearch.record_index import (
     delete_record_index,
@@ -647,15 +649,78 @@ def get_protection_desc(request, protection_code):
     return ""
 
 
+def _to_string(value):
+    if value == 1:
+        return "true"
+    else:
+        return "false"
+
+
 def get_fields_from_table(
     request, project, form, table_name, current_fields, get_values=True
 ):
+    """
+    This function get the fields of a table from the DB or the XML file
+    :param request: Pyramid request
+    :param project: Project ID
+    :param form: Form ID
+    :param table_name: Table
+    :param current_fields: Current selected fields
+    :param get_values: Get lookup values
+    :return: Dict array of fields, whether or not some fields are checked
+    """
+    result = []
+    checked = 0
+    dict_fields = get_dictionary_fields(request, project, form, table_name)
+    if dict_fields:
+        for field in dict_fields:
+            found = False
+            if len(current_fields) != 0:
+                if "rowuuid" not in current_fields:
+                    current_fields.append("rowuuid")
+            for cfield in current_fields:
+                if field.get("field_name") == cfield:
+                    found = True
+                    checked = checked + 1
+            desc = field.get("field_desc", "")
+            if desc == "" or desc == "Without label":
+                desc = field.get("field_name") + " - Without description"
+            if field.get("field_key", 0) == 1:
+                editable = "false"
+            else:
+                editable = field_is_editable(field.get("name"))
+            data = {
+                "name": field.get("field_name"),
+                "desc": desc,
+                "type": field.get("field_type"),
+                "xmlcode": field.get("field_xmlcode"),
+                "size": field.get("field_size"),
+                "decsize": field.get("field_decsize"),
+                "checked": found,
+                "sensitive": _to_string(field.get("field_sensitive", 0)),
+                "protection": field.get("field_protection", "None"),
+                "protection_desc": get_protection_desc(
+                    request, field.get("field_protection", "None")
+                ),
+                "key": _to_string(field.get("field_key", 0)),
+                "rlookup": _to_string(field.get("field_rlookup", 0)),
+                "rtable": field.get("field_rtable", "None"),
+                "rfield": field.get("field_rfield", "None"),
+                "editable": editable,
+            }
+
+            if data["rlookup"] == "true" and get_values:
+                data["lookupvalues"] = get_lookup_values(
+                    request, project, form, data["rtable"], data["rfield"]
+                )
+            result.append(data)
+        return result, checked
+
+    # If the dictionary does not exists in DB then use the XML file
     create_file = get_form_xml_create_file(request, project, form)
     tree = etree.parse(create_file)
     root = tree.getroot()
     table = root.find(".//table[@name='" + table_name + "']")
-    result = []
-    checked = 0
     if table is not None:
         for field in table.getchildren():
             if field.tag == "field":
@@ -705,6 +770,17 @@ def get_fields_from_table(
 
 
 def get_table_desc(request, project, form, table_name):
+    """
+    Return the description of a table from DB or XML file
+    :param request: Pyramid request object
+    :param project: Project ID
+    :param form: Form ID
+    :param table_name: Table Name
+    :return: Description of a table or ""
+    """
+    desc = get_dictionary_table_desc(request, project, form, table_name)
+    if desc is not None:
+        return desc
     create_file = get_form_xml_create_file(request, project, form)
     tree = etree.parse(create_file)
     root = tree.getroot()

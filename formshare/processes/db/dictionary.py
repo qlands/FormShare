@@ -1,16 +1,65 @@
-from formshare.models import DictTable, DictField
+from formshare.models import DictTable, DictField, map_from_schema
 from formshare.processes.db.form import get_form_xml_create_file
 import logging
 import os
 from lxml import etree
 from sqlalchemy.exc import IntegrityError
 
-__all__ = ["update_dictionary_tables"]
+__all__ = [
+    "update_dictionary_tables",
+    "get_dictionary_fields",
+    "get_dictionary_table_desc",
+]
 
 log = logging.getLogger("formshare")
 
 
+def get_dictionary_table_desc(request, project, form, table):
+    """
+    Return the description of a table in the DB
+    :param request: Pyramid request object
+    :param project: Project ID
+    :param form: Form ID
+    :param table: Table name
+    :return: Table description or None
+    """
+    return (
+        request.dbsession.query(DictTable.table_desc)
+        .filter(DictTable.project_id == project)
+        .filter(DictTable.form_id == form)
+        .filter(DictTable.table_name == table)
+        .first()
+    )
+
+
+def get_dictionary_fields(request, project, form, table):
+    """
+    Get the fields of a table from the DB as a array of dict
+    :param request: Pyramid request
+    :param project: Project ID
+    :param form: Form ID
+    :param table: Table name
+    :return: Array of dict fields
+    """
+    res = (
+        request.dbsession.query(DictField)
+        .filter(DictField.project_id == project)
+        .filter(DictField.form_id == form)
+        .filter(DictField.table_name == table)
+        .all()
+    )
+    return map_from_schema(res)
+
+
 def update_dictionary_tables(request, project, form):
+    """
+    Update the dictionary tables in the DB using a create XML file
+    :param request: Pyramid request object
+    :param project: Project ID
+    :param form: Form ID
+    :return: True if update happened, False if error
+    """
+
     def create_new_field_dict(a_table, a_field):
         field_desc = a_field.get("desc", "")
         field_rlookup = a_field.get("rlookup", "false")
@@ -18,19 +67,23 @@ def update_dictionary_tables(request, project, form):
             field_rlookup = 1
         else:
             field_rlookup = 0
+        field_key = a_field.get("key", "false")
+        if field_key == "true":
+            field_key = 1
+        else:
+            field_key = 0
         field_sensitive = a_field.get("sensitive", "false")
         if field_sensitive == "true":
             field_sensitive = 1
         else:
             field_sensitive = 0
-        if field_desc == "":
-            field_desc = "Without a description"
         new_field_dict = {
             "project_id": project,
             "form_id": form,
             "table_name": a_table.get("name"),
             "field_name": a_field.get("name"),
             "field_desc": field_desc,
+            "field_key": field_key,
             "field_xmlcode": a_field.get("xmlcode"),
             "field_type": a_field.get("type"),
             "field_odktype": a_field.get("odktype"),

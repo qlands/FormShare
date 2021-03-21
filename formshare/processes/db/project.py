@@ -37,6 +37,8 @@ __all__ = [
     "get_owned_project",
     "get_number_of_case_creators",
     "get_number_of_case_creators_with_repository",
+    "get_case_form",
+    "get_case_schema",
 ]
 
 log = logging.getLogger("formshare")
@@ -109,6 +111,33 @@ def get_number_of_case_creators_with_repository(request, project):
         .count()
     )
     return total
+
+
+def get_case_form(request, project):
+    """
+    This will return the case form of a project. If the form is merged then it will return any
+    because the dictionary and database are the same across merged forms.
+    :param request: Pyramid request object
+    :param project: FormShare project
+    :return: A form ID or None
+    """
+    return (
+        request.dbsession.query(Odkform.form_id)
+        .filter(Odkform.project_id == project)
+        .filter(Odkform.form_casetype == 1)
+        .filter(Odkform.form_schema.isnot(None))
+        .first()
+    )
+
+
+def get_case_schema(request, project):
+    return (
+        request.dbsession.query(Odkform.form_schema)
+        .filter(Odkform.project_id == project)
+        .filter(Odkform.form_casetype == 1)
+        .filter(Odkform.form_schema.isnot(None))
+        .first()
+    )
 
 
 def get_project_owner(request, project):
@@ -219,6 +248,8 @@ def get_user_projects(request, user, logged_user):
         project[
             "total_case_creators_with_repository"
         ] = get_number_of_case_creators_with_repository(request, project["project_id"])
+        project["case_form"] = get_case_form(request, project["project_id"])
+        project["case_schema"] = get_case_schema(request, project["project_id"])
 
     projects = sorted(projects, key=lambda prj: project["project_cdate"], reverse=True)
     return projects

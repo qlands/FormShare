@@ -512,6 +512,11 @@ def get_tables_from_form(request, project, form):
         return result
 
     # If result is empty then use the create XML file
+    log.info(
+        "get_tables_from_form using XML file for form {} in project {}".format(
+            form, project
+        )
+    )
     create_file = get_form_xml_create_file(request, project, form)
     if not os.path.isfile(create_file):
         return []
@@ -834,6 +839,11 @@ def get_fields_from_table(
         return result, checked
 
     # If the dictionary does not exists in DB then use the XML file
+    log.info(
+        "get_fields_from_table using XML file for form {} in project {}".format(
+            form, project
+        )
+    )
     create_file = get_form_xml_create_file(request, project, form)
     tree = etree.parse(create_file)
     root = tree.getroot()

@@ -131,7 +131,7 @@ def get_dictionary_tables(request, project, form, table_type=None):
     """
     if table_type is None:
         res = (
-            request.dbsession.query(DictTable.table_desc)
+            request.dbsession.query(DictTable)
             .filter(DictTable.project_id == project)
             .filter(DictTable.form_id == form)
             .order_by(DictTable.table_index)
@@ -140,7 +140,7 @@ def get_dictionary_tables(request, project, form, table_type=None):
         return map_from_schema(res)
     if table_type == 1:
         res = (
-            request.dbsession.query(DictTable.table_desc)
+            request.dbsession.query(DictTable)
             .filter(DictTable.project_id == project)
             .filter(DictTable.form_id == form)
             .filter(DictTable.table_lkp == 0)
@@ -150,7 +150,7 @@ def get_dictionary_tables(request, project, form, table_type=None):
         return map_from_schema(res)
     if table_type == 2:
         res = (
-            request.dbsession.query(DictTable.table_desc)
+            request.dbsession.query(DictTable)
             .filter(DictTable.project_id == project)
             .filter(DictTable.form_id == form)
             .filter(DictTable.table_lkp == 1)

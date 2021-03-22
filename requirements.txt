@@ -39,7 +39,7 @@ jaraco.classes==3.1.0
 jaraco.collections==3.0.0
 jaraco.functools==3.0.1
 jaraco.text==3.2.0
-Jinja2==2.11.2
+Jinja2==2.11.3
 jinja2-time==0.2.0
 joblib==0.15.1
 kombu==4.6.8
@@ -63,7 +63,7 @@ PasteDeploy==2.1.0
 pathspec==0.8.0
 Pattern==3.6
 pdfminer.six==20200517
-Pillow==7.1.2
+Pillow==8.1.1
 plaster==1.0
 plaster-pastedeploy==0.7
 pluggy==0.13.1

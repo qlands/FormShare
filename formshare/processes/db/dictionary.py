@@ -9,9 +9,156 @@ __all__ = [
     "update_dictionary_tables",
     "get_dictionary_fields",
     "get_dictionary_table_desc",
+    "get_dictionary_tables",
+    "update_dictionary_table_desc",
+    "update_dictionary_field_desc",
+    "update_dictionary_field_sensitive",
 ]
 
 log = logging.getLogger("formshare")
+
+
+def update_dictionary_field_sensitive(
+    request, project, form, table, field, sensitive, protection
+):
+    """
+    Update the sensitivity of a field in the database
+    :param request: Pyramid request object
+    :param project: Project ID
+    :param form: Form ID
+    :param table: Table name
+    :param field: Field Name
+    :param sensitive: New sensitivity
+    :param protection: New type of protection
+    :return: True or False
+    """
+    try:
+        update_dict = {"field_sensitive": sensitive}
+        if sensitive == 1:
+            update_dict["field_protection"] = protection
+        else:
+            update_dict["field_protection"] = "None"
+        request.dbsession.query(DictField).filter(
+            DictField.project_id == project
+        ).filter(DictField.form_id == form).filter(
+            DictField.table_name == table
+        ).filter(
+            DictField.field_name == field
+        ).update(
+            update_dict
+        )
+        request.dbsession.flush()
+        return True
+    except Exception as e:
+        log.error(
+            "Error {} while updating description "
+            "for field {} in table {} in form {} of project {}".format(
+                str(e), field, table, form, project
+            )
+        )
+        return False
+
+
+def update_dictionary_field_desc(request, project, form, table, field, description):
+    """
+    Update the description of a Field
+    :param request: Pyramid request object
+    :param project: Project ID
+    :param form: Form ID
+    :param table: Table name
+    :param field: Field Name
+    :param description: New description
+    :return: True or False
+    """
+    try:
+        request.dbsession.query(DictField).filter(
+            DictField.project_id == project
+        ).filter(DictField.form_id == form).filter(
+            DictField.table_name == table
+        ).filter(
+            DictField.field_name == field
+        ).update(
+            {"field_desc": description}
+        )
+        request.dbsession.flush()
+        return True
+    except Exception as e:
+        log.error(
+            "Error {} while updating description "
+            "for field {} in table {} in form {} of project {}".format(
+                str(e), field, table, form, project
+            )
+        )
+        return False
+
+
+def update_dictionary_table_desc(request, project, form, table, description):
+    """
+    Update the description of a table
+    :param request: Pyramid request object
+    :param project: Project ID
+    :param form: Form ID
+    :param table: Table name
+    :param description: New description
+    :return: True or False
+    """
+    try:
+        request.dbsession.query(DictTable).filter(
+            DictTable.project_id == project
+        ).filter(DictTable.form_id == form).filter(
+            DictTable.table_name == table
+        ).update(
+            {"table_desc": description}
+        )
+        request.dbsession.flush()
+        return True
+    except Exception as e:
+        log.error(
+            "Error {} while updating description "
+            "for table {} in form {} of project {}".format(str(e), table, form, project)
+        )
+        return False
+
+
+def get_dictionary_tables(request, project, form, table_type=None):
+    """
+    Returns all tables as an array with their information
+    :param request: Pyramid request object
+    :param project: Project ID
+    :param form: Form ID
+    :param table_type: Type of table to return: None=All, 1= Data tables, 2= Lookup tables
+    :return: Array of dict elements or empty array
+    """
+    if table_type is None:
+        res = (
+            request.dbsession.query(DictTable.table_desc)
+            .filter(DictTable.project_id == project)
+            .filter(DictTable.form_id == form)
+            .order_by(DictTable.table_index)
+            .all()
+        )
+        return map_from_schema(res)
+    if table_type == 1:
+        res = (
+            request.dbsession.query(DictTable.table_desc)
+            .filter(DictTable.project_id == project)
+            .filter(DictTable.form_id == form)
+            .filter(DictTable.table_lkp == 0)
+            .order_by(DictTable.table_index)
+            .all()
+        )
+        return map_from_schema(res)
+    if table_type == 2:
+        res = (
+            request.dbsession.query(DictTable.table_desc)
+            .filter(DictTable.project_id == project)
+            .filter(DictTable.form_id == form)
+            .filter(DictTable.table_lkp == 1)
+            .order_by(DictTable.table_index)
+            .all()
+        )
+        return map_from_schema(res)
+    return []
 
 
 def get_dictionary_table_desc(request, project, form, table):
@@ -46,6 +193,7 @@ def get_dictionary_fields(request, project, form, table):
         .filter(DictField.project_id == project)
         .filter(DictField.form_id == form)
         .filter(DictField.table_name == table)
+        .order_by(DictField.field_index)
         .all()
     )
     return map_from_schema(res)

@@ -30,6 +30,10 @@ from formshare.processes.db import (
     add_json_log,
     get_dictionary_fields,
     get_dictionary_table_desc,
+    get_dictionary_tables,
+    update_dictionary_table_desc,
+    update_dictionary_field_desc,
+    update_dictionary_field_sensitive,
 )
 from formshare.processes.elasticsearch.record_index import (
     delete_record_index,
@@ -433,7 +437,81 @@ def json_to_csv(request, project, form):
 
 
 def get_tables_from_form(request, project, form):
+    """
+    Get the tables as an array of dict from the DB or the create XML file
+    :param request: Pyramid request object
+    :param project: Project ID
+    :param form: Form ID
+    :return: Return an array of tables as dict
+    """
     _ = request.translate
+    result = []
+    tables = get_dictionary_tables(request, project, form, 1)
+    if tables:
+        for table in tables:
+            fields = []
+            sfields = []
+            num_sensitive = 0
+            db_fields = get_dictionary_fields(
+                request, project, form, table["table_name"]
+            )
+            for field in db_fields:
+                desc = field.get("field_desc", "")
+                if desc == "":
+                    desc = _("Without description")
+                fields.append({"name": field.get("field_name"), "desc": desc})
+                sfields.append(field.get("field_name") + "-" + desc)
+                sensitive = _to_string(field.get("field_sensitive", 0))
+                if sensitive == "true":
+                    num_sensitive = num_sensitive + 1
+            if table.get("table_name").find("_msel_") >= 0:
+                multi = True
+            else:
+                multi = False
+            result.append(
+                {
+                    "name": table.get("table_name"),
+                    "desc": table.get("table_desc"),
+                    "fields": fields,
+                    "lookup": False,
+                    "multi": multi,
+                    "sfields": ",".join(sfields),
+                    "numsensitive": num_sensitive,
+                }
+            )
+    tables = get_dictionary_tables(request, project, form, 2)
+    if tables:
+        for table in tables:
+            fields = []
+            sfields = []
+            num_sensitive = 0
+            db_fields = get_dictionary_fields(
+                request, project, form, table["table_name"]
+            )
+            for field in db_fields:
+                desc = field.get("field_desc", "")
+                if desc == "":
+                    desc = _("Without description")
+                fields.append({"name": field.get("field_name"), "desc": desc})
+                sfields.append(field.get("field_name") + "-" + desc)
+                sensitive = _to_string(field.get("field_sensitive", 0))
+                if sensitive == "true":
+                    num_sensitive = num_sensitive + 1
+            result.append(
+                {
+                    "name": table.get("table_name"),
+                    "desc": table.get("table_desc"),
+                    "fields": fields,
+                    "lookup": True,
+                    "multi": False,
+                    "sfields": ",".join(sfields),
+                    "numsensitive": num_sensitive,
+                }
+            )
+    if len(result) > 0:
+        return result
+
+    # If result is empty then use the create XML file
     create_file = get_form_xml_create_file(request, project, form)
     if not os.path.isfile(create_file):
         return []
@@ -443,7 +521,6 @@ def get_tables_from_form(request, project, form):
     element_tables = root.find(".//tables")
     # Append all tables
     tables = element_tables.findall(".//table")
-    result = []
     if tables:
         for table in tables:
             fields = []
@@ -507,6 +584,16 @@ def get_tables_from_form(request, project, form):
 
 
 def update_table_desc(request, project, form, table_name, description):
+    """
+    Update the description of a table in the DB and XML file
+    :param request: Pyramid request object
+    :param project: Project ID
+    :param form: Form ID
+    :param table_name: Table name
+    :param description: New description
+    :return: Return True if successful or False
+    """
+    update_dictionary_table_desc(request, project, form, table_name, description)
     create_file = get_form_xml_create_file(request, project, form)
     if os.path.exists(create_file):
         tree = etree.parse(create_file)
@@ -534,6 +621,19 @@ def update_table_desc(request, project, form, table_name, description):
 
 
 def update_field_desc(request, project, form, table_name, field_name, description):
+    """
+    Update the description of a field in the DB and in the XML file
+    :param request: Pyramid request object
+    :param project: Project ID
+    :param form: Form ID
+    :param table_name: Table name
+    :param field_name: Field name
+    :param description: New description
+    :return:
+    """
+    update_dictionary_field_desc(
+        request, project, form, table_name, field_name, description
+    )
     create_file = get_form_xml_create_file(request, project, form)
     if os.path.exists(create_file):
         tree = etree.parse(create_file)
@@ -566,11 +666,28 @@ def update_field_desc(request, project, form, table_name, field_name, descriptio
 def update_field_sensitive(
     request, project, form, table_name, field_name, sensitive, protection="None"
 ):
+    """
+    Updates the sensitivity of a field in the DB and XML file
+    :param request: Pyramid request Object
+    :param project: Project ID
+    :param form: Form ID
+    :param table_name: Table name
+    :param field_name: Field name
+    :param sensitive: New sensitivity
+    :param protection: New type of protection
+    :return:
+    """
     if sensitive:
         sensitive = "true"
+        update_dictionary_field_sensitive(
+            request, project, form, table_name, field_name, 1, protection
+        )
     else:
         sensitive = "false"
         protection = "None"
+        update_dictionary_field_sensitive(
+            request, project, form, table_name, field_name, 0, "None"
+        )
     create_file = get_form_xml_create_file(request, project, form)
     if os.path.exists(create_file):
         tree = etree.parse(create_file)

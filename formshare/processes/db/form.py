@@ -26,6 +26,7 @@ from formshare.models import (
     Project,
     Userproject,
     Jsonhistory,
+    CaseLookUp,
 )
 from formshare.processes.color_hash import ColorHash
 from formshare.processes.db.assistant import (
@@ -86,9 +87,55 @@ __all__ = [
     "get_forms_for_schema",
     "get_last_fixed_date",
     "get_maintable_information",
+    "get_case_lookup_fields",
 ]
 
 log = logging.getLogger("formshare")
+
+
+def get_case_lookup_fields(request, project, case_id_field, case_label_field):
+    """
+    This function returns the current case fields. Creates the first two fields if empty
+    :param request: Pyramid request object
+    :param project: Project ID
+    :param case_id_field: Field to identify cases
+    :param case_label_field: Field to label cases
+    :return:
+    """
+    res = (
+        request.dbsession.query(CaseLookUp)
+        .filter(CaseLookUp.project_id == project)
+        .all()
+    )
+    if res is None:
+        name_field_dict = {
+            "project_id": project,
+            "field_name": case_id_field,
+            "field_as": "name",
+            "field_editable": 0,
+        }
+        name_field = Odkform(**name_field_dict)
+        label_field_dict = {
+            "project_id": project,
+            "field_name": case_label_field,
+            "field_as": "name",
+            "field_editable": 0,
+        }
+        label_field = Odkform(**label_field_dict)
+        try:
+            request.dbsession.add(name_field)
+            request.dbsession.add(label_field)
+            request.dbsession.flush()
+        except IntegrityError as e:
+            request.dbsession.rollback()
+            return []
+        except Exception as e:
+            request.dbsession.rollback()
+            log.error("Error {} while adding a new form".format(str(e)))
+            return []
+        new_fields = [name_field_dict, label_field_dict]
+        return new_fields
+    return map_from_schema(res)
 
 
 def get_last_fixed_date(request, project, form):

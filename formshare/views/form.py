@@ -46,6 +46,7 @@ from formshare.processes.db import (
     get_media_files,
     get_maintable_information,
     update_dictionary_tables,
+    get_case_lookup_fields,
 )
 from formshare.processes.elasticsearch.record_index import delete_record_index
 from formshare.processes.elasticsearch.repository_index import (
@@ -2834,7 +2835,30 @@ class CaseLookUpTable(PrivateView):
         ):
             raise HTTPNotFound
 
+        form_id = project_details["case_form"]
+        fields, checked = get_fields_from_table(
+            self.request, project_id, form_id, "maintable", [], False
+        )
+        form_data = get_form_data(self.request, project_id, form_id)
+        case_fields = get_case_lookup_fields(
+            self.request,
+            project_id,
+            form_data["form_pkey"],
+            form_data["form_caselabel"],
+        )
+        for a_field in fields:
+            a_field["checked"] = False
+            a_field["editable"] = 1
+            a_field["as"] = ""
+            for a_case_field in case_fields:
+                if a_field["name"] == a_case_field["field_name"]:
+                    a_field["checked"] = True
+                    a_field["editable"] = a_case_field["field_editable"]
+                    a_field["field_as"] = a_case_field["field_as"]
+                    break
+
         return {
             "projectDetails": project_details,
             "userid": user_id,
+            "fields": fields,
         }

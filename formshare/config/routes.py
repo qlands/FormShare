@@ -93,6 +93,7 @@ from formshare.views.form import (
     DownloadPrivateXLSData,
     GetSubMissionInfo,
     GetMediaFile,
+    CaseLookUpTable,
 )
 from formshare.views.odk import (
     ODKFormList,
@@ -301,6 +302,15 @@ def load_routes(config):
             "/user/{userid}/project/{projcode}/edit",
             EditProjectView,
             "dashboard/projects/project_edit.jinja2",
+        )
+    )
+
+    routes.append(
+        add_route(
+            "project_case_lookup_table",
+            "/user/{userid}/project/{projcode}/caselookuptable",
+            CaseLookUpTable,
+            "dashboard/projects/forms/case/case_fields.jinja2",
         )
     )
 

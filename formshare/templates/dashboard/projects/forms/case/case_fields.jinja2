@@ -1,0 +1,18 @@
+{% extends 'dashboard/page.jinja2' %}
+
+
+{% block titlesection %}{{ _("Case lookup table") }} {% endblock titlesection %}
+
+{% block dashheader %}
+    {% block breadcrumbs %}
+        <div class="row wrapper border-bottom white-bg page-heading">
+            {% include 'dashboard/projects/forms/case/snippets/brdcrbs_case_fields.jinja2' %}
+        </div>
+    {% endblock breadcrumbs %}
+{% endblock dashheader %}
+
+{% block maincontent %}
+        {% include 'dashboard/projects/forms/case/snippets/case_fields_tab.jinja2' %}
+{% endblock maincontent %}
+
+

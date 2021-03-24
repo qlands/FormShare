@@ -2,7 +2,7 @@
     <div class="sidebar-collapse">
         <ul class="nav metismenu" id="side-menu">
             {% block nav_header%}
-                <li class="nav-header">
+                <li class="nav-header" style="{% block nav_header_style %}{% endblock nav_header_style %}">
                     <div class="dropdown profile-element">
                         {% block nav_profile%}
                             {% if activeUser != None %}

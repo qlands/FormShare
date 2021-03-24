@@ -1,91 +1,94 @@
 <div class="row border-bottom white-bg">
-
     <nav class="navbar navbar-expand-lg navbar-static-top" role="navigation">
-        <a href="{{ request.route_url('home') }}" style="{% block nav_brand_style %}margin-left: -16px; background: #026AA8{% endblock nav_brand_style %}" class="navbar-brand"><img alt="image" src="{{ request.url_for_static('formshare-small-black.png') }}"/> Form<b>Share</b></a>
-        {#            <form role="search" class="navbar-form-custom" style="display: block; !important;" action="#">#}
-        {#                <div class="form-group">#}
-        {#                    <input type="text" placeholder="Search FormShare" class="form-control" name="top-search" id="top-search">#}
-        {#                </div>#}
-        {#            </form>#}
+        {% block navbar_logo %}
+            <a href="{{ request.route_url('home') }}" style="{% block nav_brand_style %}margin-left: -16px; background: #026AA8{% endblock nav_brand_style %}" class="navbar-brand"><img alt="image" src="{{ request.url_for_static('formshare-small-black.png') }}"/> Form<b>Share</b></a>
+        {% endblock navbar_logo %}
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-label="Toggle navigation">
             <i class="fa fa-reorder"></i>
         </button>
 
-        <!--</div>-->
-        <div class="navbar-collapse collapse" id="navbar">
-            <ul class="nav navbar-nav mr-auto">
-                {#                    <li class="dropdown">#}
-                {#                        <a aria-expanded="false" role="button" href="#" class="dropdown-toggle" data-toggle="dropdown"> Menu item</a>#}
-                {#                        <ul role="menu" class="dropdown-menu" style="right: -130px">#}
-                {#                            <li><a href="">Menu item</a></li>#}
-                {#                            <li><a href="">Menu item</a></li>#}
-                {#                            <li><a href="">Menu item</a></li>#}
-                {#                            <li><a href="">Menu item</a></li>#}
-                {#                        </ul>#}
-                {#                    </li>#}
-                {#                    <li class="dropdown">#}
-                {#                        <a aria-expanded="false" role="button" href="#" class="dropdown-toggle" data-toggle="dropdown"> Menu item</a>#}
-                {#                        <ul role="menu" class="dropdown-menu" class="dropdown-menu" style="right: -135px">#}
-                {#                            <li><a href="">Menu item</a></li>#}
-                {#                            <li><a href="">Menu item</a></li>#}
-                {#                            <li><a href="">Menu item</a></li>#}
-                {#                            <li><a href="">Menu item</a></li>#}
-                {#                        </ul>#}
-                {#                    </li>#}
-                {#                    <li class="dropdown">#}
-                {#                        <a aria-expanded="false" role="button" href="#" class="dropdown-toggle" data-toggle="dropdown"> Menu item</a>#}
-                {#                        <ul role="menu" class="dropdown-menu" class="dropdown-menu" style="right: -135px">#}
-                {#                            <li><a href="">Menu item</a></li>#}
-                {#                            <li><a href="">Menu item</a></li>#}
-                {#                            <li><a href="">Menu item</a></li>#}
-                {#                            <li><a href="">Menu item</a></li>#}
-                {#                        </ul>#}
-                {#                    </li>#}
-                {#                    <li class="dropdown">#}
-                {#                        <a aria-expanded="false" role="button" href="#" class="dropdown-toggle" data-toggle="dropdown"> Menu item</a>#}
-                {#                        <ul role="menu" class="dropdown-menu" class="dropdown-menu" style="right: -135px">#}
-                {#                            <li><a href="">Menu item</a></li>#}
-                {#                            <li><a href="">Menu item</a></li>#}
-                {#                            <li><a href="">Menu item</a></li>#}
-                {#                            <li><a href="">Menu item</a></li>#}
-                {#                        </ul>#}
-                {#                    </li>#}
-                {##}
-            </ul>
-            <ul class="nav navbar-top-links navbar-right">
-                <li>
-                    <a href="{{ request.route_url('login') }}">
-                        <i class="fas fa-sign-in-alt"></i> {{ _('Sign in') }}
-                    </a>
-                </li>
-            </ul>
-            {% if request.registry.settings['auth.register_users_via_web'] == "true" %}
-                <ul class="nav navbar-top-links navbar-right">
-                    <li>
-                        <a href="{{ request.route_url('register') }}">
-                            <i class="fas fa-user-plus"></i> {{ _('Sign up') }}
-                        </a>
-                    </li>
-                </ul>
-            {% endif %}
-            {% block language_menu_item %}
-            <ul class="nav navbar-top-links navbar-right" style="margin-top: 8px">
-                <li>
-                    <div>
-                        {{ _('Language') }}:
-                        <select id="language">
-                            {% block language_options %}
-                                <option id="en" value="en">English</option>
-                                <option id="es" value="es">Español</option>
-                                <option id="fr" value="fr">Français</option>
-                                <option id="pt" value="pt">Português</option>
-                            {% endblock language_options %}
-                        </select>
-                    </div>
-                </li>
-            </ul>
-            {% endblock language_menu_item %}
-        </div>
+        {% block navbar %}
+            <div class="navbar-collapse collapse" id="navbar">
+                {% block navbar_main %}
+                    <ul class="nav navbar-nav mr-auto">
+                        {#                    <li class="dropdown">#}
+                        {#                        <a aria-expanded="false" role="button" href="#" class="dropdown-toggle" data-toggle="dropdown"> Menu item</a>#}
+                        {#                        <ul role="menu" class="dropdown-menu" style="right: -130px">#}
+                        {#                            <li><a href="">Menu item</a></li>#}
+                        {#                            <li><a href="">Menu item</a></li>#}
+                        {#                            <li><a href="">Menu item</a></li>#}
+                        {#                            <li><a href="">Menu item</a></li>#}
+                        {#                        </ul>#}
+                        {#                    </li>#}
+                        {#                    <li class="dropdown">#}
+                        {#                        <a aria-expanded="false" role="button" href="#" class="dropdown-toggle" data-toggle="dropdown"> Menu item</a>#}
+                        {#                        <ul role="menu" class="dropdown-menu" class="dropdown-menu" style="right: -135px">#}
+                        {#                            <li><a href="">Menu item</a></li>#}
+                        {#                            <li><a href="">Menu item</a></li>#}
+                        {#                            <li><a href="">Menu item</a></li>#}
+                        {#                            <li><a href="">Menu item</a></li>#}
+                        {#                        </ul>#}
+                        {#                    </li>#}
+                        {#                    <li class="dropdown">#}
+                        {#                        <a aria-expanded="false" role="button" href="#" class="dropdown-toggle" data-toggle="dropdown"> Menu item</a>#}
+                        {#                        <ul role="menu" class="dropdown-menu" class="dropdown-menu" style="right: -135px">#}
+                        {#                            <li><a href="">Menu item</a></li>#}
+                        {#                            <li><a href="">Menu item</a></li>#}
+                        {#                            <li><a href="">Menu item</a></li>#}
+                        {#                            <li><a href="">Menu item</a></li>#}
+                        {#                        </ul>#}
+                        {#                    </li>#}
+                        {#                    <li class="dropdown">#}
+                        {#                        <a aria-expanded="false" role="button" href="#" class="dropdown-toggle" data-toggle="dropdown"> Menu item</a>#}
+                        {#                        <ul role="menu" class="dropdown-menu" class="dropdown-menu" style="right: -135px">#}
+                        {#                            <li><a href="">Menu item</a></li>#}
+                        {#                            <li><a href="">Menu item</a></li>#}
+                        {#                            <li><a href="">Menu item</a></li>#}
+                        {#                            <li><a href="">Menu item</a></li>#}
+                        {#                        </ul>#}
+                        {#                    </li>#}
+                        {##}
+                    </ul>
+                {% endblock navbar_main %}
+                {% block navbar_login %}
+                    <ul class="nav navbar-top-links navbar-right">
+                        <li>
+                            <a href="{{ request.route_url('login') }}">
+                                <i class="fas fa-sign-in-alt"></i> {{ _('Sign in') }}
+                            </a>
+                        </li>
+                    </ul>
+                {% endblock navbar_login %}
+                {% block navbar_register %}
+                    {% if request.registry.settings['auth.register_users_via_web'] == "true" %}
+                        <ul class="nav navbar-top-links navbar-right">
+                            <li>
+                                <a href="{{ request.route_url('register') }}">
+                                    <i class="fas fa-user-plus"></i> {{ _('Sign up') }}
+                                </a>
+                            </li>
+                        </ul>
+                    {% endif %}
+                {% endblock navbar_register %}
+                {% block language_menu_item %}
+                    <ul class="nav navbar-top-links navbar-right" style="margin-top: 8px">
+                        <li>
+                            <div>
+                                {{ _('Language') }}:
+                                <select id="language">
+                                    {% block language_options %}
+                                        <option id="en" value="en">English</option>
+                                        <option id="es" value="es">Español</option>
+                                        <option id="fr" value="fr">Français</option>
+                                        <option id="pt" value="pt">Português</option>
+                                    {% endblock language_options %}
+                                </select>
+                            </div>
+                        </li>
+                    </ul>
+                {% endblock language_menu_item %}
+            </div>
+        {% endblock navbar %}
     </nav>
 
 </div>

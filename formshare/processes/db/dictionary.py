@@ -1,4 +1,4 @@
-from formshare.models import DictTable, DictField, map_from_schema
+from formshare.models import DictTable, DictField, map_from_schema, Odkform
 from formshare.processes.db.form import get_form_xml_create_file
 import logging
 import os

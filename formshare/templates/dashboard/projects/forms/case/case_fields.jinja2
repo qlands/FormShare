@@ -1,18 +1,214 @@
 {% extends 'dashboard/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block titlesection %}{{ _("Case lookup table definition") }}{% endblock titlesection %}
+
+{% block css %}
+    {{ super() }}
+    <style>
+        @media (max-width: 767px) {
+            .action-buttons {
+                margin-top: 10px;
+            }
+            .grid-header {
+                display: none;
+            }
+        }
+    </style>
+{% endblock css %}
 
 
-{% block titlesection %}{{ _("Case lookup table") }} {% endblock titlesection %}
-
-{% block dashheader %}
-    {% block breadcrumbs %}
-        <div class="row wrapper border-bottom white-bg page-heading">
-            {% include 'dashboard/projects/forms/case/snippets/brdcrbs_case_fields.jinja2' %}
-        </div>
-    {% endblock breadcrumbs %}
-{% endblock dashheader %}
+{% block breadcrumbs %}
+    {% include 'dashboard/projects/forms/case/snippets/brdcrbs_case_fields.jinja2' %}
+{% endblock breadcrumbs %}
 
 {% block maincontent %}
-        {% include 'dashboard/projects/forms/case/snippets/case_fields_tab.jinja2' %}
+    <div class="row">
+        <div class="col-lg-12">
+            {% if created %}
+                <div class="alert alert-success alert-dismissable">
+                    <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
+                    {{ _('The case lookup table has been created. You can adjust it below.') }}
+                </div>
+            {% endif %}
+            <div class="ibox">
+                <div class="ibox-content">
+                    {% block case_list_heading %}
+                        <h2>{{ _('Case lookup table') }}</h2>
+                        <p>
+                            {{ _('The case lookup table provides information on each case to follow-up case forms. For example, the gender of a registered member so in follow-up case forms certain questions could be asked according to it gender.') }}<br/>
+                            {{ _('FormShare will create a CSV file using this table as described') }} <a href="https://docs.getodk.org/form-datasets/#building-selects-from-csv-files" target="_blank">{{ _('here') }}.</a>
+                        </p>
+                        {#                    <div class="input-group">#}
+                        {#                        <input type="text" placeholder="{{ _('Search assistants') }} " class="input form-control">#}
+                        {#                        <span class="input-group-append"><button type="button" class="btn btn btn-primary"> <i class="fa fa-search"></i> {{ _('Search') }}</button></span>#}
+                        {#                    </div>#}
+                    {% endblock case_list_heading %}
+                    <hr class="hr-line-dashed">
+                    {% block case_list_table %}
+                        <div class="clients-list">
+                            <div class="row">
+                                <div class="col-lg-12">
+                                    {% block case_list_table_header %}
+                                        <div class="grid-header">
+                                            <div class="row">
+                                                <div class="col-md-3">
+                                                    <div class="text-center">
+                                                        {{ _('Name') }}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="text-center">
+                                                        {{ _('Description') }}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-1">
+                                                    <div class="text-center">
+                                                        {{ _('Status') }}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-2">
+                                                    <div class="text-center">
+                                                        {{ _('Alias') }}
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <div class="text-center">
+                                                        {{ _('Actions') }}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <hr class="hr-line-solid">
+                                        </div>
+                                    {% endblock case_list_table_header %}
+                                    {% block case_list_table_items %}
+                                        {% for a_field in fields %}
+                                            {% if a_field.editable == 0 %}
+                                                {% include 'dashboard/projects/forms/case/snippets/case_field_item.jinja2' %}
+                                            {% endif %}
+                                        {% endfor %}
+                                        {% for a_field in fields %}
+                                            {% if a_field.checked and a_field.editable == 1 %}
+                                                {% include 'dashboard/projects/forms/case/snippets/case_field_item.jinja2' %}
+                                            {% endif %}
+                                        {% endfor %}
+                                        {% for a_field in fields %}
+                                            {% if a_field.checked == false%}
+                                                {% include 'dashboard/projects/forms/case/snippets/case_field_item.jinja2' %}
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endblock case_list_table_items %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endblock case_list_table %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal inmodal" id="myModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content animated fadeIn">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                    <h4 class="modal-title">{{ _('Change field alias') }}</h4>
+                    <small id="field_who" class="font-bold">{{ _('Change the alias for field:') }} Carlos Quiros</small>
+                </div>
+                <form class="m-t" id="change_form" role="form" method="post" action="{{ request.url }}">
+                    {{ form.secure_form(request) }}
+                    <input type="hidden" id="field_name" name="field_name" value="">
+                    <div class="modal-body">
+                        {% block field_alias %}
+                            <div class="form-group">
+                                <label class="col-sm-2 col-form-label">{{ _('Alias') }}</label>
+                                <div class="col-sm-10">
+                                    <input type="text" class="form-control" name="field_alias" id="field_alias">
+                                </div>
+                            </div>
+                        {% endblock field_alias %}
+                    </div>
+                    {% block field_list_form_actions %}
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
+                            <button type="submit" name="change_alias" class="btn btn-primary">{{ _('Change alias') }}</button>
+                        </div>
+                    {% endblock field_list_form_actions %}
+                </form>
+            </div>
+        </div>
+    </div>
 {% endblock maincontent %}
 
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function() {
+            $('.add_field').click(function () {
+                let field_name = $( this ).attr('data-field-id');
+                let form = document.createElement('form');
+                form.setAttribute('method', 'post');
+                form.setAttribute('action', '{{ request.url }}');
+                form.style.display = 'hidden';
 
+                let csrf = document.createElement("input"); //input element, text
+                csrf.setAttribute('type',"text");
+                csrf.setAttribute('name',"csrf_token");
+                csrf.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                form.appendChild(csrf);
+
+                let field = document.createElement("input"); //input element, text
+                field.setAttribute('type',"text");
+                field.setAttribute('name',"field_name");
+                field.setAttribute('value',field_name);
+                form.appendChild(field);
+
+                let action = document.createElement("input"); //input element, text
+                action.setAttribute('type',"text");
+                action.setAttribute('name',"add_field");
+                action.setAttribute('value','');
+                form.appendChild(action);
+
+                document.body.appendChild(form);
+                form.submit();
+            });
+            $('.remove_field').click(function () {
+                let field_name = $( this ).attr('data-field-id');
+                let form = document.createElement('form');
+                form.setAttribute('method', 'post');
+                form.setAttribute('action', '{{ request.url }}');
+                form.style.display = 'hidden';
+
+                let csrf = document.createElement("input"); //input element, text
+                csrf.setAttribute('type',"text");
+                csrf.setAttribute('name',"csrf_token");
+                csrf.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                form.appendChild(csrf);
+
+                let field = document.createElement("input"); //input element, text
+                field.setAttribute('type',"text");
+                field.setAttribute('name',"field_name");
+                field.setAttribute('value',field_name);
+                form.appendChild(field);
+
+                let action = document.createElement("input"); //input element, text
+                action.setAttribute('type',"text");
+                action.setAttribute('name',"remove_field");
+                action.setAttribute('value','');
+                form.appendChild(action);
+
+                document.body.appendChild(form);
+                form.submit();
+            });
+            $('.change_alias').click(function () {
+                var field_name = $( this ).attr('data-field-id');
+                var field_alias = $( this ).attr('data-field-alias');
+                $("#field_who").text("{{ _('Change the alias for field:') }} " + field_name);
+                $("#field_name").val(field_name);
+                $("#field_alias").val(field_alias);
+            });
+        });
+    </script>
+
+
+{% endblock scripts %}

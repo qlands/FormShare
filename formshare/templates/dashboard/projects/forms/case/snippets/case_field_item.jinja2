@@ -1,27 +1,43 @@
-<hr>
-<div class="row m-b-sm m-t-sm">
-    <div class="col-md-4">
-        {% block case_field_item_details %}
-            {{ a_field.name }}-{{ afield.desc }} {% if afield.checked == 1 %}<span class="badge badge-info" title="{{ _('Currently in use by the lookup table') }}">{{ _('In use') }}</span>{% endif %}
-        {% endblock case_field_item_details %}
-    </div>
-    <div class="col-md-4">
-        {% block case_field_item_as %}
-            {{ a_field.field_as }}
-        {% endblock case_field_item_as %}
-    </div>
-    <div class="col-md-4">
-        {% block case_field_item_actions %}
-            {% if a_field.editable == 1 %}
-                {% if a_field.checked %}
-                    <a class="btn btn-danger btn-sm unselect"><i class="far fa-square" style="color: #1c84c6"></i> {{ _('Unselect field') }}</a>
-                {% else %}
-                    <a class="btn btn-primary btn-sm select"><i class="far fa-check-square" style="color: #1c84c6"></i> {{ _('Select field') }}</a>
-                {% endif %}
-                {% if a_field.checked %}
-                    <a class="btn btn-white btn-sm"><i class="fas fa-pencil-alt text-warning"></i> {{ _('Edit alias') }} </a>
-                {% endif %}
-            {% endif %}
-        {% endblock case_field_item_actions %}
-    </div>
+<div class="row">
+    {% block case_item_data %}
+        {% block case_item_desc %}
+            <div class="col-md-3">
+                <div class="text-center">
+                    {{ a_field.name }}
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center">
+                    {{ a_field.desc }}
+                </div>
+            </div>
+            <div class="col-md-1">
+                <div class="text-center">
+                    {% if a_field.checked == 1 %}<span class="badge badge-info" title="{{ _('Currently in use by the lookup table') }}">{{ _('In use') }}</span>{% endif %}
+                </div>
+            </div>
+            <div class="col-md-2">
+                <div class="text-center">
+                    {{ a_field.field_as }}
+                </div>
+            </div>
+        {% endblock case_item_desc %}
+
+        {% block case_item_actions %}
+            <div class="col-md-3">
+                <div class="text-center">
+                    {% if a_field.editable == 1 and projectDetails.access_type <= 2 %}
+                        {% if a_field.checked %}
+                            <a class="btn btn-white btn-sm change_alias" data-toggle="modal" data-target="#myModal" data-field-id="{{ a_field.name }}" data-field-alias="{{ a_field.field_as }}" ><i class="fas fa-pencil-alt text-warning"></i> {{ _('Change alias') }} </a>
+                            <a class="btn btn-white btn-sm remove_field" data-field-id="{{ a_field.name }}"><i class="fas fa-trash text-danger"></i> {{ _('Not use field') }} </a>
+                        {% else %}
+                            <a class="btn btn-white btn-sm add_field" data-field-id="{{ a_field.name }}"><i class="fas fa-plus-circle text-success"></i> {{ _('Use field') }} </a>
+                        {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+        {% endblock case_item_actions %}
+    {% endblock case_item_data %}
 </div>
+<hr>
+

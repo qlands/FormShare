@@ -12,6 +12,7 @@ from formshare.models import (
     map_from_schema,
     Odkform,
     ProjectFile,
+    CaseLookUp,
 )
 from formshare.processes.db.form import get_by_details, get_form_data
 from formshare.processes.elasticsearch.repository_index import (
@@ -39,9 +40,28 @@ __all__ = [
     "get_number_of_case_creators_with_repository",
     "get_case_form",
     "get_case_schema",
+    "project_has_case_lookup_table",
 ]
 
 log = logging.getLogger("formshare")
+
+
+def project_has_case_lookup_table(request, project):
+    """
+    Gets whether a project has a case lookup table
+    :param request: Pyramid request object
+    :param project: Project ID
+    :return: True or False
+    """
+    res = (
+        request.dbsession.query(CaseLookUp.field_name)
+        .filter(CaseLookUp.project_id == project)
+        .count()
+    )
+    if res == 0:
+        return False
+    else:
+        return True
 
 
 def get_project_id_from_name(request, user, project_code):
@@ -121,13 +141,17 @@ def get_case_form(request, project):
     :param project: FormShare project
     :return: A form ID or None
     """
-    return (
+    res = (
         request.dbsession.query(Odkform.form_id)
         .filter(Odkform.project_id == project)
         .filter(Odkform.form_casetype == 1)
         .filter(Odkform.form_schema.isnot(None))
         .first()
     )
+    if res is not None:
+        return res.form_id
+    else:
+        return None
 
 
 def get_case_schema(request, project):
@@ -250,6 +274,7 @@ def get_user_projects(request, user, logged_user):
         ] = get_number_of_case_creators_with_repository(request, project["project_id"])
         project["case_form"] = get_case_form(request, project["project_id"])
         project["case_schema"] = get_case_schema(request, project["project_id"])
+        project["has_case_lookup_table"] = project_has_case_lookup_table(request, project["project_id"])
 
     projects = sorted(projects, key=lambda prj: project["project_cdate"], reverse=True)
     return projects

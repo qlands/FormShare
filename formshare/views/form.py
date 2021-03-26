@@ -47,6 +47,9 @@ from formshare.processes.db import (
     get_maintable_information,
     update_dictionary_tables,
     get_case_lookup_fields,
+    add_case_lookup_field,
+    remove_case_lookup_field,
+    update_case_lookup_field_alias,
 )
 from formshare.processes.elasticsearch.record_index import delete_record_index
 from formshare.processes.elasticsearch.repository_index import (
@@ -2820,8 +2823,12 @@ class CaseLookUpTable(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] >= 4:
-            raise HTTPNotFound
+        if self.request.method == "GET":
+            if project_details["access_type"] >= 4:
+                raise HTTPNotFound
+        if self.request.method == "POST":
+            if project_details["access_type"] >= 3:
+                raise HTTPNotFound
 
         if project_details["project_case"] == 0:
             raise HTTPNotFound
@@ -2835,12 +2842,37 @@ class CaseLookUpTable(PrivateView):
         ):
             raise HTTPNotFound
 
+        if self.request.method == "POST":
+            field_data = self.get_post_dict()
+            if "add_field" in field_data.keys():
+                add_case_lookup_field(
+                    self.request, project_id, field_data["field_name"]
+                )
+                self.returnRawViewResult = True
+                return HTTPFound(self.request.url)
+            if "remove_field" in field_data.keys():
+                remove_case_lookup_field(
+                    self.request, project_id, field_data["field_name"]
+                )
+                self.returnRawViewResult = True
+                return HTTPFound(self.request.url)
+            if "change_alias" in field_data.keys():
+                field_alias = field_data.get("field_alias", "")
+                if field_alias == "":
+                    field_alias = field_data["field_name"]
+                update_case_lookup_field_alias(
+                    self.request, project_id, field_data["field_name"], field_alias
+                )
+                self.returnRawViewResult = True
+                return HTTPFound(self.request.url)
+
         form_id = project_details["case_form"]
         fields, checked = get_fields_from_table(
             self.request, project_id, form_id, "maintable", [], False
         )
+
         form_data = get_form_data(self.request, project_id, form_id)
-        case_fields = get_case_lookup_fields(
+        case_fields, created = get_case_lookup_fields(
             self.request,
             project_id,
             form_data["form_pkey"],
@@ -2861,4 +2893,5 @@ class CaseLookUpTable(PrivateView):
             "projectDetails": project_details,
             "userid": user_id,
             "fields": fields,
+            "created": created,
         }

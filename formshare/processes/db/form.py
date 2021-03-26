@@ -88,9 +88,72 @@ __all__ = [
     "get_last_fixed_date",
     "get_maintable_information",
     "get_case_lookup_fields",
+    "add_case_lookup_field",
+    "remove_case_lookup_field",
+    "update_case_lookup_field_alias",
 ]
 
 log = logging.getLogger("formshare")
+
+
+def update_case_lookup_field_alias(request, project, case_field, case_alias):
+    try:
+        request.dbsession.query(CaseLookUp).filter(
+            CaseLookUp.project_id == project
+        ).filter(CaseLookUp.field_name == case_field).filter(
+            CaseLookUp.field_editable == 1
+        ).update(
+            {"field_as": case_alias}
+        )
+        request.dbsession.flush()
+    except IntegrityError as e:
+        log.error("Error {} while adding a new lookup field".format(str(e)))
+        request.dbsession.rollback()
+        return False
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error("Error {} while adding a new lookup field".format(str(e)))
+        return False
+
+
+def remove_case_lookup_field(request, project, case_field):
+    try:
+        request.dbsession.query(CaseLookUp).filter(
+            CaseLookUp.project_id == project
+        ).filter(CaseLookUp.field_name == case_field).filter(
+            CaseLookUp.field_editable == 1
+        ).delete()
+        request.dbsession.flush()
+    except IntegrityError as e:
+        log.error("Error {} while adding a new lookup field".format(str(e)))
+        request.dbsession.rollback()
+        return False
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error("Error {} while adding a new lookup field".format(str(e)))
+        return False
+
+
+def add_case_lookup_field(request, project, case_field):
+    new_field_dict = {
+        "project_id": project,
+        "field_name": case_field,
+        "field_as": case_field,
+        "field_editable": 1,
+    }
+    new_field = CaseLookUp(**new_field_dict)
+    try:
+        request.dbsession.add(new_field)
+        request.dbsession.flush()
+        return True
+    except IntegrityError as e:
+        log.error("Error {} while adding a new lookup field".format(str(e)))
+        request.dbsession.rollback()
+        return False
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error("Error {} while adding a new lookup field".format(str(e)))
+        return False
 
 
 def get_case_lookup_fields(request, project, case_id_field, case_label_field):
@@ -107,35 +170,36 @@ def get_case_lookup_fields(request, project, case_id_field, case_label_field):
         .filter(CaseLookUp.project_id == project)
         .all()
     )
-    if res is None:
+    if not res:
         name_field_dict = {
             "project_id": project,
             "field_name": case_id_field,
             "field_as": "name",
             "field_editable": 0,
         }
-        name_field = Odkform(**name_field_dict)
+        name_field = CaseLookUp(**name_field_dict)
         label_field_dict = {
             "project_id": project,
             "field_name": case_label_field,
-            "field_as": "name",
+            "field_as": "label",
             "field_editable": 0,
         }
-        label_field = Odkform(**label_field_dict)
+        label_field = CaseLookUp(**label_field_dict)
         try:
             request.dbsession.add(name_field)
             request.dbsession.add(label_field)
             request.dbsession.flush()
         except IntegrityError as e:
+            log.error("Error {} while adding a new lookup field".format(str(e)))
             request.dbsession.rollback()
-            return []
+            return [], False
         except Exception as e:
             request.dbsession.rollback()
-            log.error("Error {} while adding a new form".format(str(e)))
-            return []
+            log.error("Error {} while adding a new lookup field".format(str(e)))
+            return [], False
         new_fields = [name_field_dict, label_field_dict]
-        return new_fields
-    return map_from_schema(res)
+        return new_fields, True
+    return map_from_schema(res), False
 
 
 def get_last_fixed_date(request, project, form):

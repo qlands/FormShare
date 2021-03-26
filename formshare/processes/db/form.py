@@ -78,11 +78,13 @@ __all__ = [
     "get_assistant_forms_for_cleaning",
     "update_form_directory",
     "get_last_clean_info",
+    "get_last_clean_date_from_schema",
     "get_form_size",
     "collect_maps_for_schema",
     "get_create_xml_for_schema",
     "get_insert_xml_for_schema",
     "get_last_submission_date",
+    "get_last_submission_date_from_schema",
     "get_form_directories_for_schema",
     "get_forms_for_schema",
     "get_last_fixed_date",
@@ -91,9 +93,33 @@ __all__ = [
     "add_case_lookup_field",
     "remove_case_lookup_field",
     "update_case_lookup_field_alias",
+    "get_case_lookup_file",
 ]
 
 log = logging.getLogger("formshare")
+
+
+def get_case_lookup_file(request, project, form):
+    """
+    Gets the case lookup file and the last generation date
+    :param request: Pyramid request object
+    :param project: Project ID
+    :param form: Form ID
+    :return: case_file and datetime or None and None
+    """
+    res = (
+        request.dbsession.query(
+            Odkform.form_caseselectorfilename, Odkform.form_caseselectorlastgen
+        )
+        .filter(Odkform.project_id == project)
+        .filter(Odkform.form_id == form)
+        .filter(Odkform.form_case == 1)
+        .filter(Odkform.form_casetype > 1)
+        .first()
+    )
+    if res is not None:
+        return res["form_caseselectorfilename"], res["form_caseselectorlastgen"]
+    return None, None
 
 
 def update_case_lookup_field_alias(request, project, case_field, case_alias):
@@ -344,8 +370,36 @@ def get_last_clean_info(request, project, form):
         return None, None
 
 
+def get_last_clean_date_from_schema(request, schema):
+    if schema is not None:
+        sql = "SELECT audit_date from {}.audit_log ORDER BY audit_date DESC LIMIT 1".format(
+            schema
+        )
+        res = request.dbsession.execute(sql).fetchone()
+        if res is not None:
+            return res[0]
+        else:
+            return None
+    else:
+        return None
+
+
 def get_last_submission_date(request, project, form):
     schema = get_form_schema(request, project, form)
+    if schema is not None:
+        sql = "SELECT _submitted_date from {}.maintable ORDER BY _submitted_date DESC LIMIT 1".format(
+            schema
+        )
+        res = request.dbsession.execute(sql).fetchone()
+        if res is not None:
+            return res[0]
+        else:
+            return None
+    else:
+        return None
+
+
+def get_last_submission_date_from_schema(request, schema):
     if schema is not None:
         sql = "SELECT _submitted_date from {}.maintable ORDER BY _submitted_date DESC LIMIT 1".format(
             schema

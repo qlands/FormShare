@@ -254,6 +254,7 @@ class Odkform(Base):
     form_caselabel = Column(Unicode(120))
     form_caseselector = Column(Unicode(120))
     form_caseselectorfilename = Column(Unicode(120))
+    form_caseselectorlastgen = Column(DateTime)
     form_hasdictionary = Column(INTEGER, server_default=text("'0'"))
     extras = Column(UnicodeText)
     tags = Column(UnicodeText)

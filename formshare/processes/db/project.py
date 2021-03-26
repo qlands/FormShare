@@ -274,7 +274,9 @@ def get_user_projects(request, user, logged_user):
         ] = get_number_of_case_creators_with_repository(request, project["project_id"])
         project["case_form"] = get_case_form(request, project["project_id"])
         project["case_schema"] = get_case_schema(request, project["project_id"])
-        project["has_case_lookup_table"] = project_has_case_lookup_table(request, project["project_id"])
+        project["has_case_lookup_table"] = project_has_case_lookup_table(
+            request, project["project_id"]
+        )
 
     projects = sorted(projects, key=lambda prj: project["project_cdate"], reverse=True)
     return projects

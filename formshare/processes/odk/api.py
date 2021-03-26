@@ -51,6 +51,10 @@ from formshare.processes.db import (
     get_media_files,
     add_file_to_form,
     add_submission_same_as,
+    get_case_lookup_file,
+    get_case_schema,
+    get_last_clean_date_from_schema,
+    get_last_submission_date_from_schema,
 )
 from formshare.processes.elasticsearch.record_index import (
     create_record_index,
@@ -173,13 +177,49 @@ def retrieve_form_file_stream(request, project, form, file_name):
 
 
 def retrieve_form_file(request, project, form, file_name):
+    """
+    Gets a resource file for ODK collect from the file storage or the a generated case lookup file
+    :param request: Pyramid request object
+    :param project: Project ID
+    :param form: Form ID
+    :param file_name: File name
+    :return: A response Object for the file
+    """
     if form_file_exists(request, project, form, file_name):
-        stream = retrieve_form_file_stream(request, project, form, file_name)
-        if stream is not None:
-            response = Response()
-            return response_stream(stream, file_name, response)
+        case_lookup_file, last_gen = get_case_lookup_file(request, project, form)
+        if case_lookup_file is None:
+            stream = retrieve_form_file_stream(request, project, form, file_name)
+            if stream is not None:
+                response = Response()
+                return response_stream(stream, file_name, response)
+            else:
+                raise HTTPNotFound
         else:
-            raise HTTPNotFound
+            generate_file = False
+            if last_gen is None:
+                generate_file = True
+            else:
+                schema = get_case_schema(request, project)
+                last_submission_date = get_last_submission_date_from_schema(
+                    request, schema
+                )
+                last_clean_date = get_last_clean_date_from_schema(request, schema)
+                outdated = False
+                if last_submission_date > last_gen:
+                    outdated = True
+                if last_clean_date > last_gen:
+                    outdated = True
+                if outdated:
+                    generate_file = True
+            if generate_file:
+                pass
+            else:
+                stream = retrieve_form_file_stream(request, project, form, file_name)
+                if stream is not None:
+                    response = Response()
+                    return response_stream(stream, file_name, response)
+                else:
+                    raise HTTPNotFound
     else:
         raise HTTPNotFound
 

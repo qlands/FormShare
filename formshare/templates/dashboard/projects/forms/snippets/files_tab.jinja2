@@ -28,7 +28,11 @@
                     {% endif %}
                     <ul class="tag-list" style="padding: 0">
                         {% for file in formFiles %}
-                            <li><a class="file-item" href="{{ request.route_url('form_stored_file', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, filename=file.file_name) }}" urn="{{ request.route_url('form_remove_file', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, filename=file.file_name) }}"><i class="{{ request.h.get_icon_from_mime_type(file.file_mimetype) }}"></i> {{ file.file_name }}</a></li>
+                            {% if formDetails.form_case == 1 and formDetails.form_casetype > 1 and formDetails.form_caseselectorfilename == file.file_name %}
+                                <li><a class="file-item" title="{{ _('Linked to case lookup table') }}" href="{{ request.route_url('form_stored_file', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, filename=file.file_name) }}" urn="{{ request.route_url('form_remove_file', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, filename=file.file_name) }}"><i class="fas fa-link"></i> <span style="color: #026AA8">{{ file.file_name }}</span></a></li>
+                            {% else %}
+                                <li><a class="file-item" href="{{ request.route_url('form_stored_file', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, filename=file.file_name) }}" urn="{{ request.route_url('form_remove_file', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, filename=file.file_name) }}"><i class="{{ request.h.get_icon_from_mime_type(file.file_mimetype) }}"></i> {{ file.file_name }}</a></li>
+                            {% endif %}
                         {% endfor %}
                     </ul>
                     {% if missingFiles != "" %}

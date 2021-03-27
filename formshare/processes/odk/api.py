@@ -55,6 +55,7 @@ from formshare.processes.db import (
     get_case_schema,
     get_last_clean_date_from_schema,
     get_last_submission_date_from_schema,
+    generate_lookup_file,
 )
 from formshare.processes.elasticsearch.record_index import (
     create_record_index,
@@ -195,31 +196,73 @@ def retrieve_form_file(request, project, form, file_name):
             else:
                 raise HTTPNotFound
         else:
-            generate_file = False
-            if last_gen is None:
-                generate_file = True
-            else:
-                schema = get_case_schema(request, project)
-                last_submission_date = get_last_submission_date_from_schema(
-                    request, schema
-                )
-                last_clean_date = get_last_clean_date_from_schema(request, schema)
-                outdated = False
-                if last_submission_date > last_gen:
-                    outdated = True
-                if last_clean_date > last_gen:
-                    outdated = True
-                if outdated:
-                    generate_file = True
-            if generate_file:
-                pass
-            else:
+            if case_lookup_file != file_name:
                 stream = retrieve_form_file_stream(request, project, form, file_name)
                 if stream is not None:
                     response = Response()
                     return response_stream(stream, file_name, response)
                 else:
                     raise HTTPNotFound
+            else:
+                generate_file = False
+                schema = get_case_schema(request, project)
+                if last_gen is None:
+                    generate_file = True
+                else:
+                    last_submission_date = get_last_submission_date_from_schema(
+                        request, schema
+                    )
+                    last_clean_date = get_last_clean_date_from_schema(request, schema)
+                    outdated = False
+                    if last_submission_date > last_gen:
+                        outdated = True
+                    if last_clean_date > last_gen:
+                        outdated = True
+                    if outdated:
+                        generate_file = True
+                if generate_file:
+                    odk_dir = get_odk_path(request)
+                    uid = str(uuid.uuid4())
+                    paths = ["tmp", uid]
+                    temp_dir = os.path.join(odk_dir, *paths)
+                    os.makedirs(temp_dir)
+                    paths = ["tmp", uid, file_name]
+                    temp_csv = os.path.join(odk_dir, *paths)
+                    generated = generate_lookup_file(request, project, schema, temp_csv)
+                    if generated:
+                        try:
+                            csv_file = open(temp_csv, "r")
+                            md5sum = md5(csv_file.read()).hexdigest()
+                            added, message = add_file_to_form(
+                                request, project, form, file_name, True, md5sum
+                            )
+                            if added:
+                                csv_file.seek(0)
+                                bucket_id = project + form
+                                bucket_id = md5(bucket_id.encode("utf-8")).hexdigest()
+                                store_file(request, bucket_id, file_name, csv_file)
+                                csv_file.close()
+                            else:
+                                csv_file.close()
+                                raise HTTPNotFound
+                        except Exception as e:
+                            log.error(
+                                "Error while storing case lookup file for project {}. Error: {}".format(
+                                    project, str(e)
+                                )
+                            )
+                            raise HTTPNotFound
+                    else:
+                        raise HTTPNotFound
+                else:
+                    stream = retrieve_form_file_stream(
+                        request, project, form, file_name
+                    )
+                    if stream is not None:
+                        response = Response()
+                        return response_stream(stream, file_name, response)
+                    else:
+                        raise HTTPNotFound
     else:
         raise HTTPNotFound
 

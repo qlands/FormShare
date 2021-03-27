@@ -638,7 +638,7 @@ class CaseLookUp(Base):
         ForeignKey("project.project_id", ondelete="CASCADE"), primary_key=True
     )
     field_name = Column(Unicode(120), primary_key=True)
-    field_as = Column(Unicode(45))
+    field_as = Column(Unicode(120))
     field_editable = Column(INTEGER, server_default=text("'1'"))
 
     project = relationship("Project")

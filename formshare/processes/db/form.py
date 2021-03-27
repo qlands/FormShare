@@ -6,7 +6,7 @@ import uuid
 import glob
 import shutil
 import json
-
+import csv
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 
@@ -94,9 +94,58 @@ __all__ = [
     "remove_case_lookup_field",
     "update_case_lookup_field_alias",
     "get_case_lookup_file",
+    "generate_lookup_file",
 ]
 
 log = logging.getLogger("formshare")
+
+
+def generate_lookup_file(request, project, schema, file_name):
+    """
+    Generates a temporary CSV file based on the case lookup field definition.
+    :param request: Pyramid request object
+    :param project: Project ID
+    :param schema: Schema
+    :param file_name: File to generate
+    :return: True or False
+    """
+    try:
+        fields = (
+            request.dbsession.query(CaseLookUp)
+            .filter(CaseLookUp.project_id == project)
+            .all()
+        )
+        select_field = ["'list_caseselector' as list_name"]
+        heading = ["list_name"]
+        for a_field in fields:
+            if a_field.field_name == a_field.field_as:
+                select_field.append(a_field.field_name)
+                heading.append(a_field.field_name)
+            else:
+                select_field.append(a_field.field_name + " as " + a_field.field_as)
+                heading.append(a_field.field_as)
+
+        sql = (
+            "SELECT "
+            + ",".join(select_field)
+            + " from {}.maintable ORDER BY _submitted_date".format(schema)
+        )
+        cursor = request.dbsession.execute(sql)
+        outfile = open(file_name, "w")
+        out_csv = csv.writer(outfile)
+        print("Setting heading")
+        out_csv.writerow(x for x in heading)
+        print("Setting data")
+        out_csv.writerows(cursor.fetchall())
+        outfile.close()
+        return True
+    except Exception as e:
+        log.error(
+            "Error while generating case lookup CSV file for project {}. Error:{}".format(
+                project, str(e)
+            )
+        )
+        return False
 
 
 def get_case_lookup_file(request, project, form):
@@ -118,7 +167,7 @@ def get_case_lookup_file(request, project, form):
         .first()
     )
     if res is not None:
-        return res["form_caseselectorfilename"], res["form_caseselectorlastgen"]
+        return res[0], res[1]
     return None, None
 
 
@@ -129,7 +178,7 @@ def update_case_lookup_field_alias(request, project, case_field, case_alias):
         ).filter(CaseLookUp.field_name == case_field).filter(
             CaseLookUp.field_editable == 1
         ).update(
-            {"field_as": case_alias}
+            {"field_as": case_alias.lower()}
         )
         request.dbsession.flush()
     except IntegrityError as e:

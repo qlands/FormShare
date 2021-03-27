@@ -155,13 +155,17 @@ def get_case_form(request, project):
 
 
 def get_case_schema(request, project):
-    return (
+    res = (
         request.dbsession.query(Odkform.form_schema)
         .filter(Odkform.project_id == project)
         .filter(Odkform.form_casetype == 1)
         .filter(Odkform.form_schema.isnot(None))
         .first()
     )
+    if res is not None:
+        return res[0]
+    else:
+        return None
 
 
 def get_project_owner(request, project):

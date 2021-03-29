@@ -73,7 +73,7 @@ py==1.8.1
 pycparser==2.20
 pycrypto==2.6.1
 pycryptodome==3.9.7
-Pygments==2.6.1
+Pygments==2.7.4
 pyparsing==2.4.7
 pyramid==1.10.4
 pyramid-authstack==1.0.1

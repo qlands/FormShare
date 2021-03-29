@@ -60,7 +60,6 @@ requires = [
     "more-itertools",
     "msgpack",
     "mysql-connector-python",
-    "mysqlclient",
     "nltk",
     "nose",
     "numpy",

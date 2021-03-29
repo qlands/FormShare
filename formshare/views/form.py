@@ -1305,7 +1305,15 @@ class AddFileToForm(PrivateView):
                         bucket_id = project_id + form_id
                         bucket_id = md5(bucket_id.encode("utf-8")).hexdigest()
                         store_file(self.request, bucket_id, file_name, file.file)
-
+                        if (
+                            current_form_data["form_caseselectorfilename"] == file_name
+                            and current_form_data["form_case"] == 1
+                            and current_form_data["form_casetype"] > 1
+                        ):
+                            form_update_data = {"form_caseselectorlastgen": None}
+                            update_form(
+                                self.request, project_id, form_id, form_update_data
+                            )
                         if current_form_data["form_reqfiles"] is not None:
                             required_files = current_form_data["form_reqfiles"].split(
                                 ","

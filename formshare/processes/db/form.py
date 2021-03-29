@@ -100,43 +100,74 @@ __all__ = [
 log = logging.getLogger("formshare")
 
 
-def generate_lookup_file(request, project, schema, file_name):
+def generate_lookup_file(request, project, schema, file_name, only_inactive):
     """
     Generates a temporary CSV file based on the case lookup field definition.
     :param request: Pyramid request object
     :param project: Project ID
     :param schema: Schema
     :param file_name: File to generate
+    :param only_inactive: Just generate inactive cases
     :return: True or False
     """
     try:
+        select_field = ["'list_caseselector' as list_name"]
+        heading = ["list_name", "name", "label"]
+        empty = ["list_caseselector", "empty", "empty"]
+
+        res = (
+            request.dbsession.query(CaseLookUp.field_name)
+            .filter(CaseLookUp.project_id == project)
+            .filter(CaseLookUp.field_as == "name")
+            .filter(CaseLookUp.field_editable == 0)
+            .first()
+        )
+        select_field.append(res[0] + " as name")
+
+        res = (
+            request.dbsession.query(CaseLookUp.field_name)
+            .filter(CaseLookUp.project_id == project)
+            .filter(CaseLookUp.field_as == "label")
+            .filter(CaseLookUp.field_editable == 0)
+            .first()
+        )
+        select_field.append(res[0] + " as label")
+
         fields = (
             request.dbsession.query(CaseLookUp)
             .filter(CaseLookUp.project_id == project)
+            .filter(CaseLookUp.field_editable == 1)
             .all()
         )
-        select_field = ["'list_caseselector' as list_name"]
-        heading = ["list_name"]
         for a_field in fields:
             if a_field.field_name == a_field.field_as:
                 select_field.append(a_field.field_name)
                 heading.append(a_field.field_name)
+                empty.append("empty")
             else:
                 select_field.append(a_field.field_name + " as " + a_field.field_as)
                 heading.append(a_field.field_as)
+                empty.append("empty")
 
-        sql = (
-            "SELECT "
-            + ",".join(select_field)
-            + " from {}.maintable ORDER BY _submitted_date".format(schema)
-        )
-        cursor = request.dbsession.execute(sql)
         outfile = open(file_name, "w")
         out_csv = csv.writer(outfile)
-        print("Setting heading")
         out_csv.writerow(x for x in heading)
-        print("Setting data")
-        out_csv.writerows(cursor.fetchall())
+
+        sql = "SELECT count(surveyid) FROM {}.maintable".format(schema)
+        res = request.dbsession.execute(sql).fetchone()
+        if res[0] > 0:
+            sql = (
+                "SELECT " + ",".join(select_field) + " from {}.maintable".format(schema)
+            )
+            if only_inactive:
+                sql = sql + " WHERE _active = 0"
+            else:
+                sql = sql + " WHERE _active = 1"
+            sql = sql + " ORDER BY _submitted_date"
+            cursor = request.dbsession.execute(sql)
+            out_csv.writerows(cursor.fetchall())
+        else:
+            out_csv.writerow(x for x in empty)
         outfile.close()
         return True
     except Exception as e:
@@ -158,7 +189,9 @@ def get_case_lookup_file(request, project, form):
     """
     res = (
         request.dbsession.query(
-            Odkform.form_caseselectorfilename, Odkform.form_caseselectorlastgen
+            Odkform.form_caseselectorfilename,
+            Odkform.form_caseselectorlastgen,
+            Odkform.form_casetype,
         )
         .filter(Odkform.project_id == project)
         .filter(Odkform.form_id == form)
@@ -167,8 +200,8 @@ def get_case_lookup_file(request, project, form):
         .first()
     )
     if res is not None:
-        return res[0], res[1]
-    return None, None
+        return res[0], res[1], res[2]
+    return None, None, None
 
 
 def update_case_lookup_field_alias(request, project, case_field, case_alias):

@@ -187,82 +187,12 @@ def retrieve_form_file(request, project, form, file_name):
     :return: A response Object for the file
     """
     if form_file_exists(request, project, form, file_name):
-        case_lookup_file, last_gen = get_case_lookup_file(request, project, form)
-        if case_lookup_file is None:
-            stream = retrieve_form_file_stream(request, project, form, file_name)
-            if stream is not None:
-                response = Response()
-                return response_stream(stream, file_name, response)
-            else:
-                raise HTTPNotFound
+        stream = retrieve_form_file_stream(request, project, form, file_name)
+        if stream is not None:
+            response = Response()
+            return response_stream(stream, file_name, response)
         else:
-            if case_lookup_file != file_name:
-                stream = retrieve_form_file_stream(request, project, form, file_name)
-                if stream is not None:
-                    response = Response()
-                    return response_stream(stream, file_name, response)
-                else:
-                    raise HTTPNotFound
-            else:
-                generate_file = False
-                schema = get_case_schema(request, project)
-                if last_gen is None:
-                    generate_file = True
-                else:
-                    last_submission_date = get_last_submission_date_from_schema(
-                        request, schema
-                    )
-                    last_clean_date = get_last_clean_date_from_schema(request, schema)
-                    outdated = False
-                    if last_submission_date > last_gen:
-                        outdated = True
-                    if last_clean_date > last_gen:
-                        outdated = True
-                    if outdated:
-                        generate_file = True
-                if generate_file:
-                    odk_dir = get_odk_path(request)
-                    uid = str(uuid.uuid4())
-                    paths = ["tmp", uid]
-                    temp_dir = os.path.join(odk_dir, *paths)
-                    os.makedirs(temp_dir)
-                    paths = ["tmp", uid, file_name]
-                    temp_csv = os.path.join(odk_dir, *paths)
-                    generated = generate_lookup_file(request, project, schema, temp_csv)
-                    if generated:
-                        try:
-                            csv_file = open(temp_csv, "r")
-                            md5sum = md5(csv_file.read()).hexdigest()
-                            added, message = add_file_to_form(
-                                request, project, form, file_name, True, md5sum
-                            )
-                            if added:
-                                csv_file.seek(0)
-                                bucket_id = project + form
-                                bucket_id = md5(bucket_id.encode("utf-8")).hexdigest()
-                                store_file(request, bucket_id, file_name, csv_file)
-                                csv_file.close()
-                            else:
-                                csv_file.close()
-                                raise HTTPNotFound
-                        except Exception as e:
-                            log.error(
-                                "Error while storing case lookup file for project {}. Error: {}".format(
-                                    project, str(e)
-                                )
-                            )
-                            raise HTTPNotFound
-                    else:
-                        raise HTTPNotFound
-                else:
-                    stream = retrieve_form_file_stream(
-                        request, project, form, file_name
-                    )
-                    if stream is not None:
-                        response = Response()
-                        return response_stream(stream, file_name, response)
-                    else:
-                        raise HTTPNotFound
+            raise HTTPNotFound
     else:
         raise HTTPNotFound
 
@@ -1678,21 +1608,191 @@ def get_manifest(request, user, project, project_id, form):
     form_files = get_form_files(request, project_id, form)
     if form_files:
         file_array = []
-        for file in form_files:
-            file_name = file["file_name"]
-            file_array.append(
-                {
-                    "filename": file_name,
-                    "hash": "md5:" + file["file_md5"],
-                    "downloadUrl": request.route_url(
-                        "odkmediafile",
-                        userid=user,
-                        projcode=project,
-                        formid=form,
-                        fileid=file_name,
-                    ),
-                }
-            )
+        case_lookup_file, last_gen, case_type = get_case_lookup_file(
+            request, project_id, form
+        )
+        if case_lookup_file is not None:
+            for file in form_files:
+                if case_lookup_file == file["file_name"]:
+                    generate_file = False
+                    schema = get_case_schema(request, project_id)
+                    print(last_gen)
+                    if last_gen is None:
+                        generate_file = True
+                    else:
+                        last_submission_date = get_last_submission_date_from_schema(
+                            request, schema
+                        )
+                        last_clean_date = get_last_clean_date_from_schema(
+                            request, schema
+                        )
+                        outdated = False
+                        if last_submission_date is not None:
+                            if last_submission_date > last_gen:
+                                outdated = True
+                        if last_clean_date is not None:
+                            if last_clean_date > last_gen:
+                                outdated = True
+                        if outdated:
+                            generate_file = True
+                    if generate_file:
+                        print("Generating file {}".format(file["file_name"]))
+                        odk_dir = get_odk_path(request)
+                        uid = str(uuid.uuid4())
+                        paths = ["tmp", uid]
+                        temp_dir = os.path.join(odk_dir, *paths)
+                        os.makedirs(temp_dir)
+                        paths = ["tmp", uid, file["file_name"]]
+                        temp_csv = os.path.join(odk_dir, *paths)
+                        if case_type == 4:
+                            generated = generate_lookup_file(
+                                request, project_id, schema, temp_csv, True
+                            )
+                        else:
+                            generated = generate_lookup_file(
+                                request, project_id, schema, temp_csv, False
+                            )
+                        if generated:
+                            print("File {} generated".format(file["file_name"]))
+                            try:
+                                csv_file = open(temp_csv, "rb")
+                                md5sum = md5(csv_file.read()).hexdigest()
+                                added, message = add_file_to_form(
+                                    request,
+                                    project_id,
+                                    form,
+                                    file["file_name"],
+                                    True,
+                                    md5sum,
+                                )
+                                if added:
+                                    csv_file.seek(0)
+                                    bucket_id = project_id + form
+                                    bucket_id = md5(
+                                        bucket_id.encode("utf-8")
+                                    ).hexdigest()
+                                    store_file(
+                                        request, bucket_id, file["file_name"], csv_file
+                                    )
+                                    csv_file.close()
+                                    update_form(
+                                        request,
+                                        project_id,
+                                        form,
+                                        {
+                                            "form_caseselectorlastgen": datetime.datetime.now()
+                                        },
+                                    )
+                                    file_name = file["file_name"]
+                                    file_array.append(
+                                        {
+                                            "filename": file_name,
+                                            "hash": "md5:" + md5sum,
+                                            "downloadUrl": request.route_url(
+                                                "odkmediafile",
+                                                userid=user,
+                                                projcode=project,
+                                                formid=form,
+                                                fileid=file_name,
+                                            ),
+                                        }
+                                    )
+                                else:
+                                    file_name = file["file_name"]
+                                    file_array.append(
+                                        {
+                                            "filename": file_name,
+                                            "hash": "md5:" + file["file_md5"],
+                                            "downloadUrl": request.route_url(
+                                                "odkmediafile",
+                                                userid=user,
+                                                projcode=project,
+                                                formid=form,
+                                                fileid=file_name,
+                                            ),
+                                        }
+                                    )
+                            except Exception as e:
+                                log.error(
+                                    "Error while storing case lookup file for project {}. Error: {}".format(
+                                        project_id, str(e)
+                                    )
+                                )
+                                file_name = file["file_name"]
+                                file_array.append(
+                                    {
+                                        "filename": file_name,
+                                        "hash": "md5:" + file["file_md5"],
+                                        "downloadUrl": request.route_url(
+                                            "odkmediafile",
+                                            userid=user,
+                                            projcode=project,
+                                            formid=form,
+                                            fileid=file_name,
+                                        ),
+                                    }
+                                )
+                        else:
+                            file_name = file["file_name"]
+                            file_array.append(
+                                {
+                                    "filename": file_name,
+                                    "hash": "md5:" + file["file_md5"],
+                                    "downloadUrl": request.route_url(
+                                        "odkmediafile",
+                                        userid=user,
+                                        projcode=project,
+                                        formid=form,
+                                        fileid=file_name,
+                                    ),
+                                }
+                            )
+                    else:
+                        file_name = file["file_name"]
+                        file_array.append(
+                            {
+                                "filename": file_name,
+                                "hash": "md5:" + file["file_md5"],
+                                "downloadUrl": request.route_url(
+                                    "odkmediafile",
+                                    userid=user,
+                                    projcode=project,
+                                    formid=form,
+                                    fileid=file_name,
+                                ),
+                            }
+                        )
+                else:
+                    file_name = file["file_name"]
+                    file_array.append(
+                        {
+                            "filename": file_name,
+                            "hash": "md5:" + file["file_md5"],
+                            "downloadUrl": request.route_url(
+                                "odkmediafile",
+                                userid=user,
+                                projcode=project,
+                                formid=form,
+                                fileid=file_name,
+                            ),
+                        }
+                    )
+        else:
+            for file in form_files:
+                file_name = file["file_name"]
+                file_array.append(
+                    {
+                        "filename": file_name,
+                        "hash": "md5:" + file["file_md5"],
+                        "downloadUrl": request.route_url(
+                            "odkmediafile",
+                            userid=user,
+                            projcode=project,
+                            formid=form,
+                            fileid=file_name,
+                        ),
+                    }
+                )
         return generate_manifest(file_array)
     else:
         return generate_manifest([])

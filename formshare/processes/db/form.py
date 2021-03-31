@@ -27,6 +27,7 @@ from formshare.models import (
     Userproject,
     Jsonhistory,
     CaseLookUp,
+    DictField,
 )
 from formshare.processes.color_hash import ColorHash
 from formshare.processes.db.assistant import (
@@ -95,9 +96,23 @@ __all__ = [
     "update_case_lookup_field_alias",
     "get_case_lookup_file",
     "generate_lookup_file",
+    "get_field_details",
 ]
 
 log = logging.getLogger("formshare")
+
+
+def get_field_details(request, project, form, table, field):
+    res = (
+        request.dbsession.query(DictField)
+        .filter(DictField.project_id == project)
+        .filter(DictField.form_id == form)
+        .filter(DictField.table_name == table)
+        .filter(DictField.field_name == field)
+        .first()
+    )
+    res = map_from_schema(res)
+    return res
 
 
 def generate_lookup_file(request, project, schema, file_name, only_inactive):

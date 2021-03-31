@@ -50,6 +50,8 @@ from formshare.processes.db import (
     add_case_lookup_field,
     remove_case_lookup_field,
     update_case_lookup_field_alias,
+    get_case_form,
+    get_field_details,
 )
 from formshare.processes.elasticsearch.record_index import delete_record_index
 from formshare.processes.elasticsearch.repository_index import (
@@ -170,6 +172,68 @@ class FormDetails(PrivateView):
             new_insert_file = os.path.join(
                 odk_path, *["forms", new_form_directory, "repository", "insert.xml"]
             )
+
+            form_data = get_form_data(self.request, project_id, new_form_id)
+
+            # If it is a case form and its follow up, activate or deactivate then
+            # we modify the create XML file to:
+            # - Link the form_caseselector of the form with the form_pkey of the creator form.
+            # This will allow a proper merge between Forms
+            if form_data["form_case"] == 1 and form_data["form_casetype"] > 1:
+                form_creator = get_case_form(self.request, project_id)
+                form_creator_data = get_form_data(
+                    self.request, project_id, form_creator
+                )
+                creator_pkey_data = get_field_details(
+                    self.request,
+                    project_id,
+                    form_creator,
+                    "maintable",
+                    form_creator_data["form_pkey"],
+                )
+                tree = etree.parse(new_create_file)
+                root = tree.getroot()
+                table = root.find(".//table[@name='maintable']")
+                if table is not None:
+                    field = root.find(
+                        ".//field[@name='" + form_data["form_caseselector"] + "']"
+                    )
+                    if field is not None:
+                        field.set("type", creator_pkey_data["field_type"])
+                        field.set("size", str(creator_pkey_data["field_size"]))
+                        field.set(
+                            "rtable", form_creator_data["form_schema"] + ".maintable",
+                        )
+                        field.set("rfield", form_creator_data["form_pkey"])
+                        field.set("rname", "fk_" + str(uuid.uuid4()).replace("-", "_"))
+                        field.set("rlookup", "false")
+                        # Save the changes in the XML Create file
+                        if not os.path.exists(new_create_file + ".case.bk"):
+                            shutil.copy(new_create_file, new_create_file + ".case.bk")
+                        tree.write(
+                            new_create_file,
+                            pretty_print=True,
+                            xml_declaration=True,
+                            encoding="utf-8",
+                        )
+                    else:
+                        log.error(
+                            "The selector field {} was not found in {}".format(
+                                form_data["form_caseselector"], new_create_file
+                            )
+                        )
+                        return (
+                            False,
+                            "The selector field {} was not found in {}".format(
+                                form_data["form_caseselector"], new_create_file
+                            ),
+                        )
+                else:
+                    log.error("Main table was not found in {}".format(new_create_file))
+                    return (
+                        False,
+                        "Main table was not found in {}".format(new_create_file),
+                    )
 
             merged, output = merge_versions(
                 self.request,

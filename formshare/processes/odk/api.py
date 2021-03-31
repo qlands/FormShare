@@ -56,6 +56,8 @@ from formshare.processes.db import (
     get_last_clean_date_from_schema,
     get_last_submission_date_from_schema,
     generate_lookup_file,
+    get_case_form,
+    get_field_details,
 )
 from formshare.processes.elasticsearch.record_index import (
     create_record_index,
@@ -1616,7 +1618,11 @@ def get_manifest(request, user, project, project_id, form):
                 if case_lookup_file == file["file_name"]:
                     generate_file = False
                     schema = get_case_schema(request, project_id)
-                    print(last_gen)
+                    log.info(
+                        "File {} was generated last {}".format(
+                            file["file_name"], last_gen
+                        )
+                    )
                     if last_gen is None:
                         generate_file = True
                     else:
@@ -1636,7 +1642,7 @@ def get_manifest(request, user, project, project_id, form):
                         if outdated:
                             generate_file = True
                     if generate_file:
-                        print("Generating file {}".format(file["file_name"]))
+                        log.info("Generating file {}".format(file["file_name"]))
                         odk_dir = get_odk_path(request)
                         uid = str(uuid.uuid4())
                         paths = ["tmp", uid]
@@ -1653,7 +1659,7 @@ def get_manifest(request, user, project, project_id, form):
                                 request, project_id, schema, temp_csv, False
                             )
                         if generated:
-                            print("File {} generated".format(file["file_name"]))
+                            log.info("File {} generated".format(file["file_name"]))
                             try:
                                 csv_file = open(temp_csv, "rb")
                                 md5sum = md5(csv_file.read()).hexdigest()
@@ -1748,6 +1754,11 @@ def get_manifest(request, user, project, project_id, form):
                                 }
                             )
                     else:
+                        log.info(
+                            "File {} will not be generated. Using stored file".format(
+                                file["file_name"]
+                            )
+                        )
                         file_name = file["file_name"]
                         file_array.append(
                             {
@@ -1911,6 +1922,7 @@ def create_repository(
         request.registry.settings["odktools.path"], *["JXFormToMysql", "jxformtomysql"]
     )
 
+    form_data = get_form_data(request, project, form)
     survey_file = get_form_survey_file(request, project, form)
     if survey_file is not None:
         args = [
@@ -2009,6 +2021,98 @@ def create_repository(
                 insert_xml_file = os.path.join(
                     odk_dir, *["forms", xform_directory, "repository", "insert.xml"]
                 )
+
+                # If it is a case form and its follow up, activate or deactivate then
+                # we modify the create XML file to:
+                # - Link the form_caseselector of the form with the form_pkey of the creator form.
+                # - For activate and deactivate, Indicate in the maintable of the form
+                #   information that we need to create an after insert trigger to activate or deactivate a case.
+                # - Then we call createFromXML to generate a new SQL file with such changes
+                if form_data["form_case"] == 1 and form_data["form_casetype"] > 1:
+                    form_creator = get_case_form(request, project)
+                    form_creator_data = get_form_data(request, project, form_creator)
+                    creator_pkey_data = get_field_details(
+                        request,
+                        project,
+                        form,
+                        "maintable",
+                        form_creator_data["form_pkey"],
+                    )
+                    tree = etree.parse(create_xml_file)
+                    root = tree.getroot()
+                    table = root.find(".//table[@name='maintable']")
+                    if form_data["form_casetype"] > 2:
+                        table.set("case_action", "true")
+                        table.set(
+                            "creator_table",
+                            form_creator_data["form_schema"] + ".maintable",
+                        )
+                        table.set("creator_field", form_creator_data["form_pkey"])
+                        table.set("selector_field", form_data["form_caseselector"])
+                        table.set(
+                            "action_trigger", "T" + str(uuid.uuid4()).replace("-", "_")
+                        )
+                        if form_data["form_casetype"] == 3:
+                            table.set("case_action_type", "deactivate")
+                        else:
+                            table.set("case_action_type", "activate")
+                    if table is not None:
+                        field = root.find(
+                            ".//field[@name='" + form_data["form_caseselector"] + "']"
+                        )
+                        if field is not None:
+                            field.set("type", creator_pkey_data["field_type"])
+                            field.set("size", creator_pkey_data["field_size"])
+                            field.set(
+                                "rtable",
+                                form_creator_data["form_schema"] + ".maintable",
+                            )
+                            field.set("rfield", form_creator_data["form_pkey"])
+                            field.set(
+                                "rname", "fk_" + str(uuid.uuid4()).replace("-", "_")
+                            )
+                            # Save the changes in the XML Create file
+                            if not os.path.exists(create_xml_file + ".bk"):
+                                shutil.copy(create_xml_file, create_xml_file + ".bk")
+                            tree.write(
+                                create_xml_file,
+                                pretty_print=True,
+                                xml_declaration=True,
+                                encoding="utf-8",
+                            )
+                            # Run CreateFromXML
+                            create_from_xml = os.path.join(
+                                request.registry.settings["odktools.path"],
+                                *["utilities", "createFromXML", "createfromxml"]
+                            )
+                            args = [
+                                create_from_xml,
+                                "-i " + create_xml_file,
+                                "-o " + create_file,
+                            ]
+                            p = Popen(args, stdout=PIPE, stderr=PIPE)
+                            stdout, stderr = p.communicate()
+                            if p.returncode != 0:
+                                return (
+                                    p.returncode,
+                                    stdout.decode()
+                                    + " - "
+                                    + stderr.decode()
+                                    + " - "
+                                    + " ".join(args),
+                                )
+                        else:
+                            return (
+                                1,
+                                "The selector field {} was not found in {}".format(
+                                    form_data["form_caseselector"], create_xml_file
+                                ),
+                            )
+                    else:
+                        return (
+                            1,
+                            "Main table was not found in {}".format(create_xml_file),
+                        )
 
                 formshare_create_repository = True
                 cnf_file = request.registry.settings["mysql.cnf"]

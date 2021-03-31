@@ -2034,7 +2034,7 @@ def create_repository(
                     creator_pkey_data = get_field_details(
                         request,
                         project,
-                        form,
+                        form_creator,
                         "maintable",
                         form_creator_data["form_pkey"],
                     )
@@ -2062,7 +2062,7 @@ def create_repository(
                         )
                         if field is not None:
                             field.set("type", creator_pkey_data["field_type"])
-                            field.set("size", creator_pkey_data["field_size"])
+                            field.set("size", str(creator_pkey_data["field_size"]))
                             field.set(
                                 "rtable",
                                 form_creator_data["form_schema"] + ".maintable",
@@ -2071,9 +2071,12 @@ def create_repository(
                             field.set(
                                 "rname", "fk_" + str(uuid.uuid4()).replace("-", "_")
                             )
+                            field.set("rlookup", "false")
                             # Save the changes in the XML Create file
-                            if not os.path.exists(create_xml_file + ".bk"):
-                                shutil.copy(create_xml_file, create_xml_file + ".bk")
+                            if not os.path.exists(create_xml_file + ".case.bk"):
+                                shutil.copy(
+                                    create_xml_file, create_xml_file + ".case.bk"
+                                )
                             tree.write(
                                 create_xml_file,
                                 pretty_print=True,
@@ -2093,6 +2096,13 @@ def create_repository(
                             p = Popen(args, stdout=PIPE, stderr=PIPE)
                             stdout, stderr = p.communicate()
                             if p.returncode != 0:
+                                log.error(
+                                    "Case createFromXML error {}. Message: {}. Command: {}".format(
+                                        p.returncode,
+                                        stdout.decode() + " - " + stderr.decode(),
+                                        " ".join(args),
+                                    )
+                                )
                                 return (
                                     p.returncode,
                                     stdout.decode()
@@ -2102,6 +2112,11 @@ def create_repository(
                                     + " ".join(args),
                                 )
                         else:
+                            log.error(
+                                "The selector field {} was not found in {}".format(
+                                    form_data["form_caseselector"], create_xml_file
+                                )
+                            )
                             return (
                                 1,
                                 "The selector field {} was not found in {}".format(
@@ -2109,6 +2124,9 @@ def create_repository(
                                 ),
                             )
                     else:
+                        log.error(
+                            "Main table was not found in {}".format(create_xml_file)
+                        )
                         return (
                             1,
                             "Main table was not found in {}".format(create_xml_file),

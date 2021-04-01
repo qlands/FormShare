@@ -10182,6 +10182,7 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
             time.sleep(40)  # Wait for the repository to finish
+
             # Get the details of the form
             res = self.testapp.get(
                 "/user/{}/project/{}/form/{}".format(
@@ -10192,14 +10193,416 @@ class FunctionalTests(unittest.TestCase):
             self.assertIn(b"Case creator", res.body)
             self.assertIn(b"With repository", res.body)
 
-            # Edit a project. Get details. Cannot change project type
+            # Get details of the project
             res = self.testapp.get(
-                "/user/{}/project/{}/edit".format(self.randonLogin, "case001"),
-                status=200,
+                "/user/{}/project/{}".format(self.randonLogin, "case001"), status=200,
             )
             assert "FS_error" not in res.headers
             self.assertIn(b"case lookup table", res.body)
             self.assertIn(b"Create the case lookup table before", res.body)
+
+            # Open the case lookup table
+            res = self.testapp.get(
+                "/user/{}/project/{}/caselookuptable".format(
+                    self.randonLogin, "case001"
+                ),
+                status=200,
+            )
+            assert "FS_error" not in res.headers
+
+            # Get details of the project
+            res = self.testapp.get(
+                "/user/{}/project/{}".format(self.randonLogin, "case001"), status=200,
+            )
+            assert "FS_error" not in res.headers
+            self.assertIn(b"case lookup table", res.body)
+            self.assertNotIn(b"Create the case lookup table before", res.body)
+
+            # Adds the field distrito
+            res = self.testapp.post(
+                "/user/{}/project/{}/caselookuptable".format(
+                    self.randonLogin, "case001"
+                ),
+                {"add_field": "", "field_name": "distrito",},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Removes the field distrito
+            res = self.testapp.post(
+                "/user/{}/project/{}/caselookuptable".format(
+                    self.randonLogin, "case001"
+                ),
+                {"remove_field": "", "field_name": "distrito",},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Change alias of distrito
+            res = self.testapp.post(
+                "/user/{}/project/{}/caselookuptable".format(
+                    self.randonLogin, "case001"
+                ),
+                {
+                    "change_alias": "",
+                    "field_name": "distrito",
+                    "field_alias": "distrito_id",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Change alias of distrito fails invalid character
+            res = self.testapp.post(
+                "/user/{}/project/{}/caselookuptable".format(
+                    self.randonLogin, "case001"
+                ),
+                {
+                    "change_alias": "",
+                    "field_name": "distrito",
+                    "field_alias": "distrito id",
+                },
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Change alias of distrito fails invalid name
+            res = self.testapp.post(
+                "/user/{}/project/{}/caselookuptable".format(
+                    self.randonLogin, "case001"
+                ),
+                {
+                    "change_alias": "",
+                    "field_name": "distrito",
+                    "field_alias": "select",
+                },
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Change alias of distrito fails numeric
+            res = self.testapp.post(
+                "/user/{}/project/{}/caselookuptable".format(
+                    self.randonLogin, "case001"
+                ),
+                {"change_alias": "", "field_name": "distrito", "field_alias": "123",},
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Change alias of distrito fails already exist
+            res = self.testapp.post(
+                "/user/{}/project/{}/caselookuptable".format(
+                    self.randonLogin, "case001"
+                ),
+                {"change_alias": "", "field_name": "distrito", "field_alias": "label",},
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Upload a case follow up. Invalid case type not given
+            paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, "case001"),
+                {"form_pkey": "survey_id", "form_caseselector": "hid"},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Upload a case follow up. Invalid pkey
+            paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, "case001"),
+                {"form_pkey": "test", "form_caseselector": "hid", "form_casetype": "2"},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Upload a case follow up. Empty case selector
+            paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, "case001"),
+                {"form_pkey": "survey_id", "form_caseselector": "", "form_casetype": "2"},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Upload a case follow up. Invalid case selector
+            paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, "case001"),
+                {"form_pkey": "survey_id", "form_caseselector": "test", "form_casetype": "2"},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Upload a case follow up pass
+            paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, "case001"),
+                {"form_pkey": "survey_id", "form_caseselector": "hid", "form_casetype": "2"},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Add an assistant to a form succeeds
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, "case001", "case_follow_up_20210319"
+                ),
+                {
+                    "coll_id": "{}|{}".format(case_project_id, "caseassistant001"),
+                    "coll_privileges": "1",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Uploads cantones
+            paths = ["resources", "forms", "case", "cantones.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, "case001", "case_follow_up_20210319"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Uploads distritos
+            paths = ["resources", "forms", "case", "distritos.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, "case001", "case_follow_up_20210319"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Uploads households
+            paths = ["resources", "forms", "case", "households.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, "case001", "case_follow_up_20210319"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of the form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, "case001", "case_follow_up_20210319"
+                ),
+                status=200,
+            )
+            self.assertIn(b"Linked to case lookup table", res.body)
+
+            # Get the FormList. Empty list
+            self.testapp.get(
+                "/user/{}/project/{}/formList".format(self.randonLogin, "case001"),
+                status=200,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
+            # Upload case 001
+            paths = [
+                "resources",
+                "forms",
+                "case",
+                "data",
+                "start_01.xml",
+            ]
+            submission_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, "case001"),
+                status=201,
+                upload_files=[("filetoupload", submission_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
+            # Get the FormList. households.csv is created
+            self.testapp.get(
+                "/user/{}/project/{}/formList".format(self.randonLogin, "case001"),
+                status=200,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/{}/manifest/mediafile/households.csv".format(
+                    self.randonLogin, "case001", "case_follow_up_20210319"
+                ),
+                status=200,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/{}/manifest/mediafile/cantones.csv".format(
+                    self.randonLogin, "case001", "case_follow_up_20210319"
+                ),
+                status=200,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
+            # Get the FormList. household.csv is not created
+            self.testapp.get(
+                "/user/{}/project/{}/formList".format(self.randonLogin, "case001"),
+                status=200,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/{}/manifest/mediafile/households.csv".format(
+                    self.randonLogin, "case001", "case_follow_up_20210319"
+                ),
+                status=200,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/{}/manifest/mediafile/cantones.csv".format(
+                    self.randonLogin, "case001", "case_follow_up_20210319"
+                ),
+                status=200,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
+            # --------------
+            # Update a form fails. Invalid primary key variable
+            paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, "case001", "case_follow_up_20210319"
+                ),
+                {"form_pkey": "test", "form_caseselector": "hid", "form_casetype": "2"},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Update a form fails. Invalid case selector variable
+            paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, "case001", "case_follow_up_20210319"
+                ),
+                {"form_pkey": "survey_id", "form_caseselector": "test", "form_casetype": "2"},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Update a form fails. No case case type
+            paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, "case001", "case_follow_up_20210319"
+                ),
+                {"form_pkey": "survey_id", "form_caseselector": "hid"},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Update a form. Empty case selector
+            paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, "case001", "case_follow_up_20210319"
+                ),
+                {"form_pkey": "survey_id", "form_caseselector": "", "form_casetype": "2"},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Update a form pass
+            paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, "case001", "case_follow_up_20210319"
+                ),
+                {"form_pkey": "survey_id", "form_caseselector": "hid", "form_casetype": "2"},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # ------------
+
+            # Upload case 002
+            paths = [
+                "resources",
+                "forms",
+                "case",
+                "data",
+                "start_02.xml",
+            ]
+            submission_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, "case001"),
+                status=201,
+                upload_files=[("filetoupload", submission_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
+            # Creates the repository of the case follow up
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, "case001", "case_follow_up_20210319"
+                ),
+                {"form_pkey": "hid", "start_stage1": "", },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+            time.sleep(40)  # Wait for the repository to finish
+
+            # Get the details of the form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, "case001", "case_follow_up_20210319"
+                ),
+                status=200,
+            )
+            self.assertIn(b"With repository", res.body)
 
         start_time = datetime.datetime.now()
         test_root()

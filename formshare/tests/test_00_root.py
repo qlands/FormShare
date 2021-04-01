@@ -10498,7 +10498,6 @@ class FunctionalTests(unittest.TestCase):
                 ),
             )
 
-            # --------------
             # Update a form fails. Invalid primary key variable
             paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
             resource_file = os.path.join(self.path, *paths)
@@ -10564,8 +10563,6 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            # ------------
-
             # Upload case 002
             paths = [
                 "resources",
@@ -10583,6 +10580,16 @@ class FunctionalTests(unittest.TestCase):
                     FS_for_testing="true", FS_user_for_testing="caseassistant001"
                 ),
             )
+
+            # Get the details of the form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, "case001", "case_start_20210311"
+                ),
+                status=200,
+            )
+            self.assertIn(b"[Clean data]", res.body)
+            self.assertNotIn(b"[Manage errors]", res.body)
 
             # Creates the repository of the case follow up
             res = self.testapp.post(
@@ -10603,6 +10610,61 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
             self.assertIn(b"With repository", res.body)
+
+            # Get the FormList. household.csv is created
+            self.testapp.get(
+                "/user/{}/project/{}/formList".format(self.randonLogin, "case001"),
+                status=200,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
+            # Upload follow up 001
+            paths = [
+                "resources",
+                "forms",
+                "case",
+                "data",
+                "follow_01.xml",
+            ]
+            submission_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, "case001"),
+                status=201,
+                upload_files=[("filetoupload", submission_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
+            # Upload follow up 002
+            paths = [
+                "resources",
+                "forms",
+                "case",
+                "data",
+                "follow_02.xml",
+            ]
+            submission_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, "case001"),
+                status=201,
+                upload_files=[("filetoupload", submission_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
+            # Get the details of the form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, "case001", "case_follow_up_20210319"
+                ),
+                status=200,
+            )
+            self.assertIn(b"[Clean data]", res.body)
+            self.assertNotIn(b"[Manage errors]", res.body)
 
         start_time = datetime.datetime.now()
         test_root()

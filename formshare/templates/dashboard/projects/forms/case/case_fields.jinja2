@@ -31,6 +31,9 @@
                     {{ _('The case lookup table has been created. You can adjust it below.') }}
                 </div>
             {% endif %}
+            {% block form_errors %}
+                {{ form.display_errors(errors) }}
+            {% endblock form_errors %}
             <div class="ibox">
                 <div class="ibox-content">
                     {% block case_list_heading %}

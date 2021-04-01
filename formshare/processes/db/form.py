@@ -97,12 +97,45 @@ __all__ = [
     "get_case_lookup_file",
     "generate_lookup_file",
     "get_field_details",
+    "delete_case_lookup_table",
 ]
 
 log = logging.getLogger("formshare")
 
 
+def delete_case_lookup_table(request, project):
+    """
+    Deletes the case lookup table
+    :param request: Pyramid request object
+    :param project: Project ID
+    :return:
+    """
+    try:
+        request.dbsession.query(CaseLookUp).filter(
+            CaseLookUp.project_id == project
+        ).delete()
+        request.dbsession.flush()
+        return True
+    except IntegrityError as e:
+        log.error("Error {} while removing lookup table".format(str(e)))
+        request.dbsession.rollback()
+        return False
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error("Error {} while removing lookup table".format(str(e)))
+        return False
+
+
 def get_field_details(request, project, form, table, field):
+    """
+    This gets the details of a field from the database
+    :param request: Pyramid request object
+    :param project: Project ID
+    :param form: Form ID
+    :param table: Table name
+    :param field: Field name
+    :return: Dict with the details of the field
+    """
     res = (
         request.dbsession.query(DictField)
         .filter(DictField.project_id == project)
@@ -200,7 +233,7 @@ def get_case_lookup_file(request, project, form):
     :param request: Pyramid request object
     :param project: Project ID
     :param form: Form ID
-    :return: case_file and datetime or None and None
+    :return: case_file, datetime and type or None, None and None
     """
     res = (
         request.dbsession.query(
@@ -220,6 +253,14 @@ def get_case_lookup_file(request, project, form):
 
 
 def update_case_lookup_field_alias(request, project, case_field, case_alias):
+    """
+    Updates the alias of a field
+    :param request: Pyramid request object
+    :param project: Project ID
+    :param case_field: Case field
+    :param case_alias: New alias
+    :return: True or False
+    """
     try:
         request.dbsession.query(CaseLookUp).filter(
             CaseLookUp.project_id == project
@@ -229,6 +270,7 @@ def update_case_lookup_field_alias(request, project, case_field, case_alias):
             {"field_as": case_alias.lower()}
         )
         request.dbsession.flush()
+        return True
     except IntegrityError as e:
         log.error("Error {} while adding a new lookup field".format(str(e)))
         request.dbsession.rollback()
@@ -240,6 +282,13 @@ def update_case_lookup_field_alias(request, project, case_field, case_alias):
 
 
 def remove_case_lookup_field(request, project, case_field):
+    """
+    Removes a field from the lookup table
+    :param request: Pyramid request object
+    :param project: Project ID
+    :param case_field: Case field
+    :return: True or False
+    """
     try:
         request.dbsession.query(CaseLookUp).filter(
             CaseLookUp.project_id == project
@@ -247,13 +296,14 @@ def remove_case_lookup_field(request, project, case_field):
             CaseLookUp.field_editable == 1
         ).delete()
         request.dbsession.flush()
+        return True
     except IntegrityError as e:
-        log.error("Error {} while adding a new lookup field".format(str(e)))
+        log.error("Error {} while removing lookup field".format(str(e)))
         request.dbsession.rollback()
         return False
     except Exception as e:
         request.dbsession.rollback()
-        log.error("Error {} while adding a new lookup field".format(str(e)))
+        log.error("Error {} while removing lookup field".format(str(e)))
         return False
 
 

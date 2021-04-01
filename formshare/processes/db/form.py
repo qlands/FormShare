@@ -98,9 +98,23 @@ __all__ = [
     "generate_lookup_file",
     "get_field_details",
     "delete_case_lookup_table",
+    "alias_exists",
 ]
 
 log = logging.getLogger("formshare")
+
+
+def alias_exists(request, project, alias):
+    res = (
+        request.dbsession.query(CaseLookUp)
+        .filter(CaseLookUp.project_id == project)
+        .filter(CaseLookUp.field_as == alias)
+        .count()
+    )
+    if res == 0:
+        return False
+    else:
+        return True
 
 
 def delete_case_lookup_table(request, project):

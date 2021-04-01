@@ -10,6 +10,7 @@ from pyramid.response import FileResponse
 import datetime
 import uuid
 import glob
+import re
 import mimetypes
 import formshare.plugins as plugins
 from formshare.processes.db import (
@@ -53,6 +54,8 @@ from formshare.processes.db import (
     get_case_form,
     get_field_details,
     delete_case_lookup_table,
+    invalid_aliases,
+    alias_exists,
 )
 from formshare.processes.elasticsearch.record_index import delete_record_index
 from formshare.processes.elasticsearch.repository_index import (
@@ -1135,7 +1138,10 @@ class DeleteForm(PrivateView):
                             a_plugin.after_deleting_form(
                                 self.request, "ODK", user_id, project_id, form_id
                             )
-                        if form_data["form_case"] == 1 and form_data["form_casetype"] == 1:
+                        if (
+                            form_data["form_case"] == 1
+                            and form_data["form_casetype"] == 1
+                        ):
                             delete_case_lookup_table(self.request, project_id)
                         for a_deleted_form in forms_deleted:
                             delete_dataset_index(
@@ -2937,11 +2943,35 @@ class CaseLookUpTable(PrivateView):
                 field_alias = field_data.get("field_alias", "")
                 if field_alias == "":
                     field_alias = field_data["field_name"]
-                update_case_lookup_field_alias(
-                    self.request, project_id, field_data["field_name"], field_alias
-                )
-                self.returnRawViewResult = True
-                return HTTPFound(self.request.url)
+                field_alias = field_alias.lower()
+                if re.match(r"^[A-Za-z0-9_]+$", field_alias):
+                    if field_alias.upper() not in invalid_aliases:
+                        if not field_alias.isnumeric():
+                            if not alias_exists(self.request, project_id, field_alias):
+                                update_case_lookup_field_alias(
+                                    self.request,
+                                    project_id,
+                                    field_data["field_name"],
+                                    field_alias,
+                                )
+                                self.returnRawViewResult = True
+                                return HTTPFound(self.request.url)
+                            else:
+                                self.append_to_errors(
+                                    self._("Such alias already exist")
+                                )
+                        else:
+                            self.append_to_errors(
+                                self._("The alias cannot be a number")
+                            )
+                    else:
+                        self.append_to_errors(self._("The alias is invalid"))
+                else:
+                    self.append_to_errors(
+                        self._(
+                            "The alias has invalid characters. Only underscore (_) is allowed"
+                        )
+                    )
 
         form_id = project_details["case_form"]
         fields, checked = get_fields_from_table(

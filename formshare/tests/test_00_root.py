@@ -9993,7 +9993,9 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}".format(self.randonLogin, "case001"), status=200
             )
             assert "FS_error" not in res.headers
-            self.assertIn(b"Which variable will be used to identify each case", res.body)
+            self.assertIn(
+                b"Which variable will be used to identify each case", res.body
+            )
 
             # Edit a project. Get details
             res = self.testapp.get(
@@ -10005,10 +10007,7 @@ class FunctionalTests(unittest.TestCase):
 
             res = self.testapp.post(
                 "/user/{}/project/{}/edit".format(self.randonLogin, "case001"),
-                {
-                    "project_name": "Case project 001",
-                    "project_abstract": "",
-                },
+                {"project_name": "Case project 001", "project_abstract": "",},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -10043,8 +10042,7 @@ class FunctionalTests(unittest.TestCase):
             resource_file = os.path.join(self.path, *paths)
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, "case001"),
-                {"form_pkey": "test",
-                 "form_caselabel": "test"},
+                {"form_pkey": "test", "form_caselabel": "test"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -10055,8 +10053,7 @@ class FunctionalTests(unittest.TestCase):
             resource_file = os.path.join(self.path, *paths)
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, "case001"),
-                {"form_pkey": "hid",
-                 "form_caselabel": "test"},
+                {"form_pkey": "hid", "form_caselabel": "test"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -10067,8 +10064,7 @@ class FunctionalTests(unittest.TestCase):
             resource_file = os.path.join(self.path, *paths)
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, "case001"),
-                {"form_pkey": "hid",
-                 "form_caselabel": "fname"},
+                {"form_pkey": "hid", "form_caselabel": "fname"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -10096,7 +10092,9 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}".format(self.randonLogin, "case001"), status=200
             )
             assert "FS_error" not in res.headers
-            self.assertIn(b"You cannot add new forms while you have a case creator", res.body)
+            self.assertIn(
+                b"You cannot add new forms while you have a case creator", res.body
+            )
 
             # Add an assistant to a form succeeds
             res = self.testapp.post(
@@ -10142,8 +10140,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/updateodk".format(
                     self.randonLogin, "case001", "case_start_20210311"
                 ),
-                {"form_pkey": "test",
-                 "form_caselabel": "test"},
+                {"form_pkey": "test", "form_caselabel": "test"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -10156,8 +10153,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/updateodk".format(
                     self.randonLogin, "case001", "case_start_20210311"
                 ),
-                {"form_pkey": "hid",
-                 "form_caselabel": "test"},
+                {"form_pkey": "hid", "form_caselabel": "test"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -10170,13 +10166,41 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/updateodk".format(
                     self.randonLogin, "case001", "case_start_20210311"
                 ),
-                {"form_pkey": "hid",
-                 "form_caselabel": "fname"},
+                {"form_pkey": "hid", "form_caselabel": "fname"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
             assert "FS_error" not in res.headers
-            
+
+            # Creates the repository of the case creator
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, "case001", "case_start_20210311"
+                ),
+                {"form_pkey": "hid", "start_stage1": "",},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+            time.sleep(40)  # Wait for the repository to finish
+            # Get the details of the form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, "case001", "case_start_20210311"
+                ),
+                status=200,
+            )
+            self.assertIn(b"Case creator", res.body)
+            self.assertIn(b"With repository", res.body)
+
+            # Edit a project. Get details. Cannot change project type
+            res = self.testapp.get(
+                "/user/{}/project/{}/edit".format(self.randonLogin, "case001"),
+                status=200,
+            )
+            assert "FS_error" not in res.headers
+            self.assertIn(b"case lookup table", res.body)
+            self.assertIn(b"Create the case lookup table before", res.body)
+
         start_time = datetime.datetime.now()
         test_root()
         test_login()

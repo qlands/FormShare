@@ -52,6 +52,7 @@ from formshare.processes.db import (
     update_case_lookup_field_alias,
     get_case_form,
     get_field_details,
+    delete_case_lookup_table,
 )
 from formshare.processes.elasticsearch.record_index import delete_record_index
 from formshare.processes.elasticsearch.repository_index import (
@@ -1134,7 +1135,8 @@ class DeleteForm(PrivateView):
                             a_plugin.after_deleting_form(
                                 self.request, "ODK", user_id, project_id, form_id
                             )
-
+                        if form_data["form_case"] == 1 and form_data["form_casetype"] == 1:
+                            delete_case_lookup_table(self.request, project_id)
                         for a_deleted_form in forms_deleted:
                             delete_dataset_index(
                                 self.request.registry.settings,

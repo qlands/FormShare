@@ -9965,62 +9965,275 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+        def test_case_management():
+            # Add a project succeed.
+            case_project_id = str(uuid.uuid4())
+            res = self.testapp.post(
+                "/user/{}/projects/add".format(self.randonLogin),
+                {
+                    "project_id": case_project_id,
+                    "project_code": "case001",
+                    "project_name": "Case project 001",
+                    "project_abstract": "",
+                    "project_case": "",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the project list
+            res = self.testapp.get(
+                "/user/{}/projects".format(self.randonLogin), status=200
+            )
+            assert "FS_error" not in res.headers
+            self.assertIn(b"longitudinal workflow", res.body)
+
+            # Gets the details of a project
+            res = self.testapp.get(
+                "/user/{}/project/{}".format(self.randonLogin, "case001"), status=200
+            )
+            assert "FS_error" not in res.headers
+            self.assertIn(b"Which variable will be used to identify each case", res.body)
+
+            # Edit a project. Get details
+            res = self.testapp.get(
+                "/user/{}/project/{}/edit".format(self.randonLogin, "case001"),
+                status=200,
+            )
+            assert "FS_error" not in res.headers
+            self.assertNotIn(b"Read-only because the project has forms", res.body)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/edit".format(self.randonLogin, "case001"),
+                {
+                    "project_name": "Case project 001",
+                    "project_abstract": "",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/edit".format(self.randonLogin, "case001"),
+                {
+                    "project_name": "Case project 001",
+                    "project_abstract": "",
+                    "project_case": "",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistants/add".format(
+                    self.randonLogin, "case001"
+                ),
+                {
+                    "coll_id": "caseassistant001",
+                    "coll_password": "123",
+                    "coll_password2": "123",
+                    "coll_prjshare": 1,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Upload a case creator fails. Invalid case key
+            paths = ["resources", "forms", "case", "case_start.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, "case001"),
+                {"form_pkey": "test",
+                 "form_caselabel": "test"},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Upload a case creator fails. Invalid case label
+            paths = ["resources", "forms", "case", "case_start.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, "case001"),
+                {"form_pkey": "hid",
+                 "form_caselabel": "test"},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Upload a case creator pass.
+            paths = ["resources", "forms", "case", "case_start.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, "case001"),
+                {"form_pkey": "hid",
+                 "form_caselabel": "fname"},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of the form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, "case001", "case_start_20210311"
+                ),
+                status=200,
+            )
+            self.assertIn(b"Case creator", res.body)
+
+            # Edit a project. Get details. Cannot change project type
+            res = self.testapp.get(
+                "/user/{}/project/{}/edit".format(self.randonLogin, "case001"),
+                status=200,
+            )
+            assert "FS_error" not in res.headers
+            self.assertIn(b"Read-only because the project has forms", res.body)
+
+            # Gets the details of a project. Upload Forms are inactive at the moment
+            res = self.testapp.get(
+                "/user/{}/project/{}".format(self.randonLogin, "case001"), status=200
+            )
+            assert "FS_error" not in res.headers
+            self.assertIn(b"You cannot add new forms while you have a case creator", res.body)
+
+            # Add an assistant to a form succeeds
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, "case001", "case_start_20210311"
+                ),
+                {
+                    "coll_id": "{}|{}".format(case_project_id, "caseassistant001"),
+                    "coll_privileges": "1",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Uploads cantones
+            paths = ["resources", "forms", "case", "cantones.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, "case001", "case_start_20210311"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Uploads distritos
+            paths = ["resources", "forms", "case", "distritos.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, "case001", "case_start_20210311"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Update a form fails. Invalid primary key variable
+            paths = ["resources", "forms", "case", "case_start.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, "case001", "case_start_20210311"
+                ),
+                {"form_pkey": "test",
+                 "form_caselabel": "test"},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Update a form fails. Invalid case label variable
+            paths = ["resources", "forms", "case", "case_start.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, "case001", "case_start_20210311"
+                ),
+                {"form_pkey": "hid",
+                 "form_caselabel": "test"},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Update a form pass
+            paths = ["resources", "forms", "case", "case_start.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, "case001", "case_start_20210311"
+                ),
+                {"form_pkey": "hid",
+                 "form_caselabel": "fname"},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+            
         start_time = datetime.datetime.now()
         test_root()
         test_login()
-        test_dashboard()
-        test_profile()
-        test_projects()
-        test_collaborators()
-        test_assistants()
-        test_assistant_groups()
-        test_forms()
-        test_odk()
-        test_multilanguage_odk()
-        test_support_zip_file()
-        test_external_select()
-        test_update_form_missing_files()
-        test_repository()
-        test_repository_downloads()
-        time.sleep(60)
-        test_import_data()
-        test_assistant_access()
-        test_json_logs()
-        test_json_logs_2()
-        test_json_logs_3()
-        test_json_logs_4()
-        test_clean_interface()
-        test_clean_interface_unauthorized()
-        test_audit()
-        test_repository_tasks()
-        test_collaborator_access()
-        test_helpers()
-        test_utility_functions()
-        test_avatar_generator()
-        test_color_hash_hex()
-        test_one_user_assistant()
-        test_five_collaborators()
-        test_form_merge()
-        test_form_merge_mimic()
-        test_form_merge_mimic2()
-        test_form_merge_mimic3()
-        test_group_assistant()
-        test_delete_form_with_repository()
-        test_api()
-        test_plugin_utility_functions()
-        test_collaborator_projects()
-        test_collaborator_projects_2()
-        test_collaborator_projects_3()
-        test_collaborator_projects_4()
-        test_delete_active_project()
-        test_form_access()
-        test_create_super_user()
-        test_configure_alembic()
-        test_configure_fluent()
-        test_configure_mysql()
-        test_configure_tests()
-        test_modify_config()
-        test_unauthorized_access()
+        # test_dashboard()
+        # test_profile()
+        # test_projects()
+        # test_collaborators()
+        # test_assistants()
+        # test_assistant_groups()
+        # test_forms()
+        # test_odk()
+        # test_multilanguage_odk()
+        # test_support_zip_file()
+        # test_external_select()
+        # test_update_form_missing_files()
+        # test_repository()
+        # test_repository_downloads()
+        # time.sleep(60)
+        # test_import_data()
+        # test_assistant_access()
+        # test_json_logs()
+        # test_json_logs_2()
+        # test_json_logs_3()
+        # test_json_logs_4()
+        # test_clean_interface()
+        # test_clean_interface_unauthorized()
+        # test_audit()
+        # test_repository_tasks()
+        # test_collaborator_access()
+        # test_helpers()
+        # test_utility_functions()
+        # test_avatar_generator()
+        # test_color_hash_hex()
+        # test_one_user_assistant()
+        # test_five_collaborators()
+        # test_form_merge()
+        # test_form_merge_mimic()
+        # test_form_merge_mimic2()
+        # test_form_merge_mimic3()
+        # test_group_assistant()
+        # test_delete_form_with_repository()
+        # test_api()
+        # test_plugin_utility_functions()
+        # test_collaborator_projects()
+        # test_collaborator_projects_2()
+        # test_collaborator_projects_3()
+        # test_collaborator_projects_4()
+        # test_delete_active_project()
+        # test_form_access()
+        # test_create_super_user()
+        # test_configure_alembic()
+        # test_configure_fluent()
+        # test_configure_mysql()
+        # test_configure_tests()
+        # test_modify_config()
+        # test_unauthorized_access()
+        test_case_management()
 
         end_time = datetime.datetime.now()
         time_delta = end_time - start_time

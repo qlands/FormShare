@@ -928,7 +928,10 @@ class UploadNewVersion(PrivateView):
             form_caselabel = None
             form_caseselector = None
             if project_details["project_case"] == 1:
-                form_casetype = int(form_data.get("form_casetype", "0"))
+                if project_details["total_forms"] <= 1:
+                    form_casetype = int(form_data.get("form_casetype", 1))
+                else:
+                    form_casetype = int(form_data.get("form_casetype", 0))
                 if form_casetype == 1:
                     form_caselabel = form_data.get("form_caselabel", "")
                     if form_caselabel == "":

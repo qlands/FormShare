@@ -130,10 +130,8 @@ def make_database_changes(
                 log_message("Error creating backup", error_str, output, " ".join(args))
                 error = True
     if not error:
-        log.info("Moving backup into new schema...")
-        send_task_status_to_form(
-            settings, task_id, _("Moving backup into new schema...")
-        )
+        log.info("Creating schema {} as backup of {}".format(a_schema, b_schema))
+        send_task_status_to_form(settings, task_id, _("Creating backup of schema"))
         args = ["mysql", "--defaults-file=" + cnf_file, a_schema]
         with open(b_backup_file) as input_file:
             proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)
@@ -148,11 +146,11 @@ def make_database_changes(
                 error = True
 
     if not error:
-        log.info("Applying structure changes in the new schema...")
+        log.info("Applying structure changes in the schema...")
         send_task_status_to_form(
-            settings, task_id, _("Applying structure changes in the new schema...")
+            settings, task_id, _("Applying structure changes in the schema...")
         )
-        args = ["mysql", "--defaults-file=" + cnf_file, a_schema]
+        args = ["mysql", "--defaults-file=" + cnf_file, b_schema]
         with open(merge_create_file) as input_file:
             proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)
             output, error_str = proc.communicate()
@@ -166,11 +164,11 @@ def make_database_changes(
                 error = True
 
     if not error:
-        log.info("Applying lookup value changes in the new schema...")
+        log.info("Applying lookup value changes in the schema...")
         send_task_status_to_form(
-            settings, task_id, _("Applying lookup value changes in the new schema...")
+            settings, task_id, _("Applying lookup value changes in the schema...")
         )
-        args = ["mysql", "--defaults-file=" + cnf_file, a_schema]
+        args = ["mysql", "--defaults-file=" + cnf_file, b_schema]
         with open(merge_insert_file) as input_file:
             proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)
             output, error_str = proc.communicate()
@@ -210,21 +208,21 @@ def make_database_changes(
                                 "WHERE TRIGGER_SCHEMA = '{}' "
                                 "AND EVENT_OBJECT_TABLE = '{}' "
                                 "AND TRIGGER_NAME LIKE 'audit_%'".format(
-                                    a_schema, a_table
+                                    b_schema, a_table
                                 )
                             )
                             try:
                                 res = engine.execute(sql).fetchall()
                                 for a_trigger in res:
                                     sql = "DROP TRIGGER {}.{}".format(
-                                        a_schema, a_trigger[0]
+                                        b_schema, a_trigger[0]
                                     )
                                     try:
                                         engine.execute(sql)
                                     except Exception as e:
                                         log.error(
                                             "Error {} while dropping trigger {} from database {}".format(
-                                                str(e), a_trigger[0], a_schema
+                                                str(e), a_trigger[0], b_schema
                                             )
                                         )
                                         error = True
@@ -232,7 +230,7 @@ def make_database_changes(
                             except Exception as e:
                                 log.error(
                                     "Error {} while loading triggers from schema {}, table {}".format(
-                                        str(e), a_schema, a_table
+                                        str(e), b_schema, a_table
                                     )
                                 )
                                 error = True
@@ -259,7 +257,7 @@ def make_database_changes(
                             "-P " + mysql_port,
                             "-u " + mysql_user,
                             "-p " + mysql_password,
-                            "-s " + a_schema,
+                            "-s " + b_schema,
                             "-o " + audit_path,
                             "-t " + str_all_tables,
                         ]
@@ -279,7 +277,7 @@ def make_database_changes(
                             send_task_status_to_form(
                                 settings, task_id, _("Creating new triggers")
                             )
-                            args = ["mysql", "--defaults-file=" + cnf_file, a_schema]
+                            args = ["mysql", "--defaults-file=" + cnf_file, b_schema]
                             with open(audit_file) as input_file:
                                 proc = Popen(
                                     args, stdin=input_file, stderr=PIPE, stdout=PIPE
@@ -647,9 +645,6 @@ def internal_merge_into_repository(
 
             log.info("Updating relate forms")
             send_task_status_to_form(settings, task_id, _("Updating relate forms"))
-            # Sleep for another five seconds because the FINALIZING will disable the cancellation of the task.
-            # Just to be sure that the user cannot cancel the task beyond this point.
-            time.sleep(10)
 
             critical_part = True
             # Move all forms using the old schema to the new schema, replace their create file with C and unblock them
@@ -660,20 +655,7 @@ def internal_merge_into_repository(
             )
             for a_form in res:
                 form_with_changes.append(
-                    {
-                        "id": a_form.form_id,
-                        "project_id": a_form.project_id,
-                        "from": a_form.form_schema,
-                        "to": a_schema_name,
-                    }
-                )
-                log.error(
-                    "Form ID: {} in project: {} will change schema from {} to {}".format(
-                        a_form.form_id,
-                        a_form.project_id,
-                        a_form.form_schema,
-                        a_schema_name,
-                    )
+                    {"id": a_form.form_id, "project_id": a_form.project_id,}
                 )
 
             db_session.query(Odkform).filter(
@@ -681,7 +663,6 @@ def internal_merge_into_repository(
             ).update(
                 {
                     "form_blocked": 0,
-                    "form_schema": a_schema_name,
                     "form_createxmlfile": c_create_xml_file,
                     "form_insertxmlfile": c_insert_xml_file,
                     "form_hexcolor": b_hex_color,
@@ -689,7 +670,7 @@ def internal_merge_into_repository(
             )
 
             form_data = {
-                "form_schema": a_schema_name,
+                "form_schema": b_schema_name,
                 "form_blocked": 0,
                 "form_createxmlfile": c_create_xml_file,
                 "form_insertxmlfile": c_insert_xml_file,

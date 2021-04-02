@@ -2587,18 +2587,18 @@ class FunctionalTests(unittest.TestCase):
                 assert "FS_error" not in mimic_res.headers
 
                 # Test submission
-                paths = ["resources", "forms", "mimic_complex", "submission001.xml"]
-                submission_file = os.path.join(self.path, *paths)
+                paths4 = ["resources", "forms", "mimic_complex", "submission001.xml"]
+                submission_file4 = os.path.join(self.path, *paths4)
 
-                paths = ["resources", "forms", "complex_form", "image001.png"]
-                image_file = os.path.join(self.path, *paths)
+                paths4 = ["resources", "forms", "complex_form", "image001.png"]
+                image_file4 = os.path.join(self.path, *paths4)
 
                 self.testapp.post(
                     "/user/{}/project/{}/push".format(self.randonLogin, mimic_project),
                     status=201,
                     upload_files=[
-                        ("filetoupload", submission_file),
-                        ("image", image_file),
+                        ("filetoupload", submission_file4),
+                        ("image", image_file4),
                     ],
                     extra_environ=dict(
                         FS_for_testing="true", FS_user_for_testing="mimic000"
@@ -2736,18 +2736,18 @@ class FunctionalTests(unittest.TestCase):
                 assert "FS_error" not in mimic_res.headers
 
                 # Test submission
-                paths = ["resources", "forms", "mimic_complex", "submission001.xml"]
-                submission_file = os.path.join(self.path, *paths)
+                paths2 = ["resources", "forms", "mimic_complex", "submission001.xml"]
+                submission_file3 = os.path.join(self.path, *paths2)
 
-                paths = ["resources", "forms", "complex_form", "image001.png"]
-                image_file = os.path.join(self.path, *paths)
+                paths2 = ["resources", "forms", "complex_form", "image001.png"]
+                image_file3 = os.path.join(self.path, *paths2)
 
                 self.testapp.post(
                     "/user/{}/project/{}/push".format(self.randonLogin, mimic_project),
                     status=201,
                     upload_files=[
-                        ("filetoupload", submission_file),
-                        ("image", image_file),
+                        ("filetoupload", submission_file3),
+                        ("image", image_file3),
                     ],
                     extra_environ=dict(
                         FS_for_testing="true", FS_user_for_testing="mimic001"
@@ -2871,16 +2871,16 @@ class FunctionalTests(unittest.TestCase):
                 )
                 assert "FS_error" not in mimic_res.headers
 
-                res = self.testapp.post(
+                res3 = self.testapp.post(
                     "/user/{}/project/{}/groups/add".format(
                         self.randonLogin, mimic_grp_project
                     ),
                     {"group_desc": "Mimic group 1", "group_id": "grpmimic001"},
                     status=302,
                 )
-                assert "FS_error" not in res.headers
+                assert "FS_error" not in res3.headers
 
-                res = self.testapp.post(
+                res3 = self.testapp.post(
                     "/user/{}/project/{}/group/{}/members".format(
                         self.randonLogin, mimic_grp_project, "grpmimic001"
                     ),
@@ -2890,24 +2890,24 @@ class FunctionalTests(unittest.TestCase):
                     },
                     status=302,
                 )
-                assert "FS_error" not in res.headers
+                assert "FS_error" not in res3.headers
 
                 # Add an group to a form succeeds
-                res = self.testapp.post(
+                res3 = self.testapp.post(
                     "/user/{}/project/{}/form/{}/groups/add".format(
                         self.randonLogin, mimic_grp_project, "LB_Sequia_MAG_20190123"
                     ),
                     {"group_id": "grpmimic001", "group_privilege": 3},
                     status=302,
                 )
-                assert "FS_error" not in res.headers
+                assert "FS_error" not in res3.headers
 
                 # Test submission
-                paths = ["resources", "forms", "mimic_complex", "submission001.xml"]
-                submission_file = os.path.join(self.path, *paths)
+                paths5 = ["resources", "forms", "mimic_complex", "submission001.xml"]
+                submission_file5 = os.path.join(self.path, *paths5)
 
-                paths = ["resources", "forms", "complex_form", "image001.png"]
-                image_file = os.path.join(self.path, *paths)
+                paths5 = ["resources", "forms", "complex_form", "image001.png"]
+                image_file5 = os.path.join(self.path, *paths5)
 
                 self.testapp.post(
                     "/user/{}/project/{}/push".format(
@@ -2915,8 +2915,8 @@ class FunctionalTests(unittest.TestCase):
                     ),
                     status=201,
                     upload_files=[
-                        ("filetoupload", submission_file),
-                        ("image", image_file),
+                        ("filetoupload", submission_file5),
+                        ("image", image_file5),
                     ],
                     extra_environ=dict(
                         FS_for_testing="true", FS_user_for_testing="mimic003"
@@ -5610,7 +5610,7 @@ class FunctionalTests(unittest.TestCase):
                 index = index + 1
 
                 # Checkout with get goes to 404
-                res = self.testapp.get(
+                self.testapp.get(
                     "/user/{}/project/{}/assistantaccess/form/{}/{}/checkout".format(
                         self.randonLogin, json2_project, json2_form, a_duplicate
                     ),
@@ -8535,8 +8535,6 @@ class FunctionalTests(unittest.TestCase):
             )
 
             # API Call fails. No file to upload
-            paths = ["resources", "api_test.dat"]
-            resource_file = os.path.join(self.path, *paths)
             self.testapp.post(
                 "/api/1/upload_file_to_form",
                 {
@@ -8550,8 +8548,6 @@ class FunctionalTests(unittest.TestCase):
             )
 
             # API Call fails. project_user key is missing
-            paths = ["resources", "api_test.dat"]
-            resource_file = os.path.join(self.path, *paths)
             self.testapp.post(
                 "/api/1/upload_file_to_form",
                 {

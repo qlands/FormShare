@@ -10327,7 +10327,11 @@ class FunctionalTests(unittest.TestCase):
             resource_file = os.path.join(self.path, *paths)
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, "case001"),
-                {"form_pkey": "survey_id", "form_caseselector": "", "form_casetype": "2"},
+                {
+                    "form_pkey": "survey_id",
+                    "form_caseselector": "",
+                    "form_casetype": "2",
+                },
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -10338,7 +10342,11 @@ class FunctionalTests(unittest.TestCase):
             resource_file = os.path.join(self.path, *paths)
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, "case001"),
-                {"form_pkey": "survey_id", "form_caseselector": "test", "form_casetype": "2"},
+                {
+                    "form_pkey": "survey_id",
+                    "form_caseselector": "test",
+                    "form_casetype": "2",
+                },
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -10349,7 +10357,11 @@ class FunctionalTests(unittest.TestCase):
             resource_file = os.path.join(self.path, *paths)
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, "case001"),
-                {"form_pkey": "survey_id", "form_caseselector": "hid", "form_casetype": "2"},
+                {
+                    "form_pkey": "survey_id",
+                    "form_caseselector": "hid",
+                    "form_casetype": "2",
+                },
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -10518,7 +10530,11 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/updateodk".format(
                     self.randonLogin, "case001", "case_follow_up_20210319"
                 ),
-                {"form_pkey": "survey_id", "form_caseselector": "test", "form_casetype": "2"},
+                {
+                    "form_pkey": "survey_id",
+                    "form_caseselector": "test",
+                    "form_casetype": "2",
+                },
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -10544,7 +10560,11 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/updateodk".format(
                     self.randonLogin, "case001", "case_follow_up_20210319"
                 ),
-                {"form_pkey": "survey_id", "form_caseselector": "", "form_casetype": "2"},
+                {
+                    "form_pkey": "survey_id",
+                    "form_caseselector": "",
+                    "form_casetype": "2",
+                },
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -10557,7 +10577,11 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/updateodk".format(
                     self.randonLogin, "case001", "case_follow_up_20210319"
                 ),
-                {"form_pkey": "survey_id", "form_caseselector": "hid", "form_casetype": "2"},
+                {
+                    "form_pkey": "survey_id",
+                    "form_caseselector": "hid",
+                    "form_casetype": "2",
+                },
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -10596,7 +10620,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/repository/create".format(
                     self.randonLogin, "case001", "case_follow_up_20210319"
                 ),
-                {"form_pkey": "survey_id", "start_stage1": "", },
+                {"form_pkey": "survey_id", "start_stage1": "",},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -10671,7 +10695,11 @@ class FunctionalTests(unittest.TestCase):
             resource_file = os.path.join(self.path, *paths)
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, "case001"),
-                {"form_pkey": "survey_id", "form_caseselector": "hid", "form_casetype": "3"},
+                {
+                    "form_pkey": "survey_id",
+                    "form_caseselector": "hid",
+                    "form_casetype": "3",
+                },
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -10740,7 +10768,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/repository/create".format(
                     self.randonLogin, "case001", "case_deactivate_20210331"
                 ),
-                {"form_pkey": "survey_id", "start_stage1": "", },
+                {"form_pkey": "survey_id", "start_stage1": "",},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -10788,7 +10816,9 @@ class FunctionalTests(unittest.TestCase):
             creator_schema = creator_details["form_schema"]
             engine = create_engine(self.server_config["sqlalchemy.url"])
             res = engine.execute(
-                "SELECT _active FROM {}.maintable WHERE hid = '{}'".format(creator_schema, "001")
+                "SELECT _active FROM {}.maintable WHERE hid = '{}'".format(
+                    creator_schema, "001"
+                )
             ).first()
             current_status = res[0]
             engine.dispose()
@@ -10808,7 +10838,11 @@ class FunctionalTests(unittest.TestCase):
             resource_file = os.path.join(self.path, *paths)
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, "case001"),
-                {"form_pkey": "survey_id", "form_caseselector": "hid", "form_casetype": "4"},
+                {
+                    "form_pkey": "survey_id",
+                    "form_caseselector": "hid",
+                    "form_casetype": "4",
+                },
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -10877,7 +10911,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/repository/create".format(
                     self.randonLogin, "case001", "case_activate_20210331"
                 ),
-                {"form_pkey": "survey_id", "start_stage1": "", },
+                {"form_pkey": "survey_id", "start_stage1": "",},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -10925,7 +10959,9 @@ class FunctionalTests(unittest.TestCase):
             creator_schema = creator_details["form_schema"]
             engine = create_engine(self.server_config["sqlalchemy.url"])
             res = engine.execute(
-                "SELECT _active FROM {}.maintable WHERE hid = '{}'".format(creator_schema, "001")
+                "SELECT _active FROM {}.maintable WHERE hid = '{}'".format(
+                    creator_schema, "001"
+                )
             ).first()
             current_status = res[0]
             engine.dispose()
@@ -10994,18 +11030,6 @@ class FunctionalTests(unittest.TestCase):
 
             # Uploads distritos
             paths = ["resources", "forms", "case", "distritos.csv"]
-            resource_file = os.path.join(self.path, *paths)
-            res = self.testapp.post(
-                "/user/{}/project/{}/form/{}/upload".format(
-                    self.randonLogin, "case001", "case_start_20210331"
-                ),
-                status=302,
-                upload_files=[("filetoupload", resource_file)],
-            )
-            assert "FS_error" not in res.headers
-
-            # Uploads households
-            paths = ["resources", "forms", "case", "households.csv"]
             resource_file = os.path.join(self.path, *paths)
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/upload".format(
@@ -11095,7 +11119,7 @@ class FunctionalTests(unittest.TestCase):
             self.assertIn(b"[Clean data]", res.body)
             self.assertNotIn(b"[Manage errors]", res.body)
 
-            # Deactivate case 001
+            # Deactivate case 003
             paths = [
                 "resources",
                 "forms",
@@ -11114,7 +11138,165 @@ class FunctionalTests(unittest.TestCase):
             )
 
             res = engine.execute(
-                "SELECT _active FROM {}.maintable WHERE hid = '{}'".format(creator_schema, "003")
+                "SELECT _active FROM {}.maintable WHERE hid = '{}'".format(
+                    creator_schema, "003"
+                )
+            ).first()
+            current_status = res[0]
+            engine.dispose()
+            assert current_status == 0
+
+            # Check merging a case deactivate
+
+            paths = ["resources", "forms", "case", "merge", "case_deactivate.xlsx"]
+            b_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/merge".format(
+                    self.randonLogin, "case001", "case_deactivate_20210331"
+                ),
+                {
+                    "for_merging": "",
+                    "parent_project": case_project_id,
+                    "parent_form": "case_deactivate_20210331",
+                },
+                status=302,
+                upload_files=[("xlsx", b_resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Add an assistant to a form succeeds
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, "case001", "case_deactivate_20210401"
+                ),
+                {
+                    "coll_id": "{}|{}".format(case_project_id, "caseassistant001"),
+                    "coll_privileges": "1",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, "case001", "case_deactivate_20210401"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"Merge check pending" in res.body)
+
+            # Uploads cantones
+            paths = ["resources", "forms", "case", "cantones.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, "case001", "case_deactivate_20210401"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Uploads distritos
+            paths = ["resources", "forms", "case", "distritos.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, "case001", "case_deactivate_20210401"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Uploads households
+            paths = ["resources", "forms", "case", "households.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, "case001", "case_deactivate_20210401"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, "case001", "case_deactivate_20210401"
+                ),
+                status=200,
+            )
+            self.assertFalse(b"Merge check pending" in res.body)
+            self.assertIn(b"Linked to case lookup table", res.body)
+
+            # Show the merge repository page
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}/merge/into/{}".format(
+                    self.randonLogin,
+                    "case001",
+                    "case_deactivate_20210401",
+                    "case_deactivate_20210331",
+                ),
+                status=200,
+            )
+            assert "FS_error" not in res.headers
+
+            # Merge the new creator using Celery
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/merge/into/{}".format(
+                    self.randonLogin,
+                    "case001",
+                    "case_deactivate_20210401",
+                    "case_deactivate_20210331",
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            time.sleep(60)  # Wait for the merge to finish
+
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, "case001", "case_deactivate_20210401"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"This is the sub-version of" in res.body)
+
+            # Get the details of a form tormenta20201105
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, "case001", "case_deactivate_20210331"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"is the sub-version of this form" in res.body)
+
+            # Deactivate case 002 using the merged form
+            paths = [
+                "resources",
+                "forms",
+                "case",
+                "merge",
+                "data",
+                "deact_02.xml",
+            ]
+            submission_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, "case001"),
+                status=201,
+                upload_files=[("filetoupload", submission_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
+            res = engine.execute(
+                "SELECT _active FROM {}.maintable WHERE hid = '{}'".format(
+                    creator_schema, "002"
+                )
             ).first()
             current_status = res[0]
             engine.dispose()
@@ -11123,59 +11305,59 @@ class FunctionalTests(unittest.TestCase):
         start_time = datetime.datetime.now()
         test_root()
         test_login()
-        # test_dashboard()
-        # test_profile()
-        # test_projects()
-        # test_collaborators()
-        # test_assistants()
-        # test_assistant_groups()
-        # test_forms()
-        # test_odk()
-        # test_multilanguage_odk()
-        # test_support_zip_file()
-        # test_external_select()
-        # test_update_form_missing_files()
-        # test_repository()
-        # test_repository_downloads()
-        # time.sleep(60)
-        # test_import_data()
-        # test_assistant_access()
-        # test_json_logs()
-        # test_json_logs_2()
-        # test_json_logs_3()
-        # test_json_logs_4()
-        # test_clean_interface()
-        # test_clean_interface_unauthorized()
-        # test_audit()
-        # test_repository_tasks()
-        # test_collaborator_access()
-        # test_helpers()
-        # test_utility_functions()
-        # test_avatar_generator()
-        # test_color_hash_hex()
-        # test_one_user_assistant()
-        # test_five_collaborators()
-        # test_form_merge()
-        # test_form_merge_mimic()
-        # test_form_merge_mimic2()
-        # test_form_merge_mimic3()
-        # test_group_assistant()
-        # test_delete_form_with_repository()
-        # test_api()
-        # test_plugin_utility_functions()
-        # test_collaborator_projects()
-        # test_collaborator_projects_2()
-        # test_collaborator_projects_3()
-        # test_collaborator_projects_4()
-        # test_delete_active_project()
-        # test_form_access()
-        # test_create_super_user()
-        # test_configure_alembic()
-        # test_configure_fluent()
-        # test_configure_mysql()
-        # test_configure_tests()
-        # test_modify_config()
-        # test_unauthorized_access()
+        test_dashboard()
+        test_profile()
+        test_projects()
+        test_collaborators()
+        test_assistants()
+        test_assistant_groups()
+        test_forms()
+        test_odk()
+        test_multilanguage_odk()
+        test_support_zip_file()
+        test_external_select()
+        test_update_form_missing_files()
+        test_repository()
+        test_repository_downloads()
+        time.sleep(60)
+        test_import_data()
+        test_assistant_access()
+        test_json_logs()
+        test_json_logs_2()
+        test_json_logs_3()
+        test_json_logs_4()
+        test_clean_interface()
+        test_clean_interface_unauthorized()
+        test_audit()
+        test_repository_tasks()
+        test_collaborator_access()
+        test_helpers()
+        test_utility_functions()
+        test_avatar_generator()
+        test_color_hash_hex()
+        test_one_user_assistant()
+        test_five_collaborators()
+        test_form_merge()
+        test_form_merge_mimic()
+        test_form_merge_mimic2()
+        test_form_merge_mimic3()
+        test_group_assistant()
+        test_delete_form_with_repository()
+        test_api()
+        test_plugin_utility_functions()
+        test_collaborator_projects()
+        test_collaborator_projects_2()
+        test_collaborator_projects_3()
+        test_collaborator_projects_4()
+        test_delete_active_project()
+        test_form_access()
+        test_create_super_user()
+        test_configure_alembic()
+        test_configure_fluent()
+        test_configure_mysql()
+        test_configure_tests()
+        test_modify_config()
+        test_unauthorized_access()
         test_case_management()
 
         end_time = datetime.datetime.now()

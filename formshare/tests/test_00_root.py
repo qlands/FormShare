@@ -10940,6 +10940,185 @@ class FunctionalTests(unittest.TestCase):
                 ),
             )
 
+            # Check merging a case creator
+
+            paths = ["resources", "forms", "case", "merge", "case_start.xlsx"]
+            b_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/merge".format(
+                    self.randonLogin, "case001", "case_start_20210311"
+                ),
+                {
+                    "for_merging": "",
+                    "parent_project": case_project_id,
+                    "parent_form": "case_start_20210311",
+                },
+                status=302,
+                upload_files=[("xlsx", b_resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Add an assistant to a form succeeds
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, "case001", "case_start_20210331"
+                ),
+                {
+                    "coll_id": "{}|{}".format(case_project_id, "caseassistant001"),
+                    "coll_privileges": "1",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, "case001", "case_start_20210331"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"Merge check pending" in res.body)
+
+            # Uploads cantones
+            paths = ["resources", "forms", "case", "cantones.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, "case001", "case_start_20210331"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Uploads distritos
+            paths = ["resources", "forms", "case", "distritos.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, "case001", "case_start_20210331"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Uploads households
+            paths = ["resources", "forms", "case", "households.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, "case001", "case_start_20210331"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, "case001", "case_start_20210331"
+                ),
+                status=200,
+            )
+            self.assertFalse(b"Merge check pending" in res.body)
+
+            # Show the merge repository page
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}/merge/into/{}".format(
+                    self.randonLogin,
+                    "case001",
+                    "case_start_20210331",
+                    "case_start_20210311",
+                ),
+                status=200,
+            )
+            assert "FS_error" not in res.headers
+
+            # Merge the new creator using Celery
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/merge/into/{}".format(
+                    self.randonLogin,
+                    "case001",
+                    "case_start_20210331",
+                    "case_start_20210311",
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            time.sleep(60)  # Wait for the merge to finish
+
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, "case001", "case_start_20210331"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"This is the sub-version of" in res.body)
+
+            # Get the details of a form tormenta20201105
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, "case001", "case_start_20210311"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"is the sub-version of this form" in res.body)
+
+            # Upload case 003
+            paths = [
+                "resources",
+                "forms",
+                "case",
+                "merge",
+                "data",
+                "start_03.xml",
+            ]
+            submission_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, "case001"),
+                status=201,
+                upload_files=[("filetoupload", submission_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, "case001", "case_start_20210331"
+                ),
+                status=200,
+            )
+            self.assertIn(b"[Clean data]", res.body)
+            self.assertNotIn(b"[Manage errors]", res.body)
+
+            # Deactivate case 001
+            paths = [
+                "resources",
+                "forms",
+                "case",
+                "data",
+                "deact_03.xml",
+            ]
+            submission_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, "case001"),
+                status=201,
+                upload_files=[("filetoupload", submission_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
+            res = engine.execute(
+                "SELECT _active FROM {}.maintable WHERE hid = '{}'".format(creator_schema, "003")
+            ).first()
+            current_status = res[0]
+            engine.dispose()
+            assert current_status == 0
 
         start_time = datetime.datetime.now()
         test_root()

@@ -10666,7 +10666,7 @@ class FunctionalTests(unittest.TestCase):
             self.assertIn(b"[Clean data]", res.body)
             self.assertNotIn(b"[Manage errors]", res.body)
 
-            # Upload a case follow up pass
+            # Upload a case deactivate pass
             paths = ["resources", "forms", "case", "case_deactivate.xlsx"]
             resource_file = os.path.join(self.path, *paths)
             res = self.testapp.post(
@@ -10793,6 +10793,153 @@ class FunctionalTests(unittest.TestCase):
             current_status = res[0]
             engine.dispose()
             assert current_status == 0
+
+            # Get the FormList. household.csv is created
+            self.testapp.get(
+                "/user/{}/project/{}/formList".format(self.randonLogin, "case001"),
+                status=200,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
+            # Upload a case activate pass
+            paths = ["resources", "forms", "case", "case_activate.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, "case001"),
+                {"form_pkey": "survey_id", "form_caseselector": "hid", "form_casetype": "4"},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Add an assistant to a form succeeds
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, "case001", "case_activate_20210331"
+                ),
+                {
+                    "coll_id": "{}|{}".format(case_project_id, "caseassistant001"),
+                    "coll_privileges": "1",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Uploads cantones
+            paths = ["resources", "forms", "case", "cantones.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, "case001", "case_activate_20210331"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Uploads distritos
+            paths = ["resources", "forms", "case", "distritos.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, "case001", "case_activate_20210331"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Uploads households
+            paths = ["resources", "forms", "case", "households.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, "case001", "case_activate_20210331"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of the form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, "case001", "case_activate_20210331"
+                ),
+                status=200,
+            )
+            self.assertIn(b"Linked to case lookup table", res.body)
+
+            # Creates the repository of the case creator
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, "case001", "case_activate_20210331"
+                ),
+                {"form_pkey": "survey_id", "start_stage1": "", },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+            time.sleep(40)  # Wait for the repository to finish
+
+            # Get the details of the form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, "case001", "case_activate_20210331"
+                ),
+                status=200,
+            )
+            self.assertIn(b"With repository", res.body)
+
+            # Activate case 001
+            paths = [
+                "resources",
+                "forms",
+                "case",
+                "data",
+                "activ_01.xml",
+            ]
+            submission_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, "case001"),
+                status=201,
+                upload_files=[("filetoupload", submission_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, "case001", "case_activate_20210331"
+                ),
+                status=200,
+            )
+            self.assertIn(b"[Clean data]", res.body)
+            self.assertNotIn(b"[Manage errors]", res.body)
+
+            creator_details = get_form_details(
+                self.server_config, case_project_id, "case_start_20210311"
+            )
+            creator_schema = creator_details["form_schema"]
+            engine = create_engine(self.server_config["sqlalchemy.url"])
+            res = engine.execute(
+                "SELECT _active FROM {}.maintable WHERE hid = '{}'".format(creator_schema, "001")
+            ).first()
+            current_status = res[0]
+            engine.dispose()
+            assert current_status == 1
+
+            # Get the FormList. household.csv is created
+            self.testapp.get(
+                "/user/{}/project/{}/formList".format(self.randonLogin, "case001"),
+                status=200,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
 
         start_time = datetime.datetime.now()
         test_root()

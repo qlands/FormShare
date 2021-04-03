@@ -643,8 +643,8 @@ def internal_merge_into_repository(
             # in between the critical parts then all the involved forms are broken and then technical team will need
             # to deal with them. A log indicating the involved forms are posted
 
-            log.info("Updating relate forms")
-            send_task_status_to_form(settings, task_id, _("Updating relate forms"))
+            log.info("Updating related forms")
+            send_task_status_to_form(settings, task_id, _("Updating related forms"))
 
             critical_part = True
             # Move all forms using the old schema to the new schema, replace their create file with C and unblock them

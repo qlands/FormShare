@@ -834,7 +834,7 @@ def upload_odk_form(
                                 if not case_selector_found:
                                     error = 1
                                     message = _(
-                                        "The variable {} used to search a select cases was not found or is invalid. "
+                                        "The variable {} used to search and select cases was not found or is invalid. "
                                         "The variable must be select_one_from_file using a CSV file.".format(
                                             form_caselabel
                                         )
@@ -1253,7 +1253,7 @@ def update_odk_form(
                                     if not case_selector_found:
                                         error = 1
                                         message = _(
-                                            "The variable {} used to search a select cases was not found or "
+                                            "The variable {} used to search and select cases was not found or "
                                             "is invalid. "
                                             "The variable must be select_one_from_file using a CSV file.".format(
                                                 form_caselabel

@@ -29,7 +29,7 @@
                     {% if a_field.editable == 1 and projectDetails.access_type <= 2 %}
                         {% if a_field.checked %}
                             <a class="btn btn-white btn-sm change_alias" data-toggle="modal" data-target="#myModal" data-field-id="{{ a_field.name }}" data-field-alias="{{ a_field.field_as }}" ><i class="fas fa-pencil-alt text-warning"></i> {{ _('Change alias') }} </a>
-                            <a class="btn btn-white btn-sm remove_field" data-field-id="{{ a_field.name }}"><i class="fas fa-trash text-danger"></i> {{ _('Not use field') }} </a>
+                            <a class="btn btn-white btn-sm remove_field" data-field-id="{{ a_field.name }}"><i class="fas fa-trash text-danger"></i> {{ _('Do not use field') }} </a>
                         {% else %}
                             <a class="btn btn-white btn-sm add_field" data-field-id="{{ a_field.name }}"><i class="fas fa-plus-circle text-success"></i> {{ _('Use field') }} </a>
                         {% endif %}

@@ -5299,7 +5299,7 @@ msgstr "El alias no puede ser un número"
 # | msgid "Email is invalid"
 #: formshare/views/form.py:2968
 msgid "The alias is invalid"
-msgstr "El alias es invalido"
+msgstr "El alias es inválido"
 
 # | msgid "The project code has invalid characters. Only underscore (_) is
 # | allowed"

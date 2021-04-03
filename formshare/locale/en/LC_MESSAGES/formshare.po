@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2021-04-02 20:22-0600\n"
+"POT-Creation-Date: 2021-04-03 10:03-0600\n"
 "PO-Revision-Date: 2017-11-15 22:40-0600\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -4119,10 +4119,6 @@ msgid ""
 "households as cases."
 msgstr ""
 
-#: formshare/templates/dashboard/projects/snippets/project_form.jinja2:18
-msgid "Read more here"
-msgstr ""
-
 #: formshare/templates/dashboard/projects/snippets/project_form.jinja2:22
 msgid "Abstract"
 msgstr ""
@@ -6415,5 +6411,8 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "Create case lookup table"
+#~ msgstr ""
+
+#~ msgid "Read more here"
 #~ msgstr ""
 

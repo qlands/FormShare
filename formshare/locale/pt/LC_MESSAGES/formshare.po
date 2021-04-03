@@ -3,7 +3,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.1\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2021-04-02 20:22-0600\n"
+"POT-Creation-Date: 2021-04-03 10:03-0600\n"
 "PO-Revision-Date: 2021-03-08 07:10-0600\n"
 "Last-Translator: Carlos Quiros <cquiros@qlands.com>\n"
 "Language: pt\n"
@@ -4443,10 +4443,10 @@ msgid "View/edit case lookup table"
 msgstr ""
 
 # | msgid "Please load a table"
+# | msgid "Create case lookup table"
 #: formshare/templates/dashboard/projects/snippets/no_forms.jinja2:19
 #: formshare/templates/dashboard/projects/snippets/project_forms.jinja2:41
 #, fuzzy
-#| msgid "Create case lookup table"
 msgid "Create the case lookup table"
 msgstr "Favor carregar uma tabela"
 
@@ -4548,10 +4548,6 @@ msgid ""
 "This means that the forms in this project and their submissions will be "
 "related to cases. For example longitudinal forms and data regarding "
 "households as cases."
-msgstr ""
-
-#: formshare/templates/dashboard/projects/snippets/project_form.jinja2:18
-msgid "Read more here"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/snippets/project_form.jinja2:22
@@ -5819,5 +5815,8 @@ msgstr "Você precisa fornecer uma explicação ao cancelar uma desconsideraçã
 #~ "in follow-up case forms certain "
 #~ "questions could be asked according to"
 #~ " its gender."
+#~ msgstr ""
+
+#~ msgid "Read more here"
 #~ msgstr ""
 

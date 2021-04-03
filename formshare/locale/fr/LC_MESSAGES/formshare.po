@@ -8,8 +8,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.1\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2021-04-02 20:22-0600\n"
-"PO-Revision-Date: 2021-03-08 07:09-0600\n"
+"POT-Creation-Date: 2021-04-03 10:03-0600\n"
+"PO-Revision-Date: 2021-04-03 10:02-0600\n"
 "Last-Translator: Carlos Quiros <cquiros@qlands.com>\n"
 "Language: fr\n"
 "Language-Team: English <kde-i18n-doc@kde.org>\n"
@@ -315,18 +315,26 @@ msgid ""
 "The variable {} used to identify the cases is invalid. Only text, "
 "calculates or integers are allowed."
 msgstr ""
+"La variable {} utilisée pour identifier les observations n'est pas "
+"valide. Seuls le texte, les calculs ou les nombres entiers sont "
+"autorisés."
 
 #: formshare/processes/odk/api.py:815 formshare/processes/odk/api.py:1234
 msgid ""
 "The variable {} used to label cases was not found or is invalid. Only "
 "text, calculates or integers are allowed."
 msgstr ""
+"La variable {} utilisée pour étiqueter les observations n'est pas valide."
+" Seuls le texte, les calculs ou les nombres entiers sont autorisés."
 
 #: formshare/processes/odk/api.py:838 formshare/processes/odk/api.py:1258
 msgid ""
 "The variable {} used to search and select cases was not found or is "
 "invalid. The variable must be select_one_from_file using a CSV file."
 msgstr ""
+"La variable {} utilisée pour rechercher et sélectionner des observations "
+"n'a pas été trouvée ou n'est pas valide. La variable doit être "
+"select_one_from_file à l'aide d'un fichier CSV."
 
 #: formshare/processes/odk/api.py:1059
 msgid "The form already exists in this project"
@@ -570,23 +578,18 @@ msgstr ""
 
 # | msgid "Moving backup into new schema..."
 #: formshare/products/merge/celery_task.py:134
-#, fuzzy
 msgid "Creating backup of schema"
-msgstr "Déplacement de la sauvegarde dans de nouveaux schémas..."
+msgstr "Création d'une copie de sauvegarde du schéma"
 
 # | msgid "Applying structure changes in the new schema..."
 #: formshare/products/merge/celery_task.py:151
-#, fuzzy
 msgid "Applying structure changes in the schema..."
-msgstr "Application des changements de structure dans le nouveau schéma..."
+msgstr "Application des modifications de structure au schéma..."
 
 # | msgid "Applying lookup value changes in the new schema..."
 #: formshare/products/merge/celery_task.py:169
-#, fuzzy
 msgid "Applying lookup value changes in the schema..."
-msgstr ""
-"Application des changements de valeur de recherche dans le nouveau "
-"schéma..."
+msgstr "Application des modifications aux valeurs de recherche dans le schéma..."
 
 #: formshare/products/merge/celery_task.py:201
 msgid "Dropping old triggers"
@@ -599,19 +602,17 @@ msgstr "Création de nouveaux déclencheurs"
 # | msgid "Deactivate form"
 # | msgid "Updating relate forms"
 #: formshare/products/merge/celery_task.py:647
-#, fuzzy
 msgid "Updating related forms"
-msgstr "Désactiver le formulaire"
+msgstr "Mise à jour des formulaires associés"
 
 # | msgid "In testing"
 #: formshare/products/merge/celery_task.py:684
-#, fuzzy
 msgid "Storing testing data"
-msgstr "En cours de test"
+msgstr "Stockage des données de test"
 
 #: formshare/products/merge/celery_task.py:692
 msgid "Updating dictionaries"
-msgstr ""
+msgstr "Mise à jour des dictionnaires"
 
 #: formshare/products/repository/celery_task.py:83
 msgid "Creating new tables..."
@@ -2234,18 +2235,19 @@ msgstr "Modifier le formulaire"
 #: formshare/templates/dashboard/projects/forms/case/case_fields.jinja2:4
 #: formshare/templates/dashboard/projects/forms/case/snippets/brdcrbs_case_fields.jinja2:2
 msgid "Case lookup table definition"
-msgstr ""
+msgstr "Définition de la table de recherche de cas"
 
 #: formshare/templates/dashboard/projects/forms/case/case_fields.jinja2:31
 msgid "The case lookup table has been created. You can adjust it below."
 msgstr ""
+"La table de recherche de cas a été créée. Vous pouvez l'ajuster ci-"
+"dessous."
 
 # | msgid "Lookup tables"
 #: formshare/templates/dashboard/projects/forms/case/case_fields.jinja2:40
 #: formshare/templates/dashboard/projects/forms/case/snippets/brdcrbs_case_fields.jinja2:14
-#, fuzzy
 msgid "Case lookup table"
-msgstr "Tableaux de recherche"
+msgstr "Table de recherche de cas"
 
 #: formshare/templates/dashboard/projects/forms/case/case_fields.jinja2:42
 msgid ""
@@ -2255,65 +2257,64 @@ msgid ""
 "according to sex (e.g., if female, do they have access to reproductive "
 "health services?)"
 msgstr ""
+"La table de recherche de cas fournit des informations sur chaque cas qui "
+"peuvent être utilisées dans les formulaires de suivi de cas. Par exemple,"
+" le sexe d'un participant (par exemple une femme) pourrait être utilisé "
+"dans les formulaires de suivi des cas pour poser des questions "
+"spécifiques au genre (par exemple, si une femme, a-t-elle accès aux "
+"services de santé reproductive?)"
 
 #: formshare/templates/dashboard/projects/forms/case/case_fields.jinja2:43
 msgid "FormShare will create a CSV file using this table as described"
-msgstr ""
+msgstr "FormShare créera un fichier CSV en utilisant ce tableau comme décrit ici"
 
 # | msgid "other"
 #: formshare/templates/dashboard/projects/forms/case/case_fields.jinja2:43
-#, fuzzy
 msgid "here"
-msgstr "autre"
+msgstr "ici"
 
 # | msgid "last"
 #: formshare/templates/dashboard/projects/forms/case/case_fields.jinja2:75
 #: formshare/templates/dashboard/projects/forms/case/case_fields.jinja2:127
-#, fuzzy
 msgid "Alias"
-msgstr "dernier"
+msgstr "Alias"
 
 #: formshare/templates/dashboard/projects/forms/case/case_fields.jinja2:118
 msgid "Change field alias"
-msgstr ""
+msgstr "Changer l'alias d'un champ"
 
 # | msgid "Change password of"
 # | msgid "Change the password of"
 #: formshare/templates/dashboard/projects/forms/case/case_fields.jinja2:119
 #: formshare/templates/dashboard/projects/forms/case/case_fields.jinja2:209
-#, fuzzy
 msgid "Change the alias for field:"
-msgstr "Modifier le mot de passe de"
+msgstr "Modification de l'alias du champ:"
 
 # | msgid "Change role"
 #: formshare/templates/dashboard/projects/forms/case/case_fields.jinja2:137
 #: formshare/templates/dashboard/projects/forms/case/snippets/case_field_item.jinja2:31
-#, fuzzy
 msgid "Change alias"
-msgstr "Changer de rôle"
+msgstr "Changer les alias"
 
 #: formshare/templates/dashboard/projects/forms/case/snippets/case_field_item.jinja2:16
 msgid "Currently in use by the lookup table"
-msgstr ""
+msgstr "Actuellement utilisé par la table de recherche"
 
 # | msgid "Edit user"
 #: formshare/templates/dashboard/projects/forms/case/snippets/case_field_item.jinja2:16
-#, fuzzy
 msgid "In use"
-msgstr "Modifier l'utilisateur"
+msgstr "En service"
 
 # | msgid "Anonymize fields"
 # | msgid "Not use field"
 #: formshare/templates/dashboard/projects/forms/case/snippets/case_field_item.jinja2:32
-#, fuzzy
 msgid "Do not use field"
-msgstr "Anonymiser les champs"
+msgstr "Ne pas utiliser de champ"
 
 # | msgid "Key fields"
 #: formshare/templates/dashboard/projects/forms/case/snippets/case_field_item.jinja2:34
-#, fuzzy
 msgid "Use field"
-msgstr "Champs importants"
+msgstr "Utiliser le champ"
 
 #: formshare/templates/dashboard/projects/forms/dictionary/edit_fields.jinja2:4
 msgid "Dictionary fields"
@@ -2917,9 +2918,8 @@ msgstr "Ajouter nouveau document"
 
 # | msgid "Please load a table"
 #: formshare/templates/dashboard/projects/forms/snippets/files_tab.jinja2:32
-#, fuzzy
 msgid "Linked to case lookup table"
-msgstr "S’il vous plaît, chargez un tableau"
+msgstr "Lié à une table de recherche de cas"
 
 #: formshare/templates/dashboard/projects/forms/snippets/files_tab.jinja2:40
 msgid "You need to attach the following files: "
@@ -2955,15 +2955,13 @@ msgstr "Attribuer un autre"
 
 # | msgid "last"
 #: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:33
-#, fuzzy
 msgid "Last case"
-msgstr "dernier"
+msgstr "Dernier cas"
 
 # | msgid "without projects"
 #: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:45
-#, fuzzy
 msgid "Without cases"
-msgstr "sans projets"
+msgstr "Aucun cas"
 
 #: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:54
 msgid "Last cleaned"
@@ -2980,7 +2978,7 @@ msgstr "Demandes"
 
 #: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:71
 msgid "Cases"
-msgstr ""
+msgstr "Cas"
 
 #: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:83
 msgid "In database"
@@ -3023,13 +3021,12 @@ msgstr ""
 # | at all " "times and submissions are for testing purposes. "
 #: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:119
 #: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:137
-#, fuzzy
 msgid ""
 "This form is in testing stage. This means that you can update it at all "
 "times and cases are for testing purposes. "
 msgstr ""
 "Ce formulaire est en phase de test. Cela signifie que vous pouvez le "
-"mettre à jour n'importe quand et les demandes sont à des fins de test. "
+"mettre à jour à tout moment et que les cas sont à des fins de test."
 
 # | msgid "When you finished testing it you can"
 #: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:122
@@ -3224,9 +3221,8 @@ msgstr "Aucune carte n’est disponible pour le moment. En attente de demandes"
 
 # | msgid "No map is available at the moment. Waiting for submissions"
 #: formshare/templates/dashboard/projects/forms/snippets/form_map.jinja2:31
-#, fuzzy
 msgid "No map is available at the moment. Waiting for cases"
-msgstr "Aucune carte n’est disponible pour le moment. En attente de demandes"
+msgstr "La carte n'est pas disponible pour le moment. Cas attendus"
 
 #: formshare/templates/dashboard/projects/forms/snippets/form_map.jinja2:35
 msgid "Waiting for submissions with GPS data"
@@ -3234,9 +3230,8 @@ msgstr "En attente de demandes avec des données GPS"
 
 # | msgid "Waiting for submissions with GPS data"
 #: formshare/templates/dashboard/projects/forms/snippets/form_map.jinja2:37
-#, fuzzy
 msgid "Waiting for cases with GPS data"
-msgstr "En attente de demandes avec des données GPS"
+msgstr "En attente de demandes avec des cas GPS"
 
 #: formshare/templates/dashboard/projects/forms/snippets/form_no_assistants.jinja2:4
 msgid "This form has no assistants assigned to it"
@@ -3327,26 +3322,23 @@ msgstr "Géoréférencées"
 # | msgid "The form cannot create a repository"
 # | msgid "This form cannot create a repository"
 #: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:63
-#, fuzzy
 msgid "This form will create cases once the repository is generated"
-msgstr "Ce formulaire ne peut pas créer de référentiel"
+msgstr "Ce formulaire créera des cas une fois le référentiel généré"
 
 # | msgid "Repository creator"
 #: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:63
 #: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:65
 #: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:27
-#, fuzzy
 msgid "Case creator"
-msgstr "Créateur de référentiel"
+msgstr "Générateur de cas"
 
 # | msgid "This form cannot be merged into the repository of"
 # | msgid "The form cannot create a repository"
 # | msgid "This form cannot create a repository"
 #: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:65
 #: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:27
-#, fuzzy
 msgid "This form creates cases"
-msgstr "Ce formulaire ne peut pas créer de référentiel"
+msgstr "Ce formulaire crée des cas"
 
 #: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:69
 #: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:30
@@ -3739,17 +3731,15 @@ msgstr ""
 # | msgid "Which variable will be used to control duplicate submissions?"
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:42
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:56
-#, fuzzy
 msgid "Which variable will be used to identify each case?"
-msgstr "Quelle variable sera utilisée pour contrôler les soumissions en double?"
+msgstr "Quelle variable utiliserez-vous pour identifier chaque cas?"
 
 # | msgid "You need to indicate the primary language"
 # | msgid "You need to indicate the Primary Key"
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:43
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:57
-#, fuzzy
 msgid "You need to indicate the case ID variable"
-msgstr "Vous devez indiquer la clé primaire"
+msgstr "Vous devez indiquer la variable pour identifier les cas"
 
 # | msgid "" "This variable will help in controlling duplicated data. If you
 # | have more " "than one variable then use a calculate to concate them"
@@ -3759,13 +3749,12 @@ msgstr "Vous devez indiquer la clé primaire"
 # | more than" " one variable then use an ODK Calculate to join them."
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:44
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:58
-#, fuzzy
 msgid ""
 "This will become the Primary Key of the repository for this form and the "
 "link with follow-up case forms."
 msgstr ""
-"Cela deviendra la clé primaire du référentiel. Si vous avez plus d’une "
-"variable, utilisez un ODK Calculate pour les joindre."
+"Cette variable deviendra la clé principale du référentiel pour ce "
+"formulaire et le lien vers les formulaires de suivi des cas."
 
 # | msgid "Which variable will be used as primary key"
 # | msgid "Which variable will be used to control the duplicates (primary
@@ -3774,16 +3763,14 @@ msgstr ""
 # | msgid "Which variable will be used to control duplicate submissions?"
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:48
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:62
-#, fuzzy
 msgid "Which variable will be used to label each case?"
-msgstr "Quelle variable sera utilisée pour contrôler les soumissions en double?"
+msgstr "Quelle variable utiliserez-vous pour étiqueter chaque cas?"
 
 # | msgid "You need to indicate the primary language"
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:49
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:63
-#, fuzzy
 msgid "You need to indicate the case label variable"
-msgstr "Vous devez indiquer la langue principale"
+msgstr "Vous devez indiquer la variable pour étiqueter les cas"
 
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:50
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:64
@@ -3791,25 +3778,27 @@ msgid ""
 "This will be used to search and select each case in follow-up forms. You "
 "can use a calculate to combine a name with other variables."
 msgstr ""
+"Cette variable sera utilisée pour rechercher et sélectionner chaque cas "
+"dans les formulaires de suivi. Vous pouvez utiliser un \"calculate\" pour"
+" combiner un nom avec d'autres variables."
 
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:55
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:75
 msgid "Type of case form"
-msgstr ""
+msgstr "Type de formulaire de cas"
 
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:56
 msgid "Simple follow-up form"
-msgstr ""
+msgstr "Formulaire de suivi simple"
 
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:57
 msgid "Follow-up and deactivate case form"
-msgstr ""
+msgstr "Formulaire de suivi et de désactivation de cas"
 
 # | msgid "inactivate the form."
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:58
-#, fuzzy
 msgid "Follow-up and activate case form"
-msgstr "inactive le formulaire."
+msgstr "Formulaire de suivi et activation des cas"
 
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:59
 msgid ""
@@ -3818,6 +3807,10 @@ msgid ""
 " decides to exit a study so no more data should be collected afterward "
 "about it."
 msgstr ""
+"Les formulaires de suivi attachent simplement des informations à un cas. "
+"Les formulaires de désactivation et d'activation modifient le statut d'un"
+" cas. Par exemple, un ménage qui décide de quitter une étude, il ne faut "
+"donc plus collecter de données auprès de ce ménage par la suite."
 
 # | msgid "Which variable will be used as primary key"
 # | msgid "Which variable will be used to control the duplicates (primary
@@ -3826,28 +3819,29 @@ msgstr ""
 # | msgid "Which variable will be used to control duplicate submissions?"
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:63
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:83
-#, fuzzy
 msgid "Which variable will be used to search and select a case?"
-msgstr "Quelle variable sera utilisée pour contrôler les soumissions en double?"
+msgstr "Quelle variable sera utilisée pour rechercher et sélectionner un cas?"
 
 # | msgid "You need to indicate the primary language"
 # | msgid "You need to indicate the Primary Key"
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:64
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:84
-#, fuzzy
 msgid "You need to indicate the case selector variable"
-msgstr "Vous devez indiquer la clé primaire"
+msgstr "Vous devez indiquer la variable pour rechercher et sélectionner les cas"
 
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:65
 msgid ""
 "This will be used to search and select each case in follow-up forms. This"
 " variable MUST BE a select_one_from_file. The file MUST BE CSV."
 msgstr ""
+"Cette variable sera utilisée pour rechercher et sélectionner chaque cas "
+"dans les formulaires de suivi. La variable DOIT ÊTRE un "
+"select_one_from_file. Le fichier DOIT ÊTRE CSV."
 
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:65
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:85
 msgid "Read here about it"
-msgstr ""
+msgstr "Lisez ici à ce sujet"
 
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:71
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:91
@@ -3856,6 +3850,10 @@ msgid ""
 "MUST BE a calculate joining the the case selector variable with a "
 "datetime or other kind of variable/s."
 msgstr ""
+"Cette variable deviendra la clé primaire du référentiel pour ce "
+"formulaire. Cela DOIT ÊTRE un \"calculate\" qui lie la variable de "
+"sélection de cas avec une variable \"datetime\" ou un autre type de "
+"variable."
 
 #: formshare/templates/dashboard/projects/forms/snippets/upload_file.jinja2:7
 #: formshare/templates/dashboard/projects/snippets/upload_file.jinja2:7
@@ -3889,9 +3887,8 @@ msgstr "Télécharger le formulaire"
 
 # | msgid "Upload form"
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:11
-#, fuzzy
 msgid "Upload case form"
-msgstr "Télécharger le formulaire"
+msgstr "Télécharger le formulaire de cas"
 
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:15
 msgid "Upload form for merging"
@@ -3899,53 +3896,54 @@ msgstr "Télécharger le formulaire  pour la fusion"
 
 # | msgid "Upload form for merging"
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:17
-#, fuzzy
 msgid "Upload case form for merging"
-msgstr "Télécharger le formulaire  pour la fusion"
+msgstr "Télécharger le formulaire de cas pour la fusion"
 
 # | msgid "Target number of submissions"
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:68
-#, fuzzy
 msgid "Target number of cases"
-msgstr "Nombre cible de demandes"
+msgstr "Nombre cible de cas"
 
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:76
 msgid "Simple follow-up"
-msgstr ""
+msgstr "Suivi simple"
 
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:76
 msgid "Follow-up forms just attach information to a case"
-msgstr ""
+msgstr "Les formulaires de suivi joignent simplement des informations à un cas"
 
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:77
 msgid "Follow-up and deactivate"
-msgstr ""
+msgstr "Suivi et désactivation"
 
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:77
 msgid "Deactivate forms change the status of a case to inactive."
-msgstr ""
+msgstr "Les formulaires de désactivation modifient le statut d'un cas en inactif."
 
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:77
 msgid "For example, a household that decides to exit a study"
-msgstr ""
+msgstr "Par exemple, un ménage qui décide de quitter une étude"
 
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:78
 msgid "Follow-up and activate"
-msgstr ""
+msgstr "Suivi et activation"
 
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:78
 msgid "Activate forms change the status of a case to active."
-msgstr ""
+msgstr "Les formulaires d'activation modifient le statut d'un cas en actif."
 
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:78
 msgid "For example, a household that decides to enter a study again"
-msgstr ""
+msgstr "Par exemple, un ménage qui décide de retourner à une étude"
 
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:85
 msgid ""
 "This will be used to search and select each case in follow-up forms. This"
 " variable MUST BE a \"select_one_from_file\". The file MUST BE CSV."
 msgstr ""
+"Cette variable sera utilisée pour rechercher et sélectionner chaque cas "
+"dans les formulaires de suivi. La variable DOIT ÊTRE un "
+"\"select_one_from_file\". Le fichier DOIT ÊTRE CSV."
 
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form_js.jinja2:5
 msgid "One moment please..."
@@ -4425,29 +4423,27 @@ msgstr "Ajouter un nouveau formulaire"
 #: formshare/templates/dashboard/projects/snippets/no_forms.jinja2:16
 #: formshare/templates/dashboard/projects/snippets/project_forms.jinja2:38
 msgid "Create the case lookup table before adding new forms"
-msgstr ""
+msgstr "Créez la table de recherche de cas avant d'ajouter de nouveaux formulaires"
 
 # | msgid "are inactive"
 #: formshare/templates/dashboard/projects/snippets/no_forms.jinja2:16
 #: formshare/templates/dashboard/projects/snippets/no_forms.jinja2:22
 #: formshare/templates/dashboard/projects/snippets/project_forms.jinja2:38
 #: formshare/templates/dashboard/projects/snippets/project_forms.jinja2:44
-#, fuzzy
 msgid "Add new form (Inactive)"
-msgstr "sont inactifs"
+msgstr "Ajouter un nouveau formulaire (Inactif)"
 
 #: formshare/templates/dashboard/projects/snippets/no_forms.jinja2:19
 #: formshare/templates/dashboard/projects/snippets/project_forms.jinja2:41
 msgid "View/edit case lookup table"
-msgstr ""
+msgstr "Afficher / modifier la table de recherche de cas"
 
 # | msgid "Please load a table"
+# | msgid "Create case lookup table"
 #: formshare/templates/dashboard/projects/snippets/no_forms.jinja2:19
 #: formshare/templates/dashboard/projects/snippets/project_forms.jinja2:41
-#, fuzzy
-#| msgid "Create case lookup table"
 msgid "Create the case lookup table"
-msgstr "S’il vous plaît, chargez un tableau"
+msgstr "Créer la table de recherche de cas"
 
 #: formshare/templates/dashboard/projects/snippets/no_forms.jinja2:22
 #: formshare/templates/dashboard/projects/snippets/project_forms.jinja2:44
@@ -4455,6 +4451,8 @@ msgid ""
 "You cannot add new forms while you have a case creator form in testing "
 "stage."
 msgstr ""
+"Vous ne pouvez pas ajouter de nouveaux formulaires tant que vous disposez"
+" d'un formulaire de création de cas en phase de test."
 
 #: formshare/templates/dashboard/projects/snippets/project_details.jinja2:46
 msgid "Without abstract"
@@ -4540,7 +4538,7 @@ msgstr "Le code doit être unique et ne peut pas être modifié par la suite"
 #: formshare/templates/dashboard/projects/snippets/project_form.jinja2:17
 #: formshare/templates/dashboard/projects/snippets/project_form_edit.jinja2:13
 msgid "Use a case/longitudinal workflow"
-msgstr ""
+msgstr "Utilisez un flux de travail longitudinal / de cas"
 
 #: formshare/templates/dashboard/projects/snippets/project_form.jinja2:18
 msgid ""
@@ -4548,10 +4546,9 @@ msgid ""
 "related to cases. For example longitudinal forms and data regarding "
 "households as cases."
 msgstr ""
-
-#: formshare/templates/dashboard/projects/snippets/project_form.jinja2:18
-msgid "Read more here"
-msgstr ""
+"Cela signifie que les formes de ce projet et ses soumissions seront liées"
+" à des cas. Par exemple, les formulaires longitudinaux et les données sur"
+" les ménages où chaque ménage est un cas sont suivis."
 
 #: formshare/templates/dashboard/projects/snippets/project_form.jinja2:22
 msgid "Abstract"
@@ -4564,7 +4561,7 @@ msgstr "Ajouter un projet"
 #: formshare/templates/dashboard/projects/snippets/project_form_edit.jinja2:15
 #: formshare/templates/dashboard/projects/snippets/project_form_edit.jinja2:17
 msgid "Read-only because the project has forms"
-msgstr ""
+msgstr "Lecture seule car le projet comporte des formulaires"
 
 #: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:33
 msgid "This form is the sub-version of"
@@ -4620,11 +4617,11 @@ msgstr "Total"
 
 #: formshare/templates/dashboard/projects/snippets/project_item.jinja2:5
 msgid "This project has a case/longitudinal workflow"
-msgstr ""
+msgstr "Ce projet a un flux de travail longitudinal / cas"
 
 #: formshare/templates/dashboard/projects/snippets/project_item.jinja2:5
 msgid "Case"
-msgstr ""
+msgstr "Cas"
 
 #: formshare/templates/dashboard/projects/snippets/project_item.jinja2:13
 msgid "submission"
@@ -4644,9 +4641,8 @@ msgstr "Dernière demande par"
 
 # | msgid "without projects"
 #: formshare/templates/dashboard/projects/snippets/project_item.jinja2:16
-#, fuzzy
 msgid " and without cases"
-msgstr "sans projets"
+msgstr " et sans cas"
 
 #: formshare/templates/dashboard/projects/snippets/project_map.jinja2:25
 msgid "Nothing to show. Waiting for submissions"
@@ -5191,6 +5187,8 @@ msgid ""
 "FormShare thinks that you are a computer. Please type in all the "
 "information instead of using an autofill"
 msgstr ""
+"FormShare pense que vous êtes un ordinateur. Entrez toutes les "
+"informations au lieu d'utiliser une saisie semi-automatique"
 
 # | msgid "The user account does not exists or the password is invalid"
 #: formshare/views/basic_views.py:189 formshare/views/basic_views.py:196
@@ -5371,22 +5369,19 @@ msgstr "Vous devez indiquer une clé primaire"
 # | msgid "You need to indicate a note to the checkin"
 # | msgid "You need to indicate a note to the check-in"
 #: formshare/views/form.py:803 formshare/views/form.py:949
-#, fuzzy
 msgid "You need to indicate a variable for labeling the cases"
-msgstr "Vous devez indiquer une note à l’enregistrement"
+msgstr "Vous devez indiquer une variable pour étiqueter les cas"
 
 # | msgid "You need to indicate a note to the checkin"
 # | msgid "You need to indicate a note to the check-in"
 #: formshare/views/form.py:819 formshare/views/form.py:963
-#, fuzzy
 msgid "You need to indicate a type of case form"
-msgstr "Vous devez indiquer une note à l’enregistrement"
+msgstr "Vous devez indiquer le type de formulaire de cas"
 
 # | msgid "You need to indicate a ISO 639-1 code for each language"
 #: formshare/views/form.py:833 formshare/views/form.py:976
-#, fuzzy
 msgid "You need to indicate a variable for searching and selecting cases"
-msgstr "Vous devez indiquer un code ISO 639-1 pour chaque langue"
+msgstr "Vous devez indiquer la variable pour rechercher et sélectionner les cas"
 
 #: formshare/views/form.py:863
 msgid "The form was added successfully"
@@ -5480,30 +5475,26 @@ msgstr "FormShare n’a pas été en mesure d’arrêter le processus"
 # | msgid "Such user already exists"
 # | msgid "This user already exists"
 #: formshare/views/form.py:2961
-#, fuzzy
 msgid "Such alias already exist"
-msgstr "Cet utilisateur existe déjà"
+msgstr "L'alias existe déjà"
 
 # | msgid "The following changes cannot be merged:"
 #: formshare/views/form.py:2965
-#, fuzzy
 msgid "The alias cannot be a number"
-msgstr "Les modifications suivantes ne peuvent pas être fusionnées :"
+msgstr "L'alias ne peut pas être un nombre"
 
 # | msgid "Email is invalid"
 #: formshare/views/form.py:2968
-#, fuzzy
 msgid "The alias is invalid"
-msgstr "Adresse e-mail non valide"
+msgstr "L'alias n'est pas valide"
 
 # | msgid "The project code has invalid characters. Only underscore (_) is
 # | allowed"
 #: formshare/views/form.py:2971
-#, fuzzy
 msgid "The alias has invalid characters. Only underscore (_) is allowed"
 msgstr ""
-"Le code du projet a des caractères incorrects. Seul le soulignement (_) "
-"est autorisé"
+"L'alias contient des caractères incorrects. Seul le soulignement (_) est "
+"autorisé"
 
 #: formshare/views/products.py:344
 msgid "The product was deleted successfully"
@@ -5918,4 +5909,7 @@ msgstr ""
 #~ "questions could be asked according to"
 #~ " its gender."
 #~ msgstr ""
+
+#~ msgid "Read more here"
+#~ msgstr "En savoir plus ici"
 

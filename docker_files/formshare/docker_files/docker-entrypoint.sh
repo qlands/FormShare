@@ -10,3 +10,4 @@ set -e
 rm -f /opt/formshare_gunicorn/formshare.pid
 rm -f /opt/formshare_celery/run/worker1.pid
 exec /opt/formshare_gunicorn/run_server.sh
+exec tail -f /dev/null

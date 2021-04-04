@@ -34,4 +34,3 @@ deactivate
 source /opt/formshare_env/bin/activate
 rm /opt/formshare_gunicorn/formshare.pid
 pserve /opt/formshare/development.ini
-tail -f /dev/null

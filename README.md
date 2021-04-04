@@ -14,7 +14,7 @@ FormShare was created because:
 * ODK Aggregate, in my personal opinion, is badly designed, buggy, and not interoperable. ODK Central, though is an enormous improvement to Aggregate, does not parse arbitrary schemata into database tables which makes data cleaning very cumbersome (e. g., cleaning data through Enketo).
 * Forks based on FormHub suffer from the same ills of their father: Django (sorry if I hurt your feelings), no proper repository, rudimentary data cleaning, no auditing, little interoperability, poor or none extensibility... among many others.
 
-FormShare 2 has been written from scratch (not a single line of code comes from Formhub, just ideas, and principles) using Python 3, [Pyramid](https://trypyramid.com/), MySQL, [ElasticSearch](https://www.elastic.co/elasticsearch/), and [PyUtilib](https://github.com/PyUtilib/pyutilib) to deliver a complete and extensible data management solution for ODK Data collection. It took us three years but is finally here :-) and it is Django free!
+FormShare 2 has been written from scratch (not a single line of code comes from Formhub, just ideas, and principles) using Python 3, [Pyramid](https://trypyramid.com/), MySQL, [Elasticsearch](https://www.elastic.co/Elasticsearch/), and [PyUtilib](https://github.com/PyUtilib/pyutilib) to deliver a complete and extensible data management solution for ODK Data collection. It took us three years but is finally here :-) and it is Django free!
 
 FormShare **is for organizations** to install it in their server or cloud service to serve ODK XForms and collect and manage the submissions. FormShare is also available as a service at [https://formshare.org](https://formshare.org) for those organizations that lack the capacity or resources to run their installation.
 
@@ -22,6 +22,14 @@ FormShare **is for organizations** to install it in their server or cloud servic
 
 **Current features**
 
+- Case management (Longitudinal data collection)
+  - Using the Official ODK Collect App
+  - Intelligent work flow using Official ODK standards: 
+    - Case creator forms will create cases.
+    - Follow-up forms will attach information to each case.
+    - Deactivate forms will deactivate cases. For example, a household that decides to exit a longitudinal study will not appear in follow-up forms after deactivation.
+    - Activate forms will activate cases again.  For example, a household that decides to re-enter a longitudinal study will appear again in follow-up forms after activation.
+    - Move information from case creator forms into follow-up, deactivation and activation forms. For example, the sex of a participant (e. g., female) could be used in follow-up case forms to ask specific questions according to sex (e. g., if female, do they have access to reproductive health services since our last visit?)
 - User accounts and management
 - Group-based user permissions
 - Projects to organize users, permissions, and forms
@@ -33,7 +41,7 @@ FormShare **is for organizations** to install it in their server or cloud servic
   - With testing and production stages
   - With form and submission multimedia or data attachments
   - With a table preview of submission data (even with thousand or millions of records) allowing in-table edits and recording any changes made to the data
-- OData live data feed for analysis with tools like Excel and Power BI. **With all CRUD operation supported**. You can even use [Excel](https://github.com/qlands/MrBot-OData-Add-In) to clean data
+- OData live data feed for analysis with tools like Excel and Power BI. **With all CRUD operation supported (e. g., update)**. You can even use [Excel](https://github.com/qlands/MrBot-OData-Add-In) to clean data.
 - Extensibility system, e. g., You can write extensions to connect FormShare with Microsoft 365 authentication system
 - Documentation for running on AWS using Docker
 - Data cleaning API integration with R, STATA, or SPSS
@@ -52,7 +60,6 @@ FormShare **is for organizations** to install it in their server or cloud servic
 
 **Short-term features:**
 
-- Case management (Longitudinal data collection)
 - Connecting data fields with ontological variables. This is useful when comparing variables across studies even if variable names are different
 - Graph visualization with dashboards
 - Real-time data aggregation (pull data from different forms into one common data bucket). This is useful when dealing with slightly different forms for different geographies but where that certain fields could be aggregated into a common pot for analysis
@@ -67,7 +74,7 @@ Releases
 ------------
 The current stable release is 2.7.5 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.7.5) 
 
-The database signature for stable 2.7.5 is 221d9f82a10d
+The database signature for stable 2.7.5 is 3dd1ebdcd7e0
 
 The Docker image for stable 2.7.5 is 20210308
 
@@ -105,13 +112,13 @@ mkdir /opt/formshare/repository
 mkdir /opt/formshare/config
 mkdir /opt/formshare/mysql
 mkdir /opt/formshare/plugins
-mkdir /opt/formshare/elasticsearch
-mkdir /opt/formshare/elasticsearch/esdata
-mkdir /opt/formshare/elasticsearch/esdata2
-mkdir /opt/formshare/elasticsearch/esdata3
+mkdir /opt/formshare/Elasticsearch
+mkdir /opt/formshare/Elasticsearch/esdata
+mkdir /opt/formshare/Elasticsearch/esdata2
+mkdir /opt/formshare/Elasticsearch/esdata3
 sudo chmod -R g+w /opt/formshare
 
-# Set enough memory for ElasticSearch
+# Set enough memory for Elasticsearch
 sudo sysctl -w vm.max_map_count=262144
 echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.d/60-vm-max_map_count.conf
 
@@ -192,48 +199,53 @@ cd /opt/formshare_plugins
 python setup.py develop
 # For each plugin compile the language catalogs
 python setup.py compile_catalog
-#Exit the container
-exit
-# Stop the FormShare docker container
-sudo docker stop [formshare_container_id]
+# Stop FormShare
+cd /opt/formshare_gunicorn
+pkill -F ./formshare.pid
 # Edit the file /opt/formshare/config/development.ini and enable the plug-ins
 sudo nano /opt/formshare/config/development.ini
-# Start the FormShare docker container
-sudo docker start formshare_container_id
+# Start FormShare
+cd /opt/formshare_gunicorn
+./run_server.sh
+# Exit the docker container
 ```
 
 **Important Note:** You may need to repeat these steps if the FormShare container gets updated or if you update FormShare. Use the information in "Upgrading information" if this is the case.
 
 ## Upgrading information
 
+### Important Note: Upgrading Docker images <= 20210308 (stable 2.7.5) to images > 20210308
+
+Docker images > 20210308 (stable 2.7.5) use and check for Elasticsearch version 6.8.14. To upgrade FormShare beyond 20210308 you need to update the docker-compose.yml to use the Docker image 6.8.14 of Elasticsearch **for all the nodes of Elasticsearch that you have**.
+
+```yaml
+image: docker.elastic.co/Elasticsearch/Elasticsearch:6.8.14
+```
+
+### Upgrading steps
+
 Please read the [upgrade guide](upgrade_steps.txt) if you have FormShare installed from the source code. If you use Docker then things are easier:
 
 ```sh
 # Make a backup of your installation. See the section "Backup FormShare"
 
-# Create the plug-ins directory if it does not exist
-mkdir /opt/formshare/plugins
-
 # Edit the file /opt/formshare/config/development.ini and disable all plug-ins
 sudo nano /opt/formshare/config/development.ini
 
-# Download the new version of FormShare. Replace X for the version you want to use
+# Copy the current docker compose file to a new one. For example, [current_docker_image] could be 20210308 and [new_docker_image] will be 20210411
 cd /opt
-sudo git clone https://github.com/qlands/FormShare.git -b stable-2.X formshare_2.X_source
+sudo cp -R formshare_docker_compose_[current_docker_image] formshare_docker_compose_[new_docker_image]
 
-# Copy the docker compose file from the source to a new directory. Replace XXXXXXXX to the Docker image that you want to use
-sudo mkdir formshare_docker_compose_XXXXXXXX
-sudo cp ./formshare_2.X_source/docker_compose/docker-compose.yml /opt/formshare_docker_compose_XXXXXXXX/
+# Edit the /opt/formshare_docker_compose_[new_docker_image]/docker-compose.yml and change all the references of [current_docker_image] to [new_docker_image]. For example change all  20210308 for 20210411
+# If you are upgrading from Docker images <= 20210308 to images > 20210308 then you need to also update the Docker image of Elasticsearch to 6.8.14
+sudo /opt/formshare_docker_compose_[new_docker_image]/docker-compose.yml
 
-#Edit the new docker-compose.yml so it has the same parameters as the previous one (MySQL server, ElasticSearch server, MySQL user and password, FormShare admin, etc)
-sudo nano /opt/formshare_docker_compose_XXXXXXXX/docker-compose.yml
-
-# Remove the old Docker Network. Replace XXXXXXX for the previous Docker image
-sudo docker network rm formsharedockercomposeXXXXXXXX_fsnet
+# Remove the old Docker Network.
+sudo docker network rm docker[current_docker_image]_fsnet
 
 # Start the new version of FormShare. All required updates in the database will be done automatically.
 cd /opt/formshare_docker_compose_XXXXXXXX
-sudo docker-compose up -d
+sudo docker-compose up
 
 # If you have plug-ins then you need to build them and enable them again. See the section "Install plug-ins while using Docker"
 
@@ -243,25 +255,26 @@ sudo docker-compose up -d
 
 ## How to make your FormShare installation inaccessible, inconsistent, and/or broken.
 
-FormShare uses MySQL, ElasticSearch, and a file repository. **All of them are synchronized**, thus the following list of things may make your FormShare installation inaccessible, inconsistent and/or broken:
+FormShare uses MySQL, Elasticsearch, and a file repository. **All of them are synchronized**, thus the following list of things may make your FormShare installation inaccessible, inconsistent and/or broken:
 
 - Altering the database manually, for example, removing/adding users or forms
 - Removing files manually from the repository 
 - Changing the encryption key (aes.key) in the development.ini file.
-- Deleting or changing the ElasticSearch index data
+- Deleting or changing the Elasticsearch index data
+- Upgrading Elasticsearch to a version that is not supported.
 - Deleting the repository
 
 ## Backup FormShare
 
-FormShare uses MySQL, ElasticSearch, and a file repository. **All of them are synchronized**. To backup FormShare do:
+FormShare uses MySQL, Elasticsearch, and a file repository. **All of them are synchronized**. To backup FormShare do:
 
-- Stop the FormShare service
+- Stop the FormShare service and all the Docker containers
 - Use mysqldump to backup the schema called "formshare" 
 - Use mysqldump to backup all schemata starting with "FS" (optional: Only if you are migrating FormShare to a new server)
 - If you used any of the provided Docker compose files then backup the directory /opt/formshare
 - If you did not use Docker then:
   - Backup the development.ini file
-  - Backup the ElasticSearch data directory or create a [snapshot](https://www.elastic.co/guide/en/elasticsearch/reference/6.1/modules-snapshots.html#_snapshot)  of the following indexes:
+  - Backup the Elasticsearch data directory or create a [snapshot](https://www.elastic.co/guide/en/Elasticsearch/reference/6.1/modules-snapshots.html#_snapshot)  of the following indexes:
     - formshare_*
     - [user]_[project]_*
   - Backup the file repository directory
@@ -291,7 +304,7 @@ What can you do through extension plug-ins? Some ideas:
 - Collect data using USSD or IVR services with the same ODK form and store the data in the same repository no matter the source.
 - Implement longitudinal surveys where the data of a form is pulled to populate the options of another form.
 
-You basically can extend FormShare to fit your need. We are working on proper documentation for this.
+You basically can extend FormShare to fit your needs. We are working on proper documentation for this.
 
 Some examples of plug-ins are:
 

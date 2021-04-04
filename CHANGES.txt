@@ -1,4 +1,2 @@
-2.0 (First commit stable) 20190930
----
-- All basic components are ready and stable
+See GitHub releases at https://github.com/qlands/FormShare/releases
 

@@ -94,13 +94,9 @@ sudo apt-get -y upgrade
 # Install docker-compose
 sudo apt-get install -y docker-compose
 
-# Collect the FormShare source code
-cd /opt
-sudo git clone https://github.com/qlands/FormShare.git -b stable-2.7.5 formshare_source
-
-# Copy the docker compose file from the source to a new directory
+# Get the Docker Compose file
 sudo mkdir formshare_docker_compose_20210308
-sudo cp ./formshare_source/docker_compose/docker-compose.yml ./formshare_docker_compose_20210308/
+wget https://raw.githubusercontent.com/qlands/FormShare/stable-2.7.5/docker_compose/docker-compose.yml
 
 # Make the directory structure for FormShare
 sudo mkdir /opt/formshare

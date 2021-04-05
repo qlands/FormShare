@@ -64,7 +64,7 @@ services:
       FORMSHARE_HOST: 192.169.1.4
       FORMSHARE_PORT: 5900
       FORWARDED_ALLOW_IP: 192.169.1.4
-      WAIT_HOSTS_TIMEOUT: 120
+      WAIT_HOSTS_TIMEOUT: 360
       WAIT_HOSTS: 192.169.1.5:3306, 192.169.1.1:9200
     volumes:
       - /opt/formshare/repository:/opt/formshare_repository

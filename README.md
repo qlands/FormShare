@@ -95,6 +95,7 @@ sudo apt-get -y upgrade
 sudo apt-get install -y docker-compose
 
 # Get the Docker Compose file
+cd /opt
 sudo mkdir formshare_docker_compose_20210308
 wget https://raw.githubusercontent.com/qlands/FormShare/stable-2.7.5/docker_compose/docker-compose.yml
 

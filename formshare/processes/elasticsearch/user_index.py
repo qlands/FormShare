@@ -59,17 +59,12 @@ def _get_user_index_definition(number_of_shards, number_of_replicas):
             },
         },
         "mappings": {
-            "user": {
-                "properties": {
-                    "user_id": {"type": "keyword", "copy_to": "all_data"},
-                    "user_email": {
-                        "type": "text",
-                        "copy_to": ["all_data", "user_email2"],
-                    },
-                    "user_name": {"type": "text", "copy_to": "all_data"},
-                    "all_data": {"type": "text", "analyzer": "standard"},
-                    "user_email2": {"type": "text", "analyzer": "email"},
-                }
+            "properties": {
+                "user_id": {"type": "keyword", "copy_to": "all_data"},
+                "user_email": {"type": "text", "copy_to": ["all_data", "user_email2"],},
+                "user_name": {"type": "text", "copy_to": "all_data"},
+                "all_data": {"type": "text", "analyzer": "standard"},
+                "user_email2": {"type": "text", "analyzer": "email"},
             }
         },
     }
@@ -180,6 +175,7 @@ class UserIndexManager(object):
                         body=_get_user_index_definition(
                             number_of_shards, number_of_replicas
                         ),
+                        params={"include_type_name": "false"},
                     )
                 except RequestError as e:
                     if e.status_code == 400:
@@ -222,7 +218,7 @@ class UserIndexManager(object):
             connection = self.create_connection()
             if connection is not None:
                 connection.index(
-                    index=self.index_name, doc_type="user", id=user_id, body=data_dict
+                    index=self.index_name, doc_type="_doc", id=user_id, body=data_dict
                 )
             else:
                 raise RequestError("Cannot connect to ElasticSearch")
@@ -241,7 +237,7 @@ class UserIndexManager(object):
             if connection is not None:
                 connection.delete_by_query(
                     index=self.index_name,
-                    doc_type="user",
+                    doc_type="_doc",
                     body=_get_user_search_dict(user_id),
                 )
                 return True
@@ -264,7 +260,7 @@ class UserIndexManager(object):
                 connection.update(
                     index=self.index_name,
                     id=user_id,
-                    doc_type="user",
+                    doc_type="_doc",
                     body=es_data_dict,
                 )
                 return True

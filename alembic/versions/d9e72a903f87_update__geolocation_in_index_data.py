@@ -74,7 +74,7 @@ def upgrade():
                             index=a_form.form_index,
                             id=dataset_id,
                             body=new_loc,
-                            doc_type="dataset",
+                            doc_type="_doc",
                             request_timeout=1200,
                         )
                     except Exception as e:

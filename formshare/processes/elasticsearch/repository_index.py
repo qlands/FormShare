@@ -27,16 +27,14 @@ def _get_dataset_index_definition(number_of_shards, number_of_replicas):
             }
         },
         "mappings": {
-            "dataset": {
-                "properties": {
-                    "_submitted_date": {"type": "date"},
-                    "_xform_id_string": {"type": "keyword"},
-                    "_submitted_by": {"type": "keyword"},
-                    "_user_id": {"type": "keyword"},
-                    "_project_code": {"type": "keyword"},
-                    "_geopoint": {"type": "text"},
-                    "_geolocation": {"type": "geo_point"},
-                }
+            "properties": {
+                "_submitted_date": {"type": "date"},
+                "_xform_id_string": {"type": "keyword"},
+                "_submitted_by": {"type": "keyword"},
+                "_user_id": {"type": "keyword"},
+                "_project_code": {"type": "keyword"},
+                "_geopoint": {"type": "text"},
+                "_geolocation": {"type": "geo_point"},
             }
         },
     }
@@ -156,6 +154,7 @@ def create_dataset_index(settings, user, project, form):
                     body=_get_dataset_index_definition(
                         number_of_shards, number_of_replicas
                     ),
+                    params={"include_type_name": "false"},
                 )
             except RequestError as e:
                 if e.status_code == 400:
@@ -174,7 +173,7 @@ def delete_from_dataset_index(settings, user, project, form, submission):
     if connection is not None:
         try:
             index_name = get_index_name(user, project, form)
-            connection.delete(index=index_name, doc_type="dataset", id=submission)
+            connection.delete(index=index_name, doc_type="_doc", id=submission)
         except RequestError as e:
             if e.status_code == 400:
                 if e.error.find("already_exists") >= 0:
@@ -228,7 +227,7 @@ def add_dataset(settings, user, project, form, dataset_id, data_dict):
     connection = create_connection(settings)
     if connection is not None:
         connection.index(
-            index=index_name, doc_type="dataset", id=dataset_id, body=data_dict
+            index=index_name, doc_type="_doc", id=dataset_id, body=data_dict
         )
     else:
         raise RequestError("Cannot connect to ElasticSearch")

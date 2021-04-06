@@ -28,12 +28,7 @@ def _get_record_index_definition(number_of_shards, number_of_replicas):
             }
         },
         "mappings": {
-            "record": {
-                "properties": {
-                    "schema": {"type": "keyword"},
-                    "table": {"type": "keyword"},
-                }
-            }
+            "properties": {"schema": {"type": "keyword"}, "table": {"type": "keyword"},}
         },
     }
     return _json
@@ -104,6 +99,7 @@ def create_record_index(settings, user, project, form):
             connection.indices.create(
                 index_name,
                 body=_get_record_index_definition(number_of_shards, number_of_replicas),
+                params={"include_type_name": "false"},
             )
         except RequestError as e:
             if e.status_code == 400:
@@ -140,7 +136,7 @@ def delete_from_record_index(settings, user, project, form, record_uuid):
     if connection is not None:
         try:
             index_name = get_index_name(user, project, form)
-            connection.delete(index=index_name, doc_type="record", id=record_uuid)
+            connection.delete(index=index_name, doc_type="_doc", id=record_uuid)
         except RequestError as e:
             if e.status_code == 400:
                 if e.error.find("already_exists") >= 0:
@@ -159,7 +155,7 @@ def add_record(settings, user, project, form, schema, table, record_uuid):
         index_name = get_index_name(user, project, form)
         data_dict = {"schema": schema, "table": table}
         connection.index(
-            index=index_name, doc_type="record", id=record_uuid, body=data_dict
+            index=index_name, doc_type="_doc", id=record_uuid, body=data_dict
         )
     else:
         raise RequestError("Cannot connect to ElasticSearch")

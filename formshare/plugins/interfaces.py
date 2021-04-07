@@ -35,6 +35,8 @@ __all__ = [
     "IFormAccess",
     "IUser",
     "IEnvironment",
+    "IXMLSubmission",
+    "IMediaSubmission",
 ]
 
 
@@ -1291,6 +1293,77 @@ class IEnvironment(Interface):  # pragma: no cover
         """
         Called by FormShare after the environment is configured
         :param settings: FormShare settings
+        """
+
+
+class IXMLSubmission(Interface):  # pragma: no cover
+    """
+        Allows to hook into the process that received and stores the XML submission from ODK Collect
+    """
+
+    def before_processing_submission(
+        self, request, user, project, form, assistant, xml_file
+    ):
+        """
+        Called by FormShare before FormShare process the XML submission file
+        :param request: Pyramid request object
+        :param user: User ID
+        :param project: Project ID
+        :param form: XForm ID
+        :param assistant: Assistant ID submitting the XML file
+        :param xml_file: XML submission file
+        :return True/False, error code: Whether the storage should continue, 0 no error or other error code
+        """
+
+    def after_processing_submission(
+        self, request, user, project, form, assistant, error, xml_file
+    ):
+        """
+        Called by FormShare after FormShare process the XML submission file
+        :param request: Pyramid request object
+        :param user: User ID
+        :param project: Project ID
+        :param form: XForm ID
+        :param assistant: Assistant ID submitting the XML file
+        :param error: Whether or not FormShare processed the XMK file
+        :param xml_file: XML submission file
+        :return: None
+        """
+
+
+class IMediaSubmission(Interface):  # pragma: no cover
+    """
+        Allows to hook into the process that received and stores media files from ODK Collect
+    """
+
+    def before_storing_media(
+        self, request, user, project, form, assistant, xml_file, media_file
+    ):
+        """
+        Called by FormShare before FormShare process the XML submission file
+        :param request: Pyramid request object
+        :param user: User ID
+        :param project: Project ID
+        :param form: XForm ID
+        :param assistant: Assistant ID submitting the media file
+        :param xml_file: XML Data file
+        :param media_file: Media file
+        :return True/False: Whether the storage should continue
+        """
+
+    def after_storing_media(
+        self, request, user, project, form, assistant, xml_file, media_file
+    ):
+        """
+        Called by FormShare after FormShare process the XML submission file
+        :param request: Pyramid request object
+        :param user: User ID
+        :param project: Project ID
+        :param form: XForm ID
+        :param assistant: Assistant ID submitting the media file
+        :param xml_file: XML Data file
+        :param media_file: Media file
+        :return: None
         """
 
 

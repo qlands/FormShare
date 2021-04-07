@@ -2822,22 +2822,82 @@ def store_submission(request, user, project, assistant):
                                 if base_file.upper().find(".XML") >= 0:
                                     target_file = os.path.join(target_path, base_file)
                                     xml_file = target_file
-                                else:
+                                    shutil.move(file, target_file)
+
+                            for file in files:
+                                base_file = os.path.basename(file)
+                                if base_file.upper().find(".XML") < 0:
+                                    continue_storing = True
                                     target_file = os.path.join(media_path, base_file)
-                                shutil.move(file, target_file)
+                                    for a_plugin in plugins.PluginImplementations(
+                                        plugins.IMediaSubmission
+                                    ):
+                                        continue_storing = a_plugin.before_storing_media(
+                                            request,
+                                            user,
+                                            project,
+                                            xform_id,
+                                            assistant,
+                                            xml_file,
+                                            file,
+                                        )
+                                    if continue_storing:
+                                        shutil.move(file, target_file)
+                                    for a_plugin in plugins.PluginImplementations(
+                                        plugins.IMediaSubmission
+                                    ):
+                                        a_plugin.after_storing_media(
+                                            request,
+                                            user,
+                                            project,
+                                            xform_id,
+                                            assistant,
+                                            xml_file,
+                                            target_file,
+                                        )
+
                             if xml_file != "":
-                                res_code, message = convert_xml_to_json(
-                                    odk_dir,
-                                    xml_file,
-                                    form_data["form_directory"],
-                                    form_data["form_schema"],
-                                    form_data["form_xmlfile"],
-                                    user,
-                                    project,
-                                    xform_id,
-                                    assistant,
-                                    request,
-                                )
+                                continue_processing = True
+                                res_code = 0
+                                for a_plugin in plugins.PluginImplementations(
+                                    plugins.IXMLSubmission
+                                ):
+                                    (
+                                        continue_processing,
+                                        res_code,
+                                    ) = a_plugin.before_processing_submission(
+                                        request,
+                                        user,
+                                        project,
+                                        xform_id,
+                                        assistant,
+                                        xml_file,
+                                    )
+                                if continue_processing:
+                                    res_code, message = convert_xml_to_json(
+                                        odk_dir,
+                                        xml_file,
+                                        form_data["form_directory"],
+                                        form_data["form_schema"],
+                                        form_data["form_xmlfile"],
+                                        user,
+                                        project,
+                                        xform_id,
+                                        assistant,
+                                        request,
+                                    )
+                                    for a_plugin in plugins.PluginImplementations(
+                                        plugins.IXMLSubmission
+                                    ):
+                                        a_plugin.after_processing_submission(
+                                            request,
+                                            user,
+                                            project,
+                                            xform_id,
+                                            assistant,
+                                            res_code,
+                                            xml_file,
+                                        )
                                 if res_code == 0:
                                     return True, 201
                                 else:

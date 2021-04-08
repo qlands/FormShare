@@ -1337,7 +1337,7 @@ class IMediaSubmission(Interface):  # pragma: no cover
     """
 
     def before_storing_media(
-        self, request, user, project, form, assistant, xml_file, media_file
+        self, request, user, project, form, assistant, submission, xml_file, media_file
     ):
         """
         Called by FormShare before FormShare process the XML submission file
@@ -1346,13 +1346,14 @@ class IMediaSubmission(Interface):  # pragma: no cover
         :param project: Project ID
         :param form: XForm ID
         :param assistant: Assistant ID submitting the media file
+        :param submission: Submission ID
         :param xml_file: XML Data file
         :param media_file: Media file
         :return True/False: Whether the storage should continue
         """
 
     def after_storing_media(
-        self, request, user, project, form, assistant, xml_file, media_file
+        self, request, user, project, form, assistant, submission, xml_file, media_file
     ):
         """
         Called by FormShare after FormShare process the XML submission file
@@ -1361,6 +1362,7 @@ class IMediaSubmission(Interface):  # pragma: no cover
         :param project: Project ID
         :param form: XForm ID
         :param assistant: Assistant ID submitting the media file
+        :param submission: Submission ID
         :param xml_file: XML Data file
         :param media_file: Media file
         :return: None

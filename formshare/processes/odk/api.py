@@ -2838,6 +2838,7 @@ def store_submission(request, user, project, assistant):
                                             project,
                                             xform_id,
                                             assistant,
+                                            unique_id,
                                             xml_file,
                                             file,
                                         )
@@ -2852,6 +2853,7 @@ def store_submission(request, user, project, assistant):
                                             project,
                                             xform_id,
                                             assistant,
+                                            unique_id,
                                             xml_file,
                                             target_file,
                                         )

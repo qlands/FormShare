@@ -20,6 +20,7 @@ services:
       - bootstrap.memory_lock=true
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
       - network.host=172.28.1.1
+      - "discovery.zen.minimum_master_nodes=2"
     ulimits:
       memlock:
         soft: -1

@@ -71,7 +71,7 @@
                                 <label>{{ _('Fields') }}</label>
                                 <select id="fields" data-module="autocomplete" name="fields" multiple="multiple" style="width: 100%">
                                     {% for field in fields %}
-                                        <option value="{{ field.name }}" {% if field.checked %} selected {% endif %} >{{ field.desc }}</option>
+                                        <option value="{{ field.name }}" {% if field.checked %} selected {% endif %} >{{ field.desc|truncate(30,true,'...') }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -124,7 +124,7 @@
                         {% if checked == 0 %}
                             {% for field in fields -%}
                                 {% if field.name != "rowuuid" %}
-                                    {label: '{{ field.desc }}', name: '{{ field.name }}' , key: false, editable: {{ field.editable }},
+                                    {label: '{{ field.desc|truncate(30,true,'...') }}', name: '{{ field.name }}' , key: false, editable: {{ field.editable }},
                                         {% if field.rlookup == 'true' %}
                                             formatter:'select',
                                             edittype:'select',
@@ -139,7 +139,7 @@
                             {% for field in fields -%}
                                 {% if field.checked -%}
                                     {% if field.name != "rowuuid" %}
-                                        {label: '{{ field.desc }}', name: '{{ field.name }}' , key: false, editable: {{ field.editable }},
+                                        {label: '{{ field.desc|truncate(30,true,'...') }}', name: '{{ field.name }}' , key: false, editable: {{ field.editable }},
                                             {% if field.rlookup == 'true' %}
                                                 formatter:'select',
                                                 edittype:'select',

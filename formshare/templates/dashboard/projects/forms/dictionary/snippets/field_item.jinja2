@@ -5,7 +5,7 @@
                 <div class="rounded-circle" style="margin-right: 10px; background-color: {% if field.sensitive == 'true' %}#FF0000{% else %}#008000{% endif %}; width: 38px; height: 38px; display: inline-block; vertical-align: middle" ><span style="color: white; position: relative; float: left; top: 50%; left: 50%; transform: translate(-50%, -50%);"><i class="{% if field.key == 'false' and field.rlookup == 'false' %}fas fa-columns{% else %}{% if field.key == 'true' %}fas fa-star{% else %}fas fa-link{% endif %}{% endif %} fa-2x"></i></span></div>
             </a>
             <div class="media-body ">
-                {{ field.name }} - <span id="desc_{{ field.name }}">{{ field.desc }}</span><br>
+                {{ field.name }} - <span id="desc_{{ field.name }}"><span>{{ field.desc }}</span></span><br>
                 <p class="text-muted">{% if field.sensitive == 'true' %}<span class="text-danger">{{ _('Sensitive') }} - {{ _('Protection type') }}: {{ field.protection_desc }}</span>{% else %}{{ _('Not sensitive') }}{% endif %}</p>
                 <div class="actions">
                     {% block field_item_processing_actions %}

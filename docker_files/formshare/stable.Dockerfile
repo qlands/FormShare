@@ -37,6 +37,7 @@ VOLUME /opt/formshare_config
 COPY ./docker_files/etc/default/celery_formshare /etc/default/celery_formshare
 COPY ./docker_files/etc/init.d/celery_formshare /etc/init.d/celery_formshare
 COPY ./docker_files/run_server.sh /opt/formshare_gunicorn
+COPY ./docker_files/stop_server.sh /opt/formshare_gunicorn
 COPY ./docker_files/docker-entrypoint.sh /
 
 EXPOSE 5900
@@ -44,6 +45,7 @@ EXPOSE 5900
 RUN chmod +x /docker-entrypoint.sh
 RUN chmod +x /etc/init.d/celery_formshare
 RUN chmod +x /opt/formshare_gunicorn/run_server.sh
+RUN chmod +x /opt/formshare_gunicorn/stop_server.sh
 RUN chmod 640 /etc/default/celery_formshare
 RUN ldconfig
 ENTRYPOINT ["/docker-entrypoint.sh"]

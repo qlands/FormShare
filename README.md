@@ -6,7 +6,7 @@ Centralize data – Decentralize knowledge<sup>TM</sup>
 
 About
 -----
-FormShare 2 is inspired by the excellent [FormHub](<http://github.com/SEL-Columbia/formhub>) platform developed by the Sustainable Engineering Lab at Columbia University. After I forked [OnaData](https://github.com/onaio/onadata) (a fork of FormHub) back in 2016 it was clear that the code needed a lot to bring it to the main ideas that I had: 1) Integrate it with [ODK Tools](https://github.com/qlands/odktools), 2) provide a proper MySQL repository to centralize the data and, 3) use latest software technologies to decentralize the management.
+FormShare 2 is an advanced data management platform for [Open Data Kit (ODK)](https://getodk.org/). FormShare 2 is inspired by the excellent [FormHub](<http://github.com/SEL-Columbia/formhub>) platform developed by the Sustainable Engineering Lab at Columbia University. After I forked [OnaData](https://github.com/onaio/onadata) (a fork of FormHub) back in 2016 it was clear that the code needed a lot to bring it to the main ideas that I had: 1) Integrate it with [ODK Tools](https://github.com/qlands/odktools), 2) provide a proper MySQL repository to centralize the data and, 3) use latest software technologies to decentralize the management.
 
 FormShare was created because:
 
@@ -22,7 +22,7 @@ FormShare **is for organizations** to install it in their server or cloud servic
 
 **Current features**
 
-- Case management (Longitudinal data collection)
+- Case management (Longitudinal data collection) (Version >= 2.8.0)
   - Using the Official ODK Collect App
   - Intelligent work flow using Official ODK standards: 
     - Case creator forms will create cases.
@@ -60,8 +60,8 @@ FormShare **is for organizations** to install it in their server or cloud servic
 
 **Short-term features:**
 
+- Graph visualization with dashboards.
 - Connecting data fields with ontological variables. This is useful when comparing variables across studies even if variable names are different
-- Graph visualization with dashboards
 - Real-time data aggregation (pull data from different forms into one common data bucket). This is useful when dealing with slightly different forms for different geographies but where that certain fields could be aggregated into a common pot for analysis
 - Real-time data cleaning scripts using R
 
@@ -72,11 +72,11 @@ ScreenShot
 
 Releases
 ------------
-The current stable release is 2.7.5 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.7.5) 
+The current stable release is 2.8.0 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.8.0) 
 
-The database signature for stable 2.7.5 is 3dd1ebdcd7e0
+The database signature for stable 2.8.0 is 3dd1ebdcd7e0
 
-The Docker image for stable 2.7.5 is 20210308
+The Docker image for stable 2.8.0 is 20210411
 
 Installation
 ------------
@@ -96,9 +96,9 @@ sudo apt-get install -y docker-compose
 
 # Get the Docker Compose file
 cd /opt
-sudo mkdir formshare_docker_compose_20210308
-cd formshare_docker_compose_20210308
-sudo wget https://raw.githubusercontent.com/qlands/FormShare/stable-2.7.5/docker_compose/docker-compose.yml
+sudo mkdir formshare_docker_compose_20210411
+cd formshare_docker_compose_20210411
+sudo wget https://raw.githubusercontent.com/qlands/FormShare/stable-2.8.0/docker_compose/docker-compose.yml
 
 # Make the directory structure for FormShare
 sudo mkdir /opt/formshare
@@ -121,19 +121,19 @@ sudo sysctl -w vm.max_map_count=262144
 echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.d/60-vm-max_map_count.conf
 
 # Download all the required Docker Images
-cd /opt/formshare_docker_compose_20210308
+cd /opt/formshare_docker_compose_20210411
 sudo docker-compose pull
 
 # Edit the docker-compose.yml file to set the MySQL root and FormShare admin passwords
-sudo nano /opt/formshare_docker_compose_20210308/docker-compose.yml
+sudo nano /opt/formshare_docker_compose_20210411/docker-compose.yml
 # Press Alt+Shit+3 to show the line numbers in Nano
 
-Edit line 7: Change the root password from "my_secure_password" to your password
-Edit line 57: Change the root password from "my_secure_password" to the same password of line 7
-Edit line 58: Change the admin user name (optional)
-Edit line 59: Change the admin email address
-Edit line 60: Change the admin user password from "my_secure_password" to your password
-Edit line 65: Change the IP address for the IP address of the machine running the Docker service
+Edit line 10: Change the root password from "my_secure_password" to your password
+Edit line 61: Change the root password from "my_secure_password" to the same password of line 10
+Edit line 62: Change the admin user name (optional)
+Edit line 63: Change the admin email address
+Edit line 64: Change the admin user password from "my_secure_password" to your password
+Edit line 69: Change the IP address for the IP address of the machine running the Docker service
 
 # Save the file with Ctlr+o Enter . Exit with Ctrl+x
 
@@ -173,7 +173,7 @@ sudo service apache2 start
 # Subsequent start will take about 2 minutes. You can check the status with "sudo docker stats". 
 # FormShare will be ready for usage when the container reaches more than 500 kB of MEM USAGE
 # This is the only two commands you need to start FormShare after a server restart
-cd /opt/formshare_docker_compose_20210308
+cd /opt/formshare_docker_compose_20210411
 sudo docker-compose up -d
 
 # Browse to FormShare
@@ -212,9 +212,9 @@ cd /opt/formshare_gunicorn
 
 ## Upgrading information
 
-### Important Note: Upgrading Docker images <= 20210308 (stable 2.7.5) to images > 20210308
+### Important Note: Upgrading Docker images <= 20210411 (stable 2.8.0) to images > 20210411
 
-Docker images > 20210308 (stable 2.7.5) use and check for Elasticsearch version 6.8.14. To upgrade FormShare beyond 20210308 you need to update the docker-compose.yml to use the Docker image 6.8.14 of Elasticsearch **for all the nodes of Elasticsearch that you have**.
+Docker images > 20210411 (stable 2.8.0) use and check for Elasticsearch version 6.8.14. To upgrade FormShare beyond 20210411 you need to update the docker-compose.yml to use the Docker image 6.8.14 of Elasticsearch **for all the nodes of Elasticsearch that you have**.
 
 ```yaml
 image: docker.elastic.co/Elasticsearch/Elasticsearch:6.8.14
@@ -230,12 +230,12 @@ Please read the [upgrade guide](upgrade_steps.txt) if you have FormShare install
 # Edit the file /opt/formshare/config/development.ini and disable all plug-ins
 sudo nano /opt/formshare/config/development.ini
 
-# Copy the current docker compose file to a new one. For example, [current_docker_image] could be 20210308 and [new_docker_image] will be 20210411
+# Copy the current docker compose file to a new one. For example, [current_docker_image] could be 20210411 and [new_docker_image] will be 20210411
 cd /opt
 sudo cp -R formshare_docker_compose_[current_docker_image] formshare_docker_compose_[new_docker_image]
 
-# Edit the /opt/formshare_docker_compose_[new_docker_image]/docker-compose.yml and change all the references of [current_docker_image] to [new_docker_image]. For example change all  20210308 for 20210411
-# If you are upgrading from Docker images <= 20210308 to images > 20210308 then you need to also update the Docker image of Elasticsearch to 6.8.14
+# Edit the /opt/formshare_docker_compose_[new_docker_image]/docker-compose.yml and change all the references of [current_docker_image] to [new_docker_image]. For example change all  20210411 for 20210411
+# If you are upgrading from Docker images <= 20210411 to images > 20210411 then you need to also update the Docker image of Elasticsearch to 6.8.14
 sudo /opt/formshare_docker_compose_[new_docker_image]/docker-compose.yml
 
 # Remove the old Docker Network.

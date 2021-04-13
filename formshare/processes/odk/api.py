@@ -2425,6 +2425,45 @@ def store_json_file(
                             log.error(message)
                             return 1, message
 
+                        for a_plugin in plugins.PluginImplementations(
+                            plugins.IJSONSubmission
+                        ):
+                            a_plugin.after_processing_submission_in_repository(
+                                request,
+                                user,
+                                project,
+                                form,
+                                assistant,
+                                p.returncode,
+                                json_file,
+                            )
+
+                        media_path = os.path.join(
+                            odk_dir,
+                            *[
+                                "forms",
+                                xform_directory,
+                                "submissions",
+                                submission_id,
+                                "*.*",
+                            ]
+                        )
+                        files = glob.glob(media_path)
+                        for file in files:
+                            for a_plugin in plugins.PluginImplementations(
+                                plugins.IMediaSubmission
+                            ):
+                                a_plugin.after_storing_media(
+                                    request,
+                                    user,
+                                    project,
+                                    form,
+                                    assistant,
+                                    submission_id,
+                                    json_file,
+                                    file,
+                                )
+
                         if p.returncode == 2:
                             log.error(
                                 "Submission ID {} did not enter the repository. Command executed: {}".format(
@@ -2535,6 +2574,26 @@ def store_json_file(
                         log.error(message)
                         return 1, message
 
+                    media_path = os.path.join(
+                        odk_dir,
+                        *["forms", xform_directory, "submissions", submission_id, "*.*"]
+                    )
+                    files = glob.glob(media_path)
+                    for file in files:
+                        for a_plugin in plugins.PluginImplementations(
+                            plugins.IMediaSubmission
+                        ):
+                            a_plugin.after_storing_media_in_repository(
+                                request,
+                                user,
+                                project,
+                                form,
+                                assistant,
+                                submission_id,
+                                json_file,
+                                file,
+                            )
+
                     move_media_files(
                         odk_dir, xform_directory, submission_id, sameas.submission_id
                     )
@@ -2640,6 +2699,32 @@ def store_json_file(
                         submission_data, indent=4, ensure_ascii=False
                     )
                     outfile.write(json_string)
+
+                for a_plugin in plugins.PluginImplementations(plugins.IJSONSubmission):
+                    a_plugin.after_processing_submission_not_in_repository(
+                        request, user, project, form, assistant, json_file,
+                    )
+
+                media_path = os.path.join(
+                    odk_dir,
+                    *["forms", xform_directory, "submissions", submission_id, "*.*"]
+                )
+                files = glob.glob(media_path)
+                for file in files:
+                    for a_plugin in plugins.PluginImplementations(
+                        plugins.IMediaSubmission
+                    ):
+                        a_plugin.after_storing_media_not_in_repository(
+                            request,
+                            user,
+                            project,
+                            form,
+                            assistant,
+                            submission_id,
+                            json_file,
+                            file,
+                        )
+
             else:
                 target_submission_id = os.path.basename(submission_exists)
                 target_submission_id = target_submission_id.replace(".original", "")
@@ -2648,6 +2733,27 @@ def store_json_file(
                         source=submission_id, target=target_submission_id
                     )
                 )
+
+                media_path = os.path.join(
+                    odk_dir,
+                    *["forms", xform_directory, "submissions", submission_id, "*.*"]
+                )
+                files = glob.glob(media_path)
+                for file in files:
+                    for a_plugin in plugins.PluginImplementations(
+                        plugins.IMediaSubmission
+                    ):
+                        a_plugin.after_storing_media_not_in_repository(
+                            request,
+                            user,
+                            project,
+                            form,
+                            assistant,
+                            submission_id,
+                            json_file,
+                            file,
+                        )
+
                 move_media_files(
                     odk_dir, xform_directory, submission_id, target_submission_id
                 )
@@ -2700,21 +2806,29 @@ def convert_xml_to_json(
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()
     if p.returncode == 0:
-        stored, message = store_json_file(
-            request,
-            submission_id,
-            temp_json_file,
-            json_file,
-            ordered_json_file,
-            odk_dir,
-            xform_directory,
-            schema,
-            user,
-            project,
-            form,
-            assistant,
-        )
-        return stored, message
+        continue_processing = 0
+        for a_plugin in plugins.PluginImplementations(plugins.IJSONSubmission):
+            continue_processing, message = a_plugin.before_processing_submission(
+                request, user, project, form, assistant, temp_json_file,
+            )
+        if continue_processing == 0:
+            stored, message = store_json_file(
+                request,
+                submission_id,
+                temp_json_file,
+                json_file,
+                ordered_json_file,
+                odk_dir,
+                xform_directory,
+                schema,
+                user,
+                project,
+                form,
+                assistant,
+            )
+            return stored, message
+        else:
+            return continue_processing, message
     else:
         log.error(
             "XMLToJSON error. Converting "
@@ -2827,36 +2941,8 @@ def store_submission(request, user, project, assistant):
                             for file in files:
                                 base_file = os.path.basename(file)
                                 if base_file.upper().find(".XML") < 0:
-                                    continue_storing = True
                                     target_file = os.path.join(media_path, base_file)
-                                    for a_plugin in plugins.PluginImplementations(
-                                        plugins.IMediaSubmission
-                                    ):
-                                        continue_storing = a_plugin.before_storing_media(
-                                            request,
-                                            user,
-                                            project,
-                                            xform_id,
-                                            assistant,
-                                            unique_id,
-                                            xml_file,
-                                            file,
-                                        )
-                                    if continue_storing:
-                                        shutil.move(file, target_file)
-                                    for a_plugin in plugins.PluginImplementations(
-                                        plugins.IMediaSubmission
-                                    ):
-                                        a_plugin.after_storing_media(
-                                            request,
-                                            user,
-                                            project,
-                                            xform_id,
-                                            assistant,
-                                            unique_id,
-                                            xml_file,
-                                            target_file,
-                                        )
+                                    shutil.move(file, target_file)
 
                             if xml_file != "":
                                 continue_processing = True

@@ -37,6 +37,7 @@ __all__ = [
     "IEnvironment",
     "IXMLSubmission",
     "IMediaSubmission",
+    "IJSONSubmission",
 ]
 
 
@@ -1331,29 +1332,62 @@ class IXMLSubmission(Interface):  # pragma: no cover
         """
 
 
+class IJSONSubmission(Interface):  # pragma: no cover
+    """
+        Allows to hook into the process that received and stores the XML submission from ODK Collect
+    """
+
+    def before_processing_submission(
+        self, request, user, project, form, assistant, json_file
+    ):
+        """
+        Called by FormShare before FormShare process the JSON submission file
+        :param request: Pyramid request object
+        :param user: User ID
+        :param project: Project ID
+        :param form: XForm ID
+        :param assistant: Assistant ID submitting the JSON file
+        :param json_file: JSON submission file
+        :return Error code, message: 0 or other error code and a message
+        """
+
+    def after_processing_submission_in_repository(
+        self, request, user, project, form, assistant, error, json_file
+    ):
+        """
+        Called by FormShare after FormShare process the JSON submission file into t
+        :param request: Pyramid request object
+        :param user: User ID
+        :param project: Project ID
+        :param form: XForm ID
+        :param assistant: Assistant ID submitting the JSON file
+        :param error: Whether or not FormShare stored the JSON file. 0 = stored, 2 = in logs
+        :param json_file: JSON submission file
+        :return: None
+        """
+
+    def after_processing_submission_not_in_repository(
+        self, request, user, project, form, assistant, json_file
+    ):
+        """
+        Called by FormShare after FormShare process the JSON submission file into t
+        :param request: Pyramid request object
+        :param user: User ID
+        :param project: Project ID
+        :param form: XForm ID
+        :param assistant: Assistant ID submitting the JSON file
+        :param json_file: JSON submission file
+        :return: None
+        """
+
+
 class IMediaSubmission(Interface):  # pragma: no cover
     """
         Allows to hook into the process that received and stores media files from ODK Collect
     """
 
-    def before_storing_media(
-        self, request, user, project, form, assistant, submission, xml_file, media_file
-    ):
-        """
-        Called by FormShare before FormShare process the XML submission file
-        :param request: Pyramid request object
-        :param user: User ID
-        :param project: Project ID
-        :param form: XForm ID
-        :param assistant: Assistant ID submitting the media file
-        :param submission: Submission ID
-        :param xml_file: XML Data file
-        :param media_file: Media file
-        :return True/False: Whether the storage should continue
-        """
-
-    def after_storing_media(
-        self, request, user, project, form, assistant, submission, xml_file, media_file
+    def after_storing_media_in_repository(
+        self, request, user, project, form, assistant, submission, json_file, media_file
     ):
         """
         Called by FormShare after FormShare process the XML submission file
@@ -1363,7 +1397,23 @@ class IMediaSubmission(Interface):  # pragma: no cover
         :param form: XForm ID
         :param assistant: Assistant ID submitting the media file
         :param submission: Submission ID
-        :param xml_file: XML Data file
+        :param json_file: XML Data file
+        :param media_file: Media file
+        :return: None
+        """
+
+    def after_storing_media_not_in_repository(
+        self, request, user, project, form, assistant, submission, json_file, media_file
+    ):
+        """
+        Called by FormShare after FormShare process the XML submission file
+        :param request: Pyramid request object
+        :param user: User ID
+        :param project: Project ID
+        :param form: XForm ID
+        :param assistant: Assistant ID submitting the media file
+        :param submission: Submission ID
+        :param json_file: XML Data file
         :param media_file: Media file
         :return: None
         """

@@ -2453,7 +2453,7 @@ def store_json_file(
                             for a_plugin in plugins.PluginImplementations(
                                 plugins.IMediaSubmission
                             ):
-                                a_plugin.after_storing_media(
+                                a_plugin.after_storing_media_in_repository(
                                     request,
                                     user,
                                     project,

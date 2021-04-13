@@ -438,12 +438,12 @@ class IUserAuthentication(Interface):  # pragma: no cover
             "on_authenticate_user must be implemented in subclasses"
         )
 
-    def on_authenticate_password(self, request, user_id, password):
+    def on_authenticate_password(self, request, user_data, password):
         """
                 Called by FormShare so plugins can modify the way FormShare gather information about the user
 
                 :param request: ``pyramid.request`` object
-                :param user_id: The user ID trying to authenticate
+                :param user_data: The user data
                 :param password: The password as is typed in the FormShare interface
                 :return Return None to indicate that Forshare should get this in the normal way.
                         False if the password is incorrect.

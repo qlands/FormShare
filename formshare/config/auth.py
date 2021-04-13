@@ -34,7 +34,7 @@ class User(object):
         plugin_result = None
         for plugin in PluginImplementations(IUserAuthentication):
             plugin_result = plugin.on_authenticate_password(
-                request, self.login, password
+                request, self.userData, password
             )
             break  # Only one plugging will be called to extend authenticate_user
         if plugin_result is None:

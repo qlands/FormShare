@@ -1352,7 +1352,7 @@ class IJSONSubmission(Interface):  # pragma: no cover
         """
 
     def after_processing_submission_in_repository(
-        self, request, user, project, form, assistant, error, json_file
+        self, request, user, project, form, assistant, submission, error, json_file
     ):
         """
         Called by FormShare after FormShare process the JSON submission file into t
@@ -1361,13 +1361,14 @@ class IJSONSubmission(Interface):  # pragma: no cover
         :param project: Project ID
         :param form: XForm ID
         :param assistant: Assistant ID submitting the JSON file
+        :param submission: Submission ID
         :param error: Whether or not FormShare stored the JSON file. 0 = stored, 2 = in logs
         :param json_file: JSON submission file
         :return: None
         """
 
     def after_processing_submission_not_in_repository(
-        self, request, user, project, form, assistant, json_file
+        self, request, user, project, form, assistant, submission, json_file
     ):
         """
         Called by FormShare after FormShare process the JSON submission file into t
@@ -1376,6 +1377,7 @@ class IJSONSubmission(Interface):  # pragma: no cover
         :param project: Project ID
         :param form: XForm ID
         :param assistant: Assistant ID submitting the JSON file
+        :param submission: Submission ID
         :param json_file: JSON submission file
         :return: None
         """

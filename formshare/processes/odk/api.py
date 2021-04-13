@@ -2425,19 +2425,6 @@ def store_json_file(
                             log.error(message)
                             return 1, message
 
-                        for a_plugin in plugins.PluginImplementations(
-                            plugins.IJSONSubmission
-                        ):
-                            a_plugin.after_processing_submission_in_repository(
-                                request,
-                                user,
-                                project,
-                                form,
-                                assistant,
-                                p.returncode,
-                                json_file,
-                            )
-
                         media_path = os.path.join(
                             odk_dir,
                             *[
@@ -2536,6 +2523,20 @@ def store_json_file(
                                         parts[1].replace("\n", ""),
                                     )
 
+                        for a_plugin in plugins.PluginImplementations(
+                            plugins.IJSONSubmission
+                        ):
+                            a_plugin.after_processing_submission_in_repository(
+                                request,
+                                user,
+                                project,
+                                form,
+                                assistant,
+                                submission_id,
+                                p.returncode,
+                                json_file,
+                            )
+
                         return p.returncode, ""
                     else:
                         log.error(
@@ -2589,7 +2590,7 @@ def store_json_file(
                                 project,
                                 form,
                                 assistant,
-                                submission_id,
+                                sameas.submission_id,
                                 json_file,
                                 file,
                             )
@@ -2597,6 +2598,21 @@ def store_json_file(
                     move_media_files(
                         odk_dir, xform_directory, submission_id, sameas.submission_id
                     )
+
+                    for a_plugin in plugins.PluginImplementations(
+                        plugins.IJSONSubmission
+                    ):
+                        a_plugin.after_processing_submission_in_repository(
+                            request,
+                            user,
+                            project,
+                            form,
+                            assistant,
+                            sameas.submission_id,
+                            0,
+                            json_file,
+                        )
+
                     return 0, ""
             else:
                 log.error(
@@ -2700,11 +2716,6 @@ def store_json_file(
                     )
                     outfile.write(json_string)
 
-                for a_plugin in plugins.PluginImplementations(plugins.IJSONSubmission):
-                    a_plugin.after_processing_submission_not_in_repository(
-                        request, user, project, form, assistant, json_file,
-                    )
-
                 media_path = os.path.join(
                     odk_dir,
                     *["forms", xform_directory, "submissions", submission_id, "*.*"]
@@ -2724,6 +2735,17 @@ def store_json_file(
                             json_file,
                             file,
                         )
+
+                for a_plugin in plugins.PluginImplementations(plugins.IJSONSubmission):
+                    a_plugin.after_processing_submission_not_in_repository(
+                        request,
+                        user,
+                        project,
+                        form,
+                        assistant,
+                        submission_id,
+                        json_file,
+                    )
 
             else:
                 target_submission_id = os.path.basename(submission_exists)
@@ -2749,7 +2771,7 @@ def store_json_file(
                             project,
                             form,
                             assistant,
-                            submission_id,
+                            target_submission_id,
                             json_file,
                             file,
                         )
@@ -2764,6 +2786,18 @@ def store_json_file(
                     odk_dir, *["forms", xform_directory, "submissions", submission_id]
                 )
                 shutil.rmtree(submission_path)
+
+                for a_plugin in plugins.PluginImplementations(plugins.IJSONSubmission):
+                    a_plugin.after_processing_submission_not_in_repository(
+                        request,
+                        user,
+                        project,
+                        form,
+                        assistant,
+                        target_submission_id,
+                        json_file,
+                    )
+
             return 0, ""
         except Exception as e:
             log.error(

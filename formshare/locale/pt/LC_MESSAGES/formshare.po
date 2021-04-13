@@ -3,16 +3,17 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.1\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2021-04-11 20:46-0600\n"
-"PO-Revision-Date: 2021-04-04 09:00-0600\n"
-"Last-Translator: Carlos Quiros <cquiros@qlands.com>\n"
+"POT-Creation-Date: 2021-04-13 08:00-0600\n"
+"PO-Revision-Date: 2021-04-13 08:09-0600\n"
+"Last-Translator: cquiros <cquiros@qlands.com>\n"
 "Language: pt\n"
 "Language-Team: English <kde-i18n-doc@kde.org>\n"
 "Plural-Forms: nplurals=2; plural=n != 1\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.8.0\n"
+"X-Generator: Lokalize 19.12.3\n"
 
 # | msgid "" "The assistant already exists in your account. You don't need to
 # | duplicate" " assistants, just mark them as \"Share among projects\" to use
@@ -62,7 +63,8 @@ msgstr "Os colaboradores já fazem parte deste projeto"
 #: formshare/processes/db/form.py:1691 formshare/processes/db/form.py:1736
 #: formshare/processes/db/form.py:1766
 msgid "This form is blocked and cannot be changed at the moment."
-msgstr "Este formulário está bloqueado e não pode ser modificado nesse momento."
+msgstr ""
+"Este formulário está bloqueado e não pode ser modificado nesse momento."
 
 #: formshare/processes/db/form.py:1458 formshare/processes/db/project.py:1245
 msgid "The file {} already exist"
@@ -1636,6 +1638,20 @@ msgstr "Todos os dados deste projeto serão excluídos!"
 msgid "Yes, delete it!"
 msgstr "Sim, excluir!"
 
+#: formshare/templates/dashboard/page.jinja2:108
+msgid "Errors in your last action"
+msgstr "Erros em sua última ação"
+
+# | msgid "The following errors happened while trying to merge this form"
+#: formshare/templates/dashboard/page.jinja2:109
+msgid "The following errors happened while processing your last action"
+msgstr ""
+"Os seguintes erros foram relatados durante o processamento de sua última ação"
+
+#: formshare/templates/dashboard/page.jinja2:115
+msgid "Dismiss"
+msgstr "Ignorar"
+
 #: formshare/templates/dashboard/macros/form.jinja2:17
 msgid "The last action reported errors"
 msgstr "A última ação reportou erros"
@@ -2057,7 +2073,8 @@ msgstr "ID do usuário"
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2:6
 #: formshare/templates/dashboard/users/snippets/user_form.jinja2:6
 msgid "The user name must be unique and cannot be changed afterwards"
-msgstr "O nome do usuário deve ser único e não pode ser alterado posteriormente"
+msgstr ""
+"O nome do usuário deve ser único e não pode ser alterado posteriormente"
 
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_form.jinja2:10
 #: formshare/templates/dashboard/users/snippets/user_form.jinja2:10
@@ -2660,7 +2677,8 @@ msgstr "Onde você deseja salvar o arquivo CSV baixado do FormShare?"
 
 #: formshare/templates/dashboard/projects/forms/snippets/api_examples.jinja2:42
 msgid "Define a dataset with the information that you want to update"
-msgstr "Definir um conjunto de dados com a informação que você deseja atualizar"
+msgstr ""
+"Definir um conjunto de dados com a informação que você deseja atualizar"
 
 #: formshare/templates/dashboard/projects/forms/snippets/api_examples.jinja2:43
 #: formshare/templates/dashboard/projects/forms/snippets/api_examples.jinja2:173
@@ -2773,7 +2791,8 @@ msgid "The list needs to have the following structure"
 msgstr "A lista precisa ter a seguinte estrutura"
 
 #: formshare/templates/dashboard/projects/forms/snippets/api_examples.jinja2:120
-msgid "Python program: Read the list of changes and push the update to FormShare"
+msgid ""
+"Python program: Read the list of changes and push the update to FormShare"
 msgstr ""
 "Programa Python: Leia a lista de modificações e coloque na atualização no"
 " FormShare"
@@ -3917,7 +3936,8 @@ msgstr "Rastreamento simples"
 
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:76
 msgid "Follow-up forms just attach information to a case"
-msgstr "Os formulários de rastreamento simplesmente anexam informações a um caso"
+msgstr ""
+"Os formulários de rastreamento simplesmente anexam informações a um caso"
 
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:77
 msgid "Follow-up and deactivate"
@@ -4212,7 +4232,8 @@ msgstr ""
 # | msgid "Your ODK have duplicated list names in the choices sheet"
 #: formshare/templates/dashboard/projects/repository/create_repository.jinja2:147
 msgid "Your ODK form has duplicated list names in the choices sheet"
-msgstr "Seu formulário ODK tem nomes de lista duplicados na planilha de escolhas"
+msgstr ""
+"Seu formulário ODK tem nomes de lista duplicados na planilha de escolhas"
 
 #: formshare/templates/dashboard/projects/repository/create_repository.jinja2:148
 msgid ""
@@ -4247,7 +4268,8 @@ msgid "FormShare will perform more checks on"
 msgstr "O FormShare realizará mais checagens em"
 
 #: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:41
-msgid "and report whether or not is possible to merge it into the repository of"
+msgid ""
+"and report whether or not is possible to merge it into the repository of"
 msgstr "e reportar se é possível ou não fundi-lo no repositório de"
 
 #: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:41
@@ -4282,7 +4304,8 @@ msgstr "Alterar a variável de cadeira em um número inteiro."
 msgid ""
 "Change a variable from select one into select multiple and the other way "
 "around."
-msgstr "Alterar a variável de seleção única para seleção múltipla e vice-versa."
+msgstr ""
+"Alterar a variável de seleção única para seleção múltipla e vice-versa."
 
 # | msgid "Change a variable from categorical into continous and vicerversa."
 #: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:47
@@ -5432,7 +5455,8 @@ msgstr "Os arquivos foram carregados com sucesso"
 
 #: formshare/views/form.py:1499
 msgid "You cannot remove this file because it is required by the repository"
-msgstr "Você não pode remover este arquivo porque ele é exigido pelo repositório"
+msgstr ""
+"Você não pode remover este arquivo porque ele é exigido pelo repositório"
 
 #: formshare/views/form.py:1523 formshare/views/projects.py:586
 msgid "The files was removed successfully"

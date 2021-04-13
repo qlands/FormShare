@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2021-04-11 20:46-0600\n"
+"POT-Creation-Date: 2021-04-13 08:00-0600\n"
 "PO-Revision-Date: 2017-11-15 22:40-0600\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -1478,6 +1478,18 @@ msgstr ""
 #: formshare/templates/dashboard/projects/project_details.jinja2:193
 #: formshare/templates/dashboard/projects/project_list.jinja2:70
 msgid "Yes, delete it!"
+msgstr ""
+
+#: formshare/templates/dashboard/page.jinja2:108
+msgid "Errors in your last action"
+msgstr ""
+
+#: formshare/templates/dashboard/page.jinja2:109
+msgid "The following errors happened while processing your last action"
+msgstr ""
+
+#: formshare/templates/dashboard/page.jinja2:115
+msgid "Dismiss"
 msgstr ""
 
 #: formshare/templates/dashboard/macros/form.jinja2:17

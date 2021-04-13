@@ -3,9 +3,9 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-04-11 20:46-0600\n"
-"PO-Revision-Date: 2021-04-04 09:01-0600\n"
-"Last-Translator: Carlos Quiros <cquiros@qlands.com>\n"
+"POT-Creation-Date: 2021-04-13 08:00-0600\n"
+"PO-Revision-Date: 2021-04-13 07:30-0600\n"
+"Last-Translator: cquiros <cquiros@qlands.com>\n"
 "Language: es\n"
 "Language-Team: English <kde-i18n-doc@kde.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1)\n"
@@ -1555,6 +1555,19 @@ msgstr "¡Todos los datos en este proyecto serán borrados!"
 #: formshare/templates/dashboard/projects/project_list.jinja2:70
 msgid "Yes, delete it!"
 msgstr "¡Si, bórrelo!"
+
+#: formshare/templates/dashboard/page.jinja2:108
+msgid "Errors in your last action"
+msgstr "Errores en su última acción"
+
+# | msgid "The following errors happened while trying to merge this form"
+#: formshare/templates/dashboard/page.jinja2:109
+msgid "The following errors happened while processing your last action"
+msgstr "Se reportaron los siguientes errores al procesar su última acción"
+
+#: formshare/templates/dashboard/page.jinja2:115
+msgid "Dismiss"
+msgstr "Cerrar"
 
 #: formshare/templates/dashboard/macros/form.jinja2:17
 msgid "The last action reported errors"

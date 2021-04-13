@@ -105,14 +105,14 @@
                         </div>
                         <div class="modal-header" style="padding: 0px">
                             <i class="fa fa-info-circle modal-icon"></i>
-                            <h4 class="modal-title">Errors in your last action</h4>
-                            <small class="font-bold">The following errors happened while processing your last action.</small>
+                            <h4 class="modal-title">{{ _('Errors in your last action') }}</h4>
+                            <small class="font-bold">{{ _('The following errors happened while processing your last action') }}</small>
                         </div>
                         <div class="modal-body">
                             <textarea readonly style="width: 100%; min-height: 200px">{% for error in errors %}{{ error }}{% endfor %}</textarea>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-white" data-dismiss="modal">Dismiss</button>
+                            <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Dismiss') }}</button>
                         </div>
                     </div>
                 </div>

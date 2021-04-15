@@ -92,7 +92,9 @@ class EditProfileView(ProfileView):
                         if data["new_pass"] != "":
                             if data["new_pass"] == data["conf_pass"]:
                                 user = get_user_data(user_id, self.request)
-                                pass_ok, message = user.check_password(data["old_pass"], self.request)
+                                pass_ok, message = user.check_password(
+                                    data["old_pass"], self.request
+                                )
                                 if pass_ok:
                                     encoded_password = encode_data(
                                         self.request, data["new_pass"]

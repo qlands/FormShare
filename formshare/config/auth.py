@@ -32,15 +32,23 @@ class User(object):
         self.set_gravatar_url(request, self.name, 45)
         # Load connected plugins and check if they modify the password authentication
         plugin_result = None
+        plugin_message = ""
         for plugin in PluginImplementations(IUserAuthentication):
-            plugin_result = plugin.on_authenticate_password(
+            plugin_result, plugin_message = plugin.on_authenticate_password(
                 request, self.userData, password
             )
             break  # Only one plugging will be called to extend authenticate_user
         if plugin_result is None:
-            return check_login(self.login, password, request)
+            if check_login(self.login, password, request):
+                return True, ""
+            else:
+                _ = request.translate
+                return (
+                    False,
+                    _("The user account does not exist or the password is invalid"),
+                )
         else:
-            return plugin_result
+            return plugin_result, plugin_message
 
     def set_gravatar_url(self, request, name, size):
         self.gravatarURL = request.route_url(

@@ -445,9 +445,9 @@ class IUserAuthentication(Interface):  # pragma: no cover
                 :param request: ``pyramid.request`` object
                 :param user_data: The user data
                 :param password: The password as is typed in the FormShare interface
-                :return Return None to indicate that Forshare should get this in the normal way.
-                        False if the password is incorrect.
-                        Otherwise true
+                :return Return None, None to indicate that Forshare should get this in the normal way.
+                        False,"Message why" if the password is not correct.
+                        Otherwise True, ""
                         """
         raise NotImplementedError(
             "on_authenticate_password must be implemented in subclasses"
@@ -461,7 +461,7 @@ class IUserAuthentication(Interface):  # pragma: no cover
         :return: True, "" or False, "Why"
         """
         raise NotImplementedError(
-            "on_authenticate_password must be implemented in subclasses"
+            "after_collaborator_login must be implemented in subclasses"
         )
 
 

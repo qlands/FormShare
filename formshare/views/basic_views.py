@@ -158,7 +158,8 @@ class LoginView(PublicView):
             user = get_user_data(login, self.request)
             login_data = {"login": login, "group": "mainApp"}
             if user is not None:
-                if user.check_password(passwd, self.request):
+                password_ok, message = user.check_password(passwd, self.request)
+                if password_ok:
                     continue_login = True
                     # Load connected plugins and check if they modify the login authorization
                     for plugin in p.PluginImplementations(p.IUserAuthentication):
@@ -181,15 +182,11 @@ class LoginView(PublicView):
                         return HTTPFound(location=next_page, headers=headers)
                 else:
                     log.error(
-                        "Logging into account {} provided an invalid password".format(
-                            login
+                        "Logging into account {} provided an invalid password. Message: {}".format(
+                            login, message
                         )
                     )
-                    self.append_to_errors(
-                        self._(
-                            "The user account does not exist or the password is invalid"
-                        )
-                    )
+                    self.append_to_errors(message)
             else:
                 log.error("User account {} does not exist".format(login))
                 self.append_to_errors(

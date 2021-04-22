@@ -92,7 +92,7 @@ python-editor==1.0.4
 python-slugify==4.0.0
 pytz==2020.1
 PyUtilib==5.8.0
-pyxform==1.3.3
+pyxform==1.4.0
 qrcode==6.1
 redis==3.5.2
 regex==2020.5.14

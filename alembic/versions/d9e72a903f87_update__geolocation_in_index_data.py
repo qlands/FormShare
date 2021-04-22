@@ -66,7 +66,12 @@ def upgrade():
                             longitude = parts[1]
                 if longitude != "null" and latitude != "null":
                     new_loc = {
-                        "doc": {"_geolocation": {"lat": latitude, "lon": longitude,}}
+                        "doc": {
+                            "_geolocation": {
+                                "lat": latitude,
+                                "lon": longitude,
+                            }
+                        }
                     }
 
                     try:

@@ -298,11 +298,17 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            res = self.testapp.get("/login", status=302,)
+            res = self.testapp.get(
+                "/login",
+                status=302,
+            )
             assert "FS_error" not in res.headers
 
             # Logout
-            res = self.testapp.post("/logout", status=302,)
+            res = self.testapp.post(
+                "/logout",
+                status=302,
+            )
             assert "FS_error" not in res.headers
 
             # Login fails
@@ -6528,7 +6534,10 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/assistantaccess/form/{}/clean".format(
                     self.randonLogin, self.project, self.formID
                 ),
-                {"loadtable": "", "table": "maintable",},
+                {
+                    "loadtable": "",
+                    "table": "maintable",
+                },
                 status=302,
             )
 
@@ -6537,7 +6546,10 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/assistantaccess/form/{}/clean".format(
                     self.randonLogin, self.project, self.formID
                 ),
-                {"loadtable": "", "table": "maintables",},
+                {
+                    "loadtable": "",
+                    "table": "maintables",
+                },
                 status=302,
             )
 
@@ -6546,7 +6558,10 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/assistantaccess/form/{}/clean".format(
                     self.randonLogin, self.project, self.formID
                 ),
-                {"loadfields": "", "fields": "provincia",},
+                {
+                    "loadfields": "",
+                    "fields": "provincia",
+                },
                 status=302,
             )
 
@@ -6555,7 +6570,10 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/assistantaccess/form/{}/clean".format(
                     self.randonLogin, self.project, self.formID
                 ),
-                {"loadfields": "", "fields": ["provincia", "canton"],},
+                {
+                    "loadfields": "",
+                    "fields": ["provincia", "canton"],
+                },
                 status=302,
             )
 
@@ -6564,7 +6582,10 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/assistantaccess/form/{}/clean".format(
                     self.randonLogin, self.project, self.formID
                 ),
-                {"loadfields": "", "fields": "",},
+                {
+                    "loadfields": "",
+                    "fields": "",
+                },
                 status=302,
             )
 
@@ -6573,7 +6594,9 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/assistantaccess/form/{}/clean".format(
                     self.randonLogin, self.project, self.formID
                 ),
-                {"loadfields": "",},
+                {
+                    "loadfields": "",
+                },
                 status=302,
             )
 
@@ -8616,7 +8639,8 @@ class FunctionalTests(unittest.TestCase):
 
         def test_plugin_utility_functions():
             self.testapp.get(
-                "/test/{}".format(self.randonLogin), status=200,
+                "/test/{}".format(self.randonLogin),
+                status=200,
             )
             self.testapp.get(
                 "/test/{}/project/{}/form/{}".format(
@@ -9122,7 +9146,8 @@ class FunctionalTests(unittest.TestCase):
 
             time.sleep(5)  # Wait for elastic to finish adding the collaborator
             self.testapp.get(
-                "/test/{}/remove".format(collaborator_2), status=200,
+                "/test/{}/remove".format(collaborator_2),
+                status=200,
             )
 
             self.testapp.get("/logout", status=302)
@@ -10003,7 +10028,10 @@ class FunctionalTests(unittest.TestCase):
 
             res = self.testapp.post(
                 "/user/{}/project/{}/edit".format(self.randonLogin, "case001"),
-                {"project_name": "Case project 001", "project_abstract": "",},
+                {
+                    "project_name": "Case project 001",
+                    "project_abstract": "",
+                },
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -10173,7 +10201,10 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/repository/create".format(
                     self.randonLogin, "case001", "case_start_20210311"
                 ),
-                {"form_pkey": "hid", "start_stage1": "",},
+                {
+                    "form_pkey": "hid",
+                    "start_stage1": "",
+                },
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -10191,7 +10222,8 @@ class FunctionalTests(unittest.TestCase):
 
             # Get details of the project
             res = self.testapp.get(
-                "/user/{}/project/{}".format(self.randonLogin, "case001"), status=200,
+                "/user/{}/project/{}".format(self.randonLogin, "case001"),
+                status=200,
             )
             assert "FS_error" not in res.headers
             self.assertIn(b"case lookup table", res.body)
@@ -10208,7 +10240,8 @@ class FunctionalTests(unittest.TestCase):
 
             # Get details of the project
             res = self.testapp.get(
-                "/user/{}/project/{}".format(self.randonLogin, "case001"), status=200,
+                "/user/{}/project/{}".format(self.randonLogin, "case001"),
+                status=200,
             )
             assert "FS_error" not in res.headers
             self.assertIn(b"case lookup table", res.body)
@@ -10219,7 +10252,10 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/caselookuptable".format(
                     self.randonLogin, "case001"
                 ),
-                {"add_field": "", "field_name": "distrito",},
+                {
+                    "add_field": "",
+                    "field_name": "distrito",
+                },
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -10229,7 +10265,10 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/caselookuptable".format(
                     self.randonLogin, "case001"
                 ),
-                {"remove_field": "", "field_name": "distrito",},
+                {
+                    "remove_field": "",
+                    "field_name": "distrito",
+                },
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -10281,7 +10320,11 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/caselookuptable".format(
                     self.randonLogin, "case001"
                 ),
-                {"change_alias": "", "field_name": "distrito", "field_alias": "123",},
+                {
+                    "change_alias": "",
+                    "field_name": "distrito",
+                    "field_alias": "123",
+                },
                 status=200,
             )
             assert "FS_error" in res.headers
@@ -10291,7 +10334,11 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/caselookuptable".format(
                     self.randonLogin, "case001"
                 ),
-                {"change_alias": "", "field_name": "distrito", "field_alias": "label",},
+                {
+                    "change_alias": "",
+                    "field_name": "distrito",
+                    "field_alias": "label",
+                },
                 status=200,
             )
             assert "FS_error" in res.headers
@@ -10616,7 +10663,10 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/repository/create".format(
                     self.randonLogin, "case001", "case_follow_up_20210319"
                 ),
-                {"form_pkey": "survey_id", "start_stage1": "",},
+                {
+                    "form_pkey": "survey_id",
+                    "start_stage1": "",
+                },
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -10764,7 +10814,10 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/repository/create".format(
                     self.randonLogin, "case001", "case_deactivate_20210331"
                 ),
-                {"form_pkey": "survey_id", "start_stage1": "",},
+                {
+                    "form_pkey": "survey_id",
+                    "start_stage1": "",
+                },
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -10907,7 +10960,10 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/repository/create".format(
                     self.randonLogin, "case001", "case_activate_20210331"
                 ),
-                {"form_pkey": "survey_id", "start_stage1": "",},
+                {
+                    "form_pkey": "survey_id",
+                    "start_stage1": "",
+                },
                 status=302,
             )
             assert "FS_error" not in res.headers

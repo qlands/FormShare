@@ -40,7 +40,7 @@ log = get_task_logger(__name__)
 
 class MergeDataBaseError(Exception):
     """
-        Exception raised when there is an error while creating the repository.
+    Exception raised when there is an error while creating the repository.
     """
 
 
@@ -655,7 +655,10 @@ def internal_merge_into_repository(
             )
             for a_form in res:
                 form_with_changes.append(
-                    {"id": a_form.form_id, "project_id": a_form.project_id,}
+                    {
+                        "id": a_form.form_id,
+                        "project_id": a_form.project_id,
+                    }
                 )
 
             db_session.query(Odkform).filter(

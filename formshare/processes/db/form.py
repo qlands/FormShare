@@ -447,11 +447,11 @@ def get_create_xml_for_schema(request, schema):
 
 def get_insert_xml_for_schema(request, schema):
     """
-        Returns the XML insert file for the last form using a schema
-        :param request: Pyramid request object
-        :param schema: Schema
-        :return: Path to XML Insert file
-        """
+    Returns the XML insert file for the last form using a schema
+    :param request: Pyramid request object
+    :param schema: Schema
+    :return: Path to XML Insert file
+    """
     res = (
         request.dbsession.query(Odkform)
         .filter(Odkform.form_schema == schema)

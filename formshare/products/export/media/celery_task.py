@@ -20,7 +20,7 @@ log = get_task_logger(__name__)
 
 class BuildError(Exception):
     """
-        Exception raised when there is an error while creating the repository.
+    Exception raised when there is an error while creating the repository.
     """
 
 

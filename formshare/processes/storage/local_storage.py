@@ -96,7 +96,7 @@ def response_stream(stream, file_name, response):
 
 
 class FileIter(object):
-    """ A fixed-block-size iterator for use as a WSGI app_iter. Based on Pyramid FileResponse
+    """A fixed-block-size iterator for use as a WSGI app_iter. Based on Pyramid FileResponse
 
     file: is a Python file pointer (or at least an object with a ``read`` method that takes a size hint).
     block_size: is an optional block size for iteration.

@@ -17,7 +17,8 @@ def generate_kml_file(request, user, project, form, form_schema):
     kml_file = os.path.join(repo_dir, *paths)
 
     task = build_kml.apply_async(
-        (settings, form_schema, kml_file, request.locale_name), queue="FormShare",
+        (settings, form_schema, kml_file, request.locale_name),
+        queue="FormShare",
     )
     register_product_instance(
         request,

@@ -206,7 +206,8 @@ class FormDetails(PrivateView):
                         field.set("type", creator_pkey_data["field_type"])
                         field.set("size", str(creator_pkey_data["field_size"]))
                         field.set(
-                            "rtable", form_creator_data["form_schema"] + ".maintable",
+                            "rtable",
+                            form_creator_data["form_schema"] + ".maintable",
                         )
                         field.set("rfield", form_creator_data["form_pkey"])
                         field.set("rname", "fk_" + str(uuid.uuid4()).replace("-", "_"))
@@ -2467,7 +2468,11 @@ class DownloadKML(PrivateView):
             raise HTTPNotFound
 
         generate_kml_file(
-            self.request, self.user.id, project_id, form_id, form_data["form_schema"],
+            self.request,
+            self.user.id,
+            project_id,
+            form_id,
+            form_data["form_schema"],
         )
         next_page = self.request.params.get("next") or self.request.route_url(
             "form_details",

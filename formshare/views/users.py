@@ -130,7 +130,9 @@ class EditUserView(PrivateView):
                             if res:
                                 for plugin in p.PluginImplementations(p.IUser):
                                     plugin.after_edit(
-                                        self.request, user_to_modify, user_details,
+                                        self.request,
+                                        user_to_modify,
+                                        user_details,
                                     )
 
                                 user_index = get_user_index_manager(self.request)
@@ -280,7 +282,8 @@ class AddUserView(PrivateView):
                                                 p.IUser
                                             ):
                                                 plugin.after_create(
-                                                    self.request, user_details,
+                                                    self.request,
+                                                    user_details,
                                                 )
                                             # Store the notifications
                                             feed_manager = get_manager(self.request)
@@ -328,8 +331,10 @@ class AddUserView(PrivateView):
                                             for plugin in p.PluginImplementations(
                                                 p.IRegistration
                                             ):
-                                                plugin_next_page = plugin.after_register(
-                                                    self.request, user_details
+                                                plugin_next_page = (
+                                                    plugin.after_register(
+                                                        self.request, user_details
+                                                    )
                                                 )
                                                 break  # Only one plugging will be called to extend after_register
                                             if plugin_next_page is not None:

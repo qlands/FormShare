@@ -5,19 +5,19 @@ from elasticsearch.exceptions import RequestError
 
 def _get_dataset_index_definition(number_of_shards, number_of_replicas):
     """
-       Constructs the dataset index with a given number of shards and replicas.
-       Each connection is stored as individual ES documents
-       :param number_of_shards: Number of shards for the network index.
-       :param number_of_replicas: Number of replicas for the network index.
+    Constructs the dataset index with a given number of shards and replicas.
+    Each connection is stored as individual ES documents
+    :param number_of_shards: Number of shards for the network index.
+    :param number_of_replicas: Number of replicas for the network index.
 
-       The index has the following parts:
-            _xform_id_string: Keyword. The ID of the form
-            _submitted_by: Keyword. The assistant submitting the data 
-            _user_id: Text. The user used in the submission as part of the URL
-            _project_id: Text. The project used in the submission as part of the URL
-            _submitted_date: Date. The date when the submission was done
+    The index has the following parts:
+         _xform_id_string: Keyword. The ID of the form
+         _submitted_by: Keyword. The assistant submitting the data
+         _user_id: Text. The user used in the submission as part of the URL
+         _project_id: Text. The project used in the submission as part of the URL
+         _submitted_date: Date. The date when the submission was done
 
-       :return: A dict object with the definition of the dataset index.
+    :return: A dict object with the definition of the dataset index.
     """
     _json = {
         "settings": {

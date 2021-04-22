@@ -44,7 +44,7 @@ _PLUGINS_SERVICE = {}
 
 class PluginNotFoundException(Exception):
     """
-     Raised when a requested plugin cannot be found.
+    Raised when a requested plugin cannot be found.
     """
 
 

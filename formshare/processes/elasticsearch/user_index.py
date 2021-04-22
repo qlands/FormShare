@@ -4,7 +4,7 @@ from elasticsearch.exceptions import RequestError
 
 class UserExistError(Exception):
     """
-        Exception raised when ElasticSearch checks whether a user already exists in the index.
+    Exception raised when ElasticSearch checks whether a user already exists in the index.
     """
 
     def __str__(self):
@@ -13,7 +13,7 @@ class UserExistError(Exception):
 
 class UserNotExistError(Exception):
     """
-        Exception raised when ElasticSearch checks whether a user doesn't exists in the index.
+    Exception raised when ElasticSearch checks whether a user doesn't exists in the index.
     """
 
     def __str__(self):
@@ -22,19 +22,19 @@ class UserNotExistError(Exception):
 
 def _get_user_index_definition(number_of_shards, number_of_replicas):
     """
-       Constructs the User index with a given number of shards and replicas.
-       Each connection is stored as individual ES documents
-       :param number_of_shards: Number of shards for the network index.
-       :param number_of_replicas: Number of replicas for the network index.
+    Constructs the User index with a given number of shards and replicas.
+    Each connection is stored as individual ES documents
+    :param number_of_shards: Number of shards for the network index.
+    :param number_of_replicas: Number of replicas for the network index.
 
-       The index has the following parts:
-            user_id: Single word. The ID of the user
-            user_email: Text. The email of the user
-            user_name: Text. The name of the user
-            user_about: Text. The about of the user
-            user_cdate: Date. The date when the user was created
+    The index has the following parts:
+         user_id: Single word. The ID of the user
+         user_email: Text. The email of the user
+         user_name: Text. The name of the user
+         user_about: Text. The about of the user
+         user_cdate: Date. The date when the user was created
 
-       :return: A dict object with the definition of the User index.
+    :return: A dict object with the definition of the User index.
     """
     _json = {
         "settings": {
@@ -61,7 +61,10 @@ def _get_user_index_definition(number_of_shards, number_of_replicas):
         "mappings": {
             "properties": {
                 "user_id": {"type": "keyword", "copy_to": "all_data"},
-                "user_email": {"type": "text", "copy_to": ["all_data", "user_email2"],},
+                "user_email": {
+                    "type": "text",
+                    "copy_to": ["all_data", "user_email2"],
+                },
                 "user_name": {"type": "text", "copy_to": "all_data"},
                 "all_data": {"type": "text", "analyzer": "standard"},
                 "user_email2": {"type": "text", "analyzer": "email"},

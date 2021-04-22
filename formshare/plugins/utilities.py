@@ -180,7 +180,7 @@ class FormShareFormEditorView(
     PrivateView
 ):  # pragma: no cover - Tested by loading testing plugins but not Covered
     """
-       A view class for plugins which require a private Form View with editor+ privileges.
+    A view class for plugins which require a private Form View with editor+ privileges.
     """
 
     def __init__(self, request):
@@ -221,7 +221,7 @@ class FormShareFormAdminView(
     PrivateView
 ):  # pragma: no cover - Tested by loading testing plugins but not Covered
     """
-       A view class for plugins which require a private Form View with admin privileges.
+    A view class for plugins which require a private Form View with admin privileges.
     """
 
     def __init__(self, request):

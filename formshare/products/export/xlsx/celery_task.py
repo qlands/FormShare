@@ -13,13 +13,13 @@ log = get_task_logger(__name__)
 
 class BuildFileError(Exception):
     """
-        Exception raised when there is an error while creating the repository.
+    Exception raised when there is an error while creating the repository.
     """
 
 
 class SheetNameError(Exception):
     """
-        Exception raised when there is an error while creating the repository.
+    Exception raised when there is an error while creating the repository.
     """
 
 

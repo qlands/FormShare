@@ -48,11 +48,11 @@ from pyutilib.component.core import Interface as _pca_Interface
 
 class Interface(_pca_Interface):  # pragma: no cover
     """
-        This code is based on CKAN
-        :Copyright (C) 2007 Open Knowledge Foundation
-        :license: AGPL V3, see LICENSE for more details.
+    This code is based on CKAN
+    :Copyright (C) 2007 Open Knowledge Foundation
+    :license: AGPL V3, see LICENSE for more details.
 
-     """
+    """
 
     @classmethod
     def provided_by(cls, instance):
@@ -137,7 +137,7 @@ class IConfig(Interface):  # pragma: no cover
 
 class IResource(Interface):  # pragma: no cover
     """
-        Allows to hook into the creation of JS and CSS libraries or resources
+    Allows to hook into the creation of JS and CSS libraries or resources
     """
 
     def add_libraries(self, config):
@@ -152,8 +152,8 @@ class IResource(Interface):  # pragma: no cover
     def add_js_resources(self, config):
         """
         Called by FormShare so plugins can add new JS Resources
-        
-        :param config: ``pyramid.config`` object        
+
+        :param config: ``pyramid.config`` object
         :return Returns a dict array [{'libraryname':'mylibrary','id':'myResourceID','file':'/relative/path/to/jsFile',
                                       'depends':'resourceID'}]
         """
@@ -163,7 +163,7 @@ class IResource(Interface):  # pragma: no cover
         """
         Called by FormShare so plugins can add new FanStatic CSS Resources
 
-        :param config: ``pyramid.config`` object        
+        :param config: ``pyramid.config`` object
         :return Returns a dict array [{'libraryname':'mylibrary','id':'myResourceID','file':'/relative/path/to/jsFile',
                                       'depends':'resourceID'}]
         """
@@ -172,25 +172,25 @@ class IResource(Interface):  # pragma: no cover
 
 class IPluralize(Interface):  # pragma: no cover
     """
-        Allows to hook into the pluralization function so plugins can extend the pluralization of FormShare
+    Allows to hook into the pluralization function so plugins can extend the pluralization of FormShare
     """
 
     def pluralize(self, noun, locale):
         """
-            Called the packages are created
+        Called the packages are created
 
-            :param noun: ``Noun to be pluralized``
-            :param locale: ``The current locate code e.g. en``
-            :return the noun in plural form
+        :param noun: ``Noun to be pluralized``
+        :param locale: ``The current locate code e.g. en``
+        :return the noun in plural form
         """
 
 
 class ISchema(Interface):  # pragma: no cover
     """
-        Allows to hook into the schema layer and add new fields into it.
-        The schema is a layer on top of the database schema so plugin developers can
-        add new fields to FormShare tables without affecting the structure
-        of the database. New fields are stored in extra as JSON keys
+    Allows to hook into the schema layer and add new fields into it.
+    The schema is a layer on top of the database schema so plugin developers can
+    add new fields to FormShare tables without affecting the structure
+    of the database. New fields are stored in extra as JSON keys
     """
 
     def update_schema(self, config):
@@ -219,8 +219,8 @@ class ISchema(Interface):  # pragma: no cover
 
 class IDatabase(Interface):  # pragma: no cover
     """
-        Allows to hook into the database schema so plugins can add new tables
-        After calling this
+    Allows to hook into the database schema so plugins can add new tables
+    After calling this
     """
 
     def update_orm(self, metadata):
@@ -234,7 +234,7 @@ class IDatabase(Interface):  # pragma: no cover
 
 class IProject(Interface):  # pragma: no cover
     """
-        Allows to hook into the processes that create, update and delete projects
+    Allows to hook into the processes that create, update and delete projects
     """
 
     def before_create(self, request, user, project_data):
@@ -261,7 +261,7 @@ class IProject(Interface):  # pragma: no cover
 
 class IForm(Interface):  # pragma: no cover
     """
-        Allows to hook into the processes that create, update and delete forms
+    Allows to hook into the processes that create, update and delete forms
     """
 
     def after_odk_form_checks(
@@ -373,7 +373,7 @@ class IForm(Interface):  # pragma: no cover
 
 class IRegistration(Interface):  # pragma: no cover
     """
-        Allows to hook into the user registration
+    Allows to hook into the user registration
     """
 
     def before_register(self, request, registrant):
@@ -405,7 +405,7 @@ class IRegistration(Interface):  # pragma: no cover
 
 class IUserAuthentication(Interface):  # pragma: no cover
     """
-        Allows to hook into the user authentication
+    Allows to hook into the user authentication
     """
 
     def after_login(self, request, user):
@@ -421,34 +421,34 @@ class IUserAuthentication(Interface):  # pragma: no cover
 
     def on_authenticate_user(self, request, user_id, user_is_email):
         """
-                Called by FormShare so plugins can modify the way FormShare gather information about the user
+        Called by FormShare so plugins can modify the way FormShare gather information about the user
 
-                :param request: ``pyramid.request`` object
-                :param user_id: The user ID trying to authenticate
-                :param user_is_email: Whether the user is an email
-                :return Return None and and empty Dict to indicate that Forshare should get this in the normal way.
-                        False and None if the user must be denied.
-                        Otherwise true and then the Dict MUST contain at least the following keys:
-                        user_id : With the same userID authenticating
-                        user_email : With the email of the userID authenticating
-                        user_name : With the full name of the userID authenticating
-                        user_about : With the bio data of the userID authenticating or None
-                """
+        :param request: ``pyramid.request`` object
+        :param user_id: The user ID trying to authenticate
+        :param user_is_email: Whether the user is an email
+        :return Return None and and empty Dict to indicate that Forshare should get this in the normal way.
+                False and None if the user must be denied.
+                Otherwise true and then the Dict MUST contain at least the following keys:
+                user_id : With the same userID authenticating
+                user_email : With the email of the userID authenticating
+                user_name : With the full name of the userID authenticating
+                user_about : With the bio data of the userID authenticating or None
+        """
         raise NotImplementedError(
             "on_authenticate_user must be implemented in subclasses"
         )
 
     def on_authenticate_password(self, request, user_data, password):
         """
-                Called by FormShare so plugins can modify the way FormShare gather information about the user
+        Called by FormShare so plugins can modify the way FormShare gather information about the user
 
-                :param request: ``pyramid.request`` object
-                :param user_data: The user data
-                :param password: The password as is typed in the FormShare interface
-                :return Return None, None to indicate that Forshare should get this in the normal way.
-                        False,"Message why" if the password is not correct.
-                        Otherwise True, ""
-                        """
+        :param request: ``pyramid.request`` object
+        :param user_data: The user data
+        :param password: The password as is typed in the FormShare interface
+        :return Return None, None to indicate that Forshare should get this in the normal way.
+                False,"Message why" if the password is not correct.
+                Otherwise True, ""
+        """
         raise NotImplementedError(
             "on_authenticate_password must be implemented in subclasses"
         )
@@ -467,7 +467,7 @@ class IUserAuthentication(Interface):  # pragma: no cover
 
 class IUserAuthorization(Interface):  # pragma: no cover
     """
-        Allows to hook into the user authorization.
+    Allows to hook into the user authorization.
     """
 
     def before_check_authorization(self, request):
@@ -520,16 +520,16 @@ class ITemplateHelpers(Interface):  # pragma: no cover
 
 class IProduct(Interface):  # pragma: no cover
     """
-        Allows to hook into FormShare's Celery task manager.
+    Allows to hook into FormShare's Celery task manager.
     """
 
     def register_products(self, config):
         """
-            Called by FormShare so plugins can add new products with Celery as task manager
+        Called by FormShare so plugins can add new products with Celery as task manager
 
-            :param config: ``pyramid.config`` object
-            :return Must returns a dict array [{'code':'productCode', 'hidden': False, 'icon':'fas fa-box-open',
-            'metadata':{'key':value}}]
+        :param config: ``pyramid.config`` object
+        :return Must returns a dict array [{'code':'productCode', 'hidden': False, 'icon':'fas fa-box-open',
+        'metadata':{'key':value}}]
         """
         raise NotImplementedError("register_products must be implemented in subclasses")
 
@@ -602,7 +602,7 @@ class IProduct(Interface):  # pragma: no cover
 
 class IImportExternalData(Interface):  # pragma: no cover
     """
-        Allows to create new data imports
+    Allows to create new data imports
     """
 
     def import_external_data(
@@ -650,9 +650,9 @@ class IImportExternalData(Interface):  # pragma: no cover
 
 class IRepository(Interface):  # pragma: no cover
     """
-        Allows to hook into FormShare's repository process.
-        Please note that there is no "After creating repository", this is because the creation of the repository
-        is runs in a background as a Celery task.
+    Allows to hook into FormShare's repository process.
+    Please note that there is no "After creating repository", this is because the creation of the repository
+    is runs in a background as a Celery task.
     """
 
     def before_creating_repository(
@@ -730,7 +730,7 @@ class IRepository(Interface):  # pragma: no cover
 
 class IPublicView(Interface):  # pragma: no cover
     """
-     Allows to hook into FormShare's view public class.
+    Allows to hook into FormShare's view public class.
     """
 
     def before_processing(self, request):
@@ -757,7 +757,7 @@ class IPublicView(Interface):  # pragma: no cover
 
 class IPrivateView(Interface):  # pragma: no cover
     """
-     Allows to hook into FormShare's private class.
+    Allows to hook into FormShare's private class.
     """
 
     def before_processing(self, request, class_data):
@@ -774,7 +774,7 @@ class IPrivateView(Interface):  # pragma: no cover
 
 class IDashBoardView(Interface):  # pragma: no cover
     """
-     Allows to hook into FormShare's dashboard view class.
+    Allows to hook into FormShare's dashboard view class.
     """
 
     def after_dashboard_processing(self, request, class_data, context):
@@ -793,7 +793,7 @@ class IDashBoardView(Interface):  # pragma: no cover
 
 class IProjectDetailsView(Interface):  # pragma: no cover
     """
-     Allows to hook into FormShare's project details view class.
+    Allows to hook into FormShare's project details view class.
     """
 
     def after_project_details_processing(self, request, class_data, context):
@@ -812,7 +812,7 @@ class IProjectDetailsView(Interface):  # pragma: no cover
 
 class IFormDetailsView(Interface):  # pragma: no cover
     """
-     Allows to hook into FormShare's form details view class.
+    Allows to hook into FormShare's form details view class.
     """
 
     def after_form_details_processing(self, request, class_data, context):
@@ -877,7 +877,7 @@ class ILogOut(Interface):  # pragma: no cover
 
 class IAssistant(Interface):  # pragma: no cover
     """
-        Allows to hook into the processes that create, update and delete assistants
+    Allows to hook into the processes that create, update and delete assistants
     """
 
     def before_create(self, request, user, project, assistant_data):
@@ -979,7 +979,7 @@ class IAssistant(Interface):  # pragma: no cover
 
 class IAssistantGroup(Interface):  # pragma: no cover
     """
-        Allows to hook into the processes that create, update and delete assistant groups
+    Allows to hook into the processes that create, update and delete assistant groups
     """
 
     def before_create(self, request, user, project, group_data):
@@ -1058,7 +1058,7 @@ class IAssistantGroup(Interface):  # pragma: no cover
 
 class IFormAccess(Interface):  # pragma: no cover
     """
-        Allows to hook into the processes that gives assistant access to a form
+    Allows to hook into the processes that gives assistant access to a form
     """
 
     def before_giving_access(
@@ -1204,7 +1204,7 @@ class IFormAccess(Interface):  # pragma: no cover
 
 class IFormGroupAccess(Interface):  # pragma: no cover
     """
-        Allows to hook into the processes that gives group access to a form
+    Allows to hook into the processes that gives group access to a form
     """
 
     def before_giving_access(
@@ -1241,7 +1241,7 @@ class IFormGroupAccess(Interface):  # pragma: no cover
 
 class IUser(Interface):  # pragma: no cover
     """
-        Allows to hook into the processes that creates and updates users
+    Allows to hook into the processes that creates and updates users
     """
 
     def before_create(self, request, user_data):
@@ -1287,7 +1287,7 @@ class IUser(Interface):  # pragma: no cover
 
 class IEnvironment(Interface):  # pragma: no cover
     """
-        Allows to hook into the process that creates the FormShare environment
+    Allows to hook into the process that creates the FormShare environment
     """
 
     def after_environment_load(self, settings):
@@ -1299,7 +1299,7 @@ class IEnvironment(Interface):  # pragma: no cover
 
 class IXMLSubmission(Interface):  # pragma: no cover
     """
-        Allows to hook into the process that received and stores the XML submission from ODK Collect
+    Allows to hook into the process that received and stores the XML submission from ODK Collect
     """
 
     def before_processing_submission(
@@ -1334,7 +1334,7 @@ class IXMLSubmission(Interface):  # pragma: no cover
 
 class IJSONSubmission(Interface):  # pragma: no cover
     """
-        Allows to hook into the process that received and stores the XML submission from ODK Collect
+    Allows to hook into the process that received and stores the XML submission from ODK Collect
     """
 
     def before_processing_submission(
@@ -1385,7 +1385,7 @@ class IJSONSubmission(Interface):  # pragma: no cover
 
 class IMediaSubmission(Interface):  # pragma: no cover
     """
-        Allows to hook into the process that received and stores media files from ODK Collect
+    Allows to hook into the process that received and stores media files from ODK Collect
     """
 
     def after_storing_media_in_repository(

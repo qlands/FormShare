@@ -9,12 +9,12 @@ log = logging.getLogger("formshare")
 
 def old_decode_data_with_key(data, key):  # pragma: no cover
     """
-        Old decode code based on PyCrypto. Here only to migrate 2.0.0 versions
-        of FormShare to new versions
-        :param data: Data to encrypt
-        :param key: Key to use
-        :return:
-        """
+    Old decode code based on PyCrypto. Here only to migrate 2.0.0 versions
+    of FormShare to new versions
+    :param data: Data to encrypt
+    :param key: Key to use
+    :return:
+    """
     byte_padding = b"|"
 
     def decode_aes(c, e):

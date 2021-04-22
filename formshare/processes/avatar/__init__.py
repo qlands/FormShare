@@ -15,11 +15,11 @@ class Avatar(object):
     @classmethod
     def generate(cls, size, string, filetype="JPEG"):
         """
-            Generates a squared avatar with random background color.
+        Generates a squared avatar with random background color.
 
-            :param size: size of the avatar, in pixels
-            :param string: string to be used to print text and seed the random
-            :param filetype: the file format of the image (i.e. JPEG, PNG)
+        :param size: size of the avatar, in pixels
+        :param string: string to be used to print text and seed the random
+        :param filetype: the file format of the image (i.e. JPEG, PNG)
         """
         render_size = max(size, Avatar.MIN_RENDER_SIZE)
         image = Image.new("RGB", (render_size, render_size), cls._background_color())
@@ -40,8 +40,8 @@ class Avatar(object):
     @staticmethod
     def _background_color():
         """
-            Generate a random background color.
-            Brighter colors are dropped, because the text is white.
+        Generate a random background color.
+        Brighter colors are dropped, because the text is white.
         """
         # r = v = b = 255
         # while r + v + b > 255 * 2:
@@ -53,9 +53,9 @@ class Avatar(object):
     @staticmethod
     def _font(size):
         """
-            Returns a PIL ImageFont instance.
+        Returns a PIL ImageFont instance.
 
-            :param size: size of the avatar, in pixels
+        :param size: size of the avatar, in pixels
         """
         path = os.path.join(os.path.dirname(__file__), "data", "unifont-13.0.01.ttf")
         return ImageFont.truetype(path, size=int(0.4 * size))
@@ -63,7 +63,7 @@ class Avatar(object):
     @staticmethod
     def _text(string):
         """
-            Returns the text to draw.
+        Returns the text to draw.
         """
         try:
             if len(string) == 0:
@@ -99,7 +99,7 @@ class Avatar(object):
     @staticmethod
     def _text_position(size, text, font):
         """
-            Returns the left-top point where the text should be positioned.
+        Returns the left-top point where the text should be positioned.
         """
         width, height = font.getsize(text)
         left = (size - width) / 2.0

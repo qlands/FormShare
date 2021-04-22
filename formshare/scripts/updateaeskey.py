@@ -13,7 +13,7 @@ import uuid
 
 class EmptyPassword(Exception):
     """
-        Exception raised when there is an empty password
+    Exception raised when there is an empty password
     """
 
 

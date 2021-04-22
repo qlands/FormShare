@@ -2843,7 +2843,12 @@ def convert_xml_to_json(
         continue_processing = 0
         for a_plugin in plugins.PluginImplementations(plugins.IJSONSubmission):
             continue_processing, message = a_plugin.before_processing_submission(
-                request, user, project, form, assistant, temp_json_file,
+                request,
+                user,
+                project,
+                form,
+                assistant,
+                temp_json_file,
             )
         if continue_processing == 0:
             stored, message = store_json_file(
@@ -3414,7 +3419,12 @@ def push_revision(
         if submission_data.get("_geolocation", "") != "":
             index_data["_geolocation"] = submission_data.get("_geolocation", "")
         add_dataset(
-            request.registry.settings, user, project_code, form, submission, index_data,
+            request.registry.settings,
+            user,
+            project_code,
+            form,
+            submission,
+            index_data,
         )
 
         # Add the inserted records in the record index

@@ -19,8 +19,7 @@ from formshare.config.config_indexes import configure_indexes
 
 
 def main(global_config, **settings):
-    """ This function returns a Pyramid WSGI application.
-    """
+    """This function returns a Pyramid WSGI application."""
     auth_policy = AuthenticationStackPolicy()
     policy_array = []
 

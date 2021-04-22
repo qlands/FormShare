@@ -21,19 +21,19 @@ log = get_task_logger(__name__)
 
 class EmptyFileError(Exception):
     """
-        Exception raised when there is an error while creating the CSV.
+    Exception raised when there is an error while creating the CSV.
     """
 
 
 class DummyError(Exception):
     """
-        Exception raised when there is an error while creating the CSV.
+    Exception raised when there is an error while creating the CSV.
     """
 
 
 class MySQLDenormalizeError(Exception):
     """
-        Exception raised when there is an error while creating the CSV.
+    Exception raised when there is an error while creating the CSV.
     """
 
 

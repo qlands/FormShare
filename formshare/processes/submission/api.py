@@ -1324,7 +1324,10 @@ def delete_submission(
         root.append(errors)
         tree = etree.ElementTree(root)
         tree.write(
-            new_log_file, pretty_print=True, xml_declaration=True, encoding="utf-8",
+            new_log_file,
+            pretty_print=True,
+            xml_declaration=True,
+            encoding="utf-8",
         )
         added, message = add_json_log(
             request,

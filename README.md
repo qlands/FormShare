@@ -22,7 +22,7 @@ FormShare **is for organizations** to install it in their server or cloud servic
 
 **Current features**
 
-- Case management (Longitudinal data collection) (Version >= 2.8.1)
+- Case management (Longitudinal data collection) (Version >= 2.8.0)
   - Using the Official ODK Collect App
   - Intelligent work flow using Official ODK standards: 
     - Case creator forms will create cases.
@@ -212,9 +212,9 @@ cd /opt/formshare_gunicorn
 
 ## Upgrading information
 
-### Important Note: Upgrading Docker images <= 20210423 (stable 2.8.1) to images > 20210423
+### Important Note: Upgrading Docker images < **20210411** (stable 2.8.0) to images >= **20210411**
 
-Docker images > 20210423 (stable 2.8.1) use and check for Elasticsearch version 6.8.14. To upgrade FormShare beyond 20210423 you need to update the docker-compose.yml to use the Docker image 6.8.14 of Elasticsearch **for all the nodes of Elasticsearch that you have**.
+Docker images >= 20210411 (stable 2.8.0) use and check for Elasticsearch version 6.8.14. To upgrade FormShare beyond 20210411 you need to update the docker-compose.yml to use the Docker image 6.8.14 of Elasticsearch **for all the nodes of Elasticsearch that you have**.
 
 ```yaml
 image: docker.elastic.co/Elasticsearch/Elasticsearch:6.8.14

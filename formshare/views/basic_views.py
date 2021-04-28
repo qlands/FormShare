@@ -395,8 +395,10 @@ class RegisterView(PublicView):
                 )
                 return {"next": next, "userdata": data}
             data.pop("user_address")
-
-            if validators.email(data["user_email"]):
+            data["user_email"] = data["user_email"].strip()
+            if validators.email(data["user_email"]) and re.match(
+                r"^[A-Za-z0-9._@-]+$", data["user_email"]
+            ):
                 if data["user_password"] != "":
                     if re.match(r"^[A-Za-z0-9._]+$", data["user_id"]):
                         if data["user_password"] == data["user_password2"]:

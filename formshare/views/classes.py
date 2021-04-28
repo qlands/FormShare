@@ -486,6 +486,9 @@ class PrivateView(object):
 
     def get_post_dict(self):
         dct = variable_decode(self.request.POST)
+        for key, value in dct.items():
+            if isinstance(value, str):
+                dct[key] = value.strip()
         return dct
 
     def reload_user_details(self):

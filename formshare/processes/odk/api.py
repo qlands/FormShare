@@ -831,13 +831,16 @@ def upload_odk_form(
                                             form_caseselector_file = a_field[
                                                 "externalfilename"
                                             ]
+                                        if a_field["odktype"] == "barcode":
+                                            case_selector_found = True
+                                            form_caseselector_file = "barcode"
+
                                 if not case_selector_found:
                                     error = 1
                                     message = _(
                                         "The variable {} used to search and select cases was not found or is invalid. "
-                                        "The variable must be select_one_from_file using a CSV file.".format(
-                                            form_caselabel
-                                        )
+                                        "The variable must be select_one_from_file using a CSV file "
+                                        "or a barcode".format(form_caselabel)
                                     )
 
                     if error == 0:
@@ -1250,14 +1253,16 @@ def update_odk_form(
                                                 form_caseselector_file = a_field[
                                                     "externalfilename"
                                                 ]
+                                            if a_field["odktype"] == "barcode":
+                                                case_selector_found = True
+                                                form_caseselector_file = "barcode"
                                     if not case_selector_found:
                                         error = 1
                                         message = _(
                                             "The variable {} used to search and select cases was not found or "
                                             "is invalid. "
-                                            "The variable must be select_one_from_file using a CSV file.".format(
-                                                form_caselabel
-                                            )
+                                            "The variable must be select_one_from_file using a CSV file "
+                                            "or a barcode.".format(form_caselabel)
                                         )
 
                         if error == 0:

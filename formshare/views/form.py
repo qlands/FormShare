@@ -806,6 +806,20 @@ class AddNewForm(PrivateView):
                                 )
                             )
                             return HTTPFound(next_page, headers={"FS_error": "true"})
+                        if form_caselabel.upper() == primary_key.upper():
+                            next_page = self.request.params.get(
+                                "next"
+                            ) or self.request.route_url(
+                                "project_details",
+                                userid=project_details["owner"],
+                                projcode=project_code,
+                            )
+                            self.add_error(
+                                self._(
+                                    "The labeling variable and the variable to identify each case cannot be the same"
+                                )
+                            )
+                            return HTTPFound(next_page, headers={"FS_error": "true"})
                     else:
                         form_casetype = int(form_data.get("form_casetype", "0"))
                         if form_casetype == 0:
@@ -834,6 +848,23 @@ class AddNewForm(PrivateView):
                                     self._(
                                         "You need to indicate a variable for searching and "
                                         "selecting cases"
+                                    )
+                                )
+                                return HTTPFound(
+                                    next_page, headers={"FS_error": "true"}
+                                )
+                            if form_caseselector.upper() == primary_key.upper():
+                                next_page = self.request.params.get(
+                                    "next"
+                                ) or self.request.route_url(
+                                    "project_details",
+                                    userid=project_details["owner"],
+                                    projcode=project_code,
+                                )
+                                self.add_error(
+                                    self._(
+                                        "The variable for searching and selecting cases cannot "
+                                        "be the same as the primary key"
                                     )
                                 )
                                 return HTTPFound(
@@ -952,6 +983,19 @@ class UploadNewVersion(PrivateView):
                             )
                         )
                         return HTTPFound(next_page, headers={"FS_error": "true"})
+                    if form_caselabel.upper() == primary_key.upper():
+                        next_page = self.request.route_url(
+                            "form_details",
+                            userid=project_details["owner"],
+                            projcode=project_code,
+                            formid=form_id,
+                        )
+                        self.add_error(
+                            self._(
+                                "The labeling variable and the variable to identify each case cannot be the same"
+                            )
+                        )
+                        return HTTPFound(next_page, headers={"FS_error": "true"})
                 else:
                     if form_casetype == 0:
                         next_page = self.request.route_url(
@@ -977,6 +1021,20 @@ class UploadNewVersion(PrivateView):
                                 self._(
                                     "You need to indicate a variable for searching and "
                                     "selecting cases"
+                                )
+                            )
+                            return HTTPFound(next_page, headers={"FS_error": "true"})
+                        if form_caseselector.upper() == primary_key.upper():
+                            next_page = self.request.route_url(
+                                "form_details",
+                                userid=project_details["owner"],
+                                projcode=project_code,
+                                formid=form_id,
+                            )
+                            self.add_error(
+                                self._(
+                                    "The variable for searching and selecting cases cannot "
+                                    "be the same as the primary key"
                                 )
                             )
                             return HTTPFound(next_page, headers={"FS_error": "true"})

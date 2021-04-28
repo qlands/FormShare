@@ -10083,6 +10083,28 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" in res.headers
 
+            # Upload a case creator fails. Case label is empty
+            paths = ["resources", "forms", "case", "case_start.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, "case001"),
+                {"form_pkey": "hid", "form_caselabel": ""},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Upload a case creator fails. Case label and key are the same
+            paths = ["resources", "forms", "case", "case_start.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, "case001"),
+                {"form_pkey": "hid", "form_caselabel": "hid"},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
             # Upload a case creator pass.
             paths = ["resources", "forms", "case", "case_start.xlsx"]
             resource_file = os.path.join(self.path, *paths)
@@ -10178,6 +10200,32 @@ class FunctionalTests(unittest.TestCase):
                     self.randonLogin, "case001", "case_start_20210311"
                 ),
                 {"form_pkey": "hid", "form_caselabel": "test"},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Update a form fails. label variable empty
+            paths = ["resources", "forms", "case", "case_start.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, "case001", "case_start_20210311"
+                ),
+                {"form_pkey": "hid", "form_caselabel": ""},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Update a form fails. label variable and key are the same
+            paths = ["resources", "forms", "case", "case_start.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, "case001", "case_start_20210311"
+                ),
+                {"form_pkey": "hid", "form_caselabel": "hid"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -10388,6 +10436,21 @@ class FunctionalTests(unittest.TestCase):
                 {
                     "form_pkey": "survey_id",
                     "form_caseselector": "test",
+                    "form_casetype": "2",
+                },
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Upload a case follow up. case selector and primary key are the same
+            paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, "case001"),
+                {
+                    "form_pkey": "survey_id",
+                    "form_caseselector": "survey_id",
                     "form_casetype": "2",
                 },
                 status=302,
@@ -10606,6 +10669,23 @@ class FunctionalTests(unittest.TestCase):
                 {
                     "form_pkey": "survey_id",
                     "form_caseselector": "",
+                    "form_casetype": "2",
+                },
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Update a form. Case selector and primary key are the same
+            paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, "case001", "case_follow_up_20210319"
+                ),
+                {
+                    "form_pkey": "survey_id",
+                    "form_caseselector": "survey_id",
                     "form_casetype": "2",
                 },
                 status=302,
@@ -11353,6 +11433,57 @@ class FunctionalTests(unittest.TestCase):
             current_status = res[0]
             engine.dispose()
             assert current_status == 0
+
+            # Upload a case follow up barcode passes.
+            paths = ["resources", "forms", "case", "case_follow_up_barcode.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, "case001"),
+                {
+                    "form_pkey": "survey_id",
+                    "form_caseselector": "hid",
+                    "form_casetype": "2",
+                },
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Add an assistant to a form succeeds
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, "case001", "case_follow_up_barcode_20210428"
+                ),
+                {
+                    "coll_id": "{}|{}".format(case_project_id, "caseassistant001"),
+                    "coll_privileges": "1",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Creates the repository of the case follow up
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, "case001", "case_follow_up_barcode_20210428"
+                ),
+                {
+                    "form_pkey": "survey_id",
+                    "start_stage1": "",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+            time.sleep(40)  # Wait for the repository to finish
+
+            # Get the details of the form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, "case001", "case_follow_up_barcode_20210428"
+                ),
+                status=200,
+            )
+            self.assertIn(b"With repository", res.body)
 
         start_time = datetime.datetime.now()
         test_root()

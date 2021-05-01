@@ -11099,6 +11099,33 @@ class FunctionalTests(unittest.TestCase):
             engine.dispose()
             assert current_status == 1
 
+            # Activate case 001 B. Goes to logs because is already active
+            paths = [
+                "resources",
+                "forms",
+                "case",
+                "data",
+                "activ_01B.xml",
+            ]
+            submission_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, "case001"),
+                status=201,
+                upload_files=[("filetoupload", submission_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, "case001", "case_activate_20210331"
+                ),
+                status=200,
+            )
+            self.assertIn(b"[Clean data]", res.body)
+            self.assertIn(b"[Manage errors]", res.body)
+
             # Get the FormList. household.csv is created
             self.testapp.get(
                 "/user/{}/project/{}/formList".format(self.randonLogin, "case001"),
@@ -11425,6 +11452,16 @@ class FunctionalTests(unittest.TestCase):
                 ),
             )
 
+            # Get the details of a form case_deactivate_20210331
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, "case001", "case_deactivate_20210331"
+                ),
+                status=200,
+            )
+            self.assertIn(b"[Clean data]", res.body)
+            self.assertNotIn(b"[Manage errors]", res.body)
+
             res = engine.execute(
                 "SELECT _active FROM {}.maintable WHERE hid = '{}'".format(
                     creator_schema, "002"
@@ -11433,6 +11470,35 @@ class FunctionalTests(unittest.TestCase):
             current_status = res[0]
             engine.dispose()
             assert current_status == 0
+
+            # Deactivate case 002 using the merged form goes to logs
+            paths = [
+                "resources",
+                "forms",
+                "case",
+                "merge",
+                "data",
+                "deact_02B.xml",
+            ]
+            submission_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, "case001"),
+                status=201,
+                upload_files=[("filetoupload", submission_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
+            # Get the details of a form case_deactivate_20210331
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, "case001", "case_deactivate_20210331"
+                ),
+                status=200,
+            )
+            self.assertIn(b"[Clean data]", res.body)
+            self.assertIn(b"[Manage errors]", res.body)
 
             # Upload a case follow up barcode passes.
             paths = ["resources", "forms", "case", "case_follow_up_barcode.xlsx"]
@@ -11484,6 +11550,62 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
             self.assertIn(b"With repository", res.body)
+
+            # Follow up 001 with QR Code
+            paths = [
+                "resources",
+                "forms",
+                "case",
+                "data",
+                "follow_bar_code_01.xml",
+            ]
+            submission_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, "case001"),
+                status=201,
+                upload_files=[("filetoupload", submission_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
+            # Get the details of the form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, "case001", "case_follow_up_barcode_20210428"
+                ),
+                status=200,
+            )
+            self.assertIn(b"[Clean data]", res.body)
+            self.assertNotIn(b"[Manage errors]", res.body)
+
+            # Follow up 002 with QR Code goes to the logs
+            paths = [
+                "resources",
+                "forms",
+                "case",
+                "data",
+                "follow_bar_code_02.xml",
+            ]
+            submission_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, "case001"),
+                status=201,
+                upload_files=[("filetoupload", submission_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
+            # Get the details of the form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, "case001", "case_follow_up_barcode_20210428"
+                ),
+                status=200,
+            )
+            self.assertIn(b"[Clean data]", res.body)
+            self.assertIn(b"[Manage errors]", res.body)
 
         start_time = datetime.datetime.now()
         test_root()

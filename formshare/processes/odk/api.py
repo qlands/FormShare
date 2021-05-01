@@ -2046,8 +2046,10 @@ def create_repository(
                     tree = etree.parse(create_xml_file)
                     root = tree.getroot()
                     table = root.find(".//table[@name='maintable']")
-                    if form_data["form_casetype"] > 2:
-                        table.set("case_action", "true")
+                    if form_data["form_casetype"] >= 2:
+                        table.set("case_followup", "true")
+                        if form_data["form_casetype"] > 2:
+                            table.set("case_action", "true")
                         table.set(
                             "creator_table",
                             form_creator_data["form_schema"] + ".maintable",
@@ -2055,12 +2057,17 @@ def create_repository(
                         table.set("creator_field", form_creator_data["form_pkey"])
                         table.set("selector_field", form_data["form_caseselector"])
                         table.set(
-                            "action_trigger", "T" + str(uuid.uuid4()).replace("-", "_")
+                            "block_trigger", "T" + str(uuid.uuid4()).replace("-", "_")
                         )
-                        if form_data["form_casetype"] == 3:
-                            table.set("case_action_type", "deactivate")
-                        else:
-                            table.set("case_action_type", "activate")
+                        if form_data["form_casetype"] > 2:
+                            table.set(
+                                "action_trigger",
+                                "T" + str(uuid.uuid4()).replace("-", "_"),
+                            )
+                            if form_data["form_casetype"] == 3:
+                                table.set("case_action_type", "deactivate")
+                            else:
+                                table.set("case_action_type", "activate")
                     if table is not None:
                         field = root.find(
                             ".//field[@name='" + form_data["form_caseselector"] + "']"

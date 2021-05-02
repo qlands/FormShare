@@ -3017,7 +3017,7 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            time.sleep(60)  # Wait for Celery to finish
+            time.sleep(120)  # Wait for Celery to finish
 
             # Get the details of a form. The form now should have a repository
             res = self.testapp.get(

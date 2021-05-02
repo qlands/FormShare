@@ -24,7 +24,7 @@ jobs:
             python3 create_config.py --daemon --capture_output --mysql_host localhost --mysql_user_name root --mysql_user_password circleci --repository_path /opt/formshare_repository --odktools_path /opt/odktools --elastic_search_host localhost --elastic_search_port 9200 --formshare_host localhost --formshare_port 5900 --forwarded_allow_ip localhost --pid_file /opt/formshare_gunicorn/formshare.pid --error_log_file /opt/formshare_log/error_log /opt/formshare_config/development.ini
             ln -s /opt/formshare_config/development.ini ./development.ini
             python3 configure_celery.py ./development.ini
-            python3 setup.py develop
+            python3 setup.py install --user
             /home/circleci/.local/bin/disable_ssl ./development.ini
             /home/circleci/.local/bin/configure_alembic ./development.ini .
             /home/circleci/.local/bin/configure_mysql ./development.ini .

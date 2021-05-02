@@ -46,7 +46,6 @@ jobs:
           command: |            
             sudo service elasticsearch start
             sudo service mongodb start
-            sudo /etc/init.d/celery_formshare start
             export FORMSHARE_PYTEST_RUNNING=true
             /home/circleci/.local/bin/pytest --coverage=formshare
       - run:

@@ -17,7 +17,6 @@ jobs:
       - run:          
           name: Run servers
           command: |
-            sudo service elasticsearch start
             sudo /etc/init.d/redis-server start
             sudo service mongodb start
             sudo service mysql start

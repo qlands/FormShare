@@ -34,8 +34,6 @@ jobs:
             /home/circleci/.local/bin/configure_mysql ./development.ini .
             /home/circleci/.local/bin/configure_tests ./development.ini .
             /home/circleci/.local/bin/alembic upgrade head
-            export COLUMNS=80
-            /home/circleci/.local/bin/celery -A formshare.config.celery_app worker -D --loglevel=info -Q FormShare --broker=redis://localhost:6379/0 --result-backend=redis://localhost:6379/0
       - run:
           name: Test code is well formatted
           command: |

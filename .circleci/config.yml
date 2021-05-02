@@ -45,7 +45,7 @@ jobs:
           name: Run tests
           command: |
             export COLUMNS=80
-            /home/circleci/.local/bin/celery -A formshare.config.celery_app worker -D --loglevel=info -Q FormShare --broker=redis://localhost:6379/0 --result-backend=redis://localhost:6379/0
+            /home/circleci/.local/bin/celery -A formshare.config.celery_app worker -D --loglevel=info -Q FormShare --broker=redis://localhost:6379/0 --result-backend=redis://localhost:6379/0 1>&2
             sudo service elasticsearch start
             sudo service mongodb start
             export FORMSHARE_PYTEST_RUNNING=true

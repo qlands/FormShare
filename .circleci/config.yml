@@ -43,11 +43,13 @@ jobs:
             /home/circleci/.local/bin/black formshare --check || exit;
       - run:
           name: Run tests
-          command: |            
+          command: |
+            export COLUMNS=80
+            /home/circleci/.local/bin/celery -A formshare.config.celery_app worker -D --loglevel=info -Q FormShare --broker=redis://localhost:6379/0 --result-backend=redis://localhost:6379/0
             sudo service elasticsearch start
             sudo service mongodb start
             export FORMSHARE_PYTEST_RUNNING=true
-            /home/circleci/.local/bin/pytest --cov=formshare
+            /home/circleci/.local/bin/pytest -s --cov=formshare
       - run:
           name: Building artifacts
           command: |

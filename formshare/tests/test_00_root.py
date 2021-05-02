@@ -11655,6 +11655,11 @@ class FunctionalTests(unittest.TestCase):
         test_form_merge_mimic()
         test_form_merge_mimic2()
         test_form_merge_mimic3()
+
+        eprint("Processing case management")
+        print("Processing case management")
+        test_case_management()
+
         eprint("Processing authorization")
         print("Processing authorization")
         test_group_assistant()
@@ -11667,17 +11672,16 @@ class FunctionalTests(unittest.TestCase):
         test_collaborator_projects_4()
         test_delete_active_project()
         test_form_access()
+        test_unauthorized_access()
+        eprint("Processing scripts")
+        print("Processing scripts")
         test_create_super_user()
         test_configure_alembic()
         test_configure_fluent()
         test_configure_mysql()
         test_configure_tests()
         test_modify_config()
-        test_unauthorized_access()
-        eprint("Processing case management")
-        print("Processing case management")
-        test_case_management()
-
+                
         end_time = datetime.datetime.now()
         time_delta = end_time - start_time
         total_seconds = time_delta.total_seconds()

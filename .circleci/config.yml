@@ -34,6 +34,7 @@ jobs:
             /home/circleci/.local/bin/configure_mysql ./development.ini .
             /home/circleci/.local/bin/configure_tests ./development.ini .
             /home/circleci/.local/bin/alembic upgrade head
+            sudo chmod 640 '/etc/default/celery_formshare'
             sudo /etc/init.d/celery_formshare stop
             sudo /etc/init.d/celery_formshare start
       - run:

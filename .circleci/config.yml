@@ -15,15 +15,12 @@ jobs:
             sudo /etc/init.d/redis-server start
             sudo service mongodb start
             sudo service mysql start
-            sudo apt-get install curl
+          background: true
       - run:
           # Install dependencies with --user to enable easier caching
           name: Install dependencies
           command: |
-            sudo service elasticsearch start
-            sudo service mongodb start
             pip install -r requirements.txt --user
-            curl http://localhost:9200
             mysql -h localhost -u root --ssl-mode=DISABLED --password=circleci --execute='CREATE SCHEMA IF NOT EXISTS formshare'
             python3 create_config.py --daemon --capture_output --mysql_host localhost --mysql_user_name root --mysql_user_password circleci --repository_path /opt/formshare_repository --odktools_path /opt/odktools --elastic_search_host localhost --elastic_search_port 9200 --formshare_host localhost --formshare_port 5900 --forwarded_allow_ip localhost --pid_file /opt/formshare_gunicorn/formshare.pid --error_log_file /opt/formshare_log/error_log /opt/formshare_config/development.ini
             ln -s /opt/formshare_config/development.ini ./development.ini
@@ -45,8 +42,6 @@ jobs:
           command: |
             export COLUMNS=80
             /home/circleci/.local/bin/celery -A formshare.config.celery_app worker -D --loglevel=info -Q FormShare --broker=redis://localhost:6379/0 --result-backend=redis://localhost:6379/0 --logfile /opt/formshare_celery/out.log
-            sudo service elasticsearch start
-            sudo service mongodb start
             export FORMSHARE_PYTEST_RUNNING=true
             /home/circleci/.local/bin/pytest -s --cov=formshare
       - run:

@@ -11683,3 +11683,4 @@ class FunctionalTests(unittest.TestCase):
         total_seconds = time_delta.total_seconds()
         minutes = total_seconds / 60
         print("Finished in {} minutes".format(minutes))
+        eprint("Finished in {} minutes".format(minutes))

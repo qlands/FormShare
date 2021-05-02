@@ -27,6 +27,8 @@ jobs:
           name: Install dependencies
           command: |
             pip install -r requirements.txt --user
+            pip install codecov --user
+            /home/circleci/.local/bin/codecov
             mysql -h localhost -u root --ssl-mode=DISABLED --password=circleci --execute='CREATE SCHEMA IF NOT EXISTS formshare'
             python3 create_config.py --daemon --capture_output --mysql_host localhost --mysql_user_name root --mysql_user_password circleci --repository_path /opt/formshare_repository --odktools_path /opt/odktools --elastic_search_host localhost --elastic_search_port 9200 --formshare_host localhost --formshare_port 5900 --forwarded_allow_ip localhost --pid_file /opt/formshare_gunicorn/formshare.pid --error_log_file /opt/formshare_log/error_log /opt/formshare_config/development.ini
             ln -s /opt/formshare_config/development.ini ./development.ini
@@ -56,11 +58,15 @@ jobs:
              echo "$(cat /opt/formshare_celery/out.log)"
           when: on_fail
       - run:
+          name: upload coverage report
+          command: |
+            /home/circleci/.local/bin/coverage xml
+            (/home/circleci/.local/bin/codecov --required -X search gcov pycov -f coverage.xml) || echo 'Codecov failed to upload'
+      - run:
           name: Building artifacts
           command: |
-            ls -l /opt/formshare_celery
-            python setup.py sdist
-            python setup.py bdist_wheel
+            python3 setup.py sdist
+            python3 setup.py bdist_wheel
       - store_artifacts:
           path: dist/
           destination: ./

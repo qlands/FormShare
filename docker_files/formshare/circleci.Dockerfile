@@ -171,10 +171,10 @@ RUN apt-get update \
 ENV LANG en_US.UTF-8
 ENV LC_ALL en_US.UTF-8
 
-RUN wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.8.14.deb
-RUN wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.8.14.deb.sha512
-RUN shasum -a 512 -c elasticsearch-6.8.14.deb.sha512
-RUN dpkg -i elasticsearch-6.8.14.deb
+#RUN wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.8.14.deb
+#RUN wget https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.8.14.deb.sha512
+#RUN shasum -a 512 -c elasticsearch-6.8.14.deb.sha512
+#RUN dpkg -i elasticsearch-6.8.14.deb
 
 COPY ./docker_files/circleci_mysql_setup.sh /circleci_mysql_setup.sh
 RUN chmod +x /circleci_mysql_setup.sh

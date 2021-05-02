@@ -29,6 +29,7 @@ jobs:
             ln -s /opt/formshare_config/development.ini ./development.ini
             python3 configure_celery.py ./development.ini
             python3 setup.py install --user
+            python3 setup.py compile_catalog
             /home/circleci/.local/bin/disable_ssl ./development.ini
             /home/circleci/.local/bin/configure_alembic ./development.ini .
             /home/circleci/.local/bin/configure_mysql ./development.ini .

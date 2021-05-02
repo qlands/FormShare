@@ -8,6 +8,7 @@ import datetime
 import glob
 import pkg_resources
 from sqlalchemy import create_engine
+import sys
 
 """
 This testing module test all routes. It launch start the server and test all the routes and processes
@@ -15,6 +16,10 @@ We allocated all in one massive test because separating them in different test f
 the environment processes multiple times and crash FormShare.
    
 """
+
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
 
 
 def store_task_status(task, config):
@@ -11642,10 +11647,16 @@ class FunctionalTests(unittest.TestCase):
         test_color_hash_hex()
         test_one_user_assistant()
         test_five_collaborators()
+        eprint("Processing merging")
+        print("Processing merging")
         test_form_merge()
+        eprint("Processing mimic merging")
+        print("Processing mimic merging")
         test_form_merge_mimic()
         test_form_merge_mimic2()
         test_form_merge_mimic3()
+        eprint("Processing authorization")
+        print("Processing authorization")
         test_group_assistant()
         test_delete_form_with_repository()
         test_api()
@@ -11663,6 +11674,8 @@ class FunctionalTests(unittest.TestCase):
         test_configure_tests()
         test_modify_config()
         test_unauthorized_access()
+        eprint("Processing case management")
+        print("Processing case management")
         test_case_management()
 
         end_time = datetime.datetime.now()

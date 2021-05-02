@@ -49,6 +49,11 @@ jobs:
             export FORMSHARE_PYTEST_RUNNING=true
             /home/circleci/.local/bin/pytest -s --cov=formshare
       - run:
+          name: Run on fail status
+          command: |
+             echo "$(cat /opt/formshare_celery/out.log)"
+          when: on_fail
+      - run:
           name: Building artifacts
           command: |
             ls -l /opt/formshare_celery

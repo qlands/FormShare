@@ -3,7 +3,7 @@ jobs:
   py-3.8: &build-template
     docker:
       - image: qlands/odktools_circleci:20210501
-      command: ['sysctl', '-w', 'vm.max_map_count=262144']
+        command: ['sysctl', '-w', 'vm.max_map_count=262144']
     working_directory: ~/work
     steps:
       - checkout

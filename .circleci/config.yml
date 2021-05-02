@@ -21,6 +21,7 @@ jobs:
           name: Install dependencies
           command: |
             sudo service elasticsearch start
+            sudo service mongodb start
             pip install -r requirements.txt --user
             curl http://localhost:9200
             mysql -h localhost -u root --ssl-mode=DISABLED --password=circleci --execute='CREATE SCHEMA IF NOT EXISTS formshare'
@@ -33,8 +34,8 @@ jobs:
             /home/circleci/.local/bin/configure_mysql ./development.ini .
             /home/circleci/.local/bin/configure_tests ./development.ini .
             /home/circleci/.local/bin/alembic upgrade head
-            /etc/init.d/celery_formshare stop
-            /etc/init.d/celery_formshare start
+            sudo /etc/init.d/celery_formshare stop
+            sudo /etc/init.d/celery_formshare start
       - run:
           name: Test code is well formatted
           command: |
@@ -43,6 +44,9 @@ jobs:
       - run:
           name: Run tests
           command: |            
+            sudo service elasticsearch start
+            sudo service mongodb start
+            sudo /etc/init.d/celery_formshare start
             export FORMSHARE_PYTEST_RUNNING=true
             /home/circleci/.local/bin/pytest --coverage=formshare
       - run:

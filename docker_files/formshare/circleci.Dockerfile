@@ -200,4 +200,4 @@ COPY ./docker_files/etc/init.d/celery_formshare /etc/init.d/celery_formshare
 USER circleci
 ENV PATH /home/circleci/.local/bin:/home/circleci/bin:${PATH}
 
-CMD ["/bin/sh"]
+CMD ["/bin/bash"]

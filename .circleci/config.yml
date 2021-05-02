@@ -51,7 +51,7 @@ jobs:
       - run:
           name: Building artifacts
           command: |
-            echo "$(cat /opt/formshare_celery/out.log)"
+            ls -l /opt/formshare_celery
             python setup.py sdist
             python setup.py bdist_wheel
       - store_artifacts:

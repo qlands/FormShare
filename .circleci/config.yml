@@ -3,6 +3,7 @@ jobs:
   py-3.8: &build-template
     docker:
       - image: qlands/odktools_circleci:20210501
+      command: ['sysctl', '-w', 'vm.max_map_count=262144']
     working_directory: ~/work
     steps:
       - checkout
@@ -11,8 +12,6 @@ jobs:
       - run:          
           name: Run servers
           command: |
-            sudo sysctl -w vm.max_map_count=262144
-            echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.d/60-vm-max_map_count.conf
             sudo service elasticsearch start
             sudo /etc/init.d/redis-server start
             sudo service mongodb start

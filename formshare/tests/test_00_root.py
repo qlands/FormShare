@@ -11681,7 +11681,7 @@ class FunctionalTests(unittest.TestCase):
         test_configure_mysql()
         test_configure_tests()
         test_modify_config()
-                
+
         end_time = datetime.datetime.now()
         time_delta = end_time - start_time
         total_seconds = time_delta.total_seconds()

@@ -194,7 +194,7 @@ RUN chown -R circleci /opt/formshare_celery
 RUN chown -R circleci /opt/formshare_gunicorn
 RUN chown -R circleci /opt/formshare_config
 
-COPY ./docker_files/etc/default/celery_formshare /etc/default/celery_formshare
+COPY ./docker_files/etc/default/celery_formshare_circleci /etc/default/celery_formshare
 COPY ./docker_files/etc/init.d/celery_formshare /etc/init.d/celery_formshare
 
 USER circleci

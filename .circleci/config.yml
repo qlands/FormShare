@@ -55,8 +55,8 @@ jobs:
           paths:
             - /home/circleci/.local/lib
             - /home/circleci/.local/bin
-  workflows:
-    version: 2
-    build:
-      jobs:
-        - py-3.8
+workflows:
+  version: 2
+  build:
+    jobs:
+      - py-3.8

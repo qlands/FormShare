@@ -124,3 +124,5 @@ alembic.ini
 formshare.ini
 mysql.cnf
 test_config.json
+.out.txt.swp
+.isort.cfg

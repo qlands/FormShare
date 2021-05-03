@@ -1,4 +1,4 @@
-![](https://circleci.com/gh/qlands/FormShare.svg?style=shield&circle-token=:circle-token) ![](https://codecov.io/github/qlands/FormShare/branch/master-2.0/graph/badge.svg)![](https://img.shields.io/badge/code%20style-black-000000.svg) 
+![](https://circleci.com/gh/qlands/FormShare.svg?style=shield&circle-token=:circle-token) ![](https://codecov.io/github/qlands/FormShare/branch/master-2.0/graph/badge.svg) ![](https://img.shields.io/badge/code%20style-black-000000.svg)  
 
 FormShare 2
 =========

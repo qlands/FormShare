@@ -1,5 +1,8 @@
+![](https://circleci.com/gh/qlands/FormShare.svg?style=shield&circle-token=:circle-token) ![](https://codecov.io/github/qlands/FormShare/branch/master-2.0/graph/badge.svg)
+
 FormShare 2
 =========
+
 The future of FormHub
 
 Centralize data – Decentralize knowledge<sup>TM</sup>

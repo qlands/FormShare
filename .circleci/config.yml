@@ -47,17 +47,16 @@ jobs:
             /home/circleci/.local/bin/black --version
             /home/circleci/.local/bin/black formshare --check || exit;
       - run:
-          name: Run tests
+          name: Run Celery in the background
           command: |
             export COLUMNS=80
-            /home/circleci/.local/bin/celery -A formshare.config.celery_app worker -D --loglevel=info -Q FormShare --broker=redis://localhost:6379/0 --result-backend=redis://localhost:6379/0 --logfile /opt/formshare_celery/out.log
+            /home/circleci/.local/bin/celery -A formshare.config.celery_app worker --loglevel=info -Q FormShare --broker=redis://localhost:6379/0 --result-backend=redis://localhost:6379/0
+          background: true
+      - run:
+          name: Run tests
+          command: |
             export FORMSHARE_PYTEST_RUNNING=true
             /home/circleci/.local/bin/pytest -s --cov=formshare
-      - run:
-          name: Run on fail status
-          command: |
-             echo "$(cat /opt/formshare_celery/out.log)"
-          when: on_fail
       - run:
           name: upload coverage report
           command: |

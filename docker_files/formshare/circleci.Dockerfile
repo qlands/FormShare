@@ -187,6 +187,10 @@ RUN mkdir formshare_log
 RUN mkdir formshare_celery
 RUN mkdir formshare_gunicorn
 RUN mkdir formshare_config
+RUN mkdir formshare_plugins
+COPY ./docker_files/testing_plugin_directories.zip /opt/formshare_plugins
+WORKDIR /opt/formshare_plugins
+RUN unzip ./testing_plugin_directories.zip
 
 RUN chown -R circleci /opt/formshare_repository
 RUN chown -R circleci /opt/formshare_log

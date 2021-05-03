@@ -1,4 +1,6 @@
-![https://circleci.com/gh/qlands/FormShare](https://circleci.com/gh/qlands/FormShare.svg?style=shield&circle-token=:circle-token) ![https://app.codecov.io/gh/qlands/FormShare/commits?page=1](https://codecov.io/github/qlands/FormShare/branch/master-2.0/graph/badge.svg) ![https://github.com/python/black](https://img.shields.io/badge/code%20style-black-000000.svg)  
+[![CircleCI](https://circleci.com/gh/qlands/FormShare.svg?style=shield&circle-token=:circle-token)](https://circleci.com/gh/qlands/FormShare)
+[![Codecov](https://codecov.io/github/qlands/FormShare/branch/master-2.0/graph/badge.svg)](https://app.codecov.io/gh/qlands/FormShare/commits?page=1)
+[![Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
 
 FormShare 2
 =========

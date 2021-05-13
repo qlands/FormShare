@@ -219,6 +219,9 @@ def load_environment(settings, config, apppath, policy_array):
     load_routes(config)
     load_api_version_1_routes(config)
 
+    wsgi_app = config.make_wsgi_app()
     # Finally called connected plugins to IEnvironment
     for plugin in p.PluginImplementations(p.IEnvironment):
-        plugin.after_environment_load(settings)
+        plugin.after_environment_load(config)
+
+    return wsgi_app

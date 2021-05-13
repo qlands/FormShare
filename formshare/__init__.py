@@ -10,7 +10,7 @@ if os.environ.get("FORMSHARE_PYTEST_RUNNING", "false") == "false":
 
 from pyramid.config import Configurator
 import os
-
+import configparser
 from pyramid.authentication import AuthTktAuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid_authstack import AuthenticationStackPolicy
@@ -19,6 +19,16 @@ from formshare.config.config_indexes import configure_indexes
 
 
 def main(global_config, **settings):
+    config = configparser.ConfigParser()
+    config.read(global_config["__file__"])
+    host = config.get("server:main", "host")
+    port = config.get("server:main", "port")
+    composite_section = dict(config.items("composite:main"))
+    composite_section.pop("use")
+    settings["server:main:host"] = host
+    settings["server:main:port"] = port
+    settings["server:main:root"] = list(composite_section.keys())[0]
+
     """This function returns a Pyramid WSGI application."""
     auth_policy = AuthenticationStackPolicy()
     policy_array = []
@@ -52,5 +62,5 @@ def main(global_config, **settings):
     config.include(".models")
     # Load and configure the host application
     configure_indexes(settings)
-    load_environment(settings, config, apppath, policy_array)
-    return config.make_wsgi_app()
+    wsgi_app = load_environment(settings, config, apppath, policy_array)
+    return wsgi_app

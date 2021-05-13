@@ -1290,10 +1290,10 @@ class IEnvironment(Interface):  # pragma: no cover
     Allows to hook into the process that creates the FormShare environment
     """
 
-    def after_environment_load(self, settings):
+    def after_environment_load(self, config):
         """
         Called by FormShare after the environment is configured
-        :param settings: FormShare settings
+        :param config: FormShare config object
         """
 
 

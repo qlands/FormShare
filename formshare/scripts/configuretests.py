@@ -91,6 +91,9 @@ def main(raw_args=None):
         "repository_path": repository_path,
         "odktools_path": odktools_path,
         "mysql_cnf": mysql_cnf,
+        "formshare_test_directory": os.path.join(
+            formshare_path, *["formshare", "tests"]
+        ),
     }
 
     rendered_template = template_environment.get_template("test_config.jinja2").render(

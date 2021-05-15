@@ -58,7 +58,9 @@ def get_repository_task(config, project, form):
         "SELECT celery_taskid FROM product WHERE project_id = '{}' "
         "AND form_id = '{}' AND product_id = 'repository'".format(project, form)
     ).fetchone()
-    return result[0]
+    res = result[0]
+    engine.dispose()
+    return res
 
 
 class FunctionalTests(unittest.TestCase):

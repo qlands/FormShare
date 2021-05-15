@@ -9,7 +9,7 @@ import validators
 from elasticfeeds.activity import Actor, Object, Activity
 from formencode.variabledecode import variable_decode
 from pyramid.httpexceptions import HTTPFound
-from pyramid.httpexceptions import HTTPNotFound
+from pyramid.httpexceptions import HTTPNotFound, HTTPSeeOther
 from pyramid.response import Response
 from pyramid.security import remember
 from pyramid.session import check_csrf_token
@@ -123,11 +123,17 @@ class LoginView(PublicView):
                     current_user = get_user_data(login_data["login"], self.request)
                     if current_user is not None:
                         self.returnRawViewResult = True
-                        return HTTPFound(
-                            location=self.request.route_url(
-                                "dashboard", userid=current_user.login
-                            ),
-                        )
+                        if self.request.params.get("openid", None) is None:
+                            return HTTPFound(
+                                location=self.request.route_url(
+                                    "dashboard", userid=current_user.login
+                                ),
+                            )
+                        else:
+                            return HTTPSeeOther(
+                                location=next_page, headers=self.request.headers
+                            )
+
         else:
             if (
                 self.request.registry.settings.get("perform_post_checks", "true")
@@ -179,7 +185,11 @@ class LoginView(PublicView):
                             "next"
                         ) or self.request.route_url("dashboard", userid=user.login)
                         self.returnRawViewResult = True
-                        return HTTPFound(location=next_page, headers=headers)
+                        if self.request.params.get("openid", None) is None:
+                            return HTTPFound(location=next_page, headers=headers)
+                        else:
+                            headers = headers + self.request.headers
+                            return HTTPSeeOther(location=next_page, headers=headers)
                 else:
                     log.error(
                         "Logging into account {} provided an invalid password. Message: {}".format(
@@ -349,9 +359,36 @@ def get_policy(request, policy_name):
 
 def log_out_view(request):
     policy = get_policy(request, "main")
-    headers = policy.forget(request)
-    loc = request.route_url("home")
-    raise HTTPFound(location=loc, headers=headers)
+    login_data = policy.authenticated_userid(request)
+    if login_data is not None:
+        login_data = literal_eval(login_data)
+        if login_data["group"] == "mainApp":
+            current_user = login_data["login"]
+            continue_logout = True
+            for plugin in p.PluginImplementations(p.ILogOut):
+                continue_logout = plugin.before_log_out(
+                    request, current_user, continue_logout
+                )
+            if continue_logout:
+                policy = get_policy(request, "main")
+                headers = policy.forget(request)
+                loc = request.route_url("home")
+                for plugin in p.PluginImplementations(p.ILogOut):
+                    loc, headers = plugin.after_log_out(
+                        request, current_user, loc, headers
+                    )
+                raise HTTPFound(location=loc, headers=headers)
+            else:
+                loc = request.route_url("dashboard", userid=current_user)
+                raise HTTPFound(location=loc)
+        else:
+            policy = get_policy(request, "main")
+            headers = policy.forget(request)
+            loc = request.route_url("home")
+            raise HTTPFound(location=loc, headers=headers)
+    else:
+        loc = request.route_url("home")
+        raise HTTPFound(location=loc)
 
 
 def assistant_log_out_view(request):

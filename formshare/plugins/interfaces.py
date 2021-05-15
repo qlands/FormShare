@@ -858,20 +858,23 @@ class ILogOut(Interface):  # pragma: no cover
     Allow extensions to hook to the FormShare logout process
     """
 
-    def before_log_out(self, request, user):
+    def before_log_out(self, request, user, continue_logout):
         """
         Called by FormShare so plugins can perform actions before FormShare logs out an user
         :param request: Pyramid request object
         :param user: User disconnecting
+        :param continue_logout: If FormShare or other plugin has indicated to logout or not
         :return: True if the logout should proceed. Or false to halt the logout
         """
 
-    def after_log_out(self, request, user):
+    def after_log_out(self, request, user, redirect_url, logout_headers):
         """
         Called by FormShare so plugins can perform actions after FormShare logs out an user
         :param request: Pyramid request object
         :param user: User that disconnected
-        :return: None
+        :param redirect_url: Where FormShare is going after logout
+        :param logout_headers: FormShare logout headers
+        :return: target_location, headers
         """
 
 

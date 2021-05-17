@@ -188,7 +188,6 @@ class LoginView(PublicView):
                         if self.request.params.get("openid", None) is None:
                             return HTTPFound(location=next_page, headers=headers)
                         else:
-                            headers = headers + self.request.headers
                             return HTTPSeeOther(location=next_page, headers=headers)
                 else:
                     log.error(

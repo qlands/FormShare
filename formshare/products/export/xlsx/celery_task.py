@@ -26,11 +26,10 @@ class SheetNameError(Exception):
 def internal_build_xlsx(
     settings,
     odk_dir,
-    form_directory,
     form_schema,
     form_id,
     create_xml,
-    insert_xml,
+    encryption_key,
     xlsx_file,
     protect_sensitive,
     locale,
@@ -64,11 +63,10 @@ def internal_build_xlsx(
         "-p " + mysql_password,
         "-s " + form_schema,
         "-x " + create_xml,
-        "-I " + insert_xml,
         "-o " + xlsx_file,
         "-T " + temp_dir,
         "-f " + form_id,
-        "-S",
+        "-e " + encryption_key,
     ]
     if protect_sensitive:
         args.append("-c")
@@ -127,11 +125,10 @@ def internal_build_xlsx(
 def build_xlsx(
     settings,
     odk_dir,
-    form_directory,
     form_schema,
     form_id,
     create_xml,
-    insert_xml,
+    encryption_key,
     xlsx_file,
     protect_sensitive,
     locale,
@@ -139,11 +136,10 @@ def build_xlsx(
     internal_build_xlsx(
         settings,
         odk_dir,
-        form_directory,
         form_schema,
         form_id,
         create_xml,
-        insert_xml,
+        encryption_key,
         xlsx_file,
         protect_sensitive,
         locale,

@@ -3459,10 +3459,8 @@ class FunctionalTests(unittest.TestCase):
                 form_details = get_form_details(
                     self.server_config, self.projectID, self.formID
                 )
-                form_directory = form_details["form_directory"]
                 form_schema = form_details["form_schema"]
                 create_xml_file = form_details["form_createxmlfile"]
-                insert_xml_file = form_details["form_insertxmlfile"]
                 task_id = str(uuid.uuid4())
 
                 sql = (
@@ -3487,11 +3485,10 @@ class FunctionalTests(unittest.TestCase):
                 internal_build_xlsx(
                     self.server_config,
                     self.server_config["repository.path"] + "/odk",
-                    form_directory,
                     form_schema,
                     self.formID,
                     create_xml_file,
-                    insert_xml_file,
+                    self.server_config["auth.opaque"],
                     self.working_dir + "/{}.xlsx".format(task_id),
                     True,
                     "en",

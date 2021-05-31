@@ -9,9 +9,7 @@ from formshare.processes.db.form import (
 )
 
 
-def generate_public_xlsx_file(
-    request, user, project, form, odk_dir, form_directory, form_schema
-):
+def generate_public_xlsx_file(request, user, project, form, odk_dir, form_schema):
     settings = {}
     for key, value in request.registry.settings.items():
         if isinstance(value, str):
@@ -23,17 +21,15 @@ def generate_public_xlsx_file(
     xlsx_file = os.path.join(repo_dir, *paths)
 
     create_xml_file = get_form_xml_create_file(request, project, form)
-    insert_xml_file = get_form_xml_insert_file(request, project, form)
 
     task = build_xlsx.apply_async(
         (
             settings,
             odk_dir,
-            form_directory,
             form_schema,
             form,
             create_xml_file,
-            insert_xml_file,
+            request.registry.settings["auth.opaque"],
             xlsx_file,
             True,
             request.locale_name,
@@ -54,9 +50,7 @@ def generate_public_xlsx_file(
     )
 
 
-def generate_private_xlsx_file(
-    request, user, project, form, odk_dir, form_directory, form_schema
-):
+def generate_private_xlsx_file(request, user, project, form, odk_dir, form_schema):
     settings = {}
     for key, value in request.registry.settings.items():
         if isinstance(value, str):
@@ -68,17 +62,15 @@ def generate_private_xlsx_file(
     xlsx_file = os.path.join(repo_dir, *paths)
 
     create_xml_file = get_form_xml_create_file(request, project, form)
-    insert_xml_file = get_form_xml_insert_file(request, project, form)
 
     task = build_xlsx.apply_async(
         (
             settings,
             odk_dir,
-            form_directory,
             form_schema,
             form,
             create_xml_file,
-            insert_xml_file,
+            request.registry.settings["auth.opaque"],
             xlsx_file,
             False,
             request.locale_name,

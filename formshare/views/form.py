@@ -2262,14 +2262,12 @@ class DownloadPublicXLSData(PrivateView):
             raise HTTPNotFound
 
         odk_dir = get_odk_path(self.request)
-        form_directory = get_form_directory(self.request, project_id, form_id)
         generate_public_xlsx_file(
             self.request,
             self.user.id,
             project_id,
             form_id,
             odk_dir,
-            form_directory,
             form_data["form_schema"],
         )
 
@@ -2316,14 +2314,12 @@ class DownloadPrivateXLSData(PrivateView):
             raise HTTPNotFound
 
         odk_dir = get_odk_path(self.request)
-        form_directory = get_form_directory(self.request, project_id, form_id)
         generate_private_xlsx_file(
             self.request,
             self.user.id,
             project_id,
             form_id,
             odk_dir,
-            form_directory,
             form_data["form_schema"],
         )
 

@@ -8,7 +8,6 @@ from collections import OrderedDict
 from subprocess import Popen, PIPE
 
 import pandas as pd
-from lxml import etree
 from pandas import json_normalize
 
 from formshare.config.celery_app import celeryApp
@@ -77,89 +76,6 @@ def internal_build_csv(
     locale,
     task_id,
 ):
-    tables = {}
-    keys = []
-    replace_values = []
-
-    def protect_field(table_name, field_name, field_value):
-        for a_key in keys:
-            if a_key["name"] == field_name:
-                for a_value in replace_values:
-                    if (
-                        a_value["table"] == "all"
-                        and a_value["field"] == field_name
-                        and a_value["value"] == field_value
-                    ):
-                        return a_value["new_value"]
-                unique_id = str(uuid.uuid4())
-                replace_values.append(
-                    {
-                        "table": "all",
-                        "field": field_name,
-                        "value": field_value,
-                        "new_value": unique_id,
-                    }
-                )
-                return unique_id
-        from_table = table_name
-        if from_table == "":
-            from_table = "maintable"
-        fields = tables.get(from_table, [])
-        for a_field in fields:
-            if a_field["name"] == field_name:
-                if a_field["protection"] == "exclude":
-                    return "exclude"
-        return field_value
-
-    def protect_sensitive_fields(json_data, table_name):
-        for a_key, a_value in OrderedDict(json_data).items():
-            if type(a_value) is list:
-                for an_item in a_value:
-                    if (
-                        a_key != "_attachments"
-                        and a_key != "_notes"
-                        and a_key != "_tags"
-                        and a_key != "_geolocation"
-                    ):
-                        protect_sensitive_fields(an_item, a_key)
-            if a_key == "_geolocation":
-                json_data.pop(a_key)
-            else:
-                new_value = protect_field(table_name, a_key, a_value)
-                if new_value == "exclude":
-                    json_data.pop(a_key)
-                else:
-                    json_data[a_key] = new_value
-
-    def get_sensitive_fields(root, table_name):
-        for child in root.iterchildren():
-            if child.tag == "table":
-                a_table = child.get("name")
-                tables[a_table] = []
-                get_sensitive_fields(child, a_table)
-            else:
-                if child.get("sensitive", "false") == "true":
-                    is_key = child.get("key", "false")
-                    is_lookup = child.get("rlookup", "false")
-                    if is_key == "true":
-                        is_key = True
-                    else:
-                        is_key = False
-                    if is_lookup == "true":
-                        is_lookup = True
-                    else:
-                        is_lookup = False
-                    if not is_key:
-                        tables[table_name].append(
-                            {
-                                "name": child.get("name"),
-                                "protection": child.get("protection", "exclude"),
-                                "lookup": is_lookup,
-                            }
-                        )
-                    else:
-                        keys.append({"name": child.get("name")})
-
     parts = __file__.split("/products/")
     this_file_path = parts[0] + "/locale"
     es = gettext.translation("formshare", localedir=this_file_path, languages=[locale])
@@ -187,13 +103,13 @@ def internal_build_csv(
         "-p " + settings["mysql.password"],
         "-s " + form_schema,
         "-t maintable",
-        "-c " + create_xml_file,
+        "-x " + create_xml_file,
         "-m " + maps_directory,
         "-o " + out_path,
         "-T " + temp_path,
-        "-S",
     ]
-
+    if protect_sensitive:
+        args.append("-c")
     log.info(" ".join(args))
 
     send_task_status_to_form(settings, task_id, _("Denormalizing database"))
@@ -220,14 +136,6 @@ def internal_build_csv(
             paths = ["utilities", "createDummyJSON", "createdummyjson"]
             create_dummy_json = os.path.join(settings["odktools.path"], *paths)
 
-            if protect_sensitive:
-                tree = etree.parse(create_xml_file)
-                element_root = tree.getroot()
-                if len(element_root[0]):
-                    get_sensitive_fields(element_root[0], "")
-                if len(element_root[1]):
-                    get_sensitive_fields(element_root[1], "")
-
             paths = ["dummy.djson"]
             dummy_json = os.path.join(out_path, *paths)
 
@@ -235,8 +143,6 @@ def internal_build_csv(
                 create_dummy_json,
                 "-c " + create_xml_file,
                 "-o " + dummy_json,
-                "-i " + insert_xml_file,
-                "-s",
                 "-r",
             ]
             if len(array_sizes) > 0:
@@ -266,8 +172,7 @@ def internal_build_csv(
                 for file in files:
                     with open(file) as json_file:
                         data = json.load(json_file, object_pairs_hook=OrderedDict)
-                    replace_values = []
-                    protect_sensitive_fields(data, "")
+
                     flat = flatten_json(data)
                     temp = json_normalize(flat)
                     cols = []

@@ -4,12 +4,8 @@ import json
 from celery.utils.log import get_task_logger
 import os
 import uuid
-from collections import OrderedDict
+import sys
 from subprocess import Popen, PIPE
-
-import pandas as pd
-from pandas import json_normalize
-
 from formshare.config.celery_app import celeryApp
 from formshare.config.celery_class import CeleryTask
 from formshare.processes.email.send_async_email import send_async_email
@@ -34,25 +30,6 @@ class MySQLDenormalizeError(Exception):
     """
     Exception raised when there is an error while creating the CSV.
     """
-
-
-def flatten_json(y, separator="/"):
-    out = OrderedDict()
-
-    def flatten(x, name=""):
-        if type(x) is OrderedDict:
-            for a in x:
-                flatten(x[a], name + a + separator)
-        elif type(x) is list:
-            i = 1
-            for a in x:
-                flatten(a, name + "[" + str(i) + "]" + separator)
-                i += 1
-        else:
-            out[name[:-1]] = x.replace("\r\n", "").replace("\n", "").replace(",", "")
-
-    flatten(y)
-    return out
 
 
 def gather_array_sizes(data, array_dict):
@@ -149,42 +126,49 @@ def internal_build_csv(
                 args.append("-a " + ",".join(array_sizes))
 
             log.info(" ".join(args))
-
             p = Popen(args, stdout=PIPE, stderr=PIPE)
-
+            send_task_status_to_form(settings, task_id, _("Creating CSV file"))
             stdout, stderr = p.communicate()
             if p.returncode == 0:
-                dataframe_array = []
-
-                # Adds the dummy
-                with open(dummy_json) as json_file:
-                    data = json.load(json_file, object_pairs_hook=OrderedDict)
-                flat = flatten_json(data)
-                temp = json_normalize(flat)
-                cols = []
-                for col in temp.columns:
-                    cols.append(col.replace(".", ""))
-                temp.columns = cols
-                dataframe_array.append(temp)
-                send_task_status_to_form(
-                    settings, task_id, _("Flattening the JSON files")
+                parts = __file__.split("/products/")
+                this_file_path = parts[0]
+                flatten_json = os.path.join(
+                    this_file_path, *["scripts", "flatten_jsons.py"]
                 )
-                for file in files:
-                    with open(file) as json_file:
-                        data = json.load(json_file, object_pairs_hook=OrderedDict)
 
-                    flat = flatten_json(data)
-                    temp = json_normalize(flat)
-                    cols = []
-                    for col in temp.columns:
-                        cols.append(col.replace(".", ""))
-                    temp.columns = cols
-                    dataframe_array.append(temp)
-                send_task_status_to_form(settings, task_id, _("Joining submissions"))
-                join = pd.concat(dataframe_array, sort=False)
-                join = join.iloc[1:]
-                send_task_status_to_form(settings, task_id, _("Saving CSV"))
-                join.to_csv(csv_file, index=False, encoding="utf-8")
+                args = [
+                    flatten_json,
+                    "--dummy_json",
+                    dummy_json,
+                    "--path_to_jsons",
+                    out_path,
+                    "--csv_file",
+                    csv_file,
+                ]
+                log.info(" ".join(args))
+                p = Popen(args, stdout=PIPE, stderr=PIPE)
+
+                stdout, stderr = p.communicate()
+                if p.returncode != 0:
+                    email_from = settings.get("mail.from", None)
+                    email_to = settings.get("mail.error", None)
+                    send_async_email(
+                        settings,
+                        email_from,
+                        email_to,
+                        "Error while creating the flattening the JSON files",
+                        "Error: "
+                        + stderr.decode("utf-8")
+                        + "-"
+                        + stdout.decode("utf-8")
+                        + ":"
+                        + " ".join(args),
+                        None,
+                        locale,
+                    )
+                    raise DummyError(
+                        _("Error while creating the flattening the JSON files")
+                    )
             else:
                 email_from = settings.get("mail.from", None)
                 email_to = settings.get("mail.error", None)

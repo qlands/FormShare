@@ -113,6 +113,9 @@ venv.bak/
 # Generated Celery App
 celery_app.py
 
+# Flatten JSONs
+flatten_jsons.py
+
 # Thumbs
 Thumbs.db
 Thumbs.db:encryptable

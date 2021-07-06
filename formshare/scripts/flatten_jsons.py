@@ -1,0 +1,103 @@
+#!/home/cquiros/data/projects2017/personal/software/env_formshare/bin/python
+
+import multiprocessing
+from collections import OrderedDict
+import glob
+import os
+import json
+import pandas as pd
+from pandas import json_normalize
+import argparse
+from multiprocessing import Process, Manager
+import numpy as np
+import time
+
+
+def flatten_json(y, separator="/"):
+    out = OrderedDict()
+
+    def flatten(x, name=""):
+        if type(x) is OrderedDict:
+            for a in x:
+                flatten(x[a], name + a + separator)
+        elif type(x) is list:
+            i = 1
+            for a in x:
+                flatten(a, name + "[" + str(i) + "]" + separator)
+                i += 1
+        else:
+            out[name[:-1]] = x.replace("\r\n", "").replace("\n", "").replace(",", "")
+
+    flatten(y)
+    return out
+
+
+def flatten_files(files, dataframe):
+    for file in files:
+        with open(file) as json_file:
+            data = json.load(json_file, object_pairs_hook=OrderedDict)
+
+        flat = flatten_json(data)
+        temp = json_normalize(flat)
+        cols = []
+        for col in temp.columns:
+            cols.append(col.replace(".", ""))
+        temp.columns = cols
+        dataframe.append(temp)
+
+
+def main(raw_args=None):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--dummy_json", required=True, help="Path to dummy JSON")
+    parser.add_argument("--path_to_jsons", required=True, help="Path to JSON files")
+    parser.add_argument("--csv_file", required=True, help="CSV file to generate")
+    args = parser.parse_args(raw_args)
+
+    if not os.path.exists(args.dummy_json):
+        print("Dummy file does not exist")
+        exit(1)
+    if not os.path.exists(args.path_to_jsons):
+        print("JSON directory does not exist")
+        exit(1)
+
+    df = Manager().list()
+    with open(args.dummy_json) as json_file:
+        data = json.load(json_file, object_pairs_hook=OrderedDict)
+    flat = flatten_json(data)
+    temp = json_normalize(flat)
+    cols = []
+    for col in temp.columns:
+        cols.append(col.replace(".", ""))
+    temp.columns = cols
+    df.append(temp)
+
+    paths = ["*.json"]
+    out_path2 = os.path.join(args.path_to_jsons, *paths)
+    files = glob.glob(out_path2)
+    if len(files) == 0:
+        print("There are no JSON files to process")
+        exit(1)
+
+    print("Processing with {} threads".format(multiprocessing.cpu_count()))
+    arrays = np.array_split(np.array(files), multiprocessing.cpu_count())
+
+    threads = list()
+    start_time = time.monotonic()
+    for ii in range(len(arrays)):
+        keywords = {"files": arrays[ii], "dataframe": df}
+        process = Process(target=flatten_files, kwargs=keywords)
+        process.start()
+        threads.append(process)
+
+    for process in threads:
+        process.join()
+    print("Done flattening seconds: ", time.monotonic() - start_time)
+    start_time = time.monotonic()
+    join = pd.concat(df, sort=False)
+    join = join.iloc[1:]
+    join.to_csv(args.csv_file, index=False, encoding="utf-8")
+    print("Done Saving seconds: ", time.monotonic() - start_time)
+
+
+if __name__ == "__main__":
+    main()

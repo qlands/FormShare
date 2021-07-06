@@ -12,6 +12,8 @@ else
 fi
 ln -s /opt/formshare_config/development.ini ./development.ini
 python configure_celery.py ./development.ini
+python configure_flatten.py
+chmod +x /opt/formshare/formshare/scripts/flatten_jsons.py
 python setup.py develop
 python setup.py compile_catalog
 disable_ssl ./development.ini

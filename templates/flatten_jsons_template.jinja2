@@ -1,4 +1,4 @@
-#!/home/cquiros/data/projects2017/personal/software/env_formshare/bin/python
+#!{{ path_to_python }}
 
 import multiprocessing
 from collections import OrderedDict
@@ -10,7 +10,6 @@ from pandas import json_normalize
 import argparse
 from multiprocessing import Process, Manager
 import numpy as np
-import time
 
 
 def flatten_json(y, separator="/"):
@@ -78,11 +77,10 @@ def main(raw_args=None):
         print("There are no JSON files to process")
         exit(1)
 
-    print("Processing with {} threads".format(multiprocessing.cpu_count()))
+    # print("Processing with {} threads".format(multiprocessing.cpu_count()))
     arrays = np.array_split(np.array(files), multiprocessing.cpu_count())
 
     threads = list()
-    start_time = time.monotonic()
     for ii in range(len(arrays)):
         keywords = {"files": arrays[ii], "dataframe": df}
         process = Process(target=flatten_files, kwargs=keywords)
@@ -91,12 +89,9 @@ def main(raw_args=None):
 
     for process in threads:
         process.join()
-    print("Done flattening seconds: ", time.monotonic() - start_time)
-    start_time = time.monotonic()
     join = pd.concat(df, sort=False)
     join = join.iloc[1:]
     join.to_csv(args.csv_file, index=False, encoding="utf-8")
-    print("Done Saving seconds: ", time.monotonic() - start_time)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 import os
 import sys
-
+import stat
 from jinja2 import Environment, FileSystemLoader
 
 
@@ -24,6 +24,9 @@ def main():
 
     with open(formshare_flatten_app, "w") as f:
         f.write(rendered_template)
+
+    st = os.stat(formshare_flatten_app)
+    os.chmod(formshare_flatten_app, st.st_mode | stat.S_IEXEC)
 
 
 if __name__ == "__main__":

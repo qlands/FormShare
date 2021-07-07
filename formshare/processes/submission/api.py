@@ -389,8 +389,6 @@ def json_to_csv(request, project, form):
             create_dummy_json,
             "-c " + create_xml_file,
             "-o " + dummy_json,
-            "-i " + insert_xml_file,
-            "-s",
         ]
         if len(array_sizes) > 0:
             args.append("-a " + ",".join(array_sizes))

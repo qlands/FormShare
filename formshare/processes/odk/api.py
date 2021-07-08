@@ -2925,7 +2925,27 @@ def store_submission(request, user, project, assistant):
                 with open(temp_file_path, "wb") as output_file:
                     shutil.copyfileobj(input_file, output_file)
                 # Now that we know the file has been fully saved to disk move it into place.
-                os.rename(temp_file_path, file_path)
+                final = open(file_path, "w")
+                args = ["tidy", "-xml", temp_file_path]
+                p = Popen(args, stdout=final, stderr=PIPE)
+                stdout, stderr = p.communicate()
+                final.close()
+                if p.returncode != 0:
+                    log.error(
+                        "Tidy error. Formatting "
+                        + file_path
+                        + "  to "
+                        + temp_file_path
+                        + ". Error: "
+                        + "-"
+                        + stderr.decode()
+                        + ". Command line: "
+                        + " ".join(args)
+                    )
+                    return False, 500
+                else:
+                    os.remove(temp_file_path)
+                # os.rename(temp_file_path, file_path)
             else:
                 log.error(
                     "Incomplete submission {} in project {} of user {} with assistant {}".format(

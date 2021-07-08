@@ -67,7 +67,7 @@ def build_database(
         "--defaults-file=" + cnf_file,
         "--execute=CREATE SCHEMA "
         + schema
-        + " DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_general_ci",
+        + " DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_unicode_ci",
     ]
     try:
         check_call(args)

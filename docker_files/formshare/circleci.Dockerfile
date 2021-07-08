@@ -6,7 +6,11 @@ RUN apt-get install -y software-properties-common
 RUN add-apt-repository universe && add-apt-repository multiverse
 RUN apt-get update
 
-RUN apt-get install -y build-essential qt5-default qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake mongodb jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client-8.0 openjdk-11-jdk sqlite3 libqt5sql5-sqlite git wget python3-venv tidy
+RUN apt-get install -y build-essential qt5-default qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake mongodb jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client-8.0 openjdk-11-jdk sqlite3 libqt5sql5-sqlite git wget python3-venv tidy golang-go
+RUN wget https://dev.mysql.com/get/mysql-apt-config_0.8.17-1_all.deb
+RUN dpkg -i ./mysql-apt-config_0.8.17-1_all.deb
+RUN apt-get update
+RUN apt-get install mysql-shell
 
 # ---------------From Circle CI
 # make Apt non-interactive
@@ -108,6 +112,15 @@ RUN npm install -g diff2html-cli
 
 # This is a patched MySQL Drivet to allow connections between Client 8.0 and Server 5.7.X
 COPY ./docker_files/sqldriver/libqsqlmysql.s_o /usr/lib/x86_64-linux-gnu/qt5/plugins/sqldrivers/libqsqlmysql.so
+
+RUN wget https://github.com/BurntSushi/xsv/releases/download/0.13.0/xsv-0.13.0-x86_64-unknown-linux-musl.tar.gz
+RUN tar xvfz xsv-0.13.0-x86_64-unknown-linux-musl.tar.gz
+RUN cp xsv /bin
+
+RUN git clone https://github.com/qlands/csv2xlsx.git
+WORKDIR csv2xlsx
+RUN go build
+RUN cp csv2xlsx /bin
 
 WORKDIR /opt
 RUN git clone https://github.com/qlands/odktools.git

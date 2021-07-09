@@ -393,6 +393,11 @@ def update_dictionary_tables(db_session, schema, xml_create_file):
             field_rlookup = 1
         else:
             field_rlookup = 0
+        field_key = a_field.get("key", "false")
+        if field_key == "true":
+            field_key = 1
+        else:
+            field_key = 0
         field_sensitive = a_field.get("sensitive", "false")
         if field_sensitive == "true":
             field_sensitive = 1
@@ -406,6 +411,7 @@ def update_dictionary_tables(db_session, schema, xml_create_file):
             "table_name": a_table.get("name"),
             "field_name": a_field.get("name"),
             "field_desc": field_desc,
+            "field_key": field_key,
             "field_xmlcode": a_field.get("xmlcode"),
             "field_type": a_field.get("type"),
             "field_odktype": a_field.get("odktype"),

@@ -2000,6 +2000,7 @@ def create_repository(
         stdout, stderr = p.communicate()
 
         log.info(" ".join(args))
+        args_create = args
 
         if p.returncode == 0:
             update_form_repository_info(
@@ -2174,7 +2175,7 @@ def create_repository(
                         insert_file,
                         create_xml_file,
                         insert_xml_file,
-                        " ".join(args),
+                        " ".join(args_create),
                         discard_testing_data,
                     )
                     form_data = {"form_reptask": task}

@@ -600,7 +600,7 @@ def check_jxform_file(
                 + "\n"
             )
             message = (
-                message + _("The following tables have more than 64 selects: ") + "\n"
+                message + _("The following tables have more than 60 selects: ") + "\n"
             )
             root = etree.fromstring(stdout)
             tables_with_errors = root.findall(".//table")
@@ -640,7 +640,7 @@ def check_jxform_file(
                     "(questions, notes, calculations, etc.) outside repeats into a table called "
                     '"maintable". Thus "maintable" usually end up with several items and if '
                     'your ODK form has many selects, then the "maintable" could potentially '
-                    "have more than 64 selects. FormShare can only handle 64 selects per table."
+                    "have more than 60 selects. FormShare can only handle 60 selects per table."
                 )
                 + "\n\n"
             )
@@ -701,7 +701,7 @@ def upload_odk_form(
     except Exception as e:
         log.error("The post xlsx elements is empty. Error {}".format(str(e)))
         return False, _("No file was attached")
-
+    input_file_name = input_file_name.replace(" ", "_")
     paths = ["tmp", uid, input_file_name.lower()]
     file_name = os.path.join(odk_dir, *paths)
 
@@ -1120,7 +1120,7 @@ def update_odk_form(
     except Exception as e:
         log.error("The post xlsx elements is empty. Error {}".format(str(e)))
         return False, _("No file was attached")
-
+    input_file_name = input_file_name.replace(" ", "_")
     paths = ["tmp", uid, input_file_name]
     file_name = os.path.join(odk_dir, *paths)
     file_name = file_name.lower()

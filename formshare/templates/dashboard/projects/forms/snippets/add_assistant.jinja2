@@ -5,7 +5,7 @@
                 <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
                 <h4 class="modal-title">{{ _('Adding assistant') }}</h4>
             </div>
-            <form id="member_form" role="form" method="post" action="{{ request.route_url('form_add_assistant',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}">
+            <form id="member_form" class="require_busy" role="form" method="post" action="{{ request.route_url('form_add_assistant',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}">
                 {% block add_assistant_form %}
                     {{ form.secure_form(request) }}
                     {% block add_assistant_form_fields %}

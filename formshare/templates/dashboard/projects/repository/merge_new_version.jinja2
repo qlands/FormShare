@@ -72,7 +72,7 @@
                                 {% if errortype == 1 %}
                                     {{ _('There are changes in the descriptions of certain choice options. You can merge such changes at') }} <b style="color: red">{{ _('YOUR OWN RISK') }} {{ _('by trying again') }}</b>
                                 {% endif %}
-                                <form id="form_update_form" role="form" method="post" enctype="multipart/form-data" action="{{ request.url }}">
+                                <form id="form_update_form" class="require_busy" role="form" method="post" enctype="multipart/form-data" action="{{ request.url }}">
                                     {% block merge_form %}
                                         {{ form.secure_form(request) }}
                                         {% if errortype == 1 %}

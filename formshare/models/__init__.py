@@ -42,7 +42,16 @@ configure_mappers()
 
 
 def get_engine(settings, prefix="sqlalchemy."):
-    return engine_from_config(settings, prefix, pool_recycle=2000)
+    pool_size = int(settings.get("pool.size", "30"))
+    max_overflow = int(settings.get("pool.max.overflow", "10"))
+    pool_recycle = int(settings.get("pool.recycle", "2000"))
+    return engine_from_config(
+        settings,
+        prefix,
+        pool_recycle=pool_recycle,
+        pool_size=pool_size,
+        max_overflow=max_overflow,
+    )
 
 
 def get_session_factory(engine):

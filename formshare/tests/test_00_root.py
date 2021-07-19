@@ -11606,6 +11606,12 @@ class FunctionalTests(unittest.TestCase):
             self.assertIn(b"[Clean data]", res.body)
             self.assertIn(b"[Manage errors]", res.body)
 
+        def show_health():
+            res = self.testapp.get("/health", status=200)
+            print("*****************Final health")
+            print(res.body)
+            print("*****************Final health")
+
         start_time = datetime.datetime.now()
         test_root()
         test_login()
@@ -11663,7 +11669,7 @@ class FunctionalTests(unittest.TestCase):
         test_configure_mysql()
         test_configure_tests()
         test_modify_config()
-
+        show_health()
         end_time = datetime.datetime.now()
         time_delta = end_time - start_time
         total_seconds = time_delta.total_seconds()

@@ -47,6 +47,7 @@ from formshare.views.assistants import (
 from formshare.views.basic_views import (
     NotFoundView,
     HomeView,
+    HealthView,
     log_out_view,
     LoginView,
     RegisterView,
@@ -188,6 +189,7 @@ def load_routes(config):
 
     # FormShare routes
     routes.append(add_route("home", "/", HomeView, "landing/index.jinja2"))
+    routes.append(add_route("health", "/health", HealthView, "json"))
 
     routes.append(
         add_route("refresh", "/refresh", RefreshSessionView, "generic/refresh.jinja2")

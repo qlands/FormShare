@@ -37,6 +37,25 @@ from formshare.processes.db import (
 log = logging.getLogger("formshare")
 
 
+class HealthView(PublicView):
+    def process_view(self):
+        self.returnRawViewResult = True
+        engine = self.request.dbsession.get_bind()
+        try:
+            res = self.request.dbsession.execute(
+                "show status like 'Threads_connected%'"
+            ).fetchone()
+            threads_connected = res[1]
+        except Exception as e:
+            threads_connected = str(e)
+        return {
+            "health": {
+                "pool": engine.pool.status(),
+                "threads_connected": threads_connected,
+            }
+        }
+
+
 class HomeView(PublicView):
     def process_view(self):
         return {"activeUser": None}

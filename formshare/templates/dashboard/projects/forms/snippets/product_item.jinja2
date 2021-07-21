@@ -10,7 +10,7 @@
                 <div class="actions">
                     {% block product_item_processing_actions %}
                         {% if output.celery_taskid != formDetails.form_reptask %}
-                            <a urn="{{ request.route_url('stop_task',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, taskid=output.celery_taskid) }}" class="btn btn-xs btn-white cancel-task"><i class="fas fa-ban" style="color: red;"></i> {{ _('Cancel') }}</a>
+{#                            <a urn="{{ request.route_url('stop_task',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, taskid=output.celery_taskid) }}" class="btn btn-xs btn-white cancel-task"><i class="fas fa-ban" style="color: red;"></i> {{ _('Cancel') }}</a>#}
                         {% endif %}
                     {% endblock product_item_processing_actions %}
                 </div>

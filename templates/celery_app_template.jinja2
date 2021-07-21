@@ -9,7 +9,6 @@
 from celery import Celery
 import configparser
 from pkg_resources import iter_entry_points
-from formshare.config import celery_config
 import logging
 
 log = logging.getLogger(__name__)
@@ -49,5 +48,4 @@ celeryApp = Celery(
     backend=get_ini_value("celery.backend"),
     include=get_tasks(),
 )
-celeryApp.config_from_object(celery_config)
 

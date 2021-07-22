@@ -2,13 +2,83 @@ import datetime
 import json
 import logging
 import uuid
-
+import smtplib
+from email.utils import formatdate
+from email.mime.text import MIMEText
 from celery.app.task import Task
 from sqlalchemy import create_engine
-
+from celery.worker.request import Request
 from formshare.config.celery_app import get_ini_value
+from sqlalchemy.exc import IntegrityError
 
 log = logging.getLogger("formshare")
+
+
+def send_timeout_email(
+    settings, email_from, email_to, subject, message, reply_to
+):  # pragma: no cover
+    message = MIMEText(message.encode("utf-8"), "plain", "utf-8")
+    message["From"] = email_from
+    message["To"] = email_to
+    message["Date"] = formatdate(localtime=True)
+    message["Subject"] = subject
+    if reply_to is not None:
+        message.add_header("reply-to", reply_to)
+
+    server = settings.get("mail.server", None)
+    if server is not None:
+        if server != "":
+            try:
+                port = settings.get("mail.port", "587")
+                if port != "":
+                    port = int(port)
+                    ssl = settings.get("mail.ssl", "false")
+                    if ssl == "false":
+                        smtp = smtplib.SMTP(server, port)
+                    else:
+                        smtp = smtplib.SMTP_SSL(server, port)
+                    login = settings.get("mail.login", None)
+                    if login is not None:
+                        if login != "":
+                            password = settings.get("mail.password", None)
+                            if password is not None:
+                                if password != "":
+                                    start_tls = settings.get("mail.starttls", "false")
+                                    if start_tls == "true":
+                                        smtp.ehlo()
+                                        smtp.starttls()
+                                        smtp.ehlo()
+                                    smtp.login(login, password)
+                                    smtp.sendmail(
+                                        email_from, email_to, message.as_string()
+                                    )
+                                    smtp.close()
+
+            except Exception as e:
+                log.error("Error {} while sending email".format(str(e)))
+
+
+def send_timeout_error(task_id):  # pragma: no cover
+    settings = {
+        "mail.from": get_ini_value("mail.from"),
+        "mail.error": get_ini_value("mail.error"),
+        "mail.server": get_ini_value("mail.server"),
+        "mail.port": get_ini_value("mail.port"),
+        "mail.ssl": get_ini_value("mail.ssl"),
+        "mail.login": get_ini_value("mail.login"),
+        "mail.password": get_ini_value("mail.password"),
+        "mail.starttls": get_ini_value("mail.starttls"),
+    }
+    email_from = settings.get("mail.from", None)
+    email_to = settings.get("mail.error", None)
+    send_timeout_email(
+        settings,
+        email_from,
+        email_to,
+        "Celery Timeout",
+        "Timeout in task ID: {}".format(task_id),
+        None,
+    )
 
 
 def send_sse_event(connection, task_id, task_name, message):  # pragma: no cover
@@ -49,11 +119,44 @@ def send_sse_event(connection, task_id, task_name, message):  # pragma: no cover
             log.error("Task {} with ID {} failed.".format(task_name, task_id))
 
 
+class CeleryRequest(Request):  # pragma: no cover
+    """
+    This is the Celery Request used by all Celery decentralized processing. Out of Coverage because processes are
+    executed by Celery this is not covered by the testing framework
+    """
+
+    def on_timeout(self, soft, timeout):
+        super(CeleryRequest, self).on_timeout(soft, timeout)
+        task_id = self.task_id
+        log.error("Timeout for task {}".format(task_id))
+        send_timeout_error(task_id)
+        engine = create_engine(get_ini_value("sqlalchemy.url"))
+        connection = engine.connect()
+        if soft:
+            timeout_type = "Soft"
+        else:
+            timeout_type = "Hard"
+        try:
+            connection.execute(
+                "INSERT INTO finishedtask(task_id,task_enumber,task_error) "
+                "VALUES ('{}','{}','{}')".format(
+                    str(task_id), 2, "{} timeout".format(timeout_type)
+                )
+            )
+        except Exception as e:
+            log.error("Error {} reporting failure for task {}".format(str(e), task_id))
+        send_sse_event(connection, task_id, self.name, "failure")
+        connection.invalidate()
+        engine.dispose()
+
+
 class CeleryTask(Task):  # pragma: no cover
     """
     This is the Celery Class used by all Celery decentralized processing. Out of Coverage because processes are
-    executed by Celery this not covered by the testing framework
+    executed by Celery this is not covered by the testing framework
     """
+
+    Request = CeleryRequest
 
     def run(self, *args, **kwargs):
         pass
@@ -86,6 +189,8 @@ class CeleryTask(Task):  # pragma: no cover
                     str(task_id), 1, trace_back.replace("'", "")
                 )
             )
+        except IntegrityError:
+            pass  # Don't do anything because this was a timeout
         except Exception as e:
             log.error("Error {} reporting failure for task {}".format(str(e), task_id))
         send_sse_event(connection, task_id, self.name, "failure")
@@ -104,6 +209,9 @@ class CeleryTask(Task):  # pragma: no cover
         **options
     ):
         options["countdown"] = 2
+        options["time_limit"] = 600
+        options["soft_time_limit"] = 480
+        options["retry"] = False
         return Task.apply_async(
             self, args, kwargs, task_id, producer, link, link_error, shadow, **options
         )

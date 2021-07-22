@@ -21,7 +21,7 @@ CELERY_APP="formshare.config.celery_app"
 CELERYD_CHDIR="/opt/formshare/"
 
 # Extra command-line arguments to the worker
-CELERYD_OPTS="--time-limit=300 --concurrency=8 -Q FormShare"
+CELERYD_OPTS="--time-limit=900 --concurrency=8 -Q FormShare"
 # Configure node-specific settings by appending node name to arguments:
 #CELERYD_OPTS="--time-limit=300 -c 8 -c:worker2 4 -c:worker3 2 -Ofair:worker1"
 

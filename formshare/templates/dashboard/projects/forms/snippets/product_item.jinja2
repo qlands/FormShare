@@ -32,7 +32,8 @@
                         <small class="float-right text-danger">{{ _('Empty set') }}</small>
                     {% endif %}
                     {% if output.output_file == None %}{{ _('Ran by') }}{% else %}{{ _('Created by') }}{% endif %} <strong>{{ output.created_by_name }}</strong> {% if output.published == 1 %}<span class="label" style="color: white; background: cornflowerblue" title="{{ _('Public Access') }}">{{ _('Public') }}</span>{% endif %} <br>
-                    {% if output.status > 0 %} <textarea style="display:none;" id="error_{{ output.celery_taskid }}"></textarea> {{ _('The process generated an error') }}<br>{{ _('An email has been sent to the technical team') }}<br>{% endif %}
+                    {% if output.status == 1 %} <textarea style="display:none;" id="error_{{ output.celery_taskid }}"></textarea> {{ _('The process generated an error') }}<br>{{ _('An email has been sent to the technical team') }}<br>{% endif %}
+                    {% if output.status == 2 %} <textarea style="display:none;" id="timeout_{{ output.celery_taskid }}"></textarea> {{ _('The process did not finish under the time limit') }}<br>{{ _('An email has been sent to the technical team') }}<br>{% endif %}
                     <small class="text-muted">{{ request.h.readble_date_with_time(output.datetime_added,request.locale_name) }} {% if output.status == 0 %} {% if output.output_file != None %}- <span class="text-success"> {{ output.downloads }} {{ request.h.pluralize(_('download'),output.downloads,request.locale_name) }} {% if output.last_download != None %}({{ _('last') }}: {{ request.h.simple_date(output.last_download) }}){% endif %}</span>{% endif %} {% endif %}</small>
                     {% if output.output_file != None %}
                         <br/>

@@ -72,7 +72,9 @@ def get_fields_from_table(engine, schema, create_file):
     return result
 
 
-def internal_build_kml(settings, form_schema, kml_file, locale, task_id):
+def internal_build_kml(
+    settings, form_schema, kml_file, locale, task_id, task_object=None
+):
     parts = __file__.split("/products/")
     this_file_path = parts[0] + "/locale"
     es = gettext.translation("formshare", localedir=this_file_path, languages=[locale])
@@ -115,6 +117,9 @@ def internal_build_kml(settings, form_schema, kml_file, locale, task_id):
     send_75 = True
 
     for a_submission in submissions:
+        if task_object is not None:
+            if task_object.is_aborted():
+                return
         index = index + 1
         percentage = (index * 100) / total
         # We report chucks to not overload the messaging system
@@ -205,10 +210,10 @@ def internal_build_kml(settings, form_schema, kml_file, locale, task_id):
         )
 
 
-@celeryApp.task(base=CeleryTask)
-def build_kml(settings, form_schema, kml_file, locale, test_task_id=None):
+@celeryApp.task(bind=True, base=CeleryTask)
+def build_kml(self, settings, form_schema, kml_file, locale, test_task_id=None):
     if test_task_id is None:
         task_id = build_kml.request.id
     else:
         task_id = test_task_id
-    internal_build_kml(settings, form_schema, kml_file, locale, task_id)
+    internal_build_kml(settings, form_schema, kml_file, locale, task_id, self)

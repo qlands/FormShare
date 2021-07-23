@@ -10,9 +10,9 @@ from formshare.config.celery_class import CeleryTask
 log = logging.getLogger("formshare")
 
 
-@celeryApp.task(base=CeleryTask)
+@celeryApp.task(bind=True, base=CeleryTask)
 def send_async_email(
-    settings, email_from, email_to, subject, message, reply_to, locale
+    self, settings, email_from, email_to, subject, message, reply_to, locale
 ):
     parts = __file__.split("/processes/")
     this_file_path = parts[0] + "/locale"

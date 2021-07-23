@@ -2,6 +2,7 @@ import logging
 import os
 
 import formshare.plugins as p
+from celery.contrib.abortable import AbortableAsyncResult
 from formshare.config.celery_app import celeryApp
 from formshare.processes.db import (
     add_product_instance,
@@ -91,7 +92,9 @@ def get_products():
 def stop_task(request, user, project, form, task):
     if task_exists(request, project, form, task):
         log.warning("Stopping task {}".format(task))
-        celeryApp.control.revoke(task, terminate=True)
+        backend = celeryApp.backend
+        task_to_abort = AbortableAsyncResult(task, backend=backend)
+        task_to_abort.abort()
         log.warning("Cancelling task {} in database ".format(task))
         return cancel_task(request, user, task)
     return False, ""

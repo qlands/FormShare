@@ -33,6 +33,7 @@ def internal_build_media_zip(
     primary_key,
     locale,
     task_id,
+    task_object=None,
 ):
 
     parts = __file__.split("/products/")
@@ -56,6 +57,9 @@ def internal_build_media_zip(
         send_50 = True
         send_75 = True
         for submission in submissions:
+            if task_object is not None:
+                if task_object.is_aborted():
+                    return
             index = index + 1
             percentage = (index * 100) / total
             # We report chucks to not overload the messaging system
@@ -139,8 +143,9 @@ def internal_build_media_zip(
             file.writestr("empty.txt", _("There are no media files"))
 
 
-@celeryApp.task(base=CeleryTask)
+@celeryApp.task(bind=True, base=CeleryTask)
 def build_media_zip(
+    self,
     settings,
     odk_dir,
     form_directories,
@@ -163,4 +168,5 @@ def build_media_zip(
         primary_key,
         locale,
         task_id,
+        self,
     )

@@ -121,8 +121,9 @@ def internal_build_xlsx(
             )
 
 
-@celeryApp.task(base=CeleryTask)
+@celeryApp.task(bind=True, base=CeleryTask)
 def build_xlsx(
+    self,
     settings,
     odk_dir,
     form_schema,

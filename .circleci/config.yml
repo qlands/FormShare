@@ -57,7 +57,7 @@ jobs:
           name: Run tests
           command: |
             export FORMSHARE_PYTEST_RUNNING=true
-            /home/circleci/.local/bin/pytest --cov=formshare
+            /home/circleci/.local/bin/pytest -s --cov=formshare
       - run:
           name: upload coverage report
           command: |

@@ -3662,7 +3662,7 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
-
+            print("Testing repository downloads step1 finished")
             time.sleep(40)  # Wait 5 seconds so celery finished this
 
             # Get the details of a form. The form now should have a repository with products
@@ -3672,12 +3672,14 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 status=200,
             )
+            print("Testing repository downloads step 2 finished")
             time.sleep(40)
             mimic_celery_public_csv_process()
             mimic_celery_private_csv_process()
             mimic_celery_xlsx_process()
             mimic_celery_kml_process()
             mimic_celery_media_process()
+            print("Testing repository downloads step 3 finished")
 
         def test_import_data():
             def mimic_celery_test_import():
@@ -10255,6 +10257,7 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+            print("Testing case management step 1 finished")
             time.sleep(40)  # Wait for the repository to finish
 
             # Get the details of the form
@@ -10749,6 +10752,7 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+            print("Testing case management step 2 finished")
             time.sleep(40)  # Wait for the repository to finish
 
             # Get the details of the form
@@ -10900,6 +10904,7 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+            print("Testing case management step 3 finished")
             time.sleep(40)  # Wait for the repository to finish
 
             # Get the details of the form
@@ -11046,6 +11051,7 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+            print("Testing case management step 4 finished")
             time.sleep(40)  # Wait for the repository to finish
 
             # Get the details of the form
@@ -11229,7 +11235,7 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
-
+            print("Testing case management step 5 finished")
             time.sleep(60)  # Wait for the merge to finish
 
             res = self.testapp.get(
@@ -11412,7 +11418,7 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
-
+            print("Testing case management step 7 finished")
             time.sleep(60)  # Wait for the merge to finish
 
             res = self.testapp.get(
@@ -11539,6 +11545,7 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+            print("Testing case management step 8 finished")
             time.sleep(40)  # Wait for the repository to finish
 
             # Get the details of the form

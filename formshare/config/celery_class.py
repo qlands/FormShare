@@ -5,7 +5,7 @@ import uuid
 import smtplib
 from email.utils import formatdate
 from email.mime.text import MIMEText
-from celery.app.task import Task
+from celery.contrib.abortable import AbortableTask
 from sqlalchemy import create_engine
 from celery.worker.request import Request
 from formshare.config.celery_app import get_ini_value
@@ -150,7 +150,7 @@ class CeleryRequest(Request):  # pragma: no cover
         engine.dispose()
 
 
-class CeleryTask(Task):  # pragma: no cover
+class CeleryTask(AbortableTask):  # pragma: no cover
     """
     This is the Celery Class used by all Celery decentralized processing. Out of Coverage because processes are
     executed by Celery this is not covered by the testing framework
@@ -165,11 +165,14 @@ class CeleryTask(Task):  # pragma: no cover
         engine = create_engine(get_ini_value("sqlalchemy.url"))
         connection = engine.connect()
         try:
+
             connection.execute(
                 "INSERT INTO finishedtask(task_id,task_enumber) VALUES ('{}',{})".format(
                     str(task_id), 0
                 )
             )
+        except IntegrityError:
+            pass  # Don't do anything because it was aborted
         except Exception as e:
             log.error("Error {} reporting success for task {}".format(str(e), task_id))
         send_sse_event(connection, task_id, self.name, "success")
@@ -212,6 +215,6 @@ class CeleryTask(Task):  # pragma: no cover
         options["time_limit"] = 600
         options["soft_time_limit"] = 480
         options["retry"] = False
-        return Task.apply_async(
+        return AbortableTask.apply_async(
             self, args, kwargs, task_id, producer, link, link_error, shadow, **options
         )

@@ -362,6 +362,7 @@ def internal_import_json_files(
     ignore_xform_check=False,
     task_id=None,
     report_task=True,
+    task_object=None,
 ):
     parts = __file__.split("/products/")
     this_file_path = parts[0] + "/locale"
@@ -382,6 +383,9 @@ def internal_import_json_files(
     send_50 = True
     send_75 = True
     for file_to_import in files_to_import:
+        if task_object is not None:
+            if task_object.is_aborted():
+                return
         percentage = (index * 100) / total_files
         # We report chucks to not overload the messaging system
         if 25 <= percentage <= 50:
@@ -426,8 +430,9 @@ def internal_import_json_files(
     engine.dispose()
 
 
-@celeryApp.task(base=CeleryTask)
+@celeryApp.task(bind=True, base=CeleryTask)
 def import_json_files(
+    self,
     user,
     project,
     form,
@@ -466,4 +471,5 @@ def import_json_files(
         ignore_xform_check,
         task_id,
         report_task,
+        self,
     )

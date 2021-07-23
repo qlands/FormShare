@@ -8,7 +8,7 @@ import traceback
 import uuid
 from subprocess import Popen, PIPE, check_call, CalledProcessError
 from celery.utils.log import get_task_logger
-from formshare.products.fs1import.celery_task import import_json_files
+from formshare.products.fs1import.celery_task import internal_import_json_files
 from sqlalchemy.exc import IntegrityError
 import transaction
 from lxml import etree
@@ -773,7 +773,7 @@ def internal_merge_into_repository(
             for file in files:
                 shutil.copy(file, temp_path)
             if assistant is not None and project_of_assistant is not None:
-                import_json_files(
+                internal_import_json_files(
                     user,
                     project_id,
                     a_form_id,
@@ -790,6 +790,7 @@ def internal_merge_into_repository(
                     False,
                     None,
                     False,
+                    None,
                 )
             else:
                 log.error(
@@ -816,8 +817,9 @@ def internal_merge_into_repository(
     log.info("Merging successful")
 
 
-@celeryApp.task(base=CeleryTask)
+@celeryApp.task(bind=True, base=CeleryTask)
 def merge_into_repository(
+    self,
     settings,
     user,
     project_id,

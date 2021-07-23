@@ -6,7 +6,7 @@ import shutil
 import traceback
 import uuid
 from subprocess import Popen, PIPE, check_call, CalledProcessError
-from formshare.products.fs1import.celery_task import import_json_files
+from formshare.products.fs1import.celery_task import internal_import_json_files
 from lxml import etree
 import transaction
 from sqlalchemy.orm import configure_mappers
@@ -479,7 +479,7 @@ def internal_create_mysql_repository(
             for file in files:
                 shutil.copy(file, temp_path)
             if assistant is not None and project_of_assistant is not None:
-                import_json_files(
+                internal_import_json_files(
                     user,
                     project_id,
                     form,
@@ -496,6 +496,7 @@ def internal_create_mysql_repository(
                     False,
                     None,
                     False,
+                    None,
                 )
             else:
                 log.error(
@@ -521,8 +522,9 @@ def internal_create_mysql_repository(
                 )
 
 
-@celeryApp.task(base=CeleryTask)
+@celeryApp.task(bind=True, base=CeleryTask)
 def create_mysql_repository(
+    self,
     settings,
     user,
     project_id,

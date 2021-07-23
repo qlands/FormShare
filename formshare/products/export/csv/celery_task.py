@@ -4,7 +4,7 @@ import json
 from celery.utils.log import get_task_logger
 import os
 import uuid
-import sys
+import time
 from subprocess import Popen, PIPE
 from formshare.config.celery_app import celeryApp
 from formshare.config.celery_class import CeleryTask
@@ -52,6 +52,7 @@ def internal_build_csv(
     protect_sensitive,
     locale,
     task_id,
+    task_object=None,
 ):
     parts = __file__.split("/products/")
     this_file_path = parts[0] + "/locale"
@@ -88,7 +89,9 @@ def internal_build_csv(
     if protect_sensitive:
         args.append("-c")
     log.info(" ".join(args))
-
+    if task_object is not None:
+        if task_object.is_aborted():
+            return
     send_task_status_to_form(settings, task_id, _("Denormalizing database"))
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()
@@ -125,6 +128,9 @@ def internal_build_csv(
             if len(array_sizes) > 0:
                 args.append("-a " + ",".join(array_sizes))
 
+            if task_object is not None:
+                if task_object.is_aborted():
+                    return
             log.info(" ".join(args))
             p = Popen(args, stdout=PIPE, stderr=PIPE)
             send_task_status_to_form(settings, task_id, _("Creating CSV file"))
@@ -146,8 +152,10 @@ def internal_build_csv(
                     csv_file,
                 ]
                 log.info(" ".join(args))
+                if task_object is not None:
+                    if task_object.is_aborted():
+                        return
                 p = Popen(args, stdout=PIPE, stderr=PIPE)
-
                 stdout, stderr = p.communicate()
                 if p.returncode != 0:
                     email_from = settings.get("mail.from", None)
@@ -223,8 +231,9 @@ def internal_build_csv(
         )
 
 
-@celeryApp.task(base=CeleryTask)
+@celeryApp.task(bind=True, base=CeleryTask)
 def build_csv(
+    self,
     settings,
     maps_directory,
     create_xml_file,
@@ -249,4 +258,5 @@ def build_csv(
         protect_sensitive,
         locale,
         task_id,
+        self,
     )

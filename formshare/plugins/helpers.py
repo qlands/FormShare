@@ -89,6 +89,8 @@ def readble_date(date, locale="en"):
     :param locale: Locale code
     :return: A readable date
     """
+    if date is None:
+        return "NA"
     ar = arrow.get(date)
     if locale == "es":
         return (
@@ -107,6 +109,8 @@ def readble_date_with_time(date, locale="en"):
     :param locale: Locale code
     :return: A readable date with time
     """
+    if date is None:
+        return "NA"
     ar = arrow.get(date)
     if locale == "es":
         return (
@@ -124,6 +128,8 @@ def simple_date(date):
     :param date: Datetime
     :return: A readable date
     """
+    if date is None:
+        return "NA"
     ar = arrow.get(date)
     return ar.format("DD/MM/YYYY")
 
@@ -135,6 +141,8 @@ def simple_date_usa(date):
     :param date: Datetime
     :return: A readable date
     """
+    if date is None:
+        return "NA"
     ar = arrow.get(date)
     return ar.format("MM/DD/YYYY")
 

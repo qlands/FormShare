@@ -77,11 +77,11 @@ ScreenShot
 
 Releases
 ------------
-The current stable release is 2.8.3 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.8.3) 
+The current stable release is 2.8.4 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.8.4) 
 
-The database signature for stable 2.8.3 is 3dd1ebdcd7e0
+The database signature for stable 2.8.4 is 678c8daba0a3
 
-The Docker image for stable 2.8.3 is 20210708
+The Docker image for stable 2.8.4 is 20210724
 
 Installation
 ------------
@@ -101,9 +101,9 @@ sudo apt-get install -y docker-compose
 
 # Get the Docker Compose file
 cd /opt
-sudo mkdir formshare_docker_compose_20210708
-cd formshare_docker_compose_20210708
-sudo wget https://raw.githubusercontent.com/qlands/FormShare/stable-2.8.3/docker_compose/docker-compose.yml
+sudo mkdir formshare_docker_compose_20210724
+cd formshare_docker_compose_20210724
+sudo wget https://raw.githubusercontent.com/qlands/FormShare/stable-2.8.4/docker_compose/docker-compose.yml
 
 # Make the directory structure for FormShare
 sudo mkdir /opt/formshare
@@ -126,11 +126,11 @@ sudo sysctl -w vm.max_map_count=262144
 echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.d/60-vm-max_map_count.conf
 
 # Download all the required Docker Images
-cd /opt/formshare_docker_compose_20210708
+cd /opt/formshare_docker_compose_20210724
 sudo docker-compose pull
 
 # Edit the docker-compose.yml file to set the MySQL root and FormShare admin passwords
-sudo nano /opt/formshare_docker_compose_20210708/docker-compose.yml
+sudo nano /opt/formshare_docker_compose_20210724/docker-compose.yml
 # Press Alt+Shit+3 to show the line numbers in Nano
 
 Edit line 10: Change the root password from "my_secure_password" to your password
@@ -178,7 +178,7 @@ sudo service apache2 start
 # Subsequent start will take about 2 minutes. You can check the status with "sudo docker stats". 
 # FormShare will be ready for usage when the container reaches more than 500 kB of MEM USAGE
 # This is the only two commands you need to start FormShare after a server restart
-cd /opt/formshare_docker_compose_20210708
+cd /opt/formshare_docker_compose_20210724
 sudo docker-compose up -d
 
 # Browse to FormShare
@@ -235,12 +235,12 @@ Please read the [upgrade guide](upgrade_steps.txt) if you have FormShare install
 # Edit the file /opt/formshare/config/development.ini and disable all plug-ins
 sudo nano /opt/formshare/config/development.ini
 
-# Copy the current docker compose file to a new one. For example, [current_docker_image] could be 20210708 and [new_docker_image] will be 20210708
+# Copy the current docker compose file to a new one. For example, [current_docker_image] could be 20210724 and [new_docker_image] will be 20210724
 cd /opt
 sudo cp -R formshare_docker_compose_[current_docker_image] formshare_docker_compose_[new_docker_image]
 
-# Edit the /opt/formshare_docker_compose_[new_docker_image]/docker-compose.yml and change all the references of [current_docker_image] to [new_docker_image]. For example change all  20210708 for 20210708
-# If you are upgrading from Docker images <= 20210708 to images > 20210708 then you need to also update the Docker image of Elasticsearch to 6.8.14
+# Edit the /opt/formshare_docker_compose_[new_docker_image]/docker-compose.yml and change all the references of [current_docker_image] to [new_docker_image]. For example change all  20210724 for 20210724
+# If you are upgrading from Docker images <= 20210724 to images > 20210724 then you need to also update the Docker image of Elasticsearch to 6.8.14
 sudo /opt/formshare_docker_compose_[new_docker_image]/docker-compose.yml
 
 # Remove the old Docker Network.

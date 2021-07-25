@@ -1,6 +1,7 @@
+import argparse
 import configparser
 import os
-import argparse
+
 from jinja2 import Environment, FileSystemLoader
 
 

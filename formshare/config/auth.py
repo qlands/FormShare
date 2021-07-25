@@ -1,12 +1,12 @@
 import validators
 from sqlalchemy import func
 
+from formshare.config.encdecdata import decode_data
 from formshare.models import Collaborator as collaboratorModel
 from formshare.models import User as userModel
+from formshare.models import map_from_schema
 from formshare.plugins.core import PluginImplementations
 from formshare.plugins.interfaces import IUserAuthentication
-from formshare.config.encdecdata import decode_data
-from formshare.models import map_from_schema
 
 
 class User(object):

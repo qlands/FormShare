@@ -1,17 +1,18 @@
 import gettext
 import glob
-from celery.utils.log import get_task_logger
 import os
 import shutil
 import traceback
 import uuid
 from subprocess import Popen, PIPE, check_call, CalledProcessError
-from formshare.products.fs1import.celery_task import internal_import_json_files
-from lxml import etree
+
 import transaction
-from sqlalchemy.orm import configure_mappers
+from celery.utils.log import get_task_logger
+from lxml import etree
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import configure_mappers
+
 from formshare.config.celery_app import celeryApp
 from formshare.config.celery_class import CeleryTask
 from formshare.models import (
@@ -30,6 +31,7 @@ from formshare.models import (
 from formshare.processes.elasticsearch.repository_index import delete_dataset_index
 from formshare.processes.email.send_async_email import send_async_email
 from formshare.processes.sse.messaging import send_task_status_to_form
+from formshare.products.fs1import.celery_task import internal_import_json_files
 
 log = get_task_logger(__name__)
 

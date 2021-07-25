@@ -1,6 +1,7 @@
 import os
-import sys
 import stat
+import sys
+
 from jinja2 import Environment, FileSystemLoader
 
 

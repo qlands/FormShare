@@ -1,6 +1,7 @@
 import re
 
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
+
 import formshare.plugins as p
 from formshare.processes.db import (
     get_project_assistants,

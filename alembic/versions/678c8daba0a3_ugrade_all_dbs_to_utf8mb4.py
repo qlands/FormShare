@@ -6,11 +6,9 @@ Create Date: 2021-07-13 10:12:39.296734
 
 """
 from alembic import op
-import sqlalchemy as sa
-from pyramid.paster import get_appsettings, setup_logging
 from sqlalchemy.orm.session import Session
-from formshare.models.formshare import Odkform
 
+from formshare.models.formshare import Odkform
 
 # revision identifiers, used by Alembic.
 revision = "678c8daba0a3"

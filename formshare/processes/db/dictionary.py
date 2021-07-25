@@ -1,9 +1,11 @@
-from formshare.models import DictTable, DictField, map_from_schema, Odkform
-from formshare.processes.db.form import get_form_xml_create_file
 import logging
 import os
+
 from lxml import etree
 from sqlalchemy.exc import IntegrityError
+
+from formshare.models import DictTable, DictField, map_from_schema
+from formshare.processes.db.form import get_form_xml_create_file
 
 __all__ = [
     "update_dictionary_tables",

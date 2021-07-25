@@ -8,6 +8,7 @@ Create Date: 2020-04-26 11:24:22.016565
 import configparser
 
 from alembic import context
+
 from formshare.scripts.modifyconfig import modify_ini_file
 
 # revision identifiers, used by Alembic.

@@ -1,13 +1,15 @@
 import gettext
+import html
+import os
+
 from celery.utils.log import get_task_logger
-from formshare.processes.sse.messaging import send_task_status_to_form
+from jinja2 import Environment, FileSystemLoader
 from lxml import etree
+
 from formshare.config.celery_app import celeryApp
 from formshare.config.celery_class import CeleryTask
 from formshare.models import get_engine
-import os
-from jinja2 import Environment, FileSystemLoader
-import html
+from formshare.processes.sse.messaging import send_task_status_to_form
 
 log = get_task_logger(__name__)
 

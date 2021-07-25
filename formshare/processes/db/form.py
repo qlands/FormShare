@@ -1,12 +1,13 @@
+import csv
 import datetime
+import glob
+import json
 import logging
 import mimetypes
 import os
-import uuid
-import glob
 import shutil
-import json
-import csv
+import uuid
+
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 

@@ -6,12 +6,12 @@ Create Date: 2019-10-02 21:57:30.066310
 
 """
 import sqlalchemy as sa
+from alembic import context
+from alembic import op
 from pyramid.paster import get_appsettings, setup_logging
 from sqlalchemy.dialects import mysql
 from sqlalchemy.orm.session import Session
 
-from alembic import context
-from alembic import op
 from formshare.config.encdecdata import encode_data_with_key, old_decode_data_with_key
 from formshare.models.formshare import User, Collaborator
 

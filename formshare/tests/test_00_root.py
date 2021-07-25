@@ -1,11 +1,12 @@
+import datetime
+import glob
 import json
 import os
 import shutil
 import time
 import unittest
 import uuid
-import datetime
-import glob
+
 import pkg_resources
 from sqlalchemy import create_engine
 

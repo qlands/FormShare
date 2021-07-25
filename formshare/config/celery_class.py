@@ -1,15 +1,17 @@
 import datetime
 import json
 import logging
-import uuid
 import smtplib
-from email.utils import formatdate
+import uuid
 from email.mime.text import MIMEText
+from email.utils import formatdate
+
 from celery.contrib.abortable import AbortableTask
-from sqlalchemy import create_engine
 from celery.worker.request import Request
-from formshare.config.celery_app import get_ini_value
+from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
+
+from formshare.config.celery_app import get_ini_value
 
 log = logging.getLogger("formshare")
 

@@ -1,14 +1,16 @@
 import argparse
+import configparser
+import os
+import shutil
+import uuid
+
 import transaction
 from pyramid.paster import get_appsettings
-import configparser
+
 from formshare.config.encdecdata import encode_data_with_key, decode_data_with_key
 from formshare.models import User, Collaborator
 from formshare.models import get_engine, get_session_factory, get_tm_session
 from formshare.models.meta import Base
-import os
-import shutil
-import uuid
 
 
 class EmptyPassword(Exception):

@@ -7,6 +7,7 @@ import zlib
 import qrcode
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from pyramid.response import FileResponse
+
 import formshare.plugins as p
 from formshare.config.auth import check_assistant_login
 from formshare.processes.db import (

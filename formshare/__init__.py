@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 
 if os.environ.get("FORMSHARE_PYTEST_RUNNING", "false") == "false":
     if sys.version_info[0] == 3 and sys.version_info[1] >= 6:

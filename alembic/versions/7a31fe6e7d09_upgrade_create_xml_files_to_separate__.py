@@ -9,10 +9,9 @@ import os
 import shutil
 from pathlib import Path
 
+from alembic import context
 from lxml import etree
 from pyramid.paster import get_appsettings, setup_logging
-
-from alembic import context
 
 # revision identifiers, used by Alembic.
 revision = "7a31fe6e7d09"

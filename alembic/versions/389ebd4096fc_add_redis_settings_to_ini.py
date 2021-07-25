@@ -11,6 +11,7 @@ import shutil
 import string
 
 from alembic import context
+
 from formshare.scripts.modifyconfig import modify_ini_file
 
 # revision identifiers, used by Alembic.

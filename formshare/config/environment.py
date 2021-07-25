@@ -1,15 +1,13 @@
 import os
 
-from pyramid.csrf import SessionCSRFStoragePolicy
-from pyramid_session_redis import session_factory_from_settings
-from pyramid.session import SignedCookieSessionFactory
 import pyramid_session_multi
+from pyramid.csrf import SessionCSRFStoragePolicy
+from pyramid.session import SignedCookieSessionFactory
+from pyramid_session_redis import session_factory_from_settings
+
 import formshare.plugins as p
 import formshare.plugins.helpers as helpers
-from formshare.products import add_product
 import formshare.resources as r
-from formshare.models import add_column_to_schema
-from formshare.products.formshare_products import register_products
 from formshare.config.api_routes import load_api_version_1_routes
 from formshare.config.jinja_extensions import (
     initialize,
@@ -19,6 +17,9 @@ from formshare.config.jinja_extensions import (
 )
 from formshare.config.mainresources import create_resources
 from formshare.config.routes import load_routes
+from formshare.models import add_column_to_schema
+from formshare.products import add_product
+from formshare.products.formshare_products import register_products
 
 main_policy_array = []
 

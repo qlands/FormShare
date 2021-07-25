@@ -1,6 +1,6 @@
+from formshare.processes.db.form import get_form_xml_create_file
 from formshare.products import register_product_instance
 from formshare.products.merge.celery_task import merge_into_repository
-from formshare.processes.db.form import get_form_xml_create_file
 
 
 def merge_form(

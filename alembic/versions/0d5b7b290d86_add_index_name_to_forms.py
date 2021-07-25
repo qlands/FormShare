@@ -7,15 +7,15 @@ Create Date: 2020-04-20 15:08:24.264749
 """
 import time
 
+import requests
 import sqlalchemy as sa
+from alembic import context
+from alembic import op
 from pyramid.paster import get_appsettings, setup_logging
 from sqlalchemy.orm.session import Session
 
-from alembic import context
-from alembic import op
 from formshare.models.formshare import Odkform, Project, Userproject
 from formshare.processes.elasticsearch.repository_index import create_connection
-import requests
 
 # revision identifiers, used by Alembic.
 revision = "0d5b7b290d86"

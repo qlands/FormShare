@@ -1,13 +1,14 @@
 import datetime
 import gettext
 import glob
-from celery.utils.log import get_task_logger
 import os
 import shutil
 import traceback
 import uuid
 import zipfile
 from decimal import Decimal
+
+from celery.utils.log import get_task_logger
 
 from formshare.config.celery_app import celeryApp
 from formshare.config.celery_class import CeleryTask

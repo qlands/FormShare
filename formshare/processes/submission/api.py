@@ -1,5 +1,6 @@
 import datetime
 import glob
+import imghdr
 import json
 import logging
 import os
@@ -9,16 +10,17 @@ import uuid
 from collections import OrderedDict
 from decimal import Decimal
 from subprocess import Popen, PIPE
-import imghdr
+
 import paginate
 import pandas as pd
+from PIL import Image
 from lxml import etree
 from pandas import json_normalize
 from sqlalchemy import create_engine
 from sqlalchemy import exc
 from webhelpers2.html import literal
 from zope.sqlalchemy import mark_changed
-from PIL import Image
+
 from formshare.models.formshare import Submission, Jsonlog
 from formshare.processes.color_hash import ColorHash
 from formshare.processes.db import (

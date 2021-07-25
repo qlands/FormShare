@@ -4,7 +4,6 @@ from formshare.processes.db import (
     is_collaborator,
     get_project_assistants,
     get_project_collaborators,
-    get_user_details,
     get_project_forms,
     get_by_details,
     get_project_groups,

@@ -7,11 +7,11 @@ Create Date: 2020-04-21 13:38:28.047231
 """
 import time
 
+from alembic import context
+from alembic import op
 from pyramid.paster import get_appsettings, setup_logging
 from sqlalchemy.orm.session import Session
 
-from alembic import context
-from alembic import op
 from formshare.models.formshare import Odkform
 from formshare.processes.elasticsearch.repository_index import (
     create_connection,

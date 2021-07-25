@@ -1,12 +1,13 @@
+from pyramid.httpexceptions import HTTPNotFound
+
 from formshare.plugins.utilities import FormSharePrivateView
+from formshare.processes.db import get_project_id_from_name, get_form_details
 from formshare.processes.db.project import get_owned_project
 from formshare.processes.db.user import (
     get_users,
     get_user_id_with_email,
     get_user_details,
 )
-from formshare.processes.db import get_project_id_from_name, get_form_details
-from pyramid.httpexceptions import HTTPNotFound
 from formshare.processes.elasticsearch.repository_index import get_all_datasets_with_gps
 from formshare.processes.elasticsearch.user_index import configure_user_index_manager
 from formshare.processes.settings import (

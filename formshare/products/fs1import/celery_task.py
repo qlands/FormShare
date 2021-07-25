@@ -2,12 +2,12 @@ import datetime
 import gettext
 import glob
 import json
-from celery.utils.log import get_task_logger
 import os
 import shutil
 from hashlib import md5
 from subprocess import Popen, PIPE
 
+from celery.utils.log import get_task_logger
 from sqlalchemy import create_engine
 
 from formshare.config.celery_app import celeryApp

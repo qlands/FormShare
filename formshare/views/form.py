@@ -1,17 +1,19 @@
+import datetime
+import glob
 import json
 import logging
+import mimetypes
 import os
+import re
 import shutil
+import uuid
 from hashlib import md5
-import formshare.plugins as p
+
 from lxml import etree
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from pyramid.response import FileResponse
-import datetime
-import uuid
-import glob
-import re
-import mimetypes
+
+import formshare.plugins as p
 import formshare.plugins as plugins
 from formshare.processes.db import (
     get_project_id_from_name,
@@ -35,7 +37,6 @@ from formshare.processes.db import (
     get_form_xls_file,
     set_form_status,
     get_assigned_assistants,
-    get_form_directory,
     get_form_processing_products,
     get_task_status,
     get_output_by_task,

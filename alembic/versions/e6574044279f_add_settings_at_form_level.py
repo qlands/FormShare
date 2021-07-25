@@ -6,8 +6,8 @@ Create Date: 2019-12-09 19:04:14.491917
 
 """
 import sqlalchemy as sa
-
 from alembic import op
+
 from formshare.models.formshare import JsonEncodedDict
 
 # revision identifiers, used by Alembic.

@@ -23,6 +23,8 @@ from pyramid.httpexceptions import HTTPNotFound, exception_response
 from pyramid.response import Response
 from pyramid.session import check_csrf_token
 
+from formshare import plugins as p
+from formshare.config.auth import get_user_data, get_assistant_data
 from formshare.processes.db import (
     get_project_id_from_name,
     user_exists,
@@ -33,8 +35,6 @@ from formshare.processes.db import (
     get_user_by_api_key,
     get_assistant_by_api_key,
 )
-from formshare import plugins as p
-from formshare.config.auth import get_user_data, get_assistant_data
 
 log = logging.getLogger("formshare")
 

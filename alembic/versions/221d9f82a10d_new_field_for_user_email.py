@@ -5,11 +5,13 @@ Revises: 4f59ec12363e
 Create Date: 2021-02-23 20:53:45.850561
 
 """
-from pyramid.paster import get_appsettings, setup_logging
-from alembic import context
-from formshare.processes.elasticsearch.user_index import configure_user_index_manager
-import requests
 import time
+
+import requests
+from alembic import context
+from pyramid.paster import get_appsettings, setup_logging
+
+from formshare.processes.elasticsearch.user_index import configure_user_index_manager
 
 # revision identifiers, used by Alembic.
 revision = "221d9f82a10d"

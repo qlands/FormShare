@@ -1,8 +1,10 @@
+import logging
+import time
+
+import requests
+
 from formshare.config.elasticfeeds import configure_manager
 from formshare.processes.elasticsearch.user_index import configure_user_index_manager
-import requests
-import time
-import logging
 
 log = logging.getLogger("formshare")
 

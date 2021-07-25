@@ -8,9 +8,9 @@ Create Date: 2019-12-01 20:10:28.981417
 from uuid import uuid4
 
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.orm.session import Session
 
-from alembic import op
 from formshare.models.formshare import Collaborator
 
 # revision identifiers, used by Alembic.

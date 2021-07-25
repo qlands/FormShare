@@ -2,8 +2,8 @@ import datetime
 import logging
 from uuid import uuid4
 
-from sqlalchemy.exc import IntegrityError
 from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 
 from formshare.config.encdecdata import decode_data
 from formshare.config.encdecdata import encode_data

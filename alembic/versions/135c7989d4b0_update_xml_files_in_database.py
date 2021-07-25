@@ -5,13 +5,14 @@ Revises: b735d4dd5fb7
 Create Date: 2020-11-21 17:20:50.820488
 
 """
-from pyramid.paster import get_appsettings, setup_logging
-from sqlalchemy.orm.session import Session
+import os
+
 from alembic import context
 from alembic import op
-import os
-from formshare.models.formshare import Odkform
+from pyramid.paster import get_appsettings, setup_logging
+from sqlalchemy.orm.session import Session
 
+from formshare.models.formshare import Odkform
 
 # revision identifiers, used by Alembic.
 revision = "135c7989d4b0"

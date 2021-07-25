@@ -1,5 +1,6 @@
-import requests
 import glob
+
+import requests
 from requests.auth import HTTPDigestAuth
 
 headers = {"Content-Type": "text/xml"}

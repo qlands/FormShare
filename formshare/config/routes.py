@@ -1,5 +1,6 @@
 import logging
 import os
+
 import formshare.plugins as p
 from formshare.plugins.utilities import add_route
 from formshare.views.assistant_groups import (
@@ -142,14 +143,13 @@ from formshare.views.repository_submissions import (
 )
 from formshare.views.search import APIUserSearchSelect2
 from formshare.views.sse import SSEventStream
-from formshare.views.users import UsersListView, EditUserView, AddUserView
-
 from formshare.views.testing import (
     TestUserView,
     TestFormView,
     TestRemoveUserView,
     TestErrorView,
 )
+from formshare.views.users import UsersListView, EditUserView, AddUserView
 
 log = logging.getLogger("formshare")
 

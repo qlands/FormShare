@@ -12,7 +12,7 @@ from elasticfeeds.activity import Actor, Object, Activity
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from pyramid.response import FileResponse
 from pyramid.response import Response
-
+from formshare.processes.color_hash import ColorHash
 import formshare.plugins as p
 from formshare.config.elasticfeeds import get_manager
 from formshare.processes.db import (
@@ -199,6 +199,19 @@ class AddProjectView(ProjectsView):
                         break  # Only one plugging will be called to extend before_create
 
                     if continue_creation:
+
+                        # This will change when ODK collect allows more than 1 character icon
+                        if project_details["project_icon"] != "":
+                            if len(project_details["project_icon"]) > 1:
+                                project_details["project_icon"] = project_details[
+                                    "project_icon"
+                                ][0]
+
+                        if project_details["project_hexcolor"] == "":
+                            project_details["project_hexcolor"] = ColorHash(
+                                project_details["project_code"]
+                            ).hex
+
                         added, message = add_project(
                             self.request, self.user.login, project_details
                         )
@@ -318,6 +331,16 @@ class EditProjectView(ProjectsView):
                     project_details["project_case"] = 0
 
             project_details["project_code"] = project_code
+
+            if project_details["project_hexcolor"] == "":
+                project_details["project_hexcolor"] = ColorHash(
+                    project_details["project_code"]
+                ).hex
+
+            # This will change when ODK collect allows more than 1 character icon
+            if project_details["project_icon"] != "":
+                if len(project_details["project_icon"]) > 1:
+                    project_details["project_icon"] = project_details["project_icon"][0]
 
             if project_details["project_abstract"] == "":
                 project_details["project_abstract"] = None
@@ -664,6 +687,11 @@ class GetProjectQRCode(ProjectsView):
                 "change_server": True,
                 "navigation": "buttons",
                 "server_url": url,
+            },
+            "project": {
+                "name": project_details["project_name"],
+                "icon": project_details["project_icon"],
+                "color": project_details["project_hexcolor"],
             },
         }
         qr_json = json.dumps(odk_settings).encode()

@@ -7,6 +7,16 @@
     {{ super() }}
     {% cssresource request,'formshare','bsmarkdown' %}
     {% cssresource request,'formshare','switchery' %}
+    {% cssresource request,'formshare','colorpicker' %}
+    {% cssresource request,'formshare','emoji' %}
+    <style>
+        .evo-palette {
+            background-color: lightgrey;
+        }
+        .evo-pop {
+            background-color: lightgrey;
+        }
+    </style>
 {% endblock css %}
 
 {% block topScripts %}
@@ -40,10 +50,26 @@
 
 {% block scripts %}
     {{ super() }}
+    {% jsresource request,'formshare','emoji' %}
+    <script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js" type="text/javascript" charset="utf-8"></script>
+    {% jsresource request,'formshare','colorpicker' %}
     <script>
         $(document).ready(function() {
-            var elem = document.querySelector('.js-switch');
-            var switchery = new Switchery(elem, { color: '#1AB394' });
+            {% if projectDetails.total_forms == 0 %}
+                var elem = document.querySelector('.js-switch');
+                var switchery = new Switchery(elem, { color: '#1AB394' });
+            {% endif %}
+
+            $('#noIndColor').colorpicker({
+                displayIndicator: false
+            });
+
+            $("#emojiarea").emojioneArea({
+                pickerPosition: "bottom",
+                filtersPosition: "bottom",
+                tonesStyle: "checkbox"
+            });
+
         });
     </script>
 {% endblock scripts %}

@@ -12,10 +12,10 @@ from sqlalchemy import (
     Index,
     text,
     Unicode,
-    UnicodeText,
 )
 from sqlalchemy.ext import mutable
 from sqlalchemy.orm import relationship
+from sqlalchemy.dialects.mysql import MEDIUMTEXT
 
 from formshare.models.meta import Base
 
@@ -25,7 +25,7 @@ metadata = Base.metadata
 class JsonEncodedDict(types.TypeDecorator):
     """Enables JSON storage by encoding and decoding on the fly."""
 
-    impl = types.UnicodeText
+    impl = MEDIUMTEXT(collation="utf8mb4_unicode_ci")
 
     def process_bind_param(self, value, dialect):
         if value is None:
@@ -68,13 +68,13 @@ class User(Base):
     user_id = Column(Unicode(120), primary_key=True)
     user_name = Column(Unicode(120))
     user_email = Column(Unicode(120))
-    user_password = Column(UnicodeText)
-    user_about = Column(UnicodeText)
+    user_password = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    user_about = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     user_cdate = Column(DateTime)
     user_llogin = Column(DateTime)
     user_super = Column(INTEGER, server_default=text("'0'"))
-    extras = Column(UnicodeText)
-    tags = Column(UnicodeText)
+    extras = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    tags = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     user_active = Column(INTEGER, server_default=text("'1'"))
     user_apikey = Column(Unicode(64))
 
@@ -84,14 +84,16 @@ class Project(Base):
 
     project_id = Column(Unicode(64), primary_key=True)
     project_code = Column(Unicode(45))
-    project_name = Column(UnicodeText)
-    project_abstract = Column(UnicodeText)
+    project_name = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    project_abstract = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     project_cdate = Column(DateTime)
     project_public = Column(INTEGER)
-    project_image = Column(UnicodeText)
+    project_image = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     project_case = Column(INTEGER, server_default=text("'0'"))
-    extras = Column(UnicodeText)
-    tags = Column(UnicodeText)
+    project_icon = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    project_hexcolor = Column(Unicode(60))
+    extras = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    tags = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 
 
 class Settings(Base):
@@ -130,15 +132,15 @@ class Collaborator(Base):
     )
     coll_id = Column(Unicode(120), primary_key=True, nullable=False)
     coll_name = Column(Unicode(120))
-    coll_password = Column(UnicodeText)
+    coll_password = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     coll_active = Column(INTEGER)
     coll_cdate = Column(DateTime)
-    coll_email = Column(UnicodeText)
+    coll_email = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     coll_telephone = Column(Unicode(120))
     coll_prjshare = Column(INTEGER)
     coll_apikey = Column(Unicode(64))
-    extras = Column(UnicodeText)
-    tags = Column(UnicodeText)
+    extras = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    tags = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 
     project = relationship("Project")
 
@@ -165,11 +167,11 @@ class Collgroup(Base):
         nullable=False,
     )
     group_id = Column(Unicode(12), primary_key=True, nullable=False)
-    group_desc = Column(UnicodeText)
+    group_desc = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     group_cdate = Column(DateTime)
     group_active = Column(INTEGER)
-    extras = Column(UnicodeText)
-    tags = Column(UnicodeText)
+    extras = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    tags = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 
     project = relationship("Project")
 
@@ -192,7 +194,7 @@ class FinishedTask(Base):
     __tablename__ = "finishedtask"
     task_id = Column(Unicode(64), primary_key=True, nullable=False)
     task_enumber = Column(INTEGER)
-    task_error = Column(UnicodeText)
+    task_error = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 
 
 class Odkform(Base):
@@ -230,22 +232,22 @@ class Odkform(Base):
     form_stage = Column(INTEGER)
     form_pkey = Column(Unicode(120))
     form_deflang = Column(Unicode(120))
-    form_othlangs = Column(UnicodeText)
+    form_othlangs = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     form_mergetask = Column(Unicode(64))
     form_abletomerge = Column(INTEGER, server_default=text("'-1'"))
     form_repositorypossible = Column(INTEGER, server_default=text("'-1'"))
-    form_mergerrors = Column(UnicodeText)
-    form_xlsfile = Column(UnicodeText)
-    form_xmlfile = Column(UnicodeText)
-    form_jsonfile = Column(UnicodeText)
-    form_createxmlfile = Column(UnicodeText)
-    form_insertxmlfile = Column(UnicodeText)
-    form_reqfiles = Column(UnicodeText)
+    form_mergerrors = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    form_xlsfile = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    form_xmlfile = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    form_jsonfile = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    form_createxmlfile = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    form_insertxmlfile = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    form_reqfiles = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     form_public = Column(INTEGER)
-    form_geopoint = Column(UnicodeText)
+    form_geopoint = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     form_hexcolor = Column(Unicode(60))
     form_reptask = Column(Unicode(64))
-    form_index = Column(UnicodeText)
+    form_index = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     form_type = Column(INTEGER, server_default=text("'1'"))
     form_case = Column(INTEGER, server_default=text("'0'"))
     form_casetype = Column(
@@ -256,8 +258,8 @@ class Odkform(Base):
     form_caseselectorfilename = Column(Unicode(120))
     form_caseselectorlastgen = Column(DateTime)
     form_hasdictionary = Column(INTEGER, server_default=text("'0'"))
-    extras = Column(UnicodeText)
-    tags = Column(UnicodeText)
+    extras = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    tags = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 
     parent = relationship("Odkform", remote_side=[project_id, form_id])
     project = relationship("Project")
@@ -327,7 +329,7 @@ class TaskMessages(Base):
         ForeignKey("product.celery_taskid", ondelete="CASCADE"), nullable=False
     )
     message_date = Column(DateTime)
-    message_content = Column(UnicodeText)
+    message_content = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 
     product = relationship("Product")
 
@@ -409,7 +411,7 @@ class Formacces(Base):
     form_id = Column(Unicode(120), primary_key=True, nullable=False)
     coll_privileges = Column(INTEGER)
     access_date = Column(DateTime)
-    extras = Column(UnicodeText)
+    extras = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 
     odkform = relationship("Odkform")
     project = relationship("Collaborator")
@@ -438,7 +440,7 @@ class Formgrpacces(Base):
     form_id = Column(Unicode(120), primary_key=True, nullable=False)
     group_privileges = Column(INTEGER)
     access_date = Column(DateTime)
-    extras = Column(UnicodeText)
+    extras = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 
     odkform = relationship("Odkform")
     project = relationship("Collgroup")
@@ -464,9 +466,9 @@ class Jsonlog(Base):
     project_id = Column(Unicode(64), primary_key=True, nullable=False)
     log_id = Column(Unicode(64), primary_key=True, nullable=False)
     log_dtime = Column(DateTime)
-    json_file = Column(UnicodeText)
-    log_file = Column(UnicodeText)
-    command_executed = Column(UnicodeText)
+    json_file = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    log_file = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    command_executed = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     status = Column(INTEGER)
     enum_project = Column(Unicode(64), nullable=False)
     coll_id = Column(Unicode(120), nullable=False)
@@ -548,7 +550,7 @@ class Jsonhistory(Base):
     log_dtime = Column(DateTime)
     log_action = Column(INTEGER)
     log_commit = Column(Unicode(12))
-    log_notes = Column(UnicodeText)
+    log_notes = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     enum_project = Column(Unicode(64), nullable=False)
     coll_id = Column(Unicode(120), nullable=False)
 
@@ -583,10 +585,10 @@ class DictTable(Base):
     table_index = Column(
         BigInteger, index=True, autoincrement=True, unique=True, nullable=False
     )
-    table_desc = Column(UnicodeText, nullable=False)
+    table_desc = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"), nullable=False)
     table_lkp = Column(INTEGER, server_default=text("'0'"), nullable=False)
     table_inserttrigger = Column(Unicode(64))
-    table_xmlcode = Column(UnicodeText)
+    table_xmlcode = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     parent_project = Column(Unicode(64))
     parent_form = Column(Unicode(120))
     parent_table = Column(Unicode(120))
@@ -612,8 +614,8 @@ class DictField(Base):
     field_index = Column(
         BigInteger, index=True, autoincrement=True, unique=True, nullable=False
     )
-    field_desc = Column(UnicodeText)
-    field_xmlcode = Column(UnicodeText)
+    field_desc = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    field_xmlcode = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     field_type = Column(Unicode(64))
     field_odktype = Column(Unicode(64))
     field_rtable = Column(Unicode(120))
@@ -622,7 +624,7 @@ class DictField(Base):
     field_key = Column(INTEGER, server_default=text("'0'"))
     field_rname = Column(Unicode(64))
     field_selecttype = Column(INTEGER, server_default=text("'0'"))
-    field_externalfilename = Column(UnicodeText)
+    field_externalfilename = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     field_size = Column(INTEGER, server_default=text("'0'"))
     field_decsize = Column(INTEGER, server_default=text("'0'"))
     field_sensitive = Column(INTEGER, server_default=text("'0'"))

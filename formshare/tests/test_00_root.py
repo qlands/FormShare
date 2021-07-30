@@ -580,7 +580,12 @@ class FunctionalTests(unittest.TestCase):
             # Add a project fails. The project id is empty
             res = self.testapp.post(
                 "/user/{}/projects/add".format(self.randonLogin),
-                {"project_code": "", "project_abstract": ""},
+                {
+                    "project_code": "",
+                    "project_abstract": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
+                },
                 status=200,
             )
             assert "FS_error" in res.headers
@@ -588,7 +593,12 @@ class FunctionalTests(unittest.TestCase):
             # Add a project fails. The project id is not valid
             res = self.testapp.post(
                 "/user/{}/projects/add".format(self.randonLogin),
-                {"project_code": "some@test", "project_abstract": ""},
+                {
+                    "project_code": "some@test",
+                    "project_abstract": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
+                },
                 status=200,
             )
             assert "FS_error" in res.headers
@@ -600,6 +610,8 @@ class FunctionalTests(unittest.TestCase):
                     "project_code": "test001",
                     "project_name": "Test project",
                     "project_abstract": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
                 },
                 status=302,
             )
@@ -612,6 +624,8 @@ class FunctionalTests(unittest.TestCase):
                     "project_code": "test002",
                     "project_name": "Test project",
                     "project_abstract": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
                 },
                 status=302,
             )
@@ -624,6 +638,8 @@ class FunctionalTests(unittest.TestCase):
                     "project_code": "test001",
                     "project_name": "Test project",
                     "project_abstract": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
                 },
                 status=200,
             )
@@ -639,7 +655,13 @@ class FunctionalTests(unittest.TestCase):
             # Edit a project fails. The project name is empty
             res = self.testapp.post(
                 "/user/{}/project/{}/edit".format(self.randonLogin, "test001"),
-                {"project_code": "test001", "project_abstract": "", "project_name": ""},
+                {
+                    "project_code": "test001",
+                    "project_abstract": "",
+                    "project_name": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
+                },
                 status=200,
             )
             assert "FS_error" in res.headers
@@ -663,6 +685,8 @@ class FunctionalTests(unittest.TestCase):
                     "project_code": "test001",
                     "project_name": "Test project",
                     "project_abstract": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
                 },
                 status=302,
             )
@@ -686,6 +710,8 @@ class FunctionalTests(unittest.TestCase):
                     "project_code": "test001",
                     "project_name": "Test project",
                     "project_abstract": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
                 },
                 status=302,
             )
@@ -2550,6 +2576,8 @@ class FunctionalTests(unittest.TestCase):
                         "project_code": mimic_project,
                         "project_name": "Test project",
                         "project_abstract": "",
+                        "project_icon": "",
+                        "project_hexcolor": "",
                     },
                     status=302,
                 )
@@ -2699,6 +2727,8 @@ class FunctionalTests(unittest.TestCase):
                         "project_code": mimic_project,
                         "project_name": "Test project",
                         "project_abstract": "",
+                        "project_icon": "",
+                        "project_hexcolor": "",
                     },
                     status=302,
                 )
@@ -2848,6 +2878,8 @@ class FunctionalTests(unittest.TestCase):
                         "project_code": mimic_grp_project,
                         "project_name": "Test project",
                         "project_abstract": "",
+                        "project_icon": "",
+                        "project_hexcolor": "",
                     },
                     status=302,
                 )
@@ -5342,6 +5374,8 @@ class FunctionalTests(unittest.TestCase):
                     "project_code": json2_project,
                     "project_name": "Test project",
                     "project_abstract": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
                 },
                 status=302,
             )
@@ -6035,6 +6069,8 @@ class FunctionalTests(unittest.TestCase):
                     "project_code": json4_project,
                     "project_name": "Test project",
                     "project_abstract": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
                 },
                 status=302,
             )
@@ -6297,6 +6333,8 @@ class FunctionalTests(unittest.TestCase):
                     "project_code": json3_project,
                     "project_name": "Test project",
                     "project_abstract": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
                 },
                 status=302,
             )
@@ -7031,6 +7069,8 @@ class FunctionalTests(unittest.TestCase):
                     "project_code": "test001",
                     "project_name": "Test project",
                     "project_abstract": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
                 },
                 status=302,
             )
@@ -7104,6 +7144,8 @@ class FunctionalTests(unittest.TestCase):
                     "project_code": "test002",
                     "project_name": "Test project",
                     "project_abstract": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
                 },
                 status=302,
             )
@@ -7242,6 +7284,8 @@ class FunctionalTests(unittest.TestCase):
                     "project_code": "test001",
                     "project_name": "Test project",
                     "project_abstract": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
                 },
                 status=302,
             )
@@ -7587,6 +7631,8 @@ class FunctionalTests(unittest.TestCase):
                     "project_code": merge_project,
                     "project_name": "Test project",
                     "project_abstract": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
                 },
                 status=302,
             )
@@ -7830,6 +7876,8 @@ class FunctionalTests(unittest.TestCase):
                     "project_code": merge_project,
                     "project_name": "Test project",
                     "project_abstract": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
                 },
                 status=302,
             )
@@ -8091,6 +8139,8 @@ class FunctionalTests(unittest.TestCase):
                     "project_code": merge_project,
                     "project_name": "Test project",
                     "project_abstract": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
                 },
                 status=302,
             )
@@ -8680,6 +8730,8 @@ class FunctionalTests(unittest.TestCase):
                     "project_code": "collaborator_1_prj001",
                     "project_name": "Test project",
                     "project_abstract": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
                 },
                 status=302,
             )
@@ -8715,6 +8767,8 @@ class FunctionalTests(unittest.TestCase):
                     "project_code": "collaborator_2_prj001",
                     "project_name": "Test project",
                     "project_abstract": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
                 },
                 status=302,
             )
@@ -8806,6 +8860,8 @@ class FunctionalTests(unittest.TestCase):
                     "project_code": "collaborator_1_prj001",
                     "project_name": "Test project",
                     "project_abstract": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
                 },
                 status=302,
             )
@@ -8920,6 +8976,8 @@ class FunctionalTests(unittest.TestCase):
                     "project_code": "collaborator_1_prj001",
                     "project_name": "Test project",
                     "project_abstract": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
                 },
                 status=302,
             )
@@ -9040,6 +9098,8 @@ class FunctionalTests(unittest.TestCase):
                     "project_code": "collaborator_1_prj001",
                     "project_name": "Test project",
                     "project_abstract": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
                 },
                 status=302,
             )
@@ -9075,6 +9135,8 @@ class FunctionalTests(unittest.TestCase):
                     "project_code": "collaborator_2_prj001",
                     "project_name": "Test project",
                     "project_abstract": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
                 },
                 status=302,
             )
@@ -9183,6 +9245,8 @@ class FunctionalTests(unittest.TestCase):
                     "project_code": "collaborator_1_prj001",
                     "project_name": "Test project",
                     "project_abstract": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
                 },
                 status=302,
             )
@@ -9195,6 +9259,8 @@ class FunctionalTests(unittest.TestCase):
                     "project_code": "collaborator_1_prj002",
                     "project_name": "Test project",
                     "project_abstract": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
                 },
                 status=302,
             )
@@ -9247,6 +9313,8 @@ class FunctionalTests(unittest.TestCase):
                     "project_code": json2_project,
                     "project_name": "Test project",
                     "project_abstract": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
                 },
                 status=302,
             )
@@ -9999,6 +10067,8 @@ class FunctionalTests(unittest.TestCase):
                     "project_name": "Case project 001",
                     "project_abstract": "",
                     "project_case": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
                 },
                 status=302,
             )
@@ -10033,6 +10103,8 @@ class FunctionalTests(unittest.TestCase):
                 {
                     "project_name": "Case project 001",
                     "project_abstract": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
                 },
                 status=302,
             )
@@ -10044,6 +10116,8 @@ class FunctionalTests(unittest.TestCase):
                     "project_name": "Case project 001",
                     "project_abstract": "",
                     "project_case": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
                 },
                 status=302,
             )

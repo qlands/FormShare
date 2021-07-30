@@ -83,6 +83,19 @@ def create_resources(apppath, config):
         None,
     )
 
+    r.add_css_resource(
+        "formshare",
+        "emoji",
+        "js/plugins/emojiarea/emojionearea.css",
+        None,
+    )
+    r.add_js_resource(
+        "formshare",
+        "emoji",
+        "js/plugins/emojiarea/emojionearea.js",
+        None,
+    )
+
     # ------------------------------Project details --------------------------------------
     r.add_js_resource(
         "formshare",

@@ -23,7 +23,6 @@ from formshare.models.formshare import (
     MediaFile,
     Product,
     FinishedTask,
-    TaskMessages,
     Settings,
     ProjectSettings,
     FormSettings,

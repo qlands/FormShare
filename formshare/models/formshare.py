@@ -321,19 +321,6 @@ class Product(Base):
     fsuser1 = relationship("User", primaryjoin="Product.published_by == User.user_id")
 
 
-class TaskMessages(Base):
-    __tablename__ = "taskmessages"
-
-    message_id = Column(Unicode(64), primary_key=True, nullable=False)
-    celery_taskid = Column(
-        ForeignKey("product.celery_taskid", ondelete="CASCADE"), nullable=False
-    )
-    message_date = Column(DateTime)
-    message_content = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
-
-    product = relationship("Product")
-
-
 class Userproject(Base):
     __tablename__ = "userproject"
 

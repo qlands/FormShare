@@ -142,7 +142,6 @@ from formshare.views.repository_submissions import (
     ReviewAudit,
 )
 from formshare.views.search import APIUserSearchSelect2
-from formshare.views.sse import SSEventStream
 from formshare.views.testing import (
     TestUserView,
     TestFormView,
@@ -556,16 +555,6 @@ def load_routes(config):
             "activate_form",
             "/user/{userid}/project/{projcode}/form/{formid}/activate",
             ActivateForm,
-            None,
-        )
-    )
-
-    # TODO: Test
-    routes.append(
-        add_route(
-            "form_sse",
-            "/user/{userid}/project/{projcode}/form/{formid}/sse",
-            SSEventStream,
             None,
         )
     )

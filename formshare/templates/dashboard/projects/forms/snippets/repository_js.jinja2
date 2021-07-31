@@ -1,46 +1,21 @@
-let sse = $.SSE('{{ request.route_url('form_sse', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}', {
-    onMessage: function(e){
-        var lines = e.data.split("\n");
-        for (var a_line in lines)
-        {
-            let message = null;
-            try
-            {
-                message = JSON.parse(lines[a_line])['message'];
-            }
-            catch(err)
-            {
-                console.log(lines[a_line])
-            }
-            if (message !== null)
-            {
-                console.log(message)
-                message = JSON.parse(message);
-                if (typeof message === 'object')
-                {
-                    let task_id = message['task'];
-                    let task_status = message['status'];
-                    if (task_id === "{{ formDetails.form_reptask }}")
-                    {
-                        if ((task_status === "success") || (task_status === "failure"))
-                        {
-                            location.reload();
-                        }
-                        else {
-                            $(".repository_message").text(task_status);
-                            $("#sse_" + task_id).text(task_status);
-                        }
-                    }
-                }
-                else
-                {
-                    console.log(message)
-                }
-            }
-        }
+client_repository = new Paho.MQTT.Client("{{ request.server_name }}", Number(9001), "clientId");
+
+function onConnect_repository() {
+    client_repository.subscribe("formshare/{{ formDetails.form_reptask }}");
+}
+function onMessageArrived_repository(message) {
+    if ((message.payloadString === "success") || (message.payloadString === "failure"))
+    {
+        location.reload();
     }
-});
-sse.start();
+    else
+    {
+        $(".repository_message").text(message.payloadString);
+    }
+}
+
+client_repository.onMessageArrived = onMessageArrived_repository;
+client_repository.connect({onSuccess:onConnect_repository, userName : "formshare_client", password : "read_only"});
 
 let $element = $('.repository_message, .sse-message');
 function fadeInOut () {

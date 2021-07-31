@@ -26,13 +26,6 @@ def store_task_status(task, config):
     engine.execute(
         "INSERT INTO finishedtask (task_id,task_enumber) VALUES ('{}',0)".format(task)
     )
-    engine.execute(
-        "INSERT INTO taskmessages (message_id, celery_taskid, message_date, message_content) "
-        "VALUES ('{}','{}','{}','success')".format(
-            message_id, task, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")
-        )
-    )
-    engine.dispose()
 
 
 def get_form_details(config, project, form):

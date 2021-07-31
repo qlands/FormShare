@@ -1,49 +1,29 @@
-let active_tasks = [{% for product in products %}{% for output in product.outputs %}{% if output.status == -1 %}'{{ output.celery_taskid }}',{% endif %}{% endfor %}{% endfor %}];
-let finished_tasks = [];
-let sse2 = $.SSE('{{ request.route_url('form_sse', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}', {
-    onMessage: function(e){
-        var lines = e.data.split("\n");
-        for (var a_line in lines) {
-            let message = null;
-            try
-            {
-                message = JSON.parse(lines[a_line])['message'];
+{% for product in products %}
+    {% for output in product.outputs %}
+        {% if output.status == -1 %}
+            {% set task_id = output.celery_taskid | replace("-","_") %}
+            client{{ task_id }} = new Paho.MQTT.Client("{{ request.server_name }}", Number(9001), "clientId");
+            client{{ task_id }}.onMessageArrived = onMessageArrived{{ task_id }};
+            client{{ task_id }}.connect({onSuccess:onConnect{{ task_id }}, userName : "formshare_client", password : "read_only"});
+            function onConnect{{ task_id }}() {
+                client{{ task_id }}.subscribe("formshare/{{ output.celery_taskid }}");
             }
-            catch(err)
-            {
-                console.log(lines[a_line])
-            }
-            if (message !== null)
-            {
-                message = JSON.parse(message);
-                if (typeof message === 'object')
+            function onMessageArrived{{ task_id }}(message) {
+                if ((message.payloadString === "success") || (message.payloadString === "failure"))
                 {
-                    let task_id = message['task'];
-                    let task_status = message['status'];
-                    if ((task_status === "success") || (task_status === "failure")) {
-                        if (active_tasks.indexOf(task_id) >= 0) {
-                            finished_tasks.push(task_id);
-                            if (active_tasks.length === finished_tasks.length)
-                                sse2.stop();
-                            $('#feed_element_' + task_id).load('{{ request.url }} #feed_element_' + task_id,function(){
-                                product_buttons()
-                            });
-                        }
-                    }
-                    else {
-                        $("#sse_" + task_id).text(task_status);
-                    }
-
+                    $('#feed_element_{{ output.celery_taskid }}').load('{{ request.url }} #feed_element_{{ output.celery_taskid }}',function(){
+                      product_buttons()
+                    });
                 }
                 else
                 {
-                    console.log(message)
+                    $("#sse_{{ output.celery_taskid }}").text(message.payloadString);
                 }
             }
-        }
-    }
-});
-sse2.start();
+        {% endif %}
+    {% endfor %}
+{% endfor %}
+
 
 let $element2 = $('.sse-message');
 function fadeInOut2 () {

@@ -1,8 +1,5 @@
-import datetime
-import json
 import logging
 import smtplib
-import uuid
 from email.mime.text import MIMEText
 from email.utils import formatdate
 
@@ -10,7 +7,7 @@ from celery.contrib.abortable import AbortableTask
 from celery.worker.request import Request
 from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
-
+from formshare.processes.sse.messaging import send_task_status_to_form
 from formshare.config.celery_app import get_ini_value
 
 log = logging.getLogger("formshare")
@@ -83,44 +80,6 @@ def send_timeout_error(task_id):  # pragma: no cover
     )
 
 
-def send_sse_event(connection, task_id, task_name, message):  # pragma: no cover
-    """
-    This function send the SSE Events for the Celery Class
-    :param connection: Connection to the MySQL Server
-    :param task_id: Task ID
-    :param task_name: Task name
-    :param message: Message
-    :return:
-    """
-    res = connection.execute(
-        "SELECT count(celery_taskid) FROM product WHERE celery_taskid = '{}'".format(
-            task_id
-        )
-    ).fetchone()
-    if res[0] == 1:
-        dict_body = {"task": task_id, "status": message}
-        body_string = json.dumps(dict_body)
-        try:
-            connection.execute(
-                "INSERT INTO taskmessages(message_id,celery_taskid,message_date,message_content) "
-                "VALUES ('{}','{}','{}','{}')".format(
-                    str(uuid.uuid4()),
-                    str(task_id),
-                    datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
-                    body_string,
-                )
-            )
-        except Exception as e:
-            log.error(
-                "Error {} while registering task {} in the message queue".format(
-                    str(e), task_id
-                )
-            )
-    else:
-        if message == "failure":
-            log.error("Task {} with ID {} failed.".format(task_name, task_id))
-
-
 class CeleryRequest(Request):  # pragma: no cover
     """
     This is the Celery Request used by all Celery decentralized processing. Out of Coverage because processes are
@@ -133,6 +92,12 @@ class CeleryRequest(Request):  # pragma: no cover
         log.error("Timeout for task {}".format(task_id))
         send_timeout_error(task_id)
         engine = create_engine(get_ini_value("sqlalchemy.url"))
+        settings = {
+            "mosquitto.host": get_ini_value("mosquitto.host"),
+            "mosquitto.port": get_ini_value("mosquitto.port"),
+            "mosquitto.user": get_ini_value("mosquitto.user"),
+            "mosquitto.password": get_ini_value("mosquitto.password"),
+        }
         connection = engine.connect()
         if soft:
             timeout_type = "Soft"
@@ -147,7 +112,7 @@ class CeleryRequest(Request):  # pragma: no cover
             )
         except Exception as e:
             log.error("Error {} reporting failure for task {}".format(str(e), task_id))
-        send_sse_event(connection, task_id, self.name, "failure")
+        send_task_status_to_form(settings, task_id, "failure")
         connection.invalidate()
         engine.dispose()
 
@@ -165,6 +130,12 @@ class CeleryTask(AbortableTask):  # pragma: no cover
 
     def on_success(self, retval, task_id, args, kwargs):
         engine = create_engine(get_ini_value("sqlalchemy.url"))
+        settings = {
+            "mosquitto.host": get_ini_value("mosquitto.host"),
+            "mosquitto.port": get_ini_value("mosquitto.port"),
+            "mosquitto.user": get_ini_value("mosquitto.user"),
+            "mosquitto.password": get_ini_value("mosquitto.password"),
+        }
         connection = engine.connect()
         try:
 
@@ -177,12 +148,18 @@ class CeleryTask(AbortableTask):  # pragma: no cover
             pass  # Don't do anything because it was aborted
         except Exception as e:
             log.error("Error {} reporting success for task {}".format(str(e), task_id))
-        send_sse_event(connection, task_id, self.name, "success")
+        send_task_status_to_form(settings, task_id, "success")
         connection.invalidate()
         engine.dispose()
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
         engine = create_engine(get_ini_value("sqlalchemy.url"))
+        settings = {
+            "mosquitto.host": get_ini_value("mosquitto.host"),
+            "mosquitto.port": get_ini_value("mosquitto.port"),
+            "mosquitto.user": get_ini_value("mosquitto.user"),
+            "mosquitto.password": get_ini_value("mosquitto.password"),
+        }
         connection = engine.connect()
         trace_back = einfo.traceback
         if trace_back is None:
@@ -198,7 +175,7 @@ class CeleryTask(AbortableTask):  # pragma: no cover
             pass  # Don't do anything because this was a timeout
         except Exception as e:
             log.error("Error {} reporting failure for task {}".format(str(e), task_id))
-        send_sse_event(connection, task_id, self.name, "failure")
+        send_task_status_to_form(settings, task_id, "failure")
         connection.invalidate()
         engine.dispose()
 

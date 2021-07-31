@@ -1,46 +1,19 @@
-let sse = $.SSE('{{ request.route_url('form_sse', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}', {
-    onMessage: function(e){
-        var lines = e.data.split("\n");
-        for (var a_line in lines)
-        {
-            let message = null;
-            try
-            {
-                message = JSON.parse(lines[a_line])['message'];
-            }
-            catch(err)
-            {
-                console.log(lines[a_line])
-            }
-            if (message !== null)
-            {
-                message = JSON.parse(message);
-                if (typeof message === 'object')
-                {
-                    let task_id = message['task'];
-                    let task_status = message['status'];
-                    if (task_id === "{{ formDetails.form_mergetask }}")
-                    {
-                        if ((task_status === "success") || (task_status === "failure") || (task_status === "FINALIZING"))
-                        {
-                            if ((task_status === "success") || (task_status === "failure"))
-                                location.reload();
-                        }
-                        else {
-                            $(".merge_message").text(task_status);
-                            $("#sse_" + task_id).text(task_status);
-                        }
-                    }
-                }
-                else
-                {
-                    console.log(message)
-                }
-            }
-        }
+client_merge = new Paho.MQTT.Client("{{ request.server_name }}", Number(9001), "clientId");
+client_merge.onMessageArrived = onMessageArrived_merge;
+client_merge.connect({onSuccess:onConnect_merge, userName : "formshare_client", password : "read_only"});
+function onConnect_merge() {
+    client_merge.subscribe("formshare/{{ formDetails.form_mergetask }}");
+}
+function onMessageArrived_merge(message) {
+    if ((message.payloadString === "success") || (message.payloadString === "failure"))
+    {
+        location.reload();
     }
-});
-sse.start();
+    else
+    {
+        $(".merge_message").text(message.payloadString);
+    }
+}
 
 function fadeInOut () {
     $("#merge_message").fadeIn(1500, function () {

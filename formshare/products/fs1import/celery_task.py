@@ -6,7 +6,7 @@ import os
 import shutil
 from hashlib import md5
 from subprocess import Popen, PIPE
-
+from sqlalchemy.pool import NullPool
 from celery.utils.log import get_task_logger
 from sqlalchemy import create_engine
 
@@ -370,7 +370,7 @@ def internal_import_json_files(
     es.install()
     _ = es.gettext
 
-    engine = create_engine(settings["sqlalchemy.url"])
+    engine = create_engine(settings["sqlalchemy.url"], poolclass=NullPool)
     list_of_files = path_to_files + "/**/*.json"
     files_to_import = glob.iglob(list_of_files, recursive=True)
     index = 0

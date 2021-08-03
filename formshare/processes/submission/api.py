@@ -20,7 +20,7 @@ from sqlalchemy import create_engine
 from sqlalchemy import exc
 from webhelpers2.html import literal
 from zope.sqlalchemy import mark_changed
-
+from sqlalchemy.pool import NullPool
 from formshare.models.formshare import Submission, Jsonlog
 from formshare.processes.color_hash import ColorHash
 from formshare.processes.db import (
@@ -1041,7 +1041,7 @@ def update_data(request, user, project, form, table_name, row_uuid, field, value
     sql = sql.replace("''", "null")
 
     log.info(sql)
-    engine = create_engine(sql_url)
+    engine = create_engine(sql_url, poolclass=NullPool)
     try:
         engine.execute("SET @odktools_current_user = '" + user + "'")
         engine.execute(sql)
@@ -1114,7 +1114,7 @@ def delete_submission(
     paths = ["forms", form_directory, "submissions", "logs", "imported.sqlite"]
     imported_db = os.path.join(odk_dir, *paths)
     sqlite_engine = "sqlite:///{}".format(imported_db)
-    engine = create_engine(sqlite_engine)
+    engine = create_engine(sqlite_engine, poolclass=NullPool)
     try:
         engine.execute(
             "DELETE FROM submissions WHERE submission_id ='{}'".format(submission_id)
@@ -1419,7 +1419,7 @@ def update_record_with_id(request, user, schema, table, rowuuid, data):
         sql = sql + ",".join(updates)
         sql = sql + " WHERE rowuuid = '" + rowuuid + "'"
         sql_url = request.registry.settings.get("sqlalchemy.url")
-        engine = create_engine(sql_url)
+        engine = create_engine(sql_url, poolclass=NullPool)
         try:
             engine.execute("SET @odktools_current_user = '" + user + "'")
             engine.execute(sql)

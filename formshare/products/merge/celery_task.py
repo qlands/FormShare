@@ -7,7 +7,7 @@ import time
 import traceback
 import uuid
 from subprocess import Popen, PIPE, check_call, CalledProcessError
-
+from sqlalchemy.pool import NullPool
 import transaction
 from celery.utils.log import get_task_logger
 from lxml import etree
@@ -201,7 +201,9 @@ def make_database_changes(
                     send_task_status_to_form(
                         settings, task_id, _("Dropping old triggers")
                     )
-                    engine = create_engine(settings.get("sqlalchemy.url"))
+                    engine = create_engine(
+                        settings.get("sqlalchemy.url"), poolclass=NullPool
+                    )
                     for a_table in rebuild_table_list:
                         if not error:
                             sql = (

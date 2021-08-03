@@ -6,7 +6,7 @@ import shutil
 import time
 import unittest
 import uuid
-
+from sqlalchemy.pool import NullPool
 import pkg_resources
 from sqlalchemy import create_engine
 
@@ -21,15 +21,14 @@ the environment processes multiple times and crash FormShare.
 def store_task_status(task, config):
     from sqlalchemy import create_engine
 
-    message_id = str(uuid.uuid4())
-    engine = create_engine(config["sqlalchemy.url"])
+    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
     engine.execute(
         "INSERT INTO finishedtask (task_id,task_enumber) VALUES ('{}',0)".format(task)
     )
 
 
 def get_form_details(config, project, form):
-    engine = create_engine(config["sqlalchemy.url"])
+    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
     result = engine.execute(
         "SELECT form_directory,form_schema,form_reptask,form_createxmlfile,form_insertxmlfile,form_hexcolor "
         "FROM odkform WHERE project_id = '{}' AND form_id = '{}'".format(project, form)
@@ -47,7 +46,7 @@ def get_form_details(config, project, form):
 
 
 def get_repository_task(config, project, form):
-    engine = create_engine(config["sqlalchemy.url"])
+    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
     result = engine.execute(
         "SELECT celery_taskid FROM product WHERE project_id = '{}' "
         "AND form_id = '{}' AND product_id = 'repository'".format(project, form)
@@ -2643,7 +2642,9 @@ class FunctionalTests(unittest.TestCase):
 
                 form_reptask = str(uuid.uuid4())
 
-                engine = create_engine(self.server_config["sqlalchemy.url"])
+                engine = create_engine(
+                    self.server_config["sqlalchemy.url"], poolclass=NullPool
+                )
                 sql = (
                     "INSERT INTO product (project_id,form_id,product_id,"
                     "celery_taskid,datetime_added,created_by,process_only,output_id) "
@@ -2794,7 +2795,9 @@ class FunctionalTests(unittest.TestCase):
 
                 form_reptask = str(uuid.uuid4())
 
-                engine = create_engine(self.server_config["sqlalchemy.url"])
+                engine = create_engine(
+                    self.server_config["sqlalchemy.url"], poolclass=NullPool
+                )
                 sql = (
                     "INSERT INTO product (project_id,form_id,product_id,"
                     "celery_taskid,datetime_added,created_by,process_only,output_id) "
@@ -2965,7 +2968,9 @@ class FunctionalTests(unittest.TestCase):
 
                 form_reptask = str(uuid.uuid4())
 
-                engine = create_engine(self.server_config["sqlalchemy.url"])
+                engine = create_engine(
+                    self.server_config["sqlalchemy.url"], poolclass=NullPool
+                )
                 sql = (
                     "INSERT INTO product (project_id,form_id,product_id,"
                     "celery_taskid,datetime_added,created_by,process_only,output_id) "
@@ -3263,7 +3268,9 @@ class FunctionalTests(unittest.TestCase):
             def mimic_celery_public_csv_process():
                 from formshare.products.export.csv.celery_task import internal_build_csv
 
-                engine = create_engine(self.server_config["sqlalchemy.url"])
+                engine = create_engine(
+                    self.server_config["sqlalchemy.url"], poolclass=NullPool
+                )
 
                 form_details = get_form_details(
                     self.server_config, self.projectID, self.formID
@@ -3392,7 +3399,9 @@ class FunctionalTests(unittest.TestCase):
             def mimic_celery_private_csv_process():
                 from formshare.products.export.csv.celery_task import internal_build_csv
 
-                engine = create_engine(self.server_config["sqlalchemy.url"])
+                engine = create_engine(
+                    self.server_config["sqlalchemy.url"], poolclass=NullPool
+                )
 
                 form_details = get_form_details(
                     self.server_config, self.projectID, self.formID
@@ -3481,7 +3490,9 @@ class FunctionalTests(unittest.TestCase):
                     internal_build_xlsx,
                 )
 
-                engine = create_engine(self.server_config["sqlalchemy.url"])
+                engine = create_engine(
+                    self.server_config["sqlalchemy.url"], poolclass=NullPool
+                )
                 form_details = get_form_details(
                     self.server_config, self.projectID, self.formID
                 )
@@ -3534,7 +3545,9 @@ class FunctionalTests(unittest.TestCase):
             def mimic_celery_kml_process():
                 from formshare.products.export.kml.celery_task import internal_build_kml
 
-                engine = create_engine(self.server_config["sqlalchemy.url"])
+                engine = create_engine(
+                    self.server_config["sqlalchemy.url"], poolclass=NullPool
+                )
 
                 form_details = get_form_details(
                     self.server_config, self.projectID, self.formID
@@ -3586,7 +3599,9 @@ class FunctionalTests(unittest.TestCase):
                     internal_build_media_zip,
                 )
 
-                engine = create_engine(self.server_config["sqlalchemy.url"])
+                engine = create_engine(
+                    self.server_config["sqlalchemy.url"], poolclass=NullPool
+                )
                 form_details = get_form_details(
                     self.server_config, self.projectID, self.formID
                 )
@@ -3713,7 +3728,9 @@ class FunctionalTests(unittest.TestCase):
                     internal_import_json_files,
                 )
 
-                engine = create_engine(self.server_config["sqlalchemy.url"])
+                engine = create_engine(
+                    self.server_config["sqlalchemy.url"], poolclass=NullPool
+                )
                 form_details = get_form_details(
                     self.server_config, self.projectID, self.formID
                 )
@@ -4072,7 +4089,9 @@ class FunctionalTests(unittest.TestCase):
             form_details = get_form_details(
                 self.server_config, self.projectID, self.formID
             )
-            engine = create_engine(self.server_config["sqlalchemy.url"])
+            engine = create_engine(
+                self.server_config["sqlalchemy.url"], poolclass=NullPool
+            )
             res = engine.execute(
                 "SELECT rowuuid FROM {}.maintable".format(form_details["form_schema"])
             ).first()
@@ -4288,7 +4307,9 @@ class FunctionalTests(unittest.TestCase):
             form_details = get_form_details(
                 self.server_config, self.projectID, self.formID
             )
-            engine = create_engine(self.server_config["sqlalchemy.url"])
+            engine = create_engine(
+                self.server_config["sqlalchemy.url"], poolclass=NullPool
+            )
             sql = "SELECT surveyid FROM {}.maintable WHERE i_d = '501890386'".format(
                 form_details["form_schema"]
             )
@@ -5622,7 +5643,9 @@ class FunctionalTests(unittest.TestCase):
                 self.server_config, json2_project_id, json2_form
             )
 
-            engine = create_engine(self.server_config["sqlalchemy.url"])
+            engine = create_engine(
+                self.server_config["sqlalchemy.url"], poolclass=NullPool
+            )
             sql = "SELECT surveyid FROM {}.maintable WHERE i_d = '109750690'".format(
                 form_details["form_schema"]
             )
@@ -6189,7 +6212,9 @@ class FunctionalTests(unittest.TestCase):
                 self.server_config, json4_project_id, json4_form
             )
 
-            engine = create_engine(self.server_config["sqlalchemy.url"])
+            engine = create_engine(
+                self.server_config["sqlalchemy.url"], poolclass=NullPool
+            )
             sql = "SELECT rowuuid FROM {}.maintable WHERE i_d = '109750690'".format(
                 form_details["form_schema"]
             )
@@ -6453,7 +6478,9 @@ class FunctionalTests(unittest.TestCase):
                 self.server_config, json3_project_id, json3_form
             )
 
-            engine = create_engine(self.server_config["sqlalchemy.url"])
+            engine = create_engine(
+                self.server_config["sqlalchemy.url"], poolclass=NullPool
+            )
             sql = "SELECT rowuuid FROM {}.maintable WHERE i_d = '109750690'".format(
                 form_details["form_schema"]
             )
@@ -6726,7 +6753,9 @@ class FunctionalTests(unittest.TestCase):
             form_details = get_form_details(
                 self.server_config, self.projectID, self.formID
             )
-            engine = create_engine(self.server_config["sqlalchemy.url"])
+            engine = create_engine(
+                self.server_config["sqlalchemy.url"], poolclass=NullPool
+            )
             res = engine.execute(
                 "SELECT rowuuid FROM {}.maintable".format(form_details["form_schema"])
             ).first()
@@ -6892,7 +6921,9 @@ class FunctionalTests(unittest.TestCase):
             form_details = get_form_details(
                 self.server_config, self.projectID, self.formID
             )
-            engine = create_engine(self.server_config["sqlalchemy.url"])
+            engine = create_engine(
+                self.server_config["sqlalchemy.url"], poolclass=NullPool
+            )
             res = engine.execute(
                 "SELECT rowuuid FROM {}.maintable".format(form_details["form_schema"])
             ).first()
@@ -7804,7 +7835,9 @@ class FunctionalTests(unittest.TestCase):
                 self.server_config, merge_project_id, "tormenta20201105"
             )
 
-            engine = create_engine(self.server_config["sqlalchemy.url"])
+            engine = create_engine(
+                self.server_config["sqlalchemy.url"], poolclass=NullPool
+            )
             task_id = str(uuid.uuid4())
             sql = (
                 "INSERT INTO product (project_id,form_id,product_id,"
@@ -8067,7 +8100,9 @@ class FunctionalTests(unittest.TestCase):
                 self.server_config, merge_project_id, "tormenta20201105"
             )
 
-            engine = create_engine(self.server_config["sqlalchemy.url"])
+            engine = create_engine(
+                self.server_config["sqlalchemy.url"], poolclass=NullPool
+            )
             task_id = str(uuid.uuid4())
             sql = (
                 "INSERT INTO product (project_id,form_id,product_id,"
@@ -8312,7 +8347,9 @@ class FunctionalTests(unittest.TestCase):
                 self.server_config, merge_project_id, "tormenta20201105"
             )
 
-            engine = create_engine(self.server_config["sqlalchemy.url"])
+            engine = create_engine(
+                self.server_config["sqlalchemy.url"], poolclass=NullPool
+            )
             task_id = str(uuid.uuid4())
             sql = (
                 "INSERT INTO product (project_id,form_id,product_id,"
@@ -11015,7 +11052,9 @@ class FunctionalTests(unittest.TestCase):
                 self.server_config, case_project_id, "case_start_20210311"
             )
             creator_schema = creator_details["form_schema"]
-            engine = create_engine(self.server_config["sqlalchemy.url"])
+            engine = create_engine(
+                self.server_config["sqlalchemy.url"], poolclass=NullPool
+            )
             res = engine.execute(
                 "SELECT _active FROM {}.maintable WHERE hid = '{}'".format(
                     creator_schema, "001"
@@ -11162,7 +11201,9 @@ class FunctionalTests(unittest.TestCase):
                 self.server_config, case_project_id, "case_start_20210311"
             )
             creator_schema = creator_details["form_schema"]
-            engine = create_engine(self.server_config["sqlalchemy.url"])
+            engine = create_engine(
+                self.server_config["sqlalchemy.url"], poolclass=NullPool
+            )
             res = engine.execute(
                 "SELECT _active FROM {}.maintable WHERE hid = '{}'".format(
                     creator_schema, "001"

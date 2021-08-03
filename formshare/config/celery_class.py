@@ -2,7 +2,7 @@ import logging
 import smtplib
 from email.mime.text import MIMEText
 from email.utils import formatdate
-
+from sqlalchemy.pool import NullPool
 from celery.contrib.abortable import AbortableTask
 from celery.worker.request import Request
 from sqlalchemy import create_engine
@@ -91,7 +91,7 @@ class CeleryRequest(Request):  # pragma: no cover
         task_id = self.task_id
         log.error("Timeout for task {}".format(task_id))
         send_timeout_error(task_id)
-        engine = create_engine(get_ini_value("sqlalchemy.url"))
+        engine = create_engine(get_ini_value("sqlalchemy.url"), poolclass=NullPool)
         settings = {
             "mosquitto.host": get_ini_value("mosquitto.host"),
             "mosquitto.port": get_ini_value("mosquitto.port"),
@@ -129,7 +129,7 @@ class CeleryTask(AbortableTask):  # pragma: no cover
         pass
 
     def on_success(self, retval, task_id, args, kwargs):
-        engine = create_engine(get_ini_value("sqlalchemy.url"))
+        engine = create_engine(get_ini_value("sqlalchemy.url"), poolclass=NullPool)
         settings = {
             "mosquitto.host": get_ini_value("mosquitto.host"),
             "mosquitto.port": get_ini_value("mosquitto.port"),
@@ -153,7 +153,7 @@ class CeleryTask(AbortableTask):  # pragma: no cover
         engine.dispose()
 
     def on_failure(self, exc, task_id, args, kwargs, einfo):
-        engine = create_engine(get_ini_value("sqlalchemy.url"))
+        engine = create_engine(get_ini_value("sqlalchemy.url"), poolclass=NullPool)
         settings = {
             "mosquitto.host": get_ini_value("mosquitto.host"),
             "mosquitto.port": get_ini_value("mosquitto.port"),

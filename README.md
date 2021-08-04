@@ -115,6 +115,7 @@ mkdir /opt/formshare/repository
 mkdir /opt/formshare/config
 mkdir /opt/formshare/mysql
 mkdir /opt/formshare/plugins
+mkdir /opt/formshare/mosquitto
 mkdir /opt/formshare/elasticsearch
 mkdir /opt/formshare/elasticsearch/esdata
 mkdir /opt/formshare/elasticsearch/esdata2
@@ -219,10 +220,24 @@ cd /opt/formshare_gunicorn
 
 ### Important Note: Upgrading Docker images >= 20210801
 
-Docker images >= 20210801 (stable 2.8.5) use WebSockets for client-server communication. To upgrade FormShare beyond 20210801 you need to update the docker-compose.yml to expose port 9001. In the FormShare service under the ports section add the following line after port 5900:
+Docker images >= 20210801 (stable 2.8.5) use WebSockets for client-server communication. To upgrade FormShare beyond 20210801 you need to update the docker-compose.yml to expose port 9001. 
+
+In the FormShare service under the ports section add the following line after port 5900:
 
 ```yaml
 - 9001:9001
+```
+
+Create a local directory for the Mosquitto configuration files
+
+```sh
+mkdir /opt/formshare/mosquitto
+```
+
+In the FormShare service under the volumes section add the following volume: 
+
+```yaml
+- /opt/formshare/mosquitto:/etc/mosquitto/conf.d/
 ```
 
 Note for AWS: Inbound and outbound communication to port 9001 must be allowed for FormShare to support client-server communication.

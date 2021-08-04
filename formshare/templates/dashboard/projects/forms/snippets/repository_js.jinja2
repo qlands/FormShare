@@ -1,7 +1,7 @@
 client_repository = new Paho.MQTT.Client("{{ request.server_name }}", Number(9001), "clientId");
 
 function onConnect_repository() {
-    client_repository.subscribe("formshare/{{ formDetails.form_reptask }}");
+    client_repository.subscribe("formshare/tasks/{{ formDetails.form_reptask }}");
 }
 function onMessageArrived_repository(message) {
     if ((message.payloadString === "success") || (message.payloadString === "failure"))

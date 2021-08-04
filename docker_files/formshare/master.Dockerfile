@@ -21,6 +21,12 @@ VOLUME /opt/formshare_plugins
 RUN mkdir formshare_odata
 VOLUME /opt/formshare_odata
 
+VOLUME /etc/mosquitto/conf.d/
+
+COPY ./docker_files/etc/mosquitto/mosquitto.conf /etc/mosquitto/conf.d/
+COPY ./docker_files/etc/mosquitto/websocket.conf /etc/mosquitto/conf.d/
+COPY ./docker_files/etc/mosquitto/access.acl /etc/mosquitto/conf.d/
+
 RUN mkdir formshare_gunicorn
 RUN python3 -m venv formshare_env
 

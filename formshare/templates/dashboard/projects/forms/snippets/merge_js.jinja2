@@ -2,7 +2,7 @@ client_merge = new Paho.MQTT.Client("{{ request.server_name }}", Number(9001), "
 client_merge.onMessageArrived = onMessageArrived_merge;
 client_merge.connect({onSuccess:onConnect_merge, userName : "formshare_client", password : "read_only"});
 function onConnect_merge() {
-    client_merge.subscribe("formshare/{{ formDetails.form_mergetask }}");
+    client_merge.subscribe("formshare/tasks/{{ formDetails.form_mergetask }}");
 }
 function onMessageArrived_merge(message) {
     if ((message.payloadString === "success") || (message.payloadString === "failure"))
@@ -23,34 +23,3 @@ function fadeInOut () {
     });
 }
 fadeInOut();
-
-$('.cancel-task').click(function () {
-    var action_url = $( this ).attr('urn');
-    swal({
-            title: "{{ _('Cancel the process') }}",
-            text: "{{ _('Are you sure that you want to cancel this process') }}",
-            type: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#DD6B55",
-            confirmButtonText: "{{ _('Yes, stop the process') }}",
-            cancelButtonText: "{{ _('Oops!, cancel!') }}",
-            closeOnConfirm: true,
-            closeOnCancel: true },
-        function (isConfirm) {
-            if (isConfirm) {
-                var form = document.createElement('form');
-                form.setAttribute('method', 'post');
-                form.setAttribute('action', action_url);
-                form.style.display = 'hidden';
-
-                var i = document.createElement("input"); //input element, text
-                i.setAttribute('type',"text");
-                i.setAttribute('name',"csrf_token");
-                i.setAttribute('value','{{ request.session.get_csrf_token() }}');
-                form.appendChild(i);
-
-                document.body.appendChild(form);
-                form.submit();
-            }
-        });
-});

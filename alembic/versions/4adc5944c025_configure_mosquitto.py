@@ -73,7 +73,7 @@ def upgrade():
             with open("/etc/mosquitto/conf.d/users.mqt", "w") as f:
                 f.write("formshare:{}\n".format(mosquitto_password))
                 f.write("formshare_client:read_only")
-            os.system("mosquitto_passwd -U /etc/mosquitto/users.mqt")
+            os.system("mosquitto_passwd -U /etc/mosquitto/conf.d/users.mqt")
             os.system("/etc/init.d/mosquitto restart")
         except Exception as e:
             print("********************************************")
@@ -101,7 +101,7 @@ def downgrade():
     modify_ini_file(config, "REMOVE", "app:formshare", "mosquitto.user")
     modify_ini_file(config, "REMOVE", "app:formshare", "mosquitto.password")
     try:
-        os.remove("/etc/mosquitto/users.mqt")
+        os.remove("/etc/mosquitto/conf.d/users.mqt")
     except Exception as e:
         print("Unable to remove mosquito users file. Error: {}".format(str(e)))
 

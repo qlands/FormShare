@@ -1,6 +1,14 @@
 #! /bin/bash
 
 /wait
+
+if [ ! -f /etc/mosquitto/conf.d/mosquitto.conf ]; then
+    cp /root/mosquitto.conf /etc/mosquitto/conf.d
+    cp /root/websocket.conf /etc/mosquitto/conf.d
+    cp /root/access.acl /etc/mosquitto/conf.d
+fi
+/etc/init.d/mosquitto stop
+/etc/init.d/mosquitto start
 mysql -h $MYSQL_HOST_NAME -u $MYSQL_USER_NAME --ssl-mode=DISABLED --password=$MYSQL_USER_PASSWORD --execute='CREATE SCHEMA IF NOT EXISTS formshare'
 source /opt/formshare_env/bin/activate
 cd /opt/formshare

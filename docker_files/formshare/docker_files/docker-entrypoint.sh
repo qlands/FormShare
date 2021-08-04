@@ -3,6 +3,7 @@
 /etc/init.d/mongodb start
 rm /var/run/redis/redis-server.pid
 /etc/init.d/redis-server start
+/etc/init.d/mosquitto start
 
 set -e
 

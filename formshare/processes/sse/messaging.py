@@ -14,7 +14,7 @@ def send_task_status_to_form(settings, task_id, status):
         mqtt_port = int(settings.get("mosquitto.port", "1883"))
         try:
             publish.single(
-                "formshare/{}".format(task_id),
+                "formshare/tasks/{}".format(task_id),
                 status,
                 hostname=mqtt_host,
                 port=mqtt_port,

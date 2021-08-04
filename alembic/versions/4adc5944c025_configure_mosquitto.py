@@ -57,7 +57,7 @@ def upgrade():
     modify_ini_file(config, "ADD", "app:formshare", "mosquitto.host", "localhost")
     modify_ini_file(config, "ADD", "app:formshare", "mosquitto.port", "1883")
     modify_ini_file(config, "ADD", "app:formshare", "mosquitto.user", "formshare")
-    if not os.path.exists("/etc/mosquitto/users.mqt"):
+    if not os.path.exists("/etc/mosquitto/conf.d/users.mqt"):
         modify_ini_file(
             config, "ADD", "app:formshare", "mosquitto.password", mosquitto_password
         )
@@ -68,9 +68,9 @@ def upgrade():
     with open(config_uri, "w") as configfile:
         config.write(configfile)
 
-    if not os.path.exists("/etc/mosquitto/users.mqt"):
+    if not os.path.exists("/etc/mosquitto/conf.d/users.mqt"):
         try:
-            with open("/etc/mosquitto/users.mqt", "w") as f:
+            with open("/etc/mosquitto/conf.d/users.mqt", "w") as f:
                 f.write("formshare:{}\n".format(mosquitto_password))
                 f.write("formshare_client:read_only")
             os.system("mosquitto_passwd -U /etc/mosquitto/users.mqt")

@@ -1,6 +1,6 @@
 # Allow user2 read/write to topic foo/bar/baz
 user formshare
-topic formshare/#
+topic formshare/tasks/#
 # Allow user3 read to topic foo/bar/baz
 user formshare_client
-topic read formshare/#
+topic read formshare/tasks/#

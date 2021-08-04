@@ -6,7 +6,7 @@
             client{{ task_id }}.onMessageArrived = onMessageArrived{{ task_id }};
             client{{ task_id }}.connect({onSuccess:onConnect{{ task_id }}, userName : "formshare_client", password : "read_only"});
             function onConnect{{ task_id }}() {
-                client{{ task_id }}.subscribe("formshare/{{ output.celery_taskid }}");
+                client{{ task_id }}.subscribe("formshare/tasks/{{ output.celery_taskid }}");
             }
             function onMessageArrived{{ task_id }}(message) {
                 if ((message.payloadString === "success") || (message.payloadString === "failure"))

@@ -1,4 +1,4 @@
-client_repository = new Paho.MQTT.Client("{{ request.server_name }}", Number(9001), "clientId");
+client_repository = new Paho.MQTT.Client("{{ request.domain }}", Number(9001), "clientId");
 
 function onConnect_repository() {
     client_repository.subscribe("formshare/tasks/{{ formDetails.form_reptask }}");

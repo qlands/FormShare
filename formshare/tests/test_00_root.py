@@ -602,8 +602,8 @@ class FunctionalTests(unittest.TestCase):
                     "project_code": "test001",
                     "project_name": "Test project",
                     "project_abstract": "",
-                    "project_icon": "",
-                    "project_hexcolor": "",
+                    "project_icon": "😁",
+                    "project_hexcolor": "#9bbb59",
                 },
                 status=302,
             )

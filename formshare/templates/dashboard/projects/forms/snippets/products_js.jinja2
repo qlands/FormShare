@@ -2,7 +2,7 @@
     {% for output in product.outputs %}
         {% if output.status == -1 %}
             {% set task_id = output.celery_taskid | replace("-","_") %}
-            client{{ task_id }} = new Paho.MQTT.Client("{{ request.server_name }}", Number(9001), "clientId");
+            client{{ task_id }} = new Paho.MQTT.Client("{{ request.domain }}", Number(9001), "clientId");
             client{{ task_id }}.onMessageArrived = onMessageArrived{{ task_id }};
             client{{ task_id }}.connect({onSuccess:onConnect{{ task_id }}, userName : "formshare_client", password : "read_only"});
             function onConnect{{ task_id }}() {

@@ -1,4 +1,4 @@
-client_merge = new Paho.MQTT.Client("{{ request.server_name }}", Number(9001), "clientId");
+client_merge = new Paho.MQTT.Client("{{ request.domain }}", Number(9001), "clientId");
 client_merge.onMessageArrived = onMessageArrived_merge;
 client_merge.connect({onSuccess:onConnect_merge, userName : "formshare_client", password : "read_only"});
 function onConnect_merge() {

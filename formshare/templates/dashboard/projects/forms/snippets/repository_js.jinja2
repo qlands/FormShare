@@ -15,8 +15,11 @@ function onMessageArrived_repository(message) {
 }
 
 client_repository.onMessageArrived = onMessageArrived_repository;
-client_repository.connect({onSuccess:onConnect_repository, userName : "formshare_client", password : "read_only"});
-
+{% if request.host_port != "443" %}
+    client_repository.connect({onSuccess:onConnect_repository, userName : "formshare_client", password : "read_only"});
+{% else %}
+    client_repository.connect({onSuccess:onConnect_repository, userName : "formshare_client", password : "read_only", useSSL : true});
+{% endif %}
 let $element = $('.repository_message, .sse-message');
 function fadeInOut () {
     $element.fadeIn(1000, function () {

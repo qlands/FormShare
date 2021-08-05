@@ -23,10 +23,14 @@ VOLUME /opt/formshare_odata
 
 VOLUME /etc/mosquitto/conf.d/
 
+COPY ./docker_files/mosquitto/mosquitto.conf /root
+COPY ./docker_files/mosquitto/websocket.conf /root
+COPY ./docker_files/mosquitto/access.acl /root
+
 RUN mkdir formshare_gunicorn
 RUN python3 -m venv formshare_env
 
-RUN git clone https://github.com/qlands/FormShare.git -b stable-2.8.5 formshare
+RUN git clone https://github.com/qlands/FormShare.git -b stable-2.8.6 formshare
 RUN . ./formshare_env/bin/activate && pip install wheel && pip install -r /opt/formshare/requirements.txt && python /opt/formshare/download_nltk_packages.py
 
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.6.0/wait /wait

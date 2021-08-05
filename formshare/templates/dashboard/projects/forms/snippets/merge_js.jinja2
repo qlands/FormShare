@@ -1,6 +1,10 @@
 client_merge = new Paho.MQTT.Client("{{ request.domain }}", Number(9001), "clientId");
 client_merge.onMessageArrived = onMessageArrived_merge;
-client_merge.connect({onSuccess:onConnect_merge, userName : "formshare_client", password : "read_only"});
+{% if request.host_port != "443" %}
+    client_merge.connect({onSuccess:onConnect_merge, userName : "formshare_client", password : "read_only"});
+{% else %}
+    client_merge.connect({onSuccess:onConnect_merge, userName : "formshare_client", password : "read_only", useSSL : true});
+{% endif %}
 function onConnect_merge() {
     client_merge.subscribe("formshare/tasks/{{ formDetails.form_mergetask }}");
 }

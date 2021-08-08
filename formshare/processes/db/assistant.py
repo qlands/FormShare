@@ -91,7 +91,7 @@ def get_assigned_assistants(request, project, form):
     return assistants
 
 
-def get_all_assistants(request, project_user):
+def get_all_assistants(request, project_user, project_id):
     res = (
         request.dbsession.query(Project, Collaborator)
         .filter(Project.project_id == Collaborator.project_id)
@@ -102,6 +102,25 @@ def get_all_assistants(request, project_user):
         .all()
     )
     all_assistants = map_from_schema(res)
+
+    # Current project collaborators
+    res = (
+        request.dbsession.query(Project, Collaborator)
+        .filter(Project.project_id == Collaborator.project_id)
+        .filter(Project.project_id == project_id)
+        .all()
+    )
+    this_project_assistants = map_from_schema(res)
+    for an_assistant in this_project_assistants:
+        found = False
+        for item in all_assistants:
+            if (
+                item["project_id"] == an_assistant["project_id"]
+                and item["coll_id"] == an_assistant["coll_id"]
+            ):
+                found = True
+        if not found:
+            all_assistants.append(an_assistant)
 
     assistants = []
     for item in all_assistants:

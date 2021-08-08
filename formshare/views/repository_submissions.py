@@ -49,7 +49,7 @@ class ManageSubmissions(PrivateView):
             raise HTTPNotFound
 
         form_data = get_form_details(self.request, user_id, project_id, form_id)
-        assistants = get_all_assistants(self.request, user_id)
+        assistants = get_all_assistants(self.request, user_id, project_id)
         if form_data is not None:
             if form_data["form_schema"] is None:
                 raise HTTPNotFound

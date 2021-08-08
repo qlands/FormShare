@@ -20,13 +20,6 @@ pyramid.includes =
 #For MySQL
 sqlalchemy.url = mysql+mysqlconnector://{{ mysql_user_name }}:{{ mysql_user_password }}@{{ mysql_host }}:{{ mysql_port }}/{{ mysql_schema }}?charset=utf8mb4&ssl_disabled=True
 
-#For PostgreSQL
-#sqlalchemy.url = postgresql://user_name:user_password@localhost/formshare
-
-#For Microsoft SQL Server
-#Note that you need the official Microsoft ODBC driver for Linux. See https://docs.microsoft.com/en-us/sql/connect/odbc/linux-mac/installing-the-microsoft-odbc-driver-for-sql-server?view=sql-server-2017
-#sqlalchemy.url = mssql+pyodbc://user_name:user_password@localhost:1433/formshare?driver=/path/to/libmsodbcsql-XX.X.so.0.X
-
 ###
 # Security settings. You must change this parameters for every installation of FormShare. Each password must be different
 # Use https://passwordsgenerator.net/ to generate strong 16 and 32 strong passwords

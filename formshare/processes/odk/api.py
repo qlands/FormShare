@@ -2281,6 +2281,9 @@ def store_json_file(
                 geopoint_variable = get_form_geopoint(request, project, form)
                 if geopoint_variable is not None:
                     if geopoint_variable in submission_data.keys():
+                        submission_data[geopoint_variable] = submission_data[
+                            geopoint_variable
+                        ].replace("\n", " ")
                         submission_data["_geopoint"] = submission_data[
                             geopoint_variable
                         ]
@@ -2660,6 +2663,9 @@ def store_json_file(
                 geopoint_variable = get_form_geopoint(request, project, form)
                 if geopoint_variable is not None:
                     try:
+                        submission_data[geopoint_variable] = submission_data[
+                            geopoint_variable
+                        ].replace("\n", " ")
                         submission_data["_geopoint"] = submission_data[
                             geopoint_variable
                         ]

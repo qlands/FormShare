@@ -3405,6 +3405,9 @@ def push_revision(
             submission_data["_geopoint"] = submission_data["_geopoint"].replace(
                 "\\n", " "
             )
+            submission_data["_geopoint"] = submission_data["_geopoint"].replace(
+                "\n", " "
+            )
             parts = submission_data["_geopoint"].split(" ")
             log.error("**************99")
             log.error(submission_data["_geopoint"])

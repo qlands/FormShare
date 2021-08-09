@@ -3406,7 +3406,11 @@ def push_revision(
     with open(current_file, "r") as f:
         submission_data = json.load(f)
         try:
+            submission_data["_geopoint"] = submission_data["_geopoint"].replace("\\n", " ").split(" ")
             parts = submission_data["_geopoint"].replace("\\n", " ").split(" ")
+            log.error("**************99")
+            log.error(" ".join(parts))
+            log.error("**************99")
             if len(parts) >= 4:
                 submission_data["_latitude"] = parts[0]
                 submission_data["_longitude"] = parts[1]

@@ -2283,7 +2283,7 @@ def store_json_file(
                     if geopoint_variable in submission_data.keys():
                         submission_data[geopoint_variable] = submission_data[
                             geopoint_variable
-                        ].replace("\n", " ")
+                        ].replace("\\n", " ")
                         submission_data["_geopoint"] = submission_data[
                             geopoint_variable
                         ]
@@ -2665,7 +2665,7 @@ def store_json_file(
                     try:
                         submission_data[geopoint_variable] = submission_data[
                             geopoint_variable
-                        ].replace("\n", " ")
+                        ].replace("\\n", " ")
                         submission_data["_geopoint"] = submission_data[
                             geopoint_variable
                         ]

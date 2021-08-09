@@ -2284,6 +2284,9 @@ def store_json_file(
                         submission_data[geopoint_variable] = submission_data[
                             geopoint_variable
                         ].replace("\\n", " ")
+                        submission_data[geopoint_variable] = submission_data[
+                            geopoint_variable
+                        ].replace("\n", " ")
                         submission_data["_geopoint"] = submission_data[
                             geopoint_variable
                         ]
@@ -2666,6 +2669,9 @@ def store_json_file(
                         submission_data[geopoint_variable] = submission_data[
                             geopoint_variable
                         ].replace("\\n", " ")
+                        submission_data[geopoint_variable] = submission_data[
+                            geopoint_variable
+                        ].replace("\n", " ")
                         submission_data["_geopoint"] = submission_data[
                             geopoint_variable
                         ]
@@ -3409,10 +3415,6 @@ def push_revision(
                 "\n", " "
             )
             parts = submission_data["_geopoint"].split(" ")
-            log.error("**************99")
-            log.error(submission_data["_geopoint"])
-            log.error(" ".join(parts))
-            log.error("**************99")
             if len(parts) >= 4:
                 submission_data["_latitude"] = parts[0]
                 submission_data["_longitude"] = parts[1]

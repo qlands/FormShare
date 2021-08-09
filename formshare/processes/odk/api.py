@@ -2287,7 +2287,9 @@ def store_json_file(
                         submission_data["_geopoint"] = submission_data[
                             geopoint_variable
                         ]
-                        parts = submission_data["_geopoint"].split(" ")
+                        parts = (
+                            submission_data["_geopoint"].replace("\\n", " ").split(" ")
+                        )
                         if len(parts) >= 4:
                             submission_data["_latitude"] = parts[0]
                             submission_data["_longitude"] = parts[1]
@@ -2669,7 +2671,9 @@ def store_json_file(
                         submission_data["_geopoint"] = submission_data[
                             geopoint_variable
                         ]
-                        parts = submission_data["_geopoint"].split(" ")
+                        parts = (
+                            submission_data["_geopoint"].replace("\\n", " ").split(" ")
+                        )
                         if len(parts) >= 4:
                             submission_data["_latitude"] = parts[0]
                             submission_data["_longitude"] = parts[1]
@@ -3402,7 +3406,7 @@ def push_revision(
     with open(current_file, "r") as f:
         submission_data = json.load(f)
         try:
-            parts = submission_data["_geopoint"].split(" ")
+            parts = submission_data["_geopoint"].replace("\\n", " ").split(" ")
             if len(parts) >= 4:
                 submission_data["_latitude"] = parts[0]
                 submission_data["_longitude"] = parts[1]

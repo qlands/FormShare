@@ -145,7 +145,7 @@ def store_json_file(
                     geopoint_variable
                 ].replace("\\n", " ")
                 submission_data["_geopoint"] = submission_data[geopoint_variable]
-                parts = submission_data["_geopoint"].split(" ")
+                parts = submission_data["_geopoint"].replace("\\n", " ").split(" ")
                 if len(parts) >= 4:
                     submission_data["_latitude"] = parts[0]
                     submission_data["_longitude"] = parts[1]

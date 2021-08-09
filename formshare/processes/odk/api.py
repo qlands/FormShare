@@ -3402,8 +3402,8 @@ def push_revision(
     with open(current_file, "r") as f:
         submission_data = json.load(f)
         try:
-            submission_data["_geopoint"] = (
-                submission_data["_geopoint"].replace("\\n", " ").split(" ")
+            submission_data["_geopoint"] = submission_data["_geopoint"].replace(
+                "\\n", " "
             )
             parts = submission_data["_geopoint"].split(" ")
             log.error("**************99")

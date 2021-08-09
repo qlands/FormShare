@@ -143,7 +143,7 @@ def store_json_file(
             if geopoint_variable in submission_data.keys():
                 submission_data[geopoint_variable] = submission_data[
                     geopoint_variable
-                ].replace("\n", " ")
+                ].replace("\\n", " ")
                 submission_data["_geopoint"] = submission_data[geopoint_variable]
                 parts = submission_data["_geopoint"].split(" ")
                 if len(parts) >= 4:

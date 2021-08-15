@@ -50,6 +50,14 @@ def main(global_config, **settings):
     auth_policy.add_policy("assistant", assistant_policy)
     policy_array.append({"name": "assistant", "policy": assistant_policy})
 
+    partner_policy = AuthTktAuthenticationPolicy(
+        settings["auth.partner.secret"],
+        timeout=settings.get("auth.partner.cookie.timeout", 7200),
+        cookie_name=settings["auth.partner.cookie"],
+    )
+    auth_policy.add_policy("partner", partner_policy)
+    policy_array.append({"name": "partner", "policy": partner_policy})
+
     # authn_policy = AuthTktAuthenticationPolicy(settings['auth.secret'], cookie_name='formshare_auth_tkt')
     authz_policy = ACLAuthorizationPolicy()
     config = Configurator(

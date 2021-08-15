@@ -1,0 +1,34 @@
+{% extends 'partner/page.jinja2' %}
+
+{% block title %}
+    <title>{{ _('Partner forms') }}</title>
+{% endblock title %}
+
+{% block breadcrumbs %}
+    {% include 'partner/snippets/brdcrbs_home.jinja2' %}
+{% endblock breadcrumbs %}
+
+{% block maincontent %}
+    {{ form.display_errors(posterrors) }}
+    <div class="ibox">
+        <div class="ibox-title">
+            <h5>{{ _('Forms that you have access within the project:') }} "{{ projectDetails.project_name }}" </h5>
+            <div class="ibox-tools">
+                <a class="collapse-link" style="margin-right: 10px">
+                    <i class="fa fa-chevron-up"></i>
+                </a>
+                <a class="fullscreen-link">
+                    <i class="fa fa-expand"></i>
+                </a>
+            </div>
+        </div>
+        <div class="ibox-content">
+            <div class="feed-activity-list">
+                {% block index_form_list %}
+
+                {% endblock index_form_list %}
+            </div>
+        </div>
+    </div>
+
+{% endblock maincontent %}

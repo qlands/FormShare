@@ -15,16 +15,16 @@ Each submission must be a directory containing the XML and medias files. For exa
 /home/me/submissions/submission_002/image2.jpg
 /home/me/submissions/submission_002/image3.jpg
 
-path_to_submissions = /home/me/submissions 
+path_to_submissions = /home/me/submissions/*/
 
 """
 
-path_to_submissions = "/home/me/submissions"
+path_to_submissions = "/home/me/submissions/*/"
 url_to_project = "http://192.168.0.10:5900/user/me/project/my_project"
 assistant_to_use = "assistant"
 assistant_password = "123"
 
-for a_directory in glob.iglob(os.path.join(path_to_submissions, *["/*/"])):
+for a_directory in glob.iglob(path_to_submissions):
     files = {}
     files_array = []
     for a_file in glob.iglob(a_directory + "*"):

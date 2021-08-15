@@ -199,14 +199,6 @@ class AddProjectView(ProjectsView):
                         break  # Only one plugging will be called to extend before_create
 
                     if continue_creation:
-
-                        # This will change when ODK collect allows more than 1 character icon
-                        if project_details["project_icon"] != "":
-                            if len(project_details["project_icon"]) > 1:
-                                project_details["project_icon"] = project_details[
-                                    "project_icon"
-                                ][0]
-
                         if project_details["project_hexcolor"] == "":
                             project_details["project_hexcolor"] = ColorHash(
                                 project_details["project_code"]
@@ -336,11 +328,6 @@ class EditProjectView(ProjectsView):
                 project_details["project_hexcolor"] = ColorHash(
                     project_details["project_code"]
                 ).hex
-
-            # This will change when ODK collect allows more than 1 character icon
-            if project_details["project_icon"] != "":
-                if len(project_details["project_icon"]) > 1:
-                    project_details["project_icon"] = project_details["project_icon"][0]
 
             if project_details["project_abstract"] == "":
                 project_details["project_abstract"] = None

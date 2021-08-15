@@ -29,6 +29,7 @@ from formshare.models.formshare import (
     DictTable,
     DictField,
     CaseLookUp,
+    Partner,
 )
 from formshare.models.schema import *
 

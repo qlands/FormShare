@@ -24,7 +24,7 @@ from pyramid.response import Response
 from pyramid.session import check_csrf_token
 
 from formshare import plugins as p
-from formshare.config.auth import get_user_data, get_assistant_data
+from formshare.config.auth import get_user_data, get_assistant_data, get_partner_data
 from formshare.processes.db import (
     get_project_id_from_name,
     user_exists,
@@ -679,6 +679,135 @@ class AssistantView(object):
 
     def process_view(self):
         return {"activeAssistant": self.assistant}
+
+    def get_post_dict(self):
+        dct = variable_decode(self.request.POST)
+        return dct
+
+    def add_error(self, message):
+        self.request.session.flash(message, queue="error")
+
+
+class PartnerView(object):
+    def __init__(self, request):
+        self.request = request
+        self.projectID = ""
+        self.userID = ""
+        self.projectCode = ""
+        self.partner = None
+        self._ = self.request.translate
+        self.errors = []
+        self.resultDict = {"errors": []}
+        locale = Locale(request.locale_name)
+        if locale.character_order == "left-to-right":
+            self.resultDict["rtl"] = False
+        else:
+            self.resultDict["rtl"] = True
+        self.returnRawViewResult = False
+        self.checkCrossPost = True
+
+    def get_policy(self, policy_name):
+        policies = self.request.policies()
+        for policy in policies:
+            if policy["name"] == policy_name:
+                return policy["policy"]
+        return None
+
+    def append_to_errors(self, error):
+        self.request.response.headers["FS_error"] = "true"
+        self.errors.append(error)
+
+    def __call__(self):
+        error = self.request.session.pop_flash(queue="error")
+        if len(error) > 0:
+            self.append_to_errors(error[0])
+
+        self.userID = self.request.matchdict["userid"]
+        self.projectCode = self.request.matchdict["projcode"]
+        self.projectID = get_project_id_from_name(
+            self.request, self.userID, self.projectCode
+        )
+        if self.projectID is None:
+            raise HTTPNotFound()
+
+        policy = self.get_policy("partner")
+        login_data = policy.authenticated_userid(self.request)
+        if login_data is not None:
+            login_data = literal_eval(login_data)
+            if login_data["group"] == "partners":
+                system_wide_partners = self.request.registry.settings.get(
+                    "system_wide.partners", "false"
+                )
+                if system_wide_partners == "true":
+                    self.partner = get_partner_data(self.request, login_data["login"])
+                else:
+                    self.partner = get_partner_data(
+                        self.request, login_data["login"], self.userID
+                    )
+                if self.partner is None:
+                    return HTTPFound(
+                        location=self.request.route_url(
+                            "partner_login",
+                            userid=self.userID,
+                            projcode=self.projectCode,
+                            _query={"next": self.request.url},
+                        )
+                    )
+            else:
+                return HTTPFound(
+                    location=self.request.route_url(
+                        "partner_login",
+                        userid=self.userID,
+                        projcode=self.projectCode,
+                        _query={"next": self.request.url},
+                    )
+                )
+        else:
+            return HTTPFound(
+                location=self.request.route_url(
+                    "partner_login",
+                    userid=self.userID,
+                    projcode=self.projectCode,
+                    _query={"next": self.request.url},
+                )
+            )
+
+        if self.request.method == "POST":
+            if (
+                self.request.registry.settings.get("perform_post_checks", "true")
+                == "true"
+            ):
+                safe = check_csrf_token(self.request, raises=False)
+                if not safe:
+                    self.request.session.pop_flash()
+                    log.error("SECURITY-CSRF error at {} ".format(self.request.url))
+                    raise HTTPFound(self.request.route_url("refresh"))
+                else:
+                    if self.checkCrossPost:
+                        if self.request.referer != self.request.url:
+                            self.request.session.pop_flash()
+                            log.error(
+                                "SECURITY-CrossPost error. Posting at {} from {} ".format(
+                                    self.request.url, self.request.referer
+                                )
+                            )
+                            raise HTTPNotFound()
+
+        self.partnerID = self.partner.id
+        self.partnerEmail = self.partner.email
+        self.resultDict["activePartner"] = self.partner
+        self.resultDict["userid"] = self.userID
+        self.resultDict["projcode"] = self.projectCode
+        self.resultDict["posterrors"] = self.errors
+        process_dict = self.process_view()
+        if not self.returnRawViewResult:
+            self.resultDict.update(process_dict)
+            return self.resultDict
+        else:
+            return process_dict
+
+    def process_view(self):
+        return {"activePartner": self.partner}
 
     def get_post_dict(self):
         dct = variable_decode(self.request.POST)

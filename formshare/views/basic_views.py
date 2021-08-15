@@ -19,6 +19,7 @@ from formshare.config.auth import (
     get_user_data,
     get_assistant_data,
     get_formshare_user_data,
+    get_partner_data,
 )
 from formshare.config.elasticfeeds import get_manager
 from formshare.config.encdecdata import encode_data, decode_data
@@ -367,6 +368,106 @@ class AssistantLoginView(PublicView):
         return {"next": next_page, "userid": user_id, "projcode": project_code}
 
 
+class PartnerLoginView(PublicView):
+    def process_view(self):
+        # If we logged in then go to dashboard
+        project_code = self.request.matchdict["projcode"]
+        user_id = self.request.matchdict["userid"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        if project_id is None:
+            raise HTTPNotFound()
+        next_page = self.request.params.get("next") or self.request.route_url(
+            "partner_forms", userid=user_id, projcode=project_code
+        )
+        if self.request.method == "GET":
+            policy = get_policy(self.request, "partner")
+            login_data = policy.authenticated_userid(self.request)
+            if login_data is not None:
+                login_data = literal_eval(login_data)
+                if login_data["group"] == "partners":
+                    system_wide_partners = self.request.registry.settings.get(
+                        "system_wide.partners", "false"
+                    )
+                    if system_wide_partners == "true":
+                        current_partner = get_partner_data(
+                            self.request, login_data["login"]
+                        )
+                    else:
+                        current_partner = get_partner_data(
+                            self.request, login_data["login"], user_id
+                        )
+                    if current_partner is not None:
+                        self.returnRawViewResult = True
+                        return HTTPFound(
+                            location=self.request.route_url(
+                                "assistant_forms", userid=user_id, projcode=project_code
+                            )
+                        )
+        else:
+            if (
+                self.request.registry.settings.get("perform_post_checks", "true")
+                == "true"
+            ):
+                safe = check_csrf_token(self.request, raises=False)
+                if not safe:
+                    raise HTTPNotFound()
+            data = variable_decode(self.request.POST)
+            login = data["login"]
+            passwd = data["passwd"]
+            system_wide_partners = self.request.registry.settings.get(
+                "system_wide.partners", "false"
+            )
+            if system_wide_partners == "true":
+                partner = get_partner_data(self.request, login)
+            else:
+                partner = get_partner_data(self.request, login, user_id)
+            login_data = {"login": login, "group": "partners"}
+            if partner is not None:
+                if partner.check_password(passwd, self.request):
+                    continue_login = True
+                    # Load connected plugins and check if they modify the login authorization
+                    for plugin in p.PluginImplementations(p.IUserAuthentication):
+                        (
+                            continue_with_login,
+                            error_message,
+                        ) = plugin.after_partner_login(self.request, partner)
+                        if not continue_with_login:
+                            self.append_to_errors(error_message)
+                            continue_login = False
+                        break  # Only one plugging will be called to extend after_collaborator_login
+                    if continue_login:
+                        headers = remember(
+                            self.request, str(login_data), policies=["partner"]
+                        )
+                        self.returnRawViewResult = True
+                        return HTTPFound(location=next_page, headers=headers)
+                else:
+                    log.error(
+                        "Logging into partner account {} for FormShare account {} in project {} "
+                        "provided an invalid password".format(
+                            login, user_id, project_code
+                        )
+                    )
+                    self.append_to_errors(
+                        self._(
+                            "The partner account does not exist or it is not linked to this project "
+                            "or the password is invalid"
+                        )
+                    )
+            else:
+                log.error(
+                    "Partner account {} for FormShare account {} in project {} "
+                    "does not exists".format(login, user_id, project_code)
+                )
+                self.append_to_errors(
+                    self._(
+                        "The partner account does not exists or it is not linked to this project "
+                        "or the password is invalid"
+                    )
+                )
+        return {"next": next_page, "userid": user_id, "projcode": project_code}
+
+
 def get_policy(request, policy_name):
     policies = request.policies()
     for policy in policies:
@@ -415,6 +516,15 @@ def assistant_log_out_view(request):
     project_code = request.matchdict["projcode"]
     user_id = request.matchdict["userid"]
     loc = request.route_url("assistant_login", userid=user_id, projcode=project_code)
+    raise HTTPFound(location=loc, headers=headers)
+
+
+def partner_log_out_view(request):
+    policy = get_policy(request, "partner")
+    headers = policy.forget(request)
+    project_code = request.matchdict["projcode"]
+    user_id = request.matchdict["userid"]
+    loc = request.route_url("partner_login", userid=user_id, projcode=project_code)
     raise HTTPFound(location=loc, headers=headers)
 
 

@@ -1,0 +1,81 @@
+{% extends 'generic/login.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block titlesection %}{{ _('Partner Sign in') }}{% endblock titlesection %}
+
+{% block logingheadmsg %}
+    <h2 style="color: red">{{ _('Partner Sign in') }}</h2>
+{% endblock logingheadmsg %}
+
+{% block loginform %}
+    {% block language_selector %}
+        <div>
+            {{ _('Language') }}:
+            <select id="language">
+                {% block language_options %}
+                    <option id="en" value="en">English</option>
+                    <option id="es" value="es">Español</option>
+                    <option id="fr" value="fr">Français</option>
+                    <option id="pt" value="pt">Português</option>
+                {% endblock language_options %}
+            </select>
+        </div>
+    {% endblock language_selector %}
+    <form class="m-t" role="form" method="post" action="{{ request.url }}">
+        {{ form.secure_form(request) }}
+        {% block loginform_fields %}
+            <div class="form-group">
+                <input type="email" name="login" class="form-control" placeholder="{{ _('Partner Email') }}" required="">
+            </div>
+            <div class="form-group">
+                <input type="password" name="passwd" class="form-control" placeholder="{{ _('Password') }}" required="">
+            </div>
+        {% endblock loginform_fields %}
+        {% block loginform_actions %}
+            <button type="submit" class="btn btn-primary block full-width m-b">{{ _('Sign in') }}</button>
+        {% endblock loginform_actions %}
+    </form>
+{% endblock loginform %}
+
+{% block login_tools %}
+
+{% endblock login_tools %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function() {
+            var selectedLanguage = readCookie('_LOCALE_');
+            if (selectedLanguage != null)
+                $('#language').val(selectedLanguage);
+            $("#language").bind('change', function() {
+                //on change set cookie and...
+                setCookie('_LOCALE_', this.value, 365);
+                location.reload();
+            });
+        });
+
+        function setCookie(cookieName, cookieValue, nDays) {
+            var today = new Date();
+            var expire = new Date();
+
+            if (nDays==null || nDays==0)
+                nDays=1;
+
+            expire.setTime(today.getTime() + 3600000*24*nDays);
+            document.cookie = cookieName+"="+escape(cookieValue) + ";expires="+expire.toGMTString() + ";path=/";
+        }
+
+        function readCookie(name) {
+            var nameEQ = name + "=";
+            var ca = document.cookie.split(';');
+            for(var i = 0; i < ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+    </script>
+
+{% endblock scripts %}

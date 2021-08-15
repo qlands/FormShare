@@ -179,7 +179,7 @@ def append_to_routes(route_array):
             route_list[pos]["renderer"] = new_route["renderer"]
 
 
-def load_routes(config):
+def load_routes(config, settings):
     """
     Call connected to plugins to add any routes before FormShare
     :param config: Pyramid config
@@ -1217,35 +1217,36 @@ def load_routes(config):
 
     # Partner routes
 
-    # TODO: To test
-    routes.append(
-        add_route(
-            "partner_login",
-            "/user/{userid}/project/{projcode}/partneraccess/login",
-            PartnerLoginView,
-            "generic/partner_login.jinja2",
+    if settings.get("allow.partner.access", "false") == "true":
+        # TODO: To test
+        routes.append(
+            add_route(
+                "partner_login",
+                "/user/{userid}/project/{projcode}/partneraccess/login",
+                PartnerLoginView,
+                "generic/partner_login.jinja2",
+            )
         )
-    )
 
-    # TODO: To test
-    routes.append(
-        add_route(
-            "partner_forms",
-            "/user/{userid}/project/{projcode}/partneraccess/forms",
-            PartnerForms,
-            "partner/index.jinja2",
+        # TODO: To test
+        routes.append(
+            add_route(
+                "partner_forms",
+                "/user/{userid}/project/{projcode}/partneraccess/forms",
+                PartnerForms,
+                "partner/index.jinja2",
+            )
         )
-    )
 
-    # TODO: To test
-    routes.append(
-        add_route(
-            "partner_logout",
-            "/user/{userid}/project/{projcode}/partneraccess/logout",
-            partner_log_out_view,
-            None,
+        # TODO: To test
+        routes.append(
+            add_route(
+                "partner_logout",
+                "/user/{userid}/project/{projcode}/partneraccess/logout",
+                partner_log_out_view,
+                None,
+            )
         )
-    )
 
     # Testing routes
     if os.environ.get("FORMSHARE_PYTEST_RUNNING", "false") == "true":

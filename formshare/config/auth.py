@@ -91,7 +91,7 @@ class Partner(object):
 
     def check_password(self, password, request):
         self.set_gravatar_url(request, self.fullName, 45)
-        return check_partner_login(request, self.email, password, self.create_by)
+        return check_partner_login(request, self.email, password)
 
     def set_gravatar_url(self, request, name, size):
         self.gravatarURL = request.route_url(
@@ -161,20 +161,12 @@ def get_assistant_data(project, assistant, request):
     return None
 
 
-def get_partner_data(request, partner_email, user_id=None):
-    if user_id is None:
-        result = map_from_schema(
-            request.dbsession.query(partnerModel)
-            .filter(partnerModel.partner_email == partner_email)
-            .first()
-        )
-    else:
-        result = map_from_schema(
-            request.dbsession.query(partnerModel)
-            .filter(partnerModel.partner_email == partner_email)
-            .filter(partnerModel.created_by == user_id)
-            .first()
-        )
+def get_partner_data(request, partner_email):
+    result = map_from_schema(
+        request.dbsession.query(partnerModel)
+        .filter(partnerModel.partner_email == partner_email)
+        .first()
+    )
     if result:
         result["partner_password"] = ""  # Remove the password form the result
         return Partner(result)
@@ -216,23 +208,12 @@ def check_assistant_login(project, assistant, password, request):
             return False
 
 
-def check_partner_login(request, partner_email, password, user_id):
-    system_wide_partners = request.registry.settings.get(
-        "system_wide.partners", "false"
+def check_partner_login(request, partner_email, password):
+    result = (
+        request.dbsession.query(partnerModel)
+        .filter(partnerModel.partner_email == partner_email.lower())
+        .first()
     )
-    if system_wide_partners == "true":
-        result = (
-            request.dbsession.query(partnerModel)
-            .filter(partnerModel.partner_email == partner_email.lower())
-            .first()
-        )
-    else:
-        result = (
-            request.dbsession.query(partnerModel)
-            .filter(partnerModel.partner_email == partner_email)
-            .filter(partnerModel.created_by == user_id)
-            .first()
-        )
     if result is None:
         return False
     else:

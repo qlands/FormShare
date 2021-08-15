@@ -145,6 +145,27 @@ class Collaborator(Base):
     project = relationship("Project")
 
 
+class Partner(Base):
+    __tablename__ = "partner"
+
+    partner_id = Column(Unicode(64), primary_key=True, nullable=False)
+    partner_email = Column(Unicode(320), nullable=False)
+    partner_name = Column(Unicode(120))
+    partner_organization = Column(Unicode(120))
+    partner_password = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    partner_cdate = Column(DateTime)
+    partner_telephone = Column(Unicode(120))
+    partner_apikey = Column(Unicode(64))
+    created_by = Column(
+        ForeignKey("fsuser.user_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+    extras = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    tags = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+
+    fsuser = relationship("User")
+
+
 class ProjectFile(Base):
     __tablename__ = "projectfile"
 

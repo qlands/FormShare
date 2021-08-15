@@ -22,6 +22,7 @@ from formshare.views.assistant_views.forms import (
     GetQRCode,
     ChangeMyAPIKey,
 )
+from formshare.views.partner_views.forms import PartnerForms
 from formshare.views.assistant_views.jsonlogs import (
     JSONList,
     JSONCompare,
@@ -53,7 +54,9 @@ from formshare.views.basic_views import (
     LoginView,
     RegisterView,
     AssistantLoginView,
+    PartnerLoginView,
     assistant_log_out_view,
+    partner_log_out_view,
     RefreshSessionView,
     RecoverPasswordView,
     ErrorView,
@@ -1208,6 +1211,38 @@ def load_routes(config):
             "odkmediafile",
             "/user/{userid}/project/{projcode}/{formid}/manifest/mediafile/{fileid}",
             ODKMediaFile,
+            None,
+        )
+    )
+
+    # Partner routes
+
+    # TODO: To test
+    routes.append(
+        add_route(
+            "partner_login",
+            "/user/{userid}/project/{projcode}/partneraccess/login",
+            PartnerLoginView,
+            "generic/partner_login.jinja2",
+        )
+    )
+
+    # TODO: To test
+    routes.append(
+        add_route(
+            "partner_forms",
+            "/user/{userid}/project/{projcode}/partneraccess/forms",
+            PartnerForms,
+            "partner/index.jinja2",
+        )
+    )
+
+    # TODO: To test
+    routes.append(
+        add_route(
+            "partner_logout",
+            "/user/{userid}/project/{projcode}/partneraccess/logout",
+            partner_log_out_view,
             None,
         )
     )

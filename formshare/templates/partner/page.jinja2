@@ -1,0 +1,175 @@
+{% extends 'base.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block css %}
+    {% cssresource request,'formshare','style' %}
+{% endblock css %}
+
+{% block topScripts %}
+    {% jsresource request,'formshare','pace' %}
+    {% jsresource request,'formshare','sweetalert' %}
+{% endblock topScripts %}
+
+{% block body_tag %}
+    <body {% block bodyattributes %}{% endblock bodyattributes %} class="{% if rtl %}rtls{% endif %} {% block bodyclass %} top-navigation {% endblock bodyclass %}">
+    {% block body %}
+        {% block bodycontent %}
+            <div id="wrapper">
+                {% block wrapper %}
+                    <div id="page-wrapper" class="gray-bg">
+                        {% block pagewrapper %}
+
+                            {% block pageheader %}
+                                {% include 'partner/snippets/header.jinja2' %}
+                            {% endblock pageheader %}
+                                {% block dashheader %}
+                                    <div style="margin-top: 5px" class="row wrapper border-bottom white-bg page-heading">
+                                        {% block breadcrumbs %}
+                                            {#
+                                            Extend this section to have breadcrumbs
+                                            {% include 'dashboard/snippets/breadcrumbs.jinja2' %}
+                                        #}
+                                        {% endblock breadcrumbs %}
+                                    </div>
+                                {% endblock dashheader %}
+                            {% block mainsection %}
+                                <div style="padding: 0px; margin-top: 3px; margin-left: -15px; margin-right: -15px" class="wrapper wrapper-content">
+                                    {% block maincontent %}
+                                        {# Here goes the content of the page #}
+                                    {% endblock maincontent %}
+                                </div>
+                            {% endblock mainsection %}
+                            {% block footer %}
+                                {% include 'dashboard/snippets/footer.jinja2' %}
+                            {% endblock footer %}
+
+                        {% endblock pagewrapper %}
+                    </div>
+                {% endblock wrapper %}
+            </div>
+        {% endblock bodycontent %}
+        {% block scripts %}
+            {% jsresource request,'formshare','inspinia' %}
+
+            <script>
+
+                function uuidv4() {
+                    return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+                        (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+                    );
+                }
+
+                $(document).ready(function() {
+                    var selectedLanguage = readCookie('_LOCALE_');
+                    if (selectedLanguage != null)
+                        $('#language').val(selectedLanguage);
+                    $("#language").bind('change', function() {
+                        //on change set cookie and...
+                        setCookie('_LOCALE_', this.value, 365);
+                        location.reload();
+                    });
+
+                    $('#genkey').click(function () {
+                        $('#coll_apikey').val(uuidv4());
+                    });
+
+                });
+
+                function setCookie(cookieName, cookieValue, nDays) {
+                    var today = new Date();
+                    var expire = new Date();
+
+                    if (nDays==null || nDays==0)
+                        nDays=1;
+
+                    expire.setTime(today.getTime() + 3600000*24*nDays);
+                    document.cookie = cookieName+"="+escape(cookieValue) + ";expires="+expire.toGMTString() + ";path=/";
+                }
+
+                function readCookie(name) {
+                    var nameEQ = name + "=";
+                    var ca = document.cookie.split(';');
+                    for(var i = 0; i < ca.length; i++) {
+                        var c = ca[i];
+                        while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+                    }
+                    return null;
+                }
+            </script>
+
+        {% endblock scripts %}
+    {% endblock body %}
+    <div class="modal inmodal" id="myModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content animated fadeIn">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">{{ _('Close') }}</span></button>
+                    <h4 class="modal-title">{{ _('Change password') }}</h4>
+                    <small id="password_who" class="font-bold">{{ _('Change the password of') }} {{ activePartner.fullName }}</small>
+                </div>
+                <form class="m-t" id="change_form" role="form" method="post" action="#">
+                    {{ form.secure_form(request) }}
+                    <input type="hidden" id="partner_id" name="partner_id" value="">
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label class="col-sm-2 col-form-label">{{ _('Old password') }}</label>
+                            <div class="col-sm-10">
+                                <input type="password" class="form-control" name="old_password">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-sm-2 col-form-label">{{ _('Password') }}</label>
+                            <div class="col-sm-10">
+                                <input type="password" class="form-control" name="coll_password">
+                            </div>
+                        </div>
+                        <div class="hr-line-dashed"></div>
+                        <div class="form-group">
+                            <label class="col-sm-2 col-form-label">{{ _('Confirmation') }}</label>
+                            <div class="col-sm-10">
+                                <input type="password" class="form-control" name="coll_password2">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
+                        <button type="submit" name="change_password" class="btn btn-primary">{{ _('Change password') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal inmodal" id="myModalAPIKey" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content animated fadeIn">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">{{ _('Close') }}</span></button>
+                    <h4 class="modal-title">{{ _('Change API key') }}</h4>
+                    <small id="password_who" class="font-bold">{{ _('Change thr API key of') }} {{ activePartner.fullName }}</small>
+                </div>
+                <form class="m-t" id="change_key_form" role="form" method="post" action="#">
+                    {{ form.secure_form(request) }}
+                    <input type="hidden" id="partner_id" name="partner_id" value="">
+                    <div class="modal-body">
+                        <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('API Key') }}</label>
+                            <div class="input-group col-sm-10">
+                                <input type="text" readonly class="form-control" id="coll_apikey" name="coll_apikey" value="{{ activePartner.APIKey }}">
+                                <span class="input-group-append">
+                                    <button type="button" id="genkey" class="btn btn-default" title="{{ _('Generate new key') }}"><i class="fas fa-sync-alt"></i></button>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
+                        <button type="submit" name="change_apikey" class="btn btn-primary">{{ _('Change API key') }}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    </body>
+{% endblock body_tag %}

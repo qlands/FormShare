@@ -1,7 +1,7 @@
 <div class="row border-bottom white-bg">
 
         <nav class="navbar navbar-expand-lg navbar-static-top" role="navigation">
-            <a href="{{ request.route_url('assistant_forms', userid=userid,projcode=projcode) }}" class="navbar-brand"><img alt="image" src="{{ request.url_for_static('formshare-small-black.png') }}"/> Form<b>Share</b><span style="display: block; font-size: 50%; margin-left: 35px; line-height: 0px">{{ _('Assistant access') }}</span></a>
+            <a href="{{ request.route_url('partner_forms',userid=userid,projcode=projcode) }}" class="navbar-brand"><img alt="image" src="{{ request.url_for_static('formshare-small-black.png') }}"/> Form<b>Share</b><span style="display: block; font-size: 50%; margin-left: 35px; line-height: 0px">{{ _('Partner access') }}</span></a>
 
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-label="Toggle navigation">
                 <i class="fa fa-reorder"></i>
@@ -11,7 +11,7 @@
             <div class="navbar-collapse collapse" id="navbar">
                 <ul class="nav navbar-nav mr-auto">
                     <li class="dropdown">
-                        <a aria-expanded="false" role="button" href="#" class="dropdown-toggle" data-toggle="dropdown"> {{ activeAssistant.fullName }}</a>
+                        <a aria-expanded="false" role="button" href="#" class="dropdown-toggle" data-toggle="dropdown"> {{ activePartner.fullName }}</a>
                         <ul role="menu" class="dropdown-menu" style="right: -130px">
                             <li><a data-toggle="modal" data-target="#myModal">{{ _('Change my password') }}</a></li>
                             <li><a data-toggle="modal" data-target="#myModalAPIKey">{{ _('Change my API key') }}</a></li>
@@ -63,7 +63,7 @@
                         </li>
                     {% endblock language_menu_item %}
                     <li>
-                        <a href="{{ request.route_url('assistant_logout', userid=userid, projcode=projcode) }}">
+                        <a href="{{ request.route_url('partner_logout', userid=userid, projcode=projcode) }}">
                             <i class="fas fa-sign-out-alt"></i> {{ _('Sign out') }}
                         </a>
                     </li>

@@ -464,6 +464,17 @@ class IUserAuthentication(Interface):  # pragma: no cover
             "after_collaborator_login must be implemented in subclasses"
         )
 
+    def after_partner_login(self, request, collaborator):
+        """
+        Called by FormShare so plugins can modify the login of assistants
+        :param request: ``pyramid.request`` object
+        :param collaborator: Assistant ID
+        :return: True, "" or False, "Why"
+        """
+        raise NotImplementedError(
+            "after_collaborator_login must be implemented in subclasses"
+        )
+
 
 class IUserAuthorization(Interface):  # pragma: no cover
     """

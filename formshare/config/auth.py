@@ -3,6 +3,7 @@ from sqlalchemy import func
 
 from formshare.config.encdecdata import decode_data
 from formshare.models import Collaborator as collaboratorModel
+from formshare.models import Partner as partnerModel
 from formshare.models import User as userModel
 from formshare.models import map_from_schema
 from formshare.plugins.core import PluginImplementations
@@ -76,6 +77,31 @@ class Assistant(object):
         )
 
 
+class Partner(object):
+    def __init__(self, partner_data):
+        self.email = partner_data["partner_email"]
+        self.gravatarURL = "#"
+        self.partnerData = partner_data
+        self.id = partner_data["partner_id"]
+        self.login = partner_data["partner_email"]
+        self.fullName = partner_data["partner_name"]
+        self.create_by = partner_data["created_by"]
+        self.organization = partner_data["partner_organization"]
+        self.APIKey = partner_data["partner_apikey"]
+
+    def check_password(self, password, request):
+        self.set_gravatar_url(request, self.fullName, 45)
+        return check_partner_login(request, self.email, password, self.create_by)
+
+    def set_gravatar_url(self, request, name, size):
+        self.gravatarURL = request.route_url(
+            "gravatar", _query={"name": name, "size": size}
+        )
+
+    def get_partner_id(self):
+        return self.id
+
+
 def get_formshare_user_data(request, user, is_email):
     if is_email:
         return map_from_schema(
@@ -135,6 +161,26 @@ def get_assistant_data(project, assistant, request):
     return None
 
 
+def get_partner_data(request, partner_email, user_id=None):
+    if user_id is None:
+        result = map_from_schema(
+            request.dbsession.query(partnerModel)
+            .filter(partnerModel.partner_email == partner_email)
+            .first()
+        )
+    else:
+        result = map_from_schema(
+            request.dbsession.query(partnerModel)
+            .filter(partnerModel.partner_email == partner_email)
+            .filter(partnerModel.created_by == user_id)
+            .first()
+        )
+    if result:
+        result["partner_password"] = ""  # Remove the password form the result
+        return Partner(result)
+    return None
+
+
 def check_login(user, password, request):
     result = (
         request.dbsession.query(userModel)
@@ -164,6 +210,33 @@ def check_assistant_login(project, assistant, password, request):
         return False
     else:
         cpass = decode_data(request, result.coll_password.encode())
+        if cpass == bytearray(password.encode()):
+            return True
+        else:
+            return False
+
+
+def check_partner_login(request, partner_email, password, user_id):
+    system_wide_partners = request.registry.settings.get(
+        "system_wide.partners", "false"
+    )
+    if system_wide_partners == "true":
+        result = (
+            request.dbsession.query(partnerModel)
+            .filter(partnerModel.partner_email == partner_email.lower())
+            .first()
+        )
+    else:
+        result = (
+            request.dbsession.query(partnerModel)
+            .filter(partnerModel.partner_email == partner_email)
+            .filter(partnerModel.created_by == user_id)
+            .first()
+        )
+    if result is None:
+        return False
+    else:
+        cpass = decode_data(request, result.partner_password.encode())
         if cpass == bytearray(password.encode()):
             return True
         else:

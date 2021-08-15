@@ -30,6 +30,8 @@ from formshare.models.formshare import (
     DictField,
     CaseLookUp,
     Partner,
+    PartnerProject,
+    PartnerForm,
 )
 from formshare.models.schema import *
 

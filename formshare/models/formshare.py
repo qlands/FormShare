@@ -166,6 +166,59 @@ class Partner(Base):
     fsuser = relationship("User")
 
 
+class PartnerProject(Base):
+    __tablename__ = "partnerproject"
+
+    partner_id = Column(
+        ForeignKey("partner.partner_id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+    project_id = Column(
+        ForeignKey("project.project_id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+        index=True,
+    )
+    access_date = Column(DateTime)
+    granted_by = Column(
+        ForeignKey("fsuser.user_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+
+    project = relationship("Project")
+    partner = relationship("Partner")
+    fsuser = relationship("User")
+
+
+class PartnerForm(Base):
+    __tablename__ = "partnerform"
+    __table_args__ = (
+        ForeignKeyConstraint(
+            ["project_id", "form_id"],
+            ["odkform.project_id", "odkform.form_id"],
+            ondelete="CASCADE",
+        ),
+        Index("fk_partnerform_form1_idx", "project_id", "form_id"),
+    )
+    partner_id = Column(
+        ForeignKey("partner.partner_id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+    project_id = Column(Unicode(64), primary_key=True, nullable=False)
+    form_id = Column(Unicode(120), primary_key=True, nullable=False)
+    access_date = Column(DateTime)
+    granted_by = Column(
+        ForeignKey("fsuser.user_id", ondelete="CASCADE"),
+        nullable=False,
+    )
+
+    odkform = relationship("Odkform")
+    partner = relationship("Partner")
+    fsuser = relationship("User")
+
+
 class ProjectFile(Base):
     __tablename__ = "projectfile"
 

@@ -385,17 +385,9 @@ class PartnerLoginView(PublicView):
             if login_data is not None:
                 login_data = literal_eval(login_data)
                 if login_data["group"] == "partners":
-                    system_wide_partners = self.request.registry.settings.get(
-                        "system_wide.partners", "false"
+                    current_partner = get_partner_data(
+                        self.request, login_data["login"]
                     )
-                    if system_wide_partners == "true":
-                        current_partner = get_partner_data(
-                            self.request, login_data["login"]
-                        )
-                    else:
-                        current_partner = get_partner_data(
-                            self.request, login_data["login"], user_id
-                        )
                     if current_partner is not None:
                         self.returnRawViewResult = True
                         return HTTPFound(
@@ -414,13 +406,7 @@ class PartnerLoginView(PublicView):
             data = variable_decode(self.request.POST)
             login = data["login"]
             passwd = data["passwd"]
-            system_wide_partners = self.request.registry.settings.get(
-                "system_wide.partners", "false"
-            )
-            if system_wide_partners == "true":
-                partner = get_partner_data(self.request, login)
-            else:
-                partner = get_partner_data(self.request, login, user_id)
+            partner = get_partner_data(self.request, login)
             login_data = {"login": login, "group": "partners"}
             if partner is not None:
                 if partner.check_password(passwd, self.request):

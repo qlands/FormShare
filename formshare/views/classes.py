@@ -735,15 +735,7 @@ class PartnerView(object):
         if login_data is not None:
             login_data = literal_eval(login_data)
             if login_data["group"] == "partners":
-                system_wide_partners = self.request.registry.settings.get(
-                    "system_wide.partners", "false"
-                )
-                if system_wide_partners == "true":
-                    self.partner = get_partner_data(self.request, login_data["login"])
-                else:
-                    self.partner = get_partner_data(
-                        self.request, login_data["login"], self.userID
-                    )
+                self.partner = get_partner_data(self.request, login_data["login"])
                 if self.partner is None:
                     return HTTPFound(
                         location=self.request.route_url(

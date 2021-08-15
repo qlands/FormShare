@@ -217,7 +217,7 @@ def load_environment(settings, config, apppath, policy_array):
     initialize(config.registry.settings["templatesPaths"])
 
     # We load the routes
-    load_routes(config)
+    load_routes(config, settings)
     load_api_version_1_routes(config)
 
     wsgi_app = config.make_wsgi_app()

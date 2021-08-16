@@ -177,6 +177,20 @@ def pluralize(noun, size, locale="en"):
 
 
 @core_helper
+def get_setting(
+    request, setting_key, default=None
+):  # pragma: no cover Cannot be tested due to request object
+    """
+    Return the gravatar based on a name
+    :param request: pyramid request
+    :param setting_key: Name for setting to get
+    :param default: Default value of the key does not exist
+    :return: The value of the setting or None
+    """
+    return request.registry.settings.get(setting_key, default)
+
+
+@core_helper
 def get_gravatar_url(
     request, name, size=45
 ):  # pragma: no cover Cannot be tested due to request object

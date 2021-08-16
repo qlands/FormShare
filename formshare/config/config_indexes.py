@@ -5,6 +5,9 @@ import requests
 
 from formshare.config.elasticfeeds import configure_manager
 from formshare.processes.elasticsearch.user_index import configure_user_index_manager
+from formshare.processes.elasticsearch.partner_index import (
+    configure_partner_index_manager,
+)
 
 log = logging.getLogger("formshare")
 
@@ -42,3 +45,5 @@ def configure_indexes(settings):
     configure_manager(settings)
     # Load the user index manager
     configure_user_index_manager(settings)
+    # Load the partner index
+    configure_partner_index_manager(settings)

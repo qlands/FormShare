@@ -1,0 +1,129 @@
+{% extends 'dashboard/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block titlesection %}{{ _("FormShare partners") }}{% endblock titlesection %}
+
+{% block css %}
+    {{ super() }}
+    {% cssresource request,'formshare','select2' %}
+    <style>
+        @media (max-width: 767px) {
+            .action-buttons {
+                margin-top: 10px;
+            }
+        }
+    </style>
+{% endblock css %}
+
+{% block topScripts %}
+    {{ super() }}
+    {% jsresource request,'formshare','select2' %}
+    {% jsresource request,'formshare','md5' %}
+{% endblock topScripts %}
+
+{% block breadcrumbs %}
+    {% include 'dashboard/partners/snippets/brdcrbs_partnerlist.jinja2' %}
+{% endblock breadcrumbs %}
+
+{% block maincontent %}
+    <div class="row">
+        <div class="col-lg-12">
+            {{ form.display_errors(errors) }}
+            <div class="ibox">
+                <div class="ibox-content">
+                    {% block partner_list_heading %}
+{#                        <span class="text-muted small float-right">Last modification: <i class="fa fa-clock-o"></i> 2:10 pm - 12.06.2014</span>#}
+                        <h2>{{ _('FormShare partners') }}</h2>
+                        {{ _('Partners are trusted individuals outside your organization that require access to products and other resources in FormShare to collaborate with you. For example, a professor at a university (a partner in your project) requiring a KML export to match GPS points with weather data.') }}<br/><br/>
+                        {{ _('After adding a partner you can link it either to a project or to individual forms within a project.') }}<br/>
+                        <div style="margin-top: 10px" class="row">
+                            <div class="col-md-9">
+
+                            </div>
+                            <div class="col-md-3">
+                                <button onclick="location.href='#';" class="btn btn-block btn-primary"> <i class="fa fa-plus"></i> {{ _('Add partner') }}</button>
+                            </div>
+                        </div>
+
+
+                    {% endblock partner_list_heading %}
+                </div>
+            </div>
+            {% block partner_list_search %}
+                <div class="ibox-content text-left">
+                    <h2>{{ _('Search for a partner') }}</h2>
+                    <small>{{ _('You can search by full name, email address or organization') }}</small>
+
+
+                        <div class="row">
+                            <div class="col-md-9">
+                                <select name="partner" id="partner" style="width: 100%; !important;" class="js-example-data-ajax form-control"></select>
+                            </div>
+                            <div class="col-md-3">
+                                <button id="edit_partner" class="btn btn-block btn-warning action-buttons"> <i class="fas fa-user-edit"></i> {{ _('Edit partner') }}</button>
+                            </div>
+                        </div>
+
+                </div>
+            {% endblock partner_list_search %}
+        </div>
+    </div>
+    
+{% endblock maincontent %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function() {
+
+            $('#edit_partner').click(function () {
+                let selected_partner = $('#partner').find(":selected").val();
+                if (selected_partner)
+                {
+                    let loc = '';
+                    {#let loc = '{{ request.route_url('modify_user',userid=userid,manageuser='~TOCHANGE~') }}';#}
+                    loc = loc.replace("~TOCHANGE~",selected_partner);
+                    location.href=loc;
+                }
+
+            });
+
+            function formatPartner (partner) {
+                if (!partner.id) {
+                    return partner.text;
+                }
+                let baseUrl = "{{ request.route_url('gravatar') }}";
+                let $state = $(
+                    '<span><img src="' + baseUrl + '?name=' + partner.text + '&size=45" class="img-flag" /> ' + partner.text + '</span>'
+                );
+                return $state;
+            }
+
+            $(".js-example-data-ajax").select2({
+                templateResult: formatPartner,
+                ajax: {
+                    url: "{{ request.route_url('api_select2_partners',userid=userid) }}",
+                    dataType: 'json',
+                    delay: 250,
+                    data: function (params) {
+                        return {
+                            q: params.term, // search term
+                            page: params.page,
+                        };
+                    },
+                    processResults: function (data, params) {
+                        params.page = params.page || 1;
+                        return {
+                            results: data.results,
+                            pagination: {
+                                more: (params.page * 10) < data.total
+                            }
+                        };
+                    },
+                    cache: true
+                }
+            });
+
+        });
+    </script>
+{% endblock scripts %}

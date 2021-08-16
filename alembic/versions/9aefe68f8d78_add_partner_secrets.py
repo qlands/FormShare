@@ -48,7 +48,7 @@ def upgrade():
             "The parameter 'formshare.ini.file' must point to the full path of the FormShare ini file"
         )
         exit(1)
-    shutil.copyfile(config_uri, config_uri + ".bk.6b09c0218d0b")
+    shutil.copyfile(config_uri, config_uri + ".bk.9aefe68f8d78")
     config = configparser.ConfigParser()
     config.read(config_uri)
 

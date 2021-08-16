@@ -144,7 +144,7 @@ from formshare.views.repository_submissions import (
     GetFormAudit,
     ReviewAudit,
 )
-from formshare.views.search import APIUserSearchSelect2
+from formshare.views.search import APIUserSearchSelect2, APIPartnerSearchSelect2
 from formshare.views.testing import (
     TestUserView,
     TestFormView,
@@ -152,6 +152,7 @@ from formshare.views.testing import (
     TestErrorView,
 )
 from formshare.views.users import UsersListView, EditUserView, AddUserView
+from formshare.views.partners import PartnersListView
 
 log = logging.getLogger("formshare")
 
@@ -1217,7 +1218,7 @@ def load_routes(config, settings):
 
     # Partner routes
 
-    if settings.get("allow.partner.access", "false") == "true":
+    if settings.get("allow.partner.access", "False") == "True":
         # TODO: To test
         routes.append(
             add_route(
@@ -1245,6 +1246,25 @@ def load_routes(config, settings):
                 "/user/{userid}/project/{projcode}/partneraccess/logout",
                 partner_log_out_view,
                 None,
+            )
+        )
+
+        # TODO: To test
+        routes.append(
+            add_route(
+                "api_select2_partners",
+                "/user/{userid}/api/select2_partners",
+                APIPartnerSearchSelect2,
+                "json",
+            )
+        )
+
+        routes.append(
+            add_route(
+                "manage_partners",
+                "/user/{userid}/manage_partners",
+                PartnersListView,
+                "dashboard/partners/partner_list.jinja2",
             )
         )
 

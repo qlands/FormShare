@@ -80,7 +80,7 @@ def _get_partner_search_dict(partner_id):
     :param partner_id: The partner to search if it exists
     :return: A dict that will be passes to ES
     """
-    _dict = {"query": {"bool": {"must": {"term": {"partner_id": partner_id}}}}}
+    _dict = {"query": {"bool": {"must": {"term": {"_id": partner_id}}}}}
     return _dict
 
 

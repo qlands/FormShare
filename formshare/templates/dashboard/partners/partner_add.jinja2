@@ -3,16 +3,6 @@
 
 {% block titlesection %}{{ _("Add partner") }}{% endblock titlesection %}
 
-{% block css %}
-    {{ super() }}
-    {% cssresource request,'formshare','switchery' %}
-{% endblock css %}
-
-{% block topScripts %}
-    {{ super() }}
-    {% jsresource request,'formshare','switchery' %}
-{% endblock topScripts %}
-
 {% block breadcrumbs %}
     {% include 'dashboard/partners/snippets/brdcrbs_partneradd.jinja2' %}
 {% endblock breadcrumbs %}
@@ -41,13 +31,3 @@
         </div>
     </div>
 {% endblock maincontent %}
-
-{% block scripts %}
-    {{ super() }}
-    <script>
-        $(document).ready(function() {
-            var elem = document.querySelector('.js-switch');
-            var switchery = new Switchery(elem, { color: '#1AB394' });
-        });
-    </script>
-{% endblock scripts %}

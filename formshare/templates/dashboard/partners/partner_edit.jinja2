@@ -1,0 +1,78 @@
+{% extends 'dashboard/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block titlesection %}{{ _("Edit partner") }}{% endblock titlesection %}
+
+{% block breadcrumbs %}
+    {% include 'dashboard/partners/snippets/brdcrbs_partneredit.jinja2' %}
+{% endblock breadcrumbs %}
+
+{% block maincontent %}
+    <div class="ibox">
+        <div class="ibox-title">
+            {% block partner_edit_title %}
+                <h5>{{ _('Current information') }}</h5>
+                <div class="ibox-tools">
+                    {% block partner_edit_tools %}
+                        <a class="fullscreen-link">
+                            <i class="fa fa-expand"></i>
+                        </a>
+                    {% endblock partner_edit_tools %}
+                </div>
+            {% endblock partner_edit_title %}
+        </div>
+        <div class="ibox-content">
+            {% block partner_edit_content %}
+                {% block form_errors %}
+                    {{ form.display_errors(errors) }}
+                {% endblock form_errors %}
+                {% include 'dashboard/partners/snippets/partner_form_edit.jinja2' %}
+            {% endblock partner_edit_content %}
+        </div>
+    </div>
+    {% block change_password_section %}
+        <div class="ibox">
+            <div class="ibox-title">
+                {% block partner_password_title %}
+                    <h5>{{ _('Change password') }}</h5>
+                    <div class="ibox-tools">
+                        {% block partner_password_tools %}
+                            <a class="fullscreen-link">
+                                <i class="fa fa-expand"></i>
+                            </a>
+                        {% endblock partner_password_tools %}
+                    </div>
+                {% endblock partner_password_title %}
+            </div>
+            <div class="ibox-content">
+                {% block partner_password_content %}
+                    {% block password_errors %}
+                        {% if action == "changepass" %}
+                            {{ form.display_errors(errors) }}
+                        {% endif %}
+                    {% endblock password_errors %}
+                    {% include 'dashboard/partners/snippets/partner_password_form.jinja2' %}
+                {% endblock partner_password_content %}
+            </div>
+        </div>
+    {% endblock change_password_section %}
+{% endblock maincontent %}
+
+{% block scripts %}
+    {{ super() }}
+    {% if partnerData.created_by == userid or activeUser.super == 1 %}
+        <script>
+            function uuidv4() {
+                return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+                    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+                );
+            }
+
+            $(document).ready(function() {
+                $('#genkey').click(function () {
+                    $('#partner_apikey').val(uuidv4());
+                });
+            });
+        </script>
+    {% endif %}
+{% endblock scripts %}

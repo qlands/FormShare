@@ -81,8 +81,7 @@
                 let selected_partner = $('#partner').find(":selected").val();
                 if (selected_partner)
                 {
-                    let loc = '';
-                    {#let loc = '{{ request.route_url('modify_user',userid=userid,manageuser='~TOCHANGE~') }}';#}
+                    let loc = '{{ request.route_url('modify_partner',userid=userid,partnerid='~TOCHANGE~') }}';
                     loc = loc.replace("~TOCHANGE~",selected_partner);
                     location.href=loc;
                 }

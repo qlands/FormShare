@@ -1,0 +1,31 @@
+{% extends 'dashboard/partners/snippets/partner_form.jinja2' %}
+
+{% block partner_form_passwords %}
+
+{% endblock partner_form_passwords %}
+
+{% block partner_form_controls_extra %}
+    {{ super() }}
+    <div class="hr-line-dashed"></div>
+    <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('API Key') }}</label>
+        <div class="input-group col-sm-10">
+            <input type="text" readonly class="form-control" id="partner_apikey" name="partner_apikey" value="{{ partnerData.partner_apikey }}">
+            <span class="input-group-append">
+                <button type="button" id="genkey" class="btn btn-default" title="{{ _('Generate new key') }}"><i class="fas fa-sync-alt"></i></button>
+            </span>
+        </div>
+    </div>
+    <div class="hr-line-dashed"></div>
+{% endblock partner_form_controls_extra %}
+
+{% block partner_form_actions %}
+    <div class="form-group row">
+        <div class="col-sm-4 col-sm-offset-2">
+            {% if partnerData.created_by == userid or activeUser.super == 1 %}
+                <button class="btn btn-warning btn-sm" type="submit" name="modify">{{ _('Modify partner') }}</button>
+            {% else %}
+                <strong style="color: red">{{ _('This partner was creted by ') }} <a href="mailto:{{ partnerData.by_details.user_email }}">{{ partnerData.by_details.user_name }}</a>. {{ _('Only') }} {{ partnerData.by_details.user_name }} {{ _('or an administrator can edit its details.') }} </strong>
+            {% endif %}
+        </div>
+    </div>
+{% endblock partner_form_actions %}

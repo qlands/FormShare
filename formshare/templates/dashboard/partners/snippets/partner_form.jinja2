@@ -1,27 +1,32 @@
 {% block partner_form %}
+    {% if partnerData.created_by == userid or activeUser.super == 1 %}
+        {% set partner_read_only = true %}
+    {% else %}
+        {% set partner_read_only = true %}
+    {% endif %}
     <form class="m-t" role="form" method="post" action="{{ request.url }}">
         {{ form.secure_form(request) }}
         <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Email') }}</label>
             <div class="col-sm-10">
-                <input required type="text" class="form-control" name="partner_email" value="{{ partnerData.partner_email }}">
+                <input required {% if partner_read_only %}readonly{% endif %} type="text" class="form-control" name="partner_email" value="{{ partnerData.partner_email }}">
             </div>
         </div>     
         <div class="hr-line-dashed"></div>
         <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Full name') }}</label>
             <div class="col-sm-10">
-                <input required type="text" class="form-control" name="partner_name" value="{{ partnerData.partner_name }}">
+                <input required {% if partner_read_only %}readonly{% endif %} type="text" class="form-control" name="partner_name" value="{{ partnerData.partner_name }}">
             </div>
         </div>
         <div class="hr-line-dashed"></div>
         <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Organization') }}</label>
             <div class="col-sm-10">
-                <input required type="text" class="form-control" name="partner_organization" value="{{ partnerData.partner_organization }}">
+                <input required {% if partner_read_only %}readonly{% endif %} type="text" class="form-control" name="partner_organization" value="{{ partnerData.partner_organization }}">
             </div>
         </div>
         <div class="hr-line-dashed"></div>
         <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Telephone') }}</label>
             <div class="col-sm-10">
-                <input required type="text" class="form-control" name="partner_telephone" value="{{ partnerData.partner_telephone }}">
+                <input required {% if partner_read_only %}readonly{% endif %} type="text" class="form-control" name="partner_telephone" value="{{ partnerData.partner_telephone }}">
             </div>
         </div>
         <div class="hr-line-dashed"></div>

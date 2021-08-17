@@ -1324,20 +1324,22 @@ class IPartner(Interface):  # pragma: no cover
         """
         raise NotImplementedError("after_create must be implemented in subclasses")
 
-    def before_edit(self, request, partner_data):
+    def before_edit(self, request, partner_id, partner_data):
         """
         Called by FormShare so plugins can perform actions before editing a partner
         :param request: ``pyramid.request`` object
+        :param partner_id: partner id
         :param partner_data: partner information to be edited
         :return: Return a modified version of partner_data, true or false if the partner should be edited.
         If False then a message should state why. Example: return user_data, False, "My message"
         """
         raise NotImplementedError("before_edit must be implemented in subclasses")
 
-    def after_edit(self, request, partner_data):
+    def after_edit(self, request, partner_id, partner_data):
         """
         Called by FormShare so plugins can perform actions after editing a partner
         :param request: ``pyramid.request`` object
+        :param partner_id: partner id
         :param partner_data: Partner information
         :return: None
         """

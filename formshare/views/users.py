@@ -113,14 +113,10 @@ class EditUserView(PrivateView):
                             )
                         continue_edit = True
                         for plugin in p.PluginImplementations(p.IUser):
-                            (
-                                data,
-                                continue_creation,
-                                error_message,
-                            ) = plugin.before_edit(
+                            (data, continue_edit, error_message,) = plugin.before_edit(
                                 self.request, user_to_modify, user_details
                             )
-                            if not continue_creation:
+                            if not continue_edit:
                                 self.append_to_errors(error_message)
                             else:
                                 user_details = data

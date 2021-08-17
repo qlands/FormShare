@@ -16,6 +16,7 @@ __all__ = [
     "partner_email_exists",
     "update_partner",
     "update_partner_password",
+    "delete_partner",
 ]
 
 log = logging.getLogger("formshare")
@@ -117,4 +118,17 @@ def update_partner_password(request, partner_id, password):
         log.error(
             "Error {} when changing password for partner {}".format(str(e), partner_id)
         )
+        return False, str(e)
+
+
+def delete_partner(request, partner_id):
+    try:
+        request.dbsession.query(Partner).filter(
+            Partner.partner_id == partner_id
+        ).delete()
+        request.dbsession.flush()
+        return True, ""
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error("Error {} when updating partner {}".format(str(e), partner_id))
         return False, str(e)

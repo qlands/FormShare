@@ -185,6 +185,11 @@ class PartnerProject(Base):
         ForeignKey("fsuser.user_id", ondelete="CASCADE"),
         nullable=False,
     )
+    time_bound = Column(INTEGER, server_default=text("'0'"))
+    access_from = Column(DateTime)
+    access_to = Column(DateTime)
+    extras = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    tags = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 
     project = relationship("Project")
     partner = relationship("Partner")
@@ -213,6 +218,11 @@ class PartnerForm(Base):
         ForeignKey("fsuser.user_id", ondelete="CASCADE"),
         nullable=False,
     )
+    time_bound = Column(INTEGER, server_default=text("'0'"))
+    access_from = Column(DateTime)
+    access_to = Column(DateTime)
+    extras = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    tags = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 
     odkform = relationship("Odkform")
     partner = relationship("Partner")

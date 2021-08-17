@@ -38,6 +38,7 @@ __all__ = [
     "IXMLSubmission",
     "IMediaSubmission",
     "IJSONSubmission",
+    "IPartner",
 ]
 
 
@@ -1297,6 +1298,69 @@ class IUser(Interface):  # pragma: no cover
         :return: None
         """
         raise NotImplementedError("after_edit must be implemented in subclasses")
+
+
+class IPartner(Interface):  # pragma: no cover
+    """
+    Allows to hook into the processes that creates and updates partners
+    """
+
+    def before_create(self, request, partner_data):
+        """
+        Called by FormShare so plugins can perform actions before adding an partner
+        :param request: ``pyramid.request`` object
+        :param partner_data: Partner information to be added
+        :return: Return a modified version of user_data, true or false if the partner should be added.
+        If False then a message should state why. Example: return user_data, False, "My message"
+        """
+        raise NotImplementedError("before_create must be implemented in subclasses")
+
+    def after_create(self, request, partner_data):
+        """
+        Called by FormShare so plugins can perform actions after adding an partner
+        :param request: ``pyramid.request`` object
+        :param partner_data: Partner information
+        :return: None
+        """
+        raise NotImplementedError("after_create must be implemented in subclasses")
+
+    def before_edit(self, request, partner_data):
+        """
+        Called by FormShare so plugins can perform actions before editing a partner
+        :param request: ``pyramid.request`` object
+        :param partner_data: partner information to be edited
+        :return: Return a modified version of partner_data, true or false if the partner should be edited.
+        If False then a message should state why. Example: return user_data, False, "My message"
+        """
+        raise NotImplementedError("before_edit must be implemented in subclasses")
+
+    def after_edit(self, request, partner_data):
+        """
+        Called by FormShare so plugins can perform actions after editing a partner
+        :param request: ``pyramid.request`` object
+        :param partner_data: Partner information
+        :return: None
+        """
+        raise NotImplementedError("after_edit must be implemented in subclasses")
+
+    def before_delete(self, request, partner_email):
+        """
+        Called by FormShare so plugins can perform actions before deleting a partner
+        :param request: ``pyramid.request`` object
+        :param partner_email: partner email to be deleted
+        :return: Return true or false if the partner should be edited and a message.
+        Example: return False, "My message"
+        """
+        raise NotImplementedError("before_delete must be implemented in subclasses")
+
+    def after_delete(self, request, partner_email):
+        """
+        Called by FormShare so plugins can perform actions after deleting a partner
+        :param request: ``pyramid.request`` object
+        :param partner_email: Partner email that was deleted
+        :return: None
+        """
+        raise NotImplementedError("after_delete must be implemented in subclasses")
 
 
 class IEnvironment(Interface):  # pragma: no cover

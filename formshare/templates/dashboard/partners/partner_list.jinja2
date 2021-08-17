@@ -54,7 +54,7 @@
                     <h2>{{ _('Search for a partner') }}</h2>
                     <small>{{ _('You can search by full name, email address or organization') }}</small>
                         <div class="row">
-                            <div class="col-md-8">
+                            <div class="col-md-6">
                                 <select name="partner" id="partner" style="width: 100%; !important;" class="js-example-data-ajax form-control"></select>
                             </div>
                             <div class="col-md-2">
@@ -62,6 +62,9 @@
                             </div>
                             <div class="col-md-2">
                                 <button id="partner_history" class="btn btn-block btn-default action-buttons"> <i class="fas fa-chart-line"></i> {{ _('View partner activity') }}</button>
+                            </div>
+                            <div class="col-md-2">
+                                <button id="delete_partner" class="btn btn-block btn-danger action-buttons"> <i class="fas fa-user-minus"></i> {{ _('Delete partner') }}</button>
                             </div>
                         </div>
 
@@ -84,6 +87,45 @@
                     let loc = '{{ request.route_url('modify_partner',userid=userid,partnerid='~TOCHANGE~') }}';
                     loc = loc.replace("~TOCHANGE~",selected_partner);
                     location.href=loc;
+                }
+
+            });
+
+            $('#delete_partner').click(function () {
+                let selected_partner = $('#partner').find(":selected").val();
+                if (selected_partner)
+                {
+                    let loc = '{{ request.route_url('delete_partner',userid=userid,partnerid='~TOCHANGE~') }}';
+                    loc = loc.replace("~TOCHANGE~",selected_partner);
+
+                    swal({
+                        title: "{{ _('Are you sure?') }}",
+                        text: "{{ _('The partner and all its history will be deleted!') }}",
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#DD6B55",
+                        confirmButtonText: "{{ _('Yes, delete it!') }}",
+                        cancelButtonText: "{{ _('Oops, cancel!') }}",
+                        closeOnConfirm: true,
+                        closeOnCancel: true },
+                    function (isConfirm) {
+                        if (isConfirm) {
+                            var form = document.createElement('form');
+                            form.setAttribute('method', 'post');
+                            form.setAttribute('action', loc);
+                            form.style.display = 'hidden';
+
+                            var i = document.createElement("input"); //input element, text
+                            i.setAttribute('type',"text");
+                            i.setAttribute('name',"csrf_token");
+                            i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                            form.appendChild(i);
+
+                            document.body.appendChild(form);
+                            form.submit();
+                        }
+                    });
+
                 }
 
             });

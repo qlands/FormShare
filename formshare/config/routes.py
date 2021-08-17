@@ -152,7 +152,12 @@ from formshare.views.testing import (
     TestErrorView,
 )
 from formshare.views.users import UsersListView, EditUserView, AddUserView
-from formshare.views.partners import PartnersListView, AddPartnerView, EditPartnerView
+from formshare.views.partners import (
+    PartnersListView,
+    AddPartnerView,
+    EditPartnerView,
+    DeletePartnerView,
+)
 
 log = logging.getLogger("formshare")
 
@@ -1283,6 +1288,14 @@ def load_routes(config, settings):
                 "/user/{userid}/manage_partner/{partnerid}/edit",
                 EditPartnerView,
                 "dashboard/partners/partner_edit.jinja2",
+            )
+        )
+        routes.append(
+            add_route(
+                "delete_partner",
+                "/user/{userid}/manage_partner/{partnerid}/delete",
+                DeletePartnerView,
+                None,
             )
         )
 

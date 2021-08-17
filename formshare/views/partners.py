@@ -8,6 +8,7 @@ from formshare.processes.db.partner import (
     partner_email_exists,
     update_partner,
     update_partner_password,
+    delete_partner,
 )
 from formshare.processes.db.user import get_user_details
 from formshare.config.encdecdata import encode_data
@@ -16,6 +17,7 @@ import uuid
 import formshare.plugins as p
 from formshare.processes.elasticsearch.partner_index import get_partner_index_manager
 import logging
+
 
 log = logging.getLogger("formshare")
 
@@ -132,6 +134,11 @@ class AddPartnerView(PrivateView):
                                         plugin.after_create(
                                             self.request, partner_details
                                         )
+                                    log.error(
+                                        "The user {} created the partner {}".format(
+                                            self.userID, partner_details["partner_id"]
+                                        )
+                                    )
                                     self.request.session.flash(
                                         self._("The partner was added successfully")
                                     )
@@ -229,14 +236,10 @@ class EditPartnerView(PrivateView):
                             )
                         continue_edit = True
                         for plugin in p.PluginImplementations(p.IPartner):
-                            (
-                                data,
-                                continue_creation,
-                                error_message,
-                            ) = plugin.before_edit(
+                            (data, continue_edit, error_message,) = plugin.before_edit(
                                 self.request, partner_to_modify, partner_data
                             )
-                            if not continue_creation:
+                            if not continue_edit:
                                 self.append_to_errors(error_message)
                             else:
                                 partner_details = data
@@ -261,6 +264,11 @@ class EditPartnerView(PrivateView):
 
                                 partner_index.update_partner(
                                     partner_to_modify, partner_index_data
+                                )
+                                log.error(
+                                    "The user {} modified the partner {}".format(
+                                        self.userID, partner_details["partner_id"]
+                                    )
                                 )
                                 self.request.session.flash(
                                     self._("The partner has been updated")
@@ -314,3 +322,86 @@ class EditPartnerView(PrivateView):
                 else:
                     self.append_to_errors(self._("The password cannot be empty"))
         return {"userid": user_id, "partnerData": partner_details}
+
+
+class DeletePartnerView(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.set_active_menu("partners")
+        self.checkCrossPost = False
+
+    def process_view(self):
+        if self.request.method == "GET":
+            raise HTTPNotFound
+        else:
+            user_id = self.request.matchdict["userid"]
+            partner_to_delete = self.request.matchdict["partnerid"]
+            if self.user.id != user_id:
+                raise HTTPNotFound
+
+            partner_details = get_partner_details(self.request, partner_to_delete)
+            if not partner_details:
+                raise HTTPNotFound
+            by_details = get_user_details(self.request, partner_details["created_by"])
+            if partner_details["created_by"] != user_id:
+                if self.user.super != 1:
+                    self.returnRawViewResult = True
+                    self.add_error(
+                        self._(
+                            "This partner was created by {0} ({1}). "
+                            "Only {0} or and administrator can delete it".format(
+                                by_details["user_name"], by_details["user_email"]
+                            )
+                        )
+                    )
+                    return HTTPFound(
+                        location=self.request.route_url(
+                            "manage_partners", userid=user_id
+                        )
+                    )
+            continue_delete = True
+            for plugin in p.PluginImplementations(p.IPartner):
+                (continue_delete, error_message,) = plugin.before_delete(
+                    self.request, partner_to_delete, partner_details
+                )
+                if not continue_delete:
+                    self.add_error(error_message)
+                    self.returnRawViewResult = True
+                    return HTTPFound(
+                        location=self.request.route_url(
+                            "manage_partners", userid=user_id
+                        )
+                    )
+                break  # Only one plugging will be called to extend before_create
+            if continue_delete:
+                deleted, error_message = delete_partner(self.request, partner_to_delete)
+                if deleted:
+                    for plugin in p.PluginImplementations(p.IPartner):
+                        plugin.after_delete(
+                            self.request,
+                            partner_to_delete,
+                        )
+
+                    partner_index = get_partner_index_manager(self.request)
+                    partner_index.remove_partner(partner_to_delete)
+                    log.error(
+                        "The user {} deleted the partner {}".format(
+                            self.userID, partner_to_delete
+                        )
+                    )
+                    self.request.session.flash(self._("The partner has been deleted"))
+                    self.returnRawViewResult = True
+                    return HTTPFound(
+                        location=self.request.route_url(
+                            "manage_partners", userid=user_id
+                        )
+                    )
+                else:
+                    self.add_error(error_message)
+                    self.returnRawViewResult = True
+                    return HTTPFound(
+                        location=self.request.route_url(
+                            "manage_partners", userid=user_id
+                        )
+                    )

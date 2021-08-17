@@ -1345,21 +1345,22 @@ class IPartner(Interface):  # pragma: no cover
         """
         raise NotImplementedError("after_edit must be implemented in subclasses")
 
-    def before_delete(self, request, partner_email):
+    def before_delete(self, request, partner_id, partner_data):
         """
         Called by FormShare so plugins can perform actions before deleting a partner
         :param request: ``pyramid.request`` object
-        :param partner_email: partner email to be deleted
+        :param partner_id: partner id to be deleted
+        :param partner_data: information of the partner to be deleted
         :return: Return true or false if the partner should be edited and a message.
         Example: return False, "My message"
         """
         raise NotImplementedError("before_delete must be implemented in subclasses")
 
-    def after_delete(self, request, partner_email):
+    def after_delete(self, request, partner_id):
         """
         Called by FormShare so plugins can perform actions after deleting a partner
         :param request: ``pyramid.request`` object
-        :param partner_email: Partner email that was deleted
+        :param partner_id: Partner id that was deleted
         :return: None
         """
         raise NotImplementedError("after_delete must be implemented in subclasses")

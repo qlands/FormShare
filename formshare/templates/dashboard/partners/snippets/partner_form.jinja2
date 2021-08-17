@@ -2,7 +2,7 @@
     {% if partnerData.created_by == userid or activeUser.super == 1 %}
         {% set partner_read_only = true %}
     {% else %}
-        {% set partner_read_only = true %}
+        {% set partner_read_only = false %}
     {% endif %}
     <form class="m-t" role="form" method="post" action="{{ request.url }}">
         {{ form.secure_form(request) }}

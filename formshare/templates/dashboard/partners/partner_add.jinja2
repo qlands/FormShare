@@ -1,0 +1,53 @@
+{% extends 'dashboard/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block titlesection %}{{ _("Add partner") }}{% endblock titlesection %}
+
+{% block css %}
+    {{ super() }}
+    {% cssresource request,'formshare','switchery' %}
+{% endblock css %}
+
+{% block topScripts %}
+    {{ super() }}
+    {% jsresource request,'formshare','switchery' %}
+{% endblock topScripts %}
+
+{% block breadcrumbs %}
+    {% include 'dashboard/partners/snippets/brdcrbs_partneradd.jinja2' %}
+{% endblock breadcrumbs %}
+
+{% block maincontent %}
+    <div class="ibox">
+        <div class="ibox-title">
+            {% block partner_edit_title %}
+                <h5>{{ _('Partner information') }}</h5>
+                <div class="ibox-tools">
+                    {% block partner_edit_tools %}
+                        <a class="fullscreen-link">
+                            <i class="fa fa-expand"></i>
+                        </a>
+                    {% endblock partner_edit_tools %}
+                </div>
+            {% endblock partner_edit_title %}
+        </div>
+        <div class="ibox-content">
+            {% block partner_edit_content %}
+                {% block form_errors %}
+                    {{ form.display_errors(errors) }}
+                {% endblock form_errors %}
+                {% include 'dashboard/partners/snippets/partner_form.jinja2' %}
+            {% endblock partner_edit_content %}
+        </div>
+    </div>
+{% endblock maincontent %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function() {
+            var elem = document.querySelector('.js-switch');
+            var switchery = new Switchery(elem, { color: '#1AB394' });
+        });
+    </script>
+{% endblock scripts %}

@@ -197,6 +197,9 @@ def load_environment(settings, config, apppath, policy_array):
         "odkform",
         "formaccess",
         "formgrpaccess",
+        "partner",
+        "partnerproject",
+        "partnerform",
     ]
     for plugin in p.PluginImplementations(p.ISchema):
         schema_fields = plugin.update_schema(config)

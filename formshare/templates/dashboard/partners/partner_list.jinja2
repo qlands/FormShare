@@ -41,7 +41,7 @@
 
                             </div>
                             <div class="col-md-3">
-                                <button onclick="location.href='#';" class="btn btn-block btn-primary"> <i class="fa fa-plus"></i> {{ _('Add partner') }}</button>
+                                <button onclick="location.href='{{ request.route_url('add_partner',userid=userid) }}';" class="btn btn-block btn-primary"> <i class="fa fa-plus"></i> {{ _('Add partner') }}</button>
                             </div>
                         </div>
 
@@ -53,14 +53,15 @@
                 <div class="ibox-content text-left">
                     <h2>{{ _('Search for a partner') }}</h2>
                     <small>{{ _('You can search by full name, email address or organization') }}</small>
-
-
                         <div class="row">
-                            <div class="col-md-9">
+                            <div class="col-md-8">
                                 <select name="partner" id="partner" style="width: 100%; !important;" class="js-example-data-ajax form-control"></select>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-2">
                                 <button id="edit_partner" class="btn btn-block btn-warning action-buttons"> <i class="fas fa-user-edit"></i> {{ _('Edit partner') }}</button>
+                            </div>
+                            <div class="col-md-2">
+                                <button id="partner_history" class="btn btn-block btn-default action-buttons"> <i class="fas fa-chart-line"></i> {{ _('View partner activity') }}</button>
                             </div>
                         </div>
 

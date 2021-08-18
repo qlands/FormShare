@@ -7,6 +7,7 @@ from formshare.models import (
     map_to_schema,
     Partner,
     map_from_schema,
+    PartnerProject,
 )
 
 __all__ = [
@@ -17,6 +18,8 @@ __all__ = [
     "update_partner",
     "update_partner_password",
     "delete_partner",
+    "add_partner_to_project",
+    "get_project_partners",
 ]
 
 log = logging.getLogger("formshare")
@@ -132,3 +135,40 @@ def delete_partner(request, partner_id):
         request.dbsession.rollback()
         log.error("Error {} when updating partner {}".format(str(e), partner_id))
         return False, str(e)
+
+
+def add_partner_to_project(request, link_data):
+    _ = request.translate
+    mapped_data = map_to_schema(PartnerProject, link_data)
+    new_link = PartnerProject(**mapped_data)
+    try:
+        request.dbsession.add(new_link)
+        request.dbsession.flush()
+        return True, ""
+    except IntegrityError:
+        request.dbsession.rollback()
+        log.error(
+            "Duplicated partner {} for project {}".format(
+                mapped_data["partner_id"], mapped_data["project_id"]
+            )
+        )
+        return False, _("The partner is already linked to this project")
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error(
+            "Error {} when inserting partner {} to project {}".format(
+                str(e), mapped_data["partner_id"], mapped_data["project_id"]
+            )
+        )
+        return False, str(e)
+
+
+def get_project_partners(request, project_id):
+    res = (
+        request.dbsession.query(PartnerProject, Partner)
+        .filter(PartnerProject.project_id == project_id)
+        .filter(PartnerProject.partner_id == Partner.partner_id)
+        .all()
+    )
+    res = map_from_schema(res)
+    return res

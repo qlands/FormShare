@@ -6,7 +6,7 @@ import os
 import re
 import uuid
 import zlib
-
+from datetime import datetime
 import qrcode
 from elasticfeeds.activity import Actor, Object, Activity
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
@@ -30,6 +30,8 @@ from formshare.processes.db import (
     get_project_forms,
     get_by_details,
     set_project_as_active,
+    add_partner_to_project,
+    get_project_partners,
 )
 from formshare.processes.elasticsearch.repository_index import (
     get_dataset_stats_for_project,
@@ -151,6 +153,7 @@ class ProjectDetailsView(ProjectsView):
             "by": by,
             "bydetails": bydetails,
             "infom": in_form,
+            "project_partners": get_project_partners(self.request, project_id),
             "withgps": get_number_of_datasets_with_gps_in_project(
                 self.request.registry.settings, user_id, project_code
             ),
@@ -701,3 +704,96 @@ class GetProjectQRCode(ProjectsView):
         response.content_disposition = 'attachment; filename="' + project_code + '.png"'
         self.returnRawViewResult = True
         return response
+
+
+class AddPartnerToProject(ProjectsView):
+    def __init__(self, request):
+        ProjectsView.__init__(self, request)
+        self.checkCrossPost = False
+        self.privateOnly = True
+
+    def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        project_code = self.request.matchdict["projcode"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] >= 4:
+            raise HTTPNotFound  # Don't edit a public or a project that I am just a member
+
+        if self.request.method == "POST":
+            form_data = self.get_post_dict()
+            self.returnRawViewResult = True
+            if form_data.get("partner_id", "") != "":
+                if "time_bound" in form_data.keys():
+                    form_data["time_bound"] = True
+                else:
+                    form_data["time_bound"] = False
+
+                access_from = None
+                access_to = None
+                if form_data["time_bound"]:
+                    try:
+                        access_from = datetime.strptime(
+                            form_data["access_from"], "%Y-%m-%d"
+                        )
+                        access_to = datetime.strptime(
+                            form_data["access_to"], "%Y-%m-%d"
+                        )
+                    except ValueError:
+                        self.add_error(self._("Invalid dates"))
+                        next_page = self.request.route_url(
+                            "project_details", userid=user_id, projcode=project_code
+                        )
+                        return HTTPFound(
+                            location=next_page, headers={"FS_error": "true"}
+                        )
+                if access_from is not None:
+                    if access_to < access_from:
+                        self.add_error(self._("Invalid dates"))
+                        next_page = self.request.route_url(
+                            "project_details", userid=user_id, projcode=project_code
+                        )
+                        return HTTPFound(
+                            location=next_page, headers={"FS_error": "true"}
+                        )
+                form_data["access_from"] = access_from
+                form_data["access_to"] = access_to
+                form_data["project_id"] = project_id
+                form_data["access_date"] = datetime.now()
+                form_data["granted_by"] = project_details["owner"]
+
+                added, message = add_partner_to_project(self.request, form_data)
+                if added:
+                    next_page = self.request.route_url(
+                        "project_details", userid=user_id, projcode=project_code
+                    )
+                    self.request.session.flash(
+                        self._("The partner was successfully linked to this project")
+                    )
+                    return HTTPFound(location=next_page)
+                else:
+                    self.add_error(message)
+                    next_page = self.request.route_url(
+                        "project_details", userid=user_id, projcode=project_code
+                    )
+                    return HTTPFound(location=next_page, headers={"FS_error": "true"})
+            else:
+                self.add_error(self._("You need to indicate a partner"))
+                next_page = self.request.route_url(
+                    "project_details", userid=user_id, projcode=project_code
+                )
+                return HTTPFound(location=next_page, headers={"FS_error": "true"})
+
+        else:
+            raise HTTPNotFound

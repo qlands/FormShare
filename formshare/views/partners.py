@@ -357,7 +357,9 @@ class DeletePartnerView(PrivateView):
                     )
                     return HTTPFound(
                         location=self.request.route_url(
-                            "manage_partners", userid=user_id
+                            "manage_partners",
+                            userid=user_id,
+                            headers={"FS_error": "true"},
                         )
                     )
             continue_delete = True
@@ -370,7 +372,9 @@ class DeletePartnerView(PrivateView):
                     self.returnRawViewResult = True
                     return HTTPFound(
                         location=self.request.route_url(
-                            "manage_partners", userid=user_id
+                            "manage_partners",
+                            userid=user_id,
+                            headers={"FS_error": "true"},
                         )
                     )
                 break  # Only one plugging will be called to extend before_create
@@ -402,6 +406,8 @@ class DeletePartnerView(PrivateView):
                     self.returnRawViewResult = True
                     return HTTPFound(
                         location=self.request.route_url(
-                            "manage_partners", userid=user_id
+                            "manage_partners",
+                            userid=user_id,
+                            headers={"FS_error": "true"},
                         )
                     )

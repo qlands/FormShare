@@ -59,6 +59,9 @@
         {% include 'dashboard/projects/forms/snippets/upload_form.jinja2' %}
         {% include 'dashboard/projects/snippets/upload_file.jinja2' %}
         {% include 'dashboard/projects/snippets/link_partner.jinja2' %}
+        {% if project_partners|length > 0 %}
+            {% include 'dashboard/projects/snippets/edit_link_partner.jinja2' %}
+        {% endif %}
     {% endif %}
 
 {% endblock maincontent %}
@@ -72,6 +75,9 @@
         {% include 'dashboard/projects/forms/snippets/upload_form.jinja2' %}
         {% include 'dashboard/projects/snippets/upload_file.jinja2' %}
         {% include 'dashboard/projects/snippets/link_partner.jinja2' %}
+        {% if project_partners|length > 0 %}
+            {% include 'dashboard/projects/snippets/edit_link_partner.jinja2' %}
+        {% endif %}
     {% else %}
         {{ super() }}
     {% endif %}
@@ -103,7 +109,14 @@
                     location.reload();
             });
 
-            $('#partner_time_bound .input-daterange').datepicker({
+            $('#access_from').datepicker({
+                keyboardNavigation: false,
+                forceParse: false,
+                autoclose: true,
+                format: 'yyyy-mm-dd'
+            });
+
+            $('#access_to').datepicker({
                 keyboardNavigation: false,
                 forceParse: false,
                 autoclose: true,
@@ -157,6 +170,65 @@
                     cache: true
                 }
             });
+
+            {% if project_partners|length > 0 %}
+
+                $('#edit_partner_access_from').datepicker({
+                    keyboardNavigation: false,
+                    forceParse: false,
+                    autoclose: true,
+                    format: 'yyyy-mm-dd'
+                });
+
+                $('#edit_partner_access_to').datepicker({
+                    keyboardNavigation: false,
+                    forceParse: false,
+                    autoclose: true,
+                    format: 'yyyy-mm-dd'
+                });
+
+                var elem_partners_edit = document.querySelector('.js-switch-partner-edit');
+                var overwrite_switch_edit = new Switchery(elem_partners_edit, { color: '#1AB394' });
+                var edit_partner_time = document.getElementById("edit_partner_time_bound");
+                elem_partners_edit.onchange = function() {
+                    if (elem_partners_edit.checked) {
+                        edit_partner_time.style.display = "block";
+                    } else {
+                        edit_partner_time.style.display = "none";
+                    }
+                };
+
+                function setSwitchery(switchElement, checkedBool) {
+                    if((checkedBool && !switchElement.isChecked()) || (!checkedBool && switchElement.isChecked())) {
+                        switchElement.setPosition(true);
+                        switchElement.handleOnchange(true);
+                    }
+}
+
+                var partner_item = $(".partner_item");
+                    partner_item.click(function() {
+                        var partner_name = $( this ).attr('data-partner-name');
+                        var time_bound = $( this ).attr('data-partner-timebound');
+                        var access_from = $( this ).attr('data-partner-access-from');
+                        access_from = access_from.replace(" 00:00:00","")
+                        var access_to = $( this ).attr('data-partner-access-to');
+                        access_to = access_to.replace(" 00:00:00","")
+                        var action_url = $( this ).attr('urn');
+                        $("#edit_link_partner_to_project").prop('action',action_url)
+                        $("#partnerwho").text("{{ _('Editing the partner options of') }} " + partner_name);
+                        if (time_bound === "1") {
+                            setSwitchery(overwrite_switch_edit, true);
+                            edit_partner_time.style.display = "block";
+                            $("#edit_partner_access_from").val(access_from);
+                            $('#edit_partner_access_from').datepicker('update', access_from);
+                            $("#edit_partner_access_to").val(access_to);
+                            $("#edit_partner_access_to").datepicker('update', access_to)
+                        } else {
+                            setSwitchery(overwrite_switch_edit, false);
+                            edit_partner_time.style.display = "none";
+                        }
+                    });
+            {% endif %}
 
             {% include 'dashboard/snippets/pop_flash_js.jinja2' %}
 

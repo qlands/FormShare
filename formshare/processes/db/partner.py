@@ -20,6 +20,7 @@ __all__ = [
     "delete_partner",
     "add_partner_to_project",
     "get_project_partners",
+    "update_partner_options",
 ]
 
 log = logging.getLogger("formshare")
@@ -172,3 +173,17 @@ def get_project_partners(request, project_id):
     )
     res = map_from_schema(res)
     return res
+
+
+def update_partner_options(request, project_id, partner_id, partner_data):
+    mapped_data = map_to_schema(PartnerProject, partner_data)
+    try:
+        request.dbsession.query(PartnerProject).filter(
+            PartnerProject.project_id == project_id
+        ).filter(PartnerProject.partner_id == partner_id).update(mapped_data)
+        request.dbsession.flush()
+        return True, ""
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error("Error {} when updating partner {}".format(str(e), partner_id))
+        return False, str(e)

@@ -71,6 +71,13 @@ def create_resources(apppath, config):
     )
 
     r.add_css_resource(
+        "formshare", "datepicker", "css/plugins/datepicker/datepicker3.css", None
+    )
+    r.add_js_resource(
+        "formshare", "datepicker", "js/plugins/datepicker/bootstrap-datepicker.js", None
+    )
+
+    r.add_css_resource(
         "formshare",
         "colorpicker",
         "css/plugins/evol-colorpicker/evol-colorpicker.min.css",

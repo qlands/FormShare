@@ -232,8 +232,7 @@
                                         {% endif %}
                                         <ul class="tag-list" style="padding: 0">
                                             {% for a_partner in project_partners %}
-{#                                                <li><a class="file-item" data-file-name="{{ file.file_name }}" urn="{{ request.route_url('project_remove_file',userid=userid,projcode=projectData.project_code,filename=file.file_name) }}" href="{{ request.route_url('project_stored_file',userid=userid,projcode=projectData.project_code,filename=file.file_name) }}"><i class="fa fa-file-pdf-o"></i> {{ file.file_name }}</a></li>#}
-                                                <li><a class="partner-item" data-partner-id="{{ a_partner.partner_id }}"><span title="{{ a_partner.partner_email }}">{{ a_partner.partner_name }}</span></a></li>
+                                                <li><a class="partner_item" data-toggle="modal" data-target="#edit_link_partner_modal" urn="{{ request.route_url("project_edit_partner",userid=userid,projcode=projectData.project_code,partnerid=a_partner.partner_id)  }}" data-partner-name="{{ a_partner.partner_name }}" data-partner-timebound="{{ a_partner.time_bound }}" data-partner-access-from="{{ a_partner.access_from }}" data-partner-access-to="{{ a_partner.access_to }}"><span title="{{ a_partner.partner_email }}">{{ a_partner.partner_name }}</span></a></li>
                                             {% endfor %}
                                         </ul>
                                     </div>

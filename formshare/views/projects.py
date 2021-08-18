@@ -32,6 +32,7 @@ from formshare.processes.db import (
     set_project_as_active,
     add_partner_to_project,
     get_project_partners,
+    update_partner_options,
 )
 from formshare.processes.elasticsearch.repository_index import (
     get_dataset_stats_for_project,
@@ -790,6 +791,86 @@ class AddPartnerToProject(ProjectsView):
                     return HTTPFound(location=next_page, headers={"FS_error": "true"})
             else:
                 self.add_error(self._("You need to indicate a partner"))
+                next_page = self.request.route_url(
+                    "project_details", userid=user_id, projcode=project_code
+                )
+                return HTTPFound(location=next_page, headers={"FS_error": "true"})
+
+        else:
+            raise HTTPNotFound
+
+
+class EditPartnerOptions(ProjectsView):
+    def __init__(self, request):
+        ProjectsView.__init__(self, request)
+        self.checkCrossPost = False
+        self.privateOnly = True
+
+    def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        project_code = self.request.matchdict["projcode"]
+        partner_id = self.request.matchdict["partnerid"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] >= 4:
+            raise HTTPNotFound  # Don't edit a public or a project that I am just a member
+
+        if self.request.method == "POST":
+            form_data = self.get_post_dict()
+            self.returnRawViewResult = True
+            if "time_bound" in form_data.keys():
+                form_data["time_bound"] = True
+            else:
+                form_data["time_bound"] = False
+
+            access_from = None
+            access_to = None
+            if form_data["time_bound"]:
+                try:
+                    access_from = datetime.strptime(
+                        form_data["access_from"], "%Y-%m-%d"
+                    )
+                    access_to = datetime.strptime(form_data["access_to"], "%Y-%m-%d")
+                except ValueError:
+                    self.add_error(self._("Invalid dates"))
+                    next_page = self.request.route_url(
+                        "project_details", userid=user_id, projcode=project_code
+                    )
+                    return HTTPFound(location=next_page, headers={"FS_error": "true"})
+            if access_from is not None:
+                if access_to < access_from:
+                    self.add_error(self._("Invalid dates"))
+                    next_page = self.request.route_url(
+                        "project_details", userid=user_id, projcode=project_code
+                    )
+                    return HTTPFound(location=next_page, headers={"FS_error": "true"})
+            form_data["access_from"] = access_from
+            form_data["access_to"] = access_to
+
+            updated, message = update_partner_options(
+                self.request, project_id, partner_id, form_data
+            )
+            if updated:
+                next_page = self.request.route_url(
+                    "project_details", userid=user_id, projcode=project_code
+                )
+                self.request.session.flash(
+                    self._("The partner was successfully updated")
+                )
+                return HTTPFound(location=next_page)
+            else:
+                self.add_error(message)
                 next_page = self.request.route_url(
                     "project_details", userid=user_id, projcode=project_code
                 )

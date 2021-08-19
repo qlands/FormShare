@@ -131,6 +131,7 @@ from formshare.views.projects import (
     GetProjectQRCode,
     AddPartnerToProject,
     EditPartnerOptions,
+    RemovePartnerFromProject,
 )
 from formshare.views.repository import GenerateRepository
 from formshare.views.repository_dictionary import (
@@ -1315,6 +1316,15 @@ def load_routes(config, settings):
                 "project_edit_partner",
                 "/user/{userid}/project/{projcode}/edit_partner/{partnerid}",
                 EditPartnerOptions,
+                None,
+            )
+        )
+
+        routes.append(
+            add_route(
+                "project_remove_partner",
+                "/user/{userid}/project/{projcode}/remove_partner/{partnerid}",
+                RemovePartnerFromProject,
                 None,
             )
         )

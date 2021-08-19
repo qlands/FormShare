@@ -21,6 +21,7 @@ __all__ = [
     "add_partner_to_project",
     "get_project_partners",
     "update_partner_options",
+    "remove_partner_from_project",
 ]
 
 log = logging.getLogger("formshare")
@@ -185,5 +186,26 @@ def update_partner_options(request, project_id, partner_id, partner_data):
         return True, ""
     except Exception as e:
         request.dbsession.rollback()
-        log.error("Error {} when updating partner {}".format(str(e), partner_id))
+        log.error(
+            "Error {} when updating partner {} in project {}".format(
+                str(e), partner_id, project_id
+            )
+        )
+        return False, str(e)
+
+
+def remove_partner_from_project(request, project_id, partner_id):
+    try:
+        request.dbsession.query(PartnerProject).filter(
+            PartnerProject.project_id == project_id
+        ).filter(PartnerProject.partner_id == partner_id).delete()
+        request.dbsession.flush()
+        return True, ""
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error(
+            "Error {} when removing the partner partner {} from {}".format(
+                str(e), partner_id, project_id
+            )
+        )
         return False, str(e)

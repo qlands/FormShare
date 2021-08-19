@@ -228,6 +228,39 @@
                             edit_partner_time.style.display = "none";
                         }
                     });
+                {% if projectDetails.access_type < 4 %}
+                    partner_item.on("taphold", function()
+                    {
+                        var action_url = $( this ).attr('data-partner-remove-url');
+                        var partner_name = $( this ).attr('data-partner-name');
+                        swal({
+                                title: "{{ _('Are you sure that you want to remove ') }}" + partner_name + "?",
+                                type: "warning",
+                                showCancelButton: true,
+                                confirmButtonColor: "#DD6B55",
+                                confirmButtonText: "{{ _('Yes, remove it!') }}",
+                                cancelButtonText: "{{ _('Oops!, cancel!') }}",
+                                closeOnConfirm: true,
+                                closeOnCancel: true },
+                            function (isConfirm) {
+                                if (isConfirm) {
+                                    var form = document.createElement('form');
+                                    form.setAttribute('method', 'post');
+                                    form.setAttribute('action', action_url);
+                                    form.style.display = 'hidden';
+
+                                    var i = document.createElement("input"); //input element, text
+                                    i.setAttribute('type',"text");
+                                    i.setAttribute('name',"csrf_token");
+                                    i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                                    form.appendChild(i);
+
+                                    document.body.appendChild(form);
+                                    form.submit();
+                                }
+                            });
+                    });
+                {% endif %}
             {% endif %}
 
             {% include 'dashboard/snippets/pop_flash_js.jinja2' %}

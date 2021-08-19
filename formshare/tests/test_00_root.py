@@ -12227,7 +12227,7 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" in res.headers
 
-            # Add an assistant to a form succeeds
+            # Add an partner to project pass
             res = self.testapp.post(
                 "/user/{}/project/{}/link_partner".format(
                     self.randonLogin, self.project
@@ -12251,6 +12251,83 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" in res.headers
+
+            # Edit partner project options fails. Invalid dates
+            res = self.testapp.post(
+                "/user/{}/project/{}/edit_partner/{}".format(
+                    self.randonLogin, self.project, partner_id
+                ),
+                {
+                    "time_bound": 1,
+                    "access_from": "",
+                    "access_to": "",
+                },
+                status=302,
+            )
+            assert "FS_error" in res.headers
+
+            # Edit partner project options fails. Invalid dates
+            res = self.testapp.post(
+                "/user/{}/project/{}/edit_partner/{}".format(
+                    self.randonLogin, self.project, partner_id
+                ),
+                {
+                    "time_bound": 1,
+                    "access_from": "2021-08-19",
+                    "access_to": "2021-07-19",
+                },
+                status=302,
+            )
+            assert "FS_error" in res.headers
+
+            # Edit partner project options pass.
+            res = self.testapp.post(
+                "/user/{}/project/{}/edit_partner/{}".format(
+                    self.randonLogin, self.project, partner_id
+                ),
+                {
+                    "time_bound": 1,
+                    "access_from": "2021-08-19",
+                    "access_to": "2021-10-19",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Edit partner project options pass. Remove time bound
+            res = self.testapp.post(
+                "/user/{}/project/{}/edit_partner/{}".format(
+                    self.randonLogin, self.project, partner_id
+                ),
+                {},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Remove partner from project passes
+            res = self.testapp.post(
+                "/user/{}/project/{}/remove_partner/{}".format(
+                    self.randonLogin, self.project, partner_id
+                ),
+                {},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Add an partner to project again pass
+            res = self.testapp.post(
+                "/user/{}/project/{}/link_partner".format(
+                    self.randonLogin, self.project
+                ),
+                {
+                    "partner_id": partner_id,
+                    "time_bound": 1,
+                    "access_from": "2021-08-05",
+                    "access_to": "2021-08-05",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
 
             # Show the partner login
             self.testapp.get(

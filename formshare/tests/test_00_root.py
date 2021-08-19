@@ -12329,6 +12329,148 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Add an partner to a form fails. Empty partner
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/partners/add".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {"partner_id": ""},
+                status=302,
+            )
+            assert "FS_error" in res.headers
+
+            # Add an partner to a form fails. Invalid dates
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/partners/add".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "partner_id": partner_id,
+                    "time_bound": 1,
+                    "access_from": "",
+                    "access_to": "",
+                },
+                status=302,
+            )
+            assert "FS_error" in res.headers
+
+            # Add an partner to a form fails. Invalid dates
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/partners/add".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "partner_id": partner_id,
+                    "time_bound": 1,
+                    "access_from": "2021-08-05",
+                    "access_to": "2021-07-05",
+                },
+                status=302,
+            )
+            assert "FS_error" in res.headers
+
+            # Add an partner to form pass
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/partners/add".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "partner_id": partner_id,
+                    "time_bound": 1,
+                    "access_from": "2021-08-05",
+                    "access_to": "2021-08-05",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Add an partner to a form fails. Partner already linked
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/partners/add".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {"partner_id": partner_id},
+                status=302,
+            )
+            assert "FS_error" in res.headers
+
+            # Edit partner form options fails. Invalid dates
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/partner/{}/edit".format(
+                    self.randonLogin, self.project, self.formID, partner_id
+                ),
+                {
+                    "time_bound": 1,
+                    "access_from": "",
+                    "access_to": "",
+                },
+                status=302,
+            )
+            assert "FS_error" in res.headers
+
+            # Edit partner form options fails. Invalid dates
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/partner/{}/edit".format(
+                    self.randonLogin, self.project, self.formID, partner_id
+                ),
+                {
+                    "time_bound": 1,
+                    "access_from": "2021-08-19",
+                    "access_to": "2021-07-19",
+                },
+                status=302,
+            )
+            assert "FS_error" in res.headers
+
+            # Edit partner form options pass.
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/partner/{}/edit".format(
+                    self.randonLogin, self.project, self.formID, partner_id
+                ),
+                {
+                    "time_bound": 1,
+                    "access_from": "2021-08-19",
+                    "access_to": "2021-10-19",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Edit partner form options pass. Remove time bound
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/partner/{}/edit".format(
+                    self.randonLogin, self.project, self.formID, partner_id
+                ),
+                {},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Remove partner from form passes
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/partner/{}/remove".format(
+                    self.randonLogin, self.project, self.formID, partner_id
+                ),
+                {},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Add an partner to form again pass
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/partners/add".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "partner_id": partner_id,
+                    "time_bound": 1,
+                    "access_from": "2021-08-05",
+                    "access_to": "2021-08-05",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
             # Show the partner login
             self.testapp.get(
                 "/partneraccess/login",
@@ -12422,16 +12564,16 @@ class FunctionalTests(unittest.TestCase):
         test_profile()
         print("Testing projects")
         test_projects()
-        # print("Testing collaborators")
-        # test_collaborators()
-        # print("Testing assistants")
-        # test_assistants()
-        # print("Testing assistants groups")
-        # test_assistant_groups()
-        # print("Testing forms")
-        # test_forms()
-        # print("Testing ODK")
-        # test_odk()
+        print("Testing collaborators")
+        test_collaborators()
+        print("Testing assistants")
+        test_assistants()
+        print("Testing assistants groups")
+        test_assistant_groups()
+        print("Testing forms")
+        test_forms()
+        print("Testing ODK")
+        test_odk()
         # print("Testing Multilanguage ODK")
         # test_multilanguage_odk()
         # print("Testing Support for ZIP files")

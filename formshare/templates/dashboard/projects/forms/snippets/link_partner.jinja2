@@ -7,7 +7,7 @@
                     <h4 class="modal-title">{{ _('Link partner') }}</h4>
                 {% endblock link_partner_header %}
             </div>
-            <form autocomplete="off" id="link_partner_to_project" class="require_busy" role="form" method="post" action="{{ request.route_url("project_link_partner",userid=projectData.owner, projcode=projectData.project_code) }}">
+            <form autocomplete="off" id="link_partner_to_form" class="require_busy" role="form" method="post" action="{{ request.route_url("form_add_partner",userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}">
                 {% block link_partner_form %}
                     {{ form.secure_form(request) }}
                     <div class="modal-body">

@@ -8,7 +8,7 @@ import re
 import shutil
 import uuid
 from hashlib import md5
-
+from datetime import datetime
 from lxml import etree
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from pyramid.response import FileResponse
@@ -57,6 +57,8 @@ from formshare.processes.db import (
     delete_case_lookup_table,
     invalid_aliases,
     alias_exists,
+    get_form_partners,
+    add_partner_to_form,
 )
 from formshare.processes.elasticsearch.record_index import delete_record_index
 from formshare.processes.elasticsearch.repository_index import (
@@ -713,6 +715,7 @@ class FormDetails(PrivateView):
                 "numsensitive": num_sensitive,
                 "numtables": num_tables,
                 "products": products,
+                "form_partners": get_form_partners(self.request, project_id, form_id),
                 "processing": get_form_processing_products(
                     self.request, project_id, form_id, form_data["form_reptask"]
                 ),
@@ -3062,3 +3065,130 @@ class CaseLookUpTable(PrivateView):
             "fields": fields,
             "created": created,
         }
+
+
+class AddPartnerToForm(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+        self.returnRawViewResult = True
+
+    def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        project_code = self.request.matchdict["projcode"]
+        form_id = self.request.matchdict["formid"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] >= 4:
+            raise HTTPNotFound
+
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+
+        if self.request.method == "POST":
+            partner_data = self.get_post_dict()
+            if "partner_id" in partner_data.keys():
+                if partner_data["partner_id"] != "":
+
+                    if "time_bound" in partner_data.keys():
+                        partner_data["time_bound"] = True
+                    else:
+                        partner_data["time_bound"] = False
+
+                    access_from = None
+                    access_to = None
+                    if partner_data["time_bound"]:
+                        try:
+                            access_from = datetime.strptime(
+                                partner_data["access_from"], "%Y-%m-%d"
+                            )
+                            access_to = datetime.strptime(
+                                partner_data["access_to"], "%Y-%m-%d"
+                            )
+                        except ValueError:
+                            self.add_error(self._("Invalid dates"))
+                            next_page = self.request.route_url(
+                                "form_details",
+                                userid=user_id,
+                                projcode=project_code,
+                                formid=form_id,
+                            )
+                            return HTTPFound(
+                                location=next_page, headers={"FS_error": "true"}
+                            )
+                    if access_from is not None:
+                        if access_to < access_from:
+                            self.add_error(self._("Invalid dates"))
+                            next_page = self.request.route_url(
+                                "form_details",
+                                userid=user_id,
+                                projcode=project_code,
+                                formid=form_id,
+                            )
+                            return HTTPFound(
+                                location=next_page, headers={"FS_error": "true"}
+                            )
+
+                    partner_data["access_from"] = access_from
+                    partner_data["access_to"] = access_to
+                    partner_data["project_id"] = project_id
+                    partner_data["form_id"] = form_id
+                    partner_data["access_date"] = datetime.now()
+                    partner_data["granted_by"] = project_details["owner"]
+                    added, message = add_partner_to_form(self.request, partner_data)
+                    if added:
+                        self.request.session.flash(
+                            self._("The partner was added successfully to this form")
+                        )
+                        next_page = self.request.route_url(
+                            "form_details",
+                            userid=user_id,
+                            projcode=project_code,
+                            formid=form_id,
+                        )
+                        return HTTPFound(location=next_page)
+                    else:
+                        self.add_error(message)
+                        next_page = self.request.route_url(
+                            "form_details",
+                            userid=user_id,
+                            projcode=project_code,
+                            formid=form_id,
+                        )
+                        return HTTPFound(
+                            location=next_page, headers={"FS_error": "true"}
+                        )
+                else:
+                    self.add_error("The partner cannot be empty")
+                    next_page = self.request.route_url(
+                        "form_details",
+                        userid=user_id,
+                        projcode=project_code,
+                        formid=form_id,
+                    )
+                    return HTTPFound(location=next_page, headers={"FS_error": "true"})
+            else:
+                self.add_error("The partner cannot be empty")
+                next_page = self.request.route_url(
+                    "form_details",
+                    userid=user_id,
+                    projcode=project_code,
+                    formid=form_id,
+                )
+                return HTTPFound(location=next_page, headers={"FS_error": "true"})
+
+        else:
+            raise HTTPNotFound

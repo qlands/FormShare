@@ -7,6 +7,7 @@
     {{ super() }}
     {% if formDetails.form_type == 1 %}
         {% cssresource request,'formshare','switchery' %}
+        {% cssresource request,'formshare','datepicker' %}
         {% cssresource request,'formshare','select2' %}
         {% if formDetails.form_geopoint != None %}
             {% cssresource request,'formshare','leaflet' %}
@@ -19,6 +20,9 @@
         <style>
             .remove-all-styles {
                 all: unset;
+            }
+            span.select2-container {
+                z-index:10050;
             }
         </style>
     {% else %}
@@ -39,6 +43,7 @@
     {{ super() }}
     {% if formDetails.form_type == 1 %}
         {% jsresource request,'formshare','switchery' %}
+        {% jsresource request,'formshare','datepicker' %}
         {% jsresource request,'formshare','taphold' %}
         {% jsresource request,'formshare','select2' %}
         {% jsresource request,'formshare','clipboard' %}
@@ -88,6 +93,7 @@
                         {% include 'dashboard/projects/forms/snippets/files_tab.jinja2' %}
                         {% include 'dashboard/projects/forms/snippets/assistants_tab.jinja2' %}
                         {% include 'dashboard/projects/forms/snippets/groups_tab.jinja2' %}
+                        {% include 'dashboard/projects/forms/snippets/partners_tab.jinja2' %}
                     {% endblock form_tabs %}
                     {% block form_tabs_extra %}
 
@@ -146,6 +152,10 @@
             {% include 'dashboard/projects/forms/snippets/edit_assistant.jinja2' %}
             {% include 'dashboard/projects/forms/snippets/add_group.jinja2' %}
             {% include 'dashboard/projects/forms/snippets/edit_group.jinja2' %}
+            {% include 'dashboard/projects/forms/snippets/link_partner.jinja2' %}
+            {% if form_partners|length > 0 %}
+                {% include 'dashboard/projects/forms/snippets/edit_link_partner.jinja2' %}
+            {% endif %}
             {% if formDetails.form_schema != None %}
                 {% include 'dashboard/projects/forms/snippets/api_examples.jinja2' %}
             {% endif %}
@@ -687,7 +697,7 @@
                                 });
                         });
                     {% endif %}
-
+                    {% include 'dashboard/projects/forms/snippets/link_partner_js.jinja2' %}
                 {% endblock odk_scripts %}
             });
         </script>

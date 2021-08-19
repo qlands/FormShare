@@ -1,0 +1,44 @@
+{% block form_details_partners_section %}
+    <div class="ibox">
+        <div class="ibox-title">
+            {% block form_details_partners_title %}
+                <h5>{{ _('Form partners') }}</h5>
+                <div class="ibox-tools">
+                    {% block form_details_partners_tools %}
+                        {% if projectDetails.access_type < 4 %}
+                            <a id="add_partner" data-toggle="modal" data-target="#link_partner_modal" style="margin-right: 10px">
+                                <i class="fa fa-plus-square text-success" title="{{ _('Link new partner') }}"></i>
+                            </a>
+                        {% endif %}
+                        <a class="collapse-link" style="margin-right: 10px">
+                            <i class="fa fa-chevron-up"></i>
+                        </a>
+                        <a class="fullscreen-link">
+                            <i class="fa fa-expand"></i>
+                        </a>
+                    {% endblock form_details_partners_tools %}
+                </div>
+            {% endblock form_details_partners_title %}
+        </div>
+        <div class="ibox-content">
+            {% block form_details_partners_content %}
+                <div class="row">
+                    <div class="col-md-12">
+                        {% if projectDetails.access_type < 4 %}
+                            {% if form_partners|length > 0 %}
+                                <small>{{ _('Click / Tap and hold to unlink partners') }}</small>
+                            {% else %}
+                                <small>{{ _('No linked partners. Use the + button to link a partner') }}</small>
+                            {% endif %}
+                        {% endif %}
+                        <ul class="tag-list" style="padding: 0">
+                            {% for a_partner in form_partners %}
+{#                                <li><a class="partner_item" data-toggle="modal" data-target="#edit_link_partner_modal" data-partner-remove-url="{{ request.route_url("form_remove_partner",userid=userid,projcode=projectData.form_code,partnerid=a_partner.partner_id)  }}" urn="{{ request.route_url("form_edit_partner",userid=userid,projcode=projectData.form_code,partnerid=a_partner.partner_id)  }}" data-partner-name="{{ a_partner.partner_name }}" data-partner-timebound="{{ a_partner.time_bound }}" data-partner-access-from="{{ a_partner.access_from }}" data-partner-access-to="{{ a_partner.access_to }}"><span title="{{ a_partner.partner_email }}">{{ a_partner.partner_name }}</span></a></li>#}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            {% endblock form_details_partners_content %}
+        </div>
+    </div>
+{% endblock form_details_partners_section %}

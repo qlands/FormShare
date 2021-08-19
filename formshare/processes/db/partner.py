@@ -8,6 +8,7 @@ from formshare.models import (
     Partner,
     map_from_schema,
     PartnerProject,
+    PartnerForm,
 )
 
 __all__ = [
@@ -22,6 +23,8 @@ __all__ = [
     "get_project_partners",
     "update_partner_options",
     "remove_partner_from_project",
+    "get_form_partners",
+    "add_partner_to_form",
 ]
 
 log = logging.getLogger("formshare")
@@ -206,6 +209,49 @@ def remove_partner_from_project(request, project_id, partner_id):
         log.error(
             "Error {} when removing the partner partner {} from {}".format(
                 str(e), partner_id, project_id
+            )
+        )
+        return False, str(e)
+
+
+def get_form_partners(request, project_id, form_id):
+    res = (
+        request.dbsession.query(PartnerForm, Partner)
+        .filter(PartnerForm.project_id == project_id)
+        .filter(PartnerForm.form_id == form_id)
+        .filter(PartnerForm.partner_id == Partner.partner_id)
+        .all()
+    )
+    res = map_from_schema(res)
+    return res
+
+
+def add_partner_to_form(request, link_data):
+    _ = request.translate
+    mapped_data = map_to_schema(PartnerForm, link_data)
+    new_link = PartnerForm(**mapped_data)
+    try:
+        request.dbsession.add(new_link)
+        request.dbsession.flush()
+        return True, ""
+    except IntegrityError:
+        request.dbsession.rollback()
+        log.error(
+            "Duplicated partner {} for form {} in project {}".format(
+                mapped_data["partner_id"],
+                mapped_data["form_id"],
+                mapped_data["project_id"],
+            )
+        )
+        return False, _("The partner is already linked to this form")
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error(
+            "Error {} when inserting partner {} to form {} in project {}".format(
+                str(e),
+                mapped_data["partner_id"],
+                mapped_data["form_id"],
+                mapped_data["project_id"],
             )
         )
         return False, str(e)

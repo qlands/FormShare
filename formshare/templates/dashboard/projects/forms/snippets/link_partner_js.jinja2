@@ -1,0 +1,61 @@
+$('#access_from').datepicker({
+    keyboardNavigation: false,
+    forceParse: false,
+    autoclose: true,
+    format: 'yyyy-mm-dd'
+});
+
+$('#access_to').datepicker({
+    keyboardNavigation: false,
+    forceParse: false,
+    autoclose: true,
+    format: 'yyyy-mm-dd'
+});
+
+var elem_partners = document.querySelector('.js-switch-partner');
+var overwrite_switch = new Switchery(elem_partners, { color: '#1AB394' });
+var partner_time = document.getElementById("partner_time_bound");
+elem_partners.onchange = function() {
+    if (elem_partners.checked) {
+        partner_time.style.display = "block";
+    } else {
+        partner_time.style.display = "none";
+    }
+};
+
+function formatPartner (partner) {
+    if (!partner.id) {
+        return partner.text;
+    }
+    let baseUrl = "{{ request.route_url('gravatar') }}";
+    let $state = $(
+        '<span><img src="' + baseUrl + '?name=' + partner.text + '&size=45" class="img-flag" /> ' + partner.text + '</span>'
+    );
+    return $state;
+}
+
+$(".js-example-data-ajax").select2({
+    dropdownParent: $('#link_partner_modal'),
+    templateResult: formatPartner,
+    ajax: {
+        url: "{{ request.route_url('api_select2_partners',userid=userid) }}",
+        dataType: 'json',
+        delay: 250,
+        data: function (params) {
+            return {
+                q: params.term, // search term
+                page: params.page,
+            };
+        },
+        processResults: function (data, params) {
+            params.page = params.page || 1;
+            return {
+                results: data.results,
+                pagination: {
+                    more: (params.page * 10) < data.total
+                }
+            };
+        },
+        cache: true
+    }
+});

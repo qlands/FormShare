@@ -33,6 +33,7 @@ from formshare.processes.db import (
     add_partner_to_project,
     get_project_partners,
     update_partner_options,
+    remove_partner_from_project,
 )
 from formshare.processes.elasticsearch.repository_index import (
     get_dataset_stats_for_project,
@@ -878,3 +879,50 @@ class EditPartnerOptions(ProjectsView):
 
         else:
             raise HTTPNotFound
+
+
+class RemovePartnerFromProject(ProjectsView):
+    def __init__(self, request):
+        ProjectsView.__init__(self, request)
+        self.checkCrossPost = False
+        self.privateOnly = True
+
+    def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        project_code = self.request.matchdict["projcode"]
+        partner_id = self.request.matchdict["partnerid"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] >= 4:
+            raise HTTPNotFound  # Don't edit a public or a project that I am just a member
+
+        if self.request.method == "POST":
+            self.returnRawViewResult = True
+            removed, message = remove_partner_from_project(
+                self.request, project_id, partner_id
+            )
+            if removed:
+                next_page = self.request.route_url(
+                    "project_details", userid=user_id, projcode=project_code
+                )
+                self.request.session.flash(
+                    self._("The partner was successfully removed from this project")
+                )
+                return HTTPFound(location=next_page)
+            else:
+                self.add_error(message)
+                next_page = self.request.route_url(
+                    "project_details", userid=user_id, projcode=project_code
+                )
+                return HTTPFound(location=next_page, headers={"FS_error": "true"})

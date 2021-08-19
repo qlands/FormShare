@@ -99,6 +99,7 @@ from formshare.views.form import (
     GetSubMissionInfo,
     GetMediaFile,
     CaseLookUpTable,
+    AddPartnerToForm,
 )
 from formshare.views.odk import (
     ODKFormList,
@@ -1325,6 +1326,15 @@ def load_routes(config, settings):
                 "project_remove_partner",
                 "/user/{userid}/project/{projcode}/remove_partner/{partnerid}",
                 RemovePartnerFromProject,
+                None,
+            )
+        )
+
+        routes.append(
+            add_route(
+                "form_add_partner",
+                "/user/{userid}/project/{projcode}/form/{formid}/partners/add",
+                AddPartnerToForm,
                 None,
             )
         )

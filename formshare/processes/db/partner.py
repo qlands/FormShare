@@ -25,6 +25,8 @@ __all__ = [
     "remove_partner_from_project",
     "get_form_partners",
     "add_partner_to_form",
+    "update_partner_form_options",
+    "remove_partner_from_form",
 ]
 
 log = logging.getLogger("formshare")
@@ -252,6 +254,47 @@ def add_partner_to_form(request, link_data):
                 mapped_data["partner_id"],
                 mapped_data["form_id"],
                 mapped_data["project_id"],
+            )
+        )
+        return False, str(e)
+
+
+def update_partner_form_options(request, project_id, form_id, partner_id, partner_data):
+    mapped_data = map_to_schema(PartnerForm, partner_data)
+    try:
+        request.dbsession.query(PartnerForm).filter(
+            PartnerForm.project_id == project_id
+        ).filter(PartnerForm.form_id == form_id).filter(
+            PartnerForm.partner_id == partner_id
+        ).update(
+            mapped_data
+        )
+        request.dbsession.flush()
+        return True, ""
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error(
+            "Error {} when updating partner {} in form {} of project {}".format(
+                str(e), partner_id, form_id, project_id
+            )
+        )
+        return False, str(e)
+
+
+def remove_partner_from_form(request, project_id, form_id, partner_id):
+    try:
+        request.dbsession.query(PartnerForm).filter(
+            PartnerForm.project_id == project_id
+        ).filter(PartnerForm.form_id == form_id).filter(
+            PartnerForm.partner_id == partner_id
+        ).delete()
+        request.dbsession.flush()
+        return True, ""
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error(
+            "Error {} when removing the partner partner {} from form {} of project {}".format(
+                str(e), partner_id, form_id, project_id
             )
         )
         return False, str(e)

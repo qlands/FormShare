@@ -1,0 +1,91 @@
+{% if form_partners|length > 0 %}
+
+    $('#edit_partner_access_from').datepicker({
+        keyboardNavigation: false,
+        forceParse: false,
+        autoclose: true,
+        format: 'yyyy-mm-dd'
+    });
+
+    $('#edit_partner_access_to').datepicker({
+        keyboardNavigation: false,
+        forceParse: false,
+        autoclose: true,
+        format: 'yyyy-mm-dd'
+    });
+
+    var elem_partners_edit = document.querySelector('.js-switch-partner-edit');
+    var overwrite_switch_edit = new Switchery(elem_partners_edit, { color: '#1AB394' });
+    var edit_partner_time = document.getElementById("edit_partner_time_bound");
+    elem_partners_edit.onchange = function() {
+        if (elem_partners_edit.checked) {
+            edit_partner_time.style.display = "block";
+        } else {
+            edit_partner_time.style.display = "none";
+        }
+    };
+
+    function setSwitchery(switchElement, checkedBool) {
+        if((checkedBool && !switchElement.isChecked()) || (!checkedBool && switchElement.isChecked())) {
+            switchElement.setPosition(true);
+            switchElement.handleOnchange(true);
+        }
+    }
+
+    var partner_item = $(".partner_item");
+    partner_item.click(function() {
+        var partner_name = $( this ).attr('data-partner-name');
+        var time_bound = $( this ).attr('data-partner-timebound');
+        var access_from = $( this ).attr('data-partner-access-from');
+        access_from = access_from.replace(" 00:00:00","")
+        var access_to = $( this ).attr('data-partner-access-to');
+        access_to = access_to.replace(" 00:00:00","")
+        var action_url = $( this ).attr('urn');
+        $("#edit_link_partner_to_form").prop('action',action_url)
+        $("#partnerwho").text("{{ _('Editing the partner options of') }} " + partner_name);
+        if (time_bound === "1") {
+            setSwitchery(overwrite_switch_edit, true);
+            edit_partner_time.style.display = "block";
+            $("#edit_partner_access_from").val(access_from);
+            $('#edit_partner_access_from').datepicker('update', access_from);
+            $("#edit_partner_access_to").val(access_to);
+            $("#edit_partner_access_to").datepicker('update', access_to)
+        } else {
+            setSwitchery(overwrite_switch_edit, false);
+            edit_partner_time.style.display = "none";
+        }
+    });
+    {% if projectDetails.access_type < 4 %}
+        partner_item.on("taphold", function()
+        {
+            var action_url = $( this ).attr('data-partner-remove-url');
+            var partner_name = $( this ).attr('data-partner-name');
+            swal({
+                    title: "{{ _('Are you sure that you want to remove ') }}" + partner_name + "?",
+                    type: "warning",
+                    showCancelButton: true,
+                    confirmButtonColor: "#DD6B55",
+                    confirmButtonText: "{{ _('Yes, remove it!') }}",
+                    cancelButtonText: "{{ _('Oops!, cancel!') }}",
+                    closeOnConfirm: true,
+                    closeOnCancel: true },
+                function (isConfirm) {
+                    if (isConfirm) {
+                        var form = document.createElement('form');
+                        form.setAttribute('method', 'post');
+                        form.setAttribute('action', action_url);
+                        form.style.display = 'hidden';
+
+                        var i = document.createElement("input"); //input element, text
+                        i.setAttribute('type',"text");
+                        i.setAttribute('name',"csrf_token");
+                        i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                        form.appendChild(i);
+
+                        document.body.appendChild(form);
+                        form.submit();
+                    }
+                });
+        });
+    {% endif %}
+{% endif %}

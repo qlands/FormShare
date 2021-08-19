@@ -33,7 +33,7 @@
                         {% endif %}
                         <ul class="tag-list" style="padding: 0">
                             {% for a_partner in form_partners %}
-{#                                <li><a class="partner_item" data-toggle="modal" data-target="#edit_link_partner_modal" data-partner-remove-url="{{ request.route_url("form_remove_partner",userid=userid,projcode=projectData.form_code,partnerid=a_partner.partner_id)  }}" urn="{{ request.route_url("form_edit_partner",userid=userid,projcode=projectData.form_code,partnerid=a_partner.partner_id)  }}" data-partner-name="{{ a_partner.partner_name }}" data-partner-timebound="{{ a_partner.time_bound }}" data-partner-access-from="{{ a_partner.access_from }}" data-partner-access-to="{{ a_partner.access_to }}"><span title="{{ a_partner.partner_email }}">{{ a_partner.partner_name }}</span></a></li>#}
+                                <li><a class="partner_item" data-toggle="modal" data-target="#edit_link_partner_modal" data-partner-remove-url="{{ request.route_url("remove_partner_from_form",userid=userid,projcode=projectDetails.project_code,formid=formDetails.form_id,partnerid=a_partner.partner_id)  }}" urn="{{ request.route_url("edit_partner_form_options",userid=userid,projcode=projectDetails.project_code,formid=formDetails.form_id,partnerid=a_partner.partner_id)  }}" data-partner-name="{{ a_partner.partner_name }}" data-partner-timebound="{{ a_partner.time_bound }}" data-partner-access-from="{{ a_partner.access_from }}" data-partner-access-to="{{ a_partner.access_to }}"><span title="{{ a_partner.partner_email }}">{{ a_partner.partner_name }}</span></a></li>
                             {% endfor %}
                         </ul>
                     </div>

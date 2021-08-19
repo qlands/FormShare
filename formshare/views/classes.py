@@ -691,9 +691,6 @@ class AssistantView(object):
 class PartnerView(object):
     def __init__(self, request):
         self.request = request
-        self.projectID = ""
-        self.userID = ""
-        self.projectCode = ""
         self.partner = None
         self._ = self.request.translate
         self.errors = []
@@ -722,14 +719,6 @@ class PartnerView(object):
         if len(error) > 0:
             self.append_to_errors(error[0])
 
-        self.userID = self.request.matchdict["userid"]
-        self.projectCode = self.request.matchdict["projcode"]
-        self.projectID = get_project_id_from_name(
-            self.request, self.userID, self.projectCode
-        )
-        if self.projectID is None:
-            raise HTTPNotFound()
-
         policy = self.get_policy("partner")
         login_data = policy.authenticated_userid(self.request)
         if login_data is not None:
@@ -740,8 +729,6 @@ class PartnerView(object):
                     return HTTPFound(
                         location=self.request.route_url(
                             "partner_login",
-                            userid=self.userID,
-                            projcode=self.projectCode,
                             _query={"next": self.request.url},
                         )
                     )
@@ -749,8 +736,6 @@ class PartnerView(object):
                 return HTTPFound(
                     location=self.request.route_url(
                         "partner_login",
-                        userid=self.userID,
-                        projcode=self.projectCode,
                         _query={"next": self.request.url},
                     )
                 )
@@ -758,8 +743,6 @@ class PartnerView(object):
             return HTTPFound(
                 location=self.request.route_url(
                     "partner_login",
-                    userid=self.userID,
-                    projcode=self.projectCode,
                     _query={"next": self.request.url},
                 )
             )
@@ -788,8 +771,6 @@ class PartnerView(object):
         self.partnerID = self.partner.id
         self.partnerEmail = self.partner.email
         self.resultDict["activePartner"] = self.partner
-        self.resultDict["userid"] = self.userID
-        self.resultDict["projcode"] = self.projectCode
         self.resultDict["posterrors"] = self.errors
         process_dict = self.process_view()
         if not self.returnRawViewResult:

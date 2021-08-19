@@ -39,6 +39,7 @@ __all__ = [
     "IMediaSubmission",
     "IJSONSubmission",
     "IPartner",
+    "IPartnerAuthentication",
 ]
 
 
@@ -465,11 +466,17 @@ class IUserAuthentication(Interface):  # pragma: no cover
             "after_collaborator_login must be implemented in subclasses"
         )
 
-    def after_partner_login(self, request, collaborator):
+
+class IPartnerAuthentication(Interface):  # pragma: no cover
+    """
+    Allows to hook into the partner authentication
+    """
+
+    def after_partner_login(self, request, partner):
         """
         Called by FormShare so plugins can modify the login of assistants
         :param request: ``pyramid.request`` object
-        :param collaborator: Assistant ID
+        :param partner: Partner email
         :return: True, "" or False, "Why"
         """
         raise NotImplementedError(

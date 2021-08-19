@@ -92,7 +92,8 @@ class AddPartnerView(PrivateView):
                             partner_details.pop("partner_password2", None)
                             partner_details["partner_cdate"] = datetime.datetime.now()
                             partner_details["partner_apikey"] = str(uuid.uuid4())
-                            partner_details["partner_id"] = str(uuid.uuid4())
+                            if "partner_id" not in partner_details.keys():
+                                partner_details["partner_id"] = str(uuid.uuid4())
                             partner_details["created_by"] = user_id
                             continue_creation = True
                             for plugin in p.PluginImplementations(p.IPartner):

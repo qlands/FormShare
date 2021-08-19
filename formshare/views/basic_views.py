@@ -370,14 +370,8 @@ class AssistantLoginView(PublicView):
 
 class PartnerLoginView(PublicView):
     def process_view(self):
-        # If we logged in then go to dashboard
-        project_code = self.request.matchdict["projcode"]
-        user_id = self.request.matchdict["userid"]
-        project_id = get_project_id_from_name(self.request, user_id, project_code)
-        if project_id is None:
-            raise HTTPNotFound()
         next_page = self.request.params.get("next") or self.request.route_url(
-            "partner_forms", userid=user_id, projcode=project_code
+            "partner_forms"
         )
         if self.request.method == "GET":
             policy = get_policy(self.request, "partner")
@@ -390,11 +384,7 @@ class PartnerLoginView(PublicView):
                     )
                     if current_partner is not None:
                         self.returnRawViewResult = True
-                        return HTTPFound(
-                            location=self.request.route_url(
-                                "assistant_forms", userid=user_id, projcode=project_code
-                            )
-                        )
+                        return HTTPFound(location=next_page)
         else:
             if (
                 self.request.registry.settings.get("perform_post_checks", "true")
@@ -412,7 +402,7 @@ class PartnerLoginView(PublicView):
                 if partner.check_password(passwd, self.request):
                     continue_login = True
                     # Load connected plugins and check if they modify the login authorization
-                    for plugin in p.PluginImplementations(p.IUserAuthentication):
+                    for plugin in p.PluginImplementations(p.IPartnerAuthentication):
                         (
                             continue_with_login,
                             error_message,
@@ -429,29 +419,23 @@ class PartnerLoginView(PublicView):
                         return HTTPFound(location=next_page, headers=headers)
                 else:
                     log.error(
-                        "Logging into partner account {} for FormShare account {} in project {} "
-                        "provided an invalid password".format(
-                            login, user_id, project_code
+                        "Logging into partner account {} provided an invalid password".format(
+                            login
                         )
                     )
                     self.append_to_errors(
                         self._(
-                            "The partner account does not exist or it is not linked to this project "
-                            "or the password is invalid"
+                            "The partner account does not exist or the password is invalid"
                         )
                     )
             else:
-                log.error(
-                    "Partner account {} for FormShare account {} in project {} "
-                    "does not exists".format(login, user_id, project_code)
-                )
+                log.error("Partner account {} does not exists".format(login))
                 self.append_to_errors(
                     self._(
-                        "The partner account does not exists or it is not linked to this project "
-                        "or the password is invalid"
+                        "The partner account does not exists or the password is invalid"
                     )
                 )
-        return {"next": next_page, "userid": user_id, "projcode": project_code}
+        return {"next": next_page}
 
 
 def get_policy(request, policy_name):
@@ -508,9 +492,7 @@ def assistant_log_out_view(request):
 def partner_log_out_view(request):
     policy = get_policy(request, "partner")
     headers = policy.forget(request)
-    project_code = request.matchdict["projcode"]
-    user_id = request.matchdict["userid"]
-    loc = request.route_url("partner_login", userid=user_id, projcode=project_code)
+    loc = request.route_url("partner_login")
     raise HTTPFound(location=loc, headers=headers)
 
 

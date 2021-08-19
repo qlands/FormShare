@@ -176,11 +176,11 @@ class EditPartnerView(PrivateView):
             raise HTTPNotFound
 
         partner_details = get_partner_details(self.request, partner_to_modify)
+        if not partner_details:
+            raise HTTPNotFound
         partner_details["by_details"] = get_user_details(
             self.request, partner_details["created_by"]
         )
-        if not partner_details:
-            raise HTTPNotFound
         if self.request.method == "POST":
             if partner_details["created_by"] != user_id:
                 if self.user.super != 1:
@@ -268,7 +268,7 @@ class EditPartnerView(PrivateView):
                                 )
                                 log.error(
                                     "The user {} modified the partner {}".format(
-                                        self.userID, partner_details["partner_id"]
+                                        self.userID, partner_to_modify
                                     )
                                 )
                                 self.request.session.flash(
@@ -360,8 +360,8 @@ class DeletePartnerView(PrivateView):
                         location=self.request.route_url(
                             "manage_partners",
                             userid=user_id,
-                            headers={"FS_error": "true"},
-                        )
+                        ),
+                        headers={"FS_error": "true"},
                     )
             continue_delete = True
             for plugin in p.PluginImplementations(p.IPartner):
@@ -375,8 +375,8 @@ class DeletePartnerView(PrivateView):
                         location=self.request.route_url(
                             "manage_partners",
                             userid=user_id,
-                            headers={"FS_error": "true"},
-                        )
+                        ),
+                        headers={"FS_error": "true"},
                     )
                 break  # Only one plugging will be called to extend before_create
             if continue_delete:
@@ -409,6 +409,6 @@ class DeletePartnerView(PrivateView):
                         location=self.request.route_url(
                             "manage_partners",
                             userid=user_id,
-                            headers={"FS_error": "true"},
-                        )
+                        ),
+                        headers={"FS_error": "true"},
                     )

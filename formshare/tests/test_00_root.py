@@ -86,6 +86,7 @@ class FunctionalTests(unittest.TestCase):
         self.testapp = TestApp(app)
 
         self.randonLogin = ""
+        self.randonLoginPartner = ""
         self.randonLoginKey = ""
         self.server_config = server_config
         self.collaboratorLogin = ""
@@ -250,6 +251,42 @@ class FunctionalTests(unittest.TestCase):
                     "user_super": "1",
                     "user_apikey": self.randonLoginKey,
                 },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            random_login_partner = str(uuid.uuid4())
+            random_login_partner_key = random_login_partner
+            random_login_partner = random_login_partner[-12:]
+            self.randonLoginPartner = random_login_partner
+
+            # Logout
+            res = self.testapp.post(
+                "/logout",
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Register succeed of user for partner
+            res = self.testapp.post(
+                "/join",
+                {
+                    "user_address": "Costa Rica",
+                    "user_email": random_login_partner + "@qlands.com",
+                    "user_password": "123",
+                    "user_id": random_login_partner,
+                    "user_password2": "123",
+                    "user_name": "Testing",
+                    "user_super": "0",
+                    "user_apikey": random_login_partner_key,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Logout
+            res = self.testapp.post(
+                "/logout",
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -11858,6 +11895,24 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Second partner  pass
+            partner_id2 = str(uuid.uuid4())
+            partner2 = partner_id2[-12:]
+            res = self.testapp.post(
+                "/user/{}/manage_partners/add".format(self.randonLogin),
+                {
+                    "partner_id": partner_id2,
+                    "partner_email": "e{}@qlands.com".format(partner2),
+                    "partner_name": "Carlos Quiros",
+                    "partner_organization": "QLands",
+                    "partner_telephone": "22390771",
+                    "partner_password": "123",
+                    "partner_password2": "123",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
             # Add a new partner fail. Partner already exists
             res = self.testapp.post(
                 "/user/{}/manage_partners/add".format(self.randonLogin),
@@ -11872,6 +11927,265 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
             assert "FS_error" in res.headers
+
+            # Show modify partner
+            res = self.testapp.get(
+                "/user/{}/manage_partner/{}/edit".format(self.randonLogin, partner_id),
+                status=200,
+            )
+            self.assertNotIn(b"This partner was created", res.body)
+
+            # Modify partner fail. Organization is empty
+            res = self.testapp.post(
+                "/user/{}/manage_partner/{}/edit".format(self.randonLogin, partner_id),
+                {
+                    "partner_email": "e{}@qlands.com".format(partner),
+                    "partner_name": "Carlos Quiros",
+                    "partner_organization": "",
+                    "partner_telephone": "22390771",
+                    "partner_apikey": "123",
+                    "modify": "",
+                },
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Modify partner fail. Name is empty
+            res = self.testapp.post(
+                "/user/{}/manage_partner/{}/edit".format(self.randonLogin, partner_id),
+                {
+                    "partner_email": "e{}@qlands.com".format(partner),
+                    "partner_name": "",
+                    "partner_organization": "QLandds",
+                    "partner_telephone": "22390771",
+                    "partner_apikey": "123",
+                    "modify": "",
+                },
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Modify partner fail. Telephone is empty
+            res = self.testapp.post(
+                "/user/{}/manage_partner/{}/edit".format(self.randonLogin, partner_id),
+                {
+                    "partner_email": "e{}@qlands.com".format(partner),
+                    "partner_name": "Carlos",
+                    "partner_organization": "QLandds",
+                    "partner_telephone": "",
+                    "partner_apikey": "123",
+                    "modify": "",
+                },
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Modify partner fail. Email is invalid
+            res = self.testapp.post(
+                "/user/{}/manage_partner/{}/edit".format(self.randonLogin, partner_id),
+                {
+                    "partner_email": "cquiros~qlands.com".format(partner),
+                    "partner_name": "Carlos",
+                    "partner_organization": "QLandds",
+                    "partner_telephone": "",
+                    "partner_apikey": "123",
+                    "modify": "",
+                },
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Modify partner fail. Email is already taken
+            res = self.testapp.post(
+                "/user/{}/manage_partner/{}/edit".format(self.randonLogin, partner_id),
+                {
+                    "partner_email": "e{}@qlands.com".format(partner2),
+                    "partner_name": "Carlos",
+                    "partner_organization": "QLandds",
+                    "partner_telephone": "",
+                    "partner_apikey": "123",
+                    "modify": "",
+                },
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Modify partner pass that does not exist goes to 404.
+            self.testapp.post(
+                "/user/{}/manage_partner/{}/edit".format(self.randonLogin, "not_here"),
+                {
+                    "partner_email": "e{}@qlands.com".format(partner),
+                    "partner_name": "Carlos",
+                    "partner_organization": "QLandds",
+                    "partner_telephone": "63554488",
+                    "partner_apikey": "123",
+                    "modify": "",
+                },
+                status=404,
+            )
+
+            # Modify partner pass.
+            res = self.testapp.post(
+                "/user/{}/manage_partner/{}/edit".format(self.randonLogin, partner_id),
+                {
+                    "partner_email": "e{}@qlands.com".format(partner),
+                    "partner_name": "Carlos",
+                    "partner_organization": "QLandds",
+                    "partner_telephone": "63554488",
+                    "partner_apikey": "123",
+                    "modify": "",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Change password fails. Empty pass
+            res = self.testapp.post(
+                "/user/{}/manage_partner/{}/edit".format(self.randonLogin, partner_id),
+                {
+                    "partner_password": "",
+                    "partner_password2": "",
+                    "changepass": "",
+                },
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Change password fails. Not same pass
+            res = self.testapp.post(
+                "/user/{}/manage_partner/{}/edit".format(self.randonLogin, partner_id),
+                {
+                    "partner_password": "123",
+                    "partner_password2": "",
+                    "changepass": "",
+                },
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Change password pass
+            res = self.testapp.post(
+                "/user/{}/manage_partner/{}/edit".format(self.randonLogin, partner_id),
+                {
+                    "partner_password": "123",
+                    "partner_password2": "123",
+                    "changepass": "",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Delete partner that does not exist goes to 404.
+            self.testapp.post(
+                "/user/{}/manage_partner/{}/delete".format(
+                    self.randonLogin, "not_here"
+                ),
+                {},
+                status=404,
+            )
+
+            # Delete partner passes
+            res = self.testapp.post(
+                "/user/{}/manage_partner/{}/delete".format(
+                    self.randonLogin, partner_id
+                ),
+                {},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+            self.assertNotIn(b"This partner was created", res.body)
+
+            time.sleep(10)  # Wait for ES to remove the partner
+
+            # Add partner again
+            res = self.testapp.post(
+                "/user/{}/manage_partners/add".format(self.randonLogin),
+                {
+                    "partner_id": partner_id,
+                    "partner_email": "e{}@qlands.com".format(partner),
+                    "partner_name": "Carlos Quiros",
+                    "partner_organization": "QLands",
+                    "partner_telephone": "22390771",
+                    "partner_password": "123",
+                    "partner_password2": "123",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Add partner using other user goes tot 404
+            self.testapp.post(
+                "/user/{}/manage_partners/add".format(self.randonLoginPartner),
+                {},
+                status=404,
+            )
+
+            # Edit partner using other use goes to 4-4
+            self.testapp.post(
+                "/user/{}/manage_partner/{}/edit".format(
+                    self.randonLoginPartner, partner_id
+                ),
+                {},
+                status=404,
+            )
+
+            # Delete partner using other account goes to 404
+            self.testapp.post(
+                "/user/{}/manage_partner/{}/delete".format(
+                    self.randonLoginPartner, partner_id
+                ),
+                {},
+                status=404,
+            )
+
+            # Logout
+            res = self.testapp.post(
+                "/logout",
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Login succeed random login partner
+            res = self.testapp.post(
+                "/login",
+                {"user": "", "email": self.randonLoginPartner, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Random login partner cannot edit partner
+            res = self.testapp.get(
+                "/user/{}/manage_partner/{}/edit".format(
+                    self.randonLoginPartner, partner_id
+                ),
+                status=200,
+            )
+            self.assertIn(b"This partner was created", res.body)
+
+            # Random login partner cannot delete partner
+            res = self.testapp.post(
+                "/user/{}/manage_partner/{}/delete".format(
+                    self.randonLoginPartner, partner_id
+                ),
+                {},
+                status=302,
+            )
+            assert "FS_error" in res.headers
+
+            # Logout
+            res = self.testapp.post(
+                "/logout",
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Login succeed random login
+            res = self.testapp.post(
+                "/login",
+                {"user": "", "email": self.randonLogin, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
 
             # Add an partner to a project fails. Empty partner
             res = self.testapp.post(

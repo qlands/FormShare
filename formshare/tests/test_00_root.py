@@ -11722,6 +11722,298 @@ class FunctionalTests(unittest.TestCase):
             self.assertIn(b"[Clean data]", res.body)
             self.assertIn(b"[Manage errors]", res.body)
 
+        def test_partners():
+            # show the partner page
+            self.testapp.get(
+                "/user/{}/manage_partners".format(self.randonLogin),
+                status=200,
+            )
+
+            # Add new the partner page
+            self.testapp.get(
+                "/user/{}/manage_partners/add".format(self.randonLogin),
+                status=200,
+            )
+
+            # Add a new partner fail. Empty email
+            res = self.testapp.post(
+                "/user/{}/manage_partners/add".format(self.randonLogin),
+                {
+                    "partner_email": "",
+                    "partner_name": "",
+                    "partner_organization": "",
+                    "partner_telephone": "",
+                    "partner_password": "",
+                    "partner_password2": "",
+                },
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Add a new partner fail. Invalid email
+            res = self.testapp.post(
+                "/user/{}/manage_partners/add".format(self.randonLogin),
+                {
+                    "partner_email": "cquiros~qlands.com",
+                    "partner_name": "",
+                    "partner_organization": "",
+                    "partner_telephone": "",
+                    "partner_password": "",
+                    "partner_password2": "",
+                },
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Add a new partner fail. Empty name
+            res = self.testapp.post(
+                "/user/{}/manage_partners/add".format(self.randonLogin),
+                {
+                    "partner_email": "cquiros@qlands.com",
+                    "partner_name": "",
+                    "partner_organization": "",
+                    "partner_telephone": "",
+                    "partner_password": "",
+                    "partner_password2": "",
+                },
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Add a new partner fail. Empty organization
+            res = self.testapp.post(
+                "/user/{}/manage_partners/add".format(self.randonLogin),
+                {
+                    "partner_email": "cquiros@qlands.com",
+                    "partner_name": "Carlos Quiros",
+                    "partner_organization": "",
+                    "partner_telephone": "",
+                    "partner_password": "",
+                    "partner_password2": "",
+                },
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Add a new partner fail. Empty telephone
+            res = self.testapp.post(
+                "/user/{}/manage_partners/add".format(self.randonLogin),
+                {
+                    "partner_email": "cquiros@qlands.com",
+                    "partner_name": "Carlos Quiros",
+                    "partner_organization": "QLands",
+                    "partner_telephone": "",
+                    "partner_password": "",
+                    "partner_password2": "",
+                },
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Add a new partner fail. Empty password
+            res = self.testapp.post(
+                "/user/{}/manage_partners/add".format(self.randonLogin),
+                {
+                    "partner_email": "cquiros@qlands.com",
+                    "partner_name": "Carlos Quiros",
+                    "partner_organization": "QLands",
+                    "partner_telephone": "22390771",
+                    "partner_password": "",
+                    "partner_password2": "",
+                },
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Add a new partner fail. Empty password not the same
+            res = self.testapp.post(
+                "/user/{}/manage_partners/add".format(self.randonLogin),
+                {
+                    "partner_email": "cquiros@qlands.com",
+                    "partner_name": "Carlos Quiros",
+                    "partner_organization": "QLands",
+                    "partner_telephone": "22390771",
+                    "partner_password": "123",
+                    "partner_password2": "321",
+                },
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Add partner pass
+            partner_id = str(uuid.uuid4())
+            partner = partner_id[-12:]
+            res = self.testapp.post(
+                "/user/{}/manage_partners/add".format(self.randonLogin),
+                {
+                    "partner_id": partner_id,
+                    "partner_email": "e{}@qlands.com".format(partner),
+                    "partner_name": "Carlos Quiros",
+                    "partner_organization": "QLands",
+                    "partner_telephone": "22390771",
+                    "partner_password": "123",
+                    "partner_password2": "123",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Add a new partner fail. Partner already exists
+            res = self.testapp.post(
+                "/user/{}/manage_partners/add".format(self.randonLogin),
+                {
+                    "partner_email": "e{}@qlands.com".format(partner),
+                    "partner_name": "Carlos Quiros",
+                    "partner_organization": "QLands",
+                    "partner_telephone": "22390771",
+                    "partner_password": "123",
+                    "partner_password2": "123",
+                },
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Add an partner to a project fails. Empty partner
+            res = self.testapp.post(
+                "/user/{}/project/{}/link_partner".format(
+                    self.randonLogin, self.project
+                ),
+                {"partner_id": ""},
+                status=302,
+            )
+            assert "FS_error" in res.headers
+
+            # Add an partner to a project fails. Invalid dates
+            res = self.testapp.post(
+                "/user/{}/project/{}/link_partner".format(
+                    self.randonLogin, self.project
+                ),
+                {
+                    "partner_id": partner_id,
+                    "time_bound": 1,
+                    "access_from": "",
+                    "access_to": "",
+                },
+                status=302,
+            )
+            assert "FS_error" in res.headers
+
+            # Add an partner to a project fails. Invalid dates
+            res = self.testapp.post(
+                "/user/{}/project/{}/link_partner".format(
+                    self.randonLogin, self.project
+                ),
+                {
+                    "partner_id": partner_id,
+                    "time_bound": 1,
+                    "access_from": "2021-08-05",
+                    "access_to": "2021-07-05",
+                },
+                status=302,
+            )
+            assert "FS_error" in res.headers
+
+            # Add an assistant to a form succeeds
+            res = self.testapp.post(
+                "/user/{}/project/{}/link_partner".format(
+                    self.randonLogin, self.project
+                ),
+                {
+                    "partner_id": partner_id,
+                    "time_bound": 1,
+                    "access_from": "2021-08-05",
+                    "access_to": "2021-08-05",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Add an partner to a project fails. Partner already linked
+            res = self.testapp.post(
+                "/user/{}/project/{}/link_partner".format(
+                    self.randonLogin, self.project
+                ),
+                {"partner_id": partner_id},
+                status=302,
+            )
+            assert "FS_error" in res.headers
+
+            # Show the partner login
+            self.testapp.get(
+                "/partneraccess/login",
+                status=200,
+            )
+
+            # Partner login fails. Partner does not exists
+            res = self.testapp.post(
+                "/partneraccess/login",
+                {
+                    "login": "",
+                    "passwd": "",
+                },
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Partner login fails. Invalid password
+            res = self.testapp.post(
+                "/partneraccess/login",
+                {
+                    "login": "e{}@qlands.com".format(partner),
+                    "passwd": "",
+                },
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Partner login pass
+            res = self.testapp.post(
+                "/partneraccess/login",
+                {
+                    "login": "e{}@qlands.com".format(partner),
+                    "passwd": "123",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Go to login redirects to outputs
+            self.testapp.get(
+                "/partneraccess/login",
+                status=302,
+            )
+
+            # Partner logout pass
+            res = self.testapp.post(
+                "/partneraccess/logout",
+                {},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Show the partner login
+            self.testapp.get(
+                "/partneraccess/outputs",
+                status=302,
+            )
+
+            # Partner login pass
+            res = self.testapp.post(
+                "/partneraccess/login",
+                {
+                    "login": "e{}@qlands.com".format(partner),
+                    "passwd": "123",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Show the partner login
+            self.testapp.get(
+                "/partneraccess/outputs",
+                status=200,
+            )
+
         def show_health():
             res = self.testapp.get("/health", status=200)
             print("*****************Final health")
@@ -11739,107 +12031,109 @@ class FunctionalTests(unittest.TestCase):
         test_profile()
         print("Testing projects")
         test_projects()
-        print("Testing collaborators")
-        test_collaborators()
-        print("Testing assistants")
-        test_assistants()
-        print("Testing assistants groups")
-        test_assistant_groups()
-        print("Testing forms")
-        test_forms()
-        print("Testing ODK")
-        test_odk()
-        print("Testing Multilanguage ODK")
-        test_multilanguage_odk()
-        print("Testing Support for ZIP files")
-        test_support_zip_file()
-        print("Testing external selects")
-        test_external_select()
-        print("Testing missing files")
-        test_update_form_missing_files()
-        print("Testing repository")
-        test_repository()
-        print("Testing repository downloads")
-        test_repository_downloads()
-        time.sleep(60)
-        print("Testing data import")
-        test_import_data()
-        print("Testing assistant access")
-        test_assistant_access()
-        print("Testing logs 1")
-        test_json_logs()
-        print("Testing logs 2")
-        test_json_logs_2()
-        print("Testing logs 3")
-        test_json_logs_3()
-        print("Testing logs 4")
-        test_json_logs_4()
-        print("Testing cleaning interface")
-        test_clean_interface()
-        print("Testing cleaning interface unauthorized")
-        test_clean_interface_unauthorized()
-        print("Testing audit")
-        test_audit()
-        print("Testing repository tasks")
-        test_repository_tasks()
-        print("Testing collaborator access")
-        test_collaborator_access()
-        print("Testing helpers")
-        test_helpers()
-        print("Testing utility functions")
-        test_utility_functions()
-        print("Testing avatar generator")
-        test_avatar_generator()
-        print("Testing colo generator")
-        test_color_hash_hex()
-        print("Testing use assistant")
-        test_one_user_assistant()
-        print("Testing five collaborators")
-        test_five_collaborators()
-        print("Testing merge")
-        test_form_merge()
-        print("Testing merge code 1")
-        test_form_merge_mimic()
-        print("Testing merge code 2")
-        test_form_merge_mimic2()
-        print("Testing merge code 3")
-        test_form_merge_mimic3()
-        print("Testing case management")
-        test_case_management()
-        print("Testing assistant group access")
-        test_group_assistant()
-        print("Testing Delete form with repository")
-        test_delete_form_with_repository()
-        print("Testing API")
-        test_api()
-        print("Testing plugin functions")
-        test_plugin_utility_functions()
-        print("Testing Collaborator access to project 1")
-        test_collaborator_projects()
-        print("Testing Collaborator access to project 2")
-        test_collaborator_projects_2()
-        print("Testing Collaborator access to project 3")
-        test_collaborator_projects_3()
-        print("Testing Collaborator access to project 3")
-        test_collaborator_projects_4()
-        print("Testing delete active project")
-        test_delete_active_project()
-        print("Testing access to form")
-        test_form_access()
-        print("Testing unauthorized access")
-        test_unauthorized_access()
-        print("Testing create super user")
-        test_create_super_user()
-        print("Testing configure alembic")
-        test_configure_alembic()
-        print("Testing configure fluent")
-        test_configure_fluent()
-        print("Testing configire mysql")
-        test_configure_mysql()
-        print("Testing configure tests")
-        test_configure_tests()
-        print("Testing modify config")
-        test_modify_config()
+        # print("Testing collaborators")
+        # test_collaborators()
+        # print("Testing assistants")
+        # test_assistants()
+        # print("Testing assistants groups")
+        # test_assistant_groups()
+        # print("Testing forms")
+        # test_forms()
+        # print("Testing ODK")
+        # test_odk()
+        # print("Testing Multilanguage ODK")
+        # test_multilanguage_odk()
+        # print("Testing Support for ZIP files")
+        # test_support_zip_file()
+        # print("Testing external selects")
+        # test_external_select()
+        # print("Testing missing files")
+        # test_update_form_missing_files()
+        # print("Testing repository")
+        # test_repository()
+        # print("Testing repository downloads")
+        # test_repository_downloads()
+        # time.sleep(60)
+        # print("Testing data import")
+        # test_import_data()
+        # print("Testing assistant access")
+        # test_assistant_access()
+        # print("Testing logs 1")
+        # test_json_logs()
+        # print("Testing logs 2")
+        # test_json_logs_2()
+        # print("Testing logs 3")
+        # test_json_logs_3()
+        # print("Testing logs 4")
+        # test_json_logs_4()
+        # print("Testing cleaning interface")
+        # test_clean_interface()
+        # print("Testing cleaning interface unauthorized")
+        # test_clean_interface_unauthorized()
+        # print("Testing audit")
+        # test_audit()
+        # print("Testing repository tasks")
+        # test_repository_tasks()
+        # print("Testing collaborator access")
+        # test_collaborator_access()
+        # print("Testing helpers")
+        # test_helpers()
+        # print("Testing utility functions")
+        # test_utility_functions()
+        # print("Testing avatar generator")
+        # test_avatar_generator()
+        # print("Testing colo generator")
+        # test_color_hash_hex()
+        # print("Testing use assistant")
+        # test_one_user_assistant()
+        # print("Testing five collaborators")
+        # test_five_collaborators()
+        # print("Testing merge")
+        # test_form_merge()
+        # print("Testing merge code 1")
+        # test_form_merge_mimic()
+        # print("Testing merge code 2")
+        # test_form_merge_mimic2()
+        # print("Testing merge code 3")
+        # test_form_merge_mimic3()
+        # print("Testing case management")
+        # test_case_management()
+        # print("Testing assistant group access")
+        # test_group_assistant()
+        # print("Testing Delete form with repository")
+        # test_delete_form_with_repository()
+        # print("Testing API")
+        # test_api()
+        # print("Testing plugin functions")
+        # test_plugin_utility_functions()
+        # print("Testing Collaborator access to project 1")
+        # test_collaborator_projects()
+        # print("Testing Collaborator access to project 2")
+        # test_collaborator_projects_2()
+        # print("Testing Collaborator access to project 3")
+        # test_collaborator_projects_3()
+        # print("Testing Collaborator access to project 3")
+        # test_collaborator_projects_4()
+        # print("Testing delete active project")
+        # test_delete_active_project()
+        # print("Testing access to form")
+        # test_form_access()
+        # print("Testing unauthorized access")
+        # test_unauthorized_access()
+        # print("Testing create super user")
+        # test_create_super_user()
+        # print("Testing configure alembic")
+        # test_configure_alembic()
+        # print("Testing configure fluent")
+        # test_configure_fluent()
+        # print("Testing configire mysql")
+        # test_configure_mysql()
+        # print("Testing configure tests")
+        # test_configure_tests()
+        # print("Testing modify config")
+        # test_modify_config()
+        print("Testing partners")
+        test_partners()
         show_health()
         end_time = datetime.datetime.now()
         time_delta = end_time - start_time

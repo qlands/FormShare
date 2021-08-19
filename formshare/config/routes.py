@@ -1234,7 +1234,7 @@ def load_routes(config, settings):
         routes.append(
             add_route(
                 "partner_login",
-                "/user/{userid}/project/{projcode}/partneraccess/login",
+                "/partneraccess/login",
                 PartnerLoginView,
                 "generic/partner_login.jinja2",
             )
@@ -1244,7 +1244,7 @@ def load_routes(config, settings):
         routes.append(
             add_route(
                 "partner_forms",
-                "/user/{userid}/project/{projcode}/partneraccess/forms",
+                "/partneraccess/outputs",
                 PartnerForms,
                 "partner/index.jinja2",
             )
@@ -1254,7 +1254,7 @@ def load_routes(config, settings):
         routes.append(
             add_route(
                 "partner_logout",
-                "/user/{userid}/project/{projcode}/partneraccess/logout",
+                "/partneraccess/logout",
                 partner_log_out_view,
                 None,
             )

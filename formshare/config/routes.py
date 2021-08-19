@@ -100,6 +100,8 @@ from formshare.views.form import (
     GetMediaFile,
     CaseLookUpTable,
     AddPartnerToForm,
+    EditPartnerFormOptions,
+    RemovePartnerFromForm,
 )
 from formshare.views.odk import (
     ODKFormList,
@@ -1335,6 +1337,24 @@ def load_routes(config, settings):
                 "form_add_partner",
                 "/user/{userid}/project/{projcode}/form/{formid}/partners/add",
                 AddPartnerToForm,
+                None,
+            )
+        )
+
+        routes.append(
+            add_route(
+                "edit_partner_form_options",
+                "/user/{userid}/project/{projcode}/form/{formid}/partner/{partnerid}/edit",
+                EditPartnerFormOptions,
+                None,
+            )
+        )
+
+        routes.append(
+            add_route(
+                "remove_partner_from_form",
+                "/user/{userid}/project/{projcode}/form/{formid}/partner/{partnerid}/remove",
+                RemovePartnerFromForm,
                 None,
             )
         )

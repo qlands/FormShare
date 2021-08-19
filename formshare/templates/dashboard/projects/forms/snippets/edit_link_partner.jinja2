@@ -8,7 +8,7 @@
                     <small id="partnerwho" class="font-bold">Editing partner options of Carlos Quiros</small>
                 {% endblock link_partner_header %}
             </div>
-            <form id="edit_link_partner_to_form" class="require_busy" role="form" method="post" action="#">
+            <form autocomplete="off" id="edit_link_partner_to_form" class="require_busy" role="form" method="post" action="#">
                 {% block link_partner_form %}
                     {{ form.secure_form(request) }}
                     <div class="modal-body">

@@ -68,6 +68,16 @@
                                 </a>
                             </li>
                         </ul>
+                    {% else %}
+                        {% if request.h.get_setting(request,'allow.partner.access','False') == 'True'  %}
+                            <ul class="nav navbar-top-links navbar-right">
+                                <li>
+                                    <a href="{{ request.route_url('partner_login') }}">
+                                        <i class="fas fa-handshake"></i> {{ _('Partner access') }}
+                                    </a>
+                                </li>
+                            </ul>
+                        {% endif %}
                     {% endif %}
                 {% endblock navbar_register %}
                 {% block language_menu_item %}

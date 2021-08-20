@@ -100,6 +100,7 @@ __all__ = [
     "get_field_details",
     "delete_case_lookup_table",
     "alias_exists",
+    "form_has_subversion",
 ]
 
 log = logging.getLogger("formshare")

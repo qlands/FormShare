@@ -4,6 +4,17 @@
     <title>{{ _('Partner forms') }}</title>
 {% endblock title %}
 
+{% block css %}
+    {{ super() }}
+    {% cssresource request,'formshare','shuffle' %}
+
+{% endblock css %}
+
+{% block topScripts %}
+    {{ super() }}
+    {% jsresource request,'formshare','shuffle' %}
+{% endblock topScripts %}
+
 {% block breadcrumbs %}
     {% include 'partner/snippets/brdcrbs_home.jinja2' %}
 {% endblock breadcrumbs %}
@@ -22,13 +33,67 @@
                 </a>
             </div>
         </div>
-        <div class="ibox-content">
-            <div class="feed-activity-list">
-                {% block index_form_list %}
+        <div class="ibox-content" style="background-color: #f3f3f4">
+            {% block partner_form_list %}
+                <div class="row m-t-sm">
+                    <div class="col-lg-12">
+                        <div class="row">
+                            <div class="col">
+                                <p class="mb-1">{{ _('Search') }}:</p>
+                            </div>
+                        </div>
+                        <div class="row mb-3">
+                            <div class="col">
+                                <input class="textfield filter__search js-shuffle-search" type="search" id="filters-search-input" />
+                            </div>
+                        </div>
+                        <div class="feed-activity-list">
+                            <div class="row my-shuffle">
+                                {% for a_project in projects %}
+                                    {% include 'partner/snippets/project_item.jinja2' %}
+                                {% endfor %}
 
-                {% endblock index_form_list %}
-            </div>
+                                <div class="col-1 my-sizer-element" style="max-width: 1px; max-height: 1px"></div>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            {% endblock partner_form_list %}
         </div>
     </div>
-
 {% endblock maincontent %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        var Shuffle = window.Shuffle;
+        var jQuery = window.jQuery;
+        var myShuffle = new Shuffle(document.querySelector('.my-shuffle'), {
+            itemSelector: '.feed-item',
+            sizer: '.my-sizer-element',
+            buffer: 1,
+        });
+        jQuery('.js-shuffle-search').on('keyup', function (evt) {
+            var input = evt.currentTarget;
+            var searchText = input.value.toLowerCase();
+            myShuffle.filter(function (element, shuffle) {
+                // If there is a current filter applied, ignore elements that don't match it.
+                if (shuffle.group !== Shuffle.ALL_ITEMS) {
+                    // Get the item's groups.
+                    var groups = JSON.parse(element.getAttribute('data-groups'));
+                    var isElementInCurrentGroup = groups.indexOf(shuffle.group) !== -1;
+
+                    // Only search elements in the current group
+                    if (!isElementInCurrentGroup) {
+                        return false;
+                    }
+                }
+                var titleText = element.getAttribute('data-title').toLowerCase().trim();
+                return titleText.indexOf(searchText) !== -1;
+            });
+
+        });
+    </script>
+{% endblock scripts %}

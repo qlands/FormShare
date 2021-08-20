@@ -1,0 +1,21 @@
+{% if a_project.time_bound == 0 or (a_project.time_bound == 1 and (a_project.access_from <= today and today <= a_project.access_to)) %}
+    <div class="feed-item col-md-3" data-groups='[""]' data-title="{{ a_project.project_name }}-{%- for form in a_project.project_forms %}{{ form.form_name }}-{%- endfor %}">
+        <div class="feed-element" style="margin-top: 10px">
+            <div class="ibox">
+                <div class="ibox-title" style="padding-right: 10px">
+                    {% if a_project.project_access %}
+                        <span class="label label-primary float-right"><a>{{ _('View project level outputs') }}</a></span>
+                    {% endif %}
+                    <h5>{{ a_project.project_name }}</h5>
+                </div>
+                <div class="ibox-content">
+                    <div class="feed-activity-list">
+                        {% for form in a_project.project_forms %}
+                            {% include 'partner/snippets/odk_form_item.jinja2' %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}

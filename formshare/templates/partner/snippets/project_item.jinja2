@@ -3,9 +3,10 @@
         <div class="feed-element" style="margin-top: 10px">
             <div class="ibox">
                 <div class="ibox-title" style="padding-right: 10px">
-                    {% if a_project.project_access %}
-                        <span class="label label-primary float-right"><a>{{ _('View project level outputs') }}</a></span>
-                    {% endif %}
+{#                    This will be enable once we have project level outputs #}
+{#                    {% if a_project.project_access %}#}
+{#                        <span class="label label-primary float-right"><a>{{ _('View project level outputs') }}</a></span>#}
+{#                    {% endif %}#}
                     <h5>{{ a_project.project_name }}</h5>
                 </div>
                 <div class="ibox-content">

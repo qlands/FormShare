@@ -11880,6 +11880,11 @@ class FunctionalTests(unittest.TestCase):
             # Add partner pass
             partner_id = str(uuid.uuid4())
             partner = partner_id[-12:]
+            print("Partner ID: {}".format(partner_id))
+            print("Partner email: e{}@qlands.com".format(partner))
+            print("Partner working with login: {}".format(self.randonLogin))
+            print("Partner working with project: {}".format(self.project))
+            print("Partner working with form: {}".format(self.formID))
             res = self.testapp.post(
                 "/user/{}/manage_partners/add".format(self.randonLogin),
                 {
@@ -12002,7 +12007,7 @@ class FunctionalTests(unittest.TestCase):
                     "partner_email": "e{}@qlands.com".format(partner2),
                     "partner_name": "Carlos",
                     "partner_organization": "QLandds",
-                    "partner_telephone": "",
+                    "partner_telephone": "22390771",
                     "partner_apikey": "123",
                     "modify": "",
                 },
@@ -12323,7 +12328,7 @@ class FunctionalTests(unittest.TestCase):
                     "partner_id": partner_id,
                     "time_bound": 1,
                     "access_from": "2021-08-05",
-                    "access_to": "2021-08-05",
+                    "access_to": "2121-08-05",
                 },
                 status=302,
             )
@@ -12465,7 +12470,7 @@ class FunctionalTests(unittest.TestCase):
                     "partner_id": partner_id,
                     "time_bound": 1,
                     "access_from": "2021-08-05",
-                    "access_to": "2021-08-05",
+                    "access_to": "2121-08-05",
                 },
                 status=302,
             )
@@ -12541,11 +12546,166 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            # Show the partner login
-            self.testapp.get(
+            # Show partner outputs. Partner has projects
+            res = self.testapp.get(
                 "/partneraccess/outputs",
                 status=200,
             )
+            self.assertIn(b"data-title", res.body)
+
+            # Remove partner from project passes
+            res = self.testapp.post(
+                "/user/{}/project/{}/remove_partner/{}".format(
+                    self.randonLogin, self.project, partner_id
+                ),
+                {},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Remove partner from form passes
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/partner/{}/remove".format(
+                    self.randonLogin, self.project, self.formID, partner_id
+                ),
+                {},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Partner does not have projects
+            res = self.testapp.get(
+                "/partneraccess/outputs",
+                status=200,
+            )
+            self.assertNotIn(b"data-title", res.body)
+
+            # Add an partner to form again pass
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/partners/add".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "partner_id": partner_id,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Show partner outputs. Partner has projects through forms
+            res = self.testapp.get(
+                "/partneraccess/outputs",
+                status=200,
+            )
+            self.assertIn(b"data-title", res.body)
+
+            # Add an partner to another form in same project
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/partners/add".format(
+                    self.randonLogin, self.project, "ADANIC_ALLMOD_20141020"
+                ),
+                {
+                    "partner_id": partner_id,
+                    "time_bound": 1,
+                    "access_from": "2021-08-05",
+                    "access_to": "2121-08-05",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Show partner outputs. Partner has projects through forms
+            res = self.testapp.get(
+                "/partneraccess/outputs",
+                status=200,
+            )
+            self.assertIn(b"data-title", res.body)
+
+            # Remove partner from form passes
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/partner/{}/remove".format(
+                    self.randonLogin, self.project, self.formID, partner_id
+                ),
+                {},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Remove partner from form passes
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/partner/{}/remove".format(
+                    self.randonLogin, self.project, "ADANIC_ALLMOD_20141020", partner_id
+                ),
+                {},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Add an partner to project again pass
+            res = self.testapp.post(
+                "/user/{}/project/{}/link_partner".format(
+                    self.randonLogin, self.project
+                ),
+                {
+                    "partner_id": partner_id,
+                    "time_bound": 1,
+                    "access_from": "2021-08-05",
+                    "access_to": "2121-08-05",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Show partner outputs. Partner has projects through projects
+            res = self.testapp.get(
+                "/partneraccess/outputs",
+                status=200,
+            )
+            self.assertIn(b"data-title", res.body)
+
+            # Add an partner to form again pass
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/partners/add".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "partner_id": partner_id,
+                    "time_bound": 1,
+                    "access_from": "2021-08-05",
+                    "access_to": "2121-08-05",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Show partner outputs. Partner has projects through projects and forms
+            res = self.testapp.get(
+                "/partneraccess/outputs",
+                status=200,
+            )
+            self.assertIn(b"data-title", res.body)
+
+            # Add an partner to another form in same project
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/partners/add".format(
+                    self.randonLogin, self.project, "ADANIC_ALLMOD_20141020"
+                ),
+                {
+                    "partner_id": partner_id,
+                    "time_bound": 1,
+                    "access_from": "2021-08-05",
+                    "access_to": "2121-08-05",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Show partner outputs. Partner has projects through projects and forms
+            res = self.testapp.get(
+                "/partneraccess/outputs",
+                status=200,
+            )
+            self.assertIn(b"data-title", res.body)
 
             # Get the available collaborators
             self.testapp.get(
@@ -12582,19 +12742,22 @@ class FunctionalTests(unittest.TestCase):
         test_forms()
         print("Testing ODK")
         test_odk()
-        # print("Testing Multilanguage ODK")
-        # test_multilanguage_odk()
-        # print("Testing Support for ZIP files")
-        # test_support_zip_file()
-        # print("Testing external selects")
-        # test_external_select()
-        # print("Testing missing files")
-        # test_update_form_missing_files()
-        # print("Testing repository")
-        # test_repository()
-        # print("Testing repository downloads")
-        # test_repository_downloads()
-        # time.sleep(60)
+        print("Testing Multilanguage ODK")
+        test_multilanguage_odk()
+        print("Testing Support for ZIP files")
+        test_support_zip_file()
+        print("Testing external selects")
+        test_external_select()
+        print("Testing missing files")
+        test_update_form_missing_files()
+        print("Testing repository")
+        test_repository()
+        print("Testing repository downloads")
+        test_repository_downloads()
+        print("Testing partners")
+        test_partners()
+
+        time.sleep(60)
         # print("Testing data import")
         # test_import_data()
         # print("Testing assistant access")
@@ -12673,8 +12836,6 @@ class FunctionalTests(unittest.TestCase):
         # test_configure_tests()
         # print("Testing modify config")
         # test_modify_config()
-        print("Testing partners")
-        test_partners()
         show_health()
         end_time = datetime.datetime.now()
         time_delta = end_time - start_time

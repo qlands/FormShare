@@ -56,34 +56,23 @@ def register_partner(request, partner_data):
     _ = request.translate
     partner_data.pop("partner_password2", None)
     mapped_data = map_to_schema(Partner, partner_data)
-    res = (
-        request.dbsession.query(Partner)
-        .filter(Partner.partner_email == mapped_data["partner_email"])
-        .first()
-    )
-    if res is None:
-        new_partner = Partner(**mapped_data)
-        try:
-            request.dbsession.add(new_partner)
-            request.dbsession.flush()
-            return True, ""
-        except IntegrityError:
-            request.dbsession.rollback()
-            log.error("Duplicated partner {}".format(mapped_data["partner_email"]))
-            return False, _("Partner email is already taken")
-        except Exception as e:
-            request.dbsession.rollback()
-            log.error(
-                "Error {} when inserting partner {}".format(
-                    str(e), mapped_data["partner_email"]
-                )
-            )
-            return False, str(e)
-    else:
+    new_partner = Partner(**mapped_data)
+    try:
+        request.dbsession.add(new_partner)
+        request.dbsession.flush()
+        return True, ""
+    except IntegrityError:
+        request.dbsession.rollback()
+        log.error("Duplicated partner {}".format(mapped_data["partner_email"]))
+        return False, _("Partner email is already taken")
+    except Exception as e:
+        request.dbsession.rollback()
         log.error(
-            "Duplicated partner with email {}".format(mapped_data["partner_email"])
+            "Error {} when inserting partner {}".format(
+                str(e), mapped_data["partner_email"]
+            )
         )
-        return False, _("Email is invalid")
+        return False, str(e)
 
 
 def get_partner_details(request, partner_id):

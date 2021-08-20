@@ -22,7 +22,13 @@ from formshare.views.assistant_views.forms import (
     GetQRCode,
     ChangeMyAPIKey,
 )
-from formshare.views.partner_views.forms import PartnerForms
+from formshare.views.partner_views.forms import (
+    PartnerForms,
+    PartnerFormDetails,
+    PartnerDownloadGPSPoints,
+    PartnerGetSubMissionInfo,
+    GetPartnerMediaFile,
+)
 from formshare.views.assistant_views.jsonlogs import (
     JSONList,
     JSONCompare,
@@ -1243,7 +1249,7 @@ def load_routes(config, settings):
         routes.append(
             add_route(
                 "partner_forms",
-                "/partneraccess/outputs",
+                "/partneraccess/dashboard",
                 PartnerForms,
                 "partner/index.jinja2",
             )
@@ -1352,6 +1358,42 @@ def load_routes(config, settings):
                 "remove_partner_from_form",
                 "/user/{userid}/project/{projcode}/form/{formid}/partner/{partnerid}/remove",
                 RemovePartnerFromForm,
+                None,
+            )
+        )
+
+        routes.append(
+            add_route(
+                "partner_form_details",
+                "/partneraccess/user/{userid}/project/{projcode}/form/{formid}",
+                PartnerFormDetails,
+                "partner/form_details.jinja2",
+            )
+        )
+
+        routes.append(
+            add_route(
+                "partner_form_download_gpspoints",
+                "/partneraccess/user/{userid}/project/{projcode}/form/{formid}/get/gpspoints",
+                PartnerDownloadGPSPoints,
+                "json",
+            )
+        )
+
+        routes.append(
+            add_route(
+                "partner_get_submission_info",
+                "/partneraccess/user/{userid}/project/{projcode}/form/{formid}/{submissionid}/info",
+                PartnerGetSubMissionInfo,
+                "partner/map/marker_info.jinja2",
+            )
+        )
+
+        routes.append(
+            add_route(
+                "get_partner_submission_media_file",
+                "/partneraccess/user/{userid}/project/{projcode}/form/{formid}/{submissionid}/media/{filename}/get",
+                GetPartnerMediaFile,
                 None,
             )
         )

@@ -36,6 +36,8 @@ __all__ = [
     "update_partner_form_options",
     "remove_partner_from_form",
     "get_projects_and_forms_by_partner",
+    "partner_has_project",
+    "partner_has_form",
 ]
 
 log = logging.getLogger("formshare")
@@ -335,6 +337,7 @@ def get_projects_and_forms_by_partner(request, partner_id):
         if project_found is None:
             projects_and_forms.append(
                 {
+                    "user_id": a_form["user_id"],
                     "project_id": a_form["project_id"],
                     "project_code": a_form["project_code"],
                     "project_name": a_form["project_name"],
@@ -347,6 +350,8 @@ def get_projects_and_forms_by_partner(request, partner_id):
                     "project_access": True,
                     "project_forms": [
                         {
+                            "user_id": a_form["user_id"],
+                            "project_code": a_form["project_code"],
                             "form_id": a_form["form_id"],
                             "form_name": a_form["form_name"],
                             "form_cdate": a_form["form_cdate"],
@@ -384,6 +389,8 @@ def get_projects_and_forms_by_partner(request, partner_id):
         else:
             project_found["project_forms"].append(
                 {
+                    "user_id": a_form["user_id"],
+                    "project_code": a_form["project_code"],
                     "form_id": a_form["form_id"],
                     "form_name": a_form["form_name"],
                     "form_cdate": a_form["form_cdate"],
@@ -439,6 +446,7 @@ def get_projects_and_forms_by_partner(request, partner_id):
         if project_found is None:
             projects_and_forms.append(
                 {
+                    "user_id": a_form["user_id"],
                     "project_id": a_form["project_id"],
                     "project_code": a_form["project_code"],
                     "project_name": a_form["project_name"],
@@ -449,6 +457,8 @@ def get_projects_and_forms_by_partner(request, partner_id):
                     "project_access": False,
                     "project_forms": [
                         {
+                            "user_id": a_form["user_id"],
+                            "project_code": a_form["project_code"],
                             "form_id": a_form["form_id"],
                             "form_name": a_form["form_name"],
                             "form_cdate": a_form["form_cdate"],
@@ -496,6 +506,8 @@ def get_projects_and_forms_by_partner(request, partner_id):
             if a_child_form_found is None:
                 project_found["project_forms"].append(
                     {
+                        "user_id": a_form["user_id"],
+                        "project_code": a_form["project_code"],
                         "form_id": a_form["form_id"],
                         "form_name": a_form["form_name"],
                         "form_cdate": a_form["form_cdate"],
@@ -541,3 +553,30 @@ def get_projects_and_forms_by_partner(request, partner_id):
                     a_form["time_bound"], a_form["access_to"]
                 )
     return projects_and_forms
+
+
+def partner_has_project(request, partner_id, project_id):
+    res = (
+        request.dbsession.query(PartnerProject)
+        .filter(PartnerProject.partner_id == partner_id)
+        .filter(PartnerProject.project_id == project_id)
+        .first()
+    )
+    if res is not None:
+        return map_from_schema(res)
+    else:
+        return None
+
+
+def partner_has_form(request, partner_id, project_id, form_id):
+    res = (
+        request.dbsession.query(PartnerForm)
+        .filter(PartnerForm.partner_id == partner_id)
+        .filter(PartnerForm.project_id == project_id)
+        .filter(PartnerForm.form_id == form_id)
+        .first()
+    )
+    if res is not None:
+        return map_from_schema(res)
+    else:
+        return None

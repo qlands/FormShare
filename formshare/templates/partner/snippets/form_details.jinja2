@@ -1,0 +1,96 @@
+<div class="row">
+    <div class="col-lg-6">
+        {% block form_details_header %}
+            <dl class="row mb-0">
+                <div class="col-sm-4 text-sm-right"><dt>{{ _('Created') }}:</dt> </div>
+                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date(formDetails.form_cdate, request.locale_name) }}</dd></div>
+            </dl>
+            <dl class="row mb-0">
+                <div class="col-sm-4 text-sm-right"><dt>{{ _('Last updated') }}:</dt> </div>
+                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date(formDetails.form_cdate, request.locale_name) }}</dd></div>
+            </dl>
+        {% endblock form_details_header %}
+    </div>
+    <div class="col-lg-6" id="cluster_info">
+        {% block form_details_submissions %}
+            <dl class="row mb-0">
+                <div class="col-sm-4 text-sm-right">
+                    {% if formDetails.form_casetype != 1 %}
+                        <dt>{{ _('Last submission') }}:</dt>
+                    {% else %}
+                        <dt>{{ _('Last case') }}:</dt>
+                    {% endif %}
+                </div>
+                {% if formDetails.submissions > 0 %}
+                    <div class="col-sm-8 text-sm-left">
+                        <dd class="mb-1">{{ request.h.readble_date_with_time(formDetails.last, request.locale_name) }}</dd>
+                    </div>
+                {% else %}
+                    <div class="col-sm-8 text-sm-left">
+                        {% if formDetails.form_casetype != 1 %}
+                            <dd class="mb-1">{{ _('Without submissions') }}</dd>
+                        {% else %}
+                            <dd class="mb-1">{{ _('Without cases') }}</dd>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </dl>
+            {% if formDetails.submissions > 0 %}
+                {% if formDetails.form_schema != None %}
+                    <dl class="row mb-0">
+                        <div class="col-sm-4 text-sm-right">
+                            <dt>{{ _('Last cleaned') }}:</dt>
+                        </div>
+                        <div class="col-sm-8 text-sm-left">
+                            {% if formDetails.cleanedlast == "" %}
+                                <dd class="mb-1">{{ _('Not cleaned yet') }}</dd>
+                            {% else %}
+                                <dd class="mb-1">{{ request.h.readble_date_with_time(formDetails.cleanedlast, request.locale_name) }}</dd>
+                            {% endif %}
+                        </div>
+                    </dl>
+                {% endif %}
+            {% endif %}
+            <dl class="row mb-0">
+                <div class="col-sm-4 text-sm-right">
+                    {% if formDetails.form_casetype != 1 %}
+                        <dt>{{ _('Submissions') }}:</dt>
+                    {% else %}
+                        <dt>{{ _('Cases') }}:</dt>
+                    {% endif %}
+                </div>
+                <div class="col-sm-8 text-sm-left">
+                    <dd class="mb-1">{{ formDetails.submissions }}</dd>
+                </div>
+            </dl>
+        {% endblock form_details_submissions %}
+        {% if formDetails.form_schema != None %}
+            {% block form_details_submissions_db %}
+                <dl class="row mb-0">
+                    <div class="col-sm-4 text-sm-right">
+                        <dt>{{ _('In database') }}:</dt>
+                    </div>
+                    <div class="col-sm-8 text-sm-left">
+                        <dd class="mb-1">{{ formDetails.indb }} {% if formDetails.indb > 0 %}<a target="_blank" href="{{ request.route_url('clean', userid=userid, projcode=projectDetails.project_code,formid=formDetails.form_id) }}">[{{ _('Clean data') }}]</a>{% endif %}</dd>
+                    </div>
+                </dl>
+                <dl class="row mb-0">
+                    <div class="col-sm-4 text-sm-right">
+                        <dt>{{ _('With errors') }}:</dt>
+                    </div>
+                    <div class="col-sm-8 text-sm-left">
+                        <dd class="mb-1" {% if formDetails.inerror > 0 %}style="color: red"{% endif %}>{{ formDetails.inerror }} {% if formDetails.inerror > 0 %}<a style="color: red" target="_blank" href="{{ request.route_url('errorlist', userid=userid, projcode=projectDetails.project_code,formid=formDetails.form_id) }}">[{{ _('Manage errors') }}]</a>{% endif %}</dd>
+                    </div>
+                </dl>
+                <dl class="row mb-0">
+                    <div class="col-sm-4 text-sm-right">
+                        <dt>{{ _('Log entries') }}:</dt>
+                    </div>
+                    <div class="col-sm-8 text-sm-left">
+                        <dd class="mb-1">{{ formDetails.inlogs }} {% if formDetails.inlogs > 0 %}<a target="_blank" href="{{ request.route_url('errorlist', userid=userid, projcode=projectDetails.project_code,formid=formDetails.form_id) }}">[{{ _('View logs') }}]</a>{% endif %}</dd>
+                    </div>
+                </dl>
+            {% endblock form_details_submissions_db %}
+        {% endif %}
+    </div>
+</div>

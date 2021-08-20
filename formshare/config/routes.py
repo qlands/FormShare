@@ -1230,7 +1230,6 @@ def load_routes(config, settings):
     # Partner routes
 
     if settings.get("allow.partner.access", "False") == "True":
-        # TODO: To test
         routes.append(
             add_route(
                 "partner_login",
@@ -1250,7 +1249,6 @@ def load_routes(config, settings):
             )
         )
 
-        # TODO: To test
         routes.append(
             add_route(
                 "partner_logout",
@@ -1260,7 +1258,6 @@ def load_routes(config, settings):
             )
         )
 
-        # TODO: To test
         routes.append(
             add_route(
                 "api_select2_partners",

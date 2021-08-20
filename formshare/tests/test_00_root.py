@@ -12547,6 +12547,14 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
 
+            # Get the available collaborators
+            self.testapp.get(
+                "/user/{}/api/select2_partners?q={}".format(
+                    self.randonLogin, "Carlos Quiros"
+                ),
+                status=200,
+            )
+
         def show_health():
             res = self.testapp.get("/health", status=200)
             print("*****************Final health")

@@ -68,32 +68,34 @@
 {% block scripts %}
     {{ super() }}
     <script>
-        var Shuffle = window.Shuffle;
-        var jQuery = window.jQuery;
-        var myShuffle = new Shuffle(document.querySelector('.my-shuffle'), {
-            itemSelector: '.feed-item',
-            sizer: '.my-sizer-element',
-            buffer: 1,
-        });
-        jQuery('.js-shuffle-search').on('keyup', function (evt) {
-            var input = evt.currentTarget;
-            var searchText = input.value.toLowerCase();
-            myShuffle.filter(function (element, shuffle) {
-                // If there is a current filter applied, ignore elements that don't match it.
-                if (shuffle.group !== Shuffle.ALL_ITEMS) {
-                    // Get the item's groups.
-                    var groups = JSON.parse(element.getAttribute('data-groups'));
-                    var isElementInCurrentGroup = groups.indexOf(shuffle.group) !== -1;
-
-                    // Only search elements in the current group
-                    if (!isElementInCurrentGroup) {
-                        return false;
-                    }
-                }
-                var titleText = element.getAttribute('data-title').toLowerCase().trim();
-                return titleText.indexOf(searchText) !== -1;
+        {% if projects|length > 0 %}
+            var Shuffle = window.Shuffle;
+            var jQuery = window.jQuery;
+            var myShuffle = new Shuffle(document.querySelector('.my-shuffle'), {
+                itemSelector: '.feed-item',
+                sizer: '.my-sizer-element',
+                buffer: 1,
             });
+            jQuery('.js-shuffle-search').on('keyup', function (evt) {
+                var input = evt.currentTarget;
+                var searchText = input.value.toLowerCase();
+                myShuffle.filter(function (element, shuffle) {
+                    // If there is a current filter applied, ignore elements that don't match it.
+                    if (shuffle.group !== Shuffle.ALL_ITEMS) {
+                        // Get the item's groups.
+                        var groups = JSON.parse(element.getAttribute('data-groups'));
+                        var isElementInCurrentGroup = groups.indexOf(shuffle.group) !== -1;
 
-        });
+                        // Only search elements in the current group
+                        if (!isElementInCurrentGroup) {
+                            return false;
+                        }
+                    }
+                    var titleText = element.getAttribute('data-title').toLowerCase().trim();
+                    return titleText.indexOf(searchText) !== -1;
+                });
+
+            });
+        {% endif %}
     </script>
 {% endblock scripts %}

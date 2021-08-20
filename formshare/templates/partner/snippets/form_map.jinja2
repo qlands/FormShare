@@ -1,0 +1,45 @@
+{% set active_tab = request.params.get('tab',None) %}
+<div id="maptab" class="ibox {% if active_tab != 'map' and active_tab != None %}collapsed{% endif %}">
+    <div class="ibox-title">
+        {% block form_map_title %}
+            <h5>{{ _('Map') }}</h5>
+            <div class="ibox-tools">
+                {% block form_map_tools %}
+                    <a class="collapse-link" style="margin-right: 10px">
+                        <i class="fa fa-chevron-up"></i>
+                    </a>
+                    <a class="fullscreen-link">
+                        <i class="fa fa-expand"></i>
+                    </a>
+                {% endblock form_map_tools %}
+            </div>
+        {% endblock form_map_title %}
+    </div>
+    <div class="ibox-content">
+        {% block form_map_content %}
+            <div id="mapbox">
+                {% if formDetails.submissions > 0 and formDetails.form_geopoint != None and withgps > 0 %}
+                    <div id="projmap" style="height: 600px"></div>
+                {% else %}
+                    {% if formDetails.form_geopoint == None %}
+                        {{ _('This form is not geo-referenced') }}
+                    {% else %}
+                        {% if formDetails.submissions == 0 %}
+                            {% if formDetails.form_casetype != 1 %}
+                                {{ _('No map is available at the moment. Waiting for submissions') }}
+                            {% else %}
+                                {{ _('No map is available at the moment. Waiting for cases') }}
+                            {% endif %}
+                        {% else %}
+                            {% if formDetails.form_casetype != 1 %}
+                                {{ _('Waiting for submissions with GPS data') }}
+                            {% else %}
+                                {{ _('Waiting for cases with GPS data') }}
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+            </div>
+        {% endblock form_map_content %}
+    </div>
+</div>

@@ -1,0 +1,61 @@
+{% extends 'partner/page.jinja2' %}
+
+{% block title %}
+    <title>{{ _('Form details') }}</title>
+{% endblock title %}
+
+{% block css %}
+    {{ super() }}
+    {% if formDetails.form_geopoint != None %}
+        {% cssresource request,'formshare','leaflet' %}
+        {% cssresource request,'formshare','blueimp' %}
+    {% endif %}
+{% endblock css %}
+
+{% block topScripts %}
+    <script>
+        paceOptions = {
+            ajax: {
+                trackWebSockets: false
+            }
+        }
+    </script>
+    {{ super() }}
+    {% if formDetails.form_geopoint != None %}
+        {% jsresource request,'formshare','leaflet' %}
+        {% jsresource request,'formshare','blueimp' %}
+    {% endif %}
+{% endblock topScripts %}
+
+{% block breadcrumbs %}
+    {% include 'partner/snippets/brdcrbs_forms.jinja2' %}
+{% endblock breadcrumbs %}
+
+{% block maincontent %}
+
+    <div class="ibox">
+        <div class="ibox-content">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="m-b-md">
+                        <h2>{{ _('Form stats') }}</h2>
+                    </div>
+
+                </div>
+            </div>
+            {% include 'partner/snippets/form_details.jinja2' %}
+            {% include 'partner/snippets/form_map.jinja2' %}
+        </div>
+    </div>
+
+    {% include 'dashboard/projects/forms/snippets/submission_info.jinja2' %}
+{% endblock maincontent %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function() {
+            {% include 'partner/snippets/form_map_js.jinja2' %}
+        });
+    </script>
+{% endblock scripts %}

@@ -9,7 +9,7 @@
             <div class="row">
                 <div class="col-md-12">
                     {% block form_item_content %}
-                        <strong><a href="">{{ form.form_name }}</a></strong>
+                        <strong><a href="{{ request.route_url('partner_form_details',userid=form.user_id,projcode=form.project_code,formid=form.form_id) }}">{{ form.form_name }}</a></strong>
                         {% if form.form_geopoint != None %}
                             <span class="label label-default">{{ _('Geo-referenced') }}</span>
                         {% endif %}

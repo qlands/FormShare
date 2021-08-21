@@ -28,6 +28,8 @@ from formshare.views.partner_views.forms import (
     PartnerDownloadGPSPoints,
     PartnerGetSubMissionInfo,
     GetPartnerMediaFile,
+    PartnerDownloadPrivateProduct,
+    PartnerDownloadPrivateProductByAPI,
 )
 from formshare.views.assistant_views.jsonlogs import (
     JSONList,
@@ -1395,6 +1397,25 @@ def load_routes(config, settings):
                 "/partneraccess/user/{userid}/project/{projcode}/form/{formid}/{submissionid}/media/{filename}/get",
                 GetPartnerMediaFile,
                 None,
+            )
+        )
+
+        routes.append(
+            add_route(
+                "partner_download_private_product",
+                "/partneraccess/user/{userid}/project/{projcode}/form/{formid}/"
+                "private_download/{productid}/output/{outputid}",
+                PartnerDownloadPrivateProduct,
+                None,
+            )
+        )
+
+        routes.append(
+            add_route(
+                "partner_api_download_private_product",
+                "/partneraccess/user/{userid}/project/{projcode}/form/{formid}/api_download/{productid}/output/{outputid}",
+                PartnerDownloadPrivateProductByAPI,
+                "json",
             )
         )
 

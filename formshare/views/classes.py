@@ -34,6 +34,7 @@ from formshare.processes.db import (
     get_project_from_assistant,
     get_user_by_api_key,
     get_assistant_by_api_key,
+    get_partner_by_api_key,
 )
 
 log = logging.getLogger("formshare")
@@ -942,6 +943,99 @@ class AssistantAPIView(object):
                     ).encode(),
                 )
                 return response
+        else:
+            response = Response(
+                content_type="application/json",
+                status=401,
+                body=json.dumps(
+                    {
+                        "error": self._("You need to specify an API key"),
+                        "error_type": "api_key_missing",
+                    }
+                ).encode(),
+            )
+            return response
+
+        res = self.process_view()
+        if not self.error:
+            return res
+        else:
+            response = Response(
+                content_type="application/json",
+                status=400,
+                body=json.dumps(res).encode(),
+            )
+            return response
+
+    def process_view(self):
+        return {"key": self.api_key}
+
+    def check_keys(self, key_list):
+        not_found_keys = []
+        for a_key in key_list:
+            if a_key not in self.request.POST.keys():
+                not_found_keys.append(a_key)
+        if not_found_keys:
+            json_result = {
+                "error": self._(
+                    "The following keys were not present in the submitted JSON"
+                ),
+                "keys": [],
+                "error_type": "missing_key",
+            }
+            for a_key in not_found_keys:
+                json_result["keys"].append(a_key)
+
+            response = exception_response(
+                400,
+                content_type="application/json",
+                body=json.dumps(json_result).encode(),
+            )
+            raise response
+
+    def return_error(self, error_type, error_message):
+        response = exception_response(
+            400,
+            content_type="application/json",
+            body=json.dumps(
+                {"error": error_message, "error_type": error_type}
+            ).encode(),
+        )
+        raise response
+
+
+class PartnerAPIView(object):
+    def __init__(self, request):
+        self.request = request
+        self.partner = None
+        self.api_key = ""
+        self.partnerID = None
+        self._ = self.request.translate
+        self.error = False
+
+    def __call__(self):
+        if self.request.method == "GET":
+            self.api_key = self.request.params.get("apikey", None)
+        else:
+            self.api_key = self.request.POST.get("apikey", None)
+        if self.api_key is not None:
+            self.partner = get_partner_by_api_key(self.request, self.api_key)
+            if self.partner is None:
+                response = Response(
+                    content_type="application/json",
+                    status=401,
+                    body=json.dumps(
+                        {
+                            "error": self._(
+                                "This API key does not exist or is inactive"
+                            ),
+                            "error_type": "authentication",
+                        }
+                    ).encode(),
+                )
+                return response
+            else:
+                self.partnerID = self.partner["partner_id"]
         else:
             response = Response(
                 content_type="application/json",

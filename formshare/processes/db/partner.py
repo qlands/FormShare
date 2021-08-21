@@ -38,6 +38,7 @@ __all__ = [
     "get_projects_and_forms_by_partner",
     "partner_has_project",
     "partner_has_form",
+    "get_partner_by_api_key",
 ]
 
 log = logging.getLogger("formshare")
@@ -580,3 +581,15 @@ def partner_has_form(request, partner_id, project_id, form_id):
         return map_from_schema(res)
     else:
         return None
+
+
+def get_partner_by_api_key(request, api_key):
+    res = (
+        request.dbsession.query(Partner)
+        .filter(Partner.partner_apikey == api_key)
+        .first()
+    )
+    if res is not None:
+        result = map_from_schema(res)
+        return result
+    return None

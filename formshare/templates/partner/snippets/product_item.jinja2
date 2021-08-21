@@ -1,0 +1,76 @@
+{% if output.status == 0 %}
+    {% block product_item_ready %}
+        <div id="feed_element_{{ output.celery_taskid }}" class="feed-element">
+            <a href="#" class="float-left">
+                <div class="rounded-circle" style="margin-right: 10px; {% if output.status == 0 %}background-color: #026AA8;{% else %}{% if output.status > 0 %}background-color:red;{% else %}background-color: orange;{% endif %}{% endif %} width: 38px; height: 38px; display: inline-block; vertical-align: middle" ><span style="color: white; position: relative; float: left; top: 50%; left: 50%; transform: translate(-50%, -50%);"><i class="{{ product.icon }} fa-2x"></i></span></div>
+            </a>
+            <div class="media-body ">
+                {% block product_item_ready_head %}
+                    {% if output.product_published == 1 %}
+                        <small class="float-right text-navy">{{ _('Published by') }} {{ output.published_by_name }} ({{ request.h.simple_date(output.date_published) }})</small>
+                    {% endif %}
+                    {% if output.published == 1 %}<span class="label" style="color: white; background: cornflowerblue" title="{{ _('Public Access') }}">{{ _('Public') }}</span><br>{% endif %}
+                    <small class="text-muted">{{ _('Created on ') }} {{ request.h.readble_date_with_time(output.datetime_added,request.locale_name) }} {% if output.status == 0 %} {% if output.output_file != None %}- <span class="text-success"> {{ output.downloads }} {{ request.h.pluralize(_('download'),output.downloads,request.locale_name) }} {% if output.last_download != None %}({{ _('last') }}: {{ request.h.simple_date(output.last_download) }}){% endif %}</span>{% endif %} {% endif %}</small>
+                    {% if output.output_file != None %}
+                        <br/>
+                        {% if output.status == 0 %}
+                            {% if loop_index == 1 %}
+                                <span title="{{ _('This is the latest export of this product') }}" class="badge">{{ _('Latest') }}</span>
+                            {% endif %}
+                            {% if formDetails.lastindb != None %}
+                                {% set product_outdated = False %}
+                                {% if formDetails.lastindb > output.datetime_added  %}
+                                    {% set product_outdated = True %}
+                                {% endif %}
+                                {% if formDetails.cleanedlast != None %}
+                                    {% if formDetails.cleanedlast > output.datetime_added %}
+                                         {% set product_outdated = True %}
+                                    {% endif %}
+                                {% endif %}
+                                {% if formDetails.fixedlast != None %}
+                                    {% if formDetails.fixedlast > output.datetime_added %}
+                                         {% set product_outdated = True %}
+                                    {% endif %}
+                                {% endif %}
+                                {% if not product_outdated %}
+                                    <span class="badge badge-success">{{ _('Up to date') }}</span>
+                                {% else %}
+                                    <span title="{{ _('This product was created before the last submission and/or before the last data cleaning update and/or before the last fixed log entry') }}" class="badge badge-danger">{{ _('Outdated') }}</span>
+                                {% endif %}
+
+                            {% else %}
+                                <span title="{{ _('This product was created before submissions were deleted') }}" class="badge badge-danger">{{ _('Outdated') }}</span>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+                {% endblock product_item_ready_head %}
+                <div class="actions">
+                    {% block product_item_ready_actions %}
+                        {% if output.output_file != None and output.status == 0 %}
+                            {% if output.product_published == 1 %}
+                                {% block product_item_ready_public_tools %}
+                                    {% if loop_index == 1 %}
+                                        <a href="{{ request.route_url('download_public_product', userid=userid, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid='latest') }}"  class="btn btn-xs btn-white"><i class="fas fa-download"></i> {{ _('Download') }} </a>
+                                    {% else %}
+                                        <a href="{{ request.route_url('download_public_product', userid=userid, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid=output.output_id) }}"  class="btn btn-xs btn-white"><i class="fas fa-download"></i> {{ _('Download') }} </a>
+                                    {% endif %}
+                                {% endblock product_item_ready_public_tools %}
+                            {% else %}
+                                {% block product_item_ready_private_tools %}
+                                    {% if loop_index == 1 %}
+                                        <a href="{{ request.route_url('partner_download_private_product', userid=userid, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid='latest') }}"  class="btn btn-xs btn-white"><i class="fas fa-download"></i> {{ _('Download') }} </a>
+                                        <a href="{{ request.route_url('partner_api_download_private_product', userid=userid, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid='latest', _query={'apikey': activePartner.api_key}) }}"  class="btn btn-xs btn-white"><i class="fas fa-code"></i> {{ _('API Download') }} </a>
+                                    {% else %}
+                                        <a href="{{ request.route_url('partner_download_private_product', userid=userid, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid=output.output_id) }}"  class="btn btn-xs btn-white"><i class="fas fa-download"></i> {{ _('Download') }} </a>
+                                        <a href="{{ request.route_url('partner_api_download_private_product', userid=userid, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid=output.output_id, _query={'apikey': activePartner.api_key}) }}"  class="btn btn-xs btn-white"><i class="fas fa-code"></i> {{ _('API Download') }} </a>
+                                    {% endif %}
+
+                                {% endblock product_item_ready_private_tools %}
+                            {% endif %}
+                        {% endif %}
+                    {% endblock product_item_ready_actions %}
+                </div>
+            </div>
+        </div>
+    {% endblock product_item_ready %}
+{% endif %}

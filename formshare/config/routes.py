@@ -1247,7 +1247,6 @@ def load_routes(config, settings):
             )
         )
 
-        # TODO: To test
         routes.append(
             add_route(
                 "partner_forms",
@@ -1413,7 +1412,8 @@ def load_routes(config, settings):
         routes.append(
             add_route(
                 "partner_api_download_private_product",
-                "/partneraccess/user/{userid}/project/{projcode}/form/{formid}/api_download/{productid}/output/{outputid}",
+                "/partneraccess/user/{userid}/project/{projcode}/form/{formid}/api_download"
+                "/{productid}/output/{outputid}",
                 PartnerDownloadPrivateProductByAPI,
                 "json",
             )

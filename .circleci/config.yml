@@ -13,7 +13,6 @@ jobs:
           - "ES_JAVA_OPTS=-Xms750m -Xmx750m"
         ports:
           - 9200:9200
-    resource_class: medium+
     working_directory: ~/work
     steps:
       - checkout

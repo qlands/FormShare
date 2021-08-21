@@ -12531,7 +12531,7 @@ class FunctionalTests(unittest.TestCase):
 
             # Show the partner login
             self.testapp.get(
-                "/partneraccess/outputs",
+                "/partneraccess/dashboard",
                 status=302,
             )
 
@@ -12548,7 +12548,7 @@ class FunctionalTests(unittest.TestCase):
 
             # Show partner outputs. Partner has projects
             res = self.testapp.get(
-                "/partneraccess/outputs",
+                "/partneraccess/dashboard",
                 status=200,
             )
             self.assertIn(b"data-title", res.body)
@@ -12575,7 +12575,7 @@ class FunctionalTests(unittest.TestCase):
 
             # Partner does not have projects
             res = self.testapp.get(
-                "/partneraccess/outputs",
+                "/partneraccess/dashboard",
                 status=200,
             )
             self.assertNotIn(b"data-title", res.body)
@@ -12594,7 +12594,7 @@ class FunctionalTests(unittest.TestCase):
 
             # Show partner outputs. Partner has projects through forms
             res = self.testapp.get(
-                "/partneraccess/outputs",
+                "/partneraccess/dashboard",
                 status=200,
             )
             self.assertIn(b"data-title", res.body)
@@ -12616,7 +12616,7 @@ class FunctionalTests(unittest.TestCase):
 
             # Show partner outputs. Partner has projects through forms
             res = self.testapp.get(
-                "/partneraccess/outputs",
+                "/partneraccess/dashboard",
                 status=200,
             )
             self.assertIn(b"data-title", res.body)
@@ -12658,7 +12658,7 @@ class FunctionalTests(unittest.TestCase):
 
             # Show partner outputs. Partner has projects through projects
             res = self.testapp.get(
-                "/partneraccess/outputs",
+                "/partneraccess/dashboard",
                 status=200,
             )
             self.assertIn(b"data-title", res.body)
@@ -12680,7 +12680,7 @@ class FunctionalTests(unittest.TestCase):
 
             # Show partner outputs. Partner has projects through projects and forms
             res = self.testapp.get(
-                "/partneraccess/outputs",
+                "/partneraccess/dashboard",
                 status=200,
             )
             self.assertIn(b"data-title", res.body)
@@ -12702,7 +12702,7 @@ class FunctionalTests(unittest.TestCase):
 
             # Show partner outputs. Partner has projects through projects and forms
             res = self.testapp.get(
-                "/partneraccess/outputs",
+                "/partneraccess/dashboard",
                 status=200,
             )
             self.assertIn(b"data-title", res.body)

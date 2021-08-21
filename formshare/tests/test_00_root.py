@@ -56,6 +56,28 @@ def get_repository_task(config, project, form):
     return res
 
 
+def get_one_submission(config, form_schema):
+    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
+    result = engine.execute(
+        "SELECT surveyid FROM {}.maintable".format(form_schema)
+    ).fetchone()
+    result = result[0]
+    engine.dispose()
+    return result
+
+
+def get_partner_api_key(config, partner_id):
+    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
+    result = engine.execute(
+        "SELECT partner_apikey FROM formshare.partner WHERE partner_id='{}'".format(
+            partner_id
+        )
+    ).fetchone()
+    result = result[0]
+    engine.dispose()
+    return result
+
+
 class FunctionalTests(unittest.TestCase):
     def setUp(self):
         if os.environ.get("FORMSHARE_PYTEST_RUNNING", "false") == "false":
@@ -12707,6 +12729,86 @@ class FunctionalTests(unittest.TestCase):
             )
             self.assertIn(b"data-title", res.body)
 
+            # Get the partner details of a form
+            self.testapp.get(
+                "/partneraccess/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+
+            # Get the partner GPS info of a form
+            self.testapp.get(
+                "/partneraccess/user/{}/project/{}/form/{}/get/gpspoints".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+
+            form_details = get_form_details(
+                self.server_config, self.projectID, self.formID
+            )
+            submission_id = get_one_submission(
+                self.server_config, form_details["form_schema"]
+            )
+            # Get the partner Marker info for a submission
+            self.testapp.get(
+                "/partneraccess/user/{}/project/{}/form/{}/{}/info".format(
+                    self.randonLogin, self.project, self.formID, submission_id
+                ),
+                status=200,
+            )
+
+            # Get the partner Marker info for a submission image
+            self.testapp.get(
+                "/partneraccess/user/{}/project/{}/form/{}/{}/media/{}/get".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    submission_id,
+                    "image001.png",
+                ),
+                status=200,
+            )
+
+            # Get the partner product
+            self.testapp.get(
+                "/partneraccess/user/{}/project/{}/form/{}/private_download/{}/output/{}".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "xlsx_public_export",
+                    "latest",
+                ),
+                status=200,
+            )
+
+            # Get the partner using API goes to 401. No key
+            self.testapp.get(
+                "/partneraccess/user/{}/project/{}/form/{}/api_download/{}/output/{}".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "xlsx_public_export",
+                    "latest",
+                ),
+                status=401,
+            )
+
+            partner_api_key = get_partner_api_key(self.server_config, partner_id)
+            # Get the partner using API goes to 401. No key
+            self.testapp.get(
+                "/partneraccess/user/{}/project/{}/form/{}/api_download/{}/output/{}?apikey={}".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "xlsx_public_export",
+                    "latest",
+                    partner_api_key,
+                ),
+                status=200,
+            )
+
             # Get the available collaborators
             self.testapp.get(
                 "/user/{}/api/select2_partners?q={}".format(
@@ -12756,85 +12858,85 @@ class FunctionalTests(unittest.TestCase):
         test_repository_downloads()
         print("Testing partners")
         test_partners()
-        time.sleep(60)
-        print("Testing data import")
-        test_import_data()
-        print("Testing assistant access")
-        test_assistant_access()
-        print("Testing logs 1")
-        test_json_logs()
-        print("Testing logs 2")
-        test_json_logs_2()
-        print("Testing logs 3")
-        test_json_logs_3()
-        print("Testing logs 4")
-        test_json_logs_4()
-        print("Testing cleaning interface")
-        test_clean_interface()
-        print("Testing cleaning interface unauthorized")
-        test_clean_interface_unauthorized()
-        print("Testing audit")
-        test_audit()
-        print("Testing repository tasks")
-        test_repository_tasks()
-        print("Testing collaborator access")
-        test_collaborator_access()
-        print("Testing helpers")
-        test_helpers()
-        print("Testing utility functions")
-        test_utility_functions()
-        print("Testing avatar generator")
-        test_avatar_generator()
-        print("Testing colo generator")
-        test_color_hash_hex()
-        print("Testing use assistant")
-        test_one_user_assistant()
-        print("Testing five collaborators")
-        test_five_collaborators()
-        print("Testing merge")
-        test_form_merge()
-        print("Testing merge code 1")
-        test_form_merge_mimic()
-        print("Testing merge code 2")
-        test_form_merge_mimic2()
-        print("Testing merge code 3")
-        test_form_merge_mimic3()
-        print("Testing case management")
-        test_case_management()
-        print("Testing assistant group access")
-        test_group_assistant()
-        print("Testing Delete form with repository")
-        test_delete_form_with_repository()
-        print("Testing API")
-        test_api()
-        print("Testing plugin functions")
-        test_plugin_utility_functions()
-        print("Testing Collaborator access to project 1")
-        test_collaborator_projects()
-        print("Testing Collaborator access to project 2")
-        test_collaborator_projects_2()
-        print("Testing Collaborator access to project 3")
-        test_collaborator_projects_3()
-        print("Testing Collaborator access to project 3")
-        test_collaborator_projects_4()
-        print("Testing delete active project")
-        test_delete_active_project()
-        print("Testing access to form")
-        test_form_access()
-        print("Testing unauthorized access")
-        test_unauthorized_access()
-        print("Testing create super user")
-        test_create_super_user()
-        print("Testing configure alembic")
-        test_configure_alembic()
-        print("Testing configure fluent")
-        test_configure_fluent()
-        print("Testing configire mysql")
-        test_configure_mysql()
-        print("Testing configure tests")
-        test_configure_tests()
-        print("Testing modify config")
-        test_modify_config()
+        # time.sleep(60)
+        # print("Testing data import")
+        # test_import_data()
+        # print("Testing assistant access")
+        # test_assistant_access()
+        # print("Testing logs 1")
+        # test_json_logs()
+        # print("Testing logs 2")
+        # test_json_logs_2()
+        # print("Testing logs 3")
+        # test_json_logs_3()
+        # print("Testing logs 4")
+        # test_json_logs_4()
+        # print("Testing cleaning interface")
+        # test_clean_interface()
+        # print("Testing cleaning interface unauthorized")
+        # test_clean_interface_unauthorized()
+        # print("Testing audit")
+        # test_audit()
+        # print("Testing repository tasks")
+        # test_repository_tasks()
+        # print("Testing collaborator access")
+        # test_collaborator_access()
+        # print("Testing helpers")
+        # test_helpers()
+        # print("Testing utility functions")
+        # test_utility_functions()
+        # print("Testing avatar generator")
+        # test_avatar_generator()
+        # print("Testing colo generator")
+        # test_color_hash_hex()
+        # print("Testing use assistant")
+        # test_one_user_assistant()
+        # print("Testing five collaborators")
+        # test_five_collaborators()
+        # print("Testing merge")
+        # test_form_merge()
+        # print("Testing merge code 1")
+        # test_form_merge_mimic()
+        # print("Testing merge code 2")
+        # test_form_merge_mimic2()
+        # print("Testing merge code 3")
+        # test_form_merge_mimic3()
+        # print("Testing case management")
+        # test_case_management()
+        # print("Testing assistant group access")
+        # test_group_assistant()
+        # print("Testing Delete form with repository")
+        # test_delete_form_with_repository()
+        # print("Testing API")
+        # test_api()
+        # print("Testing plugin functions")
+        # test_plugin_utility_functions()
+        # print("Testing Collaborator access to project 1")
+        # test_collaborator_projects()
+        # print("Testing Collaborator access to project 2")
+        # test_collaborator_projects_2()
+        # print("Testing Collaborator access to project 3")
+        # test_collaborator_projects_3()
+        # print("Testing Collaborator access to project 3")
+        # test_collaborator_projects_4()
+        # print("Testing delete active project")
+        # test_delete_active_project()
+        # print("Testing access to form")
+        # test_form_access()
+        # print("Testing unauthorized access")
+        # test_unauthorized_access()
+        # print("Testing create super user")
+        # test_create_super_user()
+        # print("Testing configure alembic")
+        # test_configure_alembic()
+        # print("Testing configure fluent")
+        # test_configure_fluent()
+        # print("Testing configire mysql")
+        # test_configure_mysql()
+        # print("Testing configure tests")
+        # test_configure_tests()
+        # print("Testing modify config")
+        # test_modify_config()
         show_health()
         end_time = datetime.datetime.now()
         time_delta = end_time - start_time

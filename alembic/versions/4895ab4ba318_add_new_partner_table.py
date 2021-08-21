@@ -19,7 +19,11 @@ depends_on = None
 def upgrade():
     op.create_table(
         "partner",
-        sa.Column("partner_id", sa.Unicode(length=64, collation="utf8mb4_unicode_ci"), nullable=False),
+        sa.Column(
+            "partner_id",
+            sa.Unicode(length=64, collation="utf8mb4_unicode_ci"),
+            nullable=False,
+        ),
         sa.Column("partner_email", sa.Unicode(length=320), nullable=False),
         sa.Column("partner_name", sa.Unicode(length=120), nullable=True),
         sa.Column("partner_organization", sa.Unicode(length=120), nullable=True),

@@ -27,7 +27,7 @@ coverage==5.5
 cryptography==3.4.7
 decorator==5.0.9
 docutils==0.17.1
--e git+https://github.com/qlands/elasticfeeds.git@b3b1bee941c97c48470f9381ca9b405a811abdda#egg=elasticfeeds
+-e git+https://github.com/qlands/elasticfeeds.git@stable-1.6#egg=elasticfeeds
 elasticsearch==7.7.1
 emoji==1.4.1
 feedparser==6.0.8

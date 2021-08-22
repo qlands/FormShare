@@ -38,7 +38,7 @@ from formshare.processes.db import (
     update_dictionary_field_sensitive,
 )
 from formshare.processes.elasticsearch.record_index import (
-    delete_record_index,
+    delete_form_records,
     delete_from_record_index,
 )
 from formshare.processes.elasticsearch.repository_index import (
@@ -1216,9 +1216,6 @@ def delete_submission(
                 try:
                     delete_from_record_index(
                         request.registry.settings,
-                        user,
-                        project_code,
-                        form,
                         parts[1].replace("\n", ""),
                     )
                 except Exception as e:
@@ -1236,9 +1233,6 @@ def delete_submission(
                     try:
                         delete_from_record_index(
                             request.registry.settings,
-                            user,
-                            project_code,
-                            form,
                             parts[1],
                         )
                     except Exception as e:
@@ -1386,7 +1380,7 @@ def delete_all_submission(request, user, project, form, project_code, deleted_by
             )
         )
         delete_dataset_index(request.registry.settings, user, project_code, form)
-        delete_record_index(request.registry.settings, user, project_code, form)
+        delete_form_records(request.registry.settings, project, form)
 
         return True, ""
     except Exception as e:

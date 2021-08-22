@@ -13,7 +13,6 @@ from sqlalchemy import create_engine
 from formshare.config.celery_app import celeryApp
 from formshare.config.celery_class import CeleryTask
 from formshare.processes.elasticsearch.record_index import (
-    create_record_index,
     add_record,
 )
 from formshare.processes.elasticsearch.repository_index import (
@@ -308,15 +307,13 @@ def store_json_file(
                     settings, user, project_code, form, submission_id, index_data
                 )
                 # Add the inserted records in the record index
-                create_record_index(settings, user, project_code, form)
                 with open(uuid_file) as f:
                     lines = f.readlines()
                     for line in lines:
                         parts = line.split(",")
                         add_record(
                             settings,
-                            user,
-                            project_code,
+                            project,
                             form,
                             schema,
                             parts[0],

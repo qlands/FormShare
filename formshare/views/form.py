@@ -62,7 +62,7 @@ from formshare.processes.db import (
     update_partner_form_options,
     remove_partner_from_form,
 )
-from formshare.processes.elasticsearch.record_index import delete_record_index
+from formshare.processes.elasticsearch.record_index import delete_form_records
 from formshare.processes.elasticsearch.repository_index import (
     delete_dataset_index,
     get_number_of_datasets_with_gps,
@@ -1215,10 +1215,9 @@ class DeleteForm(PrivateView):
                                 project_code,
                                 a_deleted_form["form_id"],
                             )
-                            delete_record_index(
+                            delete_form_records(
                                 self.request.registry.settings,
-                                user_id,
-                                project_code,
+                                project_id,
                                 a_deleted_form["form_id"],
                             )
                             try:

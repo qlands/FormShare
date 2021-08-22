@@ -60,7 +60,6 @@ from formshare.processes.db import (
     get_field_details,
 )
 from formshare.processes.elasticsearch.record_index import (
-    create_record_index,
     add_record,
 )
 from formshare.processes.elasticsearch.repository_index import (
@@ -2525,17 +2524,13 @@ def store_json_file(
                                 index_data,
                             )
                             # Add the inserted records in the record index
-                            create_record_index(
-                                request.registry.settings, user, project_code, form
-                            )
                             with open(uuid_file) as f:
                                 lines = f.readlines()
                                 for line in lines:
                                     parts = line.split(",")
                                     add_record(
                                         request.registry.settings,
-                                        user,
-                                        project_code,
+                                        project,
                                         form,
                                         schema,
                                         parts[0],
@@ -3481,15 +3476,13 @@ def push_revision(
         )
 
         # Add the inserted records in the record index
-        create_record_index(request.registry.settings, user, project_code, form)
         with open(uuid_file) as f:
             lines = f.readlines()
             for line in lines:
                 parts = line.split(",")
                 add_record(
                     request.registry.settings,
-                    user,
-                    project_code,
+                    project,
                     form,
                     schema,
                     parts[0],

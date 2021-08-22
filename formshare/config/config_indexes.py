@@ -8,6 +8,7 @@ from formshare.processes.elasticsearch.user_index import configure_user_index_ma
 from formshare.processes.elasticsearch.partner_index import (
     configure_partner_index_manager,
 )
+from formshare.processes.elasticsearch.record_index import create_record_index
 
 log = logging.getLogger("formshare")
 
@@ -47,3 +48,5 @@ def configure_indexes(settings):
     configure_user_index_manager(settings)
     # Load the partner index
     configure_partner_index_manager(settings)
+    # Creates the record index
+    create_record_index(settings)

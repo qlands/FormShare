@@ -35,11 +35,11 @@ def configure_indexes(settings):
     resp = requests.get("http://{}:{}/".format(es_host, es_port))
     data = resp.json()
     version = data["version"]["number"].split(".")
-    if version[0] != "6":
-        log.error("This version of FormShare requires ElasticSearch version 6.8.X")
+    if version[0] != "7":
+        log.error("This version of FormShare requires ElasticSearch version 7.14.X")
     else:
-        if version[1] != "8":
-            log.error("This version of FormShare requires ElasticSearch version 6.8.X")
+        if version[1] != "14":
+            log.error("This version of FormShare requires ElasticSearch version 7.14.X")
 
     # Load the feeds manager
     configure_manager(settings)

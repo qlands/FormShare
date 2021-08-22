@@ -205,7 +205,7 @@ class PartnerIndexManager(object):
             res = connection.search(
                 index=self.index_name, body=_get_partner_search_dict(partner_id)
             )
-            if res["hits"]["total"] > 0:
+            if res["hits"]["total"]["value"] > 0:
                 return True
         else:
             raise RequestError("Cannot connect to ElasticSearch")
@@ -296,8 +296,8 @@ class PartnerIndexManager(object):
         connection = self.create_connection()
         if connection is not None:
             es_result = connection.search(index=self.index_name, body=query_dict)
-            if es_result["hits"]["total"] > 0:
-                total = es_result["hits"]["total"]
+            if es_result["hits"]["total"]["value"] > 0:
+                total = es_result["hits"]["total"]["value"]
                 for hit in es_result["hits"]["hits"]:
                     result.append(hit["_source"])
                 return result, total

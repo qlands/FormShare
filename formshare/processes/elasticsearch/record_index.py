@@ -179,12 +179,12 @@ def get_table(settings, user, project, form, record_uuid):
             index_name = get_index_name(user, project, form)
             query_dict = {"query": {"match": {"_id": record_uuid}}}
             es_result = connection.search(index=index_name, body=query_dict)
-            if es_result["hits"]["total"] == 0:
+            if es_result["hits"]["total"]["value"] == 0:
                 # If no results found then try with carry return at the end
                 # because that is how was initially stored
                 query_dict = {"query": {"match": {"_id": record_uuid + "\n"}}}
                 es_result = connection.search(index=index_name, body=query_dict)
-            if es_result["hits"]["total"] == 0:
+            if es_result["hits"]["total"]["value"] == 0:
                 return None, None
             else:
                 return (

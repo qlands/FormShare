@@ -241,10 +241,10 @@ def get_dataset_stats_for_form(settings, user, project, form):
             es_result = connection.search(
                 index=index_name, body=get_search_dict_by_form()
             )
-            if es_result["hits"]["total"] > 0:
+            if es_result["hits"]["total"]["value"] > 0:
                 for hit in es_result["hits"]["hits"]:
                     return (
-                        es_result["hits"]["total"],
+                        es_result["hits"]["total"]["value"],
                         hit["_source"]["_submitted_date"],
                         hit["_source"]["_submitted_by"],
                     )
@@ -266,8 +266,8 @@ def get_number_of_datasets_with_gps(settings, user, project, forms):
                 es_result = connection.search(
                     index=index_name, body=get_datasets_with_gps()
                 )
-                if es_result["hits"]["total"] > 0:
-                    res = res + es_result["hits"]["total"]
+                if es_result["hits"]["total"]["value"] > 0:
+                    res = res + es_result["hits"]["total"]["value"]
             except NotFoundError:
                 pass
         else:
@@ -282,7 +282,7 @@ def get_all_datasets_with_gps(settings, index_name, size=0):
             es_result = connection.search(
                 index=index_name, body=get_datasets_with_gps(size)
             )
-            if es_result["hits"]["total"] > 0:
+            if es_result["hits"]["total"]["value"] > 0:
                 return es_result["hits"]["hits"]
             else:
                 return []
@@ -300,8 +300,8 @@ def get_number_of_datasets_with_gps_in_project(settings, user, project):
             es_result = connection.search(
                 index=index_name, body=get_datasets_with_gps()
             )
-            if es_result["hits"]["total"] > 0:
-                return es_result["hits"]["total"]
+            if es_result["hits"]["total"]["value"] > 0:
+                return es_result["hits"]["total"]["value"]
             else:
                 return 0
         except NotFoundError:
@@ -321,7 +321,7 @@ def get_datasets_from_form(
                 index=index_name, body=get_datasets_dict(query_from, query_size)
             )
             result = []
-            if es_result["hits"]["total"] > 0:
+            if es_result["hits"]["total"]["value"] > 0:
                 for hit in es_result["hits"]["hits"]:
                     res = hit["_source"]
                     res["_submission_id"] = hit["_id"]
@@ -346,7 +346,7 @@ def get_datasets_from_project(
                 index=index_name, body=get_datasets_dict(query_from, query_size)
             )
             result = []
-            if es_result["hits"]["total"] > 0:
+            if es_result["hits"]["total"]["value"] > 0:
                 for hit in es_result["hits"]["hits"]:
                     result.append(hit["_source"])
                 return len(result), result
@@ -366,10 +366,10 @@ def get_dataset_stats_for_project(settings, user, project):
             es_result = connection.search(
                 index=index_name, body=get_search_dict_by_project(project)
             )
-            if es_result["hits"]["total"] > 0:
+            if es_result["hits"]["total"]["value"] > 0:
                 for hit in es_result["hits"]["hits"]:
                     return (
-                        es_result["hits"]["total"],
+                        es_result["hits"]["total"]["value"],
                         hit["_source"]["_submitted_date"],
                         hit["_source"]["_submitted_by"],
                         hit["_source"]["_xform_id_string"],

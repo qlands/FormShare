@@ -1,44 +1,47 @@
+# You need to create the following directories
+# /opt/elasticsearch-docker/data
+# /opt/elasticsearch-docker/data2
 version: '3'
 services:
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:6.8.14
-    container_name: elasticsearch
+  fses01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.14.0
+    container_name: fses01
     environment:
-      - cluster.name=docker-cluster
+      - node.name=fses01
+      - cluster.name=fs-es-cluster
+      - discovery.seed_hosts=fses02
+      - cluster.initial_master_nodes=fses01,fses02
       - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ulimits:
       memlock:
         soft: -1
         hard: -1
     volumes:
-      - esdata1:/usr/share/elasticsearch/data
+      - /opt/elasticsearch-docker/data:/usr/share/elasticsearch/data
     ports:
       - 9200:9200
     networks:
       - esnet
-  elasticsearch2:
-    image: docker.elastic.co/elasticsearch/elasticsearch:6.8.14
-    container_name: elasticsearch2
+  fses02:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.14.0
+    container_name: fses02
     environment:
-      - cluster.name=docker-cluster
+      - node.name=fses02
+      - cluster.name=fs-es-cluster
+      - discovery.seed_hosts=fses01
+      - cluster.initial_master_nodes=fses01,fses02
       - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - "discovery.zen.ping.unicast.hosts=elasticsearch"
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"      
     ulimits:
       memlock:
         soft: -1
         hard: -1
     volumes:
-      - esdata2:/usr/share/elasticsearch/data
+      - /opt/elasticsearch-docker/data2:/usr/share/elasticsearch/data
     networks:
       - esnet
-
-volumes:
-  esdata1:
-    driver: local
-  esdata2:
-    driver: local
-
 networks:
   esnet:

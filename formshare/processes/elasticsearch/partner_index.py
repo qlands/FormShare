@@ -180,7 +180,6 @@ class PartnerIndexManager(object):
                         body=_get_partner_index_definition(
                             number_of_shards, number_of_replicas
                         ),
-                        params={"include_type_name": "false"},
                     )
                 except RequestError as e:
                     if e.status_code == 400:
@@ -224,7 +223,6 @@ class PartnerIndexManager(object):
             if connection is not None:
                 connection.index(
                     index=self.index_name,
-                    doc_type="_doc",
                     id=partner_id,
                     body=data_dict,
                 )
@@ -245,7 +243,6 @@ class PartnerIndexManager(object):
             if connection is not None:
                 connection.delete_by_query(
                     index=self.index_name,
-                    doc_type="_doc",
                     body=_get_partner_search_dict(partner_id),
                 )
                 return True
@@ -268,7 +265,6 @@ class PartnerIndexManager(object):
                 connection.update(
                     index=self.index_name,
                     id=partner_id,
-                    doc_type="_doc",
                     body=es_data_dict,
                 )
                 return True

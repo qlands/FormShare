@@ -154,7 +154,6 @@ def create_dataset_index(settings, user, project, form):
                     body=_get_dataset_index_definition(
                         number_of_shards, number_of_replicas
                     ),
-                    params={"include_type_name": "false"},
                 )
             except RequestError as e:
                 if e.status_code == 400:
@@ -173,7 +172,7 @@ def delete_from_dataset_index(settings, user, project, form, submission):
     if connection is not None:
         try:
             index_name = get_index_name(user, project, form)
-            connection.delete(index=index_name, doc_type="_doc", id=submission)
+            connection.delete(index=index_name, id=submission)
         except RequestError as e:
             if e.status_code == 400:
                 if e.error.find("already_exists") >= 0:
@@ -226,9 +225,7 @@ def add_dataset(settings, user, project, form, dataset_id, data_dict):
     index_name = get_index_name(user, project, form)
     connection = create_connection(settings)
     if connection is not None:
-        connection.index(
-            index=index_name, doc_type="_doc", id=dataset_id, body=data_dict
-        )
+        connection.index(index=index_name, id=dataset_id, body=data_dict)
     else:
         raise RequestError("Cannot connect to ElasticSearch")
 

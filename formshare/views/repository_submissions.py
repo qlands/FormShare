@@ -480,9 +480,6 @@ class API1UpdateRepository(AssistantAPIView):
             try:
                 schema, table = get_table(
                     self.request.registry.settings,
-                    user_id,
-                    project_code,
-                    form_id,
                     self.json["rowuuid"],
                 )
                 if schema is not None:

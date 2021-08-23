@@ -178,7 +178,6 @@ class UserIndexManager(object):
                         body=_get_user_index_definition(
                             number_of_shards, number_of_replicas
                         ),
-                        params={"include_type_name": "false"},
                     )
                 except RequestError as e:
                     if e.status_code == 400:
@@ -220,9 +219,7 @@ class UserIndexManager(object):
         if not self.user_exists(user_id):
             connection = self.create_connection()
             if connection is not None:
-                connection.index(
-                    index=self.index_name, doc_type="_doc", id=user_id, body=data_dict
-                )
+                connection.index(index=self.index_name, id=user_id, body=data_dict)
             else:
                 raise RequestError("Cannot connect to ElasticSearch")
         else:
@@ -240,7 +237,6 @@ class UserIndexManager(object):
             if connection is not None:
                 connection.delete_by_query(
                     index=self.index_name,
-                    doc_type="_doc",
                     body=_get_user_search_dict(user_id),
                 )
                 return True
@@ -263,7 +259,6 @@ class UserIndexManager(object):
                 connection.update(
                     index=self.index_name,
                     id=user_id,
-                    doc_type="_doc",
                     body=es_data_dict,
                 )
                 return True

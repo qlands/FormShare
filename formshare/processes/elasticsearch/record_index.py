@@ -118,20 +118,22 @@ def create_record_index(settings):
     connection = create_connection(settings)
     if connection is not None:
         index_name = get_index_name()
-        try:
-            connection.indices.create(
-                index_name,
-                body=_get_record_index_definition(number_of_shards, number_of_replicas),
-                params={"include_type_name": "false"},
-            )
-        except RequestError as e:
-            if e.status_code == 400:
-                if e.error.find("already_exists") >= 0:
-                    pass
+        if not connection.indices.exists(index_name):
+            try:
+                connection.indices.create(
+                    index_name,
+                    body=_get_record_index_definition(
+                        number_of_shards, number_of_replicas
+                    ),
+                )
+            except RequestError as e:
+                if e.status_code == 400:
+                    if e.error.find("already_exists") >= 0:
+                        pass
+                    else:
+                        raise e
                 else:
                     raise e
-            else:
-                raise e
     else:
         raise RequestError("Cannot connect to ElasticSearch")
 
@@ -143,7 +145,6 @@ def delete_form_records(settings, project_id, form_id):
             index_name = get_index_name()
             connection.delete_by_query(
                 index=index_name,
-                doc_type="_doc",
                 body=_get_record_search_dict(project_id, form_id),
             )
         except RequestError as e:
@@ -163,7 +164,7 @@ def delete_from_record_index(settings, record_uuid):
     if connection is not None:
         try:
             index_name = get_index_name()
-            connection.delete(index=index_name, doc_type="_doc", id=record_uuid)
+            connection.delete(index=index_name, id=record_uuid)
         except RequestError as e:
             if e.status_code == 400:
                 if e.error.find("already_exists") >= 0:
@@ -186,9 +187,7 @@ def add_record(settings, project_id, form_id, schema, table, record_uuid):
             "schema": schema,
             "table": table,
         }
-        connection.index(
-            index=index_name, doc_type="_doc", id=record_uuid, body=data_dict
-        )
+        connection.index(index=index_name, id=record_uuid, body=data_dict)
     else:
         raise RequestError("Cannot connect to ElasticSearch")
 

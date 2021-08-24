@@ -1,16 +1,16 @@
-"""Reindex record index
+"""Migrate dataset index
 
-Revision ID: 987c58df333b
-Revises: 5e28705dda28
-Create Date: 2021-08-24 10:36:10.714706
+Revision ID: b70e2621058e
+Revises: 987c58df333b
+Create Date: 2021-08-24 15:34:07.426472
 
 """
 from pyramid.paster import get_appsettings
 from alembic import context
-from formshare.processes.elasticsearch.record_index import (
+from formshare.processes.elasticsearch.repository_index import (
     create_connection,
     index_exists,
-    create_record_index,
+    create_dataset_index,
 )
 from sqlalchemy.orm.session import Session
 from formshare.models.formshare import Odkform, Userproject, User, Project
@@ -19,9 +19,10 @@ import time
 import requests
 import json
 
+
 # revision identifiers, used by Alembic.
-revision = "987c58df333b"
-down_revision = "5e28705dda28"
+revision = "b70e2621058e"
+down_revision = "987c58df333b"
 branch_labels = None
 depends_on = None
 
@@ -81,7 +82,7 @@ def upgrade():
     if forms:
         check_es_ready(settings)
 
-        create_record_index(settings)
+        create_dataset_index(settings)
         time.sleep(10)
         es_connection = create_connection(settings)
         check_es_ready(settings)
@@ -89,19 +90,19 @@ def upgrade():
             form_id = a_form[1].lower()
             user_id = a_form[3].lower()
             project_code = a_form[2].lower()
-            index_name = "formshare_records_{}_{}_{}".format(
-                user_id, project_code, form_id
-            )
+            index_name = "{}_{}_{}".format(user_id, project_code, form_id)
             if index_exists(es_connection, index_name):
                 reindex_dict = {
                     "source": {"index": index_name},
                     "dest": {
                         "index": settings.get(
-                            "elasticsearch.records.index_name", "formshare_records"
+                            "elasticsearch.repository.index_name", "formshare_datasets"
                         )
                     },
                     "script": {
-                        "inline": "ctx._source['project_id'] = '{}'; ctx._source['form_id'] = '{}';".format(
+                        "inline": "ctx._source['project_id'] = '{}'; "
+                        "ctx._source['form_id'] = '{}'; "
+                        "ctx._source['submission_id'] = ctx._id".format(
                             a_form[0], a_form[1]
                         )
                     },

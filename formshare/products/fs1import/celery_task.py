@@ -16,7 +16,6 @@ from formshare.processes.elasticsearch.record_index import (
     add_record,
 )
 from formshare.processes.elasticsearch.repository_index import (
-    create_dataset_index,
     add_dataset,
 )
 from formshare.processes.sse.messaging import send_task_status_to_form
@@ -292,7 +291,6 @@ def store_json_file(
                     return 1, message
             else:
                 # Add the JSON to the Elastic Search index but only submissions without error
-                create_dataset_index(settings, user, project_code, form)
                 index_data = {
                     "_submitted_date": submission_data.get("_submitted_date", ""),
                     "_xform_id_string": submission_data.get("_xform_id_string", ""),
@@ -303,9 +301,7 @@ def store_json_file(
                 }
                 if submission_data.get("_geolocation", "") != "":
                     index_data["_geolocation"] = submission_data.get("_geolocation", "")
-                add_dataset(
-                    settings, user, project_code, form, submission_id, index_data
-                )
+                add_dataset(settings, project, form, submission_id, index_data)
                 # Add the inserted records in the record index
                 with open(uuid_file) as f:
                     lines = f.readlines()

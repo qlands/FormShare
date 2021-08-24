@@ -6,7 +6,7 @@ from lxml import etree
 from pyramid.httpexceptions import HTTPNotFound, HTTPFound
 
 from formshare.processes.db import get_project_id_from_name
-from formshare.processes.elasticsearch.repository_index import delete_dataset_index
+from formshare.processes.elasticsearch.repository_index import delete_dataset_from_index
 from formshare.processes.email.send_email import send_error_to_technical_team
 from formshare.processes.odk.api import create_repository, get_odk_path
 from formshare.processes.odk.processes import get_form_data
@@ -165,10 +165,9 @@ class GenerateRepository(PrivateView):
                                 other_languages_string,
                             )
                         if result_code == 0:
-                            delete_dataset_index(
+                            delete_dataset_from_index(
                                 self.request.registry.settings,
-                                user_id,
-                                project_code,
+                                project_id,
                                 form_id,
                             )
                             self.request.session.flash(

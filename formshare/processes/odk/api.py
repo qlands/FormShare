@@ -63,7 +63,6 @@ from formshare.processes.elasticsearch.record_index import (
     add_record,
 )
 from formshare.processes.elasticsearch.repository_index import (
-    create_dataset_index,
     add_dataset,
 )
 from formshare.processes.odk.processes import update_form_repository_info
@@ -2492,9 +2491,7 @@ def store_json_file(
                                 return 1, message
                         else:
                             # Add the JSON to the Elastic Search index but only submissions without error
-                            create_dataset_index(
-                                request.registry.settings, user, project_code, form
-                            )
+
                             index_data = {
                                 "_submitted_date": submission_data.get(
                                     "_submitted_date", ""
@@ -2517,8 +2514,7 @@ def store_json_file(
                                 )
                             add_dataset(
                                 request.registry.settings,
-                                user,
-                                project_code,
+                                project,
                                 form,
                                 submission_id,
                                 index_data,
@@ -2708,9 +2704,6 @@ def store_json_file(
 
             if submission_exists is None:
                 # Adds the dataset to the Elastic Search index
-                create_dataset_index(
-                    request.registry.settings, user, project_code, form
-                )
                 index_data = {
                     "_submitted_date": submission_data.get("_submitted_date", ""),
                     "_xform_id_string": submission_data.get("_xform_id_string", ""),
@@ -2723,8 +2716,7 @@ def store_json_file(
                     index_data["_geolocation"] = submission_data.get("_geolocation", "")
                 add_dataset(
                     request.registry.settings,
-                    user,
-                    project_code,
+                    project,
                     form,
                     submission_id,
                     index_data,
@@ -3455,7 +3447,6 @@ def push_revision(
 
         # Add the JSON to the Elastic Search index
         project_code = get_project_code_from_id(request, user, project)
-        create_dataset_index(request.registry.settings, user, project_code, form)
         index_data = {
             "_submitted_date": submission_data.get("_submitted_date", ""),
             "_xform_id_string": submission_data.get("_xform_id_string", ""),
@@ -3468,8 +3459,7 @@ def push_revision(
             index_data["_geolocation"] = submission_data.get("_geolocation", "")
         add_dataset(
             request.registry.settings,
-            user,
-            project_code,
+            project,
             form,
             submission,
             index_data,

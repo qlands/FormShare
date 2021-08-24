@@ -79,7 +79,7 @@ class PartnerFormDetails(PartnerView):
 
         forms = get_forms_for_schema(self.request, form_data["form_schema"])
         number_with_gps = get_number_of_datasets_with_gps(
-            self.request.registry.settings, user_id, project_code, forms
+            self.request.registry.settings, project_id, forms
         )
         products = get_form_products(self.request, project_id, form_id)
         return {
@@ -129,9 +129,7 @@ class PartnerDownloadGPSPoints(PartnerView):
         if form_data is None:
             raise HTTPNotFound
 
-        created, data = get_gps_points_from_form(
-            self.request, user_id, project_code, form_id
-        )
+        created, data = get_gps_points_from_form(self.request, project_id, form_id)
         self.returnRawViewResult = True
         return data
 

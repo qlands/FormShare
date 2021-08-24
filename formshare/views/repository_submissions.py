@@ -410,7 +410,6 @@ class DeleteAllSubmissions(PrivateView):
                         user_id,
                         project_id,
                         form_id,
-                        project_code,
                         self.userID,
                     )
                     if deleted:
@@ -466,7 +465,6 @@ class API1UpdateRepository(AssistantAPIView):
 
     def process_view(self):
         user_id = self.request.matchdict["userid"]
-        project_code = self.request.matchdict["projcode"]
         form_id = self.request.matchdict["formid"]
 
         permissions = get_assistant_permissions_on_a_form(

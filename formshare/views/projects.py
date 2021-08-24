@@ -134,7 +134,7 @@ class ProjectDetailsView(ProjectsView):
             else:
                 inactive_forms = inactive_forms + 1
         submissions, last, by, in_form = get_dataset_stats_for_project(
-            self.request.registry.settings, user_id, project_code
+            self.request.registry.settings, project_id
         )
         bydetails = get_by_details(self.request, user_id, project_id, by)
         return {
@@ -157,7 +157,7 @@ class ProjectDetailsView(ProjectsView):
             "infom": in_form,
             "project_partners": get_project_partners(self.request, project_id),
             "withgps": get_number_of_datasets_with_gps_in_project(
-                self.request.registry.settings, user_id, project_code
+                self.request.registry.settings, project_id
             ),
         }
 
@@ -446,7 +446,7 @@ class DeleteProjectView(ProjectsView):
                 feed_manager.add_activity_feed(activity)
                 # Deletes the project from the dataset index
                 delete_dataset_index_by_project(
-                    self.request.registry.settings, user_id, project_code
+                    self.request.registry.settings, project_id
                 )
                 self.request.session.flash(
                     self._("The project was deleted successfully")
@@ -643,7 +643,7 @@ class DownloadProjectGPSPoints(ProjectsView):
             raise HTTPNotFound
 
         created, data = get_gps_points_from_project(
-            self.request, user_id, project_code, project_id, query_from, query_size
+            self.request, project_id, query_from, query_size
         )
         return data
 

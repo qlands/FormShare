@@ -72,8 +72,7 @@ class UserDashBoardView(DashboardView):
 
             submissions, last, by, in_form = get_dataset_stats_for_project(
                 self.request.registry.settings,
-                owner,
-                self.activeProject["project_code"],
+                self.activeProject["project_id"],
             )
 
             bydetails = get_by_details(
@@ -104,8 +103,7 @@ class UserDashBoardView(DashboardView):
                 "active_project_owner": owner,
                 "withgps": get_number_of_datasets_with_gps_in_project(
                     self.request.registry.settings,
-                    owner,
-                    self.activeProject["project_code"],
+                    self.activeProject["project_id"],
                 ),
             }
         else:

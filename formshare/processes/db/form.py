@@ -514,8 +514,8 @@ def get_project_code_from_id(request, user, project_id):
     return None
 
 
-def get_number_of_submissions(request, user, project, form):
-    return get_dataset_stats_for_form(request.registry.settings, user, project, form)
+def get_number_of_submissions(request, project_id, form_id):
+    return get_dataset_stats_for_form(request.registry.settings, project_id, form_id)
 
 
 def get_last_clean_info(request, project, form):
@@ -785,9 +785,8 @@ def get_form_details(request, user, project, form):
     if result is not None:
         result["pubby"] = get_creator_data(request, result["form_pubby"])
         if result["form_schema"] is None:
-            project_code = get_project_code_from_id(request, user, project)
             submissions, last, by = get_number_of_submissions(
-                request, user, project_code, result["form_id"]
+                request, project, result["form_id"]
             )
             result["submissions"] = submissions
             result["last"] = last
@@ -880,9 +879,8 @@ def get_project_forms(request, user, project):
         else:
             form["_xid_color"] = form["form_hexcolor"]
         if form["form_schema"] is None:
-            project_code = get_project_code_from_id(request, user, form["project_id"])
             submissions, last, by = get_number_of_submissions(
-                request, user, project_code, form["form_id"]
+                request, form["project_id"], form["form_id"]
             )
             form["submissions"] = submissions
             form["last"] = last

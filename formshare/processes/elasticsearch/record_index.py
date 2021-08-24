@@ -80,8 +80,8 @@ def create_connection(settings):
         return None
 
 
-def get_index_name():
-    return "formshare_records"
+def get_index_name(settings):
+    return settings.get("elasticsearch.records.index_name", "formshare_records")
 
 
 def _get_record_search_dict(project_id, form_id):
@@ -104,6 +104,16 @@ def _get_record_search_dict(project_id, form_id):
     return _dict
 
 
+def index_exists(connection, index_name):
+    if connection is not None:
+        if connection.indices.exists(index_name):
+            return True
+        else:
+            return False
+    else:
+        raise RequestError("Cannot connect to ElasticSearch")
+
+
 def create_record_index(settings):
     try:
         number_of_shards = int(settings["elasticsearch.records.number_of_shards"])
@@ -117,8 +127,8 @@ def create_record_index(settings):
 
     connection = create_connection(settings)
     if connection is not None:
-        index_name = get_index_name()
-        if not connection.indices.exists(index_name):
+        index_name = get_index_name(settings)
+        if not index_exists(connection, index_name):
             try:
                 connection.indices.create(
                     index_name,
@@ -142,7 +152,7 @@ def delete_form_records(settings, project_id, form_id):
     connection = create_connection(settings)
     if connection is not None:
         try:
-            index_name = get_index_name()
+            index_name = get_index_name(settings)
             connection.delete_by_query(
                 index=index_name,
                 body=_get_record_search_dict(project_id, form_id),
@@ -163,7 +173,7 @@ def delete_from_record_index(settings, record_uuid):
     connection = create_connection(settings)
     if connection is not None:
         try:
-            index_name = get_index_name()
+            index_name = get_index_name(settings)
             connection.delete(index=index_name, id=record_uuid)
         except RequestError as e:
             if e.status_code == 400:
@@ -180,7 +190,7 @@ def delete_from_record_index(settings, record_uuid):
 def add_record(settings, project_id, form_id, schema, table, record_uuid):
     connection = create_connection(settings)
     if connection is not None:
-        index_name = get_index_name()
+        index_name = get_index_name(settings)
         data_dict = {
             "project_id": project_id,
             "form_id": form_id,
@@ -204,7 +214,7 @@ def get_table(settings, record_uuid):
     if _validate_uuid4(record_uuid):
         connection = create_connection(settings)
         if connection is not None:
-            index_name = get_index_name()
+            index_name = get_index_name(settings)
             query_dict = {"query": {"match": {"_id": record_uuid}}}
             es_result = connection.search(index=index_name, body=query_dict)
             if es_result["hits"]["total"]["value"] == 0:

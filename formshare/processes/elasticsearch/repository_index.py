@@ -195,8 +195,18 @@ def create_connection(settings):
         return None
 
 
-def get_index_name():
-    return "formshare_datasets"
+def get_index_name(settings):
+    return settings.get("elasticsearch.repository.index_name", "formshare_datasets")
+
+
+def index_exists(connection, index_name):
+    if connection is not None:
+        if connection.indices.exists(index_name):
+            return True
+        else:
+            return False
+    else:
+        raise RequestError("Cannot connect to ElasticSearch")
 
 
 def create_dataset_index(settings):
@@ -214,8 +224,8 @@ def create_dataset_index(settings):
 
     connection = create_connection(settings)
     if connection is not None:
-        index_name = get_index_name()
-        if not connection.indices.exists(index_name):
+        index_name = get_index_name(settings)
+        if not index_exists(connection, index_name):
             try:
                 connection.indices.create(
                     index_name,
@@ -298,7 +308,7 @@ def delete_from_dataset_index(settings, project_id, form_id, submission_id):
     connection = create_connection(settings)
     if connection is not None:
         try:
-            index_name = get_index_name()
+            index_name = get_index_name(settings)
             connection.delete_by_query(
                 index=index_name,
                 body=_get_submission_search_dict(project_id, form_id, submission_id),
@@ -319,7 +329,7 @@ def delete_dataset_from_index(settings, project_id, form_id):
     connection = create_connection(settings)
     if connection is not None:
         try:
-            index_name = get_index_name()
+            index_name = get_index_name(settings)
             connection.delete_by_query(
                 index=index_name, body=_get_dateset_search_dict(project_id, form_id)
             )
@@ -339,7 +349,7 @@ def delete_dataset_index_by_project(settings, project_id):
     connection = create_connection(settings)
     if connection is not None:
         try:
-            index_name = get_index_name()
+            index_name = get_index_name(settings)
             connection.delete_by_query(
                 index=index_name, body=_get_project_search_dict(project_id)
             )
@@ -356,7 +366,7 @@ def delete_dataset_index_by_project(settings, project_id):
 
 
 def add_dataset(settings, project_id, form_id, submission_id, data_dict):
-    index_name = get_index_name()
+    index_name = get_index_name(settings)
     data_dict["project_id"] = project_id
     data_dict["form_id"] = form_id
     data_dict["submission_id"] = submission_id
@@ -368,7 +378,7 @@ def add_dataset(settings, project_id, form_id, submission_id, data_dict):
 
 
 def get_dataset_stats_for_form(settings, project_id, form_id):
-    index_name = get_index_name()
+    index_name = get_index_name(settings)
     connection = create_connection(settings)
     if connection is not None:
         try:
@@ -392,7 +402,7 @@ def get_dataset_stats_for_form(settings, project_id, form_id):
 
 def get_number_of_datasets_with_gps(settings, project_id, forms):
     res = 0
-    index_name = get_index_name()
+    index_name = get_index_name(settings)
     connection = create_connection(settings)
     if connection is not None:
         for a_form in forms:
@@ -414,7 +424,7 @@ def get_all_datasets_with_gps(settings, project_id, form_id, size=0):
     if connection is not None:
         try:
             es_result = connection.search(
-                index=get_index_name(),
+                index=get_index_name(settings),
                 body=get_datasets_with_gps(project_id, form_id, size),
             )
             if es_result["hits"]["total"]["value"] > 0:
@@ -428,7 +438,7 @@ def get_all_datasets_with_gps(settings, project_id, form_id, size=0):
 
 
 def get_number_of_datasets_with_gps_in_project(settings, project_id):
-    index_name = get_index_name()
+    index_name = get_index_name(settings)
     connection = create_connection(settings)
     if connection is not None:
         try:
@@ -448,7 +458,7 @@ def get_number_of_datasets_with_gps_in_project(settings, project_id):
 def get_datasets_from_form(
     settings, project_id, form_id, query_from=None, query_size=None
 ):
-    index_name = get_index_name()
+    index_name = get_index_name(settings)
     connection = create_connection(settings)
     if connection is not None:
         try:
@@ -472,7 +482,7 @@ def get_datasets_from_form(
 
 
 def get_datasets_from_project(settings, project_id, query_from=None, query_size=None):
-    index_name = get_index_name()
+    index_name = get_index_name(settings)
     connection = create_connection(settings)
     if connection is not None:
         try:
@@ -494,7 +504,7 @@ def get_datasets_from_project(settings, project_id, query_from=None, query_size=
 
 
 def get_dataset_stats_for_project(settings, project_id):
-    index_name = get_index_name()
+    index_name = get_index_name(settings)
     connection = create_connection(settings)
     if connection is not None:
         try:

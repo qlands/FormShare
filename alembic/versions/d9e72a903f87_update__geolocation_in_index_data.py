@@ -46,7 +46,9 @@ def upgrade():
     forms = session.query(Odkform.form_index).all()
     for a_form in forms:
         try:
-            datasets = get_all_datasets_with_gps(settings, a_form.form_index, 10000)
+            datasets = get_all_datasets_with_gps(
+                settings, a_form["project_id"], a_form["form_id"], 10000
+            )
             for a_dataset in datasets:
                 dataset_id = a_dataset.get("_id")
                 geo_point = a_dataset["_source"].get("_geopoint", "")

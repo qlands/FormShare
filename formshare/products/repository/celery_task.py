@@ -28,7 +28,7 @@ from formshare.models import (
     DictTable,
     DictField,
 )
-from formshare.processes.elasticsearch.repository_index import delete_dataset_index
+from formshare.processes.elasticsearch.repository_index import delete_dataset_from_index
 from formshare.processes.email.send_async_email import send_async_email
 from formshare.processes.sse.messaging import send_task_status_to_form
 from formshare.products.fs1import.celery_task import internal_import_json_files
@@ -444,7 +444,7 @@ def internal_create_mysql_repository(
             geo_point_variable = get_geopoint_variable(db_session, project_id, form)
         update_dictionary_tables(db_session, project_id, form, create_xml_file)
     engine.dispose()
-    delete_dataset_index(settings, user, project_code, form)
+    delete_dataset_from_index(settings, project_id, form)
     if discard_testing_data:
         # Remove any test submissions if any.
         submissions_path = os.path.join(

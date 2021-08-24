@@ -27,7 +27,6 @@ from formshare.processes.db import (
     get_form_schema,
     get_form_directory,
     get_form_xml_create_file,
-    get_form_xml_insert_file,
     get_project_form_colors,
     add_json_log,
     get_dictionary_fields,
@@ -42,7 +41,7 @@ from formshare.processes.elasticsearch.record_index import (
     delete_from_record_index,
 )
 from formshare.processes.elasticsearch.repository_index import (
-    delete_dataset_index,
+    delete_dataset_from_index,
     delete_from_dataset_index,
     get_datasets_from_form,
     get_datasets_from_project,
@@ -166,11 +165,9 @@ def get_dataset_info_from_file(request, project_id, form, submission_id):
     return result
 
 
-def get_gps_points_from_project(
-    request, user, project, project_id, query_from=None, query_size=None
-):
+def get_gps_points_from_project(request, project_id, query_from=None, query_size=None):
     total, datasets = get_datasets_from_project(
-        request.registry.settings, user, project, query_from, query_size
+        request.registry.settings, project_id, query_from, query_size
     )
     data = []
     colors = get_project_form_colors(request, project_id)
@@ -206,10 +203,10 @@ def get_gps_points_from_project(
 
 
 def get_gps_points_from_form(
-    request, user, project, form, query_from=None, query_size=None
+    request, project_id, form_id, query_from=None, query_size=None
 ):
     total, datasets = get_datasets_from_form(
-        request.registry.settings, user, project, form, query_from, query_size
+        request.registry.settings, project_id, form_id, query_from, query_size
     )
     data = []
     for dataset in datasets:
@@ -382,7 +379,6 @@ def json_to_csv(request, project, form):
                     "This form was uploaded using an old version of ODK Tools. Please upload it again."
                 ),
             )
-        insert_xml_file = get_form_xml_insert_file(request, project, form)
 
         paths = ["dummy.djson"]
         dummy_json = os.path.join(tmp_dir, *paths)
@@ -1120,8 +1116,10 @@ def delete_submission(
             "DELETE FROM submissions WHERE submission_id ='{}'".format(submission_id)
         )
     except Exception as e:
-        log.error("Error {} removing submission {} from {}").format(
-            str(e), submission_id, imported_db
+        log.error(
+            "Error {} removing submission {} from {}".format(
+                str(e), submission_id, imported_db
+            )
         )
         return False
     engine.dispose()
@@ -1259,7 +1257,7 @@ def delete_submission(
     # Delete the dataset index
     try:
         delete_from_dataset_index(
-            request.registry.settings, user, project_code, form, submission_id
+            request.registry.settings, project, form, submission_id
         )
     except Exception as e:
         log.error(
@@ -1344,7 +1342,7 @@ def delete_submission(
     return True
 
 
-def delete_all_submission(request, user, project, form, project_code, deleted_by):
+def delete_all_submission(request, user, project, form, deleted_by):
     schema = get_form_schema(request, project, form)
     try:
         request.dbsession.query(Submission).filter(
@@ -1379,7 +1377,7 @@ def delete_all_submission(request, user, project, form, project_code, deleted_by
                 deleted_by, form, project, string_date
             )
         )
-        delete_dataset_index(request.registry.settings, user, project_code, form)
+        delete_dataset_from_index(request.registry.settings, project, form)
         delete_form_records(request.registry.settings, project, form)
 
         return True, ""

@@ -970,7 +970,7 @@ def get_user_projects(request, user, logged_user):
 
     for project in projects:
         submissions, last, by, form = get_dataset_stats_for_project(
-            request.registry.settings, user, project["project_code"]
+            request.registry.settings, project["project_id"]
         )
         if last is not None:
             project["last_submission"] = dateutil.parser.parse(last)

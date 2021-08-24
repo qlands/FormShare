@@ -64,7 +64,7 @@ from formshare.processes.db import (
 )
 from formshare.processes.elasticsearch.record_index import delete_form_records
 from formshare.processes.elasticsearch.repository_index import (
-    delete_dataset_index,
+    delete_dataset_from_index,
     get_number_of_datasets_with_gps,
 )
 from formshare.processes.email.send_email import send_error_to_technical_team
@@ -697,7 +697,7 @@ class FormDetails(PrivateView):
             else:
                 forms = get_forms_for_schema(self.request, form_data["form_schema"])
             number_with_gps = get_number_of_datasets_with_gps(
-                self.request.registry.settings, user_id, project_code, forms
+                self.request.registry.settings, project_id, forms
             )
             products = get_form_products(self.request, project_id, form_id)
             return {
@@ -1060,8 +1060,8 @@ class UploadNewVersion(PrivateView):
             )
 
             if updated:
-                delete_dataset_index(
-                    self.request.registry.settings, user_id, project_code, form_id
+                delete_dataset_from_index(
+                    self.request.registry.settings, project_id, form_id
                 )
                 next_page = self.request.route_url(
                     "form_details",
@@ -1209,10 +1209,9 @@ class DeleteForm(PrivateView):
                         ):
                             delete_case_lookup_table(self.request, project_id)
                         for a_deleted_form in forms_deleted:
-                            delete_dataset_index(
+                            delete_dataset_from_index(
                                 self.request.registry.settings,
-                                user_id,
-                                project_code,
+                                project_id,
                                 a_deleted_form["form_id"],
                             )
                             delete_form_records(
@@ -2489,9 +2488,7 @@ class DownloadGPSPoints(PrivateView):
         if form_data is None:
             raise HTTPNotFound
 
-        created, data = get_gps_points_from_form(
-            self.request, user_id, project_code, form_id
-        )
+        created, data = get_gps_points_from_form(self.request, project_id, form_id)
         return data
 
 

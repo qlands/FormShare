@@ -31,7 +31,7 @@ from formshare.models import (
     DictTable,
     DictField,
 )
-from formshare.processes.elasticsearch.repository_index import delete_dataset_index
+from formshare.processes.elasticsearch.repository_index import delete_dataset_from_index
 from formshare.processes.email.send_async_email import send_async_email
 from formshare.processes.sse.messaging import send_task_status_to_form
 from formshare.products.fs1import.celery_task import internal_import_json_files
@@ -739,7 +739,7 @@ def internal_merge_into_repository(
             raise MergeDataBaseError(str(e))
     # Delete the dataset index
     engine.dispose()
-    delete_dataset_index(settings, user, project_code, a_form_id)
+    delete_dataset_from_index(settings, project_id, a_form_id)
     if discard_testing_data:
         # Remove any test submissions if any
         submissions_path = os.path.join(

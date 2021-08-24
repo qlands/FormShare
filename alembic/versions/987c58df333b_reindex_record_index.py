@@ -17,12 +17,34 @@ from formshare.models.formshare import Odkform, Userproject, User, Project
 from alembic import op
 import time
 import requests
+import json
 
 # revision identifiers, used by Alembic.
 revision = "987c58df333b"
 down_revision = "5e28705dda28"
 branch_labels = None
 depends_on = None
+
+
+def check_es_ready(settings):
+    es_host = settings.get("elasticsearch.records.host", "localhost")
+    es_port = settings.get("elasticsearch.records.port", 9200)
+    use_ssl = settings.get("elasticsearch.records.use_ssl", "False")
+    ready = False
+    print("Waiting for ES to be ready")
+    while not ready:
+        if use_ssl == "False":
+            resp = requests.get("http://{}:{}/_cluster/health".format(es_host, es_port))
+        else:
+            resp = requests.get(
+                "https://{}:{}/_cluster/health".format(es_host, es_port)
+            )
+        data = resp.json()
+        if data["status"] == "yellow" or data["status"] == "green":
+            ready = True
+        else:
+            time.sleep(30)
+    print("ES is ready")
 
 
 def upgrade():
@@ -44,7 +66,11 @@ def upgrade():
     session = Session(bind=op.get_bind())
     forms = (
         session.query(
-            Odkform.project_id, Odkform.form_id, Project.project_code, User.user_id
+            Odkform.project_id,
+            Odkform.form_id,
+            Project.project_code,
+            User.user_id,
+            Odkform.form_schema,
         )
         .filter(Odkform.project_id == Project.project_id)
         .filter(Odkform.project_id == Userproject.project_id)
@@ -54,27 +80,12 @@ def upgrade():
         .all()
     )
     if forms:
-        ready = False
-        print("Waiting for ES to be ready")
-        while not ready:
-            if use_ssl == "False":
-                resp = requests.get(
-                    "http://{}:{}/_cluster/health".format(es_host, es_port)
-                )
-            else:
-                resp = requests.get(
-                    "https://{}:{}/_cluster/health".format(es_host, es_port)
-                )
-            data = resp.json()
-            if data["status"] == "yellow" or data["status"] == "green":
-                ready = True
-            else:
-                time.sleep(30)
-        print("ES is ready")
+        check_es_ready(settings)
 
         create_record_index(settings)
+        time.sleep(10)
         es_connection = create_connection(settings)
-
+        check_es_ready(settings)
         for a_form in forms:
             index_name = "formshare_records_{}_{}_{}".format(
                 a_form[3], a_form[2], a_form[1]
@@ -93,23 +104,27 @@ def upgrade():
                         )
                     },
                 }
+                json_data = json.dumps(reindex_dict)
                 if use_ssl == "False":
-                    requests.post(
+                    result = requests.post(
                         "http://{}:{}/_reindex".format(es_host, es_port),
-                        data=reindex_dict,
+                        data=json_data,
+                        headers={"Content-Type": "application/json"},
                     )
                 else:
-                    requests.post(
+                    result = requests.post(
                         "https://{}:{}/_reindex".format(es_host, es_port),
-                        data=reindex_dict,
+                        data=json_data,
+                        headers={"Content-Type": "application/json"},
                     )
+                if result.status_code != 200:
+                    exit(1)
                 print("Index: {} . Has been reindex".format(index_name))
             else:
                 print("Index: {} . Does not exist".format(index_name))
+        check_es_ready(settings)
     session.commit()
-    exit(1)
 
 
 def downgrade():
     print("Downgrade not possible")
-    exit(1)

@@ -17,6 +17,11 @@ import uuid
 import formshare.plugins as p
 from formshare.processes.elasticsearch.partner_index import get_partner_index_manager
 import logging
+from formshare.config.elasticfeeds import get_manager
+from elasticfeeds.aggregators import YearMonthAggregator
+from formshare.processes.db.form import get_form_data
+from formshare.processes.db.project import get_project_details
+from formshare.products.products import get_product_description, get_product
 
 
 log = logging.getLogger("formshare")
@@ -33,6 +38,103 @@ class PartnersListView(PrivateView):
         if self.user.id != user_id:
             raise HTTPNotFound
         return {"userid": user_id}
+
+
+def get_years_query_dict(partner_to_view):
+    return {
+        "query": {
+            "bool": {
+                "must": [
+                    {"term": {"actor.id": partner_to_view}},
+                    {"term": {"actor.type": "partner"}},
+                ]
+            }
+        },
+        "aggs": {
+            "feed_years": {
+                "terms": {
+                    "field": "published_year",
+                    "order": {"_key": "asc"},
+                }
+            },
+        },
+    }
+
+
+class PartnerActivityView(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.set_active_menu("partners")
+
+    def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        partner_to_view = self.request.matchdict["partnerid"]
+        year = self.request.params.get("year", None)
+        if self.user.id != user_id:
+            raise HTTPNotFound
+
+        partner_details = get_partner_details(self.request, partner_to_view)
+        if partner_details is None:
+            raise HTTPNotFound
+
+        esf_manager = get_manager(self.request)
+
+        es_result = esf_manager.execute_raw_feeds_query(
+            get_years_query_dict(partner_to_view)
+        )
+        year_bukets = es_result["aggregations"]["feed_years"]["buckets"]
+        years = []
+        for a_year in year_bukets:
+            years.append(str(a_year["key"]))
+
+        if year is None:
+            year = datetime.datetime.now().strftime("%Y")
+        else:
+            if not year.isdigit():
+                year = datetime.datetime.now().strftime("%Y")
+
+        partner_aggregator = YearMonthAggregator(partner_to_view, int(year))
+        partner_feeds = esf_manager.get_feeds(partner_aggregator)
+        if partner_feeds:
+            partner_feeds = partner_feeds[0]["months"]
+        for a_month in partner_feeds:
+            for an_activity in a_month["activities"]:
+                if an_activity["type"] == "access":
+                    parts = an_activity["object"]["id"].split("|")
+                    an_activity["user_id"] = parts[0]
+                    an_activity["project_id"] = parts[1]
+                    an_activity["form_id"] = parts[2]
+                    an_activity["project_details"] = get_project_details(
+                        self.request, parts[1]
+                    )
+                    an_activity["form_details"] = get_form_data(
+                        self.request, parts[1], parts[2]
+                    )
+                if an_activity["type"] == "download":
+                    parts = an_activity["object"]["id"].split("|")
+                    an_activity["user_id"] = parts[0]
+                    an_activity["project_id"] = parts[1]
+                    an_activity["form_id"] = parts[2]
+                    an_activity["product_id"] = parts[3]
+                    an_activity["output_id"] = parts[4]
+                    an_activity["project_details"] = get_project_details(
+                        self.request, parts[1]
+                    )
+                    an_activity["form_details"] = get_form_data(
+                        self.request, parts[1], parts[2]
+                    )
+                    an_activity["product"] = get_product(parts[3])
+                    an_activity["product_desc"] = get_product_description(
+                        self.request, parts[3]
+                    )
+        return {
+            "userid": user_id,
+            "partnerData": partner_details,
+            "year": year,
+            "years": years,
+            "feeds": partner_feeds,
+        }
 
 
 class AddPartnerView(PrivateView):
@@ -114,6 +216,21 @@ class AddPartnerView(PrivateView):
                                 if not added:
                                     self.append_to_errors(error_message)
                                 else:
+                                    # Creates the partner as an actor
+                                    feed_manager = get_manager(self.request)
+                                    try:
+                                        feed_manager.follow(
+                                            partner_details["partner_id"],
+                                            partner_details["partner_id"],
+                                            activity_type="partner",
+                                        )
+                                    except Exception as e:
+                                        log.warning(
+                                            "Partner {} was in FormShare at some point. Error: {}".format(
+                                                partner_details["partner_email"], str(e)
+                                            )
+                                        )
+
                                     # Add the partner to the partner index
                                     partner_index = get_partner_index_manager(
                                         self.request

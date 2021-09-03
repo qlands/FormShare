@@ -61,7 +61,7 @@
                                 <button id="edit_partner" class="btn btn-block btn-warning action-buttons"> <i class="fas fa-user-edit"></i> {{ _('Edit partner') }}</button>
                             </div>
                             <div class="col-md-2">
-                                <button id="partner_history" class="btn btn-block btn-default action-buttons"> <i class="fas fa-chart-line"></i> {{ _('View partner activity') }}</button>
+                                <button id="partner_history" class="btn btn-block btn-default action-buttons"> <i class="fas fa-chart-line"></i> {{ _('View activity') }}</button>
                             </div>
                             <div class="col-md-2">
                                 <button id="delete_partner" class="btn btn-block btn-danger action-buttons"> <i class="fas fa-user-minus"></i> {{ _('Delete partner') }}</button>
@@ -79,6 +79,17 @@
     {{ super() }}
     <script>
         $(document).ready(function() {
+
+            $('#partner_history').click(function () {
+                let selected_partner = $('#partner').find(":selected").val();
+                if (selected_partner)
+                {
+                    let loc = '{{ request.route_url('partner_activity',userid=userid,partnerid='~TOCHANGE~') }}';
+                    loc = loc.replace("~TOCHANGE~",selected_partner);
+                    location.href=loc;
+                }
+
+            });
 
             $('#edit_partner').click(function () {
                 let selected_partner = $('#partner').find(":selected").val();

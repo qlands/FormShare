@@ -171,6 +171,7 @@ from formshare.views.partners import (
     AddPartnerView,
     EditPartnerView,
     DeletePartnerView,
+    PartnerActivityView,
 )
 
 log = logging.getLogger("formshare")
@@ -1306,6 +1307,14 @@ def load_routes(config, settings):
                 "/user/{userid}/manage_partner/{partnerid}/delete",
                 DeletePartnerView,
                 None,
+            )
+        )
+        routes.append(
+            add_route(
+                "partner_activity",
+                "/user/{userid}/manage_partner/{partnerid}/activity",
+                PartnerActivityView,
+                "dashboard/partners/partner_activity.jinja2",
             )
         )
 

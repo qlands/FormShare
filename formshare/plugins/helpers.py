@@ -10,7 +10,7 @@ import timeago
 import validators
 from pattern.en import pluralize as pluralize_en
 from pattern.es import pluralize as pluralize_es
-
+import datetime
 import formshare.plugins as p
 
 
@@ -79,6 +79,28 @@ def get_version():
     :return: The version of FormShare
     """
     return "2.8.6 (20210805)"
+
+
+@core_helper
+def month_from_number(month, locale="en", capitalize=True):
+    """
+    Returns a readable date"
+    :param month: Numeric month
+    :param locale: Locale code
+    :param capitalize: Capitalize month
+    :return: A readable date
+    """
+    if isinstance(month, str):
+        if month.isdigit():
+            month = int(month)
+        else:
+            return "NA"
+    temp_data = datetime.date(1900, month, 1)
+    ar = arrow.get(temp_data)
+    month_name = ar.format("MMMM", locale=locale)
+    if capitalize:
+        month_name = month_name.capitalize()
+    return month_name
 
 
 @core_helper

@@ -1,0 +1,11 @@
+<div class="col-sm-12">
+    <h2>{{ _('Partner activity') }}</h2>
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ request.route_url("manage_partners",userid=userid) }}">{{ _('FormShare partners') }}</a>
+        </li>
+        <li class="breadcrumb-item active">
+            <strong>{{ _('Activity of') }} {{ partnerData.partner_name }}</strong>
+        </li>
+    </ol>
+</div>

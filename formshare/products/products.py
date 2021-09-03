@@ -25,6 +25,7 @@ __all__ = [
     "add_metadata_to_product",
     "get_product_directory",
     "get_form_products",
+    "get_product_description",
 ]
 
 log = logging.getLogger("formshare")

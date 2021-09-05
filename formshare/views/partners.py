@@ -130,6 +130,7 @@ class PartnerActivityView(PrivateView):
                     )
         return {
             "userid": user_id,
+            "partnerid": partner_to_view,
             "partnerData": partner_details,
             "year": year,
             "years": years,

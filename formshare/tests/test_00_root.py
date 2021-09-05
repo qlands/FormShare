@@ -12809,6 +12809,50 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
 
+            # Get the history of a partner
+            res = self.testapp.get(
+                "/user/{}/manage_partner/{}/activity".format(
+                    self.randonLogin,
+                    partner_id
+                ),
+                status=200,
+            )
+            self.assertIn(b'"timeline-header"', res.body)
+
+            this_year = datetime.datetime.now().strftime("%Y")
+            # Get the history of a partner current year
+            res = self.testapp.get(
+                "/user/{}/manage_partner/{}/activity?year={}".format(
+                    self.randonLogin,
+                    partner_id,
+                    this_year
+                ),
+                status=200,
+            )
+            self.assertIn(b'"timeline-header"', res.body)
+
+            # Get the history of a partner last year
+            res = self.testapp.get(
+                "/user/{}/manage_partner/{}/activity?year={}".format(
+                    self.randonLogin,
+                    partner_id,
+                    int(this_year)-2
+                ),
+                status=200,
+            )
+            self.assertNotIn(b'"timeline-header"', res.body)
+
+            # Get the history of a partner invalid year
+            res = self.testapp.get(
+                "/user/{}/manage_partner/{}/activity?year={}".format(
+                    self.randonLogin,
+                    partner_id,
+                    "year"
+                ),
+                status=200,
+            )
+            self.assertIn(b'"timeline-header"', res.body)
+
             # Get the available collaborators
             self.testapp.get(
                 "/user/{}/api/select2_partners?q={}".format(

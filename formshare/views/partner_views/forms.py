@@ -492,7 +492,7 @@ class PartnerDownloadPrivateProductByAPI(PartnerAPIView):
             if continue_download:
 
                 feed_manager = get_manager(self.request)
-                actor = Actor(self.partner.id, "partner")
+                actor = Actor(self.partnerID, "partner")
                 feed_object = Object(
                     "{}|{}|{}|{}|{}".format(
                         user_id, project_id, form_id, product_id, output_id

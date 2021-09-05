@@ -12812,8 +12812,7 @@ class FunctionalTests(unittest.TestCase):
             # Get the history of a partner
             res = self.testapp.get(
                 "/user/{}/manage_partner/{}/activity".format(
-                    self.randonLogin,
-                    partner_id
+                    self.randonLogin, partner_id
                 ),
                 status=200,
             )
@@ -12823,9 +12822,7 @@ class FunctionalTests(unittest.TestCase):
             # Get the history of a partner current year
             res = self.testapp.get(
                 "/user/{}/manage_partner/{}/activity?year={}".format(
-                    self.randonLogin,
-                    partner_id,
-                    this_year
+                    self.randonLogin, partner_id, this_year
                 ),
                 status=200,
             )
@@ -12834,9 +12831,7 @@ class FunctionalTests(unittest.TestCase):
             # Get the history of a partner last year
             res = self.testapp.get(
                 "/user/{}/manage_partner/{}/activity?year={}".format(
-                    self.randonLogin,
-                    partner_id,
-                    int(this_year)-2
+                    self.randonLogin, partner_id, int(this_year) - 2
                 ),
                 status=200,
             )
@@ -12845,9 +12840,7 @@ class FunctionalTests(unittest.TestCase):
             # Get the history of a partner invalid year
             res = self.testapp.get(
                 "/user/{}/manage_partner/{}/activity?year={}".format(
-                    self.randonLogin,
-                    partner_id,
-                    "year"
+                    self.randonLogin, partner_id, "year"
                 ),
                 status=200,
             )

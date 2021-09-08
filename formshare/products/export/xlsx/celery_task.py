@@ -2,7 +2,7 @@ import gettext
 import os
 import uuid
 from subprocess import Popen, PIPE
-
+import time
 from celery.utils.log import get_task_logger
 
 from formshare.config.celery_app import celeryApp
@@ -35,6 +35,12 @@ def internal_build_xlsx(
     protect_sensitive,
     locale,
 ):
+    if (
+        os.environ.get("FORMSHARE_PYTEST_RUNNING", "false") == "true"
+        and protect_sensitive
+    ):
+        print("In testing. Waiting 10 seconds so we can test cancelling the task")
+        time.sleep(10)
     parts = __file__.split("/products/")
     this_file_path = parts[0] + "/locale"
     es = gettext.translation("formshare", localedir=this_file_path, languages=[locale])

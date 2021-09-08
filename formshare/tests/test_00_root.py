@@ -78,6 +78,21 @@ def get_partner_api_key(config, partner_id):
     return result
 
 
+def get_last_task(config, project_id, form_id, product_id):
+    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
+    sql = (
+        "SELECT celery_taskid FROM product "
+        "WHERE project_id = '{}' "
+        "AND form_id = '{}' "
+        "AND product_id = '{}' "
+        "ORDER BY datetime_added DESC LIMIT 1".format(project_id, form_id, product_id)
+    )
+    result = engine.execute(sql).fetchone()
+    result = result[0]
+    engine.dispose()
+    return result
+
+
 class FunctionalTests(unittest.TestCase):
     def setUp(self):
         if os.environ.get("FORMSHARE_PYTEST_RUNNING", "false") == "false":
@@ -123,6 +138,7 @@ class FunctionalTests(unittest.TestCase):
         self.formMultiLanguageID = ""
         self.path = os.path.dirname(os.path.abspath(__file__))
         self.working_dir = working_dir
+        self.partner = ""
 
     def test_all(self):
         def test_root():
@@ -391,11 +407,8 @@ class FunctionalTests(unittest.TestCase):
 
         def test_dashboard():
 
-            if os.environ.get("FORMSHARE_TEST_ERROR_PAGE", "false") == "true":
-                # Test error screen
-                self.testapp.get(
-                    "/test/{}/test_error".format(self.randonLogin), status=500
-                )
+            # Test error screen
+            self.testapp.get("/test/{}/test_error".format(self.randonLogin), status=500)
 
             # Test access to the dashboard
             res = self.testapp.get("/user/{}".format(self.randonLogin), status=200)
@@ -890,6 +903,22 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
             assert "FS_error" not in res.headers
+
+            # Remove the collaborator of a project that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/collaborator/{}/remove".format(
+                    self.randonLogin, "not_exist_project", self.collaboratorLogin
+                ),
+                status=404,
+            )
+
+            # Remove collaborator with GET goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/collaborator/{}/remove".format(
+                    self.randonLogin, self.project, self.collaboratorLogin
+                ),
+                status=404,
+            )
 
             # Remove the collaborator
             res = self.testapp.post(
@@ -3532,6 +3561,32 @@ class FunctionalTests(unittest.TestCase):
                     ),
                     status=200,
                 )
+
+                # API download goes to 401. No API key
+                self.testapp.get(
+                    "/user/{}/project/{}/form/{}/api_download/{}/output/{}".format(
+                        self.randonLogin,
+                        self.project,
+                        self.formID,
+                        "csv_private_export",
+                        task_id[-12:],
+                    ),
+                    status=401,
+                )
+
+                # API download goes to 401. Wrong API key
+                self.testapp.get(
+                    "/user/{}/project/{}/form/{}/api_download/{}/output/{}?apikey={}".format(
+                        self.randonLogin,
+                        self.project,
+                        self.formID,
+                        "csv_private_export",
+                        task_id[-12:],
+                        "wrongAPIKey",
+                    ),
+                    status=401,
+                )
+
                 self.testapp.get(
                     "/user/{}/project/{}/form/{}/api_download/{}/output/{}?apikey={}".format(
                         self.randonLogin,
@@ -3713,6 +3768,28 @@ class FunctionalTests(unittest.TestCase):
             res = self.testapp.get(
                 "/user/{}/project/{}/form/{}/generate/media".format(
                     self.randonLogin, self.project, self.formID
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Generate public XLSX
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/public_xlsx".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+            print("Testing cancel a task")
+            time.sleep(4)
+            last_task = get_last_task(
+                self.server_config, self.projectID, self.formID, "xlsx_public_export"
+            )
+            print("Task to cancel: {}".format(last_task))
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/task/{}/stop".format(
+                    self.randonLogin, self.project, self.formID, last_task
                 ),
                 status=302,
             )
@@ -8865,6 +8942,29 @@ class FunctionalTests(unittest.TestCase):
 
             self.testapp.get("/logout", status=302)
 
+            # Create collaborator 3
+            collaborator_3 = str(uuid.uuid4())
+            collaborator_3_key = collaborator_3
+            collaborator_3 = collaborator_3[-12:]
+
+            res = self.testapp.post(
+                "/join",
+                {
+                    "user_address": "Costa Rica",
+                    "user_email": collaborator_3 + "@qlands.com",
+                    "user_password": "123",
+                    "user_id": collaborator_3,
+                    "user_password2": "123",
+                    "user_name": "Testing",
+                    "user_super": "1",
+                    "user_apikey": collaborator_3_key,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get("/logout", status=302)
+
             # Collaborator 1 login
             res = self.testapp.post(
                 "/login",
@@ -8896,6 +8996,24 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            self.testapp.get("/logout", status=302)
+
+            # Collaborator 3 login
+            res = self.testapp.post(
+                "/login",
+                {"user": "", "email": collaborator_3, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Collaborator 3 tries to remove collaborator 2. Goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/collaborator/{}/remove".format(
+                    collaborator_1, "collaborator_1_prj001", collaborator_2
+                ),
+                status=404,
+            )
 
             self.testapp.get("/logout", status=302)
 
@@ -9838,6 +9956,38 @@ class FunctionalTests(unittest.TestCase):
                     "test",
                 ]
             )
+            assert res == 0
+
+        def test_disable_ssl():
+            from formshare.scripts.disablessl import main as disablessl
+
+            here = os.path.dirname(os.path.abspath(__file__)).split("/formshare/tests")[
+                0
+            ]
+            paths2 = ["development.ini"]
+            ini_file = os.path.join(here, *paths2)
+
+            res = disablessl(["/not_found/development.ini"])
+            assert res == 1
+
+            res = disablessl([ini_file])
+            assert res == 0
+
+        def test_update_aes_key():
+            from formshare.scripts.updateaeskey import main as updateaeskey
+
+            here = os.path.dirname(os.path.abspath(__file__)).split("/formshare/tests")[
+                0
+            ]
+            paths2 = ["development.ini"]
+            ini_file = os.path.join(here, *paths2)
+            res = updateaeskey(["--new_key", "123", "/not/found/development.ini"])
+            assert res == 1
+
+            res = updateaeskey(["--new_key", "123", ini_file])
+            assert res == 1
+
+            res = updateaeskey(["--new_key", self.server_config["aes.key"], ini_file])
             assert res == 0
 
         def test_unauthorized_access():
@@ -11902,6 +12052,7 @@ class FunctionalTests(unittest.TestCase):
             # Add partner pass
             partner_id = str(uuid.uuid4())
             partner = partner_id[-12:]
+            self.partner = partner
             print("Partner ID: {}".format(partner_id))
             print("Partner email: e{}@qlands.com".format(partner))
             print("Partner working with login: {}".format(self.randonLogin))
@@ -12795,8 +12946,20 @@ class FunctionalTests(unittest.TestCase):
                 status=401,
             )
 
+            # Get the partner using API goes to 401. Wrong key
+            self.testapp.get(
+                "/partneraccess/user/{}/project/{}/form/{}/api_download/{}/output/{}?apikey={}".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "xlsx_public_export",
+                    "latest",
+                    "wrongAPIKey",
+                ),
+                status=401,
+            )
+
             partner_api_key = get_partner_api_key(self.server_config, partner_id)
-            # Get the partner using API goes to 401. No key
             self.testapp.get(
                 "/partneraccess/user/{}/project/{}/form/{}/api_download/{}/output/{}?apikey={}".format(
                     self.randonLogin,
@@ -12849,10 +13012,153 @@ class FunctionalTests(unittest.TestCase):
             # Get the available collaborators
             self.testapp.get(
                 "/user/{}/api/select2_partners?q={}".format(
-                    self.randonLogin, "Carlos Quiros"
+                    self.randonLogin, "@qlands.com"
                 ),
                 status=200,
             )
+            # Get the available collaborators
+            self.testapp.get(
+                "/user/{}/api/select2_partners?q={}".format(self.randonLogin, "Carlos"),
+                status=200,
+            )
+
+        def test_error_pages():
+            res = self.testapp.post(
+                "/logout",
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/logout".format(
+                    self.randonLogin, self.project
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.post(
+                "/partneraccess/logout",
+                {},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/login".format(
+                    self.randonLogin, self.project
+                ),
+                {"login": self.assistantLogin, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/test".format(
+                    self.randonLogin, self.project
+                ),
+                status=500,
+            )
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/logout".format(
+                    self.randonLogin, self.project
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.post(
+                "/partneraccess/login",
+                {
+                    "login": "e{}@qlands.com".format(self.partner),
+                    "passwd": "123",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get("/partneraccess/test", status=500)
+
+            res = self.testapp.post(
+                "/partneraccess/logout",
+                {},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get("/user/{}".format(self.randonLogin), status=302)
+
+            res = self.testapp.post(
+                "/partneraccess/login",
+                {
+                    "login": "e{}@qlands.com".format(self.partner),
+                    "passwd": "123",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get("/user/{}".format(self.randonLogin), status=302)
+
+            res = self.testapp.post(
+                "/partneraccess/logout",
+                {},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/test".format(
+                    self.randonLogin, self.project
+                ),
+                status=302,
+            )
+
+            res = self.testapp.post(
+                "/partneraccess/login",
+                {
+                    "login": "e{}@qlands.com".format(self.partner),
+                    "passwd": "123",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/test".format(
+                    self.randonLogin, self.project
+                ),
+                status=302,
+            )
+
+            res = self.testapp.post(
+                "/partneraccess/logout",
+                {},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get("/partneraccess/test", status=302)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/login".format(
+                    self.randonLogin, self.project
+                ),
+                {"login": self.assistantLogin, "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.get("/partneraccess/test", status=302)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/logout".format(
+                    self.randonLogin, self.project
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
 
         def show_health():
             res = self.testapp.get("/health", status=200)
@@ -12974,6 +13280,12 @@ class FunctionalTests(unittest.TestCase):
         test_configure_tests()
         print("Testing modify config")
         test_modify_config()
+        print("Testing disable ssl")
+        test_disable_ssl()
+        print("Testing update aes key")
+        test_update_aes_key()
+        print("Testing error pages")
+        test_error_pages()
         show_health()
         end_time = datetime.datetime.now()
         time_delta = end_time - start_time

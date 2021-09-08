@@ -50,7 +50,7 @@ class ODKView(object):
         self.authHeader = {}
         self.user = ""
 
-    def get_auth_dict(self):
+    def get_auth_dict(self):  # pragma: no cover
         authheader = self.request.headers["Authorization"].replace(", ", ",")
         authheader = authheader.replace('"', "")
         autharray = authheader.split(",")
@@ -62,7 +62,9 @@ class ODKView(object):
                 self.authHeader[t[0]] = t[1] + "=" + t[2]
 
     def authorize(self, correct_password):
-        if self.request.encget("FS_for_testing", default="false") == "false":
+        if (
+            self.request.encget("FS_for_testing", default="false") == "false"
+        ):  # pragma: no cover
             ha1 = ""
             ha2 = ""
             if self.authHeader["qop"] == "auth":
@@ -117,7 +119,7 @@ class ODKView(object):
         else:
             return True
 
-    def ask_for_credentials(self):
+    def ask_for_credentials(self):  # pragma: no cover
         headers = [
             (
                 "WWW-Authenticate",
@@ -150,7 +152,7 @@ class ODKView(object):
     def __call__(self):
         testing_calls = self.request.encget("FS_for_testing", default="false")
         if "Authorization" in self.request.headers or testing_calls == "true":
-            if testing_calls == "false":
+            if testing_calls == "false":  # pragma: no cover
                 if self.request.headers["Authorization"].find("Basic ") == -1:
                     self.get_auth_dict()
                     self.user = self.authHeader["Digest username"]
@@ -290,7 +292,7 @@ class PrivateView(object):
             if (
                 self.request.registry.settings.get("perform_post_checks", "true")
                 == "true"
-            ):
+            ):  # pragma: no cover
                 safe = check_csrf_token(self.request, raises=False)
                 if not safe:
                     self.request.session.pop_flash()
@@ -351,7 +353,7 @@ class PrivateView(object):
             break  # Only only plugin will be called for before_check_authorization
         if continue_authorization:
             self.check_authorization()
-        else:
+        else:  # pragma: no cover
             authorized = False
             user_authorized = ""
             for plugin in i_user_authorization:
@@ -649,7 +651,7 @@ class AssistantView(object):
             if (
                 self.request.registry.settings.get("perform_post_checks", "true")
                 == "true"
-            ):
+            ):  # pragma: no cover
                 safe = check_csrf_token(self.request, raises=False)
                 if not safe:
                     self.request.session.pop_flash()
@@ -752,7 +754,7 @@ class PartnerView(object):
             if (
                 self.request.registry.settings.get("perform_post_checks", "true")
                 == "true"
-            ):
+            ):  # pragma: no cover
                 safe = check_csrf_token(self.request, raises=False)
                 if not safe:
                     self.request.session.pop_flash()

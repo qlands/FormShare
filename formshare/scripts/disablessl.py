@@ -16,7 +16,8 @@ def main(raw_args=None):
     config = configparser.ConfigParser()
     config.read(formshare_ini_file_path)
     sqlalchemy_url = config.get("app:formshare", "sqlalchemy.url")
-    if sqlalchemy_url.find("&ssl_disabled=True") == -1:
+    if sqlalchemy_url.find("&ssl_disabled=True") == -1:  # pragma: no cover
+        # This only happens with versions < 2.7.0 (20210114)
         shutil.copyfile(
             formshare_ini_file_path, formshare_ini_file_path + ".bk.20210113"
         )
@@ -24,3 +25,4 @@ def main(raw_args=None):
         config.set("app:formshare", "sqlalchemy.url", sqlalchemy_url)
         with open(formshare_ini_file_path, "w") as configfile:
             config.write(configfile)
+    return 0

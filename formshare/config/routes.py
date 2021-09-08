@@ -164,6 +164,8 @@ from formshare.views.testing import (
     TestFormView,
     TestRemoveUserView,
     TestErrorView,
+    TestPartnerErrorView,
+    TestAssistantErrorView,
 )
 from formshare.views.users import UsersListView, EditUserView, AddUserView
 from formshare.views.partners import (
@@ -583,7 +585,6 @@ def load_routes(config, settings):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "stop_task",
@@ -1464,6 +1465,24 @@ def load_routes(config, settings):
             )
         )
 
+        routes.append(
+            add_route(
+                "TestAssistantErrorView",
+                "/user/{userid}/project/{projcode}/assistantaccess/test",
+                TestAssistantErrorView,
+                "generic/testing.jinja2",
+            )
+        )
+
+        routes.append(
+            add_route(
+                "TestPartnerErrorView",
+                "/partneraccess/test",
+                TestPartnerErrorView,
+                "generic/testing.jinja2",
+            )
+        )
+
     append_to_routes(routes)
 
     # Add the not found route
@@ -1471,7 +1490,7 @@ def load_routes(config, settings):
 
     if (
         log.level == logging.WARN
-        or os.environ.get("FORMSHARE_TEST_ERROR_PAGE", "false") == "true"
+        or os.environ.get("FORMSHARE_PYTEST_RUNNING", "false") == "true"
     ):
         config.add_view(ErrorView, context=Exception, renderer="generic/500.jinja2")
 

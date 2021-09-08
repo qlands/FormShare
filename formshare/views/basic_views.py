@@ -84,33 +84,27 @@ class Gravatar(PublicView):
 class ErrorView(PublicView):
     def process_view(self):
         user = None
-        i_user_authorization = p.PluginImplementations(p.IUserAuthorization)
-        continue_authorization = True
-        for plugin in i_user_authorization:
-            continue_authorization = plugin.before_check_authorization(self.request)
-            break  # Only only plugin will be called for before_check_authorization
-        if continue_authorization:
-            policy = get_policy(self.request, "main")
-            login_data = policy.authenticated_userid(self.request)
-            if login_data is not None:
-                login_data = literal_eval(login_data)
-                if login_data["group"] == "mainApp":
-                    user = login_data["login"]
-        else:
-            authorized = False
-            user_authorized = None
-            for plugin in i_user_authorization:
-                authorized, user_authorized = plugin.custom_authorization(self.request)
-                break  # Only only plugin will be called for custom_authorization
-            if authorized:
-                user = user_authorized
+        policy = get_policy(self.request, "main")
+        login_data = policy.authenticated_userid(self.request)
+        if login_data is not None:
+            login_data = literal_eval(login_data)
+            if login_data["group"] == "mainApp":
+                user = login_data["login"]
 
         if user is None:
             policy = get_policy(self.request, "assistant")
             login_data = policy.authenticated_userid(self.request)
             if login_data is not None:
                 login_data = literal_eval(login_data)
-                if login_data["group"] == "collaborator":
+                if login_data["group"] == "collaborators":
+                    user = login_data["login"]
+
+        if user is None:
+            policy = get_policy(self.request, "partner")
+            login_data = policy.authenticated_userid(self.request)
+            if login_data is not None:
+                login_data = literal_eval(login_data)
+                if login_data["group"] == "partners":
                     user = login_data["login"]
 
         if user is None:
@@ -162,7 +156,7 @@ class LoginView(PublicView):
                 safe = check_csrf_token(self.request, raises=False)
                 if not safe:
                     raise HTTPNotFound()
-            data = variable_decode(self.request.POST)
+            data = self.get_post_dict()
 
             user = data["user"]
             if user != "":

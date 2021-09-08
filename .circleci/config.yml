@@ -56,6 +56,7 @@ jobs:
           name: Run Celery in the background
           command: |
             export COLUMNS=80
+            export FORMSHARE_PYTEST_RUNNING=true
             /home/circleci/.local/bin/celery -A formshare.config.celery_app worker --loglevel=info -Q FormShare
           background: true
       - run:

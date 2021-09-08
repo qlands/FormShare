@@ -1,6 +1,7 @@
 from pyramid.httpexceptions import HTTPNotFound
 
 from formshare.plugins.utilities import FormSharePrivateView
+from formshare.views.classes import PartnerView, AssistantView
 from formshare.processes.db import get_project_id_from_name
 from formshare.processes.db.project import get_owned_project
 from formshare.processes.db.user import (
@@ -45,6 +46,7 @@ class TestFormView(FormSharePrivateView):
         project_code = self.request.matchdict["projcode"]
         form_id = self.request.matchdict["formid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
+        self.get_project_access_level()
         project_details = {}
         if project_id is not None:
             project_found = False
@@ -75,5 +77,15 @@ class TestRemoveUserView(FormSharePrivateView):
 
 
 class TestErrorView(FormSharePrivateView):
+    def process_view(self):
+        return {"data": 1 / 0}
+
+
+class TestAssistantErrorView(AssistantView):
+    def process_view(self):
+        return {"data": 1 / 0}
+
+
+class TestPartnerErrorView(PartnerView):
     def process_view(self):
         return {"data": 1 / 0}

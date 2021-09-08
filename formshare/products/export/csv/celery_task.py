@@ -158,7 +158,7 @@ def internal_build_csv(
                         return
                 p = Popen(args, stdout=PIPE, stderr=PIPE)
                 stdout, stderr = p.communicate()
-                if p.returncode != 0:
+                if p.returncode != 0:  # pragma: no cover
                     email_from = settings.get("mail.from", None)
                     email_to = settings.get("mail.error", None)
                     send_async_email(
@@ -178,7 +178,7 @@ def internal_build_csv(
                     raise DummyError(
                         _("Error while creating the flattening the JSON files")
                     )
-            else:
+            else:  # pragma: no cover
                 email_from = settings.get("mail.from", None)
                 email_to = settings.get("mail.error", None)
                 send_async_email(
@@ -196,7 +196,6 @@ def internal_build_csv(
                     locale,
                 )
                 raise DummyError(_("Error while creating the dummy JSON file"))
-
         else:
             raise EmptyFileError(_("The ODK form does not contain any submissions"))
     else:

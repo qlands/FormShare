@@ -63,7 +63,7 @@ class CollaboratorsListView(PrivateView):
                             self.request.session.flash(
                                 self._("The collaborator was added to this project")
                             )
-                        else:
+                        else:  # pragma: no cover
                             user_details = get_user_details(
                                 self.request, collaborator_details["collaborator"]
                             )
@@ -171,7 +171,7 @@ class RemoveCollaborator(PrivateView):
             raise HTTPNotFound
 
 
-class AcceptCollaboration(PrivateView):
+class AcceptCollaboration(PrivateView):  # pragma: no cover
     def __init__(self, request):
         PrivateView.__init__(self, request)
         self.privateOnly = True

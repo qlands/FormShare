@@ -137,7 +137,7 @@ def make_database_changes(
         with open(b_backup_file) as input_file:
             proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)
             output, error_str = proc.communicate()
-            if proc.returncode != 0:
+            if proc.returncode != 0:  # pragma: no cover
                 log_message(
                     "Error creating database from backup",
                     error_str,
@@ -155,7 +155,7 @@ def make_database_changes(
         with open(merge_create_file) as input_file:
             proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)
             output, error_str = proc.communicate()
-            if proc.returncode != 0:
+            if proc.returncode != 0:  # pragma: no cover
                 log_message(
                     "Error applying changes to schema",
                     error_str,
@@ -173,7 +173,7 @@ def make_database_changes(
         with open(merge_insert_file) as input_file:
             proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)
             output, error_str = proc.communicate()
-            if proc.returncode != 0:
+            if proc.returncode != 0:  # pragma: no cover
                 log_message(
                     "Error applying lookup changes to schema",
                     error_str,
@@ -286,7 +286,7 @@ def make_database_changes(
                                     args, stdin=input_file, stderr=PIPE, stdout=PIPE
                                 )
                                 output, error_str = proc.communicate()
-                                if proc.returncode != 0:
+                                if proc.returncode != 0:  # pragma: no cover
                                     log_message(
                                         "Error applying triggers",
                                         error_str,
@@ -294,7 +294,7 @@ def make_database_changes(
                                         " ".join(args),
                                     )
                                     error = True
-                        else:
+                        else:  # pragma: no cover
                             log_message(
                                 "Error creating triggers",
                                 stderr,
@@ -702,7 +702,7 @@ def internal_merge_into_repository(
                 )
             log.info("Updating dictionaries")
             send_task_status_to_form(settings, task_id, _("Updating dictionaries"))
-            update_dictionary_tables(db_session, a_schema_name, c_create_xml_file)
+            update_dictionary_tables(db_session, b_schema_name, c_create_xml_file)
             transaction.commit()
             critical_part = False
         except Exception as e:
@@ -795,7 +795,7 @@ def internal_merge_into_repository(
                     False,
                     None,
                 )
-            else:
+            else:  # pragma: no cover
                 log.error(
                     "Error while importing testing files. "
                     "The process was not able to find an assistant. "

@@ -122,7 +122,7 @@ def update_dictionary_table_desc(request, project, form, table, description):
         return False
 
 
-def get_dictionary_tables(request, project, form, table_type=None):
+def get_dictionary_tables(request, project, form, table_type):
     """
     Returns all tables as an array with their information
     :param request: Pyramid request object
@@ -131,15 +131,15 @@ def get_dictionary_tables(request, project, form, table_type=None):
     :param table_type: Type of table to return: None=All, 1= Data tables, 2= Lookup tables
     :return: Array of dict elements or empty array
     """
-    if table_type is None:
-        res = (
-            request.dbsession.query(DictTable)
-            .filter(DictTable.project_id == project)
-            .filter(DictTable.form_id == form)
-            .order_by(DictTable.table_index)
-            .all()
-        )
-        return map_from_schema(res)
+    # if table_type is None:
+    #     res = (
+    #         request.dbsession.query(DictTable)
+    #         .filter(DictTable.project_id == project)
+    #         .filter(DictTable.form_id == form)
+    #         .order_by(DictTable.table_index)
+    #         .all()
+    #     )
+    #     return map_from_schema(res)
     if table_type == 1:
         res = (
             request.dbsession.query(DictTable)
@@ -201,9 +201,11 @@ def get_dictionary_fields(request, project, form, table):
     return map_from_schema(res)
 
 
-def update_dictionary_tables(request, project, form):
+def update_dictionary_tables(request, project, form):  # pragma: no cover
     """
-    Update the dictionary tables in the DB using a create XML file
+    Update the dictionary tables in the DB using a create XML file.
+    This function has no coverage because it is used by old version of FormShare
+    to move the dictionary tables from XML files to database
     :param request: Pyramid request object
     :param project: Project ID
     :param form: Form ID

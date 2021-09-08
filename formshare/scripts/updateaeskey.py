@@ -8,7 +8,7 @@ import transaction
 from pyramid.paster import get_appsettings
 
 from formshare.config.encdecdata import encode_data_with_key, decode_data_with_key
-from formshare.models import User, Collaborator
+from formshare.models import User, Collaborator, Partner
 from formshare.models import get_engine, get_session_factory, get_tm_session
 from formshare.models.meta import Base
 
@@ -64,8 +64,8 @@ def main(raw_args=None):
                 dbsession.query(User).filter(User.user_id == a_user.user_id).update(
                     {"user_password": new_password}
                 )
-            assistants = dbsession.query(Collaborator).all()
             # Update Assistants password
+            assistants = dbsession.query(Collaborator).all()
             for an_assistant in assistants:
                 current_password = decode_data_with_key(
                     an_assistant.coll_password.encode(), settings["aes.key"].encode()
@@ -79,7 +79,26 @@ def main(raw_args=None):
                 )
                 dbsession.query(Collaborator).filter(
                     Collaborator.coll_id == an_assistant.coll_id
-                ).update({"coll_password": new_password})
+                ).filter(Collaborator.project_id == an_assistant.project_id).update(
+                    {"coll_password": new_password}
+                )
+
+            # Update partners password
+            partners = dbsession.query(Partner).all()
+            for a_partner in partners:
+                current_password = decode_data_with_key(
+                    a_partner.partner_password.encode(), settings["aes.key"].encode()
+                )
+                if current_password == "":
+                    raise EmptyPassword(
+                        "Empty password for assistant {}".format(an_assistant.coll_id)
+                    )
+                new_password = encode_data_with_key(
+                    current_password, args.new_key.encode()
+                )
+                dbsession.query(Partner).filter(
+                    Partner.partner_id == a_partner.partner_id
+                ).update({"partner_password": new_password})
         except Exception as e:
             print(str(e))
             error = 1

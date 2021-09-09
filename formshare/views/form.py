@@ -110,7 +110,9 @@ log = logging.getLogger("formshare")
 
 
 class FormDetails(PrivateView):
-    def report_critical_error(self, user, project, form, error_code, message):
+    def report_critical_error(
+        self, user, project, form, error_code, message
+    ):  # pragma: no cover
         send_error_to_technical_team(
             self.request,
             "Error while creating the repository for form {} in "
@@ -204,7 +206,7 @@ class FormDetails(PrivateView):
                 root = tree.getroot()
                 table = root.find(".//table[@name='maintable']")
                 if table is not None:
-                    field = root.find(
+                    field = table.find(
                         ".//field[@name='" + form_data["form_caseselector"] + "']"
                     )
                     if field is not None:
@@ -238,12 +240,12 @@ class FormDetails(PrivateView):
                                 form_data["form_caseselector"], new_create_file
                             ),
                         )
-                else:
-                    log.error("Main table was not found in {}".format(new_create_file))
-                    return (
-                        False,
-                        "Main table was not found in {}".format(new_create_file),
-                    )
+                # else:
+                #     log.error("Main table was not found in {}".format(new_create_file))
+                #     return (
+                #         False,
+                #         "Main table was not found in {}".format(new_create_file),
+                #     )
 
             merged, output = merge_versions(
                 self.request,

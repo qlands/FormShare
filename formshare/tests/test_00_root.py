@@ -861,6 +861,15 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" in res.headers
 
+            # Add a collaborato to an project that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/collaborators".format(
+                    self.randonLogin, "not_exist_project"
+                ),
+                {"add_collaborator": "", "collaborator": self.collaboratorLogin},
+                status=404,
+            )
+
             # Add a collaborator succeed
             res = self.testapp.post(
                 "/user/{}/project/{}/collaborators".format(
@@ -7482,7 +7491,7 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-        def test_form_merge():
+        def test_form_merge_delete():
             paths = ["resources", "forms", "merge", "A", "A.xls"]
             a_resource_file = os.path.join(self.path, *paths)
 
@@ -7528,8 +7537,123 @@ class FunctionalTests(unittest.TestCase):
 
             time.sleep(60)  # Wait for celery to generate the repository
 
-            # TODO: We need to test forms that cannot merge for different reasons
+            print("Testing merge. Uploading B then deleting it")
 
+            # Upload B***********************************************
+
+            paths = ["resources", "forms", "merge", "B", "B.xls"]
+            b_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/merge".format(
+                    self.randonLogin, self.project, "tormenta20201105"
+                ),
+                {
+                    "for_merging": "",
+                    "parent_project": self.projectID,
+                    "parent_form": "tormenta20201105",
+                },
+                status=302,
+                upload_files=[("xlsx", b_resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, "tormenta20201117"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"Merge check pending" in res.body)
+
+            paths = ["resources", "forms", "merge", "B", "cantones.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, self.project, "tormenta20201117"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            paths = ["resources", "forms", "merge", "B", "distritos.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, self.project, "tormenta20201117"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, "tormenta20201117"
+                ),
+                status=200,
+            )
+            self.assertFalse(b"Merge check pending" in res.body)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/delete".format(
+                    self.randonLogin, self.project, "tormenta20201117"
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+        def test_form_merge():
+            # paths = ["resources", "forms", "merge", "A", "A.xls"]
+            # a_resource_file = os.path.join(self.path, *paths)
+            #
+            # res = self.testapp.post(
+            #     "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+            #     {"form_pkey": "numero_de_cedula"},
+            #     status=302,
+            #     upload_files=[("xlsx", a_resource_file)],
+            # )
+            # assert "FS_error" not in res.headers
+            #
+            # paths = ["resources", "forms", "merge", "A", "cantones.csv"]
+            # resource_file = os.path.join(self.path, *paths)
+            # res = self.testapp.post(
+            #     "/user/{}/project/{}/form/{}/upload".format(
+            #         self.randonLogin, self.project, "tormenta20201105"
+            #     ),
+            #     status=302,
+            #     upload_files=[("filetoupload", resource_file)],
+            # )
+            # assert "FS_error" not in res.headers
+            #
+            # paths = ["resources", "forms", "merge", "A", "distritos.csv"]
+            # resource_file = os.path.join(self.path, *paths)
+            # res = self.testapp.post(
+            #     "/user/{}/project/{}/form/{}/upload".format(
+            #         self.randonLogin, self.project, "tormenta20201105"
+            #     ),
+            #     status=302,
+            #     upload_files=[("filetoupload", resource_file)],
+            # )
+            # assert "FS_error" not in res.headers
+            #
+            # # Generate the repository using celery
+            # res = self.testapp.post(
+            #     "/user/{}/project/{}/form/{}/repository/create".format(
+            #         self.randonLogin, self.project, "tormenta20201105"
+            #     ),
+            #     {"form_pkey": "numero_de_cedula", "start_stage1": ""},
+            #     status=302,
+            # )
+            # assert "FS_error" not in res.headers
+            #
+            # time.sleep(60)  # Wait for celery to generate the repository
+            #
+            # # TODO: We need to test forms that cannot merge for different reasons
+            #
             # Upload B***********************************************
 
             paths = ["resources", "forms", "merge", "B", "B.xls"]
@@ -8963,6 +9087,20 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # We add a project to collaborator 3
+            res = self.testapp.post(
+                "/user/{}/projects/add".format(collaborator_3),
+                {
+                    "project_code": "test001",
+                    "project_name": "Test project",
+                    "project_abstract": "",
+                    "project_icon": "😁",
+                    "project_hexcolor": "#9bbb59",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
             self.testapp.get("/logout", status=302)
 
             # Collaborator 1 login
@@ -9015,6 +9153,18 @@ class FunctionalTests(unittest.TestCase):
                 status=404,
             )
 
+            # Collaborator 3 tries to add collaborator 2. Goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/collaborators".format(
+                    self.randonLogin, self.project
+                ),
+                {"add_collaborator": "", "collaborator": collaborator_2},
+                status=404,
+            )
+
+            # Collaborator 3 tries to go to dashboard of collaborator 1
+            self.testapp.get("/user/{}".format(collaborator_1), status=404)
+
             self.testapp.get("/logout", status=302)
 
             # Collaborator 2 login
@@ -9023,6 +9173,10 @@ class FunctionalTests(unittest.TestCase):
                 {"user": "", "email": collaborator_2, "passwd": "123"},
                 status=302,
             )
+            assert "FS_error" not in res.headers
+
+            # Collaborator 2 goes to dashboard of collaborator 1
+            res = self.testapp.get("/user/{}".format(collaborator_1), status=200)
             assert "FS_error" not in res.headers
 
             # Collaborator remove itself as collaborator
@@ -13236,6 +13390,8 @@ class FunctionalTests(unittest.TestCase):
         test_one_user_assistant()
         print("Testing five collaborators")
         test_five_collaborators()
+        print("Testing merge then delete")
+        test_form_merge_delete()
         print("Testing merge")
         test_form_merge()
         print("Testing merge code 1")

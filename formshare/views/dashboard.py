@@ -46,7 +46,6 @@ class UserDashBoardView(DashboardView):
                     else:
                         project_data["user_collaborates"] = False
             if not project_found:
-                print("Here2! :-(")
                 raise HTTPNotFound
 
             assistants, more_assistants = get_project_assistants(

@@ -122,6 +122,7 @@ Thumbs.db:encryptable
 
 # Settings
 development.ini
+development.ini.*
 production.ini
 alembic.ini
 formshare.ini

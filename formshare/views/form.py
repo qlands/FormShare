@@ -1104,7 +1104,7 @@ class EditForm(PrivateView):
         project_code = self.request.matchdict["projcode"]
         form_id = self.request.matchdict["formid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        if self.activeProject["project_id"] == project_id:
+        if self.activeProject.get("project_id",None) == project_id:
             self.set_active_menu("assistants")
         else:
             self.set_active_menu("projects")
@@ -1166,7 +1166,7 @@ class DeleteForm(PrivateView):
         project_code = self.request.matchdict["projcode"]
         form_id = self.request.matchdict["formid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        if self.activeProject["project_id"] == project_id:
+        if self.activeProject.get("project_id", None) == project_id:
             self.set_active_menu("assistants")
         else:
             self.set_active_menu("projects")
@@ -1293,7 +1293,7 @@ class ActivateForm(PrivateView):
         project_code = self.request.matchdict["projcode"]
         form_id = self.request.matchdict["formid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        if self.activeProject["project_id"] == project_id:
+        if self.activeProject.get("project_id", None) == project_id:
             self.set_active_menu("assistants")
         else:
             self.set_active_menu("projects")
@@ -1346,7 +1346,7 @@ class DeActivateForm(PrivateView):
         project_code = self.request.matchdict["projcode"]
         form_id = self.request.matchdict["formid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        if self.activeProject["project_id"] == project_id:
+        if self.activeProject.get("project_id", None) == project_id:
             self.set_active_menu("assistants")
         else:
             self.set_active_menu("projects")
@@ -2751,7 +2751,7 @@ class StopTask(PrivateView):
         form_id = self.request.matchdict["formid"]
         task_id = self.request.matchdict["taskid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        if self.activeProject["project_id"] == project_id:
+        if self.activeProject.get("project_id", None) == project_id:
             self.set_active_menu("assistants")
         else:
             self.set_active_menu("projects")
@@ -2958,7 +2958,7 @@ class CaseLookUpTable(PrivateView):
         user_id = self.request.matchdict["userid"]
         project_code = self.request.matchdict["projcode"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        if self.activeProject["project_id"] == project_id:
+        if self.activeProject.get("project_id", None) == project_id:
             self.set_active_menu("assistants")
         else:
             self.set_active_menu("projects")

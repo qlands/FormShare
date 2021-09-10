@@ -139,6 +139,7 @@ class FunctionalTests(unittest.TestCase):
         self.path = os.path.dirname(os.path.abspath(__file__))
         self.working_dir = working_dir
         self.partner = ""
+        self.case_project_id = ""
 
     def test_all(self):
         def test_root():
@@ -1590,10 +1591,16 @@ class FunctionalTests(unittest.TestCase):
                 upload_files=[("xlsx", resource_file)],
             )
 
+            # Upload a form with a get goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                status=404,
+            )
+
             # Upload a form a succeeds
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
-                {"form_pkey": "hid"},
+                {"form_pkey": "hid", "form_target": ""},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -1778,10 +1785,38 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" in res.headers
 
-            # Update a form a succeeds
             paths = ["resources", "forms", "form08_OK.xlsx"]
             resource_file = os.path.join(self.path, *paths)
 
+            # Update to a project that does not exists fails
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, "not_exist_project", "justtest"
+                ),
+                {"form_pkey": "hid"},
+                status=404,
+                upload_files=[("xlsx", resource_file)],
+            )
+
+            # Update a form with get goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                status=404,
+            )
+
+            # Update a form without pkey fails
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Update a form a succeeds
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/updateodk".format(
                     self.randonLogin, self.project, "Justtest"
@@ -1792,6 +1827,22 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Edit a form for a project that does not exists goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/edit".format(
+                    self.randonLogin, "project_not_exist", "Justtest"
+                ),
+                status=404,
+            )
+
+            # Edit a form that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/edit".format(
+                    self.randonLogin, self.project, "justtest_dont_exist"
+                ),
+                status=404,
+            )
+
             # Edit a form. Show details
             res = self.testapp.get(
                 "/user/{}/project/{}/form/{}/edit".format(
@@ -1801,12 +1852,22 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            # Edit a form.
+            # Edit a form. Without form_accsub
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/edit".format(
                     self.randonLogin, self.project, "Justtest"
                 ),
                 {"form_target": "100", "form_hexcolor": "#663f3c"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Edit a form. With form_accsub
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/edit".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                {"form_target": "100", "form_hexcolor": "#663f3c", "form_accsub": ""},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -1819,6 +1880,30 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            # Delete the form of a project that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/delete".format(
+                    self.randonLogin, "project_not_exist", "Justtest"
+                ),
+                status=404,
+            )
+
+            # Delete a form that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/delete".format(
+                    self.randonLogin, self.project, "not_exists_justtest"
+                ),
+                status=404,
+            )
+
+            # Delete the form with get goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/delete".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                status=404,
+            )
 
             # Delete the form
             res = self.testapp.post(
@@ -7592,6 +7677,24 @@ class FunctionalTests(unittest.TestCase):
             time.sleep(60)  # Wait for celery to generate the repository
 
         def test_form_merge_check_errors():
+            # Check upload form for merge is bad
+            paths = ["resources", "forms", "merge", "B", "B_bad.xls"]
+            b_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/merge".format(
+                    self.randonLogin, self.project, "tormenta20201105"
+                ),
+                {
+                    "for_merging": "",
+                    "parent_project": self.projectID,
+                    "parent_form": "tormenta20201105",
+                },
+                status=302,
+                upload_files=[("xlsx", b_resource_file)],
+            )
+            assert "FS_error" in res.headers
+
             # Check table not the same
             paths = ["resources", "forms", "merge", "B", "B_TNS.xls"]
             b_resource_file = os.path.join(self.path, *paths)
@@ -10464,6 +10567,34 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            paths = ["resources", "forms", "form08_OK.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            # Updates a form to a project that does not has access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {"form_pkey": "hid"},
+                status=404,
+                upload_files=[("xlsx", resource_file)],
+            )
+
+            # Edit a form for a project that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/edit".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Delete the form of a project that does not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/delete".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
             # The user don't have access to such project
             self.testapp.get(
                 "/user/{}/project/{}/groups".format(self.randonLogin, self.project),
@@ -10603,6 +10734,44 @@ class FunctionalTests(unittest.TestCase):
                 status=404,
             )
 
+            # The user don't have access to add a form to the project
+            paths = ["resources", "forms", "form08_OK.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            #  Upload a form to a project that does not has access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "hid"},
+                status=404,
+                upload_files=[("xlsx", resource_file)],
+            )
+
+            # Updates a form to a project that does not has access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {"form_pkey": "hid"},
+                status=404,
+                upload_files=[("xlsx", resource_file)],
+            )
+
+            # Edit a form for a project that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/edit".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Delete the form of a project that does not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/delete".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
             # The user don have credentials for looking at assistants
             self.testapp.get(
                 "/user/{}/project/{}/assistants".format(self.randonLogin, self.project),
@@ -10688,9 +10857,10 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-        def test_case_management():
+        def test_case_management_start():
             # Add a project succeed.
             case_project_id = str(uuid.uuid4())
+            self.case_project_id = case_project_id
             res = self.testapp.post(
                 "/user/{}/projects/add".format(self.randonLogin),
                 {
@@ -10833,6 +11003,36 @@ class FunctionalTests(unittest.TestCase):
             )
             self.assertIn(b"Case creator", res.body)
 
+            # Delete the case form
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/delete".format(
+                    self.randonLogin, "case001", "case_start_20210311"
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+        def test_case_management():
+            # Upload a case creator pass.
+            paths = ["resources", "forms", "case", "case_start.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, "case001"),
+                {"form_pkey": "hid", "form_caselabel": "fname"},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of the form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, "case001", "case_start_20210311"
+                ),
+                status=200,
+            )
+            self.assertIn(b"Case creator", res.body)
+
             # Edit a project. Get details. Cannot change project type
             res = self.testapp.get(
                 "/user/{}/project/{}/edit".format(self.randonLogin, "case001"),
@@ -10856,7 +11056,7 @@ class FunctionalTests(unittest.TestCase):
                     self.randonLogin, "case001", "case_start_20210311"
                 ),
                 {
-                    "coll_id": "{}|{}".format(case_project_id, "caseassistant001"),
+                    "coll_id": "{}|{}".format(self.case_project_id, "caseassistant001"),
                     "coll_privileges": "1",
                 },
                 status=302,
@@ -11188,7 +11388,7 @@ class FunctionalTests(unittest.TestCase):
                     self.randonLogin, "case001", "case_follow_up_20210319"
                 ),
                 {
-                    "coll_id": "{}|{}".format(case_project_id, "caseassistant001"),
+                    "coll_id": "{}|{}".format(self.case_project_id, "caseassistant001"),
                     "coll_privileges": "1",
                 },
                 status=302,
@@ -11547,7 +11747,7 @@ class FunctionalTests(unittest.TestCase):
                     self.randonLogin, "case001", "case_deactivate_20210331"
                 ),
                 {
-                    "coll_id": "{}|{}".format(case_project_id, "caseassistant001"),
+                    "coll_id": "{}|{}".format(self.case_project_id, "caseassistant001"),
                     "coll_privileges": "1",
                 },
                 status=302,
@@ -11651,7 +11851,7 @@ class FunctionalTests(unittest.TestCase):
             self.assertNotIn(b"[Manage errors]", res.body)
 
             creator_details = get_form_details(
-                self.server_config, case_project_id, "case_start_20210311"
+                self.server_config, self.case_project_id, "case_start_20210311"
             )
             creator_schema = creator_details["form_schema"]
             engine = create_engine(
@@ -11696,7 +11896,7 @@ class FunctionalTests(unittest.TestCase):
                     self.randonLogin, "case001", "case_activate_20210331"
                 ),
                 {
-                    "coll_id": "{}|{}".format(case_project_id, "caseassistant001"),
+                    "coll_id": "{}|{}".format(self.case_project_id, "caseassistant001"),
                     "coll_privileges": "1",
                 },
                 status=302,
@@ -11800,7 +12000,7 @@ class FunctionalTests(unittest.TestCase):
             self.assertNotIn(b"[Manage errors]", res.body)
 
             creator_details = get_form_details(
-                self.server_config, case_project_id, "case_start_20210311"
+                self.server_config, self.case_project_id, "case_start_20210311"
             )
             creator_schema = creator_details["form_schema"]
             engine = create_engine(
@@ -11862,7 +12062,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "for_merging": "",
-                    "parent_project": case_project_id,
+                    "parent_project": self.case_project_id,
                     "parent_form": "case_start_20210311",
                 },
                 status=302,
@@ -11876,7 +12076,7 @@ class FunctionalTests(unittest.TestCase):
                     self.randonLogin, "case001", "case_start_20210331"
                 ),
                 {
-                    "coll_id": "{}|{}".format(case_project_id, "caseassistant001"),
+                    "coll_id": "{}|{}".format(self.case_project_id, "caseassistant001"),
                     "coll_privileges": "1",
                 },
                 status=302,
@@ -12032,7 +12232,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "for_merging": "",
-                    "parent_project": case_project_id,
+                    "parent_project": self.case_project_id,
                     "parent_form": "case_deactivate_20210331",
                 },
                 status=302,
@@ -12046,7 +12246,7 @@ class FunctionalTests(unittest.TestCase):
                     self.randonLogin, "case001", "case_deactivate_20210401"
                 ),
                 {
-                    "coll_id": "{}|{}".format(case_project_id, "caseassistant001"),
+                    "coll_id": "{}|{}".format(self.case_project_id, "caseassistant001"),
                     "coll_privileges": "1",
                 },
                 status=302,
@@ -12237,7 +12437,7 @@ class FunctionalTests(unittest.TestCase):
                     self.randonLogin, "case001", "case_follow_up_barcode_20210428"
                 ),
                 {
-                    "coll_id": "{}|{}".format(case_project_id, "caseassistant001"),
+                    "coll_id": "{}|{}".format(self.case_project_id, "caseassistant001"),
                     "coll_privileges": "1",
                 },
                 status=302,
@@ -13643,6 +13843,8 @@ class FunctionalTests(unittest.TestCase):
         test_form_merge_mimic2()
         print("Testing merge code 3")
         test_form_merge_mimic3()
+        print("Testing case management - head")
+        test_case_management_start()
         print("Testing case management")
         test_case_management()
         print("Testing assistant group access")

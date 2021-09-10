@@ -135,7 +135,8 @@ class RepositoryMergeForm(PrivateView):
                                         )
                                     )
                                 )
-                            if error_code == "TWP":
+                            if error_code == "TWP":  # pragma: no cover
+                                #  We leave it here just in case.. TWP might not be possible.
                                 error_type = 2
                                 table_name = a_error.get("table")
                                 c_from = a_error.get("from")

@@ -1579,10 +1579,18 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" in res.headers
 
-            # Upload a form a succeeds
             paths = ["resources", "forms", "form08_OK.xlsx"]
             resource_file = os.path.join(self.path, *paths)
 
+            #  Upload a form to a project that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, "not_exist"),
+                {"form_pkey": "hid"},
+                status=404,
+                upload_files=[("xlsx", resource_file)],
+            )
+
+            # Upload a form a succeeds
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
                 {"form_pkey": "hid"},
@@ -1609,6 +1617,22 @@ class FunctionalTests(unittest.TestCase):
                     self.randonLogin, self.project, "Justtest"
                 ),
                 status=200,
+            )
+
+            # Get the details of a form of a project that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, "not_exist_project", "Justtest"
+                ),
+                status=404,
+            )
+
+            # Get the details of a form that does not exist
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, "justtest_not_exist"
+                ),
+                status=404,
             )
 
             # Edit a project. Get details with a form
@@ -2259,8 +2283,8 @@ class FunctionalTests(unittest.TestCase):
             )
             self.assertTrue(b"Repository check pending" in res.body)
 
-            # Uploads a file to the form
-            paths = ["resources", "forms", "complex_form", "cantones.csv"]
+            # Uploads a bad file to the form
+            paths = ["resources", "forms", "complex_form", "bad_csv", "cantones.csv"]
             resource_file = os.path.join(self.path, *paths)
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/upload".format(
@@ -2273,6 +2297,36 @@ class FunctionalTests(unittest.TestCase):
 
             # Uploads a file to the form
             paths = ["resources", "forms", "complex_form", "distritos.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+            self.assertIn(b"This form cannot create a repository", res.body)
+
+            # Remove a support file
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/uploads/{}/remove".format(
+                    self.randonLogin, self.project, self.formID, "cantones.csv"
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Uploads a file to the form
+            paths = ["resources", "forms", "complex_form", "cantones.csv"]
             resource_file = os.path.join(self.path, *paths)
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/upload".format(
@@ -7491,7 +7545,7 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-        def test_form_merge_delete():
+        def test_form_merge_start():
             paths = ["resources", "forms", "merge", "A", "A.xls"]
             a_resource_file = os.path.join(self.path, *paths)
 
@@ -7537,10 +7591,176 @@ class FunctionalTests(unittest.TestCase):
 
             time.sleep(60)  # Wait for celery to generate the repository
 
-            print("Testing merge. Uploading B then deleting it")
+        def test_form_merge_check_errors():
+            # Check table not the same
+            paths = ["resources", "forms", "merge", "B", "B_TNS.xls"]
+            b_resource_file = os.path.join(self.path, *paths)
 
-            # Upload B***********************************************
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/merge".format(
+                    self.randonLogin, self.project, "tormenta20201105"
+                ),
+                {
+                    "for_merging": "",
+                    "parent_project": self.projectID,
+                    "parent_form": "tormenta20201105",
+                },
+                status=302,
+                upload_files=[("xlsx", b_resource_file)],
+            )
+            assert "FS_error" not in res.headers
 
+            paths = ["resources", "forms", "merge", "B", "cantones.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, self.project, "tormenta20201117"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            paths = ["resources", "forms", "merge", "B", "distritos.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, self.project, "tormenta20201117"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, "tormenta20201117"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"Unable to merge" in res.body)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/delete".format(
+                    self.randonLogin, self.project, "tormenta20201117"
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            #  Checks for field not the same
+            paths = ["resources", "forms", "merge", "B", "B_FNS.xls"]
+            b_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/merge".format(
+                    self.randonLogin, self.project, "tormenta20201105"
+                ),
+                {
+                    "for_merging": "",
+                    "parent_project": self.projectID,
+                    "parent_form": "tormenta20201105",
+                },
+                status=302,
+                upload_files=[("xlsx", b_resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            paths = ["resources", "forms", "merge", "B", "cantones.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, self.project, "tormenta20201117"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            paths = ["resources", "forms", "merge", "B", "distritos.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, self.project, "tormenta20201117"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, "tormenta20201117"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"Unable to merge" in res.body)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/delete".format(
+                    self.randonLogin, self.project, "tormenta20201117"
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            #  Checks for relation not the same
+            paths = ["resources", "forms", "merge", "B", "B_RNS.xls"]
+            b_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/merge".format(
+                    self.randonLogin, self.project, "tormenta20201105"
+                ),
+                {
+                    "for_merging": "",
+                    "parent_project": self.projectID,
+                    "parent_form": "tormenta20201105",
+                },
+                status=302,
+                upload_files=[("xlsx", b_resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            paths = ["resources", "forms", "merge", "B", "cantones.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, self.project, "tormenta20201117"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            paths = ["resources", "forms", "merge", "B", "distritos.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, self.project, "tormenta20201117"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, "tormenta20201117"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"Unable to merge" in res.body)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/delete".format(
+                    self.randonLogin, self.project, "tormenta20201117"
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+        def test_form_merge_delete():
             paths = ["resources", "forms", "merge", "B", "B.xls"]
             b_resource_file = os.path.join(self.path, *paths)
 
@@ -9100,6 +9320,25 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            # Get the details of a form in a project that does not belong to him
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            paths = ["resources", "forms", "form08_OK.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            #  Upload a form to a project that does not belong to it goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "hid"},
+                status=404,
+                upload_files=[("xlsx", resource_file)],
+            )
 
             self.testapp.get("/logout", status=302)
 
@@ -13390,6 +13629,10 @@ class FunctionalTests(unittest.TestCase):
         test_one_user_assistant()
         print("Testing five collaborators")
         test_five_collaborators()
+        print("Test form merge. Add head")
+        test_form_merge_start()
+        print("Test form merge erros")
+        test_form_merge_check_errors()
         print("Testing merge then delete")
         test_form_merge_delete()
         print("Testing merge")

@@ -228,7 +228,8 @@ class FormDetails(PrivateView):
                             xml_declaration=True,
                             encoding="utf-8",
                         )
-                    else:
+                    else:  # pragma: no cover
+                        #  This might not be possible to happen. Left here just in case
                         log.error(
                             "The selector field {} was not found in {}".format(
                                 form_data["form_caseselector"], new_create_file
@@ -236,16 +237,17 @@ class FormDetails(PrivateView):
                         )
                         return (
                             False,
-                            "The selector field {} was not found in {}".format(
-                                form_data["form_caseselector"], new_create_file
+                            "The case selector field {} was not found in the ODK form".format(
+                                form_data["form_caseselector"]
                             ),
                         )
-                # else:
-                #     log.error("Main table was not found in {}".format(new_create_file))
-                #     return (
-                #         False,
-                #         "Main table was not found in {}".format(new_create_file),
-                #     )
+                else:  # pragma: no cover
+                    #  This might not be possible to happen. Left here just in case
+                    log.error("Main table was not found in {}".format(new_create_file))
+                    return (
+                        False,
+                        "Main table was not found in {}".format(new_create_file),
+                    )
 
             merged, output = merge_versions(
                 self.request,
@@ -265,9 +267,11 @@ class FormDetails(PrivateView):
                     root = etree.fromstring(output)
                     xml_errors = root.findall(".//error")
                     if xml_errors:
+                        fatal_error = False
                         for a_error in xml_errors:
                             error_code = a_error.get("code")
                             if error_code == "TNS":
+                                fatal_error = True
                                 table_name = a_error.get("table")
                                 c_from = a_error.get("from")
                                 c_to = a_error.get("to")
@@ -279,7 +283,9 @@ class FormDetails(PrivateView):
                                         )
                                     )
                                 )
-                            if error_code == "TWP":
+                            if error_code == "TWP":  # pragma: no cover
+                                #  We leave it here just in case.. TWP might not be possible.
+                                fatal_error = True
                                 table_name = a_error.get("table")
                                 c_from = a_error.get("from")
                                 errors.append(
@@ -291,6 +297,7 @@ class FormDetails(PrivateView):
                                     )
                                 )
                             if error_code == "FNS":
+                                fatal_error = True
                                 table_name = a_error.get("table")
                                 field_name = a_error.get("field")
                                 errors.append(
@@ -301,13 +308,8 @@ class FormDetails(PrivateView):
                                         )
                                     )
                                 )
-                            if error_code == "VNS":
-                                form_data = {"form_abletomerge": 1}
-                                update_form(
-                                    self.request, project_id, new_form_id, form_data
-                                )
-                                return True, ""
                             if error_code == "RNS":
+                                fatal_error = True
                                 table_name = a_error.get("table")
                                 field_code = a_error.get("field")
                                 errors.append(
@@ -318,6 +320,12 @@ class FormDetails(PrivateView):
                                         )
                                     )
                                 )
+                        if not fatal_error:
+                            form_data = {"form_abletomerge": 1}
+                            update_form(
+                                self.request, project_id, new_form_id, form_data
+                            )
+                            return True, ""
                 except Exception as e:
                     send_error_to_technical_team(
                         self.request,
@@ -332,7 +340,8 @@ class FormDetails(PrivateView):
                             "they will contact you ASAP."
                         )
                     )
-        else:
+        else:  # pragma: no cover
+            # This might not happen. Left here just in case
             if created == 1:
                 # Internal error: Report issue
                 self.report_critical_error(
@@ -569,13 +578,10 @@ class FormDetails(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] > 4:
-            raise HTTPNotFound
-
         form_data = get_form_details(self.request, user_id, project_id, form_id)
         if form_data is not None:
             if form_data["form_schema"] is not None:
-                if form_data["form_hasdictionary"] == 0:
+                if form_data["form_hasdictionary"] == 0:  # pragma: no cover
                     updated = update_dictionary_tables(
                         self.request, project_id, form_id
                     )
@@ -584,10 +590,9 @@ class FormDetails(PrivateView):
                         update_form(self.request, project_id, form_id, form_dict_data)
 
             form_files = get_form_files(self.request, project_id, form_id)
-            if self.user is not None:
-                assistants = get_all_assistants(self.request, user_id, project_id)
-            else:
-                assistants = []
+
+            assistants = get_all_assistants(self.request, user_id, project_id)
+
             form_assistants = get_form_assistants(self.request, project_id, form_id)
             groups = get_project_groups(self.request, project_id)
             form_groups = get_form_groups(self.request, project_id, form_id)

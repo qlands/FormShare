@@ -1872,6 +1872,30 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Activate a form of a project that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/activate".format(
+                    self.randonLogin, "not_exist_project", "Justtest"
+                ),
+                status=404,
+            )
+
+            # Activate a form that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/activate".format(
+                    self.randonLogin, self.project, "justtest_not_exist"
+                ),
+                status=404,
+            )
+
+            # Activate using get goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/activate".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                status=404,
+            )
+
             # Set form as active
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/activate".format(
@@ -1926,6 +1950,30 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Set form as inactive of a project that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/deactivate".format(
+                    self.randonLogin, "not_exist_project", "Justtest"
+                ),
+                status=404,
+            )
+
+            # Set form as inactive of a form that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/deactivate".format(
+                    self.randonLogin, self.project, "justtest_not_exist"
+                ),
+                status=404,
+            )
+
+            # Set form as inactive of a form using get goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/deactivate".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                status=404,
+            )
+
             # Set form as inactive
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/deactivate".format(
@@ -1935,7 +1983,7 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            # Set form as inactive
+            # Set form as active
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/activate".format(
                     self.randonLogin, self.project, "Justtest"
@@ -1944,9 +1992,36 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            # Uploads a file to the form
             paths = ["resources", "test1.dat"]
             resource_file = os.path.join(self.path, *paths)
+
+            # Upload a file to a project that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, "test001_not_exist", "Justtest"
+                ),
+                status=404,
+                upload_files=[("filetoupload", resource_file)],
+            )
+
+            # Upload a file to a form that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, "test001", "justtest_not_exist"
+                ),
+                status=404,
+                upload_files=[("filetoupload", resource_file)],
+            )
+
+            # Upload a file to a form using get goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, "test001", "Justtest"
+                ),
+                status=404,
+            )
+
+            # Uploads a file to the form
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/upload".format(
                     self.randonLogin, "test001", "Justtest"
@@ -1980,6 +2055,58 @@ class FunctionalTests(unittest.TestCase):
                 upload_files=[("filetoupload", resource_file)],
             )
             assert "FS_error" not in res.headers
+
+            # Overwrites the same files to the form
+            paths = ["resources", "test1.dat"]
+            resource_file = os.path.join(self.path, *paths)
+
+            paths = ["resources", "test2.dat"]
+            resource_file_2 = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, "test001", "Justtest"
+                ),
+                {"overwrite": ""},
+                status=302,
+                upload_files=[
+                    ("filetoupload", resource_file),
+                    ("filetoupload", resource_file_2),
+                ],
+            )
+            assert "FS_error" not in res.headers
+
+            # Removes a file from a project that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/uploads/{}/remove".format(
+                    self.randonLogin, "project_not_exist", "Justtest", "test1.dat"
+                ),
+                status=404,
+            )
+
+            # Removes a file from a form that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/uploads/{}/remove".format(
+                    self.randonLogin, "test001", "form_not_exist", "test1.dat"
+                ),
+                status=404,
+            )
+
+            # Removes a file from a form that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/uploads/{}/remove".format(
+                    self.randonLogin, "test001", "Justtest", "not_exist.dat"
+                ),
+                status=404,
+            )
+
+            # Removes a file using get goes to get
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/uploads/{}/remove".format(
+                    self.randonLogin, "test001", "Justtest", "test1.dat"
+                ),
+                status=404,
+            )
 
             # Removes a file from a form
             res = self.testapp.post(
@@ -10579,6 +10706,41 @@ class FunctionalTests(unittest.TestCase):
                 upload_files=[("xlsx", resource_file)],
             )
 
+            # Activate a form that does not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/activate".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Set form as inactive in a project that don't have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/deactivate".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Upload a file to a project that does have access goes to 404
+            paths = ["resources", "test1.dat"]
+            resource_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+                upload_files=[("filetoupload", resource_file)],
+            )
+
+            # Removes a file from a form in a project that des not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/uploads/{}/remove".format(
+                    self.randonLogin, self.project, self.formID, "distritos.csv"
+                ),
+                status=404,
+            )
+
             # Edit a form for a project that does not have access goes to 404
             self.testapp.get(
                 "/user/{}/project/{}/form/{}/edit".format(
@@ -10727,6 +10889,41 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            # Activate a form that does not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/activate".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Set form as inactive in a project that don't have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/deactivate".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Upload a file to a project that does have access goes to 404
+            paths = ["resources", "test1.dat"]
+            resource_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+                upload_files=[("filetoupload", resource_file)],
+            )
+
+            # Removes a file from a form in a project that des not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/uploads/{}/remove".format(
+                    self.randonLogin, self.project, self.formID, "distritos.csv"
+                ),
+                status=404,
+            )
 
             # The user don't have access to add a group in project project
             self.testapp.get(
@@ -11176,6 +11373,15 @@ class FunctionalTests(unittest.TestCase):
             )
             self.assertIn(b"Case creator", res.body)
             self.assertIn(b"With repository", res.body)
+
+            # Removes a rquired file fails
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/uploads/{}/remove".format(
+                    self.randonLogin, "case001", "case_start_20210311", "distritos.csv"
+                ),
+                status=302,
+            )
+            assert "FS_error" in res.headers
 
             # Get details of the project
             res = self.testapp.get(

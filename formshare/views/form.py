@@ -8,7 +8,7 @@ import re
 import shutil
 import uuid
 from hashlib import md5
-from datetime import datetime
+
 from lxml import etree
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from pyramid.response import FileResponse
@@ -24,6 +24,7 @@ from formshare.processes.db import (
     add_file_to_form,
     get_form_files,
     remove_file_from_form,
+    form_file_exists,
     get_all_assistants,
     add_assistant_to_form,
     get_form_assistants,
@@ -1104,7 +1105,7 @@ class EditForm(PrivateView):
         project_code = self.request.matchdict["projcode"]
         form_id = self.request.matchdict["formid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        if self.activeProject.get("project_id",None) == project_id:
+        if self.activeProject.get("project_id", None) == project_id:
             self.set_active_menu("assistants")
         else:
             self.set_active_menu("projects")
@@ -1557,6 +1558,9 @@ class RemoveFileFromForm(PrivateView):
 
         form_data = get_form_data(self.request, project_id, form_id)
         if form_data is None:
+            raise HTTPNotFound
+
+        if not form_file_exists(self.request, project_id, form_id, file_name):
             raise HTTPNotFound
 
         if self.request.method == "POST":
@@ -3117,10 +3121,10 @@ class AddPartnerToForm(PrivateView):
                     access_to = None
                     if partner_data["time_bound"]:
                         try:
-                            access_from = datetime.strptime(
+                            access_from = datetime.datetime.strptime(
                                 partner_data["access_from"], "%Y-%m-%d"
                             )
-                            access_to = datetime.strptime(
+                            access_to = datetime.datetime.strptime(
                                 partner_data["access_to"], "%Y-%m-%d"
                             )
                         except ValueError:
@@ -3151,7 +3155,7 @@ class AddPartnerToForm(PrivateView):
                     partner_data["access_to"] = access_to
                     partner_data["project_id"] = project_id
                     partner_data["form_id"] = form_id
-                    partner_data["access_date"] = datetime.now()
+                    partner_data["access_date"] = datetime.datetime.now()
                     partner_data["granted_by"] = project_details["owner"]
                     added, message = add_partner_to_form(self.request, partner_data)
                     if added:
@@ -3242,10 +3246,12 @@ class EditPartnerFormOptions(PrivateView):
             access_to = None
             if partner_data["time_bound"]:
                 try:
-                    access_from = datetime.strptime(
+                    access_from = datetime.datetime.strptime(
                         partner_data["access_from"], "%Y-%m-%d"
                     )
-                    access_to = datetime.strptime(partner_data["access_to"], "%Y-%m-%d")
+                    access_to = datetime.datetime.strptime(
+                        partner_data["access_to"], "%Y-%m-%d"
+                    )
                 except ValueError:
                     self.add_error(self._("Invalid dates"))
                     next_page = self.request.route_url(

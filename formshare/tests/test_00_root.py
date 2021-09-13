@@ -2837,6 +2837,51 @@ class FunctionalTests(unittest.TestCase):
             )
             self.assertFalse(b"Repository check pending" in res.body)
 
+            # Test getting the forms goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/formList".format(self.randonLogin, "not_exist"),
+                status=404,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            # Deactivate the assistant
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistant/{}/edit".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                {
+                    "coll_prjshare": "",
+                    "coll_id": self.assistantLogin,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Test getting the forms goes to 401 the assistant is not active
+            self.testapp.get(
+                "/user/{}/project/{}/formList".format(self.randonLogin, self.project),
+                status=401,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            # Activate the assistant
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistant/{}/edit".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                {
+                    "coll_prjshare": "",
+                    "coll_active": "1",
+                    "coll_id": self.assistantLogin,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
             # Test getting the forms. Ask for credential
             self.testapp.get(
                 "/user/{}/project/{}/formList".format(self.randonLogin, self.project),
@@ -2851,6 +2896,92 @@ class FunctionalTests(unittest.TestCase):
                     FS_for_testing="true", FS_user_for_testing=self.assistantLogin
                 ),
             )
+
+            # Test Download the form for a project that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/{}/xmlform".format(
+                    self.randonLogin, "not_exist", self.formID
+                ),
+                status=404,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            # Deactivate the assistant
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistant/{}/edit".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                {
+                    "coll_prjshare": "",
+                    "coll_id": self.assistantLogin,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Test Download the form for a deactivated assistant goes to 401
+            self.testapp.get(
+                "/user/{}/project/{}/{}/xmlform".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=401,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            # Activate the assistant
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistant/{}/edit".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                {
+                    "coll_prjshare": "",
+                    "coll_active": "1",
+                    "coll_id": self.assistantLogin,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Remove the assistant from the form
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/remove".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Test Download the form for assistant that does not have the form goes to 401
+            self.testapp.get(
+                "/user/{}/project/{}/{}/xmlform".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=401,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            # Add an assistant to a form succeeds
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
+                    "coll_privileges": "3",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
 
             # Test Download the form.
             self.testapp.get(
@@ -2874,7 +3005,93 @@ class FunctionalTests(unittest.TestCase):
                 ),
             )
 
-            # Get the manifest
+            # Get the manifest of a project that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/{}/manifest".format(
+                    self.randonLogin, "not exist", self.formID
+                ),
+                status=404,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            # Deactivate the assistant
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistant/{}/edit".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                {
+                    "coll_prjshare": "",
+                    "coll_id": self.assistantLogin,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the manifest of an inactive assistant goes to 401
+            self.testapp.get(
+                "/user/{}/project/{}/{}/manifest".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=401,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            # Activate the assistant
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistant/{}/edit".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                {
+                    "coll_prjshare": "",
+                    "coll_active": "1",
+                    "coll_id": self.assistantLogin,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Remove the assistant from the form
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/remove".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the manifest with an assistant that does not have the form goes to 401
+            self.testapp.get(
+                "/user/{}/project/{}/{}/manifest".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=401,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            # Add an assistant to a form succeeds
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
+                    "coll_privileges": "3",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the manifest pass
             self.testapp.get(
                 "/user/{}/project/{}/{}/manifest".format(
                     self.randonLogin, self.project, self.formID
@@ -2884,6 +3101,92 @@ class FunctionalTests(unittest.TestCase):
                     FS_for_testing="true", FS_user_for_testing=self.assistantLogin
                 ),
             )
+
+            # Get the a media file for a project that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/{}/manifest/mediafile/cantones.csv".format(
+                    self.randonLogin, "not_exist", self.formID
+                ),
+                status=404,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            # Deactivate the assistant
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistant/{}/edit".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                {
+                    "coll_prjshare": "",
+                    "coll_id": self.assistantLogin,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the a media file for a deactivated assisstant goes to 401
+            self.testapp.get(
+                "/user/{}/project/{}/{}/manifest/mediafile/cantones.csv".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=401,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            # Activate the assistant
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistant/{}/edit".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                {
+                    "coll_prjshare": "",
+                    "coll_active": "1",
+                    "coll_id": self.assistantLogin,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Remove the assistant from the form
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/remove".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the a media file for an assistant that does not have the form goes to 401
+            self.testapp.get(
+                "/user/{}/project/{}/{}/manifest/mediafile/cantones.csv".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=401,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            # Add an assistant to a form succeeds
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
+                    "coll_privileges": "3",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
 
             # Get the a media file
             self.testapp.get(
@@ -2895,6 +3198,51 @@ class FunctionalTests(unittest.TestCase):
                     FS_for_testing="true", FS_user_for_testing=self.assistantLogin
                 ),
             )
+
+            # Get head submission of a project that does not exist goes to 404
+            self.testapp.head(
+                "/user/{}/project/{}/submission".format(self.randonLogin, "not_exist"),
+                status=404,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            # Deactivate the assistant
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistant/{}/edit".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                {
+                    "coll_prjshare": "",
+                    "coll_id": self.assistantLogin,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Get head submission with an deactivated assistant goes to 401
+            self.testapp.head(
+                "/user/{}/project/{}/submission".format(self.randonLogin, self.project),
+                status=401,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            # Activate the assistant
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistant/{}/edit".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                {
+                    "coll_prjshare": "",
+                    "coll_active": "1",
+                    "coll_id": self.assistantLogin,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
 
             # Get head submission
             self.testapp.head(
@@ -2920,6 +3268,149 @@ class FunctionalTests(unittest.TestCase):
 
             paths = ["resources", "forms", "complex_form", "sample.mp3"]
             sound_file = os.path.join(self.path, *paths)
+
+            # Push to /submission
+            # Push to a project that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/submission".format(self.randonLogin, "not exist"),
+                status=404,
+                upload_files=[
+                    ("filetoupload", submission_file),
+                    ("image", image_file),
+                    ("sound", sound_file),
+                ],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            # Push using get goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/submission".format(self.randonLogin, self.project),
+                status=404,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            # Deactivate the assistant
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistant/{}/edit".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                {
+                    "coll_prjshare": "",
+                    "coll_id": self.assistantLogin,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Push with inactive assistant goes to 401
+            self.testapp.post(
+                "/user/{}/project/{}/submission".format(self.randonLogin, self.project),
+                status=401,
+                upload_files=[
+                    ("filetoupload", submission_file),
+                    ("image", image_file),
+                    ("sound", sound_file),
+                ],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            # Activate the assistant
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistant/{}/edit".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                {
+                    "coll_prjshare": "",
+                    "coll_active": "1",
+                    "coll_id": self.assistantLogin,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.post(
+                "/user/{}/project/{}/submission".format(self.randonLogin, self.project),
+                status=201,
+                upload_files=[
+                    ("filetoupload", submission_file),
+                    ("image", image_file),
+                    ("sound", sound_file),
+                ],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            # Push to /push
+            # Push to a project that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, "not exist"),
+                status=404,
+                upload_files=[
+                    ("filetoupload", submission_file),
+                    ("image", image_file),
+                    ("sound", sound_file),
+                ],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            # Push using get goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/push".format(self.randonLogin, self.project),
+                status=404,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            # Deactivate the assistant
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistant/{}/edit".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                {
+                    "coll_prjshare": "",
+                    "coll_id": self.assistantLogin,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Push with inactive assistant goes to 401
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, self.project),
+                status=401,
+                upload_files=[
+                    ("filetoupload", submission_file),
+                    ("image", image_file),
+                    ("sound", sound_file),
+                ],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            # Activate the assistant
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistant/{}/edit".format(
+                    self.randonLogin, self.project, self.assistantLogin
+                ),
+                {
+                    "coll_prjshare": "",
+                    "coll_active": "1",
+                    "coll_id": self.assistantLogin,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
 
             self.testapp.post(
                 "/user/{}/project/{}/push".format(self.randonLogin, self.project),

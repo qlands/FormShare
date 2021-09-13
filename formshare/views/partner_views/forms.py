@@ -193,6 +193,8 @@ class PartnerGetSubMissionInfo(PartnerView):
                     raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
 
         fields, checked = get_fields_from_table(
             self.request, project_id, form_id, "maintable", [], False

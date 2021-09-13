@@ -2129,6 +2129,30 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Gets a file of a project that does not exits goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/uploads/{}/retrieve".format(
+                    self.randonLogin, "not_exist_project", "Justtest", "test1.dat"
+                ),
+                status=404,
+            )
+
+            # Gets a file of a form that does not exits goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/uploads/{}/retrieve".format(
+                    self.randonLogin, "test001", "not_exist_justtest", "test1.dat"
+                ),
+                status=404,
+            )
+
+            # Gets a file that does not exits goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/uploads/{}/retrieve".format(
+                    self.randonLogin, "test001", "Justtest", "test_not_exist.dat"
+                ),
+                status=404,
+            )
+
             # Gets the file
             res = self.testapp.get(
                 "/user/{}/project/{}/form/{}/uploads/{}/retrieve".format(
@@ -2148,6 +2172,38 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" in res.headers
 
+            # Add assistant to a project that does not exists goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, "project_not_exist", "Justtest"
+                ),
+                {
+                    "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
+                    "coll_privileges": "1",
+                },
+                status=404,
+            )
+
+            # Add assistant to a form that does not exists goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, self.project, "justtest_dont_exist"
+                ),
+                {
+                    "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
+                    "coll_privileges": "1",
+                },
+                status=404,
+            )
+
+            # Add assistant with a get goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                status=404,
+            )
+
             # Add an assistant to a form succeeds
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/assistants/add".format(
@@ -2160,6 +2216,57 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            # Add an assistant again fails
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                {
+                    "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
+                    "coll_privileges": "1",
+                },
+                status=302,
+            )
+            assert "FS_error" in res.headers
+
+            # Edit an assistant of a project the does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    "project_dont_exist",
+                    "Justtest",
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                {"coll_privileges": "3"},
+                status=404,
+            )
+
+            # Edit an assistant of a form the does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    self.project,
+                    "justtest_dont_exist",
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                {"coll_privileges": "3"},
+                status=404,
+            )
+
+            # Edit an assistant with get gees to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    self.project,
+                    "Justtest",
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                status=404,
+            )
 
             # Edit an assistant
             res = self.testapp.post(
@@ -2174,6 +2281,42 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            # Remove assistant of a project that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/remove".format(
+                    self.randonLogin,
+                    "project_dont_exist",
+                    "Justtest",
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                status=404,
+            )
+
+            # Remove assistant of a form that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/remove".format(
+                    self.randonLogin,
+                    self.project,
+                    "justtest_not_exist",
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                status=404,
+            )
+
+            # Remove assistant with get goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/remove".format(
+                    self.randonLogin,
+                    self.project,
+                    "Justtest",
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                status=404,
+            )
 
             # Remove the assistant
             res = self.testapp.post(
@@ -2207,6 +2350,32 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" in res.headers
 
+            # Add a group to a form in a project that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/groups/add".format(
+                    self.randonLogin, "project_dont_exist", "Justtest"
+                ),
+                {"group_id": self.assistantGroupID, "group_privilege": 1},
+                status=404,
+            )
+
+            # Add a group to a form that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/groups/add".format(
+                    self.randonLogin, self.project, "justtest_not_exist"
+                ),
+                {"group_id": self.assistantGroupID, "group_privilege": 1},
+                status=404,
+            )
+
+            # Add a group to a form using get goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/groups/add".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                status=404,
+            )
+
             # Add a group to a form succeeds
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/groups/add".format(
@@ -2216,6 +2385,48 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            # Add a group again fails
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/groups/add".format(
+                    self.randonLogin, self.project, "Justtest"
+                ),
+                {"group_id": self.assistantGroupID, "group_privilege": 1},
+                status=302,
+            )
+            assert "FS_error" in res.headers
+
+            # Edit a group of a project that does not exists goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/group/{}/edit".format(
+                    self.randonLogin,
+                    "project_dont_exist",
+                    "Justtest",
+                    self.assistantGroupID,
+                ),
+                {"group_privilege": 3},
+                status=404,
+            )
+
+            # Edit a group of a form that does not exists goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/group/{}/edit".format(
+                    self.randonLogin,
+                    self.project,
+                    "justtest_not_exist",
+                    self.assistantGroupID,
+                ),
+                {"group_privilege": 3},
+                status=404,
+            )
+
+            # Edit the project with get goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/group/{}/edit".format(
+                    self.randonLogin, self.project, "Justtest", self.assistantGroupID
+                ),
+                status=404,
+            )
 
             # Edit a group
             res = self.testapp.post(
@@ -2227,12 +2438,41 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Delete a group of a project that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/group/{}/remove".format(
+                    self.randonLogin,
+                    "project_not_exist",
+                    "Justtest",
+                    self.assistantGroupID,
+                ),
+                status=404,
+            )
+
+            # Delete a group of a form that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/group/{}/remove".format(
+                    self.randonLogin,
+                    self.project,
+                    "justtest_not_exist",
+                    self.assistantGroupID,
+                ),
+                status=404,
+            )
+
+            # Delete a group using get goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/group/{}/remove".format(
+                    self.randonLogin, self.project, "Justtest", self.assistantGroupID
+                ),
+                status=404,
+            )
+
             # Delete a group
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/group/{}/remove".format(
                     self.randonLogin, self.project, "Justtest", self.assistantGroupID
                 ),
-                {"group_privilege": 3},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -2822,6 +3062,22 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
 
+            # Download the ODK form file for a project that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/get/odk".format(
+                    self.randonLogin, "not_exist", self.formID
+                ),
+                status=404,
+            )
+
+            # Download the ODK form file for a form that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/get/odk".format(
+                    self.randonLogin, self.project, "not_exist"
+                ),
+                status=404,
+            )
+
             # Download the ODK form file
             self.testapp.get(
                 "/user/{}/project/{}/form/{}/get/odk".format(
@@ -2830,12 +3086,44 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
 
+            # Download data in CSV format of a project that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/csv".format(
+                    self.randonLogin, "project_not_exist", self.formID
+                ),
+                status=404,
+            )
+
+            # Download data in CSV format of a form that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/csv".format(
+                    self.randonLogin, self.project, "form_not_exist"
+                ),
+                status=404,
+            )
+
             # Download data in CSV format
             self.testapp.get(
                 "/user/{}/project/{}/form/{}/generate/csv".format(
                     self.randonLogin, self.project, self.formID
                 ),
                 status=200,
+            )
+
+            # Download submitted media files for a project that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/media".format(
+                    self.randonLogin, "not_exist", self.formID
+                ),
+                status=404,
+            )
+
+            # Download submitted media files for a form that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/media".format(
+                    self.randonLogin, self.project, "not_exist"
+                ),
+                status=404,
             )
 
             # Download submitted media files
@@ -2874,6 +3162,23 @@ class FunctionalTests(unittest.TestCase):
                     break
             submission_id = os.path.basename(a_submission)
             submission_id = submission_id.replace(".json", "")
+
+            # Get the GeoInformation of the submission_id of a project that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/{}/info".format(
+                    self.randonLogin, "not_exist", self.formID, submission_id
+                ),
+                status=404,
+            )
+
+            # Get the GeoInformation of the submission_id of a form that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/{}/info".format(
+                    self.randonLogin, self.project, "not_exist", submission_id
+                ),
+                status=404,
+            )
+
             # Get the GeoInformation of the submission_id
             self.testapp.get(
                 "/user/{}/project/{}/form/{}/{}/info".format(
@@ -2892,6 +3197,30 @@ class FunctionalTests(unittest.TestCase):
                     media_file = file
                     break
             media_file = os.path.basename(media_file)
+
+            # Get media files of a project that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/{}/media/{}/get".format(
+                    self.randonLogin,
+                    "not_exist",
+                    self.formID,
+                    submission_id,
+                    media_file,
+                ),
+                status=404,
+            )
+
+            # Get media files of a form that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/{}/media/{}/get".format(
+                    self.randonLogin,
+                    self.project,
+                    "not_exist",
+                    submission_id,
+                    media_file,
+                ),
+                status=404,
+            )
 
             self.testapp.get(
                 "/user/{}/project/{}/form/{}/{}/media/{}/get".format(
@@ -3493,6 +3822,22 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Get GPS point of a project that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/get/gpspoints".format(
+                    self.randonLogin, "not_exist", self.formID
+                ),
+                status=404,
+            )
+
+            # Get GPS point of a form that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/get/gpspoints".format(
+                    self.randonLogin, self.project, "not_exist"
+                ),
+                status=404,
+            )
+
             # Gets the GPS Points of a Form
             res = self.testapp.get(
                 "/user/{}/project/{}/form/{}/get/gpspoints".format(
@@ -4048,6 +4393,22 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Generate public XLSX for a project that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/public_xlsx".format(
+                    self.randonLogin, "not_exist", self.formID
+                ),
+                status=404,
+            )
+
+            # Generate public XLSX for a form that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/public_xlsx".format(
+                    self.randonLogin, self.project, "not_exist"
+                ),
+                status=404,
+            )
+
             # Generate public XLSX
             res = self.testapp.get(
                 "/user/{}/project/{}/form/{}/generate/public_xlsx".format(
@@ -4056,12 +4417,38 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
             print("Testing cancel a task")
             time.sleep(4)
             last_task = get_last_task(
                 self.server_config, self.projectID, self.formID, "xlsx_public_export"
             )
             print("Task to cancel: {}".format(last_task))
+
+            # Stop task for a project that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/task/{}/stop".format(
+                    self.randonLogin, "not_exist", self.formID, last_task
+                ),
+                status=404,
+            )
+
+            # Stop task for a form that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/task/{}/stop".format(
+                    self.randonLogin, self.project, "not_exist", last_task
+                ),
+                status=404,
+            )
+
+            # Stop task for a task that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/task/{}/stop".format(
+                    self.randonLogin, self.project, self.formID, "not_exist"
+                ),
+                status=404,
+            )
+
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/task/{}/stop".format(
                     self.randonLogin, self.project, self.formID, last_task
@@ -4079,6 +4466,22 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Download a private xls for a project that does not exist goes tot 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/private_xlsx".format(
+                    self.randonLogin, "not_exist", self.formID
+                ),
+                status=404,
+            )
+
+            # Download a private xls for a form that does not exist goes tot 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/private_xlsx".format(
+                    self.randonLogin, self.project, "not_exist"
+                ),
+                status=404,
+            )
+
             # Private public XLSX
             res = self.testapp.get(
                 "/user/{}/project/{}/form/{}/generate/private_xlsx".format(
@@ -4088,7 +4491,23 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            # KML
+            # Download KML of a project that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/kml".format(
+                    self.randonLogin, "not_exist", self.formID
+                ),
+                status=404,
+            )
+
+            # Download KML of a form that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/kml".format(
+                    self.randonLogin, self.project, "not_exist"
+                ),
+                status=404,
+            )
+
+            # Download KML
             res = self.testapp.get(
                 "/user/{}/project/{}/form/{}/generate/kml".format(
                     self.randonLogin, self.project, self.formID
@@ -4096,6 +4515,22 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            # Public CSV of a project that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/repo_public_csv".format(
+                    self.randonLogin, "not_exist", self.formID
+                ),
+                status=404,
+            )
+
+            # Public CSV of a form that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/repo_public_csv".format(
+                    self.randonLogin, self.project, "not_exist"
+                ),
+                status=404,
+            )
 
             # Public CSV
             res = self.testapp.get(
@@ -4105,6 +4540,22 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            # Download private csv from a project that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/repo_private_csv".format(
+                    self.randonLogin, "not_exist", self.formID
+                ),
+                status=404,
+            )
+
+            # Download private csv from a form that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/repo_private_csv".format(
+                    self.randonLogin, self.project, "not_exist"
+                ),
+                status=404,
+            )
 
             # Private CSV
             res = self.testapp.get(
@@ -4350,6 +4801,22 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            # Loads import data for a project that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/import".format(
+                    self.randonLogin, "not_exist", self.formID
+                ),
+                status=404,
+            )
+
+            # Loads import data for a form that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/import".format(
+                    self.randonLogin, self.project, "not_exist"
+                ),
+                status=404,
+            )
 
             self.testapp.get(
                 "/user/{}/project/{}/form/{}/import".format(
@@ -9551,6 +10018,18 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Add an assistant to a project that does not belong to him goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
+                    "coll_privileges": "1",
+                },
+                status=404,
+            )
+
             # Get the details of a form in a project that does not belong to him
             self.testapp.get(
                 "/user/{}/project/{}/form/{}".format(
@@ -10694,6 +11173,194 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Download a private xls for a form that does not have access goes tot 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/private_xlsx".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Generate public XLSX when don't have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/public_xlsx".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Gets a file of a project that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/uploads/{}/retrieve".format(
+                    self.randonLogin, self.project, self.formID, "test1.dat"
+                ),
+                status=404,
+            )
+
+            # Add assistant to a form that does not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
+                    "coll_privileges": "1",
+                },
+                status=404,
+            )
+
+            # Edit an assistant of a form the does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                {"coll_privileges": "3"},
+                status=404,
+            )
+
+            # Remove an assistant that does not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/remove".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                status=404,
+            )
+
+            # Add a group of a project that does not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/groups/add".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {"group_id": self.assistantGroupID, "group_privilege": 1},
+                status=404,
+            )
+
+            # Edit a group of a project that does not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/group/{}/edit".format(
+                    self.randonLogin, self.project, self.formID, self.assistantGroupID
+                ),
+                {"group_privilege": 3},
+                status=404,
+            )
+
+            # Delete a group of a project that does not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/group/{}/remove".format(
+                    self.randonLogin, self.project, self.formID, self.assistantGroupID
+                ),
+                {"group_privilege": 3},
+                status=404,
+            )
+
+            # Download data in CSV format of a project that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/csv".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Download the ODK form file for a form that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/get/odk".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Download submitted media files for a form that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/media".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Get the partner GPS info of a form that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/get/gpspoints".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Download KML of a form that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/kml".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Public CSV of a form that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/repo_public_csv".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Private CSV of a form that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/repo_private_csv".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Loads import data for a form that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/import".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Stop task for a project that does not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/task/{}/stop".format(
+                    self.randonLogin, self.project, self.formID, "not_exist"
+                ),
+                status=404,
+            )
+
+            # Get the partner Marker info for a submission in a project without access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/{}/info".format(
+                    self.randonLogin, self.project, self.formID, "not_exist"
+                ),
+                status=404,
+            )
+
+            # Get media files of a project that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/{}/media/{}/get".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "na",
+                    "na",
+                ),
+                status=404,
+            )
+
+            # Open the case lookup table for a project that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/caselookuptable".format(
+                    self.randonLogin, "case001"
+                ),
+                status=404,
+            )
+
             paths = ["resources", "forms", "form08_OK.xlsx"]
             resource_file = os.path.join(self.path, *paths)
             # Updates a form to a project that does not has access goes to 404
@@ -10890,6 +11557,144 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # ---------------Section to test editor unauthorized access ---------------
+
+            # Add assistant to a form that does not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
+                    "coll_privileges": "1",
+                },
+                status=404,
+            )
+
+            # Edit an assistant of a form the does not have acess goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                {"coll_privileges": "3"},
+                status=404,
+            )
+
+            # Remove an assistant that does not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/remove".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                status=404,
+            )
+
+            # Add a group to a form without access get goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/groups/add".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {"group_id": self.assistantGroupID, "group_privilege": 1},
+                status=404,
+            )
+
+            # Edit a group of a project that does not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/group/{}/edit".format(
+                    self.randonLogin, self.project, self.formID, self.assistantGroupID
+                ),
+                {"group_privilege": 3},
+                status=404,
+            )
+
+            # Delete a group of a project that does not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/group/{}/remove".format(
+                    self.randonLogin, self.project, self.formID, self.assistantGroupID
+                ),
+                {"group_privilege": 3},
+                status=404,
+            )
+
+            # Generate public XLSX when don't have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/public_xlsx".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Download a private xls for a form that does not have access goes tot 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/private_xlsx".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Download submitted media files for a form that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/media".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Download KML of a form that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/kml".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Public CSV of a form that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/repo_public_csv".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Private CSV of a form that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/repo_private_csv".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Loads import data for a form that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/import".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Stop task for a project that does not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/task/{}/stop".format(
+                    self.randonLogin, self.project, self.formID, "not_exist"
+                ),
+                status=404,
+            )
+
+            # Open the case lookup table for a project that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/caselookuptable".format(
+                    self.randonLogin, self.project
+                ),
+                status=404,
+            )
+
             # Activate a form that does not have access goes to 404
             self.testapp.post(
                 "/user/{}/project/{}/form/{}/activate".format(
@@ -11072,6 +11877,14 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            # At this point there are no case creators
+            self.testapp.get(
+                "/user/{}/project/{}/caselookuptable".format(
+                    self.randonLogin, "case001"
+                ),
+                status=404,
+            )
 
             # Get the project list
             res = self.testapp.get(
@@ -11349,6 +12162,14 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # There are not case starts with repository
+            self.testapp.get(
+                "/user/{}/project/{}/caselookuptable".format(
+                    self.randonLogin, "case001"
+                ),
+                status=404,
+            )
+
             # Creates the repository of the case creator
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/repository/create".format(
@@ -11391,6 +12212,22 @@ class FunctionalTests(unittest.TestCase):
             assert "FS_error" not in res.headers
             self.assertIn(b"case lookup table", res.body)
             self.assertIn(b"Create the case lookup table before", res.body)
+
+            # Open the case lookup table for a project that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/caselookuptable".format(
+                    self.randonLogin, "not_exist"
+                ),
+                status=404,
+            )
+
+            # Open the case lookup table for a project that does not have cases management goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/caselookuptable".format(
+                    self.randonLogin, self.project
+                ),
+                status=404,
+            )
 
             # Open the case lookup table
             res = self.testapp.get(
@@ -13687,6 +14524,22 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
 
+            # Get the partner GPS info of a project that does not exist goes to 404
+            self.testapp.get(
+                "/partneraccess/user/{}/project/{}/form/{}/get/gpspoints".format(
+                    self.randonLogin, "not exist", self.formID
+                ),
+                status=404,
+            )
+
+            # Get the partner GPS info of a form that does not exist goes to 404
+            self.testapp.get(
+                "/partneraccess/user/{}/project/{}/form/{}/get/gpspoints".format(
+                    self.randonLogin, self.project, "not_exist"
+                ),
+                status=404,
+            )
+
             # Get the partner GPS info of a form
             self.testapp.get(
                 "/partneraccess/user/{}/project/{}/form/{}/get/gpspoints".format(
@@ -13701,6 +14554,23 @@ class FunctionalTests(unittest.TestCase):
             submission_id = get_one_submission(
                 self.server_config, form_details["form_schema"]
             )
+
+            # Get the partner Marker info for a submission in not exist project goes to 404
+            self.testapp.get(
+                "/partneraccess/user/{}/project/{}/form/{}/{}/info".format(
+                    self.randonLogin, "not_exist", self.formID, submission_id
+                ),
+                status=404,
+            )
+
+            # Get the partner Marker info for a submission in not exist form goes to 404
+            self.testapp.get(
+                "/partneraccess/user/{}/project/{}/form/{}/{}/info".format(
+                    self.randonLogin, self.project, "not_exist", submission_id
+                ),
+                status=404,
+            )
+
             # Get the partner Marker info for a submission
             self.testapp.get(
                 "/partneraccess/user/{}/project/{}/form/{}/{}/info".format(

@@ -1633,35 +1633,23 @@ class FormStoredFile(PrivateView):
         file_name = self.request.matchdict["filename"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
 
-        project_details = {}
         if project_id is not None:
             project_found = False
             for project in self.user_projects:
                 if project["project_id"] == project_id:
                     project_found = True
-                    project_details = project
             if not project_found:
                 raise HTTPNotFound
         else:
-            raise HTTPNotFound
-
-        if project_details["access_type"] > 4:
             raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)
         if form_data is None:
             raise HTTPNotFound
 
-        if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-            if project_found:
-                self.returnRawViewResult = True
-                return retrieve_form_file(self.request, project_id, form_id, file_name)
-            else:
-                raise HTTPNotFound
+        if form_file_exists(self.request, project_id, form_id, file_name):
+            self.returnRawViewResult = True
+            return retrieve_form_file(self.request, project_id, form_id, file_name)
         else:
             raise HTTPNotFound
 
@@ -2212,19 +2200,14 @@ class DownloadCSVData(PrivateView):
         project_code = self.request.matchdict["projcode"]
         form_id = self.request.matchdict["formid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
         if project_id is not None:
             project_found = False
             for project in self.user_projects:
                 if project["project_id"] == project_id:
                     project_found = True
-                    project_details = project
             if not project_found:
                 raise HTTPNotFound
         else:
-            raise HTTPNotFound
-
-        if project_details["access_type"] > 4:
             raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)
@@ -2362,19 +2345,14 @@ class DownloadXLSX(PrivateView):
         project_code = self.request.matchdict["projcode"]
         form_id = self.request.matchdict["formid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
         if project_id is not None:
             project_found = False
             for project in self.user_projects:
                 if project["project_id"] == project_id:
                     project_found = True
-                    project_details = project
             if not project_found:
                 raise HTTPNotFound
         else:
-            raise HTTPNotFound
-
-        if project_details["access_type"] > 4:
             raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)
@@ -2415,9 +2393,6 @@ class DownloadSubmissionFiles(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] > 4:
-            raise HTTPNotFound
-
         form_data = get_form_data(self.request, project_id, form_id)
         if form_data is None:
             raise HTTPNotFound
@@ -2443,6 +2418,9 @@ class DownloadSubmissionFiles(PrivateView):
                 )
                 return HTTPFound(location=next_page, headers={"FS_error": "true"})
         else:
+            if project_details["access_type"] >= 4:
+                raise HTTPNotFound
+
             get_form_directories = get_form_directories_for_schema(
                 self.request, form_data["form_schema"]
             )
@@ -2480,19 +2458,14 @@ class DownloadGPSPoints(PrivateView):
         project_code = self.request.matchdict["projcode"]
         form_id = self.request.matchdict["formid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
         if project_id is not None:
             project_found = False
             for project in self.user_projects:
                 if project["project_id"] == project_id:
                     project_found = True
-                    project_details = project
             if not project_found:
                 raise HTTPNotFound
         else:
-            raise HTTPNotFound
-
-        if project_details["access_type"] > 4:
             raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)
@@ -2818,22 +2791,19 @@ class GetSubMissionInfo(PrivateView):
         form_id = self.request.matchdict["formid"]
         submission_id = self.request.matchdict["submissionid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
         if project_id is not None:
             project_found = False
             for project in self.user_projects:
                 if project["project_id"] == project_id:
                     project_found = True
-                    project_details = project
             if not project_found:
                 raise HTTPNotFound
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] > 4:
-            raise HTTPNotFound
-
         form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
 
         fields, checked = get_fields_from_table(
             self.request, project_id, form_id, "maintable", [], False
@@ -2925,19 +2895,18 @@ class GetMediaFile(PrivateView):
         else:
             thumbnail = True
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
         if project_id is not None:
             project_found = False
             for project in self.user_projects:
                 if project["project_id"] == project_id:
                     project_found = True
-                    project_details = project
             if not project_found:
                 raise HTTPNotFound
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] > 4:
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
             raise HTTPNotFound
 
         file = get_submission_media_file(
@@ -2978,12 +2947,8 @@ class CaseLookUpTable(PrivateView):
         else:
             raise HTTPNotFound
 
-        if self.request.method == "GET":
-            if project_details["access_type"] >= 4:
-                raise HTTPNotFound
-        if self.request.method == "POST":
-            if project_details["access_type"] >= 3:
-                raise HTTPNotFound
+        if project_details["access_type"] >= 4:
+            raise HTTPNotFound
 
         if project_details["project_case"] == 0:
             raise HTTPNotFound

@@ -2918,10 +2918,17 @@ class FunctionalTests(unittest.TestCase):
             paths = ["resources", "forms", "complex_form", "image001.png"]
             image_file = os.path.join(self.path, *paths)
 
+            paths = ["resources", "forms", "complex_form", "sample.mp3"]
+            sound_file = os.path.join(self.path, *paths)
+
             self.testapp.post(
                 "/user/{}/project/{}/push".format(self.randonLogin, self.project),
                 status=201,
-                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                upload_files=[
+                    ("filetoupload", submission_file),
+                    ("image", image_file),
+                    ("sound", sound_file),
+                ],
                 extra_environ=dict(
                     FS_for_testing="true", FS_user_for_testing=self.assistantLogin
                 ),
@@ -3224,6 +3231,17 @@ class FunctionalTests(unittest.TestCase):
 
             self.testapp.get(
                 "/user/{}/project/{}/form/{}/{}/media/{}/get".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    submission_id,
+                    media_file,
+                ),
+                status=200,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/{}/media/{}/get?thumbnail=true".format(
                     self.randonLogin,
                     self.project,
                     self.formID,
@@ -4445,6 +4463,14 @@ class FunctionalTests(unittest.TestCase):
             self.testapp.post(
                 "/user/{}/project/{}/form/{}/task/{}/stop".format(
                     self.randonLogin, self.project, self.formID, "not_exist"
+                ),
+                status=404,
+            )
+
+            # Stop task with a get goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/task/{}/stop".format(
+                    self.randonLogin, self.project, self.formID, last_task
                 ),
                 status=404,
             )
@@ -8249,6 +8275,25 @@ class FunctionalTests(unittest.TestCase):
 
             paths = ["resources", "forms", "merge", "A", "distritos.csv"]
             resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, self.project, "tormenta20201105"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Removes a required file from a form to be merged
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/uploads/{}/remove".format(
+                    self.randonLogin, self.project, "tormenta20201105", "distritos.csv"
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Add the file again
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/upload".format(
                     self.randonLogin, self.project, "tormenta20201105"
@@ -12335,6 +12380,20 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Change alias of distrito with empty alias
+            res = self.testapp.post(
+                "/user/{}/project/{}/caselookuptable".format(
+                    self.randonLogin, "case001"
+                ),
+                {
+                    "change_alias": "",
+                    "field_name": "distrito",
+                    "field_alias": "",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
             # Change alias of distrito
             res = self.testapp.post(
                 "/user/{}/project/{}/caselookuptable".format(
@@ -14230,6 +14289,15 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 status=404,
             )
+
+            # Add an partner to a form fails. Empty partner
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/partners/add".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=302,
+            )
+            assert "FS_error" in res.headers
 
             # Add an partner to a form fails. Empty partner
             res = self.testapp.post(

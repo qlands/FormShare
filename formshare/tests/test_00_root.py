@@ -2955,6 +2955,7 @@ class FunctionalTests(unittest.TestCase):
                 upload_files=[
                     ("filetoupload", submission_file),
                     ("image2", image_file),
+                    ("sound", sound_file),
                 ],
                 extra_environ=dict(
                     FS_for_testing="true", FS_user_for_testing=self.assistantLogin
@@ -2976,10 +2977,17 @@ class FunctionalTests(unittest.TestCase):
             paths = ["resources", "forms", "complex_form", "image001.png"]
             image_file = os.path.join(self.path, *paths)
 
+            paths = ["resources", "forms", "complex_form", "sample.mp3"]
+            sound_file = os.path.join(self.path, *paths)
+
             self.testapp.post(
                 "/user/{}/project/{}/push".format(self.randonLogin, self.project),
                 status=201,
-                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                upload_files=[
+                    ("filetoupload", submission_file),
+                    ("image", image_file),
+                    ("sound", sound_file),
+                ],
                 extra_environ=dict(
                     FS_for_testing="true", FS_user_for_testing=self.assistantLogin
                 ),
@@ -3000,10 +3008,17 @@ class FunctionalTests(unittest.TestCase):
             paths = ["resources", "forms", "complex_form", "image001.png"]
             image_file = os.path.join(self.path, *paths)
 
+            paths = ["resources", "forms", "complex_form", "sample.mp3"]
+            sound_file = os.path.join(self.path, *paths)
+
             self.testapp.post(
                 "/user/{}/project/{}/push".format(self.randonLogin, self.project),
                 status=201,
-                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                upload_files=[
+                    ("filetoupload", submission_file),
+                    ("image", image_file),
+                    ("sound", sound_file),
+                ],
                 extra_environ=dict(
                     FS_for_testing="true", FS_user_for_testing=self.assistantLogin
                 ),
@@ -3023,10 +3038,17 @@ class FunctionalTests(unittest.TestCase):
             paths = ["resources", "forms", "complex_form", "image001.png"]
             image_file = os.path.join(self.path, *paths)
 
+            paths = ["resources", "forms", "complex_form", "sample.mp3"]
+            sound_file = os.path.join(self.path, *paths)
+
             self.testapp.post(
                 "/user/{}/project/{}/push".format(self.randonLogin, self.project),
                 status=201,
-                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                upload_files=[
+                    ("filetoupload", submission_file),
+                    ("image", image_file),
+                    ("sound", sound_file),
+                ],
                 extra_environ=dict(
                     FS_for_testing="true", FS_user_for_testing=self.assistantLogin
                 ),
@@ -3205,6 +3227,14 @@ class FunctionalTests(unittest.TestCase):
                     break
             media_file = os.path.basename(media_file)
 
+            image_file = None
+            if files:
+                for file in files:
+                    if file.find(".png") >= 0:
+                        image_file = file
+                        break
+            image_file = os.path.basename(image_file)
+
             # Get media files of a project that does not exist goes to 404
             self.testapp.get(
                 "/user/{}/project/{}/form/{}/{}/media/{}/get".format(
@@ -3246,7 +3276,7 @@ class FunctionalTests(unittest.TestCase):
                     self.project,
                     self.formID,
                     submission_id,
-                    media_file,
+                    image_file,
                 ),
                 status=200,
             )
@@ -3332,12 +3362,16 @@ class FunctionalTests(unittest.TestCase):
                 paths4 = ["resources", "forms", "complex_form", "image001.png"]
                 image_file4 = os.path.join(self.path, *paths4)
 
+                paths4 = ["resources", "forms", "complex_form", "sample.mp3"]
+                sound_file4 = os.path.join(self.path, *paths4)
+
                 self.testapp.post(
                     "/user/{}/project/{}/push".format(self.randonLogin, mimic_project),
                     status=201,
                     upload_files=[
                         ("filetoupload", submission_file4),
                         ("image", image_file4),
+                        ("sound", sound_file4),
                     ],
                     extra_environ=dict(
                         FS_for_testing="true", FS_user_for_testing="mimic000"
@@ -3485,12 +3519,16 @@ class FunctionalTests(unittest.TestCase):
                 paths2 = ["resources", "forms", "complex_form", "image001.png"]
                 image_file3 = os.path.join(self.path, *paths2)
 
+                paths2 = ["resources", "forms", "complex_form", "sample.mp3"]
+                sound_file3 = os.path.join(self.path, *paths2)
+
                 self.testapp.post(
                     "/user/{}/project/{}/push".format(self.randonLogin, mimic_project),
                     status=201,
                     upload_files=[
                         ("filetoupload", submission_file3),
                         ("image", image_file3),
+                        ("sound", sound_file3),
                     ],
                     extra_environ=dict(
                         FS_for_testing="true", FS_user_for_testing="mimic001"
@@ -3656,6 +3694,9 @@ class FunctionalTests(unittest.TestCase):
                 paths5 = ["resources", "forms", "complex_form", "image001.png"]
                 image_file5 = os.path.join(self.path, *paths5)
 
+                paths5 = ["resources", "forms", "complex_form", "sample.mp3"]
+                sound_file5 = os.path.join(self.path, *paths5)
+
                 self.testapp.post(
                     "/user/{}/project/{}/push".format(
                         self.randonLogin, mimic_grp_project
@@ -3664,6 +3705,7 @@ class FunctionalTests(unittest.TestCase):
                     upload_files=[
                         ("filetoupload", submission_file5),
                         ("image", image_file5),
+                        ("sound", sound_file5),
                     ],
                     extra_environ=dict(
                         FS_for_testing="true", FS_user_for_testing="mimic003"
@@ -3793,10 +3835,17 @@ class FunctionalTests(unittest.TestCase):
             paths = ["resources", "forms", "complex_form", "image001.png"]
             image_file = os.path.join(self.path, *paths)
 
+            paths = ["resources", "forms", "complex_form", "sample.mp3"]
+            sound_file = os.path.join(self.path, *paths)
+
             self.testapp.post(
                 "/user/{}/project/{}/push".format(self.randonLogin, self.project),
                 status=201,
-                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                upload_files=[
+                    ("filetoupload", submission_file),
+                    ("image", image_file),
+                    ("sound", sound_file),
+                ],
                 extra_environ=dict(
                     FS_for_testing="true", FS_user_for_testing=self.assistantLogin
                 ),
@@ -3817,12 +3866,16 @@ class FunctionalTests(unittest.TestCase):
             paths = ["resources", "forms", "complex_form", "image002.png"]
             image_file = os.path.join(self.path, *paths)
 
+            paths = ["resources", "forms", "complex_form", "sample.mp3"]
+            sound_file = os.path.join(self.path, *paths)
+
             self.testapp.post(
                 "/user/{}/project/{}/push".format(self.randonLogin, self.project),
                 status=201,
                 upload_files=[
                     ("filetoupload", submission_file),
                     ("image2", image_file),
+                    ("sound2", sound_file),
                 ],
                 extra_environ=dict(
                     FS_for_testing="true", FS_user_for_testing=self.assistantLogin
@@ -3896,10 +3949,17 @@ class FunctionalTests(unittest.TestCase):
             paths = ["resources", "forms", "complex_form", "image001.png"]
             image_file = os.path.join(self.path, *paths)
 
+            paths = ["resources", "forms", "complex_form", "sample.mp3"]
+            sound_file = os.path.join(self.path, *paths)
+
             self.testapp.post(
                 "/user/{}/project/{}/push".format(self.randonLogin, self.project),
                 status=201,
-                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                upload_files=[
+                    ("filetoupload", submission_file),
+                    ("image", image_file),
+                    ("sound", sound_file),
+                ],
                 extra_environ=dict(
                     FS_for_testing="true", FS_user_for_testing=self.assistantLogin
                 ),
@@ -3920,12 +3980,16 @@ class FunctionalTests(unittest.TestCase):
             paths = ["resources", "forms", "complex_form", "image001.png"]
             image_file2 = os.path.join(self.path, *paths)
 
+            paths = ["resources", "forms", "complex_form", "sample.mp3"]
+            sound_file2 = os.path.join(self.path, *paths)
+
             self.testapp.post(
                 "/user/{}/project/{}/push".format(self.randonLogin, self.project),
                 status=201,
                 upload_files=[
                     ("filetoupload", submission_file2),
                     ("image", image_file2),
+                    ("sound", sound_file2),
                 ],
                 extra_environ=dict(
                     FS_for_testing="true", FS_user_for_testing=self.assistantLogin
@@ -3947,12 +4011,16 @@ class FunctionalTests(unittest.TestCase):
             paths = ["resources", "forms", "complex_form", "image001.png"]
             image_file2 = os.path.join(self.path, *paths)
 
+            paths = ["resources", "forms", "complex_form", "sample.mp3"]
+            sound_file2 = os.path.join(self.path, *paths)
+
             self.testapp.post(
                 "/user/{}/project/{}/push".format(self.randonLogin, self.project),
                 status=201,
                 upload_files=[
                     ("filetoupload", submission_file2),
                     ("image", image_file2),
+                    ("sound", sound_file2),
                 ],
                 extra_environ=dict(
                     FS_for_testing="true", FS_user_for_testing=self.assistantLogin
@@ -3974,12 +4042,16 @@ class FunctionalTests(unittest.TestCase):
             paths = ["resources", "forms", "complex_form", "image001.png"]
             image_file2 = os.path.join(self.path, *paths)
 
+            paths = ["resources", "forms", "complex_form", "sample.mp3"]
+            sound_file2 = os.path.join(self.path, *paths)
+
             self.testapp.post(
                 "/user/{}/project/{}/push".format(self.randonLogin, self.project),
                 status=201,
                 upload_files=[
                     ("filetoupload", submission_file2),
                     ("image", image_file2),
+                    ("sound", sound_file2),
                 ],
                 extra_environ=dict(
                     FS_for_testing="true", FS_user_for_testing=self.assistantLogin
@@ -6438,10 +6510,18 @@ class FunctionalTests(unittest.TestCase):
             submission_file = os.path.join(self.path, *paths)
             paths = ["resources", "forms", "complex_form", "image001.png"]
             image_file = os.path.join(self.path, *paths)
+
+            paths = ["resources", "forms", "complex_form", "sample.mp3"]
+            sound_file = os.path.join(self.path, *paths)
+
             self.testapp.post(
                 "/user/{}/project/{}/push".format(self.randonLogin, json2_project),
                 status=201,
-                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                upload_files=[
+                    ("filetoupload", submission_file),
+                    ("image", image_file),
+                    ("sound", sound_file),
+                ],
                 extra_environ=dict(
                     FS_for_testing="true", FS_user_for_testing="json2001"
                 ),
@@ -6459,10 +6539,18 @@ class FunctionalTests(unittest.TestCase):
             submission_file = os.path.join(self.path, *paths)
             paths = ["resources", "forms", "complex_form", "image001.png"]
             image_file = os.path.join(self.path, *paths)
+
+            paths = ["resources", "forms", "complex_form", "sample.mp3"]
+            sound_file = os.path.join(self.path, *paths)
+
             self.testapp.post(
                 "/user/{}/project/{}/push".format(self.randonLogin, json2_project),
                 status=201,
-                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                upload_files=[
+                    ("filetoupload", submission_file),
+                    ("image", image_file),
+                    ("sound", sound_file),
+                ],
                 extra_environ=dict(
                     FS_for_testing="true", FS_user_for_testing="json2001"
                 ),
@@ -6480,10 +6568,18 @@ class FunctionalTests(unittest.TestCase):
             submission_file = os.path.join(self.path, *paths)
             paths = ["resources", "forms", "complex_form", "image001.png"]
             image_file = os.path.join(self.path, *paths)
+
+            paths = ["resources", "forms", "complex_form", "sample.mp3"]
+            sound_file = os.path.join(self.path, *paths)
+
             self.testapp.post(
                 "/user/{}/project/{}/push".format(self.randonLogin, json2_project),
                 status=201,
-                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                upload_files=[
+                    ("filetoupload", submission_file),
+                    ("image", image_file),
+                    ("sound", sound_file),
+                ],
                 extra_environ=dict(
                     FS_for_testing="true", FS_user_for_testing="json2001"
                 ),
@@ -6501,10 +6597,18 @@ class FunctionalTests(unittest.TestCase):
             submission_file = os.path.join(self.path, *paths)
             paths = ["resources", "forms", "complex_form", "image001.png"]
             image_file = os.path.join(self.path, *paths)
+
+            paths = ["resources", "forms", "complex_form", "sample.mp3"]
+            sound_file = os.path.join(self.path, *paths)
+
             self.testapp.post(
                 "/user/{}/project/{}/push".format(self.randonLogin, json2_project),
                 status=201,
-                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                upload_files=[
+                    ("filetoupload", submission_file),
+                    ("image", image_file),
+                    ("sound", sound_file),
+                ],
                 extra_environ=dict(
                     FS_for_testing="true", FS_user_for_testing="json2001"
                 ),
@@ -7081,10 +7185,18 @@ class FunctionalTests(unittest.TestCase):
             submission_file = os.path.join(self.path, *paths)
             paths = ["resources", "forms", "complex_form", "image001.png"]
             image_file = os.path.join(self.path, *paths)
+
+            paths = ["resources", "forms", "complex_form", "sample.mp3"]
+            sound_file = os.path.join(self.path, *paths)
+
             self.testapp.post(
                 "/user/{}/project/{}/push".format(self.randonLogin, json4_project),
                 status=201,
-                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                upload_files=[
+                    ("filetoupload", submission_file),
+                    ("image", image_file),
+                    ("sound", sound_file),
+                ],
                 extra_environ=dict(
                     FS_for_testing="true", FS_user_for_testing="json4001"
                 ),
@@ -7102,10 +7214,18 @@ class FunctionalTests(unittest.TestCase):
             submission_file = os.path.join(self.path, *paths)
             paths = ["resources", "forms", "complex_form", "image001.png"]
             image_file = os.path.join(self.path, *paths)
+
+            paths = ["resources", "forms", "complex_form", "sample.mp3"]
+            sound_file = os.path.join(self.path, *paths)
+
             self.testapp.post(
                 "/user/{}/project/{}/push".format(self.randonLogin, json4_project),
                 status=201,
-                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                upload_files=[
+                    ("filetoupload", submission_file),
+                    ("image", image_file),
+                    ("sound", sound_file),
+                ],
                 extra_environ=dict(
                     FS_for_testing="true", FS_user_for_testing="json4001"
                 ),
@@ -7347,10 +7467,18 @@ class FunctionalTests(unittest.TestCase):
             submission_file = os.path.join(self.path, *paths)
             paths = ["resources", "forms", "complex_form", "image001.png"]
             image_file = os.path.join(self.path, *paths)
+
+            paths = ["resources", "forms", "complex_form", "sample.mp3"]
+            sound_file = os.path.join(self.path, *paths)
+
             self.testapp.post(
                 "/user/{}/project/{}/push".format(self.randonLogin, json3_project),
                 status=201,
-                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                upload_files=[
+                    ("filetoupload", submission_file),
+                    ("image", image_file),
+                    ("sound", sound_file),
+                ],
                 extra_environ=dict(
                     FS_for_testing="true", FS_user_for_testing="json3001"
                 ),
@@ -7368,10 +7496,18 @@ class FunctionalTests(unittest.TestCase):
             submission_file = os.path.join(self.path, *paths)
             paths = ["resources", "forms", "complex_form", "image001.png"]
             image_file = os.path.join(self.path, *paths)
+
+            paths = ["resources", "forms", "complex_form", "sample.mp3"]
+            sound_file = os.path.join(self.path, *paths)
+
             self.testapp.post(
                 "/user/{}/project/{}/push".format(self.randonLogin, json3_project),
                 status=201,
-                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                upload_files=[
+                    ("filetoupload", submission_file),
+                    ("image", image_file),
+                    ("sound", sound_file),
+                ],
                 extra_environ=dict(
                     FS_for_testing="true", FS_user_for_testing="json3001"
                 ),
@@ -8284,25 +8420,6 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            # Removes a required file from a form to be merged
-            res = self.testapp.post(
-                "/user/{}/project/{}/form/{}/uploads/{}/remove".format(
-                    self.randonLogin, self.project, "tormenta20201105", "distritos.csv"
-                ),
-                status=302,
-            )
-            assert "FS_error" not in res.headers
-
-            # Add the file again
-            res = self.testapp.post(
-                "/user/{}/project/{}/form/{}/upload".format(
-                    self.randonLogin, self.project, "tormenta20201105"
-                ),
-                status=302,
-                upload_files=[("filetoupload", resource_file)],
-            )
-            assert "FS_error" not in res.headers
-
             # Generate the repository using celery
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/repository/create".format(
@@ -8657,6 +8774,25 @@ class FunctionalTests(unittest.TestCase):
 
             paths = ["resources", "forms", "merge", "B", "distritos.csv"]
             resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, self.project, "tormenta20201117"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Removes a required file from a form to be merged
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/uploads/{}/remove".format(
+                    self.randonLogin, self.project, "tormenta20201117", "distritos.csv"
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Add the file again
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/upload".format(
                     self.randonLogin, self.project, "tormenta20201117"
@@ -10759,10 +10895,18 @@ class FunctionalTests(unittest.TestCase):
             submission_file = os.path.join(self.path, *paths)
             paths = ["resources", "forms", "complex_form", "image001.png"]
             image_file = os.path.join(self.path, *paths)
+
+            paths = ["resources", "forms", "complex_form", "sample.mp3"]
+            sound_file = os.path.join(self.path, *paths)
+
             self.testapp.post(
                 "/user/{}/project/{}/push".format(self.randonLogin, json2_project),
                 status=404,
-                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                upload_files=[
+                    ("filetoupload", submission_file),
+                    ("image", image_file),
+                    ("sound", sound_file),
+                ],
                 extra_environ=dict(
                     FS_for_testing="true", FS_user_for_testing=access_assistant
                 ),
@@ -10788,10 +10932,18 @@ class FunctionalTests(unittest.TestCase):
             submission_file = os.path.join(self.path, *paths)
             paths = ["resources", "forms", "complex_form", "image001.png"]
             image_file = os.path.join(self.path, *paths)
+
+            paths = ["resources", "forms", "complex_form", "sample.mp3"]
+            sound_file = os.path.join(self.path, *paths)
+
             self.testapp.post(
                 "/user/{}/project/{}/push".format(self.randonLogin, json2_project),
                 status=404,
-                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                upload_files=[
+                    ("filetoupload", submission_file),
+                    ("image", image_file),
+                    ("sound", sound_file),
+                ],
                 extra_environ=dict(
                     FS_for_testing="true", FS_user_for_testing=access_assistant
                 ),
@@ -10817,10 +10969,18 @@ class FunctionalTests(unittest.TestCase):
             submission_file = os.path.join(self.path, *paths)
             paths = ["resources", "forms", "complex_form", "image001.png"]
             image_file = os.path.join(self.path, *paths)
+
+            paths = ["resources", "forms", "complex_form", "sample.mp3"]
+            sound_file = os.path.join(self.path, *paths)
+
             self.testapp.post(
                 "/user/{}/project/{}/push".format(self.randonLogin, json2_project),
                 status=404,
-                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                upload_files=[
+                    ("filetoupload", submission_file),
+                    ("image", image_file),
+                    ("sound", sound_file),
+                ],
                 extra_environ=dict(
                     FS_for_testing="true", FS_user_for_testing=access_assistant
                 ),
@@ -10831,10 +10991,18 @@ class FunctionalTests(unittest.TestCase):
             submission_file = os.path.join(self.path, *paths)
             paths = ["resources", "forms", "complex_form", "image001.png"]
             image_file = os.path.join(self.path, *paths)
+
+            paths = ["resources", "forms", "complex_form", "sample.mp3"]
+            sound_file = os.path.join(self.path, *paths)
+
             self.testapp.post(
                 "/user/{}/project/{}/push".format(self.randonLogin, json2_project),
                 status=500,
-                upload_files=[("filetoupload", submission_file), ("image", image_file)],
+                upload_files=[
+                    ("filetoupload", submission_file),
+                    ("image", image_file),
+                    ("sound", sound_file),
+                ],
                 extra_environ=dict(
                     FS_for_testing="true", FS_user_for_testing=access_assistant
                 ),
@@ -11647,7 +11815,7 @@ class FunctionalTests(unittest.TestCase):
             # Edit a partner of a form that does not have access goes to 404
             self.testapp.post(
                 "/user/{}/project/{}/form/{}/partner/{}/edit".format(
-                    self.randonLogin, self.project, self.formID, ""
+                    self.randonLogin, self.project, self.formID, "na"
                 ),
                 {
                     "time_bound": 1,

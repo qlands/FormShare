@@ -11173,6 +11173,37 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Add partner to a form that does not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/partners/add".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {"partner_id": ""},
+                status=404,
+            )
+
+            # Edit a partner of a form that does not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/partner/{}/edit".format(
+                    self.randonLogin, self.project, self.formID, "na"
+                ),
+                {
+                    "time_bound": 1,
+                    "access_from": "",
+                    "access_to": "",
+                },
+                status=404,
+            )
+
+            # Remove a partner from a form that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/partner/{}/remove".format(
+                    self.randonLogin, self.project, self.formID, "na"
+                ),
+                {},
+                status=404,
+            )
+
             # Download a private xls for a form that does not have access goes tot 404
             self.testapp.get(
                 "/user/{}/project/{}/form/{}/generate/private_xlsx".format(
@@ -11558,6 +11589,37 @@ class FunctionalTests(unittest.TestCase):
             assert "FS_error" not in res.headers
 
             # ---------------Section to test editor unauthorized access ---------------
+
+            # Add partner to a form that does not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/partners/add".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {"partner_id": ""},
+                status=404,
+            )
+
+            # Edit a partner of a form that does not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/partner/{}/edit".format(
+                    self.randonLogin, self.project, self.formID, ""
+                ),
+                {
+                    "time_bound": 1,
+                    "access_from": "",
+                    "access_to": "",
+                },
+                status=404,
+            )
+
+            # Remove a partner from a form that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/partner/{}/remove".format(
+                    self.randonLogin, self.project, self.formID, "na"
+                ),
+                {},
+                status=404,
+            )
 
             # Add assistant to a form that does not have access goes to 404
             self.testapp.post(
@@ -14143,6 +14205,32 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Add partner to a form in a project that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/partners/add".format(
+                    self.randonLogin, "not_exist", self.formID
+                ),
+                {"partner_id": ""},
+                status=404,
+            )
+
+            # Add partner to a form that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/partners/add".format(
+                    self.randonLogin, self.project, "not_exit"
+                ),
+                {"partner_id": ""},
+                status=404,
+            )
+
+            # Add partner to a form using get goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/partners/add".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
             # Add an partner to a form fails. Empty partner
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/partners/add".format(
@@ -14208,6 +14296,40 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" in res.headers
 
+            # Edit a partner of a form in a project that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/partner/{}/edit".format(
+                    self.randonLogin, "not_exist", self.formID, partner_id
+                ),
+                {
+                    "time_bound": 1,
+                    "access_from": "",
+                    "access_to": "",
+                },
+                status=404,
+            )
+
+            # Edit a partner of a form that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/partner/{}/edit".format(
+                    self.randonLogin, self.project, "not_exist", partner_id
+                ),
+                {
+                    "time_bound": 1,
+                    "access_from": "",
+                    "access_to": "",
+                },
+                status=404,
+            )
+
+            # Edit a partner of a form using get goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/partner/{}/edit".format(
+                    self.randonLogin, self.project, self.formID, partner_id
+                ),
+                status=404,
+            )
+
             # Edit partner form options fails. Invalid dates
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/partner/{}/edit".format(
@@ -14259,6 +14381,32 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            # Remove a partner from a form in a project that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/partner/{}/remove".format(
+                    self.randonLogin, "not_exist", self.formID, partner_id
+                ),
+                {},
+                status=404,
+            )
+
+            # Remove a partner from a form that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/partner/{}/remove".format(
+                    self.randonLogin, self.project, "not_exist", partner_id
+                ),
+                {},
+                status=404,
+            )
+
+            # Remove a partner from a form using get goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/partner/{}/remove".format(
+                    self.randonLogin, self.project, self.formID, partner_id
+                ),
+                status=404,
+            )
 
             # Remove partner from form passes
             res = self.testapp.post(

@@ -294,7 +294,7 @@ class EditPartnerView(PrivateView):
             raise HTTPNotFound
 
         partner_details = get_partner_details(self.request, partner_to_modify)
-        if not partner_details:
+        if partner_details is None:
             raise HTTPNotFound
         partner_details["by_details"] = get_user_details(
             self.request, partner_details["created_by"]
@@ -460,7 +460,7 @@ class DeletePartnerView(PrivateView):
                 raise HTTPNotFound
 
             partner_details = get_partner_details(self.request, partner_to_delete)
-            if not partner_details:
+            if partner_details is None:
                 raise HTTPNotFound
             by_details = get_user_details(self.request, partner_details["created_by"])
             if partner_details["created_by"] != user_id:

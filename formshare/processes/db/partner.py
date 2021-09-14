@@ -87,7 +87,7 @@ def get_partner_details(request, partner_id):
     if res is not None:
         result = map_from_schema(res)
         return result
-    return {}
+    return None
 
 
 def partner_email_exists(request, partner_id, email):

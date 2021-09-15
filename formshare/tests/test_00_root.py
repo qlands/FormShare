@@ -4623,6 +4623,42 @@ class FunctionalTests(unittest.TestCase):
                     status=404,
                 )
 
+                # Publish with not exist project goes to 404
+                self.testapp.post(
+                    "/user/{}/project/{}/form/{}/products/{}/output/{}/publish".format(
+                        self.randonLogin,
+                        "not_exist",
+                        self.formID,
+                        "csv_public_export",
+                        task_id[-12:],
+                    ),
+                    status=404,
+                )
+
+                # Publish with not exist output goes to 404
+                self.testapp.post(
+                    "/user/{}/project/{}/form/{}/products/{}/output/{}/publish".format(
+                        self.randonLogin,
+                        self.project,
+                        self.formID,
+                        "csv_public_export",
+                        "not_exist",
+                    ),
+                    status=404,
+                )
+
+                # Publis with get goes to 404
+                self.testapp.get(
+                    "/user/{}/project/{}/form/{}/products/{}/output/{}/publish".format(
+                        self.randonLogin,
+                        self.project,
+                        self.formID,
+                        "csv_public_export",
+                        task_id[-12:],
+                    ),
+                    status=404,
+                )
+
                 # Publish the product
                 res2 = self.testapp.post(
                     "/user/{}/project/{}/form/{}/products/{}/output/{}/publish".format(
@@ -4659,6 +4695,42 @@ class FunctionalTests(unittest.TestCase):
                     status=200,
                 )
 
+                # Unpublish product with not exist project goes to 404
+                self.testapp.post(
+                    "/user/{}/project/{}/form/{}/products/{}/output/{}/unpublish".format(
+                        self.randonLogin,
+                        "not_exist",
+                        self.formID,
+                        "csv_public_export",
+                        task_id[-12:],
+                    ),
+                    status=404,
+                )
+
+                # Unpublish product with not exist output goes to 404
+                self.testapp.post(
+                    "/user/{}/project/{}/form/{}/products/{}/output/{}/unpublish".format(
+                        self.randonLogin,
+                        self.project,
+                        self.formID,
+                        "csv_public_export",
+                        "not_exist",
+                    ),
+                    status=404,
+                )
+
+                # Unpublish with get goes to 404
+                self.testapp.get(
+                    "/user/{}/project/{}/form/{}/products/{}/output/{}/unpublish".format(
+                        self.randonLogin,
+                        self.project,
+                        self.formID,
+                        "csv_public_export",
+                        task_id[-12:],
+                    ),
+                    status=404,
+                )
+
                 # Unpublish the product
                 res2 = self.testapp.post(
                     "/user/{}/project/{}/form/{}/products/{}/output/{}/unpublish".format(
@@ -4671,6 +4743,42 @@ class FunctionalTests(unittest.TestCase):
                     status=302,
                 )
                 assert "FS_error" not in res2.headers
+
+                # Delete product goes to 404
+                self.testapp.post(
+                    "/user/{}/project/{}/form/{}/products/{}/output/{}/delete".format(
+                        self.randonLogin,
+                        "not_exist",
+                        self.formID,
+                        "csv_public_export",
+                        task_id[-12:],
+                    ),
+                    status=404,
+                )
+
+                # Delete product goes to 404
+                self.testapp.post(
+                    "/user/{}/project/{}/form/{}/products/{}/output/{}/delete".format(
+                        self.randonLogin,
+                        self.project,
+                        self.formID,
+                        "csv_public_export",
+                        "na",
+                    ),
+                    status=404,
+                )
+
+                # Delete product goes to 404
+                self.testapp.get(
+                    "/user/{}/project/{}/form/{}/products/{}/output/{}/delete".format(
+                        self.randonLogin,
+                        self.project,
+                        self.formID,
+                        "csv_public_export",
+                        task_id[-12:],
+                    ),
+                    status=404,
+                )
 
                 # Delete the product
                 res2 = self.testapp.post(
@@ -4742,6 +4850,31 @@ class FunctionalTests(unittest.TestCase):
                     task_id,
                 )
                 store_task_status(task_id, self.server_config)
+
+                # Download an output that does not exist goes to 404
+                self.testapp.get(
+                    "/user/{}/project/{}/form/{}/private_download/{}/output/{}".format(
+                        self.randonLogin,
+                        self.project,
+                        self.formID,
+                        "csv_private_export",
+                        "not_exist",
+                    ),
+                    status=404,
+                )
+
+                # Download private product of a project that does not exist goes to 404
+                self.testapp.get(
+                    "/user/{}/project/{}/form/{}/private_download/{}/output/{}".format(
+                        self.randonLogin,
+                        "not_exist",
+                        self.formID,
+                        "csv_private_export",
+                        task_id[-12:],
+                    ),
+                    status=404,
+                )
+
                 self.testapp.get(
                     "/user/{}/project/{}/form/{}/private_download/{}/output/{}".format(
                         self.randonLogin,
@@ -4786,6 +4919,32 @@ class FunctionalTests(unittest.TestCase):
                         "wrongAPIKey",
                     ),
                     status=401,
+                )
+
+                # Download project not exist
+                self.testapp.get(
+                    "/user/{}/project/{}/form/{}/api_download/{}/output/{}?apikey={}".format(
+                        self.randonLogin,
+                        "not_exist",
+                        self.formID,
+                        "csv_private_export",
+                        task_id[-12:],
+                        self.randonLoginKey,
+                    ),
+                    status=404,
+                )
+
+                # Download output not exist
+                self.testapp.get(
+                    "/user/{}/project/{}/form/{}/api_download/{}/output/{}?apikey={}".format(
+                        self.randonLogin,
+                        self.project,
+                        self.formID,
+                        "csv_private_export",
+                        "not_exist",
+                        self.randonLoginKey,
+                    ),
+                    status=404,
                 )
 
                 self.testapp.get(
@@ -12260,6 +12419,66 @@ class FunctionalTests(unittest.TestCase):
                 status=404,
             )
 
+            # Download a product from a project that does not have access
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/private_download/{}/output/{}".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "csv_private_export",
+                    "na",
+                ),
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/api_download/{}/output/{}?apikey={}".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "csv_private_export",
+                    "na",
+                    collaborator_1_key,
+                ),
+                status=404,
+            )
+
+            # Publish product without access
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/products/{}/output/{}/publish".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "csv_public_export",
+                    "na",
+                ),
+                status=404,
+            )
+
+            # Unpublish product with not have access project goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/products/{}/output/{}/unpublish".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "csv_public_export",
+                    "na",
+                ),
+                status=404,
+            )
+
+            # Delete product goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/products/{}/output/{}/delete".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "csv_public_export",
+                    "na",
+                ),
+                status=404,
+            )
+
             # The collaborator logs out
             self.testapp.get("/logout", status=302)
 
@@ -12293,6 +12512,42 @@ class FunctionalTests(unittest.TestCase):
             assert "FS_error" not in res.headers
 
             # ---------------Section to test editor unauthorized access ---------------
+
+            # Publish product without access
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/products/{}/output/{}/publish".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "csv_public_export",
+                    "na",
+                ),
+                status=404,
+            )
+
+            # Unpublish product with not have access project goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/products/{}/output/{}/unpublish".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "csv_public_export",
+                    "na",
+                ),
+                status=404,
+            )
+
+            # Delete product goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/products/{}/output/{}/delete".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "csv_public_export",
+                    "na",
+                ),
+                status=404,
+            )
 
             # Add partner to a form that does not have access goes to 404
             self.testapp.post(
@@ -15815,98 +16070,98 @@ class FunctionalTests(unittest.TestCase):
         print("Testing partners")
         test_partners()
         time.sleep(60)
-        # print("Testing data import")
-        # test_import_data()
-        # print("Testing assistant access")
-        # test_assistant_access()
-        # print("Testing logs 1")
-        # test_json_logs()
-        # print("Testing logs 2")
-        # test_json_logs_2()
-        # print("Testing logs 3")
-        # test_json_logs_3()
-        # print("Testing logs 4")
-        # test_json_logs_4()
-        # print("Testing cleaning interface")
-        # test_clean_interface()
-        # print("Testing cleaning interface unauthorized")
-        # test_clean_interface_unauthorized()
-        # print("Testing audit")
-        # test_audit()
-        # print("Testing repository tasks")
-        # test_repository_tasks()
-        # print("Testing collaborator access")
-        # test_collaborator_access()
-        # print("Testing helpers")
-        # test_helpers()
-        # print("Testing utility functions")
-        # test_utility_functions()
-        # print("Testing avatar generator")
-        # test_avatar_generator()
-        # print("Testing colo generator")
-        # test_color_hash_hex()
-        # print("Testing use assistant")
-        # test_one_user_assistant()
-        # print("Testing five collaborators")
-        # test_five_collaborators()
-        # print("Test form merge. Add head")
-        # test_form_merge_start()
-        # print("Test form merge erros")
-        # test_form_merge_check_errors()
-        # print("Testing merge then delete")
-        # test_form_merge_delete()
-        # print("Testing merge")
-        # test_form_merge()
-        # print("Testing merge code 1")
-        # test_form_merge_mimic()
-        # print("Testing merge code 2")
-        # test_form_merge_mimic2()
-        # print("Testing merge code 3")
-        # test_form_merge_mimic3()
-        # print("Testing case management - head")
-        # test_case_management_start()
-        # print("Testing case management")
-        # test_case_management()
-        # print("Testing assistant group access")
-        # test_group_assistant()
-        # print("Testing Delete form with repository")
-        # test_delete_form_with_repository()
-        # print("Testing API")
-        # test_api()
-        # print("Testing plugin functions")
-        # test_plugin_utility_functions()
-        # print("Testing Collaborator access to project 1")
-        # test_collaborator_projects()
-        # print("Testing Collaborator access to project 2")
-        # test_collaborator_projects_2()
-        # print("Testing Collaborator access to project 3")
-        # test_collaborator_projects_3()
-        # print("Testing Collaborator access to project 3")
-        # test_collaborator_projects_4()
-        # print("Testing delete active project")
-        # test_delete_active_project()
-        # print("Testing access to form")
-        # test_form_access()
-        # print("Testing unauthorized access")
-        # test_unauthorized_access()
-        # print("Testing create super user")
-        # test_create_super_user()
-        # print("Testing configure alembic")
-        # test_configure_alembic()
-        # print("Testing configure fluent")
-        # test_configure_fluent()
-        # print("Testing configire mysql")
-        # test_configure_mysql()
-        # print("Testing configure tests")
-        # test_configure_tests()
-        # print("Testing modify config")
-        # test_modify_config()
-        # print("Testing disable ssl")
-        # test_disable_ssl()
-        # print("Testing update aes key")
-        # test_update_aes_key()
-        # print("Testing error pages")
-        # test_error_pages()
+        print("Testing data import")
+        test_import_data()
+        print("Testing assistant access")
+        test_assistant_access()
+        print("Testing logs 1")
+        test_json_logs()
+        print("Testing logs 2")
+        test_json_logs_2()
+        print("Testing logs 3")
+        test_json_logs_3()
+        print("Testing logs 4")
+        test_json_logs_4()
+        print("Testing cleaning interface")
+        test_clean_interface()
+        print("Testing cleaning interface unauthorized")
+        test_clean_interface_unauthorized()
+        print("Testing audit")
+        test_audit()
+        print("Testing repository tasks")
+        test_repository_tasks()
+        print("Testing collaborator access")
+        test_collaborator_access()
+        print("Testing helpers")
+        test_helpers()
+        print("Testing utility functions")
+        test_utility_functions()
+        print("Testing avatar generator")
+        test_avatar_generator()
+        print("Testing colo generator")
+        test_color_hash_hex()
+        print("Testing use assistant")
+        test_one_user_assistant()
+        print("Testing five collaborators")
+        test_five_collaborators()
+        print("Test form merge. Add head")
+        test_form_merge_start()
+        print("Test form merge erros")
+        test_form_merge_check_errors()
+        print("Testing merge then delete")
+        test_form_merge_delete()
+        print("Testing merge")
+        test_form_merge()
+        print("Testing merge code 1")
+        test_form_merge_mimic()
+        print("Testing merge code 2")
+        test_form_merge_mimic2()
+        print("Testing merge code 3")
+        test_form_merge_mimic3()
+        print("Testing case management - head")
+        test_case_management_start()
+        print("Testing case management")
+        test_case_management()
+        print("Testing assistant group access")
+        test_group_assistant()
+        print("Testing Delete form with repository")
+        test_delete_form_with_repository()
+        print("Testing API")
+        test_api()
+        print("Testing plugin functions")
+        test_plugin_utility_functions()
+        print("Testing Collaborator access to project 1")
+        test_collaborator_projects()
+        print("Testing Collaborator access to project 2")
+        test_collaborator_projects_2()
+        print("Testing Collaborator access to project 3")
+        test_collaborator_projects_3()
+        print("Testing Collaborator access to project 3")
+        test_collaborator_projects_4()
+        print("Testing delete active project")
+        test_delete_active_project()
+        print("Testing access to form")
+        test_form_access()
+        print("Testing unauthorized access")
+        test_unauthorized_access()
+        print("Testing create super user")
+        test_create_super_user()
+        print("Testing configure alembic")
+        test_configure_alembic()
+        print("Testing configure fluent")
+        test_configure_fluent()
+        print("Testing configire mysql")
+        test_configure_mysql()
+        print("Testing configure tests")
+        test_configure_tests()
+        print("Testing modify config")
+        test_modify_config()
+        print("Testing disable ssl")
+        test_disable_ssl()
+        print("Testing update aes key")
+        test_update_aes_key()
+        print("Testing error pages")
+        test_error_pages()
         show_health()
         end_time = datetime.datetime.now()
         time_delta = end_time - start_time

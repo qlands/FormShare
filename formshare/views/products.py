@@ -29,19 +29,14 @@ class DownloadPrivateProduct(PrivateView):
         product_id = self.request.matchdict["productid"]
         output_id = self.request.matchdict["outputid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
         if project_id is not None:
             project_found = False
             for project in self.user_projects:
                 if project["project_id"] == project_id:
                     project_found = True
-                    project_details = project
             if not project_found:
                 raise HTTPNotFound
         else:
-            raise HTTPNotFound
-
-        if project_details["access_type"] == 5:
             raise HTTPNotFound
 
         output_id, output_file, mime_type = get_product_output(
@@ -142,18 +137,14 @@ class DownloadPrivateProductByAPI(APIView):
         product_id = self.request.matchdict["productid"]
         output_id = self.request.matchdict["outputid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-
+        if project_id is None:
+            raise HTTPNotFound
         api_projects = get_user_projects(self.request, user_id, self.user["user_id"])
         project_found = False
-        project_details = {}
         for project in api_projects:
             if project["project_id"] == project_id:
                 project_found = True
-                project_details = project
         if not project_found:
-            raise HTTPNotFound
-
-        if project_details["access_type"] == 5:
             raise HTTPNotFound
 
         output_id, output_file, mime_type = get_product_output(

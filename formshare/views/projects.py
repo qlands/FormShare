@@ -59,16 +59,12 @@ class ProjectStoredFileView(ProjectsView):
         project_code = self.request.matchdict["projcode"]
         file_name = self.request.matchdict["filename"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
         if project_id is not None:
             project_found = False
             for project in self.user_projects:
                 if project["project_id"] == project_id:
                     project_found = True
-                    project_details = project
             if project_found:
-                if project_details["access_type"] > 4:
-                    raise HTTPNotFound
                 stream = get_stream(self.request, project_id, file_name)
                 if stream is not None:
                     self.returnRawViewResult = True
@@ -113,18 +109,14 @@ class ProjectDetailsView(ProjectsView):
         else:
             raise HTTPNotFound
 
-        if project_data["access_type"] > 4:
-            raise HTTPNotFound
-
         assistants, more_assistants = get_project_assistants(
             self.request, project_id, 8
         )
-        if self.user is not None:
-            collaborators, more_collaborators = get_project_collaborators(
-                self.request, project_id, self.user.login, 4
-            )
-        else:
-            raise HTTPNotFound
+
+        collaborators, more_collaborators = get_project_collaborators(
+            self.request, project_id, self.user.login, 4
+        )
+
         forms = get_project_forms(self.request, user_id, project_id)
         active_forms = 0
         inactive_forms = 0
@@ -170,10 +162,10 @@ class AddProjectView(ProjectsView):
     def process_view(self):
         if self.request.method == "POST":
             project_details = self.get_post_dict()
-            if "project_public" in project_details.keys():
-                project_details["project_public"] = 1
-            else:
-                project_details["project_public"] = 0
+            # if "project_public" in project_details.keys():
+            #     project_details["project_public"] = 1
+            # else:
+            project_details["project_public"] = 0
 
             if "project_case" in project_details.keys():
                 project_details["project_case"] = 1
@@ -284,7 +276,7 @@ class AddProjectView(ProjectsView):
             else:
                 self.append_to_errors(self._("The project code cannot be empty"))
         else:
-            project_details = {"project_public": 1, "project_case": 0}
+            project_details = {"project_public": 0, "project_case": 0}
         return {"projectDetails": project_details}
 
 

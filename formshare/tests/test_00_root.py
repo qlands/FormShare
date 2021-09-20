@@ -642,6 +642,12 @@ class FunctionalTests(unittest.TestCase):
             assert "FS_error" not in res.headers
 
         def test_projects():
+            # Show the add screen
+            self.testapp.get(
+                "/user/{}/projects/add".format(self.randonLogin),
+                status=200,
+            )
+
             # Add a project fails. The project id is empty
             res = self.testapp.post(
                 "/user/{}/projects/add".format(self.randonLogin),
@@ -737,6 +743,11 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Project don't exist
+            self.testapp.get(
+                "/user/{}/project/{}".format(self.randonLogin, "not_exist"), status=404
+            )
+
             # Gets the details of a project
             res = self.testapp.get(
                 "/user/{}/project/{}".format(self.randonLogin, "test001"), status=200
@@ -822,6 +833,22 @@ class FunctionalTests(unittest.TestCase):
                 upload_files=[("filetoupload", resource_file)],
             )
             assert "FS_error" not in res.headers
+
+            # File of a project that does not exist
+            self.testapp.get(
+                "/user/{}/project/{}/storage/{}".format(
+                    self.randonLogin, "not_exist", "test1.dat"
+                ),
+                status=404,
+            )
+
+            # Get a file that does not exist
+            self.testapp.get(
+                "/user/{}/project/{}/storage/{}".format(
+                    self.randonLogin, "test001", "not_exist"
+                ),
+                status=404,
+            )
 
             # Returns a project file
             res = self.testapp.get(
@@ -12036,6 +12063,28 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Add a project succeed.
+            res = self.testapp.post(
+                "/user/{}/projects/add".format(self.randonLogin),
+                {
+                    "project_code": "coll1_test001",
+                    "project_name": "Test project collaborator 1",
+                    "project_abstract": "",
+                    "project_icon": "😁",
+                    "project_hexcolor": "#9bbb59",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Opens other user profile
+            self.testapp.get("/user/{}/profile".format(self.randonLogin), status=404)
+
+            # Edit others profile
+            self.testapp.get(
+                "/user/{}/profile/edit".format(self.randonLogin), status=404
+            )
+
             # Add partner to a form that does not have access goes to 404
             self.testapp.post(
                 "/user/{}/project/{}/form/{}/partners/add".format(
@@ -12477,6 +12526,22 @@ class FunctionalTests(unittest.TestCase):
                     "na",
                 ),
                 status=404,
+            )
+
+            # File of a project that does not have access
+            self.testapp.get(
+                "/user/{}/project/{}/storage/{}".format(
+                    self.randonLogin, "not_exist", "test1.dat"
+                ),
+                status=404,
+            )
+
+            # Get a list of project of a user that is not the same as logged
+            self.testapp.get("/user/{}/projects".format(self.randonLogin), status=404)
+
+            # Project details of a project that not have access
+            self.testapp.get(
+                "/user/{}/project/{}".format(self.randonLogin, "test001"), status=404
             )
 
             # The collaborator logs out

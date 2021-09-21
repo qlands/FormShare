@@ -23,6 +23,7 @@ jobs:
           command: |
             sudo /etc/init.d/redis-server start
             sudo service mongodb start
+            sudo usermod -d /var/lib/mysql/ mysql
             sudo service mysql start
             sudo service mosquitto start
             tail -f /dev/null

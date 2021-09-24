@@ -319,6 +319,7 @@ class Odkform(Base):
     form_othlangs = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     form_mergetask = Column(Unicode(64))
     form_abletomerge = Column(INTEGER, server_default=text("'-1'"))
+    form_mergelngerror = Column(INTEGER, server_default=text("'0'"))
     form_repositorypossible = Column(INTEGER, server_default=text("'-1'"))
     form_mergerrors = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     form_xlsfile = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))

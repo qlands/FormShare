@@ -334,6 +334,7 @@ def check_jxform_file(
     insert_xml_file,
     primary_key,
     external_files=None,
+    get_languages=False,
 ):
     if external_files is None:
         external_files = []
@@ -352,6 +353,8 @@ def check_jxform_file(
         "-o m",
         "-K",
     ]
+    if get_languages:
+        args.append("-L")
     for a_file in external_files:
         args.append(a_file)
     p = Popen(args, stdout=PIPE, stderr=PIPE)
@@ -361,15 +364,31 @@ def check_jxform_file(
 
     if p.returncode == 0:
         try:
-            root = etree.fromstring(stdout)
-            files_array = []
-            missing_files = root.findall(".//missingFile")
-            for a_file in missing_files:
-                files_array.append(a_file.get("fileName"))
-            if len(files_array) > 0:
-                return 0, ",".join(files_array)
+            if not get_languages:
+                root = etree.fromstring(stdout)
+                files_array = []
+                missing_files = root.findall(".//missingFile")
+                for a_file in missing_files:
+                    files_array.append(a_file.get("fileName"))
+                if len(files_array) > 0:
+                    return 0, ",".join(files_array)
+                else:
+                    return 0, ""
             else:
-                return 0, ""
+                root = etree.fromstring(stdout)
+                language_array = []
+                languages = root.findall(".//language")
+                if languages:
+                    for a_language in languages:
+                        language_array.append(
+                            {
+                                "code": "",
+                                "name": a_language.get("name")
+                                or a_language.get("description"),
+                            }
+                        )
+                return 0, language_array
+
         except Exception as e:
             log.info(
                 "Checking JXForm returned 0 with no addition messages: {}".format(
@@ -580,6 +599,40 @@ def check_jxform_file(
                         + "\n"
                     )
             return 9, message
+
+        if p.returncode == 7:
+            log.error(
+                ". Error: "
+                + str(p.returncode)
+                + "-"
+                + stderr.decode()
+                + " while checking PyXForm. Command line: "
+                + " ".join(args)
+            )
+            return (
+                7,
+                _(
+                    "Malformed language in your ODK. You have label:X (Y) when it must be label::X (Y). "
+                    "With two colons (::)"
+                ),
+            )
+
+        if p.returncode == 8:
+            log.error(
+                ". Error: "
+                + str(p.returncode)
+                + "-"
+                + stderr.decode()
+                + " while checking PyXForm. Command line: "
+                + " ".join(args)
+            )
+            return (
+                8,
+                _(
+                    "You have choices but not labels. Did you missed the :: between label and language? "
+                    "Like label::English (en)"
+                ),
+            )
 
         if p.returncode == 2:
             log.error(
@@ -1924,7 +1977,7 @@ def create_repository(
     jxform_to_mysql = os.path.join(
         request.registry.settings["odktools.path"], *["JXFormToMysql", "jxformtomysql"]
     )
-
+    _ = request.translate
     form_data = get_form_data(request, project, form)
     survey_file = get_form_survey_file(request, project, form)
     if survey_file is not None:
@@ -1977,6 +2030,7 @@ def create_repository(
             "-e "
             + os.path.join(odk_dir, *["forms", xform_directory, "repository", "temp"])
         )
+        args.append("-L")
         args.append("-o m")
 
         # Append all media files
@@ -2001,17 +2055,35 @@ def create_repository(
         args_create = args
 
         if p.returncode == 0:
-            update_form_repository_info(
-                request,
-                project,
-                form,
-                {
-                    "form_pkey": primary_key,
-                    "form_deflang": default_language,
-                    "form_othlangs": other_languages,
-                },
-            )
             if not for_merging:
+                if default_language is None:
+                    root = etree.fromstring(stdout.decode())
+                    language_array = root.findall(".//language")
+                    if language_array:
+                        default_language = "(en)english"
+                    other_languages_array = []
+                    for a_language in language_array:
+                        if a_language.get("code", "") != "en":
+                            other_languages_array.append(
+                                "({}){}".format(
+                                    a_language.get("code", ""),
+                                    a_language.get("description", ""),
+                                )
+                            )
+                    if other_languages_array:
+                        other_languages = ",".join(other_languages_array)
+
+                update_form_repository_info(
+                    request,
+                    project,
+                    form,
+                    {
+                        "form_pkey": primary_key,
+                        "form_deflang": default_language,
+                        "form_othlangs": other_languages,
+                    },
+                )
+
                 schema = "FS_" + str(uuid.uuid4()).replace("-", "_")
                 create_file = os.path.join(
                     odk_dir, *["forms", xform_directory, "repository", "create.sql"]
@@ -2211,6 +2283,63 @@ def create_repository(
 
                 return 0, ""
             else:
+                update_form_repository_info(
+                    request,
+                    project,
+                    form,
+                    {
+                        "form_pkey": primary_key,
+                        "form_deflang": default_language,
+                        "form_othlangs": other_languages,
+                    },
+                )
+                if default_language is not None:
+                    df_language = default_language.replace(")", "|")
+                    df_language = df_language.replace("(", "")
+                    parts = df_language.split("|")
+                    root = etree.fromstring(stdout.decode())
+                    language_array = root.findall(".//language")  # language
+                    language_found = False
+                    if language_array:
+                        for a_language in language_array:
+                            if (
+                                a_language.get("description", "").lower()
+                                == parts[1].lower()
+                            ):
+                                language_found = True
+                                break
+                    if not language_found:
+                        lng_message = _(
+                            'The language "{}" is missing in this version of the form '
+                            'and cannot be merged.\n\nUse the "Fix language" button to set the languages '
+                            "in this version of the ODK Form.".format(parts[1])
+                        )
+                        if parts[1] == "default":
+                            lng_message = (
+                                lng_message
+                                + "\n\n"
+                                + _(
+                                    'The language called "default" appears when you have a '
+                                    '"label" without indicating a language. '
+                                    'For example if you had a column called "label" '
+                                    'and another called "label:English (es)" then "default" '
+                                    'refers to the language of "label" which was not '
+                                    "indicated in the previous version of this ODK Form."
+                                    '\n\nIn this new version you added the language to the "label" therefore "default" '
+                                    "does not exists"
+                                )
+                            )
+                        return 22, lng_message
+                else:
+                    root = etree.fromstring(stdout.decode())
+                    language_array = root.findall(".//language")  # language
+                    if language_array:
+                        return 23, _(
+                            "This version of the form is in multiple languages but the previous one "
+                            'was not and therefore and cannot be merged.\n\nUse the "Fix language" '
+                            "button to set the languages in this version of the ODK Form."
+                        )
+
                 return 0, ""
         else:
             if p.returncode == 1 or p.returncode < 0:

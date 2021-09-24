@@ -1,0 +1,100 @@
+{% extends 'dashboard/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block titlesection %}{{ _('Fix languages') }} {% endblock titlesection %}
+
+{% block css %}
+    {{ super() }}
+    {% cssresource request,'formshare','switchery' %}
+{% endblock css %}
+
+{% block topScripts %}
+    {{ super() }}
+    {% jsresource request,'formshare','switchery' %}
+{% endblock topScripts %}
+
+{% block breadcrumbs %}
+    {% include 'dashboard/projects/repository/snippets/brdcrbs_fix.jinja2' %}
+{% endblock breadcrumbs %}
+
+{% block mainsection %}
+    <div class="row">
+        <div class="col-md-12">
+            <div  class="ibox">
+                <div class="ibox-title">
+                    <h5>{{ _('Fix languages') }}</h5>
+                    <div class="ibox-tools">
+                        <a class="collapse-link" style="margin-right: 10px">
+                            <i class="fa fa-chevron-up"></i>
+                        </a>
+                        <a class="fullscreen-link">
+                            <i class="fa fa-expand"></i>
+                        </a>
+                    </div>
+                </div>
+                <div class="ibox-content">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <h2 style="color: red">{{ _('On this page, we assume that you know the language of the repository and that the changes that you are making here to merge this new version are correct. You assume the risks of ending up with an inconsistent repository.') }}</h2>
+                            <hr>
+                            {{ form.display_errors(errors) }}
+                            <form id="repform" class="dataset-form form-horizontal add-member-form require_busy" role="form" method="post" action="{{ request.url }}">
+                                <input type="hidden" name="csrf_token" value="{{ request.session.get_csrf_token() }}">
+                                {% if languages|length > 0 %}
+                                    <div class="form-group">
+                                        <label>{{ _('Primary language') }}</label>
+                                        <select style="width: 300px !important;" id="form_deflang" name="form_deflang" class="form-control">
+                                            <option disabled selected value> -- {{ _('select an option') }} -- </option>
+                                            {% for language in languages %}
+                                                <option value="{{ language.name }}">{{ language.name }}</option>
+                                            {% endfor %}
+                                        </select>
+                                        <span style="color: #f8ac59" class="form-text m-b-none text-warning">{{ _('Please note that FormShare will store the descriptions of variables and choices in the primary language.') }}</span>
+                                        <br/><h3 style="color: red" class="text-danger">{{ _('The language of the previous form was') }} "{{ old_language }}"</h3>
+                                        {% if default %}
+                                            <br/><span style="color: #f8ac59" class="form-text m-b-none text-danger">{{ _('The language called "default" appears when you have a "label" or "hint" without indicating a language. For example if you have a column called "label" and another called "label:English (es)" then "default" refers to the language of "label" which is not indicated in the ODK Form.') }}</span>
+                                        {% endif %}
+                                    </div>
+                                    <div class="hr-line-dashed"></div>
+                                    <b>{{ _('Language codes') }}</b><br/>
+                                    <span>{{ _('You must give a code to each language. Use the ')}}<a target="_blank" href="https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes"> {{ _('ISO 639-1') }}</a> {{ _('as reference.') }}</span>
+                                    <br/>
+                                    <br/>
+                                    {% for language in languages %}
+                                        <div class="form-group">
+                                            <label>{{ _('For') }} {{ language.name }}</label>
+                                            <input class="form-control" style="width: 100px !important;" type="text" pattern="[a-zA-Z]*" required minlength="2" maxlength="2" name="LNG-{{ language.name }}" value="{{ language.code }}">
+                                        </div>
+                                    {% endfor %}
+                                {% else %}
+                                    <br/>
+                                    <h3>{{ _('This version does not have any languages. However, the previous version had different languages.') }}</h3>
+                                    <br/>
+                                    <h3 style="color: red">{{ _('By fixing it, you assume that the language of this new version of the form is') }} "{{ old_language }}". {{ _('If that is not correct then you will end up with an inconsistent repository.') }}</h3>
+                                {% endif %}
+                                <div class="form-actions">
+                                    <button class="btn btn-danger" type="submit">
+                                        {{ _('I assume the risks. Fix the languages') }}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock mainsection %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function() {
+            var elem = document.querySelector('.js-switch');
+            var switchery = new Switchery(elem, { color: '#1AB394' });
+            $('#repform').submit(function() {
+                $(this).find("button[type='submit']").prop('disabled',true);
+            });
+        });
+        </script>
+{% endblock scripts %}

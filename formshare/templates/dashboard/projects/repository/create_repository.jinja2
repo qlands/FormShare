@@ -58,11 +58,15 @@
                                             <div class="form-group">
                                                 <label>{{ _('Primary language') }}</label>
                                                 <select style="width: 300px !important;" id="form_deflang" name="form_deflang" class="form-control">
+                                                    <option disabled selected value> -- {{ _('select an option') }} -- </option>
                                                     {% for language in languages %}
                                                         <option value="{{ language.name }}">{{ language.name }}</option>
                                                     {% endfor %}
                                                 </select>
                                                 <span style="color: #f8ac59" class="form-text m-b-none text-warning">{{ _('Please note that FormShare will store the descriptions of variables and choices in the primary language.') }}</span>
+                                                {% if default %}
+                                                    <br/><span style="color: #f8ac59" class="form-text m-b-none text-danger">{{ _('The language called "default" appears when you have a "label" or "hint" without indicating a language. For example if you have a column called "label" and another called "label:English (es)" then "default" refers to the language of "label" which is not indicated in the ODK Form.') }}</span>
+                                                {% endif %}
                                             </div>
                                             <div class="hr-line-dashed"></div>
                                             <b>{{ _('Language codes') }}</b><br/>

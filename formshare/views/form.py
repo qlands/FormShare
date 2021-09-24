@@ -62,6 +62,9 @@ from formshare.processes.db import (
     add_partner_to_form,
     update_partner_form_options,
     remove_partner_from_form,
+    get_form_survey_file,
+    get_form_xml_create_file,
+    get_form_xml_insert_file,
 )
 from formshare.processes.elasticsearch.record_index import delete_form_records
 from formshare.processes.elasticsearch.repository_index import (
@@ -237,7 +240,7 @@ class FormDetails(PrivateView):
                             )
                         )
                         return (
-                            False,
+                            1,
                             "The case selector field {} was not found in the ODK form".format(
                                 form_data["form_caseselector"]
                             ),
@@ -246,7 +249,7 @@ class FormDetails(PrivateView):
                     #  This might not be possible to happen. Left here just in case
                     log.error("Main table was not found in {}".format(new_create_file))
                     return (
-                        False,
+                        1,
                         "Main table was not found in {}".format(new_create_file),
                     )
 
@@ -262,7 +265,7 @@ class FormDetails(PrivateView):
             if merged == 0:
                 form_data = {"form_abletomerge": 1}
                 update_form(self.request, project_id, new_form_id, form_data)
-                return True, ""
+                return 0, ""
             else:
                 try:
                     root = etree.fromstring(output)
@@ -326,7 +329,10 @@ class FormDetails(PrivateView):
                             update_form(
                                 self.request, project_id, new_form_id, form_data
                             )
-                            return True, ""
+                            return 0, ""
+                        else:
+                            error_string = json.dumps({"errors": errors})
+                            return 1, error_string
                 except Exception as e:
                     send_error_to_technical_team(
                         self.request,
@@ -341,7 +347,7 @@ class FormDetails(PrivateView):
                             "they will contact you ASAP."
                         )
                     )
-        else:  # pragma: no cover
+        else:
             # This might not happen. Left here just in case
             if created == 1:
                 # Internal error: Report issue
@@ -365,7 +371,8 @@ class FormDetails(PrivateView):
                         "An email has been sent to the technical team and they will contact you ASAP."
                     )
                 )
-            if 3 <= created <= 6:
+            if created == 7:
+                # Malformed language in the ODK Form. Report issue because this was checked before
                 self.report_critical_error(
                     user_id, project_id, new_form_id, created, message
                 )
@@ -375,6 +382,54 @@ class FormDetails(PrivateView):
                         "An email has been sent to the technical team and they will contact you ASAP."
                     )
                 )
+            if created == 8:
+                # Options without labels. Report issue because this was checked before
+                self.report_critical_error(
+                    user_id, project_id, new_form_id, created, message
+                )
+                errors.append(
+                    self._(
+                        "An unexpected error occurred while processing the merge. "
+                        "An email has been sent to the technical team and they will contact you ASAP."
+                    )
+                )
+            if 3 <= created <= 6:
+                if created == 3:
+                    errors.append(
+                        self._(
+                            "This new version of the form has multiple languages when the previous one did not."
+                            '\n\nUse the "Fix language" button to set the languages in '
+                            "this version of the ODK Form."
+                        )
+                    )
+                if created == 4:
+                    root = etree.fromstring(message)
+                    language_array = root.findall(".//language")
+                    error_message = self._(
+                        "This version of the ODK Form differs in the languages used. "
+                        "The following languages are undefined:\n\n"
+                    )
+                    for a_language in language_array:
+                        error_message = (
+                            error_message + "\t" + a_language.get("name", "") + "\n"
+                        )
+                    error_message = (
+                        error_message
+                        + '\nUse the "Fix language" button to set the languages in this '
+                        "version of the ODK Form."
+                    )
+                    errors.append(error_message)
+                if created != 3 and created != 4:
+                    self.report_critical_error(
+                        user_id, project_id, new_form_id, created, message
+                    )
+                    errors.append(
+                        self._(
+                            "An unexpected error occurred while processing the merge. "
+                            "An email has been sent to the technical team and they will contact you ASAP."
+                        )
+                    )
+
             if created == 14:
                 txt_message = 'The following files have invalid characters like extra ". Only _ is allowed : \n'
                 root = etree.fromstring(message)
@@ -556,11 +611,15 @@ class FormDetails(PrivateView):
                                 )
                         txt_message = txt_message + "\t"
                 errors.append(txt_message)
+            if created == 22:
+                errors.append(message)
+            if created == 23:
+                errors.append(message)
 
         error_string = json.dumps({"errors": errors})
         # form_data = {"form_abletomerge": 0, "form_mergerrors": error_string}
         # update_form(self.request, project_id, new_form_id, form_data)
-        return False, error_string
+        return created, error_string
 
     def process_view(self):
         user_id = self.request.matchdict["userid"]
@@ -652,12 +711,20 @@ class FormDetails(PrivateView):
                         form_data["form_repositorypossible"] = 1
                         form_update_data = {"form_repositorypossible": 1}
                         update_form(self.request, project_id, form_id, form_update_data)
-
+            merge_language_problem = False
             if (
                 len(missing_files) == 0
                 and form_data["form_abletomerge"] == -1
                 and form_data["parent_form"] is not None
             ):
+                if form_data["form_mergelngerror"] != 2:
+                    def_language_to_use = form_data["parent_form_data"]["form_deflang"]
+                    other_languages_to_use = form_data["parent_form_data"][
+                        "form_othlangs"
+                    ]
+                else:
+                    def_language_to_use = form_data["form_deflang"]
+                    other_languages_to_use = form_data["form_othlangs"]
                 able_to_merge, errors = self.check_merge(
                     user_id,
                     project_id,
@@ -667,14 +734,40 @@ class FormDetails(PrivateView):
                     form_data["parent_form_data"]["form_createxmlfile"],
                     form_data["parent_form_data"]["form_insertxmlfile"],
                     form_data["parent_form_data"]["form_pkey"],
-                    form_data["parent_form_data"]["form_deflang"],
-                    form_data["parent_form_data"]["form_othlangs"],
+                    def_language_to_use,
+                    other_languages_to_use,
                 )
-                if able_to_merge == 1:
+                if able_to_merge == 0:
                     form_data["form_abletomerge"] = 1
                 else:
-                    form_data["form_abletomerge"] = 0
-                    form_data["form_mergerrors"] = errors
+                    if (
+                        able_to_merge == 22
+                        or able_to_merge == 23
+                        or (3 <= able_to_merge <= 6)
+                    ):
+                        if form_data["form_mergelngerror"] != 2:
+                            merge_language_problem = True
+                            update_form(
+                                self.request,
+                                project_id,
+                                form_id,
+                                {"form_mergelngerror": 1},
+                            )
+                            form_data["form_mergelngerror"] = 1
+                            form_data["form_abletomerge"] = 0
+                            form_data["form_mergerrors"] = errors
+                        else:
+                            form_data["form_abletomerge"] = 1
+                            form_data["form_mergerrors"] = None
+                            update_form(
+                                self.request,
+                                project_id,
+                                form_id,
+                                {"form_abletomerge": 1, "form_mergerrors": None},
+                            )
+                    else:
+                        form_data["form_abletomerge"] = 0
+                        form_data["form_mergerrors"] = errors
             merging_errors = {"errors": []}
             if form_data["form_abletomerge"] == 0:
                 merging_errors = json.loads(form_data["form_mergerrors"])
@@ -730,6 +823,7 @@ class FormDetails(PrivateView):
                     self.request, project_id, form_id, form_data["form_reptask"]
                 ),
                 "merging_errors": merging_errors,
+                "merge_language_problem": merge_language_problem,
             }
         else:
             raise HTTPNotFound
@@ -3320,5 +3414,211 @@ class RemovePartnerFromForm(PrivateView):
                     formid=form_id,
                 )
                 return HTTPFound(location=next_page, headers={"FS_error": "true"})
+        else:
+            raise HTTPNotFound
+
+
+class FixMergeLanguage(PrivateView):
+    def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        project_code = self.request.matchdict["projcode"]
+        form_id = self.request.matchdict["formid"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] >= 4:
+            raise HTTPNotFound
+
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+
+        if form_data["parent_form"] is not None and form_data["form_abletomerge"] == -1:
+            parent_form_data = get_form_data(
+                self.request, project_id, form_data["parent_form"]
+            )
+            if parent_form_data is None:
+                raise HTTPNotFound
+
+            odk_dir = get_odk_path(self.request)
+            media_files = get_media_files(self.request, project_id, form_id)
+            tmp_uid = str(uuid.uuid4())
+            target_dir = os.path.join(odk_dir, *["tmp", tmp_uid])
+            os.makedirs(target_dir)
+            for media_file in media_files:
+                store_file_in_directory(
+                    self.request, project_id, form_id, media_file.file_name, target_dir
+                )
+            path = os.path.join(odk_dir, *["tmp", tmp_uid, "*.*"])
+            files = glob.glob(path)
+            odk_media_files = []
+            if files:
+                for aFile in files:
+                    odk_media_files.append(aFile)
+            survey_file = get_form_survey_file(self.request, project_id, form_id)
+            create_file = get_form_xml_create_file(self.request, project_id, form_id)
+            insert_file = get_form_xml_insert_file(self.request, project_id, form_id)
+            result, languages = check_jxform_file(
+                self.request,
+                survey_file,
+                create_file,
+                insert_file,
+                parent_form_data["form_pkey"],
+                odk_media_files,
+                True,
+            )
+
+            default = False
+            for language in languages:
+                if language["name"] == "default":
+                    default = True
+
+            if parent_form_data["form_deflang"].find("default") >= 0:
+                default = True
+            if self.request.method == "POST":
+                if languages:
+                    run_process = True
+                    postdata = self.get_post_dict()
+                    default_language_string = "("
+                    default_language = ""
+                    if postdata.get("form_deflang", "") != "":
+                        default_language = postdata.get("form_deflang")
+                    else:
+                        run_process = False
+                        self.append_to_errors(
+                            self._("You need to indicate the primary language")
+                        )
+                    other_languages = []
+                    empty_code_found = False
+                    language_codes = []
+                    duplicated_code = False
+                    for language in languages:
+                        if language["name"] == "default":
+                            default = True
+                        if postdata.get("LNG-" + language["name"], "") != "":
+                            found = False
+                            for a_code in language_codes:
+                                if a_code == postdata.get(
+                                    "LNG-" + language["name"], ""
+                                ):
+                                    found = True
+                            if not found:
+                                language_codes.append(
+                                    postdata.get("LNG-" + language["name"], "")
+                                )
+                            else:
+                                duplicated_code = True
+                                break
+
+                            if language["name"] == default_language:
+                                default_language_string = (
+                                    default_language_string
+                                    + postdata.get("LNG-" + language["name"])
+                                    + ")"
+                                    + language["name"]
+                                )
+                                language["code"] = postdata.get(
+                                    "LNG-" + language["name"]
+                                )
+                            else:
+                                other_languages.append(
+                                    "("
+                                    + postdata.get("LNG-" + language["name"])
+                                    + ")"
+                                    + language["name"]
+                                )
+                                language["code"] = postdata.get(
+                                    "LNG-" + language["name"]
+                                )
+                        else:
+                            empty_code_found = True
+                            break
+                    if duplicated_code:
+                        self.append_to_errors(
+                            self._(
+                                "Each language needs to have an unique ISO 639-1 code"
+                            )
+                        )
+                        run_process = False
+                    if empty_code_found:
+                        self.append_to_errors(
+                            self._(
+                                "You need to indicate a ISO 639-1 code for each language"
+                            )
+                        )
+                        run_process = False
+
+                    if run_process:
+                        update_form(
+                            self.request,
+                            project_id,
+                            form_id,
+                            {
+                                "form_deflang": default_language_string,
+                                "form_othlangs": ",".join(other_languages),
+                                "form_mergelngerror": 2,
+                            },
+                        )
+                        next_page = self.request.route_url(
+                            "form_details",
+                            userid=user_id,
+                            projcode=project_code,
+                            formid=form_id,
+                        )
+                        self.returnRawViewResult = True
+                        return HTTPFound(location=next_page)
+                    else:
+                        return {
+                            "languages": languages,
+                            "default": default,
+                            "userid": user_id,
+                            "formData": form_data,
+                            "projectDetails": project_details,
+                            "projcode": project_code,
+                            "formid": form_id,
+                            "old_language": parent_form_data["form_deflang"],
+                        }
+                else:
+                    update_form(
+                        self.request,
+                        project_id,
+                        form_id,
+                        {
+                            "form_deflang": None,
+                            "form_othlangs": None,
+                            "form_mergelngerror": 2,
+                        },
+                    )
+                    next_page = self.request.route_url(
+                        "form_details",
+                        userid=user_id,
+                        projcode=project_code,
+                        formid=form_id,
+                    )
+                    self.returnRawViewResult = True
+                    return HTTPFound(location=next_page)
+            if result == 0:
+                return {
+                    "languages": languages,
+                    "default": default,
+                    "userid": user_id,
+                    "formData": form_data,
+                    "projectDetails": project_details,
+                    "projcode": project_code,
+                    "formid": form_id,
+                    "old_language": parent_form_data["form_deflang"],
+                }
+            else:
+                raise HTTPNotFound
         else:
             raise HTTPNotFound

@@ -108,6 +108,9 @@
                                         {% else %}
                                             {% if formDetails.form_abletomerge == 0 %}
                                                 <li><a data-toggle="modal" data-target="#merge_error_modal" ><i style="color: red" class="fas fa-exclamation-triangle"></i><span style="color: red"> {{ _('See merging errors') }}</span> </a></li>
+                                                {% if merge_language_problem %}
+                                                    <li><a href="{{ request.route_url('form_fix_merge_languages',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i style="color: red" class="fas fa-flag"></i><span style="color: red"> {{ _('Fix language') }}</span> </a></li>
+                                                {% endif %}
                                             {% endif %}
                                         {% endif %}
                                     {% endif %}

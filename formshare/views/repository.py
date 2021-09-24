@@ -60,6 +60,7 @@ class GenerateRepository(PrivateView):
         list_array = []
         duplicated_choices = []
         languages = []
+        default = False
         languages_string = ""
         file_with_error = ""
         method = "get"
@@ -103,8 +104,26 @@ class GenerateRepository(PrivateView):
 
                         other_languages = []
                         empty_code_found = False
+                        language_codes = []
+                        duplicated_code = False
                         for language in languages:
+                            if language["name"] == "default":
+                                default = True
                             if postdata.get("LNG-" + language["name"], "") != "":
+                                found = False
+                                for a_code in language_codes:
+                                    if a_code == postdata.get(
+                                        "LNG-" + language["name"], ""
+                                    ):
+                                        found = True
+                                if not found:
+                                    language_codes.append(
+                                        postdata.get("LNG-" + language["name"], "")
+                                    )
+                                else:
+                                    duplicated_code = True
+                                    break
+
                                 if language["name"] == default_language:
                                     default_language_string = (
                                         default_language_string
@@ -128,6 +147,13 @@ class GenerateRepository(PrivateView):
                             else:
                                 empty_code_found = True
                                 break
+                        if duplicated_code:
+                            self.append_to_errors(
+                                self._(
+                                    "Each language needs to have an unique ISO 639-1 code"
+                                )
+                            )
+                            run_process = False
                         if empty_code_found:
                             self.append_to_errors(
                                 self._(
@@ -189,6 +215,18 @@ class GenerateRepository(PrivateView):
                                     user_id, project_id, form_id, result_code, message
                                 )
                                 stage = -1
+                            if result_code == 7:
+                                # Internal error: Report issue
+                                self.report_critical_error(
+                                    user_id, project_id, form_id, result_code, message
+                                )
+                                stage = -1
+                            if result_code == 8:
+                                # Internal error: Report issue
+                                self.report_critical_error(
+                                    user_id, project_id, form_id, result_code, message
+                                )
+                                stage = -1
                             if result_code == 2:
                                 # 64 or more relationships. Report issue because this was checked before
                                 self.report_critical_error(
@@ -203,9 +241,22 @@ class GenerateRepository(PrivateView):
                                     )  # language
                                     if language_array:
                                         for aLang in language_array:
-                                            languages.append(
-                                                {"code": "", "name": aLang.get("name")}
-                                            )
+                                            if aLang.get("name") == "default":
+                                                languages.insert(
+                                                    0,
+                                                    {
+                                                        "code": "",
+                                                        "name": aLang.get("name"),
+                                                    },
+                                                )
+                                                default = True
+                                            else:
+                                                languages.append(
+                                                    {
+                                                        "code": "",
+                                                        "name": aLang.get("name"),
+                                                    }
+                                                )
                                     languages_string = json.dumps(languages)
                                     stage = 2
                                 else:
@@ -394,6 +445,7 @@ class GenerateRepository(PrivateView):
                     "languages_string": languages_string,
                     "primary_key": primary_key,
                     "discard_testing_data": discard_testing_data,
+                    "default": default,
                 }
 
             else:

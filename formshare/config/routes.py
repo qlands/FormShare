@@ -110,6 +110,7 @@ from formshare.views.form import (
     AddPartnerToForm,
     EditPartnerFormOptions,
     RemovePartnerFromForm,
+    FixMergeLanguage,
 )
 from formshare.views.odk import (
     ODKFormList,
@@ -536,6 +537,15 @@ def load_routes(config, settings):
             "/user/{userid}/project/{projcode}/form/{formid}/merge",
             AddNewForm,
             None,
+        )
+    )
+
+    routes.append(
+        add_route(
+            "form_fix_merge_languages",
+            "/user/{userid}/project/{projcode}/form/{formid}/fix_languages",
+            FixMergeLanguage,
+            "dashboard/projects/repository/fix_language.jinja2",
         )
     )
 

@@ -10745,7 +10745,7 @@ class FunctionalTests(unittest.TestCase):
 
             time.sleep(60)  # Wait for celery to generate the repository
 
-            print("Testing merge of language cases")
+            print("Testing merge of language cases. Stage 2")
 
             # Merge a form without language
             paths = [
@@ -10809,6 +10809,139 @@ class FunctionalTests(unittest.TestCase):
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/delete".format(
                     self.randonLogin, self.project, "asistencia_tecnica_no_lng"
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Delete the form asistencia_tecnica
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/delete".format(
+                    self.randonLogin, self.project, "asistencia_tecnica"
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+        def test_form_merge_language_control_3():
+            # Uploads a form with a default language
+            paths = [
+                "resources",
+                "forms",
+                "merge_multilanguaje",
+                "asistencia_tecnica.xlsx",
+            ]
+            a_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "control"},
+                status=302,
+                upload_files=[("xlsx", a_resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Generate the repository using celery
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, self.project, "asistencia_tecnica"
+                ),
+                {
+                    "form_pkey": "control",
+                    "start_stage2": "",
+                    "form_deflang": "default",
+                    "LNG-default": "es",
+                    "LNG-English": "en",
+                    "languages_string": '[{"code": "", "name": "default"}, {"code": "", "name": "English"}]',
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            time.sleep(60)  # Wait for celery to generate the repository
+
+            print("Testing merge of language cases")
+
+            # Merge a form that changes the language
+            paths = [
+                "resources",
+                "forms",
+                "merge_multilanguaje",
+                "asistencia_tecnica_2_complete_language.xlsx",
+            ]
+            b_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/merge".format(
+                    self.randonLogin, self.project, "asistencia_tecnica"
+                ),
+                {
+                    "for_merging": "",
+                    "parent_project": self.projectID,
+                    "parent_form": "asistencia_tecnica",
+                },
+                status=302,
+                upload_files=[("xlsx", b_resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica_2_complete_language",
+                ),
+                status=200,
+            )
+            self.assertTrue(b"Fix language" in res.body)
+
+            # Get the page for fixing the language pass
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}/fix_languages".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica_2_complete_language",
+                ),
+                status=200,
+            )
+            self.assertTrue(
+                b"without indicating a language. For example if you have a column called"
+                in res.body
+            )
+
+            # Setting the language passes OK
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/fix_languages".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica_2_complete_language",
+                ),
+                {
+                    "form_deflang": "Español",
+                    "LNG-Español": "es",
+                    "LNG-English": "en",
+                },
+                status=302,
+            )
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica_2_complete_language",
+                ),
+                status=200,
+            )
+            self.assertTrue(b" Merge repository " in res.body)
+
+            # Delete the form asistencia_tecnica
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/delete".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica_2_complete_language",
                 ),
                 status=302,
             )
@@ -16572,6 +16705,8 @@ class FunctionalTests(unittest.TestCase):
         test_form_merge_language_control()
         print("Print test merge multi-language. Case 2")
         test_form_merge_language_control_2()
+        print("Print test merge multi-language. Case 3")
+        test_form_merge_language_control_3()
         print("Testing case management - head")
         test_case_management_start()
         print("Testing case management")

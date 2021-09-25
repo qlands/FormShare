@@ -50,7 +50,11 @@
                                             {% endfor %}
                                         </select>
                                         <span style="color: #f8ac59" class="form-text m-b-none text-warning">{{ _('Please note that FormShare will store the descriptions of variables and choices in the primary language.') }}</span>
-                                        <br/><h3 style="color: red" class="text-danger">{{ _('The language of the previous form was') }} "{{ old_language }}"</h3>
+                                        {% if parent_has_no_language == False %}
+                                            <br/><h3 style="color: red" class="text-danger">{{ _('The language of the previous form was') }} "{{ old_language }}"</h3>
+                                        {% else %}
+                                            <br/><h3 style="color: red" class="text-danger">{{ _('The previous version of the form WAS NOT in multiple languages. You need to be very careful in indicating now the default language!!') }}"</h3>
+                                        {% endif %}
                                         {% if default %}
                                             <br/><span style="color: #f8ac59" class="form-text m-b-none text-danger">{{ _('The language called "default" appears when you have a "label" or "hint" without indicating a language. For example if you have a column called "label" and another called "label:English (es)" then "default" refers to the language of "label" which is not indicated in the ODK Form.') }}</span>
                                         {% endif %}

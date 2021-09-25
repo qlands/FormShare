@@ -3479,12 +3479,19 @@ class FixMergeLanguage(PrivateView):
             )
 
             default = False
+            idx = 0
             for language in languages:
                 if language["name"] == "default":
                     default = True
+                    languages.insert(0, languages.pop(idx))
+                idx = idx + 1
 
-            if parent_form_data["form_deflang"].find("default") >= 0:
-                default = True
+            parent_has_no_language = False
+            if parent_form_data["form_deflang"] is not None:
+                if parent_form_data["form_deflang"].find("default") >= 0:
+                    default = True
+            else:
+                parent_has_no_language = True
             if self.request.method == "POST":
                 if languages:
                     run_process = True
@@ -3607,18 +3614,17 @@ class FixMergeLanguage(PrivateView):
                     )
                     self.returnRawViewResult = True
                     return HTTPFound(location=next_page)
-            if result == 0:
-                return {
-                    "languages": languages,
-                    "default": default,
-                    "userid": user_id,
-                    "formData": form_data,
-                    "projectDetails": project_details,
-                    "projcode": project_code,
-                    "formid": form_id,
-                    "old_language": parent_form_data["form_deflang"],
-                }
-            else:
-                raise HTTPNotFound
+
+            return {
+                "languages": languages,
+                "default": default,
+                "userid": user_id,
+                "formData": form_data,
+                "projectDetails": project_details,
+                "projcode": project_code,
+                "formid": form_id,
+                "old_language": parent_form_data["form_deflang"],
+                "parent_has_no_language": parent_has_no_language,
+            }
         else:
             raise HTTPNotFound

@@ -9363,53 +9363,6 @@ class FunctionalTests(unittest.TestCase):
             assert "FS_error" not in res.headers
 
         def test_form_merge():
-            # paths = ["resources", "forms", "merge", "A", "A.xls"]
-            # a_resource_file = os.path.join(self.path, *paths)
-            #
-            # res = self.testapp.post(
-            #     "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
-            #     {"form_pkey": "numero_de_cedula"},
-            #     status=302,
-            #     upload_files=[("xlsx", a_resource_file)],
-            # )
-            # assert "FS_error" not in res.headers
-            #
-            # paths = ["resources", "forms", "merge", "A", "cantones.csv"]
-            # resource_file = os.path.join(self.path, *paths)
-            # res = self.testapp.post(
-            #     "/user/{}/project/{}/form/{}/upload".format(
-            #         self.randonLogin, self.project, "tormenta20201105"
-            #     ),
-            #     status=302,
-            #     upload_files=[("filetoupload", resource_file)],
-            # )
-            # assert "FS_error" not in res.headers
-            #
-            # paths = ["resources", "forms", "merge", "A", "distritos.csv"]
-            # resource_file = os.path.join(self.path, *paths)
-            # res = self.testapp.post(
-            #     "/user/{}/project/{}/form/{}/upload".format(
-            #         self.randonLogin, self.project, "tormenta20201105"
-            #     ),
-            #     status=302,
-            #     upload_files=[("filetoupload", resource_file)],
-            # )
-            # assert "FS_error" not in res.headers
-            #
-            # # Generate the repository using celery
-            # res = self.testapp.post(
-            #     "/user/{}/project/{}/form/{}/repository/create".format(
-            #         self.randonLogin, self.project, "tormenta20201105"
-            #     ),
-            #     {"form_pkey": "numero_de_cedula", "start_stage1": ""},
-            #     status=302,
-            # )
-            # assert "FS_error" not in res.headers
-            #
-            # time.sleep(60)  # Wait for celery to generate the repository
-            #
-            # # TODO: We need to test forms that cannot merge for different reasons
-            #
             # Upload B***********************************************
 
             paths = ["resources", "forms", "merge", "B", "B.xls"]
@@ -10437,6 +10390,438 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
             self.assertTrue(b"is the sub-version of this form" in res.body)
+
+        def test_form_merge_language_control():
+            # Uploads a form with malformed language fails
+            paths = [
+                "resources",
+                "forms",
+                "merge_multilanguaje",
+                "asistencia_tecnica_malformed_language.xlsx",
+            ]
+            a_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "control"},
+                status=302,
+                upload_files=[("xlsx", a_resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Uploads a form with options without labels fails
+            paths = [
+                "resources",
+                "forms",
+                "merge_multilanguaje",
+                "asistencia_tecnica_options_no_label.xlsx",
+            ]
+            a_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "control"},
+                status=302,
+                upload_files=[("xlsx", a_resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Uploads a form with no language definition pass
+            paths = [
+                "resources",
+                "forms",
+                "merge_multilanguaje",
+                "asistencia_tecnica_no_lng.xlsx",
+            ]
+            a_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "control"},
+                status=302,
+                upload_files=[("xlsx", a_resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Generate the repository using celery
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, self.project, "asistencia_tecnica_no_lng"
+                ),
+                {"form_pkey": "control", "start_stage1": ""},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            time.sleep(60)  # Wait for celery to generate the repository
+
+            print("Testing merge of language cases")
+
+            # Tries to merge a form with malformed language fails
+            paths = [
+                "resources",
+                "forms",
+                "merge_multilanguaje",
+                "asistencia_tecnica_malformed_language.xlsx",
+            ]
+            b_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/merge".format(
+                    self.randonLogin, self.project, "asistencia_tecnica_no_lng"
+                ),
+                {
+                    "for_merging": "",
+                    "parent_project": self.projectID,
+                    "parent_form": "asistencia_tecnica_no_lng",
+                },
+                status=302,
+                upload_files=[("xlsx", b_resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Tries to merge a form with options with no labels fails
+            paths = [
+                "resources",
+                "forms",
+                "merge_multilanguaje",
+                "asistencia_tecnica_options_no_label.xlsx",
+            ]
+            b_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/merge".format(
+                    self.randonLogin, self.project, "asistencia_tecnica_no_lng"
+                ),
+                {
+                    "for_merging": "",
+                    "parent_project": self.projectID,
+                    "parent_form": "asistencia_tecnica_no_lng",
+                },
+                status=302,
+                upload_files=[("xlsx", b_resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Merge a form with default language pass
+            paths = [
+                "resources",
+                "forms",
+                "merge_multilanguaje",
+                "asistencia_tecnica.xlsx",
+            ]
+            b_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/merge".format(
+                    self.randonLogin, self.project, "asistencia_tecnica_no_lng"
+                ),
+                {
+                    "for_merging": "",
+                    "parent_project": self.projectID,
+                    "parent_form": "asistencia_tecnica_no_lng",
+                },
+                status=302,
+                upload_files=[("xlsx", b_resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, "asistencia_tecnica"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"Fix language" in res.body)
+
+            # Get the fix language page of a project that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/fix_languages".format(
+                    self.randonLogin, "not_exist", "asistencia_tecnica"
+                ),
+                status=404,
+            )
+
+            # Get the fix language page of a form that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/fix_languages".format(
+                    self.randonLogin, self.project, "not_exist"
+                ),
+                status=404,
+            )
+
+            # Get the fix language page of a form that is not merging
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/fix_languages".format(
+                    self.randonLogin, self.project, "asistencia_tecnica_no_lng"
+                ),
+                status=404,
+            )
+
+            # Get the page for fixing the language pass
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}/fix_languages".format(
+                    self.randonLogin, self.project, "asistencia_tecnica"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"WAS NOT in multiple languages" in res.body)
+
+            # Post without setting the language does not pass
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/fix_languages".format(
+                    self.randonLogin, self.project, "asistencia_tecnica"
+                ),
+                {
+                    "form_deflang": "",
+                },
+                status=200,
+            )
+            self.assertTrue(b"You need to indicate the primary language" in res.body)
+
+            # Post without setting one of the languages code does not pass
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/fix_languages".format(
+                    self.randonLogin, self.project, "asistencia_tecnica"
+                ),
+                {
+                    "form_deflang": "default",
+                    "LNG-default": "es",
+                },
+                status=200,
+            )
+            self.assertTrue(
+                b"You need to indicate a ISO 639-1 code for each language" in res.body
+            )
+
+            # Post without setting two languages with the same code fails
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/fix_languages".format(
+                    self.randonLogin, self.project, "asistencia_tecnica"
+                ),
+                {
+                    "form_deflang": "default",
+                    "LNG-default": "es",
+                    "LNG-English": "es",
+                },
+                status=200,
+            )
+            self.assertTrue(
+                b"Each language needs to have an unique ISO 639-1 code" in res.body
+            )
+
+            # Setting the language passes OK
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/fix_languages".format(
+                    self.randonLogin, self.project, "asistencia_tecnica"
+                ),
+                {
+                    "form_deflang": "default",
+                    "LNG-default": "es",
+                    "LNG-English": "en",
+                },
+                status=302,
+            )
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, "asistencia_tecnica"
+                ),
+                status=200,
+            )
+            self.assertTrue(b" Merge repository " in res.body)
+
+            # Delete the form asistencia_tecnica
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/delete".format(
+                    self.randonLogin, self.project, "asistencia_tecnica"
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Delete the form asistencia_tecnica
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/delete".format(
+                    self.randonLogin, self.project, "asistencia_tecnica_no_lng"
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+        def test_form_merge_language_control_2():
+            # Uploads a form with a default language
+            paths = [
+                "resources",
+                "forms",
+                "merge_multilanguaje",
+                "asistencia_tecnica.xlsx",
+            ]
+            a_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "control"},
+                status=302,
+                upload_files=[("xlsx", a_resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Generate the repository using celery fails. Set language
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, self.project, "asistencia_tecnica"
+                ),
+                {"form_pkey": "control", "start_stage1": ""},
+                status=200,
+            )
+            self.assertTrue(b"Primary language" in res.body)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, self.project, "asistencia_tecnica"
+                ),
+                {
+                    "form_pkey": "control",
+                    "start_stage2": "",
+                    "languages_string": '[{"code": "", "name": "default"}, {"code": "", "name": "English"}]',
+                },
+                status=200,
+            )
+            self.assertTrue(b"You need to indicate the primary language" in res.body)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, self.project, "asistencia_tecnica"
+                ),
+                {
+                    "form_pkey": "control",
+                    "start_stage2": "",
+                    "form_deflang": "default",
+                    "languages_string": '[{"code": "", "name": "default"}, {"code": "", "name": "English"}]',
+                },
+                status=200,
+            )
+            self.assertTrue(
+                b"You need to indicate a ISO 639-1 code for each language" in res.body
+            )
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, self.project, "asistencia_tecnica"
+                ),
+                {
+                    "form_pkey": "control",
+                    "start_stage2": "",
+                    "form_deflang": "default",
+                    "LNG-default": "es",
+                    "LNG-English": "es",
+                    "languages_string": '[{"code": "", "name": "default"}, {"code": "", "name": "English"}]',
+                },
+                status=200,
+            )
+            self.assertTrue(
+                b"Each language needs to have an unique ISO 639-1 code" in res.body
+            )
+
+            # Generate the repository using celery
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, self.project, "asistencia_tecnica"
+                ),
+                {
+                    "form_pkey": "control",
+                    "start_stage2": "",
+                    "form_deflang": "default",
+                    "LNG-default": "es",
+                    "LNG-English": "en",
+                    "languages_string": '[{"code": "", "name": "default"}, {"code": "", "name": "English"}]',
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            time.sleep(60)  # Wait for celery to generate the repository
+
+            print("Testing merge of language cases")
+
+            # Merge a form without language
+            paths = [
+                "resources",
+                "forms",
+                "merge_multilanguaje",
+                "asistencia_tecnica_no_lng.xlsx",
+            ]
+            b_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/merge".format(
+                    self.randonLogin, self.project, "asistencia_tecnica"
+                ),
+                {
+                    "for_merging": "",
+                    "parent_project": self.projectID,
+                    "parent_form": "asistencia_tecnica",
+                },
+                status=302,
+                upload_files=[("xlsx", b_resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, "asistencia_tecnica_no_lng"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"Fix language" in res.body)
+
+            # Get the page for fixing the language pass
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}/fix_languages".format(
+                    self.randonLogin, self.project, "asistencia_tecnica_no_lng"
+                ),
+                status=200,
+            )
+            self.assertTrue(b"This version does not have any languages" in res.body)
+
+            # Setting the language passes OK
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/fix_languages".format(
+                    self.randonLogin, self.project, "asistencia_tecnica_no_lng"
+                ),
+                status=302,
+            )
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, "asistencia_tecnica_no_lng"
+                ),
+                status=200,
+            )
+            self.assertTrue(b" Merge repository " in res.body)
+
+            # Delete the form asistencia_tecnica
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/delete".format(
+                    self.randonLogin, self.project, "asistencia_tecnica_no_lng"
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Delete the form asistencia_tecnica
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/delete".format(
+                    self.randonLogin, self.project, "asistencia_tecnica"
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
 
         def test_group_assistant():
             res = self.testapp.post(
@@ -16183,6 +16568,10 @@ class FunctionalTests(unittest.TestCase):
         test_form_merge_mimic2()
         print("Testing merge code 3")
         test_form_merge_mimic3()
+        print("Print test merge multi-language")
+        test_form_merge_language_control()
+        print("Print test merge multi-language. Case 2")
+        test_form_merge_language_control_2()
         print("Testing case management - head")
         test_case_management_start()
         print("Testing case management")

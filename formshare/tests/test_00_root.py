@@ -2726,6 +2726,85 @@ class FunctionalTests(unittest.TestCase):
 
         def test_odk():
 
+            # Upload a complex form succeeds with bad structure
+            paths = ["resources", "forms", "complex_form", "B_bad_structure.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "I_D"},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            self.formID = "LB_Sequia_MAG_20190123"
+
+            # Add an assistant to a form succeeds
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistants/add".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
+                    "coll_privileges": "3",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+            self.assertTrue(b"Repository check pending" in res.body)
+
+            # Uploads a bad file to the form
+            paths = ["resources", "forms", "complex_form", "cantones.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Uploads a file to the form
+            paths = ["resources", "forms", "complex_form", "distritos.csv"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+            self.assertIn(b"This form cannot create a repository", res.body)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/delete".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
             # Upload a complex form succeeds
             paths = ["resources", "forms", "complex_form", "B.xlsx"]
             resource_file = os.path.join(self.path, *paths)
@@ -10392,6 +10471,24 @@ class FunctionalTests(unittest.TestCase):
             self.assertTrue(b"is the sub-version of this form" in res.body)
 
         def test_form_merge_language_control():
+            # Uploads a form with duplicated options fails even using allow_choice_duplicates=yes in ODK
+            # FormShare does not allow duplicated options.
+            paths = [
+                "resources",
+                "forms",
+                "merge_multilanguaje",
+                "asistencia_tecnica_duplicated_options.xlsx",
+            ]
+            a_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "control"},
+                status=302,
+                upload_files=[("xlsx", a_resource_file)],
+            )
+            assert "FS_error" in res.headers
+
             # Uploads a form with malformed language fails
             paths = [
                 "resources",
@@ -10894,6 +10991,124 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 status=200,
             )
+            self.assertTrue(b"Merge check pending" in res.body)
+
+            # Uploads an external file that label::
+            paths = [
+                "resources",
+                "forms",
+                "merge_multilanguaje",
+                "bad",
+                "provincia.csv",
+            ]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica_2_complete_language",
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica_2_complete_language",
+                ),
+                status=200,
+            )
+            self.assertFalse(b"Fix language" in res.body)
+
+            # Removes a file from a form
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/uploads/{}/remove".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica_2_complete_language",
+                    "provincia.csv",
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # ---------------------------
+            # Uploads an external file that label::
+            paths = [
+                "resources",
+                "forms",
+                "merge_multilanguaje",
+                "duplicated",
+                "provincia.csv",
+            ]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica_2_complete_language",
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica_2_complete_language",
+                ),
+                status=200,
+            )
+            self.assertFalse(b"Fix language" in res.body)
+
+            # Removes a file from a form
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/uploads/{}/remove".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica_2_complete_language",
+                    "provincia.csv",
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+            # -------------------------
+
+            # Uploads an external file that is fine
+            paths = [
+                "resources",
+                "forms",
+                "merge_multilanguaje",
+                "provincia.csv",
+            ]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica_2_complete_language",
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica_2_complete_language",
+                ),
+                status=200,
+            )
             self.assertTrue(b"Fix language" in res.body)
 
             # Get the page for fixing the language pass
@@ -10955,6 +11170,269 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+        def test_form_merge_language_control_4():
+            # Uploads a form with a default language
+            paths = [
+                "resources",
+                "forms",
+                "merge_multilanguaje",
+                "asistencia_tecnica_2_complete_language.xlsx",
+            ]
+            a_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "control"},
+                status=302,
+                upload_files=[("xlsx", a_resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Uploads a file to the form
+            paths = [
+                "resources",
+                "forms",
+                "merge_multilanguaje",
+                "provincia.csv",
+            ]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica_2_complete_language",
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Generate the repository using celery
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica_2_complete_language",
+                ),
+                {
+                    "form_pkey": "control",
+                    "start_stage1": "",
+                },
+                status=200,
+            )
+            self.assertTrue(b"Primary language" in res.body)
+
+            # Generate the repository using celery
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica_2_complete_language",
+                ),
+                {
+                    "form_pkey": "control",
+                    "start_stage2": "",
+                    "form_deflang": "Español",
+                    "LNG-Español": "es",
+                    "LNG-English": "en",
+                    "languages_string": '[{"code": "es", "name": "Español"}, {"code": "en", "name": "English"}]',
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            time.sleep(60)  # Wait for celery to generate the repository
+
+            print("Testing merge of language cases")
+
+            # Merge a form that changes the language
+            paths = [
+                "resources",
+                "forms",
+                "merge_multilanguaje",
+                "asistencia_tecnica.xlsx",
+            ]
+            b_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/merge".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica_2_complete_language",
+                ),
+                {
+                    "for_merging": "",
+                    "parent_project": self.projectID,
+                    "parent_form": "asistencia_tecnica_2_complete_language",
+                },
+                status=302,
+                upload_files=[("xlsx", b_resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica",
+                ),
+                status=200,
+            )
+            self.assertTrue(b"Fix language" in res.body)
+
+            # Get the page for fixing the language pass
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}/fix_languages".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica",
+                ),
+                status=200,
+            )
+            self.assertTrue(b"The language called" in res.body)
+
+            # Setting the language passes OK
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/fix_languages".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica",
+                ),
+                {
+                    "form_deflang": "default",
+                    "LNG-default": "es",
+                    "LNG-English": "en",
+                },
+                status=302,
+            )
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica",
+                ),
+                status=200,
+            )
+            self.assertTrue(b" Merge repository " in res.body)
+
+            # Delete the form asistencia_tecnica
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/delete".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica",
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Delete the form asistencia_tecnica
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/delete".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica_2_complete_language",
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+        def test_form_merge_language_control_5():
+            # This will be checked later on for unauthorized access
+            # Uploads a form with a default language
+            paths = [
+                "resources",
+                "forms",
+                "merge_multilanguaje",
+                "asistencia_tecnica.xlsx",
+            ]
+            a_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "control"},
+                status=302,
+                upload_files=[("xlsx", a_resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Generate the repository using celery
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, self.project, "asistencia_tecnica"
+                ),
+                {
+                    "form_pkey": "control",
+                    "start_stage2": "",
+                    "form_deflang": "default",
+                    "LNG-default": "es",
+                    "LNG-English": "en",
+                    "languages_string": '[{"code": "", "name": "default"}, {"code": "", "name": "English"}]',
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            time.sleep(60)  # Wait for celery to generate the repository
+
+            print("Testing merge of language cases")
+
+            # Merge a form that changes the language
+            paths = [
+                "resources",
+                "forms",
+                "merge_multilanguaje",
+                "asistencia_tecnica_2_complete_language.xlsx",
+            ]
+            b_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/merge".format(
+                    self.randonLogin, self.project, "asistencia_tecnica"
+                ),
+                {
+                    "for_merging": "",
+                    "parent_project": self.projectID,
+                    "parent_form": "asistencia_tecnica",
+                },
+                status=302,
+                upload_files=[("xlsx", b_resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Uploads a file to the form
+            paths = [
+                "resources",
+                "forms",
+                "merge_multilanguaje",
+                "provincia.csv",
+            ]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica_2_complete_language",
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica_2_complete_language",
+                ),
+                status=200,
+            )
+            self.assertTrue(b"Fix language" in res.body)
 
         def test_group_assistant():
             res = self.testapp.post(
@@ -12595,6 +13073,16 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Get the page for fixing the language goes to 404. Project does not belong to him
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}/fix_languages".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica_2_complete_language",
+                ),
+                status=404,
+            )
+
             # Opens other user profile
             self.testapp.get("/user/{}/profile".format(self.randonLogin), status=404)
 
@@ -13095,6 +13583,16 @@ class FunctionalTests(unittest.TestCase):
             assert "FS_error" not in res.headers
 
             # ---------------Section to test editor unauthorized access ---------------
+
+            # Get the page for fixing the language goes to 404. Project does not belong has access
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}/fix_languages".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica_2_complete_language",
+                ),
+                status=404,
+            )
 
             # Publish product without access
             self.testapp.post(
@@ -16707,6 +17205,10 @@ class FunctionalTests(unittest.TestCase):
         test_form_merge_language_control_2()
         print("Print test merge multi-language. Case 3")
         test_form_merge_language_control_3()
+        print("Print test merge multi-language. Case 4")
+        test_form_merge_language_control_4()
+        print("Print test merge multi-language. Case 5")
+        test_form_merge_language_control_5()
         print("Testing case management - head")
         test_case_management_start()
         print("Testing case management")

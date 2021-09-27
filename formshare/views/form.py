@@ -431,7 +431,10 @@ class FormDetails(PrivateView):
                     )
 
             if created == 14:
-                txt_message = 'The following files have invalid characters like extra ". Only _ is allowed : \n'
+                txt_message = (
+                    'The following files have invalid characters like : in the column heads". '
+                    "Only _ is allowed. \n"
+                )
                 root = etree.fromstring(message)
                 files_with_problems = root.findall(".//file")
                 if files_with_problems:
@@ -519,7 +522,7 @@ class FormDetails(PrivateView):
                         + "\n"
                     )
                 else:
-                    if created == 13:
+                    if created == 14:
                         txt_message = (
                             self._(
                                 "The following CSV resource files have invalid characters:"
@@ -546,7 +549,7 @@ class FormDetails(PrivateView):
                 )
                 errors.append(
                     self._(
-                        "An unexpected error occurred while processing the merge. "
+                        "An unexpected error occurred while processing the search expression. "
                         "An email has been sent to the technical team and they will contact you ASAP."
                     )
                 )
@@ -614,6 +617,9 @@ class FormDetails(PrivateView):
             if created == 22:
                 errors.append(message)
             if created == 23:
+                print("***************************999")
+                print("23")
+                print("***************************999")
                 errors.append(message)
 
         error_string = json.dumps({"errors": errors})
@@ -3447,8 +3453,6 @@ class FixMergeLanguage(PrivateView):
             parent_form_data = get_form_data(
                 self.request, project_id, form_data["parent_form"]
             )
-            if parent_form_data is None:
-                raise HTTPNotFound
 
             odk_dir = get_odk_path(self.request)
             media_files = get_media_files(self.request, project_id, form_id)

@@ -241,20 +241,25 @@ class GenerateRepository(PrivateView):
                                     )  # language
                                     if language_array:
                                         for aLang in language_array:
-                                            if aLang.get("name") == "default":
+                                            if (
+                                                aLang.get("name")
+                                                or aLang.get("description") == "default"
+                                            ):
                                                 languages.insert(
                                                     0,
                                                     {
-                                                        "code": "",
-                                                        "name": aLang.get("name"),
+                                                        "code": aLang.get("code", ""),
+                                                        "name": aLang.get("name")
+                                                        or aLang.get("description"),
                                                     },
                                                 )
                                                 default = True
                                             else:
                                                 languages.append(
                                                     {
-                                                        "code": "",
-                                                        "name": aLang.get("name"),
+                                                        "code": aLang.get("code", ""),
+                                                        "name": aLang.get("name")
+                                                        or aLang.get("description"),
                                                     }
                                                 )
                                     languages_string = json.dumps(languages)

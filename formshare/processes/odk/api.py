@@ -380,9 +380,13 @@ def check_jxform_file(
                 languages = root.findall(".//language")
                 if languages:
                     for a_language in languages:
+                        lng_code = a_language.get("code", "")
+                        if lng_code != "":
+                            if len(lng_code) > 2:
+                                lng_code = ""
                         language_array.append(
                             {
-                                "code": "",
+                                "code": lng_code,
                                 "name": a_language.get("name")
                                 or a_language.get("description"),
                             }
@@ -564,7 +568,7 @@ def check_jxform_file(
             if files_with_problems:
                 for a_file in files_with_problems:
                     message = message + "\t" + a_file.get("name", "") + "\n"
-            return 14, message
+            return 15, message
         if p.returncode == 9:
             log.error(
                 ". Error: "
@@ -2060,18 +2064,19 @@ def create_repository(
                     root = etree.fromstring(stdout.decode())
                     language_array = root.findall(".//language")
                     if language_array:
-                        default_language = "(en)english"
-                    other_languages_array = []
-                    for a_language in language_array:
-                        if a_language.get("code", "") != "en":
-                            other_languages_array.append(
-                                "({}){}".format(
-                                    a_language.get("code", ""),
-                                    a_language.get("description", ""),
-                                )
-                            )
-                    if other_languages_array:
-                        other_languages = ",".join(other_languages_array)
+                        return 3, stdout.decode()
+                    #     default_language = "(en)english"
+                    # other_languages_array = []
+                    # for a_language in language_array:
+                    #     if a_language.get("code", "") != "en":
+                    #         other_languages_array.append(
+                    #             "({}){}".format(
+                    #                 a_language.get("code", ""),
+                    #                 a_language.get("description", ""),
+                    #             )
+                    #         )
+                    # if other_languages_array:
+                    #     other_languages = ",".join(other_languages_array)
 
                 update_form_repository_info(
                     request,

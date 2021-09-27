@@ -723,6 +723,12 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Edit a that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/edit".format(self.randonLogin, "not_exist"),
+                status=404,
+            )
+
             # Edit a project fails. The project name is empty
             res = self.testapp.post(
                 "/user/{}/project/{}/edit".format(self.randonLogin, "test001"),
@@ -768,6 +774,18 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Delete a project with get goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/delete".format(self.randonLogin, "test001"),
+                status=404,
+            )
+
+            # Delete a project that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/delete".format(self.randonLogin, "no_exist"),
+                status=404,
+            )
+
             # Delete a project
             res = self.testapp.post(
                 "/user/{}/project/{}/delete".format(self.randonLogin, "test001"),
@@ -793,11 +811,28 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            self.testapp.get(
+                "/user/{}/project/{}/qr".format(self.randonLogin, "not_exist"),
+                status=404,
+            )
+
             # Gets the QR of a project
             res = self.testapp.get(
                 "/user/{}/project/{}/qr".format(self.randonLogin, "test001"), status=200
             )
             assert "FS_error" not in res.headers
+
+            # Activate a project that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/setactive".format(self.randonLogin, "not_exist"),
+                status=404,
+            )
+
+            # Activate a project with GET goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/setactive".format(self.randonLogin, "test001"),
+                status=404,
+            )
 
             # Sets a project as active
             res = self.testapp.post(
@@ -810,10 +845,64 @@ class FunctionalTests(unittest.TestCase):
             paths = ["resources", "test1.dat"]
             resource_file = os.path.join(self.path, *paths)
 
+            paths = ["resources", "test2.dat"]
+            resource_file_2 = os.path.join(self.path, *paths)
+
+            # Upload a file with get goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/upload".format(self.randonLogin, "test001"),
+                status=404,
+            )
+
+            # Upload a file to a project that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/upload".format(self.randonLogin, "not_exist"),
+                status=404,
+                upload_files=[("filetoupload", resource_file)],
+            )
+
             res = self.testapp.post(
                 "/user/{}/project/{}/upload".format(self.randonLogin, "test001"),
                 status=302,
                 upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Removes a file of a project that does not exist goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/uploads/{}/remove".format(
+                    self.randonLogin, "not_exist", "test1.dat"
+                ),
+                status=404,
+                upload_files=[("filetoupload", resource_file)],
+            )
+
+            # Removes a file with get exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/uploads/{}/remove".format(
+                    self.randonLogin, "test001", "test1.dat"
+                ),
+                status=404,
+            )
+
+            # Remove the file
+            res = self.testapp.post(
+                "/user/{}/project/{}/uploads/{}/remove".format(
+                    self.randonLogin, "test001", "test1.dat"
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Upload two files
+            res = self.testapp.post(
+                "/user/{}/project/{}/upload".format(self.randonLogin, "test001"),
+                status=302,
+                upload_files=[
+                    ("filetoupload", resource_file),
+                    ("filetoupload", resource_file_2),
+                ],
             )
             assert "FS_error" not in res.headers
 
@@ -868,6 +957,14 @@ class FunctionalTests(unittest.TestCase):
                 upload_files=[("filetoupload", resource_file)],
             )
             assert "FS_error" not in res.headers
+
+            # Get GPS points of a project that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/download/gpspoints".format(
+                    self.randonLogin, "not_exist"
+                ),
+                status=404,
+            )
 
             # Gets the GPS Points of a project
             res = self.testapp.get(
@@ -9088,6 +9185,19 @@ class FunctionalTests(unittest.TestCase):
                 )
                 assert "FS_error" not in res.headers
 
+            # Change the role of a collaborator
+            self.testapp.post(
+                "/user/{}/project/{}/collaborators".format(
+                    self.randonLogin, self.project
+                ),
+                {
+                    "change_role": "",
+                    "collaborator_id": collaborator_to_remove,
+                    "role_collaborator": 3,
+                },
+                status=302,
+            )
+
             self.testapp.get("/logout", status=302)
 
             res = self.testapp.post(
@@ -13602,8 +13712,20 @@ class FunctionalTests(unittest.TestCase):
             # File of a project that does not have access
             self.testapp.get(
                 "/user/{}/project/{}/storage/{}".format(
-                    self.randonLogin, "not_exist", "test1.dat"
+                    self.randonLogin, "test001", "test1.dat"
                 ),
+                status=404,
+            )
+
+            # Activate a project that does not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/setactive".format(self.randonLogin, "test001"),
+                status=404,
+            )
+
+            # Delete a project with that does not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/delete".format(self.randonLogin, "test001"),
                 status=404,
             )
 
@@ -13613,6 +13735,73 @@ class FunctionalTests(unittest.TestCase):
             # Project details of a project that not have access
             self.testapp.get(
                 "/user/{}/project/{}".format(self.randonLogin, "test001"), status=404
+            )
+
+            # Edit a project that don't have access
+            self.testapp.get(
+                "/user/{}/project/{}/edit".format(self.randonLogin, "test001"),
+                status=404,
+            )
+
+            # Upload a file to a project that does not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/upload".format(self.randonLogin, "test001"),
+                status=404,
+                upload_files=[("filetoupload", resource_file)],
+            )
+
+            # Get GPS points of a project that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/download/gpspoints".format(
+                    self.randonLogin, "test001"
+                ),
+                status=404,
+            )
+
+            # Removes a file of a project that does not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/uploads/{}/remove".format(
+                    self.randonLogin, "test001", "test1.dat"
+                ),
+                status=404,
+                upload_files=[("filetoupload", resource_file)],
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/qr".format(self.randonLogin, "test001"), status=404
+            )
+
+            self.testapp.post(
+                "/user/{}/project/{}/link_partner".format(
+                    self.randonLogin, self.project
+                ),
+                {
+                    "partner_id": "some",
+                    "time_bound": 1,
+                    "access_from": "2021-08-05",
+                    "access_to": "2021-08-05",
+                },
+                status=404,
+            )
+
+            self.testapp.post(
+                "/user/{}/project/{}/edit_partner/{}".format(
+                    self.randonLogin, self.project, "NA"
+                ),
+                {
+                    "time_bound": 1,
+                    "access_from": "2021-08-19",
+                    "access_to": "2021-10-19",
+                },
+                status=404,
+            )
+
+            self.testapp.post(
+                "/user/{}/project/{}/remove_partner/{}".format(
+                    self.randonLogin, self.project, "na"
+                ),
+                {},
+                status=404,
             )
 
             # The collaborator logs out
@@ -13648,6 +13837,73 @@ class FunctionalTests(unittest.TestCase):
             assert "FS_error" not in res.headers
 
             # ---------------Section to test editor unauthorized access ---------------
+
+            # Upload a file to a project that does not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/upload".format(self.randonLogin, "test001"),
+                status=404,
+                upload_files=[("filetoupload", resource_file)],
+            )
+
+            # Delete a project that does not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/delete".format(self.randonLogin, "test001"),
+                status=404,
+            )
+
+            # Activate a project that does not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/setactive".format(self.randonLogin, "test001"),
+                status=404,
+            )
+
+            # Edit a project that don't have access
+            self.testapp.get(
+                "/user/{}/project/{}/edit".format(self.randonLogin, "test001"),
+                status=404,
+            )
+
+            # Removes a file of a project that does not have access goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/uploads/{}/remove".format(
+                    self.randonLogin, "test001", "test1.dat"
+                ),
+                status=404,
+                upload_files=[("filetoupload", resource_file)],
+            )
+
+            self.testapp.post(
+                "/user/{}/project/{}/link_partner".format(
+                    self.randonLogin, self.project
+                ),
+                {
+                    "partner_id": "some",
+                    "time_bound": 1,
+                    "access_from": "2021-08-05",
+                    "access_to": "2021-08-05",
+                },
+                status=404,
+            )
+
+            self.testapp.post(
+                "/user/{}/project/{}/edit_partner/{}".format(
+                    self.randonLogin, self.project, "NA"
+                ),
+                {
+                    "time_bound": 1,
+                    "access_from": "2021-08-19",
+                    "access_to": "2021-10-19",
+                },
+                status=404,
+            )
+
+            self.testapp.post(
+                "/user/{}/project/{}/remove_partner/{}".format(
+                    self.randonLogin, self.project, "na"
+                ),
+                {},
+                status=404,
+            )
 
             # Get the page for fixing the language goes to 404. Project does not belong has access
             res = self.testapp.get(
@@ -16275,6 +16531,26 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" in res.headers
 
+            self.testapp.post(
+                "/user/{}/project/{}/link_partner".format(
+                    self.randonLogin, "not_exist"
+                ),
+                {
+                    "partner_id": partner_id,
+                    "time_bound": 1,
+                    "access_from": "2021-08-05",
+                    "access_to": "2021-08-05",
+                },
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/link_partner".format(
+                    self.randonLogin, self.project
+                ),
+                status=404,
+            )
+
             # Add an partner to project pass
             res = self.testapp.post(
                 "/user/{}/project/{}/link_partner".format(
@@ -16328,6 +16604,25 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" in res.headers
 
+            self.testapp.post(
+                "/user/{}/project/{}/edit_partner/{}".format(
+                    self.randonLogin, "not_exist", partner_id
+                ),
+                {
+                    "time_bound": 1,
+                    "access_from": "2021-08-19",
+                    "access_to": "2021-10-19",
+                },
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/edit_partner/{}".format(
+                    self.randonLogin, self.project, partner_id
+                ),
+                status=404,
+            )
+
             # Edit partner project options pass.
             res = self.testapp.post(
                 "/user/{}/project/{}/edit_partner/{}".format(
@@ -16351,6 +16646,21 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            self.testapp.post(
+                "/user/{}/project/{}/remove_partner/{}".format(
+                    self.randonLogin, "not_exist", partner_id
+                ),
+                {},
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/remove_partner/{}".format(
+                    self.randonLogin, self.project, partner_id
+                ),
+                status=404,
+            )
 
             # Remove partner from project passes
             res = self.testapp.post(

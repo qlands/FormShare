@@ -308,10 +308,7 @@ class EditProjectView(ProjectsView):
 
         if self.request.method == "POST":
             project_details = self.get_post_dict()
-            if "project_public" in project_details.keys():
-                project_details["project_public"] = 1
-            else:
-                project_details["project_public"] = 0
+            project_details["project_public"] = 0
 
             if "project_case" in project_details.keys():
                 project_details["project_case"] = 1
@@ -366,15 +363,20 @@ class ActivateProjectView(ProjectsView):
         user_id = self.request.matchdict["userid"]
         project_code = self.request.matchdict["projcode"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
         if project_id is not None:
             project_found = False
             for project in self.user_projects:
                 if project["project_id"] == project_id:
                     project_found = True
+                    project_details = project
             if not project_found:
                 raise HTTPNotFound
         else:
             raise HTTPNotFound
+
+        if project_details["access_type"] >= 4:
+            raise HTTPNotFound  # Don't edit a public or a project that I am just a member
 
         if self.request.method == "POST":
             next_page = self.request.params.get("next") or self.request.route_url(
@@ -619,19 +621,14 @@ class DownloadProjectGPSPoints(ProjectsView):
         if query_size is None:
             query_size = 10000
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
         if project_id is not None:
             project_found = False
             for project in self.user_projects:
                 if project["project_id"] == project_id:
                     project_found = True
-                    project_details = project
             if not project_found:
                 raise HTTPNotFound
         else:
-            raise HTTPNotFound
-
-        if project_details["access_type"] > 4:
             raise HTTPNotFound
 
         created, data = get_gps_points_from_project(
@@ -656,9 +653,6 @@ class GetProjectQRCode(ProjectsView):
             if not project_found:
                 raise HTTPNotFound
         else:
-            raise HTTPNotFound
-
-        if project_details["access_type"] > 4:
             raise HTTPNotFound
 
         url = self.request.route_url(
@@ -918,3 +912,5 @@ class RemovePartnerFromProject(ProjectsView):
                     "project_details", userid=user_id, projcode=project_code
                 )
                 return HTTPFound(location=next_page, headers={"FS_error": "true"})
+        else:
+            raise HTTPNotFound

@@ -617,9 +617,6 @@ class FormDetails(PrivateView):
             if created == 22:
                 errors.append(message)
             if created == 23:
-                print("***************************999")
-                print("23")
-                print("***************************999")
                 errors.append(message)
 
         error_string = json.dumps({"errors": errors})
@@ -751,26 +748,16 @@ class FormDetails(PrivateView):
                         or able_to_merge == 23
                         or (3 <= able_to_merge <= 6)
                     ):
-                        if form_data["form_mergelngerror"] != 2:
-                            merge_language_problem = True
-                            update_form(
-                                self.request,
-                                project_id,
-                                form_id,
-                                {"form_mergelngerror": 1},
-                            )
-                            form_data["form_mergelngerror"] = 1
-                            form_data["form_abletomerge"] = 0
-                            form_data["form_mergerrors"] = errors
-                        else:
-                            form_data["form_abletomerge"] = 1
-                            form_data["form_mergerrors"] = None
-                            update_form(
-                                self.request,
-                                project_id,
-                                form_id,
-                                {"form_abletomerge": 1, "form_mergerrors": None},
-                            )
+                        merge_language_problem = True
+                        update_form(
+                            self.request,
+                            project_id,
+                            form_id,
+                            {"form_mergelngerror": 1},
+                        )
+                        form_data["form_mergelngerror"] = 1
+                        form_data["form_abletomerge"] = 0
+                        form_data["form_mergerrors"] = errors
                     else:
                         form_data["form_abletomerge"] = 0
                         form_data["form_mergerrors"] = errors

@@ -10600,6 +10600,71 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" in res.headers
 
+            # -------------------------------
+            # Merge a form with full language pass
+            paths = [
+                "resources",
+                "forms",
+                "merge_multilanguaje",
+                "asistencia_tecnica_2_complete_language.xlsx",
+            ]
+            b_resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/merge".format(
+                    self.randonLogin, self.project, "asistencia_tecnica_no_lng"
+                ),
+                {
+                    "for_merging": "",
+                    "parent_project": self.projectID,
+                    "parent_form": "asistencia_tecnica_no_lng",
+                },
+                status=302,
+                upload_files=[("xlsx", b_resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            paths = [
+                "resources",
+                "forms",
+                "merge_multilanguaje",
+                "provincia.csv",
+            ]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/upload".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica_2_complete_language",
+                ),
+                status=302,
+                upload_files=[("filetoupload", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Get the details of a form
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica_2_complete_language",
+                ),
+                status=200,
+            )
+            self.assertTrue(b"Fix language" in res.body)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/delete".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica_2_complete_language",
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # ---------------------
+
             # Merge a form with default language pass
             paths = [
                 "resources",

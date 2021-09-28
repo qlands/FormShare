@@ -20,7 +20,9 @@ class GenerateRepository(PrivateView):
         PrivateView.__init__(self, request)
         self.privateOnly = True
 
-    def report_critical_error(self, user, project, form, error_code, message):
+    def report_critical_error(
+        self, user, project, form, error_code, message
+    ):  # pragma: no cover
         send_error_to_technical_team(
             self.request,
             "Error while creating the repository for form {} in "
@@ -209,25 +211,28 @@ class GenerateRepository(PrivateView):
                                 )
                             )
                         else:
-                            if result_code == 1:
+                            # Most of this code is not included in coverage
+                            # because it is extremely unlikely that will be executed
+                            # as it is checked elsewhere before. Is here just in case
+                            if result_code == 1:  # pragma: no cover
                                 # Internal error: Report issue
                                 self.report_critical_error(
                                     user_id, project_id, form_id, result_code, message
                                 )
                                 stage = -1
-                            if result_code == 7:
+                            if result_code == 7:  # pragma: no cover
                                 # Internal error: Report issue
                                 self.report_critical_error(
                                     user_id, project_id, form_id, result_code, message
                                 )
                                 stage = -1
-                            if result_code == 8:
+                            if result_code == 8:  # pragma: no cover
                                 # Internal error: Report issue
                                 self.report_critical_error(
                                     user_id, project_id, form_id, result_code, message
                                 )
                                 stage = -1
-                            if result_code == 2:
+                            if result_code == 2:  # pragma: no cover
                                 # 64 or more relationships. Report issue because this was checked before
                                 self.report_critical_error(
                                     user_id, project_id, form_id, result_code, message
@@ -264,7 +269,7 @@ class GenerateRepository(PrivateView):
                                                 )
                                     languages_string = json.dumps(languages)
                                     stage = 2
-                                else:
+                                else:  # pragma: no cover
                                     self.report_critical_error(
                                         user_id,
                                         project_id,
@@ -274,7 +279,7 @@ class GenerateRepository(PrivateView):
                                     )
                                     stage = -1
 
-                            if result_code == 14:
+                            if result_code == 14:  # pragma: no cover
                                 txt_message = (
                                     'The following files have invalid characters like extra ". '
                                     "Only _ is allowed : \n"
@@ -290,7 +295,7 @@ class GenerateRepository(PrivateView):
                                             + "\n"
                                         )
                                 self.append_to_errors(txt_message)
-                            if result_code == 15:
+                            if result_code == 15:  # pragma: no cover
                                 txt_message = (
                                     "The following files have an invalid structure: \n"
                                 )
@@ -306,7 +311,7 @@ class GenerateRepository(PrivateView):
                                         )
                                 self.append_to_errors(txt_message)
 
-                            if result_code == 9:
+                            if result_code == 9:  # pragma: no cover
                                 # Duplicated options
                                 stage = -1
                                 root = etree.fromstring(message)
@@ -359,7 +364,7 @@ class GenerateRepository(PrivateView):
                                                     "values"
                                                 ].append(duplicated_value)
 
-                            if result_code == 10:
+                            if result_code == 10:  # pragma: no cover
                                 # Primary key not found
                                 stage = 1
                                 self.append_to_errors(
@@ -367,7 +372,9 @@ class GenerateRepository(PrivateView):
                                         "The primary key was not found in the ODK form or is inside a repeat"
                                     )
                                 )
-                            if result_code == 11 or result_code == 12:
+                            if (
+                                result_code == 11 or result_code == 12
+                            ):  # pragma: no cover
                                 # Parsing XML error
                                 root = etree.fromstring(message)
                                 file_list = root.findall(".//file")
@@ -375,7 +382,7 @@ class GenerateRepository(PrivateView):
                                     for a_file in file_list:
                                         file_with_error = a_file.get("name")
                                 stage = -1
-                            if 13 <= result_code <= 15:
+                            if 13 <= result_code <= 15:  # pragma: no cover
                                 # Parsing CSV error
                                 root = etree.fromstring(message)
                                 file_list = root.findall(".//file")
@@ -383,37 +390,37 @@ class GenerateRepository(PrivateView):
                                     for a_file in file_list:
                                         file_with_error = a_file.get("name")
                                 stage = -1
-                            if result_code == 16:
+                            if result_code == 16:  # pragma: no cover
                                 # Search error. Report issue
                                 self.report_critical_error(
                                     user_id, project_id, form_id, result_code, message
                                 )
                                 stage = -1
-                            if result_code == 17:
+                            if result_code == 17:  # pragma: no cover
                                 # Primary key is invalid
                                 self.append_to_errors(
                                     self._("The primary key is invalid.")
                                 )
                                 stage = 1
-                            if result_code == 18:
+                            if result_code == 18:  # pragma: no cover
                                 # Duplicate tables. Report issue because this was checked before
                                 self.report_critical_error(
                                     user_id, project_id, form_id, result_code, message
                                 )
                                 stage = -1
-                            if result_code == 19:
+                            if result_code == 19:  # pragma: no cover
                                 # Duplicate fields. Report issue because this was checked before
                                 self.report_critical_error(
                                     user_id, project_id, form_id, result_code, message
                                 )
                                 stage = -1
-                            if result_code == 20:
+                            if result_code == 20:  # pragma: no cover
                                 # Invalid fields. Report issue because this was checked before
                                 self.report_critical_error(
                                     user_id, project_id, form_id, result_code, message
                                 )
                                 stage = -1
-                            if result_code == 21:
+                            if result_code == 21:  # pragma: no cover
                                 # Duplicated lookups
                                 root = etree.fromstring(message)
                                 duplicated_tables = root.findall(".//table")
@@ -452,7 +459,6 @@ class GenerateRepository(PrivateView):
                     "discard_testing_data": discard_testing_data,
                     "default": default,
                 }
-
             else:
                 raise HTTPNotFound()
         else:

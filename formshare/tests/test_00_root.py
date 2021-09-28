@@ -4478,6 +4478,21 @@ class FunctionalTests(unittest.TestCase):
                     form_reptask,
                 )
 
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, "not_exist", self.formID
+                ),
+                status=404,
+            )
+
+            # Gets the repository page
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, self.project, "not_exist"
+                ),
+                status=404,
+            )
+
             # Gets the repository page
             self.testapp.get(
                 "/user/{}/project/{}/form/{}/repository/create".format(
@@ -4506,6 +4521,13 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
             self.assertTrue(b"With repository" in res.body)
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
 
             # Removes a required file from a form fails as it is required by repository
             res = self.testapp.post(
@@ -5818,6 +5840,21 @@ class FunctionalTests(unittest.TestCase):
 
         def test_repository_tasks():
             time.sleep(5)  # Wait 5 seconds to other tests to finish
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/dictionary/tables".format(
+                    self.randonLogin, "not_exist", self.formID
+                ),
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/dictionary/tables".format(
+                    self.randonLogin, self.project, "not_exist"
+                ),
+                status=404,
+            )
+
             # Get the tables in a repository
             self.testapp.get(
                 "/user/{}/project/{}/form/{}/dictionary/tables".format(
@@ -5825,6 +5862,19 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 status=200,
             )
+
+            # Change the description of a table to nothing
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/dictionary/tables".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "table_name": "maintable",
+                    "table_desc": "",
+                },
+                status=200,
+            )
+
             # Change the description of a table
             self.testapp.post(
                 "/user/{}/project/{}/form/{}/dictionary/tables".format(
@@ -5836,11 +5886,45 @@ class FunctionalTests(unittest.TestCase):
                 },
                 status=200,
             )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/dictionary/table/{}/fields".format(
+                    self.randonLogin, "not_exist", self.formID, "maintable"
+                ),
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/dictionary/table/{}/fields".format(
+                    self.randonLogin, self.project, "not_exist", "maintable"
+                ),
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/dictionary/table/{}/fields".format(
+                    self.randonLogin, self.project, self.formID, "not_exist"
+                ),
+                status=404,
+            )
+
             # Get the fields of a table
             self.testapp.get(
                 "/user/{}/project/{}/form/{}/dictionary/table/{}/fields".format(
                     self.randonLogin, self.project, self.formID, "maintable"
                 ),
+                status=200,
+            )
+            # Update the description of a field without description
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/dictionary/table/{}/fields".format(
+                    self.randonLogin, self.project, self.formID, "maintable"
+                ),
+                {
+                    "post_type": "change_desc",
+                    "field_name": "i_d",
+                    "field_desc": "",
+                },
                 status=200,
             )
             # Update the description of a field
@@ -5881,12 +5965,63 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
 
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/submissions".format(
+                    self.randonLogin, "not_exist", self.formID
+                ),
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/submissions".format(
+                    self.randonLogin, self.project, "not_exist"
+                ),
+                status=404,
+            )
+
             # Get the submissions on a form
             self.testapp.get(
                 "/user/{}/project/{}/form/{}/submissions".format(
                     self.randonLogin, self.project, self.formID
                 ),
                 status=200,
+            )
+
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/submissions/get?callback=jQuery311038923674830152466_1578156795294".format(
+                    self.randonLogin, "not_exist", self.formID
+                ),
+                {
+                    "_search": "false",
+                    "nd": "1578156795454",
+                    "rows": "10",
+                    "page": "1",
+                    "sidx": "",
+                    "sord": "asc",
+                },
+                status=404,
+            )
+
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/submissions/get?callback=jQuery311038923674830152466_1578156795294".format(
+                    self.randonLogin, self.project, "not_exist"
+                ),
+                {
+                    "_search": "false",
+                    "nd": "1578156795454",
+                    "rows": "10",
+                    "page": "1",
+                    "sidx": "",
+                    "sord": "asc",
+                },
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/submissions/get?callback=jQuery311038923674830152466_1578156795294".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
             )
 
             # Select the submissions rows
@@ -5900,6 +6035,21 @@ class FunctionalTests(unittest.TestCase):
                     "rows": "10",
                     "page": "1",
                     "sidx": "",
+                    "sord": "asc",
+                },
+                status=200,
+            )
+
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/submissions/get?callback=jQuery311038923674830152466_1578156795294".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "_search": "false",
+                    "nd": "1578156795454",
+                    "rows": "10",
+                    "page": "1",
+                    "sidx": "rowuuid",
                     "sord": "asc",
                 },
                 status=200,
@@ -5926,6 +6076,30 @@ class FunctionalTests(unittest.TestCase):
             ).first()
             row_uuid = res[0]
             engine.dispose()
+
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/submissions/delete".format(
+                    self.randonLogin, "not_exit", self.formID
+                ),
+                {"oper": "del", "id": row_uuid},
+                status=404,
+            )
+
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/submissions/delete".format(
+                    self.randonLogin, self.project, "not_exist"
+                ),
+                {"oper": "del", "id": row_uuid},
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/submissions/delete".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
             self.testapp.post(
                 "/user/{}/project/{}/form/{}/submissions/delete".format(
                     self.randonLogin, self.project, self.formID
@@ -8851,11 +9025,66 @@ class FunctionalTests(unittest.TestCase):
 
         def test_audit():
             # Load the audit page
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/audit".format(
+                    self.randonLogin, "not_exist", self.formID
+                ),
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/audit".format(
+                    self.randonLogin, self.project, "not_exist"
+                ),
+                status=404,
+            )
+
             self.testapp.get(
                 "/user/{}/project/{}/form/{}/audit".format(
                     self.randonLogin, self.project, self.formID
                 ),
                 status=200,
+            )
+
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/audit/get"
+                "?callback=jQuery31104503466642261382_1578424030318".format(
+                    self.randonLogin, "not_exit", self.formID
+                ),
+                {
+                    "_search": "false",
+                    "nd": "1578156795454",
+                    "rows": "10",
+                    "page": "1",
+                    "sidx": "",
+                    "sord": "asc",
+                },
+                status=404,
+            )
+
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/audit/get"
+                "?callback=jQuery31104503466642261382_1578424030318".format(
+                    self.randonLogin, self.project, "not_exist"
+                ),
+                {
+                    "_search": "false",
+                    "nd": "1578156795454",
+                    "rows": "10",
+                    "page": "1",
+                    "sidx": "",
+                    "sord": "asc",
+                },
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/audit/get"
+                "?callback=jQuery31104503466642261382_1578424030318".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
             )
 
             # Loads the audit data for the grid
@@ -8870,6 +9099,22 @@ class FunctionalTests(unittest.TestCase):
                     "rows": "10",
                     "page": "1",
                     "sidx": "",
+                    "sord": "asc",
+                },
+                status=200,
+            )
+
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/audit/get"
+                "?callback=jQuery31104503466642261382_1578424030318".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "_search": "false",
+                    "nd": "1578156795454",
+                    "rows": "10",
+                    "page": "1",
+                    "sidx": "audit_date",
                     "sord": "asc",
                 },
                 status=200,
@@ -9421,6 +9666,16 @@ class FunctionalTests(unittest.TestCase):
             )
             self.assertTrue(b"Unable to merge" in res.body)
 
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/merge/into/{}".format(
+                    self.randonLogin,
+                    self.project,
+                    "tormenta20201117",
+                    "tormenta20201105",
+                ),
+                status=404,
+            )
+
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/delete".format(
                     self.randonLogin, self.project, "tormenta20201117"
@@ -9630,6 +9885,16 @@ class FunctionalTests(unittest.TestCase):
             )
             self.assertFalse(b"Merge check pending" in res.body)
 
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/merge/into/{}".format(
+                    self.randonLogin,
+                    "not_exist",
+                    "tormenta20201117",
+                    "tormenta20201105",
+                ),
+                status=404,
+            )
+
             # Show the merge repository page
             res = self.testapp.get(
                 "/user/{}/project/{}/form/{}/merge/into/{}".format(
@@ -9649,6 +9914,7 @@ class FunctionalTests(unittest.TestCase):
                     self.project,
                     "tormenta20201117",
                     "tormenta20201105",
+                    "discard_testing_data",
                 ),
                 status=302,
             )
@@ -9792,6 +10058,29 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
             self.assertTrue(b"This is the sub-version of" in res.body)
+
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/submissions/deleteall".format(
+                    self.randonLogin, "not_exist", "tormenta20201130"
+                ),
+                {"owner_email": self.randonLogin + "@qlands.com"},
+                status=404,
+            )
+
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/submissions/deleteall".format(
+                    self.randonLogin, self.project, "not_exist"
+                ),
+                {"owner_email": self.randonLogin + "@qlands.com"},
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/submissions/deleteall".format(
+                    self.randonLogin, self.project, "tormenta20201130"
+                ),
+                status=404,
+            )
 
             # Remove all submissions
             res = self.testapp.post(
@@ -10650,12 +10939,94 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/dictionary/tables".format(
+                    self.randonLogin, self.project, "asistencia_tecnica_no_lng"
+                ),
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/dictionary/table/{}/fields".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica_no_lng",
+                    "maintable",
+                ),
+                status=404,
+            )
+
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/submissions/delete".format(
+                    self.randonLogin, self.project, "asistencia_tecnica_no_lng"
+                ),
+                {"oper": "del", "id": "na"},
+                status=404,
+            )
+
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/submissions/deleteall".format(
+                    self.randonLogin, self.project, "asistencia_tecnica_no_lng"
+                ),
+                {"owner_email": self.randonLogin + "@qlands.com"},
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/submissions".format(
+                    self.randonLogin, self.project, "asistencia_tecnica_no_lng"
+                ),
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/audit".format(
+                    self.randonLogin, self.project, "asistencia_tecnica_no_lng"
+                ),
+                status=404,
+            )
+
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/submissions/get?callback=jQuery311038923674830152466_1578156795294".format(
+                    self.randonLogin, self.project, "asistencia_tecnica_no_lng"
+                ),
+                {
+                    "_search": "false",
+                    "nd": "1578156795454",
+                    "rows": "10",
+                    "page": "1",
+                    "sidx": "",
+                    "sord": "asc",
+                },
+                status=404,
+            )
+
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/audit/get"
+                "?callback=jQuery31104503466642261382_1578424030318".format(
+                    self.randonLogin, self.project, "asistencia_tecnica_no_lng"
+                ),
+                {
+                    "_search": "false",
+                    "nd": "1578156795454",
+                    "rows": "10",
+                    "page": "1",
+                    "sidx": "",
+                    "sord": "asc",
+                },
+                status=404,
+            )
+
             # Generate the repository using celery
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/repository/create".format(
                     self.randonLogin, self.project, "asistencia_tecnica_no_lng"
                 ),
-                {"form_pkey": "control", "start_stage1": ""},
+                {
+                    "form_pkey": "control",
+                    "start_stage1": "",
+                    "discard_testing_data": "",
+                },
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -10663,6 +11034,13 @@ class FunctionalTests(unittest.TestCase):
             time.sleep(60)  # Wait for celery to generate the repository
 
             print("Testing merge of language cases")
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/submissions".format(
+                    self.randonLogin, self.project, "asistencia_tecnica_no_lng"
+                ),
+                status=302,
+            )
 
             # Tries to merge a form with malformed language fails
             paths = [
@@ -10905,6 +11283,26 @@ class FunctionalTests(unittest.TestCase):
             )
             self.assertTrue(b" Merge repository " in res.body)
 
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/merge/into/{}".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica",
+                    "asistencia_tecnica",
+                ),
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/merge/into/{}".format(
+                    self.randonLogin,
+                    self.project,
+                    "asistencia_tecnica",
+                    self.formID,
+                ),
+                status=404,
+            )
+
             # Delete the form asistencia_tecnica
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/delete".format(
@@ -11010,6 +11408,7 @@ class FunctionalTests(unittest.TestCase):
                     "LNG-default": "es",
                     "LNG-English": "en",
                     "languages_string": '[{"code": "", "name": "default"}, {"code": "", "name": "English"}]',
+                    "discard_testing_data": "",
                 },
                 status=302,
             )
@@ -13249,12 +13648,104 @@ class FunctionalTests(unittest.TestCase):
             assert "FS_error" not in res.headers
 
             # Get the page for fixing the language goes to 404. Project does not belong to him
-            res = self.testapp.get(
+            self.testapp.get(
                 "/user/{}/project/{}/form/{}/fix_languages".format(
                     self.randonLogin,
                     self.project,
                     "asistencia_tecnica_2_complete_language",
                 ),
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/merge/into/{}".format(
+                    self.randonLogin,
+                    self.project,
+                    "tormenta20201117",
+                    "tormenta20201105",
+                ),
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/dictionary/tables".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/dictionary/table/{}/fields".format(
+                    self.randonLogin, self.project, self.formID, "maintable"
+                ),
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/submissions".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/audit".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/submissions/get?callback=jQuery311038923674830152466_1578156795294".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "_search": "false",
+                    "nd": "1578156795454",
+                    "rows": "10",
+                    "page": "1",
+                    "sidx": "",
+                    "sord": "asc",
+                },
+                status=404,
+            )
+
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/audit/get"
+                "?callback=jQuery31104503466642261382_1578424030318".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "_search": "false",
+                    "nd": "1578156795454",
+                    "rows": "10",
+                    "page": "1",
+                    "sidx": "",
+                    "sord": "asc",
+                },
+                status=404,
+            )
+
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/submissions/deleteall".format(
+                    self.randonLogin, self.project, "tormenta20201130"
+                ),
+                {"owner_email": self.randonLogin + "@qlands.com"},
+                status=404,
+            )
+
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/submissions/delete".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {"oper": "del", "id": "na"},
                 status=404,
             )
 
@@ -13837,6 +14328,98 @@ class FunctionalTests(unittest.TestCase):
             assert "FS_error" not in res.headers
 
             # ---------------Section to test editor unauthorized access ---------------
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/dictionary/table/{}/fields".format(
+                    self.randonLogin, self.project, self.formID, "maintable"
+                ),
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/dictionary/tables".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/repository/create".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/merge/into/{}".format(
+                    self.randonLogin,
+                    self.project,
+                    "tormenta20201117",
+                    "tormenta20201105",
+                ),
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/submissions".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/audit".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/submissions/get?callback=jQuery311038923674830152466_1578156795294".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "_search": "false",
+                    "nd": "1578156795454",
+                    "rows": "10",
+                    "page": "1",
+                    "sidx": "",
+                    "sord": "asc",
+                },
+                status=404,
+            )
+
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/audit/get"
+                "?callback=jQuery31104503466642261382_1578424030318".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "_search": "false",
+                    "nd": "1578156795454",
+                    "rows": "10",
+                    "page": "1",
+                    "sidx": "",
+                    "sord": "asc",
+                },
+                status=404,
+            )
+
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/submissions/deleteall".format(
+                    self.randonLogin, self.project, "tormenta20201130"
+                ),
+                {"owner_email": self.randonLogin + "@qlands.com"},
+                status=404,
+            )
+
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/submissions/delete".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {"oper": "del", "id": "na"},
+                status=404,
+            )
 
             # Upload a file to a project that does not have access goes to 404
             self.testapp.post(

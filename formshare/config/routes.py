@@ -955,7 +955,6 @@ def load_routes(config, settings):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "deleteAllSubmissions",
@@ -1107,7 +1106,6 @@ def load_routes(config, settings):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "push_log_submission",
@@ -1147,7 +1145,6 @@ def load_routes(config, settings):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "get_submissions_media",

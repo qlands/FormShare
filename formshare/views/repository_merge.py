@@ -122,7 +122,9 @@ class RepositoryMergeForm(PrivateView):
                     if xml_errors:
                         for a_error in xml_errors:
                             error_code = a_error.get("code")
-                            if error_code == "TNS":
+                            if error_code == "TNS":  # pragma: no cover
+                                # At this stage TNS might not be possible because is
+                                # Checked elsewhere before
                                 error_type = 2
                                 table_name = a_error.get("table")
                                 c_from = a_error.get("from")
@@ -148,7 +150,9 @@ class RepositoryMergeForm(PrivateView):
                                         )
                                     )
                                 )
-                            if error_code == "FNS":
+                            if error_code == "FNS":  # pragma: no cover
+                                # At this stage TNS might not be possible because is
+                                # Checked elsewhere before
                                 error_type = 2
                                 table_name = a_error.get("table")
                                 field_name = a_error.get("field")
@@ -175,7 +179,9 @@ class RepositoryMergeForm(PrivateView):
                                         )
                                     )
                                 )
-                            if error_code == "RNS":
+                            if error_code == "RNS":  # pragma: no cover
+                                # At this stage TNS might not be possible because is
+                                # Checked elsewhere before
                                 error_type = 2
                                 table_name = a_error.get("table")
                                 field_code = a_error.get("field")

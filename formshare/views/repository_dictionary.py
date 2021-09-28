@@ -131,6 +131,8 @@ class EditDictionaryFields(PrivateView):
             fields, checked = get_fields_from_table(
                 self.request, project_id, form_id, table_id, []
             )
+            if not fields:
+                raise HTTPNotFound
             if self.request.method == "POST":
                 table_data = self.get_post_dict()
                 if table_data["post_type"] == "change_desc":

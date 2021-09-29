@@ -495,6 +495,21 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Add user as super user
+            res = self.testapp.post(
+                "/user/{}/manage_users/add".format(self.randonLogin),
+                {
+                    "user_id": random_login + "_b",
+                    "user_password": "123",
+                    "user_password2": "123",
+                    "user_email": random_login + "_b@qlands.com",
+                    "user_name": random_login + "_b",
+                    "user_super": "",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
             # Edit an user fail. Email is invalid
             res = self.testapp.post(
                 "/user/{}/manage_user/{}/edit".format(self.randonLogin, random_login),
@@ -542,6 +557,17 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
             assert "FS_error" in res.headers
+
+            self.testapp.post(
+                "/user/{}/manage_user/{}/edit".format(self.randonLogin, "not_exist"),
+                {"changepass": "", "user_password": "123", "user_password2": "123"},
+                status=404,
+            )
+
+            res = self.testapp.get(
+                "/user/{}/manage_user/{}/edit".format(self.randonLogin, random_login),
+                status=200,
+            )
 
             # Change user password succeed
             res = self.testapp.post(
@@ -1076,6 +1102,24 @@ class FunctionalTests(unittest.TestCase):
             # Get the available collaborators
             self.testapp.get(
                 "/user/{}/api/select2_user?q={}".format(
+                    self.randonLogin, self.collaboratorLogin
+                ),
+                status=200,
+            )
+
+            self.testapp.get(
+                "/user/{}/api/select2_user?q={}".format(self.randonLogin, "not_exists"),
+                status=200,
+            )
+
+            # Get the available collaborators
+            self.testapp.get(
+                "/user/{}/api/select2_user".format(self.randonLogin),
+                status=200,
+            )
+
+            self.testapp.get(
+                "/user/{}/api/select2_user?include_me=True".format(
                     self.randonLogin, self.collaboratorLogin
                 ),
                 status=200,
@@ -8911,6 +8955,46 @@ class FunctionalTests(unittest.TestCase):
                 status=401,
             )
 
+            # Set the assistant as only submit
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                {"coll_privileges": "1"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # User cannot update
+            self.testapp.post_json(
+                "/user/{}/project/{}/form/{}/api_update".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "apikey": self.assistantLoginKey,
+                    "rowuuid": row_uuid,
+                    "landcultivated": 14,
+                },
+                status=400,
+            )
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    self.projectID,
+                    self.assistantLogin,
+                ),
+                {"coll_privileges": "3"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
             #  Change data using API passes
             self.testapp.post_json(
                 "/user/{}/project/{}/form/{}/api_update".format(
@@ -13626,7 +13710,6 @@ class FunctionalTests(unittest.TestCase):
                     "user_id": collaborator_1,
                     "user_password2": "123",
                     "user_name": "Testing",
-                    "user_super": "1",
                     "user_apikey": collaborator_1_key,
                 },
                 status=302,
@@ -13654,6 +13737,36 @@ class FunctionalTests(unittest.TestCase):
                     self.project,
                     "asistencia_tecnica_2_complete_language",
                 ),
+                status=404,
+            )
+
+            self.testapp.get(
+                "/user/{}/manage_users".format(self.randonLogin), status=404
+            )
+
+            self.testapp.post(
+                "/user/{}/manage_user/{}/edit".format(self.randonLogin, "NA"),
+                {"modify": "", "user_email": "hola"},
+                status=404,
+            )
+
+            self.testapp.post(
+                "/user/{}/manage_user/{}/edit".format(collaborator_1, "na"),
+                {"modify": "", "user_email": "hola"},
+                status=404,
+            )
+
+            self.testapp.get("/user/{}/manage_users".format(collaborator_1), status=404)
+
+            self.testapp.post(
+                "/user/{}/manage_users/add".format(self.randonLogin),
+                {"user_id": "some@test"},
+                status=404,
+            )
+
+            self.testapp.post(
+                "/user/{}/manage_users/add".format(collaborator_1),
+                {"user_id": "some@test"},
                 status=404,
             )
 
@@ -14489,7 +14602,7 @@ class FunctionalTests(unittest.TestCase):
             )
 
             # Get the page for fixing the language goes to 404. Project does not belong has access
-            res = self.testapp.get(
+            self.testapp.get(
                 "/user/{}/project/{}/form/{}/fix_languages".format(
                     self.randonLogin,
                     self.project,
@@ -17928,6 +18041,13 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/api/select2_partners?q={}".format(self.randonLogin, "Carlos"),
                 status=200,
             )
+            self.testapp.get(
+                "/user/{}/api/select2_partners?q={}".format(
+                    self.randonLogin, "not_exist"
+                ),
+                status=200,
+            )
+            self.testapp.get("/user/{}/api/select2_partners".format(self.randonLogin)),
 
         def test_error_pages():
             res = self.testapp.post(

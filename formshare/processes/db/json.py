@@ -47,6 +47,7 @@ def add_json_log(
             request.dbsession.flush()
             return True, ""
         else:
+            # This might not happen. Left here just in case
             request.dbsession.query(Jsonlog).filter(
                 Jsonlog.project_id == project
             ).filter(Jsonlog.form_id == form).filter(

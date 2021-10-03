@@ -962,11 +962,6 @@ def get_user_projects(request, user, logged_user):
                 collaborative_project["collaborate"] = True
                 collaborative_project["user_id"] = user
                 projects.append(collaborative_project)
-            else:
-                if project["project_public"] == 1:
-                    project["collaborate"] = False
-                    project["access_type"] = 5
-                    projects.append(project)
 
     for project in projects:
         submissions, last, by, form = get_dataset_stats_for_project(

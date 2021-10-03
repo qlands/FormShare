@@ -150,7 +150,9 @@ def add_collaborator_to_project(request, project, collaborator):
         return False, str(e)
 
 
-def accept_collaboration(request, user, project):
+def accept_collaboration(request, user, project):  # pragma: no cover
+    # This function is not covered because accepting a collaboration
+    # requires a SMTP server and cannot be tested during pytest
     _ = request.translate
     request.dbsession.query(Userproject).filter(Userproject.user_id == user).update(
         {"project_active": 0}
@@ -177,7 +179,9 @@ def accept_collaboration(request, user, project):
         return False, str(e)
 
 
-def decline_collaboration(request, user, project):
+def decline_collaboration(request, user, project):  # pragma: no cover
+    # This function is not covered because accepting a collaboration
+    # requires a SMTP server and cannot be tested during pytest
     _ = request.translate
     request.dbsession.query(Userproject).filter(Userproject.user_id == user).filter(
         Userproject.project_id == project

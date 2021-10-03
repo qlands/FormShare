@@ -18,12 +18,9 @@ c.hex
 """
 
 from __future__ import division
-
-import sys
 from binascii import crc32
 from numbers import Number
 
-PY2 = sys.version_info[0] <= 2
 
 __all__ = ["ColorHash"]
 
@@ -36,10 +33,7 @@ def crc32_hash(obj):
     hash is guaranteed to be as stable as the result of the object's ``__str__``
     method.
     """
-    if PY2:
-        bs = str(obj)
-    else:
-        bs = str(obj).encode("utf-8")
+    bs = str(obj).encode("utf-8")
     return crc32(bs) & 0xFFFFFFFF
 
 
@@ -50,13 +44,13 @@ def hsl2rgb(hsl):
     (255, 0, 0)
     """
     try:
-        h, s, l = hsl
+        h, s, light = hsl
     except TypeError:
         raise ValueError(hsl)
     try:
         h /= 360
-        q = l * (1 + s) if l < 0.5 else l + s - l * s
-        p = 2 * l - q
+        q = light * (1 + s) if light < 0.5 else light + s - light * s
+        p = 2 * light - q
     except TypeError:
         raise ValueError(hsl)
 
@@ -94,7 +88,7 @@ def rgb2hex(rgb):
 
 def color_hash(
     obj,
-    hashfunc=crc32_hash,
+    hash_function=crc32_hash,
     lightness=(0.35, 0.5, 0.65),
     saturation=(0.35, 0.5, 0.65),
     min_h=None,
@@ -104,7 +98,7 @@ def color_hash(
 
     Args:
         obj: the value.
-        hashfunc: the hash function to use. Must be a unary function returning
+        hash_function: the hash function to use. Must be a unary function returning
                   an integer. Defaults to ``crc32_hash``.
         lightness: a range of values, one of which will be picked for the
                    lightness component of the result. Can also be a single
@@ -128,16 +122,16 @@ def color_hash(
     if min_h is not None and max_h is None:
         max_h = 360
 
-    hash = hashfunc(obj)
-    h = hash % 359
+    hash_var = hash_function(obj)
+    h = hash_var % 359
     if min_h is not None and max_h is not None:
         h = (h / 1000) * (max_h - min_h) + min_h
-    hash //= 360
-    s = saturation[hash % len(saturation)]
-    hash //= len(saturation)
-    l = lightness[hash % len(lightness)]
+    hash_var //= 360
+    s = saturation[hash_var % len(saturation)]
+    hash_var //= len(saturation)
+    light = lightness[hash_var % len(lightness)]
 
-    return (h, s, l)
+    return h, s, light
 
 
 class ColorHash:

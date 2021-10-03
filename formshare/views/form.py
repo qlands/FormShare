@@ -58,6 +58,7 @@ from formshare.processes.db import (
     delete_case_lookup_table,
     invalid_aliases,
     alias_exists,
+    field_exists,
     get_form_partners,
     add_partner_to_form,
     update_partner_form_options,
@@ -2789,6 +2790,8 @@ class ImportData(PrivateView):
                     )
                     self.returnRawViewResult = True
                     return HTTPFound(location=next_page)
+                else:
+                    self.append_to_errors(message)
 
             return {
                 "projectDetails": project_details,
@@ -3071,18 +3074,30 @@ class CaseLookUpTable(PrivateView):
                 if re.match(r"^[A-Za-z0-9_]+$", field_alias):
                     if field_alias.upper() not in invalid_aliases:
                         if not field_alias.isnumeric():
-                            if not alias_exists(self.request, project_id, field_alias):
-                                update_case_lookup_field_alias(
+                            if field_exists(
+                                self.request, project_id, field_data["field_name"]
+                            ):
+                                if not alias_exists(
                                     self.request,
                                     project_id,
                                     field_data["field_name"],
                                     field_alias,
-                                )
-                                self.returnRawViewResult = True
-                                return HTTPFound(self.request.url)
+                                ):
+                                    update_case_lookup_field_alias(
+                                        self.request,
+                                        project_id,
+                                        field_data["field_name"],
+                                        field_alias,
+                                    )
+                                    self.returnRawViewResult = True
+                                    return HTTPFound(self.request.url)
+                                else:
+                                    self.append_to_errors(
+                                        self._("Such alias already exist")
+                                    )
                             else:
                                 self.append_to_errors(
-                                    self._("Such alias already exist")
+                                    self._("Such field does not exist")
                                 )
                         else:
                             self.append_to_errors(

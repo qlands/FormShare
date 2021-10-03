@@ -26,6 +26,7 @@ class TestUserView(FormSharePrivateView):
         users = get_users(self.request)
         user_details = get_user_details(self.request, user_id)
         user = get_user_id_with_email(self.request, user_details["user_email"])
+        user_none = get_user_id_with_email(self.request, "not_exist@qlands.com")
         store_settings(self.request, "testing", {"test": "a_test_value"})
         update_settings(self.request, "testing", {"test": "new_testing_value"})
         settings = get_settings(self.request, "testing")
@@ -35,6 +36,7 @@ class TestUserView(FormSharePrivateView):
             "owned_project": owned_project,
             "users": users,
             "user": user,
+            "user_none": user_none,
             "settings": settings,
             "empty_settings": empty_settings,
         }

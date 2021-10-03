@@ -76,7 +76,6 @@ __all__ = [
     "set_form_status",
     "get_form_survey_file",
     "get_project_form_colors",
-    "reset_form_repository",
     "get_assistant_forms_for_cleaning",
     "update_form_directory",
     "get_last_clean_info",
@@ -101,15 +100,30 @@ __all__ = [
     "delete_case_lookup_table",
     "alias_exists",
     "form_has_subversion",
+    "field_exists",
 ]
 
 log = logging.getLogger("formshare")
 
 
-def alias_exists(request, project, alias):
+def field_exists(request, project, field_name):
     res = (
         request.dbsession.query(CaseLookUp)
         .filter(CaseLookUp.project_id == project)
+        .filter(CaseLookUp.field_name == field_name)
+        .count()
+    )
+    if res == 0:
+        return False
+    else:
+        return True
+
+
+def alias_exists(request, project, field_name, alias):
+    res = (
+        request.dbsession.query(CaseLookUp)
+        .filter(CaseLookUp.project_id == project)
+        .filter(CaseLookUp.field_name != field_name)
         .filter(CaseLookUp.field_as == alias)
         .count()
     )
@@ -1248,7 +1262,8 @@ def delete_form_by_database(request, database):
     return result
 
 
-def update_form_directory(request, project, form, directory):
+def update_form_directory(request, project, form, directory):  # pragma: no cover
+    # This function has no coverage because it should not happen. Cannot be covered by unitTest
     request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(
         Odkform.form_id == form
     ).update({"form_directory": directory})
@@ -1380,26 +1395,6 @@ def set_form_status(request, project, form, status):
             return False, str(e)
     else:
         return False, _("This form is blocked and cannot be changed at the moment.")
-
-
-def reset_form_repository(request, project, form):
-    try:
-        request.dbsession.query(Odkform).filter(Odkform.project_id == project).filter(
-            Odkform.form_id == form
-        ).update({"form_reptask": None})
-        request.dbsession.flush()
-        return True, ""
-    except IntegrityError as e:
-        request.dbsession.rollback()
-        return False, str(e)
-    except Exception as e:
-        request.dbsession.rollback()
-        log.error(
-            "Error {} while resetting the repository form {} in project {}".format(
-                str(e), project, form
-            )
-        )
-        return False, str(e)
 
 
 def get_media_files(request, project, form):

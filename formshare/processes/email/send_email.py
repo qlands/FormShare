@@ -76,7 +76,8 @@ def send_error_to_technical_team(request, error_message):
 
 def send_collaboration_email(
     request, email_to, reply_to, requested_by, project_name, owner, project_code
-):
+):  # pragma: no cover
+    # This function is out of coverage because it requires an SMTP to be tested
     jinjaEnv.add_extension(ext.i18n)
     jinjaEnv.add_extension(ExtendThis)
     _ = request.translate

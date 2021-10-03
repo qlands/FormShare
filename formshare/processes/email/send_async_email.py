@@ -13,7 +13,8 @@ log = logging.getLogger("formshare")
 @celeryApp.task(bind=True, base=CeleryTask)
 def send_async_email(
     self, settings, email_from, email_to, subject, message, reply_to, locale
-):
+):  # pragma: no cover
+    # This function is out of unitTest because it required a SMTP server for testing
     parts = __file__.split("/processes/")
     this_file_path = parts[0] + "/locale"
     es = gettext.translation("formshare", localedir=this_file_path, languages=[locale])

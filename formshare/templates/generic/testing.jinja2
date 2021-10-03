@@ -16,6 +16,11 @@
 
             <div class="error-desc">
                 {{ _('This page is user by the testing framework. Ignore it otherwise') }}
+                {{ request.h.month_from_number("2") }}
+                {{ request.h.month_from_number(2) }}
+                {{ request.h.readble_date(None) }}
+                {{ request.h.simple_date(None) }}
+                {{ request.h.simple_date_usa(None) }}
             </div>
         </div>
     {% endblock error_message %}

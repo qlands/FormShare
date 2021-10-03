@@ -132,6 +132,7 @@ class FunctionalTests(unittest.TestCase):
         self.assistantLogin = ""
         self.assistantLogin2 = ""
         self.assistantLoginKey = ""
+        self.caseassistantLoginKey = ""
         self.assistantGroupID = ""
         self.formID = ""
         self.formID2 = ""
@@ -315,7 +316,7 @@ class FunctionalTests(unittest.TestCase):
                     "user_password": "123",
                     "user_id": random_login_partner,
                     "user_password2": "123",
-                    "user_name": "Testing",
+                    "user_name": "Testing Testing",
                     "user_super": "0",
                     "user_apikey": random_login_partner_key,
                 },
@@ -355,7 +356,7 @@ class FunctionalTests(unittest.TestCase):
                     "user_password": "123",
                     "user_id": random_login,
                     "user_password2": "123",
-                    "user_name": "Testing",
+                    "user_name": "Testing Testing Testing",
                 },
                 status=200,
             )
@@ -607,7 +608,11 @@ class FunctionalTests(unittest.TestCase):
             # Edit profile passes.
             res = self.testapp.post(
                 "/user/{}/profile/edit".format(self.randonLogin),
-                {"editprofile": "", "user_name": "FormShare"},
+                {
+                    "editprofile": "",
+                    "user_name": "FormShare",
+                    "user_about": "FormShare testing account",
+                },
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -1385,7 +1390,6 @@ class FunctionalTests(unittest.TestCase):
                     "coll_id": "assistant002",
                     "coll_password": "123",
                     "coll_password2": "123",
-                    "coll_prjshare": 1,
                 },
                 status=302,
             )
@@ -4074,7 +4078,6 @@ class FunctionalTests(unittest.TestCase):
                         "coll_id": "mimic000",
                         "coll_password": "123",
                         "coll_password2": "123",
-                        "coll_prjshare": 1,
                     },
                     status=302,
                 )
@@ -5857,6 +5860,44 @@ class FunctionalTests(unittest.TestCase):
                 {
                     "import_type": "1",
                     "ignore_xform": "",
+                    "assistant": "{}@{}".format(self.assistantLogin, self.projectID),
+                },
+                status=302,
+                upload_files=[("file", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Test import a zip file that is bad
+            paths = [
+                "resources",
+                "forms",
+                "complex_form",
+                "for_import",
+                "zip_file_bad.zip",
+            ]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/import".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "import_type": "1",
+                    "assistant": "{}@{}".format(self.assistantLogin, self.projectID),
+                },
+                status=200,
+                upload_files=[("file", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Test import a zip file using a plugin
+            paths = ["resources", "forms", "complex_form", "for_import", "zip_file.zip"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/import".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "import_type": "3",
                     "assistant": "{}@{}".format(self.assistantLogin, self.projectID),
                 },
                 status=302,
@@ -8902,6 +8943,13 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+
             # Change data using API fails. No rowuuid
             self.testapp.post_json(
                 "/user/{}/project/{}/form/{}/api_update".format(
@@ -9290,7 +9338,7 @@ class FunctionalTests(unittest.TestCase):
                     "user_password": "123",
                     "user_id": random_login,
                     "user_password2": "123",
-                    "user_name": "Testing",
+                    "user_name": "T",
                     "user_super": "1",
                     "user_apikey": str(uuid.uuid4()),
                 },
@@ -9484,7 +9532,7 @@ class FunctionalTests(unittest.TestCase):
                         "user_password": "123",
                         "user_id": random_login,
                         "user_password2": "123",
-                        "user_name": "Testing",
+                        "user_name": "TT",
                         "user_super": "1",
                         "user_apikey": str(uuid.uuid4()),
                     },
@@ -10142,6 +10190,27 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
             self.assertTrue(b"This is the sub-version of" in res.body)
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, "tormenta20201117"
+                ),
+                status=200,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, self.project, "tormenta20201105"
+                ),
+                status=200,
+            )
+
+            self.testapp.get(
+                "/user/{}/project/{}".format(self.randonLogin, self.project), status=200
+            )
+
+            res = self.testapp.get("/user/{}".format(self.randonLogin), status=200)
+            assert "FS_error" not in res.headers
 
             self.testapp.post(
                 "/user/{}/project/{}/form/{}/submissions/deleteall".format(
@@ -12228,7 +12297,7 @@ class FunctionalTests(unittest.TestCase):
                     "user_password": "123",
                     "user_id": collaborator_1,
                     "user_password2": "123",
-                    "user_name": "Testing",
+                    "user_name": "TTT",
                     "user_super": "1",
                     "user_apikey": collaborator_1_key,
                 },
@@ -12434,7 +12503,7 @@ class FunctionalTests(unittest.TestCase):
                     "user_password": "123",
                     "user_id": collaborator_1,
                     "user_password2": "123",
-                    "user_name": "Testing",
+                    "user_name": "TTTT",
                     "user_super": "1",
                     "user_apikey": collaborator_1_key,
                 },
@@ -15062,8 +15131,28 @@ class FunctionalTests(unittest.TestCase):
                     "coll_id": "caseassistant001",
                     "coll_password": "123",
                     "coll_password2": "123",
-                    "coll_prjshare": 1,
+                    "coll_prjshare": 3,
                 },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.caseassistantLoginKey = str(uuid.uuid4())
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/login".format(
+                    self.randonLogin, "case001"
+                ),
+                {"login": "caseassistant001", "passwd": "123"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/changemykey".format(
+                    self.randonLogin, "case001"
+                ),
+                {"coll_apikey": self.caseassistantLoginKey},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -15112,6 +15201,17 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" in res.headers
 
+            # Upload a case creator pass fails. Invalid type
+            paths = ["resources", "forms", "case", "case_start.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, "case001"),
+                {"form_pkey": "coll_date", "form_caselabel": "fname"},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
             # Upload a case creator pass.
             paths = ["resources", "forms", "case", "case_start.xlsx"]
             resource_file = os.path.join(self.path, *paths)
@@ -15122,6 +15222,18 @@ class FunctionalTests(unittest.TestCase):
                 upload_files=[("xlsx", resource_file)],
             )
             assert "FS_error" not in res.headers
+
+            paths = ["resources", "forms", "case", "case_start.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, "case001", "case_start_20210311"
+                ),
+                {"form_pkey": "coll_date", "form_caselabel": "fname"},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
 
             # Get the details of the form
             res = self.testapp.get(
@@ -15186,7 +15298,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.case_project_id, "caseassistant001"),
-                    "coll_privileges": "1",
+                    "coll_privileges": "3",
                 },
                 status=302,
             )
@@ -15392,6 +15504,32 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Adds the field distrito again
+            res = self.testapp.post(
+                "/user/{}/project/{}/caselookuptable".format(
+                    self.randonLogin, "case001"
+                ),
+                {
+                    "add_field": "",
+                    "field_name": "distrito",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Adds the field canton
+            res = self.testapp.post(
+                "/user/{}/project/{}/caselookuptable".format(
+                    self.randonLogin, "case001"
+                ),
+                {
+                    "add_field": "",
+                    "field_name": "canton",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
             # Change alias of distrito with empty alias
             res = self.testapp.post(
                 "/user/{}/project/{}/caselookuptable".format(
@@ -15419,6 +15557,20 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            # Change alias of distrito fails field not found
+            res = self.testapp.post(
+                "/user/{}/project/{}/caselookuptable".format(
+                    self.randonLogin, "case001"
+                ),
+                {
+                    "change_alias": "",
+                    "field_name": "distritos",
+                    "field_alias": "distrito_id",
+                },
+                status=200,
+            )
+            assert "FS_error" in res.headers
 
             # Change alias of distrito fails invalid character
             res = self.testapp.post(
@@ -15565,7 +15717,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.case_project_id, "caseassistant001"),
-                    "coll_privileges": "1",
+                    "coll_privileges": "3",
                 },
                 status=302,
             )
@@ -15625,6 +15777,16 @@ class FunctionalTests(unittest.TestCase):
                 ),
             )
 
+            self.testapp.get(
+                "/user/{}/project/{}/{}/manifest".format(
+                    self.randonLogin, "case001", "case_follow_up_20210319"
+                ),
+                status=200,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
             # Upload case 001
             paths = [
                 "resources",
@@ -15638,6 +15800,92 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/push".format(self.randonLogin, "case001"),
                 status=201,
                 upload_files=[("filetoupload", submission_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
+            # Produces the household csv
+            self.testapp.get(
+                "/user/{}/project/{}/{}/manifest".format(
+                    self.randonLogin, "case001", "case_follow_up_20210319"
+                ),
+                status=200,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
+            # Does not produce the household csv
+            self.testapp.get(
+                "/user/{}/project/{}/{}/manifest".format(
+                    self.randonLogin, "case001", "case_follow_up_20210319"
+                ),
+                status=200,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
+            # Upload case 004
+            paths = [
+                "resources",
+                "forms",
+                "case",
+                "data",
+                "start_04.xml",
+            ]
+            submission_file = os.path.join(self.path, *paths)
+            self.testapp.post(
+                "/user/{}/project/{}/push".format(self.randonLogin, "case001"),
+                status=201,
+                upload_files=[("filetoupload", submission_file)],
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
+            # Gets the manifest. households.csv is created
+            self.testapp.get(
+                "/user/{}/project/{}/{}/manifest".format(
+                    self.randonLogin, "case001", "case_follow_up_20210319"
+                ),
+                status=200,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
+            form_details = get_form_details(
+                self.server_config, self.case_project_id, "case_start_20210311"
+            )
+            engine = create_engine(
+                self.server_config["sqlalchemy.url"], poolclass=NullPool
+            )
+            res = engine.execute(
+                "SELECT rowuuid FROM {}.maintable".format(form_details["form_schema"])
+            ).first()
+            row_uuid = res[0]
+            engine.dispose()
+
+            self.testapp.post_json(
+                "/user/{}/project/{}/form/{}/api_update".format(
+                    self.randonLogin, "case001", "case_start_20210311"
+                ),
+                {
+                    "apikey": self.caseassistantLoginKey,
+                    "rowuuid": row_uuid,
+                    "age": 14,
+                },
+                status=200,
+            )
+
+            # Gets the manifest. households.csv is created
+            self.testapp.get(
+                "/user/{}/project/{}/{}/manifest".format(
+                    self.randonLogin, "case001", "case_follow_up_20210319"
+                ),
+                status=200,
                 extra_environ=dict(
                     FS_for_testing="true", FS_user_for_testing="caseassistant001"
                 ),
@@ -15847,6 +16095,13 @@ class FunctionalTests(unittest.TestCase):
             )
             self.assertIn(b"With repository", res.body)
 
+            self.testapp.get(
+                "/partneraccess/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, "case001", "case_follow_up_20210319"
+                ),
+                status=404,
+            )
+
             # Get the FormList. household.csv is created
             self.testapp.get(
                 "/user/{}/project/{}/formList".format(self.randonLogin, "case001"),
@@ -15999,6 +16254,16 @@ class FunctionalTests(unittest.TestCase):
             )
             self.assertIn(b"With repository", res.body)
 
+            self.testapp.get(
+                "/user/{}/project/{}/{}/manifest".format(
+                    self.randonLogin, "case001", "case_deactivate_20210331"
+                ),
+                status=200,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
+
             # Deactivate case 001
             paths = [
                 "resources",
@@ -16147,6 +16412,16 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
             self.assertIn(b"With repository", res.body)
+
+            self.testapp.get(
+                "/user/{}/project/{}/{}/manifest".format(
+                    self.randonLogin, "case001", "case_activate_20210331"
+                ),
+                status=200,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing="caseassistant001"
+                ),
+            )
 
             # Activate case 001
             paths = [
@@ -16597,6 +16872,23 @@ class FunctionalTests(unittest.TestCase):
             resource_file = os.path.join(self.path, *paths)
             res = self.testapp.post(
                 "/user/{}/project/{}/forms/add".format(self.randonLogin, "case001"),
+                {
+                    "form_pkey": "survey_id",
+                    "form_caseselector": "hid",
+                    "form_casetype": "2",
+                },
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
+            # Update the same form passes
+            paths = ["resources", "forms", "case", "case_follow_up_barcode.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, "case001", "case_follow_up_barcode_20210428"
+                ),
                 {
                     "form_pkey": "survey_id",
                     "form_caseselector": "hid",
@@ -17857,6 +18149,13 @@ class FunctionalTests(unittest.TestCase):
                     self.randonLogin, self.project, self.formID
                 ),
                 status=200,
+            )
+
+            self.testapp.get(
+                "/partneraccess/user/{}/project/{}/form/{}".format(
+                    self.randonLogin, "not_exist", self.formID
+                ),
+                status=404,
             )
 
             # Get the partner GPS info of a project that does not exist goes to 404

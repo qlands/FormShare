@@ -98,8 +98,8 @@ class Partner(object):
             "gravatar", _query={"name": name, "size": size}
         )
 
-    def get_partner_id(self):
-        return self.id
+    # def get_partner_id(self):
+    #     return self.id
 
 
 def get_formshare_user_data(request, user, is_email):

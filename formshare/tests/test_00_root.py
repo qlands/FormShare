@@ -6037,6 +6037,14 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
 
+            # Get the tables in a repository
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/dictionary/tables".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+
             # Test the download with the ID as sensitive with recode
             test_repository_downloads()
             time.sleep(20)
@@ -6911,7 +6919,12 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/checkin".format(
                     self.randonLogin, self.project, self.formID, duplicated_id
                 ),
-                {"notes": "Some notes about the checkin", "sequence": "23a243c95547"},
+                {
+                    "notes": "Some notes about the checkin submission {}".format(
+                        duplicated_id
+                    ),
+                    "sequence": "23a243c95547",
+                },
                 status=302,
                 upload_files=[("json", submission_file)],
             )
@@ -7104,7 +7117,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/checkin".format(
                     self.randonLogin, self.project, self.formID, duplicated_id
                 ),
-                {"notes": "Some notes about the checkin"},
+                {"notes": "Some notes about the checkin {}".format(duplicated_id)},
                 status=200,
                 upload_files=[("json", submission_file_error)],
             )
@@ -7163,7 +7176,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/checkin".format(
                     self.randonLogin, self.project, self.formID, duplicated_id
                 ),
-                {"notes": "Some notes about the checkin"},
+                {"notes": "Some notes about the checkin {}".format(duplicated_id)},
                 status=302,
                 upload_files=[("json", submission_file)],
             )
@@ -7313,7 +7326,10 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/assistantaccess/form/{}/{}/checkin".format(
                     self.randonLogin, self.project, self.formID, duplicated_id
                 ),
-                {"notes": "Some notes about the checkin", "sequence": "23a243c95549"},
+                {
+                    "notes": "Some notes about the checkin {}".format(duplicated_id),
+                    "sequence": "23a243c95549",
+                },
                 status=302,
                 upload_files=[("json", submission_file)],
             )

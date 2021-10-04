@@ -15871,7 +15871,8 @@ class FunctionalTests(unittest.TestCase):
                     FS_for_testing="true", FS_user_for_testing="caseassistant001"
                 ),
             )
-
+            print("Waiting 10 seconds for ES to store submissions")
+            time.sleep(30)
             form_details = get_form_details(
                 self.server_config, self.case_project_id, "case_start_20210311"
             )

@@ -103,7 +103,7 @@ def map_from_schema(data):
     if type(data) is not list:
         mapped_data = {}
         if data is not None:
-            if data.__class__.__name__ != "result":
+            if data.__class__.__name__ != "Row":
                 for c in inspect(data).mapper.column_attrs:
                     if c.key != "extras":
                         mapped_data[c.key] = getattr(data, c.key)
@@ -142,7 +142,7 @@ def map_from_schema(data):
         mapped_data = []
         for row in data:
             temp = {}
-            if row.__class__.__name__ != "result":
+            if row.__class__.__name__ != "Row":
                 for c in inspect(row).mapper.column_attrs:
                     if c.key != "extras":
                         temp[c.key] = getattr(row, c.key)

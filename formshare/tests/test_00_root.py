@@ -1017,6 +1017,16 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" in res.headers
 
+            # Add collaborator fails. Collaborators is not found or inactive
+            res = self.testapp.post(
+                "/user/{}/project/{}/collaborators".format(
+                    self.randonLogin, self.project
+                ),
+                {"add_collaborator": "", "collaborator": "not_exist"},
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
             # Add a collaborato to an project that does not exist goes to 404
             self.testapp.post(
                 "/user/{}/project/{}/collaborators".format(
@@ -12368,6 +12378,22 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
             assert "FS_error" not in res.headers
+
+            # The collaborator does not have access to remove a collaborator
+            self.testapp.post(
+                "/user/{}/project/{}/collaborator/{}/remove".format(
+                    self.randonLogin, self.project, "NA"
+                ),
+                status=404,
+            )
+
+            # The collaborator does not have access to the collaborator page
+            self.testapp.get(
+                "/user/{}/project/{}/collaborators".format(
+                    self.randonLogin, self.project
+                ),
+                status=404,
+            )
 
             print(self.projectID)
             # API Call fails. User does not have editor or admin grants to this project

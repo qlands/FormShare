@@ -52,47 +52,58 @@ class CollaboratorsListView(PrivateView):
             collaborator_details = self.get_post_dict()
             if "add_collaborator" in collaborator_details.keys():
                 if "collaborator" in collaborator_details.keys():
-                    added, message = add_collaborator_to_project(
-                        self.request, project_id, collaborator_details["collaborator"]
+                    user_details = get_user_details(
+                        self.request, collaborator_details["collaborator"]
                     )
-                    if added:
-                        auto_accept_collaboration = self.request.registry.settings.get(
-                            "auth.auto_accept_collaboration", "false"
+                    if user_details:
+                        added, message = add_collaborator_to_project(
+                            self.request,
+                            project_id,
+                            collaborator_details["collaborator"],
                         )
-                        if auto_accept_collaboration == "true":
-                            self.request.session.flash(
-                                self._("The collaborator was added to this project")
-                            )
-                        else:  # pragma: no cover
-                            user_details = get_user_details(
-                                self.request, collaborator_details["collaborator"]
-                            )
-                            project_details = get_project_details(
-                                self.request, project_id
-                            )
-                            send_collaboration_email(
-                                self.request,
-                                user_details["user_email"],
-                                self.user.email,
-                                self.user.name,
-                                project_details["project_name"],
-                                user_id,
-                                project_code,
-                            )
-                            self.request.session.flash(
-                                self._(
-                                    "The collaborator was added to this project. "
-                                    "However, an email has been sent to him/her/they to accept the collaboration"
+                        if added:
+                            auto_accept_collaboration = (
+                                self.request.registry.settings.get(
+                                    "auth.auto_accept_collaboration", "false"
                                 )
                             )
-                        self.returnRawViewResult = True
-                        return HTTPFound(
-                            self.request.route_url(
-                                "collaborators", userid=user_id, projcode=project_code
+                            if auto_accept_collaboration == "true":
+                                self.request.session.flash(
+                                    self._("The collaborator was added to this project")
+                                )
+                            else:  # pragma: no cover
+                                project_details = get_project_details(
+                                    self.request, project_id
+                                )
+                                send_collaboration_email(
+                                    self.request,
+                                    user_details["user_email"],
+                                    self.user.email,
+                                    self.user.name,
+                                    project_details["project_name"],
+                                    user_id,
+                                    project_code,
+                                )
+                                self.request.session.flash(
+                                    self._(
+                                        "The collaborator was added to this project. "
+                                        "However, an email has been sent to him/her/they to accept the collaboration"
+                                    )
+                                )
+                            self.returnRawViewResult = True
+                            return HTTPFound(
+                                self.request.route_url(
+                                    "collaborators",
+                                    userid=user_id,
+                                    projcode=project_code,
+                                )
                             )
-                        )
+                        else:
+                            self.append_to_errors(message)
                     else:
-                        self.append_to_errors(message)
+                        self.append_to_errors(
+                            self._("This collaborator does not exist or is inactive")
+                        )
                 else:
                     self.append_to_errors(self._("You need to specify a collaborator"))
             if "change_role" in collaborator_details.keys():

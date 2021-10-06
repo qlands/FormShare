@@ -74,6 +74,7 @@ from formshare.processes.storage import (
 )
 from formshare.products.fs1import.fs1import import formshare_one_import_json
 from formshare.products.repository import create_database_repository
+from formshare.processes.email.send_email import send_error_to_technical_team
 
 log = logging.getLogger("formshare")
 
@@ -115,6 +116,18 @@ _GPS_types = [
     "q geopoint",
     "q location",
 ]
+
+
+def report_critical_error(
+    request, user, project, form, error_code, message
+):  # pragma: no cover
+    send_error_to_technical_team(
+        request,
+        "Error while creating the repository for form {} in "
+        "project {}. \nURL:{} \nAccount: {}\nError: {}\nMessage: {}\n".format(
+            form, project, request.url, user, error_code, message
+        ),
+    )
 
 
 def get_fields_from_table_in_file(create_file, table_name):
@@ -3580,7 +3593,6 @@ def push_revision(
     if p.returncode == 0:
 
         # Add the JSON to the Elastic Search index
-        project_code = get_project_code_from_id(request, user, project)
         index_data = {
             "_submitted_date": submission_data.get("_submitted_date", ""),
             "_xform_id_string": submission_data.get("_xform_id_string", ""),
@@ -3591,27 +3603,62 @@ def push_revision(
         }
         if submission_data.get("_geolocation", "") != "":
             index_data["_geolocation"] = submission_data.get("_geolocation", "")
-        add_dataset(
-            request.registry.settings,
-            project,
-            form,
-            submission,
-            index_data,
-        )
+        try:
+            add_dataset(
+                request.registry.settings,
+                project,
+                form,
+                submission,
+                index_data,
+            )
+        except Exception as e:
+            message = (
+                "ES Error while inserting on the dataset index. "
+                "Project: {}. Form {}. Submission: {}.".format(
+                    project, form, submission
+                )
+            )
+            report_critical_error(request, user, project, form, "ES01", message)
+            log.error(
+                'ES Error "{}" with ID while inserting on the dataset index. '
+                "Project: {}. Form {}. Submission: {}. Index data {}".format(
+                    str(e), project, form, submission, index_data
+                )
+            )
 
         # Add the inserted records in the record index
         with open(uuid_file) as f:
             lines = f.readlines()
             for line in lines:
                 parts = line.split(",")
-                add_record(
-                    request.registry.settings,
-                    project,
-                    form,
-                    schema,
-                    parts[0],
-                    parts[1].replace("\n", ""),
-                )
+                try:
+                    add_record(
+                        request.registry.settings,
+                        project,
+                        form,
+                        schema,
+                        parts[0],
+                        parts[1].replace("\n", ""),
+                    )
+                except Exception as e:
+                    message = (
+                        "ES Error while inserting on the record index. "
+                        "Project: {}. Form {}. Schema: {}. Table: {}. RowUUID: {}".format(
+                            project, form, schema, parts[0], parts[1].replace("\n", "")
+                        )
+                    )
+                    report_critical_error(request, user, project, form, "ES01", message)
+                    log.error(
+                        'ES Error "{}" while inserting on the record index. '
+                        "Project: {}. Form {}. Schema: {}. Table: {}. RowUUID: {}".format(
+                            str(e),
+                            project,
+                            form,
+                            schema,
+                            parts[0],
+                            parts[1].replace("\n", ""),
+                        )
+                    )
 
         return 0, ""
     else:

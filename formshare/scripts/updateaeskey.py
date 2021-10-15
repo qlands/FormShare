@@ -13,6 +13,7 @@ from formshare.models import get_engine, get_session_factory, get_tm_session
 from formshare.models.meta import Base
 import logging
 
+
 class EmptyPassword(Exception):
     """
     Exception raised when there is an empty password

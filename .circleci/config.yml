@@ -33,6 +33,8 @@ jobs:
           # Install dependencies with --user to enable easier caching
           name: Install dependencies
           command: |
+            pip uninstall setuptools
+            pip install setuptools==57.5.0
             pip install -r requirements.txt --user
             pip install codecov --user
             /home/circleci/.local/bin/codecov

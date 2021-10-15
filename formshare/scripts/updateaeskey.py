@@ -57,7 +57,9 @@ def main(raw_args=None):
                 )
                 if current_password == "":
                     raise EmptyPassword(
-                        "Empty password for user {}".format(a_user.user_id)
+                        "Empty password for user {} with encrypted password '{}'".format(
+                            a_user.user_id, a_user.user_password
+                        )
                     )
                 new_password = encode_data_with_key(
                     current_password, args.new_key.encode()
@@ -73,7 +75,9 @@ def main(raw_args=None):
                 )
                 if current_password == "":
                     raise EmptyPassword(
-                        "Empty password for assistant {}".format(an_assistant.coll_id)
+                        "Empty password for assistant {} with encrypted password '{}'".format(
+                            an_assistant.coll_id, an_assistant.coll_password
+                        )
                     )
                 new_password = encode_data_with_key(
                     current_password, args.new_key.encode()
@@ -92,7 +96,9 @@ def main(raw_args=None):
                 )
                 if current_password == "":
                     raise EmptyPassword(
-                        "Empty password for assistant {}".format(an_assistant.coll_id)
+                        "Empty password for partner {} with encrypted password '{}'".format(
+                            an_assistant.coll_id, a_partner.partner_password
+                        )
                     )
                 new_password = encode_data_with_key(
                     current_password, args.new_key.encode()

@@ -105,6 +105,8 @@ RUN groupadd --gid 3434 circleci \
 RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
 RUN python3 get-pip.py
 RUN sudo pip install --no-cache pipenv poetry
+RUN sudo pip uninstall --yes setuptools
+RUN sudo pip install setuptools==57.5.0
 # END IMAGE CUSTOMIZATIONS
 # -------------------------------
 

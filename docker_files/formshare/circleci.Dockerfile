@@ -217,7 +217,7 @@ RUN chown -R circleci /opt/formshare_log
 RUN chown -R circleci /opt/formshare_celery
 RUN chown -R circleci /opt/formshare_gunicorn
 RUN chown -R circleci /opt/formshare_config
-
+RUN ldconfig
 USER circleci
 ENV PATH /home/circleci/.local/bin:/home/circleci/bin:${PATH}
 

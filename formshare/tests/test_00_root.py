@@ -13744,6 +13744,7 @@ class FunctionalTests(unittest.TestCase):
             res = updateaeskey(["--new_key", "123", ini_file])
             assert res == 1
 
+            print("Update AES Key with {}".format(self.server_config["aes.key"]))
             res = updateaeskey(["--new_key", self.server_config["aes.key"], ini_file])
             assert res == 0
 

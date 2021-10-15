@@ -11,7 +11,7 @@ from formshare.config.encdecdata import encode_data_with_key, decode_data_with_k
 from formshare.models import User, Collaborator, Partner
 from formshare.models import get_engine, get_session_factory, get_tm_session
 from formshare.models.meta import Base
-
+import logging
 
 class EmptyPassword(Exception):
     """
@@ -26,11 +26,11 @@ def main(raw_args=None):
     args = parser.parse_args(raw_args)
 
     if not os.path.exists(args.ini_path):
-        print("Ini file does not exists")
+        logging.error("Ini file does not exists")
         return 1
 
     if len(args.new_key) != 32:
-        print("The AES key must be 32 characters")
+        logging.error("The AES key must be 32 characters")
         return 1
 
     formshare_ini_file_path = os.path.abspath(args.ini_path)
@@ -100,7 +100,7 @@ def main(raw_args=None):
                     Partner.partner_id == a_partner.partner_id
                 ).update({"partner_password": new_password})
         except Exception as e:
-            print(str(e))
+            logging.error(str(e))
             error = 1
     engine.dispose()
     if error == 0:

@@ -196,10 +196,10 @@ ENV LC_ALL en_US.UTF-8
 #RUN shasum -a 512 -c elasticsearch-6.8.14.deb.sha512
 #RUN dpkg -i elasticsearch-6.8.14.deb
 
-COPY ./docker_files/circleci_mysql_setup.sh /circleci_mysql_setup.sh
-RUN chmod +x /circleci_mysql_setup.sh
+#COPY ./docker_files/circleci_mysql_setup.sh /circleci_mysql_setup.sh
+#RUN chmod +x /circleci_mysql_setup.sh
 
-RUN apt-get -y install mysql-server && service mysql start && /circleci_mysql_setup.sh
+#RUN apt-get -y install mysql-server && service mysql start && /circleci_mysql_setup.sh
 
 WORKDIR /opt
 RUN mkdir formshare_repository

@@ -21,6 +21,9 @@ VOLUME /opt/formshare_plugins
 RUN mkdir formshare_odata
 VOLUME /opt/formshare_odata
 
+RUN mkdir formshare_odata_webapps
+VOLUME /opt/formshare_odata_webapps
+
 VOLUME /etc/mosquitto/conf.d/
 
 COPY ./docker_files/mosquitto/mosquitto.conf /root

@@ -10,7 +10,7 @@ import uuid
 from collections import OrderedDict
 from decimal import Decimal
 from subprocess import Popen, PIPE
-
+from sqlalchemy.orm.session import Session
 import paginate
 import pandas as pd
 from PIL import Image
@@ -1039,8 +1039,10 @@ def update_data(request, user, project, form, table_name, row_uuid, field, value
     log.info(sql)
     engine = create_engine(sql_url, poolclass=NullPool)
     try:
-        engine.execute("SET @odktools_current_user = '" + user + "'")
-        engine.execute(sql)
+        session = Session(bind=engine)
+        session.execute("SET @odktools_current_user = '" + user + "'")
+        session.execute(sql)
+        session.commit()
         engine.dispose()
         res = {"data": {field: value}}
         return res
@@ -1413,8 +1415,10 @@ def update_record_with_id(request, user, schema, table, rowuuid, data):
         sql_url = request.registry.settings.get("sqlalchemy.url")
         engine = create_engine(sql_url, poolclass=NullPool)
         try:
-            engine.execute("SET @odktools_current_user = '" + user + "'")
-            engine.execute(sql)
+            session = Session(bind=engine)
+            session.execute("SET @odktools_current_user = '" + user + "'")
+            session.execute(sql)
+            session.commit()
             engine.dispose()
             return True, ""
         except Exception as e:

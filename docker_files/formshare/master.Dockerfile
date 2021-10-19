@@ -18,8 +18,8 @@ VOLUME /opt/formshare_fluentd
 RUN mkdir formshare_plugins
 VOLUME /opt/formshare_plugins
 
-RUN mkdir formshare_odata
-VOLUME /opt/formshare_odata
+RUN mkdir formshare_odata_webapps
+VOLUME /opt/formshare_odata_webapps
 
 VOLUME /etc/mosquitto/conf.d/
 

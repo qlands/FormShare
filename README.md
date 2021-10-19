@@ -116,6 +116,7 @@ mkdir /opt/formshare/config
 mkdir /opt/formshare/mysql
 mkdir /opt/formshare/plugins
 mkdir /opt/formshare/mosquitto
+mkdir /opt/formshare_odata_webapps
 mkdir /opt/formshare/elasticsearch
 mkdir /opt/formshare/elasticsearch/esdata
 mkdir /opt/formshare/elasticsearch/esdata2
@@ -218,9 +219,105 @@ cd /opt/formshare_gunicorn
 
 ## Upgrading information
 
-### Important Note: Upgrading Docker images >= 20210805
+### Important Note: Elasticsearch migration 2 - Upgrading Docker images >= 20211019
 
-Docker images >= 20210801 (stable 2.8.5) use WebSockets for client-server communication. To upgrade FormShare beyond 20210801 you need to update the docker-compose.yml to expose port 9001. 
+Docker images >= 20211019 (from stable 2.10.0) use and check for Elasticsearch version 7.14.X. To upgrade FormShare beyond 20211019 you need to update the docker-compose.yml to use the Docker image 7.14.X of Elasticsearch **for all the nodes of Elasticsearch that you have**. **If you are upgrading from images < 20210801 then you need  to perform perform migration 1 first (see below)**.  You also need to update the configuration of your nodes:
+
+**Old configuration** (images < 20211109):
+
+```yaml
+fselasticsearch_20210805:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.8.14
+    container_name: fs_elasticsearch_20210805
+    environment:
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - network.host=172.28.1.1
+      - "discovery.zen.minimum_master_nodes=2"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - /opt/formshare/elasticsearch/esdata:/usr/share/elasticsearch/data
+    networks:
+      fsnet:
+        ipv4_address: 172.28.1.1
+
+  fselasticsearch2_20210805:
+    image: docker.elastic.co/elasticsearch/elasticsearch:6.8.14
+    container_name: fs_elasticsearch2_20210805
+    environment:
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - network.host=172.28.1.2
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "discovery.zen.ping.unicast.hosts=172.28.1.1"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - /opt/formshare/elasticsearch/esdata2:/usr/share/elasticsearch/data
+    networks:
+      fsnet:
+        ipv4_address: 172.28.1.2
+```
+
+**New configuration** (images >= 20211009):
+
+```yaml
+fses20211019n01:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.14.0
+    container_name: fses20211019n01
+    environment:
+      - network.host=172.28.1.1
+      - node.name=fses20211019n01
+      - cluster.name=fs-es-cluster
+      - discovery.seed_hosts=fses20211019n02
+      - cluster.initial_master_nodes=fses20211019n01,fses20211019n02
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - /opt/formshare/elasticsearch/esdata:/usr/share/elasticsearch/data
+    networks:
+      fsnet:
+        ipv4_address: 172.28.1.1
+
+  fses20211019n02:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.14.0
+    container_name: fses20211019n02
+    environment:
+      - network.host=172.28.1.2
+      - node.name=fses20211019n02
+      - cluster.name=fs-es-cluster
+      - discovery.seed_hosts=fses20211019n01
+      - cluster.initial_master_nodes=fses20211019n01,fses20211019n02
+      - bootstrap.memory_lock=true
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - /opt/formshare/elasticsearch/esdata2:/usr/share/elasticsearch/data
+    networks:
+      fsnet:
+        ipv4_address: 172.28.1.2
+```
+
+Note that the container names have no special characters and the way Nodes are discovered change in ES 7.14.X
+
+### Important Note: Upgrading to Docker images >= 20210805
+
+Docker images >= 20210801 (from stable 2.8.5) use WebSockets for client-server communication. To upgrade FormShare beyond 20210801 you need to update the docker-compose.yml to expose port 9001. 
 
 In the FormShare service under the ports section add the following line after port 5900:
 
@@ -242,7 +339,7 @@ In the FormShare service under the volumes section add the following volume:
 
 Note for AWS: Inbound and outbound communication to port 9001 must be allowed for FormShare to support client-server communication.
 
-### Important Note: Upgrading Docker images < **20210411** (stable 2.8.0) to images >= **20210411**
+### Important Note: Elasticsearch migration 1 - Upgrading Docker images < **20210411** (stable 2.8.0) to images >= **20210411**
 
 Docker images >= 20210411 (stable 2.8.0) use and check for Elasticsearch version 6.8.14. To upgrade FormShare beyond 20210411 you need to update the docker-compose.yml to use the Docker image 6.8.14 of Elasticsearch **for all the nodes of Elasticsearch that you have**.
 

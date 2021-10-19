@@ -3,8 +3,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.1\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2021-10-05 09:46-0600\n"
-"PO-Revision-Date: 2021-10-05 18:04-0600\n"
+"POT-Creation-Date: 2021-10-19 15:49-0600\n"
+"PO-Revision-Date: 2021-10-19 15:53-0600\n"
 "Last-Translator: cquiros <cquiros@qlands.com>\n"
 "Language: pt\n"
 "Language-Team: English <kde-i18n-doc@kde.org>\n"
@@ -76,18 +76,18 @@ msgstr ""
 msgid "The file {} already exist"
 msgstr "O arquivo {} já existe"
 
+# | msgid "Username is already taken"
 #: formshare/processes/db/partner.py:70
-#| msgid "Username is already taken"
 msgid "Partner email is already taken"
 msgstr "O e-mail do sócio já está em uso"
 
+# | msgid "The assistant is already part of this project"
 #: formshare/processes/db/partner.py:163
-#| msgid "The assistant is already part of this project"
 msgid "The partner is already linked to this project"
 msgstr "O sócio já faz parte deste projeto"
 
+# | msgid "The member is already part of this group"
 #: formshare/processes/db/partner.py:249
-#| msgid "The member is already part of this group"
 msgid "The partner is already linked to this form"
 msgstr "O sócio já faz parte deste formulário"
 
@@ -141,7 +141,7 @@ msgstr "FormShare - Solicitar colaboração"
 # | msgid "The primary key was not found in the ODK form or is inside a
 # repeat"
 # | msgid "The primary key variable does not exists or is inside a repeat"
-#: formshare/processes/odk/api.py:407
+#: formshare/processes/odk/api.py:420
 msgid "The primary key variable does not exist or is inside a repeat"
 msgstr ""
 "A chave primária não foi encontrada no formulário ODK ou está dentro de "
@@ -149,13 +149,13 @@ msgstr ""
 
 # What does ODK stand for?
 # | msgid "FormShare checks a little bit more your ODK for inconsistencies."
-#: formshare/processes/odk/api.py:421 formshare/processes/odk/api.py:470
-#: formshare/processes/odk/api.py:492 formshare/processes/odk/api.py:532
-#: formshare/processes/odk/api.py:584 formshare/views/form.py:463
+#: formshare/processes/odk/api.py:434 formshare/processes/odk/api.py:483
+#: formshare/processes/odk/api.py:505 formshare/processes/odk/api.py:545
+#: formshare/processes/odk/api.py:597 formshare/views/form.py:463
 msgid "FormShare thoroughly checks your ODK for inconsistencies."
 msgstr "FormShare verifica minuciosamente há inconsistências no seu ODK."
 
-#: formshare/processes/odk/api.py:425
+#: formshare/processes/odk/api.py:438
 msgid ""
 "The following variables are duplicated within repeats or outside repeats "
 "in the ODK you just submitted:"
@@ -163,19 +163,19 @@ msgstr ""
 "As seguintes variáveis estão duplicadas dentro de repetições ou fora de "
 "repetições no ODK que você submeteu:"
 
-#: formshare/processes/odk/api.py:435
+#: formshare/processes/odk/api.py:448
 msgid "Outside any repeat"
 msgstr "Fora de qualquer repetição"
 
-#: formshare/processes/odk/api.py:437
+#: formshare/processes/odk/api.py:450
 msgid "In repeat: {}"
 msgstr "Em repetição: {}"
 
-#: formshare/processes/odk/api.py:446
+#: formshare/processes/odk/api.py:459
 msgid "Variable: {}"
 msgstr "Variável: {}"
 
-#: formshare/processes/odk/api.py:452 formshare/processes/odk/api.py:548
+#: formshare/processes/odk/api.py:465 formshare/processes/odk/api.py:561
 msgid ""
 "Please note that FormShare only allows basic Latin letters, digits 0-9, "
 "dollar and underscore in repeat, group and variable names."
@@ -185,57 +185,57 @@ msgstr ""
 "variável."
 
 # | msgid "The following variables are have invalid names:"
-#: formshare/processes/odk/api.py:472
+#: formshare/processes/odk/api.py:485
 msgid "The following variables have invalid names:"
 msgstr "As seguintes variáveis possuem nomes inválidos:"
 
-#: formshare/processes/odk/api.py:478
+#: formshare/processes/odk/api.py:491
 msgid "Please change those names and try again."
 msgstr "Por favor, altere estes nomes e tente novamente."
 
-#: formshare/processes/odk/api.py:494
+#: formshare/processes/odk/api.py:507
 msgid "The following choices are identical:"
 msgstr "As escolhas seguintes são idênticas:"
 
-#: formshare/processes/odk/api.py:507
+#: formshare/processes/odk/api.py:520
 msgid " with the following duplicates: "
 msgstr " com as seguintes duplicações: "
 
-#: formshare/processes/odk/api.py:515
+#: formshare/processes/odk/api.py:528
 msgid "Please remove the duplicated choices and try again."
 msgstr "Favor remover as escolhas duplicadas e tentar novamente."
 
-#: formshare/processes/odk/api.py:536
+#: formshare/processes/odk/api.py:549
 msgid "The following repeats are duplicated in the ODK you just submitted:"
 msgstr "As seguintes repetições estão duplicadas no ODK que você submeteu:"
 
-#: formshare/processes/odk/api.py:544
+#: formshare/processes/odk/api.py:557
 msgid "Repeat: {}"
 msgstr "Repetição: {}"
 
-#: formshare/processes/odk/api.py:588 formshare/views/form.py:468
+#: formshare/processes/odk/api.py:601 formshare/views/form.py:468
 msgid "The following options are duplicated in the ODK you just submitted:"
 msgstr "As seguintes opções estão duplicadas no ODK que você submeteu:"
 
-#: formshare/processes/odk/api.py:600 formshare/views/form.py:480
+#: formshare/processes/odk/api.py:613 formshare/views/form.py:480
 msgid "Option {} in variable {}"
 msgstr "Opção {} na variável {}"
 
-#: formshare/processes/odk/api.py:618
+#: formshare/processes/odk/api.py:631
 msgid ""
 "Malformed language in your ODK. You have label:X (Y) when it must be "
 "label::X (Y). With two colons (::)"
 msgstr ""
-"Linguagem imprópria em seu ODK. Você tem label:X (Y) quando deveria ser"
-"label::X (Y). Com dois pontos (::)"
+"Linguagem imprópria em seu ODK. Você tem label:X (Y) quando deveria "
+"serlabel::X (Y). Com dois pontos (::)"
 
-#: formshare/processes/odk/api.py:635
+#: formshare/processes/odk/api.py:648
 msgid ""
 "You have choices but not labels. Did you missed the :: between label and "
 "language? Like label::English (en)"
 msgstr ""
-"Você tem opções, mas sem rótulos. Você colocou :: entre a tag e"
-"idioma? Como label::English (en)"
+"Você tem opções, mas sem rótulos. Você colocou :: entre a tag eidioma? "
+"Como label::English (en)"
 
 # If FormShare is referred to as an app, it is masculine "O FormShare". If it
 # is referred to as a company, then it is feminine "A FormShare". It depends
@@ -244,7 +244,7 @@ msgstr ""
 # | msgid "" "FormShare manage your data in a better way but by doing so it
 # has
 # | more " "restrictions."
-#: formshare/processes/odk/api.py:652
+#: formshare/processes/odk/api.py:665
 msgid ""
 "FormShare manages your data in a better way but by doing so it has more "
 "restrictions."
@@ -254,25 +254,25 @@ msgstr ""
 
 # Please explain "selects" to make sure the translation was accurate,
 # | msgid "The following tables have more than 64 selects: "
-#: formshare/processes/odk/api.py:658
+#: formshare/processes/odk/api.py:671
 msgid "The following tables have more than 60 selects: "
 msgstr "As seguintes tabelas têm mais de 60 seleções: "
 
-#: formshare/processes/odk/api.py:666
+#: formshare/processes/odk/api.py:679
 msgid " with "
 msgstr " com "
 
-#: formshare/processes/odk/api.py:666
+#: formshare/processes/odk/api.py:679
 msgid " selects"
 msgstr " seleções"
 
-#: formshare/processes/odk/api.py:671
+#: formshare/processes/odk/api.py:684
 msgid "Some information on this restriction and how to correct it:"
 msgstr "Mais informações sobre essa restrição e como corrigi-la:"
 
 # | msgid "" "We tent to organize our ODK forms in sections with questions
 # | around a " "topic. For example: \"livestock inputs\" or \"crops sales\"."
-#: formshare/processes/odk/api.py:676
+#: formshare/processes/odk/api.py:689
 msgid ""
 "We tend to organize our ODK forms in sections with questions around a "
 "topic. For example: \"livestock inputs\" or \"crops sales\"."
@@ -281,7 +281,7 @@ msgstr ""
 "sobre um assunto. Por exemplo: \"entradas de pecuária\" ou \"vendas de "
 "safra\"."
 
-#: formshare/processes/odk/api.py:684
+#: formshare/processes/odk/api.py:697
 msgid ""
 "These sections have type = \"begin/end group\". We also organize "
 "questions that must be repeated in sections with type = \"begin/end "
@@ -308,7 +308,7 @@ msgstr ""
 # could"
 # | " potentially have more than 64 selects. FormShare can only handle 64 "
 # | "selects per table."
-#: formshare/processes/odk/api.py:692
+#: formshare/processes/odk/api.py:705
 msgid ""
 "FormShare stores repeats as separate tables (like different Excel sheets)"
 " however groups are not stored as repeats. FormShare stores all items "
@@ -335,7 +335,7 @@ msgstr ""
 # Excel"
 # | " your items will be organized in different sheets each representing a "
 # | "table."
-#: formshare/processes/odk/api.py:704
+#: formshare/processes/odk/api.py:717
 msgid ""
 "You can bypass this restriction by creating groups of items inside "
 "repeats BUT WITH repeat_count = 1. A repeat with repeat_count = 1 will "
@@ -351,7 +351,7 @@ msgstr ""
 "exportar os dados para o Excel, seus itens serão organizados em planilhas"
 " diferentes, cada uma representando uma tabela."
 
-#: formshare/processes/odk/api.py:713
+#: formshare/processes/odk/api.py:726
 msgid ""
 "Please edit your ODK XLSX/XLS file, group several items inside repeats "
 "with repeat_count = 1 and try to upload the form again."
@@ -360,15 +360,15 @@ msgstr ""
 "das repetições com repeat_count = 1 e tente carregar o formulário "
 "novamente."
 
-#: formshare/processes/odk/api.py:758 formshare/processes/odk/api.py:1177
+#: formshare/processes/odk/api.py:771 formshare/processes/odk/api.py:1190
 msgid "No file was attached"
 msgstr "Nenhum arquivo foi anexado"
 
-#: formshare/processes/odk/api.py:780 formshare/processes/odk/api.py:1200
+#: formshare/processes/odk/api.py:793 formshare/processes/odk/api.py:1213
 msgid "Invalid file type"
 msgstr "Tipo inválido de arquivo"
 
-#: formshare/processes/odk/api.py:849 formshare/processes/odk/api.py:1271
+#: formshare/processes/odk/api.py:862 formshare/processes/odk/api.py:1284
 msgid ""
 "The variable {} used to identify the cases is invalid. Only text, "
 "calculates or integers are allowed."
@@ -376,7 +376,7 @@ msgstr ""
 "A variável {} usada para identificar os casos não é válida. Somente "
 "texto, cálculo ou números inteiros são permitidos."
 
-#: formshare/processes/odk/api.py:870 formshare/processes/odk/api.py:1292
+#: formshare/processes/odk/api.py:883 formshare/processes/odk/api.py:1305
 msgid ""
 "The variable {} used to label cases was not found or is invalid. Only "
 "text, calculates or integers are allowed."
@@ -387,7 +387,7 @@ msgstr ""
 # | msgid "" "The variable {} used to search and select cases was not found or
 # | is " "invalid. The variable must be select_one_from_file using a CSV
 # file."
-#: formshare/processes/odk/api.py:898
+#: formshare/processes/odk/api.py:911
 msgid ""
 "The variable {} used to search and select cases was not found or is "
 "invalid. The variable must be select_one_from_file using a CSV file or a "
@@ -397,11 +397,11 @@ msgstr ""
 "ou é inválida. A variável deve ser select_one_from_file usando um arquivo"
 " CSV ou uma variável de código de barras."
 
-#: formshare/processes/odk/api.py:1117
+#: formshare/processes/odk/api.py:1130
 msgid "The form already exists in this project"
 msgstr "Formulário já existente neste projeto"
 
-#: formshare/processes/odk/api.py:1121 formshare/processes/odk/api.py:1589
+#: formshare/processes/odk/api.py:1134 formshare/processes/odk/api.py:1602
 msgid ""
 "The form ID has especial characters. FormShare only allows letters, "
 "numbers and underscores(_)"
@@ -410,7 +410,7 @@ msgstr ""
 "apenas letras, números e underline (_)"
 
 # | msgid "Cannot find XForm ID. Please post this ODK form in an issue on "
-#: formshare/processes/odk/api.py:1128
+#: formshare/processes/odk/api.py:1141
 msgid "Cannot find XForm ID. Please include this ODK form in an issue on  "
 msgstr ""
 "Não foi possível localizar ID do XForm. Inclua este formulário ODK como "
@@ -419,7 +419,7 @@ msgstr ""
 # | msgid "" "The variable {} used to search and select cases was not found or
 # | is " "invalid. The variable must be select_one_from_file using a CSV
 # file."
-#: formshare/processes/odk/api.py:1320
+#: formshare/processes/odk/api.py:1333
 msgid ""
 "The variable {} used to search and select cases was not found or is "
 "invalid. The variable must be select_one_from_file using a CSV file or a "
@@ -430,14 +430,14 @@ msgstr ""
 " CSV ou uma variável de código de barras."
 
 # | msgid "The form does not exists in this project"
-#: formshare/processes/odk/api.py:1577
+#: formshare/processes/odk/api.py:1590
 msgid "The form does not exist in this project"
 msgstr "Formulário inexistente neste projeto"
 
 # | msgid "" "The \"form_id\" of the current form does not match the
 # \"form_id\"
 # | of the" " one you uploaded. You cannot update a form with another form"
-#: formshare/processes/odk/api.py:1581
+#: formshare/processes/odk/api.py:1594
 msgid ""
 "The \"form_id\" of the current form does not match the \"form_id\" of the"
 " one you uploaded. You cannot update a form with another form."
@@ -446,13 +446,13 @@ msgstr ""
 "formulário que você carregou. Você não pode atualizar um formulário com "
 "outro formulário."
 
-#: formshare/processes/odk/api.py:1596
+#: formshare/processes/odk/api.py:1609
 msgid "Cannot find XForm ID. Please post the form as an issue on "
 msgstr ""
 "Não é possível localizar o ID XForm. Favor publicar o formulário como "
 "problema em "
 
-#: formshare/processes/odk/api.py:2320
+#: formshare/processes/odk/api.py:2333
 msgid ""
 "The language \"{}\" is missing in this version of the form and cannot be "
 "merged.\n"
@@ -460,13 +460,13 @@ msgid ""
 "Use the \"Fix language\" button to set the languages in this version of "
 "the ODK Form."
 msgstr ""
-"O idioma \"{}\" não está presente nesta versão do formulário e não pode ser"
-"mesclado. \n"
+"O idioma \"{}\" não está presente nesta versão do formulário e não pode "
+"sermesclado. \n"
 "\n"
-"Use o botão \"Idioma correto\" para configurar os idiomas nesta versão do"
-"o formulário ODK."
+"Use o botão \"Idioma correto\" para configurar os idiomas nesta versão "
+"doo formulário ODK."
 
-#: formshare/processes/odk/api.py:2326
+#: formshare/processes/odk/api.py:2339
 msgid ""
 "The language called \"default\" appears when you have a \"label\" without"
 " indicating a language. For example if you had a column called \"label\" "
@@ -477,16 +477,16 @@ msgid ""
 "In this new version you added the language to the \"label\" therefore "
 "\"default\" does not exists"
 msgstr ""
-"O idioma chamado \"default\" aparece quando você tem um \"rótulo\" sem"
-" indicar o idioma. Por exemplo, se você tivesse uma coluna chamada \"label\""
-"e outro chamado \"label::English (en)\", então \"default\" refere-se ao"
-"idioma do \"label\" cujo idioma não foi indicado na versão anterior do"
-"este formulário ODK. \n"
+"O idioma chamado \"default\" aparece quando você tem um \"rótulo\" sem "
+"indicar o idioma. Por exemplo, se você tivesse uma coluna chamada "
+"\"label\"e outro chamado \"label::English (en)\", então \"default\" "
+"refere-se aoidioma do \"label\" cujo idioma não foi indicado na versão "
+"anterior doeste formulário ODK. \n"
 "\n"
-"Nesta nova versão, adicionou-se o idioma ao \"label\", portanto"
-"\"default\" não existe"
+"Nesta nova versão, adicionou-se o idioma ao \"label\", "
+"portanto\"default\" não existe"
 
-#: formshare/processes/odk/api.py:2342
+#: formshare/processes/odk/api.py:2355
 msgid ""
 "This version of the form is in multiple languages but the previous one "
 "was not and therefore and cannot be merged.\n"
@@ -494,11 +494,11 @@ msgid ""
 "Use the \"Fix language\" button to set the languages in this version of "
 "the ODK Form."
 msgstr ""
-"Esta versão do formulário está em vários idiomas, mas o anterior"
-"não e, portanto, não pode ser mesclado. \n"
+"Esta versão do formulário está em vários idiomas, mas o anteriornão e, "
+"portanto, não pode ser mesclado. \n"
 "\n"
-"Use o botão \"Idioma correto\" para configurar os idiomas nesta versão do"
-"Formulário ODK."
+"Use o botão \"Idioma correto\" para configurar os idiomas nesta versão "
+"doFormulário ODK."
 
 # I suppose it is "exists" instead of "exits"?
 # | msgid "Error storing setting for key {}. Key already exits"
@@ -555,13 +555,13 @@ msgid "AJAX Data error. Report this error as an issue on "
 msgstr "Erro de dados AJAX. Reportar este erro como problema em "
 
 # | msgid "Cannot update value. Check the valid values in lookup table"
-#: formshare/processes/submission/api.py:1058
+#: formshare/processes/submission/api.py:1060
 msgid "Cannot update value. Check the valid values in lookup table "
 msgstr ""
 "Não foi possível atualizar valor. Verifique os valores válidos na tabela "
 "de consulta"
 
-#: formshare/processes/submission/api.py:1071
+#: formshare/processes/submission/api.py:1073
 msgid "Cannot update value. Check the valid values in lookup table"
 msgstr ""
 "Não é possível atualizar valor. Verifique os valores válidos na tabela de"
@@ -1558,8 +1558,8 @@ msgstr "fazer check-in na revisão do ID"
 msgid "Apply revision to the repository"
 msgstr "Aplicar revisão ao repositório"
 
+# | msgid "Assistant forms"
 #: formshare/templates/assistant/snippets/brdcrbs_home.jinja2:2
-#| msgid "Assistant forms"
 msgid "Assistant access for"
 msgstr "Acesso de assistente para"
 
@@ -1569,8 +1569,8 @@ msgstr "Acesso de assistente para"
 msgid "Home"
 msgstr "Página Inicial"
 
+# | msgid "Assistants"
 #: formshare/templates/assistant/snippets/header.jinja2:4
-#| msgid "Assistants"
 msgid "Assistant access"
 msgstr "Acesso de assistente"
 
@@ -1827,9 +1827,9 @@ msgstr "A última ação reportou erros"
 msgid "See errors"
 msgstr "Ver erros"
 
+# | msgid "are inactive"
 #: formshare/templates/dashboard/partners/partner_activity.jinja2:4
 #: formshare/templates/dashboard/partners/snippets/brdcrbs_partneract.jinja2:2
-#| msgid "are inactive"
 msgid "Partner activity"
 msgstr "Atividade de sócio"
 
@@ -1839,35 +1839,35 @@ msgid "Activity"
 msgstr "Atividade"
 
 # Please confirm FREE as in "unpaid" or "anyone can access"
+# | msgid "Free access"
 #: formshare/templates/dashboard/partners/partner_activity.jinja2:53
-#| msgid "Free access"
 msgid "Form access"
 msgstr "Acesso ao formulário"
 
+# | msgid "download"
 #: formshare/templates/dashboard/partners/partner_activity.jinja2:56
-#| msgid "download"
 msgid "Downloaded a"
 msgstr "Baixou um"
 
 # | msgid "Upload form"
+# | msgid "Upload case form"
 #: formshare/templates/dashboard/partners/partner_activity.jinja2:62
-#| msgid "Upload case form"
 msgid "Accessed form"
 msgstr "Acessou o formulário"
 
+# | msgid "Add project"
 #: formshare/templates/dashboard/partners/partner_activity.jinja2:62
 #: formshare/templates/dashboard/partners/partner_activity.jinja2:65
-#| msgid "Add project"
 msgid "of project"
 msgstr "do projeto"
 
+# | msgid "Download current version"
 #: formshare/templates/dashboard/partners/partner_activity.jinja2:65
-#| msgid "Download current version"
 msgid "Downloaded the version with ID:"
 msgstr "Versão baixada com ID:"
 
+# | msgid "Merge form"
 #: formshare/templates/dashboard/partners/partner_activity.jinja2:65
-#| msgid "Merge form"
 msgid "from the form"
 msgstr "do formulário"
 
@@ -1877,8 +1877,8 @@ msgstr "do formulário"
 msgid "Add partner"
 msgstr "Adicionar sócios"
 
+# | msgid "User information"
 #: formshare/templates/dashboard/partners/partner_add.jinja2:14
-#| msgid "User information"
 msgid "Partner information"
 msgstr "Informação do sócio"
 
@@ -1898,13 +1898,13 @@ msgstr "Editar sócios"
 msgid "Current information"
 msgstr "Informação atual"
 
+# | msgid "FormShare users"
 #: formshare/templates/dashboard/partners/partner_list.jinja2:4
 #: formshare/templates/dashboard/partners/partner_list.jinja2:36
 #: formshare/templates/dashboard/partners/snippets/brdcrbs_partneract.jinja2:5
 #: formshare/templates/dashboard/partners/snippets/brdcrbs_partneradd.jinja2:5
 #: formshare/templates/dashboard/partners/snippets/brdcrbs_partneredit.jinja2:5
 #: formshare/templates/dashboard/partners/snippets/brdcrbs_partnerlist.jinja2:5
-#| msgid "FormShare users"
 msgid "FormShare partners"
 msgstr "Sócios no FormShare"
 
@@ -1915,53 +1915,52 @@ msgid ""
 "you. For example, a professor at a university (a partner in your project)"
 " requiring a KML export to match GPS points with weather data."
 msgstr ""
-"Sócios são pessoas de confiança fora de sua organização que exigem"
-"acesso a produtos e outros recursos no FormShare para colaborar"
-"tu. Por exemplo, um professor em uma universidade (um sócio em seu projeto)"
-" que requer uma exportação KML para combinar pontos GPS com dados"
-" meteorológicos."
+"Sócios são pessoas de confiança fora de sua organização que exigemacesso "
+"a produtos e outros recursos no FormShare para colaborartu. Por exemplo, "
+"um professor em uma universidade (um sócio em seu projeto) que requer uma"
+" exportação KML para combinar pontos GPS com dados meteorológicos."
 
 #: formshare/templates/dashboard/partners/partner_list.jinja2:38
 msgid ""
 "After adding a partner you can link it either to a project or to "
 "individual forms within a project."
 msgstr ""
-"Depois de adicionar um parceiro, você pode vinculá-lo a um projeto ou"
-"formulários individuais dentro de um projeto."
+"Depois de adicionar um parceiro, você pode vinculá-lo a um projeto "
+"ouformulários individuais dentro de um projeto."
 
 # | msgid "Search for an user"
+# | msgid "Search for a user"
 #: formshare/templates/dashboard/partners/partner_list.jinja2:54
-#| msgid "Search for a user"
 msgid "Search for a partner"
 msgstr "Procure um sócio"
 
+# | msgid "You can search by username, full name or email address"
 #: formshare/templates/dashboard/partners/partner_list.jinja2:55
-#| msgid "You can search by username, full name or email address"
 msgid "You can search by full name, email address or organization"
 msgstr "Você pode pesquisar por nome completo, e-mail ou organização"
 
+# | msgid "Activity"
 #: formshare/templates/dashboard/partners/partner_list.jinja2:64
-#| msgid "Activity"
 msgid "View activity"
 msgstr "Ver atividade"
 
+# | msgid "Delete project"
 #: formshare/templates/dashboard/partners/partner_list.jinja2:67
-#| msgid "Delete project"
 msgid "Delete partner"
 msgstr "Excluir sócio"
 
+# | msgid "All the data in this form will be deleted!"
 #: formshare/templates/dashboard/partners/partner_list.jinja2:114
-#| msgid "All the data in this form will be deleted!"
 msgid "The partner and all its history will be deleted!"
 msgstr "O sócio e todo o seu histórico serão excluídos!"
 
+# | msgid "Activity"
 #: formshare/templates/dashboard/partners/snippets/brdcrbs_partneract.jinja2:8
-#| msgid "Activity"
 msgid "Activity of"
 msgstr "Atividade de"
 
+# | msgid "Add new user"
 #: formshare/templates/dashboard/partners/snippets/brdcrbs_partneradd.jinja2:2
-#| msgid "Add new user"
 msgid "Add new partner"
 msgstr "Adicionar novo sócio"
 
@@ -1981,8 +1980,8 @@ msgstr "Adicionar"
 msgid "Editing"
 msgstr "Editando"
 
+# | msgid "User list"
 #: formshare/templates/dashboard/partners/snippets/brdcrbs_partnerlist.jinja2:2
-#| msgid "User list"
 msgid "Partner list"
 msgstr "Lista de sócios"
 
@@ -2003,8 +2002,8 @@ msgstr "E-mail"
 msgid "Full name"
 msgstr "Nome completo"
 
+# | msgid "Confirmation"
 #: formshare/templates/dashboard/partners/snippets/partner_form.jinja2:21
-#| msgid "Confirmation"
 msgid "Organization"
 msgstr "Organização"
 
@@ -2024,8 +2023,8 @@ msgstr "Telefone"
 msgid "Password confirmation"
 msgstr "Confirmação de senha"
 
+# | msgid "Modify user"
 #: formshare/templates/dashboard/partners/snippets/partner_form_edit.jinja2:25
-#| msgid "Modify user"
 msgid "Modify partner"
 msgstr "Modificar sócio"
 
@@ -2049,8 +2048,8 @@ msgstr "ou um administrador pode editar seus detalhes"
 msgid "New password"
 msgstr "Nova senha"
 
+# | msgid "As an administrator you can add and edit FormShare users"
 #: formshare/templates/dashboard/partners/snippets/partner_password_form.jinja2:29
-#| msgid "As an administrator you can add and edit FormShare users"
 msgid "or an administrator can change its password."
 msgstr "ou um administrador pode alterar sua senha."
 
@@ -2216,9 +2215,9 @@ msgstr "Projeto"
 msgid "Editing the partner options of"
 msgstr "Editando as opções de sócio"
 
+# | msgid "Are you sure that you want to delete"
 #: formshare/templates/dashboard/projects/forms/snippets/edit_link_partner_js.jinja2:64
 #: formshare/templates/dashboard/projects/project_details.jinja2:237
-#| msgid "Are you sure that you want to delete"
 msgid "Are you sure that you want to remove "
 msgstr "Você tem certeza que deseja excluir"
 
@@ -3302,11 +3301,11 @@ msgstr "Salvar"
 msgid "Time bound"
 msgstr "Com limite de tempo"
 
+# | msgid "Canceled date"
 #: formshare/templates/dashboard/projects/forms/snippets/edit_link_partner.jinja2:20
 #: formshare/templates/dashboard/projects/forms/snippets/link_partner.jinja2:24
 #: formshare/templates/dashboard/projects/snippets/edit_link_partner.jinja2:20
 #: formshare/templates/dashboard/projects/snippets/link_partner.jinja2:24
-#| msgid "Canceled date"
 msgid "Access dates"
 msgstr "Data de acesso"
 
@@ -3858,8 +3857,8 @@ msgstr "Fundir repositório"
 msgid "See merging errors"
 msgstr "Ver erros de fusão"
 
+# | msgid "Primary language"
 #: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:112
-#| msgid "Primary language"
 msgid "Fix language"
 msgstr "Idioma correto"
 
@@ -3882,9 +3881,9 @@ msgid "Partner"
 msgstr "Sócio"
 
 # "Like" as in Facebook like? Verb or Noun?
+# | msgid "like"
 #: formshare/templates/dashboard/projects/forms/snippets/link_partner.jinja2:36
 #: formshare/templates/dashboard/projects/snippets/link_partner.jinja2:36
-#| msgid "like"
 msgid "Link"
 msgstr "Associar"
 
@@ -3948,15 +3947,15 @@ msgstr "Sócios deste formulário"
 msgid "Link new partner"
 msgstr "Associar um novo sócio"
 
+# | msgid "Click / Tap and hold to remove"
 #: formshare/templates/dashboard/projects/forms/snippets/partners_tab.jinja2:29
 #: formshare/templates/dashboard/projects/snippets/project_details.jinja2:228
-#| msgid "Click / Tap and hold to remove"
 msgid "Click / Tap and hold to unlink partners"
 msgstr "Clique / toque e segure para desassociar"
 
+# | msgid "No attached files. Use the + button to add files"
 #: formshare/templates/dashboard/projects/forms/snippets/partners_tab.jinja2:31
 #: formshare/templates/dashboard/projects/snippets/project_details.jinja2:230
-#| msgid "No attached files. Use the + button to add files"
 msgid "No linked partners. Use the + button to link a partner"
 msgstr "Não há sócios associados. Use o botão + para associar um sócio"
 
@@ -4564,9 +4563,9 @@ msgstr "Vamos começar"
 msgid "Primary language"
 msgstr "Idioma primário"
 
+# | msgid "Select an assistant"
 #: formshare/templates/dashboard/projects/repository/create_repository.jinja2:61
 #: formshare/templates/dashboard/projects/repository/fix_language.jinja2:47
-#| msgid "Select an assistant"
 msgid "select an option"
 msgstr "Selecione uma opção"
 
@@ -4588,11 +4587,11 @@ msgid ""
 "\"default\" refers to the language of \"label\" which is not indicated in"
 " the ODK Form."
 msgstr ""
-"O idioma chamado \"default\" aparece quando você tem um \"label\" ou"
-"\"hint\" sem indicar seu idioma. Por exemplo, se você tiver uma coluna"
-"chamado \"label\" e outro chamado \"label::English (en)\", então"
-"\"padrão\" refere-se ao idioma do \"label\" cujo idioma não foi indicado em"
-" o formulário ODK."
+"O idioma chamado \"default\" aparece quando você tem um \"label\" "
+"ou\"hint\" sem indicar seu idioma. Por exemplo, se você tiver uma "
+"colunachamado \"label\" e outro chamado \"label::English (en)\", "
+"então\"padrão\" refere-se ao idioma do \"label\" cujo idioma não foi "
+"indicado em o formulário ODK."
 
 #: formshare/templates/dashboard/projects/repository/create_repository.jinja2:72
 #: formshare/templates/dashboard/projects/repository/fix_language.jinja2:63
@@ -4759,10 +4758,10 @@ msgstr "Nome de lista"
 msgid "Duplicated list names"
 msgstr "Nomes de lista duplicados"
 
+# | msgid "Primary language"
 #: formshare/templates/dashboard/projects/repository/fix_language.jinja2:4
 #: formshare/templates/dashboard/projects/repository/fix_language.jinja2:25
 #: formshare/templates/dashboard/projects/repository/snippets/brdcrbs_fix.jinja2:17
-#| msgid "Primary language"
 msgid "Fix languages"
 msgstr "Idiomas corretos"
 
@@ -4773,9 +4772,10 @@ msgid ""
 "correct. You assume the risks of ending up with an inconsistent "
 "repository."
 msgstr ""
-"Nesta página, presumimos que você conhece o idioma do repositório e"
-"que as mudanças que você está fazendo aqui para mesclar esta nova versão são"
-"correto. Você corre o risco de acabar com um repositório inconsistente."
+"Nesta página, presumimos que você conhece o idioma do repositório eque as"
+" mudanças que você está fazendo aqui para mesclar esta nova versão "
+"sãocorreto. Você corre o risco de acabar com um repositório "
+"inconsistente."
 
 #: formshare/templates/dashboard/projects/repository/fix_language.jinja2:54
 msgid "The language of the previous form was"
@@ -4786,16 +4786,16 @@ msgid ""
 "The previous version of the form WAS NOT in multiple languages. You need "
 "to be very careful in indicating now the default language!!"
 msgstr ""
-"A versão anterior deste formulário NÃO ESTAVA em vários idiomas. Você precisa"
-" ter muito cuidado ao inserir o idioma padrão agora !!"
+"A versão anterior deste formulário NÃO ESTAVA em vários idiomas. Você "
+"precisa ter muito cuidado ao inserir o idioma padrão agora !!"
 
 #: formshare/templates/dashboard/projects/repository/fix_language.jinja2:75
 msgid ""
 "This version does not have any languages. However, the previous version "
 "had different languages."
 msgstr ""
-"Esta versão não possui idioma. No entanto, a versão anterior tinha idiomas"
-" diferentes."
+"Esta versão não possui idioma. No entanto, a versão anterior tinha "
+"idiomas diferentes."
 
 #: formshare/templates/dashboard/projects/repository/fix_language.jinja2:77
 msgid ""
@@ -4809,7 +4809,8 @@ msgid ""
 "If that is not correct then you will end up with an inconsistent "
 "repository."
 msgstr ""
-"Se isso não estiver correto, você terminará com um repositório inconsistente."
+"Se isso não estiver correto, você terminará com um repositório "
+"inconsistente."
 
 #: formshare/templates/dashboard/projects/repository/fix_language.jinja2:81
 msgid "I assume the risks. Fix the languages"
@@ -5088,8 +5089,8 @@ msgstr "Clique / Toque e segure para remover arquivos"
 msgid "No attached files. Use the + button to add files"
 msgstr "Nenhum arquivo anexado. Use o botão + para adicionar arquivos"
 
+# | msgid "Project files"
 #: formshare/templates/dashboard/projects/snippets/project_details.jinja2:204
-#| msgid "Project files"
 msgid "Project partners"
 msgstr "Sócios do projeto"
 
@@ -5526,8 +5527,8 @@ msgstr "Você não tem uma conta?"
 msgid "Partner Sign in"
 msgstr "Faça login como sócio"
 
+# | msgid "Enter your email"
 #: formshare/templates/generic/partner_login.jinja2:28
-#| msgid "Enter your email"
 msgid "Partner Email"
 msgstr "Email do sócio"
 
@@ -5686,9 +5687,9 @@ msgstr ""
 "alterações feitas neles"
 
 # Please confirm FREE as in "unpaid" or "anyone can access"
+# | msgid "Free access"
 #: formshare/templates/landing/snippets/header.jinja2:76
 #: formshare/templates/partner/snippets/header.jinja2:4
-#| msgid "Free access"
 msgid "Partner access"
 msgstr "Acesso para sócios"
 
@@ -5739,13 +5740,13 @@ msgstr ""
 msgid "Next"
 msgstr "Próximo"
 
+# | msgid "forms"
 #: formshare/templates/partner/form_details.jinja2:41
-#| msgid "forms"
 msgid "Form stats"
 msgstr "Estatísticas do formulário"
 
+# | msgid "Update ODK form"
 #: formshare/templates/partner/index.jinja2:4
-#| msgid "Update ODK form"
 msgid "Partner forms"
 msgstr "Formulários de sócio"
 
@@ -5753,24 +5754,24 @@ msgstr "Formulários de sócio"
 msgid "Project and Forms that you have access"
 msgstr "Projeto e formulários aos quais você tem acesso"
 
+# | msgid "Form details"
 #: formshare/templates/partner/snippets/brdcrbs_forms.jinja2:8
-#| msgid "Form details"
 msgid "Form Details"
 msgstr "Detalhes do formulário"
 
 # Please confirm FREE as in "unpaid" or "anyone can access"
+# | msgid "Free access"
 #: formshare/templates/partner/snippets/brdcrbs_home.jinja2:2
-#| msgid "Free access"
 msgid "Partner access for"
 msgstr "Acesso de sócio para"
 
+# | msgid "Created"
 #: formshare/templates/partner/snippets/odk_form_item.jinja2:27
-#| msgid "Created"
 msgid "Created on"
 msgstr "Criado em"
 
+# | msgid "Created"
 #: formshare/templates/partner/snippets/product_item.jinja2:13
-#| msgid "Created"
 msgid "Created on "
 msgstr "Criado em"
 
@@ -5873,13 +5874,13 @@ msgid "The user account does not exists or the password is invalid"
 msgstr "Conta de usuário inexistente ou senha inválida"
 
 # | msgid "The user account does not exists or the password is invalid"
+# | msgid "The user account does not exist or the password is invalid"
 #: formshare/views/basic_views.py:421
-#| msgid "The user account does not exist or the password is invalid"
 msgid "The partner account does not exist or the password is invalid"
 msgstr "A conta do sócio não existe ou a senha é inválida"
 
+# | msgid "The user account does not exists or the password is invalid"
 #: formshare/views/basic_views.py:428
-#| msgid "The user account does not exists or the password is invalid"
 msgid "The partner account does not exists or the password is invalid"
 msgstr "A conta do sócio não existe ou a senha é inválida"
 
@@ -5910,14 +5911,14 @@ msgstr "As seguintes chaves não estavam presentes no JSON submetido"
 msgid "The project cannot be found"
 msgstr "Projeto não encontrado"
 
-#: formshare/views/collaborators.py:64
+#: formshare/views/collaborators.py:72
 msgid "The collaborator was added to this project"
 msgstr "Os colaboradores foram adicionados a este projeto"
 
 # | msgid "" "The collaborator was added to this project. However, an email
 # has
 # | been " "sent to him/her to accept the collaboration"
-#: formshare/views/collaborators.py:83
+#: formshare/views/collaborators.py:88
 msgid ""
 "The collaborator was added to this project. However, an email has been "
 "sent to him/her/they to accept the collaboration"
@@ -5925,35 +5926,40 @@ msgstr ""
 "O colaborador foi adicionado a este projeto. Porém, um e-mail foi enviado"
 " a ele/ela para aceitar a colaboração"
 
-#: formshare/views/collaborators.py:97
+#: formshare/views/collaborators.py:105
+#| msgid "This API key does not exist or is inactive"
+msgid "This collaborator does not exist or is inactive"
+msgstr "Este colaborador não existe ou está inativo"
+
+#: formshare/views/collaborators.py:108
 msgid "You need to specify a collaborator"
 msgstr "Você precisa especificar um colaborador"
 
-#: formshare/views/collaborators.py:106
+#: formshare/views/collaborators.py:117
 msgid "The role was changed"
 msgstr "A função foi alterada"
 
-#: formshare/views/collaborators.py:161
+#: formshare/views/collaborators.py:172
 msgid "The collaborator was removed successfully"
 msgstr "O colaborador foi removido com sucesso"
 
-#: formshare/views/collaborators.py:166
+#: formshare/views/collaborators.py:177
 msgid "Unable to remove the collaborator: "
 msgstr "Não foi possível remover o colaborador: "
 
-#: formshare/views/collaborators.py:197
+#: formshare/views/collaborators.py:208
 msgid "You accepted the collaboration"
 msgstr "Você aceitou a colaboração"
 
-#: formshare/views/collaborators.py:200
+#: formshare/views/collaborators.py:211
 msgid "Unable to accept the collaboration: "
 msgstr "Não foi possível aceitar a colaboração: "
 
-#: formshare/views/collaborators.py:207
+#: formshare/views/collaborators.py:218
 msgid "You declined the collaboration"
 msgstr "Você recusou a colaboração"
 
-#: formshare/views/collaborators.py:210
+#: formshare/views/collaborators.py:221
 msgid "Unable to decline the collaboration: "
 msgstr "Nao foi possível recusar a colaboração: "
 
@@ -6017,11 +6023,11 @@ msgid ""
 "Use the \"Fix language\" button to set the languages in this version of "
 "the ODK Form."
 msgstr ""
-"Esta nova versão do formulário tem vários idiomas, enquanto o antigo"
-" não.\n"
+"Esta nova versão do formulário tem vários idiomas, enquanto o antigo não."
 "\n"
-"Use o botão \"Idioma correto\" para definir os idiomas nesta versão do"
-" formulário ODK."
+"\n"
+"Use o botão \"Idioma correto\" para definir os idiomas nesta versão do "
+"formulário ODK."
 
 #: formshare/views/form.py:409
 msgid ""
@@ -6029,8 +6035,8 @@ msgid ""
 " languages are undefined:\n"
 "\n"
 msgstr ""
-"Esta versão do formulário ODK difere nos idiomas usados. Os seguintes"
-" idiomas não estão definidos: \n"
+"Esta versão do formulário ODK difere nos idiomas usados. Os seguintes "
+"idiomas não estão definidos: \n"
 "\n"
 
 # | msgid "The primary key was not found in the ODK form"
@@ -6056,16 +6062,17 @@ msgstr "Os seguintes arquivos CSV de recurso tem caracteres inválidos:"
 msgid "There was an error while processing some of the CSV resource files:"
 msgstr "Ocorreu um erro ao processar alguns dos arquivos CSV de recurso:"
 
+# | msgid "" "An unexpected error occurred while processing the merge. An
+# email
+# | has " "been sent to the technical team and they will contact you ASAP."
 #: formshare/views/form.py:552
-#| msgid "" "An unexpected error occurred while processing the merge. An email
-#| has " "been sent to the technical team and they will contact you ASAP."
 msgid ""
 "An unexpected error occurred while processing the search expression. An "
 "email has been sent to the technical team and they will contact you ASAP."
 msgstr ""
-"Ocorreu um erro inesperado ao processar a expressão de pesquisa. Um e-mail"
-" foi enviado para a equipe técnica e eles entrarão em contato com você o mais"
-" breve possível."
+"Ocorreu um erro inesperado ao processar a expressão de pesquisa. Um "
+"e-mail foi enviado para a equipe técnica e eles entrarão em contato com "
+"você o mais breve possível."
 
 #: formshare/views/form.py:559 formshare/views/repository.py:402
 msgid "The primary key is invalid."
@@ -6212,8 +6219,8 @@ msgid "Such alias already exist"
 msgstr "O alias já existe"
 
 # | msgid "The form does not exists"
+# | msgid "The form does not exist"
 #: formshare/views/form.py:3100
-#| msgid "The form does not exist"
 msgid "Such field does not exist"
 msgstr "O campo não existe"
 
@@ -6233,28 +6240,26 @@ msgstr "O alias é inválido"
 msgid "The alias has invalid characters. Only underscore (_) is allowed"
 msgstr "O alias tem caracteres inválidos. Apenas underline (_) é permitido"
 
+# | msgid "has invalid characters"
 #: formshare/views/form.py:3198 formshare/views/form.py:3210
 #: formshare/views/form.py:3323 formshare/views/form.py:3333
 #: formshare/views/projects.py:742 formshare/views/projects.py:751
 #: formshare/views/projects.py:833 formshare/views/projects.py:840
-#| msgid "has invalid characters"
 msgid "Invalid dates"
-msgstr ""
-""
-"Datas inválidas"
+msgstr "Datas inválidas"
 
+# | msgid "The user was added successfully"
 #: formshare/views/form.py:3230
-#| msgid "The user was added successfully"
 msgid "The partner was added successfully to this form"
 msgstr "O sócio foi adicionado com sucesso a este formulário"
 
+# | msgid "The user was added successfully"
 #: formshare/views/form.py:3347
-#| msgid "The user was added successfully"
 msgid "The partner was added successfully updated"
 msgstr "O sócio foi modificado com sucesso"
 
+# | msgid "The user was added successfully"
 #: formshare/views/form.py:3407
-#| msgid "The user was added successfully"
 msgid "The partner was added successfully removed from this form"
 msgstr "Sócio removido com sucesso deste formulário"
 
@@ -6270,8 +6275,8 @@ msgstr "Cada idioma deve ter um código ISO 639-1 exclusivo"
 msgid "You need to indicate a ISO 639-1 code for each language"
 msgstr "Você precisa indicar um código ISO 639-1 para cada idioma"
 
+# | msgid "The name cannot be empty"
 #: formshare/views/partners.py:169 formshare/views/partners.py:311
-#| msgid "The name cannot be empty"
 msgid "The organization cannot be empty"
 msgstr "Organização não pode estar vazia"
 
@@ -6280,25 +6285,25 @@ msgstr "Organização não pode estar vazia"
 msgid "The name cannot be empty"
 msgstr "O nome não pode estar vazio"
 
+# | msgid "The project code cannot be empty"
 #: formshare/views/partners.py:185 formshare/views/partners.py:324
-#| msgid "The project code cannot be empty"
 msgid "The partner telephone contact cannot be empty"
 msgstr "O número de telefone de contato do sócio não pode estar vazio"
 
+# | msgid "The user was added successfully"
 #: formshare/views/partners.py:262
-#| msgid "The user was added successfully"
 msgid "The partner was added successfully"
 msgstr "O sócio foi adicionado com sucesso"
 
 # | msgid "Such user already exists"
+# | msgid "This user already exists"
 #: formshare/views/partners.py:276
-#| msgid "This user already exists"
 msgid "This partner email address already exist"
 msgstr "Email do sócio já existe"
 
 # | msgid "Email is invalid"
+# | msgid "The alias is invalid"
 #: formshare/views/partners.py:279
-#| msgid "The alias is invalid"
 msgid "The email you provided is invalid"
 msgstr "O e-mail que você indicou não é válido"
 
@@ -6309,13 +6314,13 @@ msgid "This email address is not valid"
 msgstr "Este endereço de e-mail não é válido"
 
 # | msgid "Such email address already belongs to another account"
+# | msgid "This email address already belongs to another account"
 #: formshare/views/partners.py:339
-#| msgid "This email address already belongs to another account"
 msgid "This email address already belongs to another partner"
 msgstr "Este e-mail já pertence a outro sócio"
 
+# | msgid "The user has been updated"
 #: formshare/views/partners.py:393
-#| msgid "The user has been updated"
 msgid "The partner has been updated"
 msgstr "O sócio foi modificado"
 
@@ -6328,11 +6333,11 @@ msgid ""
 "This partner was created by {0} ({1}). Only {0} or and administrator can "
 "delete it"
 msgstr ""
-"Este sócio foi criado por {0} ({1}). Apenas {0} ou um administrador pode"
-"delete isso"
+"Este sócio foi criado por {0} ({1}). Apenas {0} ou um administrador "
+"podedelete isso"
 
+# | msgid "The user has been updated"
 #: formshare/views/partners.py:516
-#| msgid "The user has been updated"
 msgid "The partner has been deleted"
 msgstr "O sócio foi removido"
 
@@ -6398,24 +6403,24 @@ msgstr "O projeto foi excluído com sucesso"
 msgid "Unable to delete the project: "
 msgstr "Não foi possível excluir o projeto: "
 
+# | msgid "The collaborator was added to this project"
 #: formshare/views/projects.py:770
-#| msgid "The collaborator was added to this project"
 msgid "The partner was successfully linked to this project"
 msgstr "O sócio foi associado a este projeto com sucesso"
 
 # | msgid "You need to indicate the primary language"
+# | msgid "You need to indicate a primary key"
 #: formshare/views/projects.py:780
-#| msgid "You need to indicate a primary key"
 msgid "You need to indicate a partner"
 msgstr "Você deve indicar um sócio"
 
+# | msgid "The ODK form was successfully updated"
 #: formshare/views/projects.py:856
-#| msgid "The ODK form was successfully updated"
 msgid "The partner was successfully updated"
 msgstr "O sócio foi modificado com sucesso"
 
+# | msgid "The collaborator was added to this project"
 #: formshare/views/projects.py:906
-#| msgid "The collaborator was added to this project"
 msgid "The partner was successfully removed from this project"
 msgstr "O sócio foi removido com sucesso deste projeto"
 

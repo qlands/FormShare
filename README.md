@@ -77,11 +77,11 @@ ScreenShot
 
 Releases
 ------------
-The current stable release is 2.8.6 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.8.6) 
+The current stable release is 2.10.0 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.10.0) 
 
-The database signature for stable 2.8.6 is 240a606816e1
+The database signature for stable 2.10.0 is 448376431f7b
 
-The Docker image for stable 2.8.6 is 20210805
+The Docker image for stable 2.10.0 is 20211019
 
 Installation
 ------------
@@ -101,9 +101,9 @@ sudo apt-get install -y docker-compose
 
 # Get the Docker Compose file
 cd /opt
-sudo mkdir formshare_docker_compose_20210805
-cd formshare_docker_compose_20210805
-sudo wget https://raw.githubusercontent.com/qlands/FormShare/stable-2.8.6/docker_compose/docker-compose.yml
+sudo mkdir formshare_docker_compose_20211019
+cd formshare_docker_compose_20211019
+sudo wget https://raw.githubusercontent.com/qlands/FormShare/stable-2.10.0/docker_compose/docker-compose.yml
 
 # Make the directory structure for FormShare
 sudo mkdir /opt/formshare
@@ -128,19 +128,19 @@ sudo sysctl -w vm.max_map_count=262144
 echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.d/60-vm-max_map_count.conf
 
 # Download all the required Docker Images
-cd /opt/formshare_docker_compose_20210805
+cd /opt/formshare_docker_compose_20211019
 sudo docker-compose pull
 
 # Edit the docker-compose.yml file to set the MySQL root and FormShare admin passwords
-sudo nano /opt/formshare_docker_compose_20210805/docker-compose.yml
+sudo nano /opt/formshare_docker_compose_20211019/docker-compose.yml
 # Press Alt+Shit+3 to show the line numbers in Nano
 
 Edit line 10: Change the root password from "my_secure_password" to your password
-Edit line 61: Change the root password from "my_secure_password" to the same password of line 10
-Edit line 62: Change the admin user name (optional)
-Edit line 63: Change the admin email address
-Edit line 64: Change the admin user password from "my_secure_password" to your password
-Edit line 69: Change the IP address for the IP address of the machine running the Docker service
+Edit line 67: Change the root password from "my_secure_password" to the same password of line 10
+Edit line 68: Change the admin user name (optional)
+Edit line 69: Change the admin email address
+Edit line 70: Change the admin user password from "my_secure_password" to your password
+Edit line 75: Change the IP address for the IP address of the machine running the Docker service
 
 # Save the file with Ctlr+o Enter . Exit with Ctrl+x
 
@@ -180,7 +180,7 @@ sudo service apache2 start
 # Subsequent start will take about 2 minutes. You can check the status with "sudo docker stats". 
 # FormShare will be ready for usage when the container reaches more than 500 kB of MEM USAGE
 # This is the only two commands you need to start FormShare after a server restart
-cd /opt/formshare_docker_compose_20210805
+cd /opt/formshare_docker_compose_20211019
 sudo docker-compose up -d
 
 # Browse to FormShare
@@ -269,7 +269,7 @@ fselasticsearch_20210805:
 
 ```yaml
 fses20211019n01:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.14.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.14.2
     container_name: fses20211019n01
     environment:
       - network.host=172.28.1.1
@@ -291,7 +291,7 @@ fses20211019n01:
         ipv4_address: 172.28.1.1
 
   fses20211019n02:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.14.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.14.2
     container_name: fses20211019n02
     environment:
       - network.host=172.28.1.2
@@ -341,7 +341,7 @@ Note for AWS: Inbound and outbound communication to port 9001 must be allowed fo
 
 ### Important Note: Elasticsearch migration 1 - Upgrading Docker images < **20210411** (stable 2.8.0) to images >= **20210411**
 
-Docker images >= 20210411 (stable 2.8.0) use and check for Elasticsearch version 6.8.14. To upgrade FormShare beyond 20210411 you need to update the docker-compose.yml to use the Docker image 6.8.14 of Elasticsearch **for all the nodes of Elasticsearch that you have**.
+Docker images >= 20210411 (from stable 2.8.0) use and check for Elasticsearch version 6.8.14. To upgrade FormShare beyond 20210411 you need to update the docker-compose.yml to use the Docker image 6.8.14 of Elasticsearch **for all the nodes of Elasticsearch that you have**.
 
 ```yaml
 image: docker.elastic.co/Elasticsearch/Elasticsearch:6.8.14

@@ -1,4 +1,4 @@
-[![CircleCI](https://circleci.com/gh/qlands/FormShare.svg?style=shield&circle-token=:circle-token)](https://circleci.com/gh/qlands/FormShare)
+[![CircleCI](https://circleci.com/gh/qlands/FormShare/tree/master-2.0.svg?style=shield&circle-token=:circle-token)](https://circleci.com/gh/qlands/FormShare)
 [![Codecov](https://codecov.io/github/qlands/FormShare/branch/master-2.0/graph/badge.svg)](https://app.codecov.io/gh/qlands/FormShare/commits?page=1)
 [![Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/python/black)
 
@@ -116,7 +116,7 @@ mkdir /opt/formshare/config
 mkdir /opt/formshare/mysql
 mkdir /opt/formshare/plugins
 mkdir /opt/formshare/mosquitto
-mkdir /opt/formshare_odata_webapps
+mkdir /opt/formshare/formshare_odata_webapps
 mkdir /opt/formshare/elasticsearch
 mkdir /opt/formshare/elasticsearch/esdata
 mkdir /opt/formshare/elasticsearch/esdata2

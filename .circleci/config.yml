@@ -22,10 +22,13 @@ jobs:
         ports:
           - 3306:3306
     resource_class: medium+
-    parallelism: 4
     working_directory: ~/work
     steps:
       - checkout
+      - run: | # We will just build master-2.0 branch
+          if [ $CIRCLE_BRANCH != 'master-2.0' ]; then
+            exit 1
+          fi
       - restore_cache:
           key: requirements-{{ .Branch }}-{{ .Environment.CIRCLE_JOB }}-{{ checksum "requirements.txt" }}
       - run:          

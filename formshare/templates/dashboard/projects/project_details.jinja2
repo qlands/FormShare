@@ -128,7 +128,9 @@
             });
 
             var elem_partners = document.querySelector('.js-switch-partner');
-            var overwrite_switch = new Switchery(elem_partners, { color: '#1AB394' });
+            {% if request.registry.settings['allow.partner.access'] == "True" %}
+                var overwrite_switch = new Switchery(elem_partners, { color: '#1AB394' });
+            {% endif %}
             var partner_time = document.getElementById("partner_time_bound");
             elem_partners.onchange = function() {
                 if (elem_partners.checked) {

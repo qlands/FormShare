@@ -58,9 +58,11 @@
         {% set action_url = request.route_url('form_add',userid=projectData.owner,projcode=projectData.project_code) %}
         {% include 'dashboard/projects/forms/snippets/upload_form.jinja2' %}
         {% include 'dashboard/projects/snippets/upload_file.jinja2' %}
-        {% include 'dashboard/projects/snippets/link_partner.jinja2' %}
-        {% if project_partners|length > 0 %}
-            {% include 'dashboard/projects/snippets/edit_link_partner.jinja2' %}
+        {% if request.registry.settings['allow.partner.access'] == "True" %}
+            {% include 'dashboard/projects/snippets/link_partner.jinja2' %}
+            {% if project_partners|length > 0 %}
+                {% include 'dashboard/projects/snippets/edit_link_partner.jinja2' %}
+            {% endif %}
         {% endif %}
     {% endif %}
 
@@ -74,9 +76,11 @@
         {% set action_url = request.route_url('form_add',userid=projectData.owner,projcode=projectData.project_code) %}
         {% include 'dashboard/projects/forms/snippets/upload_form.jinja2' %}
         {% include 'dashboard/projects/snippets/upload_file.jinja2' %}
-        {% include 'dashboard/projects/snippets/link_partner.jinja2' %}
-        {% if project_partners|length > 0 %}
-            {% include 'dashboard/projects/snippets/edit_link_partner.jinja2' %}
+        {% if request.registry.settings['allow.partner.access'] == "True" %}
+            {% include 'dashboard/projects/snippets/link_partner.jinja2' %}
+            {% if project_partners|length > 0 %}
+                {% include 'dashboard/projects/snippets/edit_link_partner.jinja2' %}
+            {% endif %}
         {% endif %}
     {% else %}
         {{ super() }}
@@ -145,31 +149,33 @@
                 return $state;
             }
 
-            $(".js-example-data-ajax").select2({
-                dropdownParent: $('#link_partner_modal'),
-                templateResult: formatPartner,
-                ajax: {
-                    url: "{{ request.route_url('api_select2_partners',userid=userid) }}",
-                    dataType: 'json',
-                    delay: 250,
-                    data: function (params) {
-                        return {
-                            q: params.term, // search term
-                            page: params.page,
-                        };
-                    },
-                    processResults: function (data, params) {
-                        params.page = params.page || 1;
-                        return {
-                            results: data.results,
-                            pagination: {
-                                more: (params.page * 10) < data.total
-                            }
-                        };
-                    },
-                    cache: true
-                }
-            });
+            {% if request.registry.settings['allow.partner.access'] == "True" %}
+                $(".js-example-data-ajax").select2({
+                    dropdownParent: $('#link_partner_modal'),
+                    templateResult: formatPartner,
+                    ajax: {
+                        url: "{{ request.route_url('api_select2_partners',userid=userid) }}",
+                        dataType: 'json',
+                        delay: 250,
+                        data: function (params) {
+                            return {
+                                q: params.term, // search term
+                                page: params.page,
+                            };
+                        },
+                        processResults: function (data, params) {
+                            params.page = params.page || 1;
+                            return {
+                                results: data.results,
+                                pagination: {
+                                    more: (params.page * 10) < data.total
+                                }
+                            };
+                        },
+                        cache: true
+                    }
+                });
+            {% endif %}
 
             {% if project_partners|length > 0 %}
 

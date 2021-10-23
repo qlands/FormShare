@@ -93,7 +93,9 @@
                         {% include 'dashboard/projects/forms/snippets/files_tab.jinja2' %}
                         {% include 'dashboard/projects/forms/snippets/assistants_tab.jinja2' %}
                         {% include 'dashboard/projects/forms/snippets/groups_tab.jinja2' %}
-                        {% include 'dashboard/projects/forms/snippets/partners_tab.jinja2' %}
+                        {% if request.registry.settings['allow.partner.access'] == "True" %}
+                            {% include 'dashboard/projects/forms/snippets/partners_tab.jinja2' %}
+                        {% endif %}
                     {% endblock form_tabs %}
                     {% block form_tabs_extra %}
 
@@ -152,9 +154,11 @@
             {% include 'dashboard/projects/forms/snippets/edit_assistant.jinja2' %}
             {% include 'dashboard/projects/forms/snippets/add_group.jinja2' %}
             {% include 'dashboard/projects/forms/snippets/edit_group.jinja2' %}
-            {% include 'dashboard/projects/forms/snippets/link_partner.jinja2' %}
-            {% if form_partners|length > 0 %}
-                {% include 'dashboard/projects/forms/snippets/edit_link_partner.jinja2' %}
+            {% if request.registry.settings['allow.partner.access'] == "True" %}
+                {% include 'dashboard/projects/forms/snippets/link_partner.jinja2' %}
+                {% if form_partners|length > 0 %}
+                    {% include 'dashboard/projects/forms/snippets/edit_link_partner.jinja2' %}
+                {% endif %}
             {% endif %}
             {% if formDetails.form_schema != None %}
                 {% include 'dashboard/projects/forms/snippets/api_examples.jinja2' %}
@@ -697,8 +701,10 @@
                                 });
                         });
                     {% endif %}
-                    {% include 'dashboard/projects/forms/snippets/link_partner_js.jinja2' %}
-                    {% include 'dashboard/projects/forms/snippets/edit_link_partner_js.jinja2' %}
+                    {% if request.registry.settings['allow.partner.access'] == "True" %}
+                        {% include 'dashboard/projects/forms/snippets/link_partner_js.jinja2' %}
+                        {% include 'dashboard/projects/forms/snippets/edit_link_partner_js.jinja2' %}
+                    {% endif %}
                 {% endblock odk_scripts %}
             });
         </script>

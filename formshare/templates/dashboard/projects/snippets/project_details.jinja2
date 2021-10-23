@@ -198,48 +198,50 @@
                     </div>
                 {% endblock project_details_files_section %}
                 {% block project_details_partners_section %}
-                    <div class="ibox">
-                        <div class="ibox-title">
-                            {% block project_details_partners_title %}
-                                <h5>{{ _('Project partners') }}</h5>
-                                <div class="ibox-tools">
-                                    {% block project_details_partners_tools %}
-                                        {% if projectData.access_type < 4 %}
-                                            <a id="add_partner" data-toggle="modal" data-target="#link_partner_modal" style="margin-right: 10px">
-                                                <i class="fa fa-plus-square text-success" title="{{ _('Link new partner') }}"></i>
-                                            </a>
-                                        {% endif %}
-                                        <a class="collapse-link" style="margin-right: 10px">
-                                            <i class="fa fa-chevron-up"></i>
-                                        </a>
-                                        <a class="fullscreen-link">
-                                            <i class="fa fa-expand"></i>
-                                        </a>
-                                    {% endblock project_details_partners_tools %}
-                                </div>
-                            {% endblock project_details_partners_title %}
-                        </div>
-                        <div class="ibox-content">
-                            {% block project_details_partners_content %}
-                                <div class="row">
-                                    <div class="col-md-12">
-                                        {% if projectData.access_type < 4 %}
-                                            {% if project_partners|length > 0 %}
-                                                <small>{{ _('Click / Tap and hold to unlink partners') }}</small>
-                                            {% else %}
-                                                <small>{{ _('No linked partners. Use the + button to link a partner') }}</small>
+                    {% if request.registry.settings['allow.partner.access'] == "True" %}
+                        <div class="ibox">
+                            <div class="ibox-title">
+                                {% block project_details_partners_title %}
+                                    <h5>{{ _('Project partners') }}</h5>
+                                    <div class="ibox-tools">
+                                        {% block project_details_partners_tools %}
+                                            {% if projectData.access_type < 4 %}
+                                                <a id="add_partner" data-toggle="modal" data-target="#link_partner_modal" style="margin-right: 10px">
+                                                    <i class="fa fa-plus-square text-success" title="{{ _('Link new partner') }}"></i>
+                                                </a>
                                             {% endif %}
-                                        {% endif %}
-                                        <ul class="tag-list" style="padding: 0">
-                                            {% for a_partner in project_partners %}
-                                                <li><a class="partner_item" data-toggle="modal" data-target="#edit_link_partner_modal" data-partner-remove-url="{{ request.route_url("project_remove_partner",userid=userid,projcode=projectData.project_code,partnerid=a_partner.partner_id)  }}" urn="{{ request.route_url("project_edit_partner",userid=userid,projcode=projectData.project_code,partnerid=a_partner.partner_id)  }}" data-partner-name="{{ a_partner.partner_name }}" data-partner-timebound="{{ a_partner.time_bound }}" data-partner-access-from="{{ a_partner.access_from }}" data-partner-access-to="{{ a_partner.access_to }}"><span title="{{ a_partner.partner_email }}">{{ a_partner.partner_name }}</span></a></li>
-                                            {% endfor %}
-                                        </ul>
+                                            <a class="collapse-link" style="margin-right: 10px">
+                                                <i class="fa fa-chevron-up"></i>
+                                            </a>
+                                            <a class="fullscreen-link">
+                                                <i class="fa fa-expand"></i>
+                                            </a>
+                                        {% endblock project_details_partners_tools %}
                                     </div>
-                                </div>
-                            {% endblock project_details_partners_content %}
+                                {% endblock project_details_partners_title %}
+                            </div>
+                            <div class="ibox-content">
+                                {% block project_details_partners_content %}
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            {% if projectData.access_type < 4 %}
+                                                {% if project_partners|length > 0 %}
+                                                    <small>{{ _('Click / Tap and hold to unlink partners') }}</small>
+                                                {% else %}
+                                                    <small>{{ _('No linked partners. Use the + button to link a partner') }}</small>
+                                                {% endif %}
+                                            {% endif %}
+                                            <ul class="tag-list" style="padding: 0">
+                                                {% for a_partner in project_partners %}
+                                                    <li><a class="partner_item" data-toggle="modal" data-target="#edit_link_partner_modal" data-partner-remove-url="{{ request.route_url("project_remove_partner",userid=userid,projcode=projectData.project_code,partnerid=a_partner.partner_id)  }}" urn="{{ request.route_url("project_edit_partner",userid=userid,projcode=projectData.project_code,partnerid=a_partner.partner_id)  }}" data-partner-name="{{ a_partner.partner_name }}" data-partner-timebound="{{ a_partner.time_bound }}" data-partner-access-from="{{ a_partner.access_from }}" data-partner-access-to="{{ a_partner.access_to }}"><span title="{{ a_partner.partner_email }}">{{ a_partner.partner_name }}</span></a></li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                {% endblock project_details_partners_content %}
+                            </div>
                         </div>
-                    </div>
+                    {% endif %}
                 {% endblock project_details_partners_section %}
                 <div class="text-center m-t-md" style="margin-bottom: 20px">
                     {% block project_details_files_bottom %}

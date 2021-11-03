@@ -15,7 +15,7 @@ RUN apk add --no-cache --update --virtual .build-deps \
 ADD https://github.com/ufoscout/docker-compose-wait/releases/download/2.6.0/wait /wait
 RUN chmod +x /wait
 
-COPY ./docker_files/fluent.conf /fluentd/etc/
+COPY ./docker_files/fluent.conf /fluentd/etc/fluent.new
 COPY ./docker_files/entrypoint.sh /bin/
 
 RUN mkdir /opt/formshare_log

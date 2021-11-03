@@ -2,6 +2,10 @@
 
 /wait
 
+if [ ! -f /fluentd/etc/fluent.conf ]; then
+    mv /fluentd/etc/fluent.new /fluentd/etc/fluent.conf
+fi
+
 #source vars if file exists
 DEFAULT=/etc/default/fluentd
 

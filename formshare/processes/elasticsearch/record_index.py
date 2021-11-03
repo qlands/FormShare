@@ -73,7 +73,13 @@ def create_connection(settings):
         cnt_params["url_prefix"] = url_prefix
     if use_ssl:
         cnt_params["use_ssl"] = use_ssl
-    connection = Elasticsearch([cnt_params], max_retries=1)
+    connection = Elasticsearch(
+        [cnt_params],
+        max_retries=100,
+        retry_on_timeout=True,
+        timeout=700,
+        request_timeout=800,
+    )
     if connection.ping():
         return connection
     else:

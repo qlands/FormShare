@@ -783,6 +783,14 @@ def load_routes(config, settings):
             "dashboard/projects/forms/export/csv.jinja2",
         )
     )
+    routes.append(
+        add_route(
+            "form_export_kml",
+            "/user/{userid}/project/{projcode}/form/{formid}/export/kml",
+            DownloadKML,
+            "dashboard/projects/forms/export/kml.jinja2",
+        )
+    )
 
     # Form Downloads
 
@@ -837,15 +845,6 @@ def load_routes(config, settings):
             "/user/{userid}/project/{projcode}/form/{formid}/get/gpspoints",
             DownloadGPSPoints,
             "json",
-        )
-    )
-
-    routes.append(
-        add_route(
-            "form_download_kml",
-            "/user/{userid}/project/{projcode}/form/{formid}/generate/kml",
-            DownloadKML,
-            None,
         )
     )
 

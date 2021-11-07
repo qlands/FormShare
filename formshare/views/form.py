@@ -2568,55 +2568,6 @@ class DownloadGPSPoints(PrivateView):
         return data
 
 
-class DownloadKML(PrivateView):
-    def __init__(self, request):
-        PrivateView.__init__(self, request)
-        self.privateOnly = True
-        self.checkCrossPost = False
-        self.returnRawViewResult = True
-
-    def process_view(self):
-        user_id = self.request.matchdict["userid"]
-        project_code = self.request.matchdict["projcode"]
-        form_id = self.request.matchdict["formid"]
-        project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
-        if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-                    project_details = project
-            if not project_found:
-                raise HTTPNotFound
-        else:
-            raise HTTPNotFound
-
-        if project_details["access_type"] >= 4:
-            raise HTTPNotFound
-
-        form_data = get_form_data(self.request, project_id, form_id)
-        if form_data is None:
-            raise HTTPNotFound
-
-        generate_kml_file(
-            self.request,
-            self.user.id,
-            project_id,
-            form_id,
-            form_data["form_schema"],
-        )
-        next_page = self.request.params.get("next") or self.request.route_url(
-            "form_details",
-            userid=user_id,
-            projcode=project_code,
-            formid=form_id,
-            _query={"tab": "task", "product": "kml_export"},
-            _anchor="products_and_tasks",
-        )
-        return HTTPFound(location=next_page)
-
-
 class DownloadPublicCSV(PrivateView):
     def __init__(self, request):
         PrivateView.__init__(self, request)
@@ -3696,7 +3647,14 @@ class ExportData(PrivateView):
                         )
                     )
                 if export_data["export_type"] == "KML":
-                    pass
+                    return HTTPFound(
+                        location=self.request.route_url(
+                            "form_export_kml",
+                            userid=user_id,
+                            projcode=project_code,
+                            formid=form_id,
+                        )
+                    )
                 if export_data["export_type"] == "MEDIA":
                     pass
                 for a_plugin in plugins.PluginImplementations(plugins.IExport):
@@ -3817,4 +3775,74 @@ class ExportDataToCSV(PrivateView):
             "formid": form_id,
             "formDetails": form_data,
             "userid": user_id,
+        }
+
+
+class DownloadKML(PrivateView):
+    def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        project_code = self.request.matchdict["projcode"]
+        form_id = self.request.matchdict["formid"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] >= 4:
+            raise HTTPNotFound
+
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+
+        fields, checked = get_fields_from_table(
+            self.request, project_id, form_id, "maintable", [], False
+        )
+
+        if self.request.method == "POST":
+            export_data = self.get_post_dict()
+            selected_fields = export_data["fields"]
+            for a_field in fields:
+                if a_field["key"] == "true":
+                    selected_fields.insert(0, a_field["name"])
+            selected_fields.append("_geopoint")
+            selected_fields.append("rowuuid")
+            selected_fields.append("_latitude")
+            selected_fields.append("_longitude")
+
+            options = int(export_data["labels"])
+            generate_kml_file(
+                self.request,
+                self.user.id,
+                project_id,
+                form_id,
+                form_data["form_schema"],
+                form_data["form_createxmlfile"],
+                selected_fields,
+                options,
+            )
+            next_page = self.request.params.get("next") or self.request.route_url(
+                "form_details",
+                userid=user_id,
+                projcode=project_code,
+                formid=form_id,
+                _query={"tab": "task", "product": "kml_export"},
+                _anchor="products_and_tasks",
+            )
+            self.returnRawViewResult = True
+            return HTTPFound(location=next_page)
+        return {
+            "projectDetails": project_details,
+            "formid": form_id,
+            "formDetails": form_data,
+            "userid": user_id,
+            "fields": fields,
         }

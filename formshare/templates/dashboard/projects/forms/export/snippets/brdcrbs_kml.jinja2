@@ -1,5 +1,5 @@
 <div class="col-sm-12">
-    <h2>{{ _('Export to CSV') }}</h2>
+    <h2>{{ _('Export Geopoints to KML') }}</h2>
     <ol class="breadcrumb">
         <li class="breadcrumb-item">
             <a href="{{ request.route_url("dashboard",userid=activeUser.login) }}">{{ _('Dashboard') }}</a>
@@ -14,7 +14,7 @@
             <a href="{{ request.route_url("form_details",userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}">{{ formDetails.form_name }}</a>
         </li>
         <li class="breadcrumb-item active">
-            <strong>{{ _('CSV Options') }}</strong>
+            <strong>{{ _('KML options') }}</strong>
         </li>
     </ol>
 </div>

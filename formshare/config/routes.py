@@ -111,6 +111,8 @@ from formshare.views.form import (
     EditPartnerFormOptions,
     RemovePartnerFromForm,
     FixMergeLanguage,
+    ExportData,
+    ExportDataToXLSX,
 )
 from formshare.views.odk import (
     ODKFormList,
@@ -222,7 +224,6 @@ def load_routes(config, settings):
     )
     routes.append(add_route("login", "/login", LoginView, "generic/login.jinja2"))
 
-    # TODO: Mimic send emmail celery task
     routes.append(
         add_route(
             "recover_password",
@@ -237,7 +238,6 @@ def load_routes(config, settings):
 
     routes.append(add_route("logout", "/logout", log_out_view, None))
 
-    # TODO: Test for merged forms
     routes.append(
         add_route(
             "dashboard", "/user/{userid}", UserDashBoardView, "dashboard/index.jinja2"
@@ -269,7 +269,6 @@ def load_routes(config, settings):
     )
 
     # Profile
-    # TODO: Test with merged forms
     routes.append(
         add_route(
             "profile",
@@ -307,7 +306,6 @@ def load_routes(config, settings):
         )
     )
 
-    # TODO: Test with merged forms
     routes.append(
         add_route(
             "project_details",
@@ -384,7 +382,6 @@ def load_routes(config, settings):
         )
     )
 
-    # TODO: Test with merged forms
     routes.append(
         add_route(
             "project_download_gpspoints",
@@ -413,7 +410,6 @@ def load_routes(config, settings):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "accept_collaboration",
@@ -576,7 +572,6 @@ def load_routes(config, settings):
         )
     )
 
-    # TODO: Test with merged forms
     routes.append(
         add_route(
             "delete_form",
@@ -762,9 +757,26 @@ def load_routes(config, settings):
         )
     )
 
+    # Form Export
+    routes.append(
+        add_route(
+            "form_export",
+            "/user/{userid}/project/{projcode}/form/{formid}/export",
+            ExportData,
+            None,
+        )
+    )
+    routes.append(
+        add_route(
+            "form_export_xlsx",
+            "/user/{userid}/project/{projcode}/form/{formid}/export/xlsx",
+            ExportDataToXLSX,
+            "dashboard/projects/forms/export/xlsx.jinja2",
+        )
+    )
+
     # Form Downloads
 
-    # TODO: Test with repository and merged forms
     routes.append(
         add_route(
             "form_download_csv",
@@ -774,7 +786,6 @@ def load_routes(config, settings):
         )
     )
 
-    # TODO: Test and with merged forms
     routes.append(
         add_route(
             "form_download_public_xlsx_data",
@@ -784,7 +795,6 @@ def load_routes(config, settings):
         )
     )
 
-    # TODO: Test and with merged forms
     routes.append(
         add_route(
             "form_download_private_xlsx_data",
@@ -803,7 +813,6 @@ def load_routes(config, settings):
         )
     )
 
-    # TODO: Test with repository and with merged forms
     routes.append(
         add_route(
             "form_download_media",
@@ -813,7 +822,6 @@ def load_routes(config, settings):
         )
     )
 
-    # TODO: Test with repository and with merged forms
     routes.append(
         add_route(
             "form_download_gpspoints",
@@ -823,7 +831,6 @@ def load_routes(config, settings):
         )
     )
 
-    # TODO: Test with repository and with merged forms
     routes.append(
         add_route(
             "form_download_kml",
@@ -833,7 +840,6 @@ def load_routes(config, settings):
         )
     )
 
-    # TODO: Test with repository and with merged forms
     routes.append(
         add_route(
             "form_download_repo_public_csv",
@@ -843,7 +849,6 @@ def load_routes(config, settings):
         )
     )
 
-    # TODO: Test with repository and with merged forms
     routes.append(
         add_route(
             "form_download_repo_private_csv",
@@ -872,7 +877,6 @@ def load_routes(config, settings):
     )
 
     # Repository
-    # TODO: Test all error cases
     routes.append(
         add_route(
             "createrepository",
@@ -882,7 +886,6 @@ def load_routes(config, settings):
         )
     )
 
-    # TODO: Test
     routes.append(
         add_route(
             "merge_new_version",

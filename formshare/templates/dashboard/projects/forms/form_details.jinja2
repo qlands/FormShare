@@ -14,9 +14,6 @@
             {% cssresource request,'formshare','blueimp' %}
         {% endif %}
         {% cssresource request,'formshare','codemirror-ambiance' %}
-        {% if formDetails.form_schema != None %}
-            {% cssresource request,'formshare','popr' %}
-        {% endif %}
         <style>
             .remove-all-styles {
                 all: unset;
@@ -54,7 +51,6 @@
             {% jsresource request,'formshare','blueimp' %}
         {% endif %}
         {% if formDetails.form_schema != None %}
-            {% jsresource request,'formshare','popr' %}
             {% jsresource request,'formshare','codemirror-r' %}
         {% endif %}
         {% if products|length > 0 %}
@@ -84,9 +80,6 @@
                             {% block form_tabs_with_repository %}
                                 {% if projectDetails.access_type < 4 %}
                                     {% include 'dashboard/projects/forms/snippets/repository_tab.jinja2' %}
-                                    {% if formDetails.indb > 0 %}
-                                        {% include 'dashboard/projects/forms/snippets/products_tab.jinja2' %}
-                                    {% endif %}
                                 {% endif %}
                             {% endblock form_tabs_with_repository %}
                         {% endif %}
@@ -154,6 +147,7 @@
             {% include 'dashboard/projects/forms/snippets/edit_assistant.jinja2' %}
             {% include 'dashboard/projects/forms/snippets/add_group.jinja2' %}
             {% include 'dashboard/projects/forms/snippets/edit_group.jinja2' %}
+            {% include 'dashboard/projects/forms/snippets/export.jinja2' %}
             {% if request.registry.settings['allow.partner.access'] == "True" %}
                 {% include 'dashboard/projects/forms/snippets/link_partner.jinja2' %}
                 {% if form_partners|length > 0 %}
@@ -198,12 +192,6 @@
             $(document).ready(function() {
 
                 new ClipboardJS('.clipboard');
-                {% if formDetails.form_schema != None %}
-                $('.popr').popr({
-                    'speed'        : 200,
-                    'mode'         : 'bottom'
-                });
-                {% endif %}
                 let upload_started = false;
                 let xform_update_started = false;
                 $('#form_upload_file_form').submit(function() {

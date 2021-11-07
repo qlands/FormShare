@@ -40,6 +40,7 @@ __all__ = [
     "IJSONSubmission",
     "IPartner",
     "IPartnerAuthentication",
+    "IExport",
 ]
 
 
@@ -1545,6 +1546,21 @@ class IMediaSubmission(Interface):  # pragma: no cover
         :param media_file: Media file
         :return: None
         """
+
+
+class IExport(Interface):  # pragma: no cover
+    """
+    Allows to hook into the processes that process a data export
+    """
+
+    def do_export(self, request, export_type):
+        """
+        Called by FormShare so plugins can perform actions before adding an partner
+        :param request: ``pyramid.request`` object
+        :param export_type: The type of the export requested buy the user
+        :return: Must return a HTTP 302 redirect (A Pyramid HTTPFound)
+        """
+        raise NotImplementedError("do_export must be implemented in subclasses")
 
 
 class IPluginObserver(Interface):  # pragma: no cover

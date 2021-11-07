@@ -190,8 +190,6 @@ def create_resources(apppath, config):
         "js/plugins/jqGrid/css/trirand/ui.jqgrid-bootstrap4.css",
         None,
     )
-    r.add_js_resource("formshare", "popr", "js/plugins/popr/popr.min.js", "jquery")
-    r.add_css_resource("formshare", "popr", "css/plugins/popr/popr.css", None)
 
     # ------------------------------Collaborators, assistants and groups --------------------------------------
     r.add_css_resource(

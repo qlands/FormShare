@@ -32,6 +32,7 @@
                             <li><a href="{{ request.route_url('import_data', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" class="btn btn-xs btn-white"><i class="fas fa-file-import"></i> {{ _('Import external data') }} </a></li>
                             {% if formDetails.indb > 0 %}
                                 <li><a href="{{ request.route_url('viewAudit', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fas fa-shield-alt"></i> {{ _('Review the history of changes') }}</a></li>
+                                <li><a data-toggle="modal" data-target="#export"><i class="fas fa-file-export"></i> {{ _('Export data') }}</a></li>
                             {% endif %}
                         {% endblock repo_tab_tools %}
                         {% block repo_tab_tools_extra %}

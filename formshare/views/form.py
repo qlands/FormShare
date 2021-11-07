@@ -2327,6 +2327,7 @@ class DownloadPublicXLSData(PrivateView):
         user_id = self.request.matchdict["userid"]
         project_code = self.request.matchdict["projcode"]
         form_id = self.request.matchdict["formid"]
+        options = int(self.request.params.get("options", "1"))
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         project_details = {}
         if project_id is not None:
@@ -2355,6 +2356,7 @@ class DownloadPublicXLSData(PrivateView):
             form_id,
             odk_dir,
             form_data["form_schema"],
+            options,
         )
 
         next_page = self.request.route_url(
@@ -2380,6 +2382,7 @@ class DownloadPrivateXLSData(PrivateView):
         project_code = self.request.matchdict["projcode"]
         form_id = self.request.matchdict["formid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
+        options = int(self.request.params.get("options", "1"))
         project_details = {}
         if project_id is not None:
             project_found = False
@@ -2407,6 +2410,7 @@ class DownloadPrivateXLSData(PrivateView):
             form_id,
             odk_dir,
             form_data["form_schema"],
+            options=options,
         )
 
         next_page = self.request.route_url(
@@ -3634,3 +3638,116 @@ class FixMergeLanguage(PrivateView):
             }
         else:
             raise HTTPNotFound
+
+
+class ExportData(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+        self.returnRawViewResult = True
+
+    def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        project_code = self.request.matchdict["projcode"]
+        form_id = self.request.matchdict["formid"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] >= 4:
+            raise HTTPNotFound
+
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+        if self.request.method == "POST":
+            export_data = self.get_post_dict()
+            if "export_type" in export_data:
+                if export_data["export_type"] == "XLSX":
+                    return HTTPFound(
+                        location=self.request.route_url(
+                            "form_export_xlsx",
+                            userid=user_id,
+                            projcode=project_code,
+                            formid=form_id,
+                        )
+                    )
+                if export_data["export_type"] == "CSV":
+                    pass
+                if export_data["export_type"] == "KML":
+                    pass
+                if export_data["export_type"] == "MEDIA":
+                    pass
+                for a_plugin in plugins.PluginImplementations(plugins.IExport):
+                    return a_plugin.do_export(self.request, export_data["export_type"])
+                raise HTTPNotFound
+            else:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+
+class ExportDataToXLSX(PrivateView):
+    def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        project_code = self.request.matchdict["projcode"]
+        form_id = self.request.matchdict["formid"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] >= 4:
+            raise HTTPNotFound
+
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+
+        if self.request.method == "POST":
+            export_data = self.get_post_dict()
+            options_type = int(export_data["labels"])
+            self.returnRawViewResult = True
+            if export_data["publishable"] == "yes":
+                location = self.request.route_url(
+                    "form_download_public_xlsx_data",
+                    userid=user_id,
+                    projcode=project_code,
+                    formid=form_id,
+                    _query={"options": options_type},
+                )
+                return HTTPFound(location=location)
+            if export_data["publishable"] == "no":
+                location = self.request.route_url(
+                    "form_download_private_xlsx_data",
+                    userid=user_id,
+                    projcode=project_code,
+                    formid=form_id,
+                    _query={"options": options_type},
+                )
+                return HTTPFound(location=location)
+
+        return {
+            "projectDetails": project_details,
+            "formid": form_id,
+            "formDetails": form_data,
+            "userid": user_id,
+        }

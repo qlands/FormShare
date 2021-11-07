@@ -1,0 +1,32 @@
+<div class="modal inmodal" id="export" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content animated fadeIn">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">{{ _('Close') }}</span></button>
+                <h4 class="modal-title">{{ _('Export data') }}</h4>
+            </div>
+            <form id="export_form" class="require_busy" role="form" method="post" action="{{ request.route_url('form_export',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}">
+                {{ form.secure_form(request) }}
+                <div class="modal-body">
+                    <div class="form-group">
+                            <label class="col-sm-4 col-form-label">{{ _('Export type') }}</label>
+                            <div class="col-sm-8">
+                                <select name="export_type" style="width: 100%; !important;" class="form-control">
+                                    {% block export_types %}
+                                        <option value="XLSX">{{ _('XLSX') }}</option>
+                                        <option value="CVS">{{ _('CSV') }}</option>
+                                        <option value="KML">{{ _('KML') }}</option>
+                                        <option value="MEDIA">{{ _('Media (zip)') }}</option>
+                                    {% endblock export_types %}
+                                </select>
+                            </div>
+                        </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
+                    <button type="submit" class="btn btn-primary">{{ _('Export') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

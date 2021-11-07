@@ -34,6 +34,7 @@ def internal_build_xlsx(
     xlsx_file,
     protect_sensitive,
     locale,
+    options=1,
 ):
     if (
         os.environ.get("FORMSHARE_PYTEST_RUNNING", "false") == "true"
@@ -74,6 +75,7 @@ def internal_build_xlsx(
         "-T " + temp_dir,
         "-f " + form_id,
         "-e " + encryption_key,
+        "-r {}".format(options),
     ]
     if protect_sensitive:
         args.append("-c")
@@ -140,6 +142,7 @@ def build_xlsx(
     xlsx_file,
     protect_sensitive,
     locale,
+    options=1,
 ):
     internal_build_xlsx(
         settings,
@@ -151,4 +154,5 @@ def build_xlsx(
         xlsx_file,
         protect_sensitive,
         locale,
+        options,
     )

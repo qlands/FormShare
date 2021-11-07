@@ -2629,6 +2629,7 @@ class DownloadPublicCSV(PrivateView):
         project_code = self.request.matchdict["projcode"]
         form_id = self.request.matchdict["formid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
+        options = int(self.request.params.get("options", "1"))
         project_details = {}
         if project_id is not None:
             project_found = False
@@ -2661,6 +2662,7 @@ class DownloadPublicCSV(PrivateView):
             maps_directory,
             create_xml_file,
             insert_xml_file,
+            options,
         )
 
         next_page = self.request.params.get("next") or self.request.route_url(
@@ -2686,6 +2688,7 @@ class DownloadPrivateCSV(PrivateView):
         project_code = self.request.matchdict["projcode"]
         form_id = self.request.matchdict["formid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
+        options = int(self.request.params.get("options", "1"))
         project_details = {}
         if project_id is not None:
             project_found = False
@@ -2719,6 +2722,7 @@ class DownloadPrivateCSV(PrivateView):
             maps_directory,
             create_xml_file,
             insert_xml_file,
+            options,
         )
 
         next_page = self.request.params.get("next") or self.request.route_url(
@@ -3683,7 +3687,14 @@ class ExportData(PrivateView):
                         )
                     )
                 if export_data["export_type"] == "CSV":
-                    pass
+                    return HTTPFound(
+                        location=self.request.route_url(
+                            "form_export_csv",
+                            userid=user_id,
+                            projcode=project_code,
+                            formid=form_id,
+                        )
+                    )
                 if export_data["export_type"] == "KML":
                     pass
                 if export_data["export_type"] == "MEDIA":
@@ -3738,6 +3749,62 @@ class ExportDataToXLSX(PrivateView):
             if export_data["publishable"] == "no":
                 location = self.request.route_url(
                     "form_download_private_xlsx_data",
+                    userid=user_id,
+                    projcode=project_code,
+                    formid=form_id,
+                    _query={"options": options_type},
+                )
+                return HTTPFound(location=location)
+
+        return {
+            "projectDetails": project_details,
+            "formid": form_id,
+            "formDetails": form_data,
+            "userid": user_id,
+        }
+
+
+class ExportDataToCSV(PrivateView):
+    def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        project_code = self.request.matchdict["projcode"]
+        form_id = self.request.matchdict["formid"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] >= 4:
+            raise HTTPNotFound
+
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+
+        if self.request.method == "POST":
+            export_data = self.get_post_dict()
+            options_type = int(export_data["labels"])
+            self.returnRawViewResult = True
+            if export_data["publishable"] == "yes":
+                location = self.request.route_url(
+                    "form_download_repo_public_csv",
+                    userid=user_id,
+                    projcode=project_code,
+                    formid=form_id,
+                    _query={"options": options_type},
+                )
+                return HTTPFound(location=location)
+            if export_data["publishable"] == "no":
+                location = self.request.route_url(
+                    "form_download_repo_private_csv",
                     userid=user_id,
                     projcode=project_code,
                     formid=form_id,

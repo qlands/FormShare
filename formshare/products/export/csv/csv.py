@@ -14,6 +14,7 @@ def generate_public_csv_file(
     maps_directory,
     create_xml_file,
     insert_xml_file,
+    options=1,
 ):
     settings = {}
     for key, value in request.registry.settings.items():
@@ -34,6 +35,8 @@ def generate_public_csv_file(
             csv_file,
             True,
             request.locale_name,
+            None,
+            options,
         ),
         queue="FormShare",
     )
@@ -60,6 +63,7 @@ def generate_private_csv_file(
     maps_directory,
     create_xml_file,
     insert_xml_file,
+    options=1,
 ):
     settings = {}
     for key, value in request.registry.settings.items():
@@ -80,6 +84,8 @@ def generate_private_csv_file(
             csv_file,
             False,
             request.locale_name,
+            None,
+            options,
         ),
         queue="FormShare",
     )

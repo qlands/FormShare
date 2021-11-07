@@ -54,6 +54,7 @@ def internal_build_csv(
     locale,
     task_id,
     task_object=None,
+    options=1,
 ):
     parts = __file__.split("/products/")
     this_file_path = parts[0] + "/locale"
@@ -86,6 +87,7 @@ def internal_build_csv(
         "-m " + maps_directory,
         "-o " + out_path,
         "-T " + temp_path,
+        "-r {}".format(options),
     ]
     if protect_sensitive:
         args.append("-c")
@@ -125,6 +127,7 @@ def internal_build_csv(
                 "-c " + create_xml_file,
                 "-o " + dummy_json,
                 "-r",
+                "-l {}".format(options),
             ]
             if len(array_sizes) > 0:
                 args.append("-a " + ",".join(array_sizes))
@@ -243,6 +246,7 @@ def build_csv(
     protect_sensitive,
     locale,
     test_task_id=None,
+    options=1,
 ):
     if test_task_id is None:
         task_id = build_csv.request.id
@@ -259,4 +263,5 @@ def build_csv(
         locale,
         task_id,
         self,
+        options,
     )

@@ -113,6 +113,7 @@ from formshare.views.form import (
     FixMergeLanguage,
     ExportData,
     ExportDataToXLSX,
+    ExportDataToCSV,
 )
 from formshare.views.odk import (
     ODKFormList,
@@ -772,6 +773,14 @@ def load_routes(config, settings):
             "/user/{userid}/project/{projcode}/form/{formid}/export/xlsx",
             ExportDataToXLSX,
             "dashboard/projects/forms/export/xlsx.jinja2",
+        )
+    )
+    routes.append(
+        add_route(
+            "form_export_csv",
+            "/user/{userid}/project/{projcode}/form/{formid}/export/csv",
+            ExportDataToCSV,
+            "dashboard/projects/forms/export/csv.jinja2",
         )
     )
 

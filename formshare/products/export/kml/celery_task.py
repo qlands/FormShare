@@ -22,6 +22,12 @@ class EmptyFileError(Exception):
     """
 
 
+class GeneratingFileError(Exception):
+    """
+    Exception raised when there is an error while creating the repository.
+    """
+
+
 def get_fields_from_table(create_file, selected_fields):
     tree = etree.parse(create_file)
     root = tree.getroot()
@@ -184,6 +190,24 @@ def internal_build_kml(
                 if e.stderr is not None:
                     error_message = error_message + e.stderr.encode() + "\n"
                 log.error(error_message)
+
+                email_from = settings.get("mail.from", None)
+                email_to = settings.get("mail.error", None)
+                send_async_email(
+                    settings,
+                    email_from,
+                    email_to,
+                    "KML Error - Dropping table",
+                    "Error while dropping table {} in schema {}".format(
+                        temp_table_name, form_schema
+                    ),
+                    None,
+                    locale,
+                )
+
+                raise GeneratingFileError(
+                    _("There was an error while dropping the temporary table")
+                )
         else:
             engine.dispose()
             raise EmptyFileError(
@@ -213,6 +237,9 @@ def internal_build_kml(
             + stdout.decode()
             + ". Args: "
             + " ".join(args)
+        )
+        raise GeneratingFileError(
+            _("There was an error while querying data for the KML")
         )
 
 

@@ -5310,6 +5310,8 @@ class FunctionalTests(unittest.TestCase):
                 )
 
                 form_schema = form_details["form_schema"]
+                create_file = form_details["form_createxmlfile"]
+                primary_key = form_details["form_pkey"]
                 task_id = str(uuid.uuid4())
 
                 sql = (
@@ -5336,6 +5338,21 @@ class FunctionalTests(unittest.TestCase):
                     form_schema,
                     self.working_dir + "/{}.kml".format(task_id),
                     "en",
+                    self.formID,
+                    create_file,
+                    [
+                        primary_key,
+                        "_geopoint",
+                        "rowuuid",
+                        "_latitude",
+                        "_longitude",
+                        "surveyid",
+                        "originid",
+                        "_submitted_by",
+                        "_xform_id_string",
+                        "submitted_date",
+                    ],
+                    3,
                     task_id,
                 )
                 store_task_status(task_id, self.server_config)
@@ -5521,9 +5538,197 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Export data of a project that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/export".format(
+                    self.randonLogin, "not_exist", self.formID
+                ),
+                status=404,
+            )
+
+            # Export data of a form that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/export".format(
+                    self.randonLogin, self.project, "not_exist"
+                ),
+                status=404,
+            )
+
+            # Export data with get goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/export".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Call export to XLSX
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/export".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "export_type": "XLSX",
+                },
+                status=302,
+            )
+
+            # Call export to CSV
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/export".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "export_type": "CSV",
+                },
+                status=302,
+            )
+
+            # Call export to KML
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/export".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "export_type": "KML",
+                },
+                status=302,
+            )
+
+            # Call export to MEDIA
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/export".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "export_type": "MEDIA",
+                },
+                status=302,
+            )
+
+            # Call export to plugin
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/export".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "export_type": "TEST",
+                },
+                status=302,
+            )
+
+            # Call export to a type that is not handled goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/export".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "export_type": "NONE",
+                },
+                status=404,
+            )
+
+            # ------Excel-----------------------
+            # Export data to excel of a project that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/export/xlsx".format(
+                    self.randonLogin, "not_exist", self.formID
+                ),
+                status=404,
+            )
+
+            # Export data  to exel of a form that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/export/xlsx".format(
+                    self.randonLogin, self.project, "not_exist"
+                ),
+                status=404,
+            )
+
+            # Export to excel goes to 200
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/export/xlsx".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+
+            # Export to excel publishable
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/export/xlsx".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "publishable": "yes",
+                    "labels": "3",
+                },
+                status=302,
+            )
+
+            # Export to excel not publishable
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/export/xlsx".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "publishable": "no",
+                    "labels": "3",
+                },
+                status=302,
+            )
+
+            # ------CSV-----------------------
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/export/csv".format(
+                    self.randonLogin, "not_exist", self.formID
+                ),
+                status=404,
+            )
+
+            # Export data  to exel of a form that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/export/csv".format(
+                    self.randonLogin, self.project, "not_exist"
+                ),
+                status=404,
+            )
+
+            # Export to excel goes to 200
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/export/csv".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+
+            # Export to excel publishable
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/export/csv".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "publishable": "yes",
+                    "labels": "3",
+                },
+                status=302,
+            )
+
+            # Export to excel not publishable
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/export/csv".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "publishable": "no",
+                    "labels": "2",
+                },
+                status=302,
+            )
+            # ---------------
+
             # Download KML of a project that does not exist goes to 404
             self.testapp.get(
-                "/user/{}/project/{}/form/{}/generate/kml".format(
+                "/user/{}/project/{}/form/{}/export/kml".format(
                     self.randonLogin, "not_exist", self.formID
                 ),
                 status=404,
@@ -5531,20 +5736,38 @@ class FunctionalTests(unittest.TestCase):
 
             # Download KML of a form that does not exist goes to 404
             self.testapp.get(
-                "/user/{}/project/{}/form/{}/generate/kml".format(
+                "/user/{}/project/{}/form/{}/export/kml".format(
                     self.randonLogin, self.project, "not_exist"
                 ),
                 status=404,
             )
 
-            # Download KML
+            # Download KML - Show page
             res = self.testapp.get(
-                "/user/{}/project/{}/form/{}/generate/kml".format(
+                "/user/{}/project/{}/form/{}/export/kml".format(
                     self.randonLogin, self.project, self.formID
                 ),
-                status=302,
+                status=200,
             )
             assert "FS_error" not in res.headers
+
+            # Export KML pass
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/export/kml".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "fields": [
+                        "surveyid",
+                        "originid",
+                        "_submitted_by",
+                        "_xform_id_string",
+                        "submitted_date",
+                    ],
+                    "labels": "3",
+                },
+                status=302,
+            )
 
             # Public CSV of a project that does not exist goes to 404
             self.testapp.get(
@@ -14133,9 +14356,33 @@ class FunctionalTests(unittest.TestCase):
                 status=404,
             )
 
+            # Export data of a form that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/export".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
             # Download KML of a form that does not have access goes to 404
             self.testapp.get(
-                "/user/{}/project/{}/form/{}/generate/kml".format(
+                "/user/{}/project/{}/form/{}/export/kml".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Download XLSX of a form that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/export/xlsx".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Download XLSX of a form that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/export/csv".format(
                     self.randonLogin, self.project, self.formID
                 ),
                 status=404,
@@ -14878,9 +15125,33 @@ class FunctionalTests(unittest.TestCase):
                 status=404,
             )
 
+            # Export data of a form that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/export".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
             # Download KML of a form that does not have access goes to 404
             self.testapp.get(
-                "/user/{}/project/{}/form/{}/generate/kml".format(
+                "/user/{}/project/{}/form/{}/export/kml".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Download XLSX of a form that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/export/xlsx".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Download CSV of a form that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/export/csv".format(
                     self.randonLogin, self.project, self.formID
                 ),
                 status=404,

@@ -213,7 +213,7 @@ def internal_build_kml(
             raise EmptyFileError(
                 _("The ODK form does not contain any submissions with GPS coordinates")
             )
-    else:
+    else:  # pragma: no cover
         email_from = settings.get("mail.from", None)
         email_to = settings.get("mail.error", None)
         send_async_email(

@@ -30,7 +30,7 @@ def store_task_status(task, config):
 def get_form_details(config, project, form):
     engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
     result = engine.execute(
-        "SELECT form_directory,form_schema,form_reptask,form_createxmlfile,form_insertxmlfile,form_hexcolor "
+        "SELECT form_directory,form_schema,form_reptask,form_createxmlfile,form_insertxmlfile,form_hexcolor,form_pkey "
         "FROM odkform WHERE project_id = '{}' AND form_id = '{}'".format(project, form)
     ).fetchone()
     result = {
@@ -40,6 +40,7 @@ def get_form_details(config, project, form):
         "form_createxmlfile": result[3],
         "form_insertxmlfile": result[4],
         "form_hexcolor": result[5],
+        "form_pkey": result[6],
     }
     engine.dispose()
     return result
@@ -5752,7 +5753,7 @@ class FunctionalTests(unittest.TestCase):
             assert "FS_error" not in res.headers
 
             # Export KML pass
-            self.testapp.post(
+            res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/export/kml".format(
                     self.randonLogin, self.project, self.formID
                 ),
@@ -5768,6 +5769,7 @@ class FunctionalTests(unittest.TestCase):
                 },
                 status=302,
             )
+            self.assertNotIn(b"The process generated an error", res.body)
 
             # Public CSV of a project that does not exist goes to 404
             self.testapp.get(
@@ -5822,12 +5824,13 @@ class FunctionalTests(unittest.TestCase):
             time.sleep(40)  # Wait 5 seconds so celery finished this
 
             # Get the details of a form. The form now should have a repository with products
-            self.testapp.get(
+            res = self.testapp.get(
                 "/user/{}/project/{}/form/{}".format(
                     self.randonLogin, self.project, self.formID
                 ),
                 status=200,
             )
+            self.assertNotIn(b"The process generated an error", res.body)
             print("Testing repository downloads step 2 finished")
             time.sleep(40)
             mimic_celery_public_csv_process()

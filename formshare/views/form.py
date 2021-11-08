@@ -3656,9 +3656,21 @@ class ExportData(PrivateView):
                         )
                     )
                 if export_data["export_type"] == "MEDIA":
-                    pass
+                    return HTTPFound(
+                        location=self.request.route_url(
+                            "form_download_media",
+                            userid=user_id,
+                            projcode=project_code,
+                            formid=form_id,
+                        )
+                    )
                 for a_plugin in plugins.PluginImplementations(plugins.IExport):
-                    return a_plugin.do_export(self.request, export_data["export_type"])
+                    if a_plugin.has_export_for(
+                        self.request, export_data["export_type"]
+                    ):
+                        return a_plugin.do_export(
+                            self.request, export_data["export_type"]
+                        )
                 raise HTTPNotFound
             else:
                 raise HTTPNotFound

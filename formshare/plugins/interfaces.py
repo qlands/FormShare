@@ -1553,11 +1553,19 @@ class IExport(Interface):  # pragma: no cover
     Allows to hook into the processes that process a data export
     """
 
+    def has_export_for(self, request, export_type):
+        """
+        Called by FormShare so plugins can indicate if they provide an export for a type
+        :param request: ``pyramid.request`` object
+        :param export_type: The type of the export requested by the user
+        return: True if the plugins export the type or False
+        """
+
     def do_export(self, request, export_type):
         """
-        Called by FormShare so plugins can perform actions before adding an partner
+        Called by FormShare so plugins can perform other types of exports
         :param request: ``pyramid.request`` object
-        :param export_type: The type of the export requested buy the user
+        :param export_type: The type of the export requested by the user
         :return: Must return a HTTP 302 redirect (A Pyramid HTTPFound)
         """
         raise NotImplementedError("do_export must be implemented in subclasses")

@@ -50,7 +50,7 @@ def load_api_version_1_routes(config):
     routes.append(
         add_route(
             "api1_update_repository",
-            "/user/{userid}/project/{projcode}/form/{formid}/api_update",
+            "/api_update",
             API1UpdateRepository,
             "json",
         )

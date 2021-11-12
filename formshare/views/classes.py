@@ -1006,6 +1006,121 @@ class AssistantAPIView(object):
         raise response
 
 
+class UpdateAPIView(object):
+    def __init__(self, request):
+        self.request = request
+        self.api_key = ""
+        self.rowuuid = ""
+        self._ = self.request.translate
+        self.error = False
+        self.json = {}
+
+    def __call__(self):
+        if self.request.method == "GET":
+            raise HTTPNotFound()
+        else:
+            self.api_key = self.request.POST.get("apikey", None)
+            if self.api_key is not None:
+                self.json = self.request.POST
+            else:
+                try:
+                    json_body = json.loads(self.request.body)
+                    self.api_key = json_body.get("apikey", None)
+                    if self.api_key is not None:
+                        self.json = json_body
+                except Exception as e:
+                    log.error("Unable to parse API POST body. Error {}".format(str(e)))
+                    self.api_key = None
+
+            self.rowuuid = self.request.POST.get("rowuuid", None)
+            if self.rowuuid is not None:
+                self.json = self.request.POST
+            else:
+                try:
+                    json_body = json.loads(self.request.body)
+                    self.rowuuid = json_body.get("rowuuid", None)
+                    if self.rowuuid is not None:
+                        self.json = json_body
+                except Exception as e:
+                    log.error("Unable to parse API POST body. Error {}".format(str(e)))
+                    self.rowuuid = None
+
+        if self.api_key is not None:
+            if self.rowuuid is None:
+                response = Response(
+                    content_type="application/json",
+                    status=401,
+                    body=json.dumps(
+                        {
+                            "error": self._("You need to specify a rowuuid"),
+                            "error_type": "rowuuid_missing",
+                        }
+                    ).encode(),
+                )
+                return response
+        else:
+            response = Response(
+                content_type="application/json",
+                status=401,
+                body=json.dumps(
+                    {
+                        "error": self._(
+                            "You need to specify an assistant API key (apikey)"
+                        ),
+                        "error_type": "api_key_missing",
+                    }
+                ).encode(),
+            )
+            return response
+
+        res = self.process_view()
+        if not self.error:
+            return res
+        else:
+            response = Response(
+                content_type="application/json",
+                status=400,
+                body=json.dumps(res).encode(),
+            )
+            return response
+
+    def process_view(self):
+        return {"key": self.api_key}
+
+    def check_keys(self, key_list):
+        not_found_keys = []
+        for a_key in key_list:
+            if a_key not in self.request.POST.keys():
+                not_found_keys.append(a_key)
+        if not_found_keys:
+            json_result = {
+                "error": self._(
+                    "The following keys were not present in the submitted JSON"
+                ),
+                "keys": [],
+                "error_type": "missing_key",
+            }
+            for a_key in not_found_keys:
+                json_result["keys"].append(a_key)
+
+            response = exception_response(
+                400,
+                content_type="application/json",
+                body=json.dumps(json_result).encode(),
+            )
+            raise response
+
+    def return_error(self, error_type, error_message):
+        response = exception_response(
+            400,
+            content_type="application/json",
+            body=json.dumps(
+                {"error": error_message, "error_type": error_type}
+            ).encode(),
+        )
+        raise response
+
+
 class PartnerAPIView(object):
     def __init__(self, request):
         self.request = request

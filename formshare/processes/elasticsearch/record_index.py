@@ -239,3 +239,28 @@ def get_table(settings, record_uuid):
             raise RequestError("Cannot connect to ElasticSearch")
     else:
         return None, None
+
+
+def get_project_and_form(settings, record_uuid):
+    if _validate_uuid4(record_uuid):
+        connection = create_connection(settings)
+        if connection is not None:
+            index_name = get_index_name(settings)
+            query_dict = {"query": {"match": {"_id": record_uuid}}}
+            es_result = connection.search(index=index_name, body=query_dict)
+            if es_result["hits"]["total"]["value"] == 0:
+                # If no results found then try with carry return at the end
+                # because that is how was initially stored
+                query_dict = {"query": {"match": {"_id": record_uuid + "\n"}}}
+                es_result = connection.search(index=index_name, body=query_dict)
+            if es_result["hits"]["total"]["value"] == 0:
+                return None, None
+            else:
+                return (
+                    es_result["hits"]["hits"][0]["_source"]["project_id"],
+                    es_result["hits"]["hits"][0]["_source"]["form_id"],
+                )
+        else:
+            raise RequestError("Cannot connect to ElasticSearch")
+    else:
+        return None, None

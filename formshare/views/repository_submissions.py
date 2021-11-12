@@ -9,8 +9,12 @@ from formshare.processes.db import (
     get_project_owner,
     get_form_details,
     get_all_assistants,
+    get_assistant_by_api_key,
 )
-from formshare.processes.elasticsearch.record_index import get_table
+from formshare.processes.elasticsearch.record_index import (
+    get_project_and_form,
+    get_table,
+)
 from formshare.processes.odk.processes import get_assistant_permissions_on_a_form
 from formshare.processes.submission.api import (
     get_request_data_jqgrid,
@@ -19,7 +23,7 @@ from formshare.processes.submission.api import (
     delete_all_submission,
     update_record_with_id,
 )
-from formshare.views.classes import PrivateView, AssistantAPIView
+from formshare.views.classes import PrivateView, UpdateAPIView
 
 
 class ManageSubmissions(PrivateView):
@@ -459,20 +463,52 @@ class DeleteAllSubmissions(PrivateView):
             raise HTTPNotFound
 
 
-class API1UpdateRepository(AssistantAPIView):
+class API1UpdateRepository(UpdateAPIView):
     def __init__(self, request):
-        AssistantAPIView.__init__(self, request)
+        UpdateAPIView.__init__(self, request)
 
     def process_view(self):
-        user_id = self.request.matchdict["userid"]
-        form_id = self.request.matchdict["formid"]
+        project_id, form_id = get_project_and_form(
+            self.request.registry.settings,
+            self.rowuuid,
+        )
+        if project_id is None:
+            self.error = True
+            return {
+                "error": self._(
+                    "The unique Row ID (rowuuid) does not point to a project"
+                ),
+                "error_type": "project_not_found",
+            }
+
+        user_id = get_project_owner(self.request, project_id)
+        if user_id is None:
+            self.error = True
+            return {
+                "error": self._(
+                    "The unique Row ID (rowuuid) does not point to an user"
+                ),
+                "error_type": "user_not_found",
+            }
+
+        assistan_data = get_assistant_by_api_key(self.request, project_id, self.api_key)
+        if not assistan_data:
+            self.error = True
+            return {
+                "error": self._("Cannot find an assistant with such API key"),
+                "error_type": "assistant_not_found",
+            }
 
         permissions = get_assistant_permissions_on_a_form(
-            self.request, user_id, self.project_id, self.assistant["coll_id"], form_id
+            self.request, user_id, project_id, assistan_data["coll_id"], form_id
         )
         if permissions["enum_canclean"] == 0:
             self.return_error(
-                "unauthorized", self._("You don't have permission to clean this form")
+                "unauthorized",
+                self._(
+                    "This API key don't have permission to clean "
+                    "the form associated with the indicated Row ID"
+                ),
             )
         if "rowuuid" in self.json.keys():
             try:
@@ -483,7 +519,7 @@ class API1UpdateRepository(AssistantAPIView):
                 if schema is not None:
                     modified, error = update_record_with_id(
                         self.request,
-                        self.assistant["coll_id"],
+                        assistan_data["coll_id"],
                         schema,
                         table,
                         self.json["rowuuid"],

@@ -472,8 +472,13 @@ class API1UpdateRepository(UpdateAPIView):
             self.request.registry.settings,
             self.rowuuid,
         )
+        schema, table = get_table(
+            self.request.registry.settings,
+            self.rowuuid,
+        )
         if project_id is None:
             self.error = True
+            self.error_code = 404
             return {
                 "error": self._(
                     "The unique Row ID (rowuuid) does not point to a project"
@@ -494,6 +499,7 @@ class API1UpdateRepository(UpdateAPIView):
         assistan_data = get_assistant_by_api_key(self.request, project_id, self.api_key)
         if not assistan_data:
             self.error = True
+            self.error_code = 401
             return {
                 "error": self._("Cannot find an assistant with such API key"),
                 "error_type": "assistant_not_found",
@@ -503,6 +509,7 @@ class API1UpdateRepository(UpdateAPIView):
             self.request, user_id, project_id, assistan_data["coll_id"], form_id
         )
         if permissions["enum_canclean"] == 0:
+            self.error_code = 401
             self.return_error(
                 "unauthorized",
                 self._(
@@ -512,36 +519,20 @@ class API1UpdateRepository(UpdateAPIView):
             )
         if "rowuuid" in self.json.keys():
             try:
-                schema, table = get_table(
-                    self.request.registry.settings,
+                modified, error = update_record_with_id(
+                    self.request,
+                    assistan_data["coll_id"],
+                    schema,
+                    table,
                     self.json["rowuuid"],
+                    self.json,
                 )
-                if schema is not None:
-                    modified, error = update_record_with_id(
-                        self.request,
-                        assistan_data["coll_id"],
-                        schema,
-                        table,
-                        self.json["rowuuid"],
-                        self.json,
-                    )
-                    if modified:
-                        return {"status": "OK", "message": self._("Update completed")}
-                    else:
-                        self.error = True
-                        return {"error": error, "error_type": "update_error"}
+                if modified:
+                    return {"status": "OK", "message": self._("Update completed")}
                 else:
+                    self.error_code = 500
                     self.error = True
-                    return {
-                        "error": self._("Unique Row ID (Rowuuid) not found"),
-                        "error_type": "rowuuid_not_found",
-                    }
-
+                    return {"error": error, "error_type": "update_error"}
             except Exception as e:
                 self.error = True
                 return {"error": str(e), "error_type": "update_error"}
-        else:
-            self.return_error(
-                "rowuuid_missing",
-                self._("You need to indicate a Unique Row ID (rowuuid)"),
-            )

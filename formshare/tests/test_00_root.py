@@ -9202,56 +9202,46 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
 
+            # Change data using API fails. No API key
+            self.testapp.post_json(
+                "/api_update",
+                {"landcultivated": 14},
+                status=400,
+            )
+
             # Change data using API fails. No rowuuid
             self.testapp.post_json(
-                "/user/{}/project/{}/form/{}/api_update".format(
-                    self.randonLogin, self.project, self.formID
-                ),
+                "/api_update",
                 {"apikey": self.assistantLoginKey, "landcultivated": 14},
                 status=400,
             )
 
             #  Change data using API fails. Field cannot be found
             self.testapp.post_json(
-                "/user/{}/project/{}/form/{}/api_update".format(
-                    self.randonLogin, self.project, self.formID
-                ),
+                "/api_update",
                 {
                     "apikey": self.assistantLoginKey,
                     "rowuuid": row_uuid,
                     "some_file": 14,
                 },
-                status=400,
+                status=500,
             )
 
-            #  Change data fails rowuuid not found
+            #  Change data fails rowuuid does not exists
             self.testapp.post_json(
-                "/user/{}/project/{}/form/{}/api_update".format(
-                    self.randonLogin, self.project, self.formID
-                ),
+                "/api_update",
                 {
                     "apikey": self.assistantLoginKey,
                     "rowuuid": "test",
                     "landcultivated": 14,
                 },
-                status=400,
+                status=404,
             )
 
             #  Change data fails. Invalid api key
             self.testapp.post_json(
-                "/user/{}/project/{}/form/{}/api_update".format(
-                    self.randonLogin, self.project, self.formID
-                ),
-                {"apikey": "some", "rowuuid": "test", "landcultivated": 14},
-                status=401,
-            )
-
-            #  Change data fails. No api key
-            self.testapp.post_json(
-                "/user/{}/project/{}/form/{}/api_update".format(
-                    self.randonLogin, self.project, self.formID
-                ),
-                {"rowuuid": "test", "landcultivated": 14},
+                "/api_update",
+                {"apikey": "some", "rowuuid": row_uuid, "landcultivated": 14},
                 status=401,
             )
 
@@ -9271,15 +9261,13 @@ class FunctionalTests(unittest.TestCase):
 
             # User cannot update
             self.testapp.post_json(
-                "/user/{}/project/{}/form/{}/api_update".format(
-                    self.randonLogin, self.project, self.formID
-                ),
+                "/api_update",
                 {
                     "apikey": self.assistantLoginKey,
                     "rowuuid": row_uuid,
                     "landcultivated": 14,
                 },
-                status=400,
+                status=401,
             )
 
             res = self.testapp.post(
@@ -9297,9 +9285,7 @@ class FunctionalTests(unittest.TestCase):
 
             #  Change data using API passes
             self.testapp.post_json(
-                "/user/{}/project/{}/form/{}/api_update".format(
-                    self.randonLogin, self.project, self.formID
-                ),
+                "/api_update",
                 {
                     "apikey": self.assistantLoginKey,
                     "rowuuid": row_uuid,

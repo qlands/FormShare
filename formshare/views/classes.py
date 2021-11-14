@@ -1013,6 +1013,7 @@ class UpdateAPIView(object):
         self.rowuuid = ""
         self._ = self.request.translate
         self.error = False
+        self.error_code = 400
         self.json = {}
 
     def __call__(self):
@@ -1049,7 +1050,7 @@ class UpdateAPIView(object):
             if self.rowuuid is None:
                 response = Response(
                     content_type="application/json",
-                    status=401,
+                    status=400,
                     body=json.dumps(
                         {
                             "error": self._("You need to specify a rowuuid"),
@@ -1061,7 +1062,7 @@ class UpdateAPIView(object):
         else:
             response = Response(
                 content_type="application/json",
-                status=401,
+                status=400,
                 body=json.dumps(
                     {
                         "error": self._(
@@ -1079,7 +1080,7 @@ class UpdateAPIView(object):
         else:
             response = Response(
                 content_type="application/json",
-                status=400,
+                status=self.error_code,
                 body=json.dumps(res).encode(),
             )
             return response
@@ -1112,7 +1113,7 @@ class UpdateAPIView(object):
 
     def return_error(self, error_type, error_message):
         response = exception_response(
-            400,
+            self.error_code,
             content_type="application/json",
             body=json.dumps(
                 {"error": error_message, "error_type": error_type}

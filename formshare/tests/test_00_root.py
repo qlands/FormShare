@@ -16173,9 +16173,7 @@ class FunctionalTests(unittest.TestCase):
             engine.dispose()
 
             self.testapp.post_json(
-                "/user/{}/project/{}/form/{}/api_update".format(
-                    self.randonLogin, "case001", "case_start_20210311"
-                ),
+                "/api_update",
                 {
                     "apikey": self.caseassistantLoginKey,
                     "rowuuid": row_uuid,

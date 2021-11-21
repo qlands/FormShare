@@ -10473,6 +10473,16 @@ class FunctionalTests(unittest.TestCase):
                 status=404,
             )
 
+            # Remove all submissions no email
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/submissions/deleteall".format(
+                    self.randonLogin, self.project, "tormenta20201130"
+                ),
+                {},
+                status=302,
+            )
+            assert "FS_error" in res.headers
+
             # Remove all submissions
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/submissions/deleteall".format(

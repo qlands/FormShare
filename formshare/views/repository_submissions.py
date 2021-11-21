@@ -487,14 +487,6 @@ class API1UpdateRepository(UpdateAPIView):
             }
 
         user_id = get_project_owner(self.request, project_id)
-        if user_id is None:
-            self.error = True
-            return {
-                "error": self._(
-                    "The unique Row ID (rowuuid) does not point to an user"
-                ),
-                "error_type": "user_not_found",
-            }
 
         assistan_data = get_assistant_by_api_key(self.request, project_id, self.api_key)
         if not assistan_data:

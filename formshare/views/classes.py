@@ -883,127 +883,127 @@ class APIView(object):
         raise response
 
 
-class AssistantAPIView(object):
-    def __init__(self, request):
-        self.request = request
-        self.assistant = None
-        self.api_key = ""
-        self.project_id = None
-        self._ = self.request.translate
-        self.error = False
-        self.json = {}
-
-    def __call__(self):
-        if self.request.method == "GET":
-            self.api_key = self.request.params.get("apikey", None)
-        else:
-            self.api_key = self.request.POST.get("apikey", None)
-            if self.api_key is not None:
-                self.json = self.request.POST
-            else:
-                try:
-                    json_body = json.loads(self.request.body)
-                    self.api_key = json_body.get("apikey", None)
-                    if self.api_key is not None:
-                        self.json = json_body
-                except Exception as e:
-                    log.error("Unable to parse API POST body. Error {}".format(str(e)))
-                    self.api_key = None
-        if self.api_key is not None:
-            user_id = self.request.matchdict["userid"]
-            project_code = self.request.matchdict["projcode"]
-            self.project_id = get_project_id_from_name(
-                self.request, user_id, project_code
-            )
-            if self.project_id is not None:
-                self.assistant = get_assistant_by_api_key(
-                    self.request, self.project_id, self.api_key
-                )
-                if not self.assistant:
-                    response = Response(
-                        content_type="application/json",
-                        status=401,
-                        body=json.dumps(
-                            {
-                                "error": self._(
-                                    "This API key does not exist or is inactive"
-                                ),
-                                "error_type": "authentication",
-                            }
-                        ).encode(),
-                    )
-                    return response
-            else:
-                response = Response(
-                    content_type="application/json",
-                    status=400,
-                    body=json.dumps(
-                        {
-                            "error": self._("The project cannot be found"),
-                            "error_type": "project_not_found",
-                        }
-                    ).encode(),
-                )
-                return response
-        else:
-            response = Response(
-                content_type="application/json",
-                status=401,
-                body=json.dumps(
-                    {
-                        "error": self._("You need to specify an API key"),
-                        "error_type": "api_key_missing",
-                    }
-                ).encode(),
-            )
-            return response
-
-        res = self.process_view()
-        if not self.error:
-            return res
-        else:
-            response = Response(
-                content_type="application/json",
-                status=400,
-                body=json.dumps(res).encode(),
-            )
-            return response
-
-    def process_view(self):
-        return {"key": self.api_key}
-
-    def check_keys(self, key_list):
-        not_found_keys = []
-        for a_key in key_list:
-            if a_key not in self.request.POST.keys():
-                not_found_keys.append(a_key)
-        if not_found_keys:
-            json_result = {
-                "error": self._(
-                    "The following keys were not present in the submitted JSON"
-                ),
-                "keys": [],
-                "error_type": "missing_key",
-            }
-            for a_key in not_found_keys:
-                json_result["keys"].append(a_key)
-
-            response = exception_response(
-                400,
-                content_type="application/json",
-                body=json.dumps(json_result).encode(),
-            )
-            raise response
-
-    def return_error(self, error_type, error_message):
-        response = exception_response(
-            400,
-            content_type="application/json",
-            body=json.dumps(
-                {"error": error_message, "error_type": error_type}
-            ).encode(),
-        )
-        raise response
+# class AssistantAPIView(object):
+#     def __init__(self, request):
+#         self.request = request
+#         self.assistant = None
+#         self.api_key = ""
+#         self.project_id = None
+#         self._ = self.request.translate
+#         self.error = False
+#         self.json = {}
+#
+#     def __call__(self):
+#         if self.request.method == "GET":
+#             self.api_key = self.request.params.get("apikey", None)
+#         else:
+#             self.api_key = self.request.POST.get("apikey", None)
+#             if self.api_key is not None:
+#                 self.json = self.request.POST
+#             else:
+#                 try:
+#                     json_body = json.loads(self.request.body)
+#                     self.api_key = json_body.get("apikey", None)
+#                     if self.api_key is not None:
+#                         self.json = json_body
+#                 except Exception as e:
+#                     log.error("Unable to parse API POST body. Error {}".format(str(e)))
+#                     self.api_key = None
+#         if self.api_key is not None:
+#             user_id = self.request.matchdict["userid"]
+#             project_code = self.request.matchdict["projcode"]
+#             self.project_id = get_project_id_from_name(
+#                 self.request, user_id, project_code
+#             )
+#             if self.project_id is not None:
+#                 self.assistant = get_assistant_by_api_key(
+#                     self.request, self.project_id, self.api_key
+#                 )
+#                 if not self.assistant:
+#                     response = Response(
+#                         content_type="application/json",
+#                         status=401,
+#                         body=json.dumps(
+#                             {
+#                                 "error": self._(
+#                                     "This API key does not exist or is inactive"
+#                                 ),
+#                                 "error_type": "authentication",
+#                             }
+#                         ).encode(),
+#                     )
+#                     return response
+#             else:
+#                 response = Response(
+#                     content_type="application/json",
+#                     status=400,
+#                     body=json.dumps(
+#                         {
+#                             "error": self._("The project cannot be found"),
+#                             "error_type": "project_not_found",
+#                         }
+#                     ).encode(),
+#                 )
+#                 return response
+#         else:
+#             response = Response(
+#                 content_type="application/json",
+#                 status=401,
+#                 body=json.dumps(
+#                     {
+#                         "error": self._("You need to specify an API key"),
+#                         "error_type": "api_key_missing",
+#                     }
+#                 ).encode(),
+#             )
+#             return response
+#
+#         res = self.process_view()
+#         if not self.error:
+#             return res
+#         else:
+#             response = Response(
+#                 content_type="application/json",
+#                 status=400,
+#                 body=json.dumps(res).encode(),
+#             )
+#             return response
+#
+#     def process_view(self):
+#         return {"key": self.api_key}
+#
+#     def check_keys(self, key_list):
+#         not_found_keys = []
+#         for a_key in key_list:
+#             if a_key not in self.request.POST.keys():
+#                 not_found_keys.append(a_key)
+#         if not_found_keys:
+#             json_result = {
+#                 "error": self._(
+#                     "The following keys were not present in the submitted JSON"
+#                 ),
+#                 "keys": [],
+#                 "error_type": "missing_key",
+#             }
+#             for a_key in not_found_keys:
+#                 json_result["keys"].append(a_key)
+#
+#             response = exception_response(
+#                 400,
+#                 content_type="application/json",
+#                 body=json.dumps(json_result).encode(),
+#             )
+#             raise response
+#
+#     def return_error(self, error_type, error_message):
+#         response = exception_response(
+#             400,
+#             content_type="application/json",
+#             body=json.dumps(
+#                 {"error": error_message, "error_type": error_type}
+#             ).encode(),
+#         )
+#         raise response
 
 
 class UpdateAPIView(object):

@@ -5,11 +5,25 @@ import os
 from jinja2 import Environment, FileSystemLoader
 
 
-def get_ini_value(ini_file, key, default=None):
+def get_section(ini_file, section):
     try:
         config = configparser.ConfigParser()
         config.read(ini_file)
-        return config.get("app:formshare", key)
+        return dict(config.items(section))
+    except Exception as e:
+        print(
+            "Warning: Unable to read section {}. Empty dict was return".format(
+                section, str(e)
+            )
+        )
+        return {}
+
+
+def get_ini_value(ini_file, key, default=None, section="app:formshare"):
+    try:
+        config = configparser.ConfigParser()
+        config.read(ini_file)
+        return config.get(section, key)
     except Exception as e:
         print("Warning: Unable to find key {}. {} . Default used".format(key, str(e)))
         return default
@@ -78,6 +92,18 @@ def main(raw_args=None):
     mysql_password = get_ini_value(
         os.path.abspath(args.ini_path), "mysql.password", "empty!"
     )
+
+    server_main_host = get_ini_value(
+        os.path.abspath(args.ini_path), "host", "localhost", "server:main"
+    )
+    server_main_port = get_ini_value(
+        os.path.abspath(args.ini_path), "port", "localhost", "server:main"
+    )
+
+    composite_section = get_section(args.ini_path, "composite:main")
+    composite_section.pop("use")
+    server_main_root = list(composite_section.keys())[0]
+
     context = {
         "mysql_host": mysql_host,
         "mysql_port": mysql_port,
@@ -94,6 +120,9 @@ def main(raw_args=None):
         "formshare_test_directory": os.path.join(
             formshare_path, *["formshare", "tests"]
         ),
+        "server_main_host": server_main_host,
+        "server_main_port": server_main_port,
+        "server_main_root": server_main_root,
     }
 
     rendered_template = template_environment.get_template("test_config.jinja2").render(

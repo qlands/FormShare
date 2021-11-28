@@ -10,6 +10,12 @@ def register_products():
     add_metadata_to_product(new_product, "Licence", "BSD")
     products.append(new_product)
 
+    new_product = create_product("xmlimport", False, "fas fa-file-import")
+    add_metadata_to_product(new_product, "author", "QLands Technology Consultants")
+    add_metadata_to_product(new_product, "version", "1.0")
+    add_metadata_to_product(new_product, "Licence", "BSD")
+    products.append(new_product)
+
     new_product = create_product("repository", False, "fas fa-database")
     add_metadata_to_product(new_product, "author", "QLands Technology Consultants")
     add_metadata_to_product(new_product, "version", "1.0")

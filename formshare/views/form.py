@@ -879,6 +879,7 @@ class AddNewForm(PrivateView):
             form_casetype = None
             form_caselabel = None
             form_caseselector = None
+            form_casedatetime = None
             if for_merging:
                 form_id = self.request.matchdict["formid"]
                 primary_key = get_form_primary_key(self.request, project_id, form_id)
@@ -887,6 +888,7 @@ class AddNewForm(PrivateView):
                         form_casetype,
                         form_caselabel,
                         form_caseselector,
+                        form_casedatetime,
                     ) = get_form_case_params(self.request, project_id, form_id)
             else:
                 primary_key = form_data.get("form_pkey", None)
@@ -972,6 +974,43 @@ class AddNewForm(PrivateView):
                                 return HTTPFound(
                                     next_page, headers={"FS_error": "true"}
                                 )
+                            form_casedatetime = form_data.get("form_casedatetime", "")
+                            if form_casedatetime == "":
+                                next_page = self.request.params.get(
+                                    "next"
+                                ) or self.request.route_url(
+                                    "project_details",
+                                    userid=project_details["owner"],
+                                    projcode=project_code,
+                                )
+                                self.add_error(
+                                    self._(
+                                        "You need to indicate a variable that records date or date and time"
+                                    )
+                                )
+                                return HTTPFound(
+                                    next_page, headers={"FS_error": "true"}
+                                )
+                            if (
+                                form_casedatetime.upper() == primary_key.upper()
+                                or form_casedatetime.upper() == form_caseselector
+                            ):
+                                next_page = self.request.params.get(
+                                    "next"
+                                ) or self.request.route_url(
+                                    "project_details",
+                                    userid=project_details["owner"],
+                                    projcode=project_code,
+                                )
+                                self.add_error(
+                                    self._(
+                                        "The variable for recording a date or a date and time cannot "
+                                        "be the same as the primary key or the case selector variable"
+                                    )
+                                )
+                                return HTTPFound(
+                                    next_page, headers={"FS_error": "true"}
+                                )
 
             uploaded, message = upload_odk_form(
                 self.request,
@@ -985,6 +1024,7 @@ class AddNewForm(PrivateView):
                 form_casetype,
                 form_caselabel,
                 form_caseselector,
+                form_casedatetime,
             )
 
             if uploaded:
@@ -1065,6 +1105,7 @@ class UploadNewVersion(PrivateView):
             form_casetype = None
             form_caselabel = None
             form_caseselector = None
+            form_casedatetime = None
             if project_details["project_case"] == 1:
                 if project_details["total_forms"] <= 1:
                     form_casetype = int(form_data.get("form_casetype", 1))
@@ -1140,6 +1181,39 @@ class UploadNewVersion(PrivateView):
                                 )
                             )
                             return HTTPFound(next_page, headers={"FS_error": "true"})
+                        form_casedatetime = form_data.get("form_casedatetime", "")
+                        if form_casedatetime == "":
+                            next_page = self.request.params.get(
+                                "next"
+                            ) or self.request.route_url(
+                                "project_details",
+                                userid=project_details["owner"],
+                                projcode=project_code,
+                            )
+                            self.add_error(
+                                self._(
+                                    "You need to indicate a variable that records date or date and time"
+                                )
+                            )
+                            return HTTPFound(next_page, headers={"FS_error": "true"})
+                        if (
+                            form_casedatetime.upper() == primary_key.upper()
+                            or form_casedatetime.upper() == form_caseselector
+                        ):
+                            next_page = self.request.params.get(
+                                "next"
+                            ) or self.request.route_url(
+                                "project_details",
+                                userid=project_details["owner"],
+                                projcode=project_code,
+                            )
+                            self.add_error(
+                                self._(
+                                    "The variable for recording a date or a date and time cannot "
+                                    "be the same as the primary key or the case selector variable"
+                                )
+                            )
+                            return HTTPFound(next_page, headers={"FS_error": "true"})
 
             updated, message = update_odk_form(
                 self.request,
@@ -1153,6 +1227,7 @@ class UploadNewVersion(PrivateView):
                 form_casetype,
                 form_caselabel,
                 form_caseselector,
+                form_casedatetime,
             )
 
             if updated:

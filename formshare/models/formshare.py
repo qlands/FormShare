@@ -340,6 +340,7 @@ class Odkform(Base):
     )  # 1=Creator, 2= Follow up, 3= Deactivate, 4= Activate
     form_caselabel = Column(Unicode(120))
     form_caseselector = Column(Unicode(120))
+    form_casedatetime = Column(Unicode(120))
     form_caseselectorfilename = Column(Unicode(120))
     form_caseselectorlastgen = Column(DateTime)
     form_hasdictionary = Column(INTEGER, server_default=text("'0'"))
@@ -383,7 +384,7 @@ class Product(Base):
     )
 
     celery_taskid = Column(Unicode(64), primary_key=True, nullable=False)
-    output_file = Column(Unicode(120))
+    output_file = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     project_id = Column(Unicode(64), nullable=False)
     form_id = Column(Unicode(120), nullable=False)
     product_id = Column(Unicode(120), nullable=False)

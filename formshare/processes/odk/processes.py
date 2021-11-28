@@ -53,6 +53,7 @@ def get_form_case_params(request, project, form):
         form_data.form_casetype,
         form_data.form_caselabel,
         form_data.form_caseselector,
+        form_data.form_casedatetime,
     )
 
 

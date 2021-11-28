@@ -1,0 +1,47 @@
+<div class="modal inmodal fade" id="import_guides" tabindex="-1" role="dialog"  aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">{{ _('Close') }}</span></button>
+                <h4 class="modal-title">{{ _('Import guidelines') }}</h4>
+                <small class="font-bold">{{ _('Here are some notes for importing data into FormShare') }}</small>
+            </div>
+            <div class="modal-body">
+                <div class="tabs-container">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li><a class="nav-link active" data-toggle="tab" href="#example-formshare">FormShare 1.0</a></li>
+                        <li><a class="nav-link" data-toggle="tab" href="#example-collect">{{ _('ODK Collect XML data files') }}</a></li>
+                        {% block import_guide_tabs_exta %}
+
+                        {% endblock import_guide_tabs_exta %}
+                    </ul>
+                    <div class="tab-content">
+                        <div role="tabpanel" id="example-formshare" class="tab-pane active">
+                            <div class="panel-body">
+                                {{ _('FormShare is able to import submissions from FormShare 1.0 as individual JSON files or several in a Zip file. The following image shows how the zip the files.') }}
+                                <img style="margin-top: 5px; margin-bottom: 5px; margin-left: 30px" src="{{request.url_for_static('json_zip.png')}}">
+                                <br/>
+                                {{ _('Store the submission files in a zip file. The files cannot be inside directories. You can decide how to name each file and the zip file.') }}
+                            </div>
+                        </div>
+                        <div role="tabpanel" id="example-collect" class="tab-pane">
+                            <div class="panel-body">
+                                {{ _('FormShare is able to import ODK Collect XML files as long as they are saved in a zip. The following image shows how the zip the data.') }}
+                                <img style="margin-top: 5px; margin-bottom: 5px; margin-left: 30px" src="{{request.url_for_static('xml_zip.png')}}">
+                                <br/>
+                                {{ _('Store the submissions in separate directores. Each directory containing the xml data file and any media files if present. You can decide how to name each directory, each file and the zip file.') }}
+                            </div>
+                        </div>
+
+                        {% block import_guide_content_exta %}
+
+                        {% endblock import_guide_content_exta %}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Close') }}</button>
+            </div>
+        </div>
+    </div>
+</div>

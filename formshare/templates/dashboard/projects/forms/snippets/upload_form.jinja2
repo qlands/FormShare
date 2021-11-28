@@ -80,13 +80,19 @@
                                         </div>
                                         <hr>
                                         <div style="margin-top: 10px" class="form-group">
-                                            <label><b>{{ _('Which variable will be used to search and select a case?') }}</b></label>
+                                            <label><b>{{ _('Which variable in this ODK Form will be used to search and select a case?') }}</b></label>
                                             <input type="text" name="form_caseselector" class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the case selector variable') }}')"  oninput="setCustomValidity('')">
-                                            <span class="form-text m-b-none text-success">{{ _('This will be used to search and select each case in follow-up forms. This variable MUST BE a "select_one_from_file". The file MUST BE CSV.') }}<br/><a style="color: orange" href="https://docs.getodk.org/form-datasets/" target="_blank">{{ _('Read here about it') }}</a></span>
+                                            <span class="form-text m-b-none text-success">{{ _('This variable MUST BE either a "select_one_from_file" (The file MUST BE CSV) or a "barcode"') }}<br/><a style="color: orange" href="https://docs.getodk.org/form-datasets/" target="_blank">{{ _('Read here about "select_one_from_file"') }}</a></span>
                                         </div>
                                         <hr>
                                         <div style="margin-top: 10px" class="form-group">
-                                            <label><b>{{ _('Which variable will be used to control duplicate submissions?') }}</b></label>
+                                            <label><b>{{ _('Which variable in this ODK Form will be used to record the date and time?') }}</b></label>
+                                            <input type="text" name="form_casedatetime" class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the case datetime variable') }}')"  oninput="setCustomValidity('')">
+                                            <span class="form-text m-b-none text-success">{{ _('This variable MUST BE either "date" or "datetime".') }}</span>
+                                        </div>
+                                        <hr>
+                                        <div style="margin-top: 10px" class="form-group">
+                                            <label><b>{{ _('Which variable in this ODK Form will be used to control duplicate submissions?') }}</b></label>
                                             <input type="text" name="form_pkey" class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the Primary Key') }}')"  oninput="setCustomValidity('')">
                                             <span class="form-text m-b-none text-success">{{ _('This will become the Primary Key of the repository for this form. This MUST BE a calculate joining the the case selector variable with a datetime or other kind of variable/s.') }}</span>
                                         </div>

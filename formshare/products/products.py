@@ -105,7 +105,9 @@ def stop_task(request, user, project, form, task):
 def get_product_description(request, product):
     _ = request.translate
     if product == "fs1import":
-        return _("Import data")
+        return _("Import FormShare 1.0 data")
+    if product == "xmlimport":
+        return _("Import ODK Collect XML data")
     if product == "repository":
         return _("Build repository")
     if product == "xlsx_public_export":

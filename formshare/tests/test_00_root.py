@@ -5841,6 +5841,66 @@ class FunctionalTests(unittest.TestCase):
             print("Testing repository downloads step 3 finished")
 
         def test_import_data():
+            def mimic_celery_test_xml_import():
+                from formshare.products.xmlimport.celery_task import (
+                    internal_import_xml_files,
+                )
+
+                engine = create_engine(
+                    self.server_config["sqlalchemy.url"], poolclass=NullPool
+                )
+                task_id = str(uuid.uuid4())
+
+                output_file_paths = [
+                    "resources",
+                    "forms",
+                    "complex_form",
+                    "for_import",
+                    "xml",
+                    "output.txt",
+                ]
+                output_file = os.path.join(self.path, *output_file_paths)
+
+                sql = (
+                    "INSERT INTO product (project_id,form_id,product_id,output_file,output_mimetype,"
+                    "celery_taskid,datetime_added,created_by,output_id,process_only,publishable) "
+                    "VALUES ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}',{})".format(
+                        self.projectID,
+                        self.formID,
+                        "xmlimport",
+                        output_file,
+                        "text/plain",
+                        task_id,
+                        datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
+                        self.randonLogin,
+                        task_id[-12:],
+                        0,
+                        0,
+                    )
+                )
+                engine.execute(sql)
+                engine.dispose()
+
+                paths_to_xml = [
+                    "resources",
+                    "forms",
+                    "complex_form",
+                    "for_import",
+                    "xml",
+                ]
+                xml_directory = os.path.join(self.path, *paths_to_xml)
+                internal_import_xml_files(
+                    self.server_config,
+                    self.randonLogin,
+                    self.project,
+                    self.assistantLogin,
+                    "123",
+                    xml_directory,
+                    "en",
+                    task_id,
+                )
+                store_task_status(task_id, self.server_config)
+
             def mimic_celery_test_import():
                 from formshare.products.fs1import.celery_task import (
                     internal_import_json_files,
@@ -6158,6 +6218,54 @@ class FunctionalTests(unittest.TestCase):
             assert "FS_error" not in res.headers
             time.sleep(40)
             mimic_celery_test_import()
+
+            # Test import a zip xml file fails. File must be zip
+            paths = [
+                "resources",
+                "forms",
+                "complex_form",
+                "for_import",
+                "simple_file.json",
+            ]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/import".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "import_type": "2",
+                    "assistant": "{}@{}".format(self.assistantLogin, self.projectID),
+                },
+                status=200,
+                upload_files=[("file", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Test import a zip xml file pass
+            paths = [
+                "resources",
+                "forms",
+                "complex_form",
+                "for_import",
+                "xml",
+                "xml_submission.zip",
+            ]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/import".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "import_type": "2",
+                    "assistant": "{}@{}".format(self.assistantLogin, self.projectID),
+                },
+                status=302,
+                upload_files=[("file", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+            time.sleep(40)
+            print("Testing xml import")
+            mimic_celery_test_xml_import()
 
         def test_repository_tasks():
             time.sleep(5)  # Wait 5 seconds to other tests to finish
@@ -16008,6 +16116,54 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" in res.headers
 
+            # Upload case selected fails. The date or datetime variable is not given
+            paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, "case001"),
+                {
+                    "form_pkey": "survey_id",
+                    "form_caseselector": "hid",
+                    "form_casedatetime": "",
+                    "form_casetype": "2",
+                },
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Upload case selected fails. The date or datetime variable is the same of case selector
+            paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, "case001"),
+                {
+                    "form_pkey": "survey_id",
+                    "form_caseselector": "hid",
+                    "form_casedatetime": "hid",
+                    "form_casetype": "2",
+                },
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Upload case selected fails. The date or datetime variable has invalid type
+            paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, "case001"),
+                {
+                    "form_pkey": "survey_id",
+                    "form_caseselector": "hid",
+                    "form_casedatetime": "provincia",
+                    "form_casetype": "2",
+                },
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
             # Upload a case follow up pass
             paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
             resource_file = os.path.join(self.path, *paths)
@@ -16016,6 +16172,7 @@ class FunctionalTests(unittest.TestCase):
                 {
                     "form_pkey": "survey_id",
                     "form_caseselector": "hid",
+                    "form_casedatetime": "start_date",
                     "form_casetype": "2",
                 },
                 status=302,
@@ -16338,6 +16495,60 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" in res.headers
 
+            # Update a form fails. The date or datetime variable is empty
+            paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, "case001", "case_follow_up_20210319"
+                ),
+                {
+                    "form_pkey": "survey_id",
+                    "form_caseselector": "hid",
+                    "form_casedatetime": "",
+                    "form_casetype": "2",
+                },
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Update a form fails. The date or datetime variable is is the same as the key selector
+            paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, "case001", "case_follow_up_20210319"
+                ),
+                {
+                    "form_pkey": "survey_id",
+                    "form_caseselector": "hid",
+                    "form_casedatetime": "hid",
+                    "form_casetype": "2",
+                },
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Update a form fails. The date or datetime variable has an invalid type
+            paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin, "case001", "case_follow_up_20210319"
+                ),
+                {
+                    "form_pkey": "survey_id",
+                    "form_caseselector": "hid",
+                    "form_casedatetime": "provincia",
+                    "form_casetype": "2",
+                },
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
             # Update a form pass
             paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
             resource_file = os.path.join(self.path, *paths)
@@ -16348,6 +16559,7 @@ class FunctionalTests(unittest.TestCase):
                 {
                     "form_pkey": "survey_id",
                     "form_caseselector": "hid",
+                    "form_casedatetime": "start_date",
                     "form_casetype": "2",
                 },
                 status=302,
@@ -16477,6 +16689,7 @@ class FunctionalTests(unittest.TestCase):
                 {
                     "form_pkey": "survey_id",
                     "form_caseselector": "hid",
+                    "form_casedatetime": "start_date",
                     "form_casetype": "3",
                 },
                 status=302,
@@ -16636,6 +16849,7 @@ class FunctionalTests(unittest.TestCase):
                 {
                     "form_pkey": "survey_id",
                     "form_caseselector": "hid",
+                    "form_casedatetime": "start_date",
                     "form_casetype": "4",
                 },
                 status=302,
@@ -17187,6 +17401,7 @@ class FunctionalTests(unittest.TestCase):
                 {
                     "form_pkey": "survey_id",
                     "form_caseselector": "hid",
+                    "form_casedatetime": "start_date",
                     "form_casetype": "2",
                 },
                 status=302,
@@ -17204,6 +17419,7 @@ class FunctionalTests(unittest.TestCase):
                 {
                     "form_pkey": "survey_id",
                     "form_caseselector": "hid",
+                    "form_casedatetime": "start_date",
                     "form_casetype": "2",
                 },
                 status=302,

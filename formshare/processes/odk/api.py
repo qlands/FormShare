@@ -58,6 +58,7 @@ from formshare.processes.db import (
     generate_lookup_file,
     get_case_form,
     get_field_details,
+    get_assistant_password,
 )
 from formshare.processes.elasticsearch.record_index import (
     add_record,
@@ -73,6 +74,7 @@ from formshare.processes.storage import (
     delete_stream,
 )
 from formshare.products.fs1import.fs1import import formshare_one_import_json
+from formshare.products.xmlimport.xmlimport import xml_import
 from formshare.products.repository import create_database_repository
 from formshare.processes.email.send_email import send_error_to_technical_team
 
@@ -292,6 +294,9 @@ def import_external_data(
                 zip_ref.extractall(temp_dir)
         else:
             return False, "Invalid Zip file"
+    else:
+        if import_type == 2:
+            return False, "The import file must be Zip"
 
     project_code = get_project_code_from_id(request, user, project)
     geopoint_variable = get_form_geopoint(request, project, form)
@@ -315,7 +320,20 @@ def import_external_data(
             ignore_xform,
         )
     if import_type == 2:
-        pass  # We need to implement the BriefCase Import
+        assistant_password = get_assistant_password(
+            request, user, project_of_assistant, assistant
+        )
+        xml_import(
+            request,
+            user,
+            project,
+            project_code,
+            form,
+            assistant,
+            assistant_password,
+            temp_dir,
+        )
+
     if import_type > 2:
         # We call connected plugins to see if there is other ways to import
         for a_plugin in plugins.PluginImplementations(plugins.IImportExternalData):
@@ -751,6 +769,7 @@ def upload_odk_form(
     form_casetype=None,
     form_caselabel=None,
     form_caseselector=None,
+    form_casedatetime=None,
 ):
     _ = request.translate
     uid = str(uuid.uuid4())
@@ -908,7 +927,24 @@ def upload_odk_form(
                                     message = _(
                                         "The variable {} used to search and select cases was not found or is invalid. "
                                         "The variable must be select_one_from_file using a CSV file "
-                                        "or a barcode".format(form_caselabel)
+                                        "or a barcode".format(form_caseselector)
+                                    )
+                                case_datetime_found = False
+                                for a_field in fields:
+                                    if a_field["name"] == form_casedatetime:
+                                        if (
+                                            a_field["type"] == "date"
+                                            or a_field["type"] == "datetime"
+                                        ):
+                                            case_datetime_found = True
+
+                                if not case_datetime_found:
+                                    error = 1
+                                    message = _(
+                                        "The variable {} used to record a date or date and time was not found"
+                                        " or is invalid. The variable must be date or datetime.".format(
+                                            form_casedatetime
+                                        )
                                     )
 
                     if error == 0:
@@ -1029,6 +1065,7 @@ def upload_odk_form(
                                 form_data["form_casetype"] = form_casetype
                                 form_data["form_caselabel"] = form_caselabel
                                 form_data["form_caseselector"] = form_caseselector
+                                form_data["form_casedatetime"] = form_casedatetime
                                 form_data[
                                     "form_caseselectorfilename"
                                 ] = form_caseselector_file
@@ -1171,6 +1208,7 @@ def update_odk_form(
     form_casetype=None,
     form_caselabel=None,
     form_caseselector=None,
+    form_casedatetime=None,
 ):
     _ = request.translate
     uid = str(uuid.uuid4())
@@ -1330,7 +1368,25 @@ def update_odk_form(
                                             "The variable {} used to search and select cases was not found or "
                                             "is invalid. "
                                             "The variable must be select_one_from_file using a CSV file "
-                                            "or a barcode.".format(form_caselabel)
+                                            "or a barcode.".format(form_caseselector)
+                                        )
+
+                                    case_datetime_found = False
+                                    for a_field in fields:
+                                        if a_field["name"] == form_casedatetime:
+                                            if (
+                                                a_field["type"] == "date"
+                                                or a_field["type"] == "datetime"
+                                            ):
+                                                case_datetime_found = True
+
+                                    if not case_datetime_found:
+                                        error = 1
+                                        message = _(
+                                            "The variable {} used to record a date or date and time was not found"
+                                            " or is invalid. The variable must be date or datetime.".format(
+                                                form_casedatetime
+                                            )
                                         )
 
                         if error == 0:
@@ -1464,6 +1520,7 @@ def update_odk_form(
                                     form_data["form_casetype"] = form_casetype
                                     form_data["form_caselabel"] = form_caselabel
                                     form_data["form_caseselector"] = form_caseselector
+                                    form_data["form_casedatetime"] = form_casedatetime
                                     form_data[
                                         "form_caseselectorfilename"
                                     ] = form_caseselector_file

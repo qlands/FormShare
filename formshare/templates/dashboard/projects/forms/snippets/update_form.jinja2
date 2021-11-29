@@ -23,31 +23,31 @@
                                 <label><b>{{ _('Survey file (xls / xlsx)') }}</b></label>
                                 <div class="custom-file">
                                     <input type="file" name="xlsx" class="custom-file-input">
-                                    <label class="custom-file-label" for="inputGroupFile01">{{ _('Choose file') }}</label>
+                                    <label class="custom-file-label" for="inputGroupFile01">{{ _('Select the ODK Form that you want to upload into FormShare') }}</label>
                                 </div>
                             </div>
                             {% if formDetails.parent_form == None %}
                                 {% if projectDetails.project_case == 0 %}
                                     <hr>
                                     <div style="margin-top: 10px" class="form-group">
-                                        <label><b>{{ _('Which variable will be used to control duplicate submissions?') }}</b></label>
-                                        <input type="text" name="form_pkey" {% if formDetails.form_pkey != None %}value="{{ formDetails.form_pkey }}" {% endif %} class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the Primary Key') }}')"  oninput="setCustomValidity('')">
-                                        <span class="form-text m-b-none text-success">{{ _('This will become the Primary Key of the repository. If you have more than one variable then use an ODK Calculate to join them.') }}</span>
+                                        <label><b>{{ _('In the ODK Form that you are uploading into FormShare, which variable will be used to control duplicate submissions?') }}</b></label>
+                                        <input type="text" name="form_pkey" {% if formDetails.form_pkey != None %}value="{{ formDetails.form_pkey }}" {% endif %} class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the variable to control duplicate submissions') }}')"  oninput="setCustomValidity('')">
+                                        <span class="form-text m-b-none text-success">{{ _('To control duplicate submissions, you need to select a variable from your ODK Form whose values will be UNIQUE across all the submissions that you expect to have. If you need to join two or more variables to become UNIQUE, then use an ODK Calculate to merge them into one variable. This variable will become the Primary Key of your ODK Form and CANNOT BE CHANGED afterwards.') }}</span>
                                     </div>
                                 {% else %}
                                     {% if formDetails.form_casetype == 1 %}
                                         <input type="hidden" name="form_casetype" value="{{ formDetails.form_casetype }}">
                                         <hr>
                                         <div style="margin-top: 10px" class="form-group">
-                                            <label><b>{{ _('Which variable will be used to identify each case?') }}</b></label>
-                                            <input type="text" name="form_pkey" {% if formDetails.form_pkey != None %}value="{{ formDetails.form_pkey }}" {% endif %} class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the case ID variable') }}')"  oninput="setCustomValidity('')">
-                                            <span class="form-text m-b-none text-success">{{ _('This will become the Primary Key of the repository for this form and the link with follow-up case forms.') }}</span>
+                                            <label><b>{{ _('In the ODK Form that you are uploading into FormShare, which variable will be used to indentify each case?') }}</b></label>
+                                            <input type="text" name="form_pkey" {% if formDetails.form_pkey != None %}value="{{ formDetails.form_pkey }}" {% endif %} class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the variable to identify each case') }}')"  oninput="setCustomValidity('')">
+                                            <span class="form-text m-b-none text-success">{{ _('Each case must be UNIQUE. You need to select a variable from your ODK Form whose values will be UNIQUE across all the submissions that you expect to have. If you need to join two or more variables to become UNIQUE, then use an ODK Calculate to merge them into one variable. This variable will become the Primary Key of your ODK Form and CANNOT BE CHANGED afterwards.') }}</span>
                                         </div>
                                         <hr>
                                         <div style="margin-top: 10px" class="form-group">
-                                            <label><b>{{ _('Which variable will be used to label each case?') }}</b></label>
-                                            <input type="text" name="form_caselabel" {% if formDetails.form_caselabel != None %}value="{{ formDetails.form_caselabel }}" {% endif %} class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the case label variable') }}')"  oninput="setCustomValidity('')">
-                                            <span class="form-text m-b-none text-success">{{ _('This will be used to search and select each case in follow-up forms. You can use a calculate to combine a name with other variables.') }}</span>
+                                            <label><b>{{ _('In the ODK Form that you are uploading into FormShare, which variable will be used to label each case?') }}</b></label>
+                                            <input type="text" name="form_caselabel" {% if formDetails.form_caselabel != None %}value="{{ formDetails.form_caselabel }}" {% endif %} class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the variable to label each case') }}')"  oninput="setCustomValidity('')">
+                                            <span class="form-text m-b-none text-success">{{ _('Each case needs to have a label.  You need to select a variable from your ODK Form that will be used to label each case. This variable will be used to search and select each case in follow-up forms. If you need to join two or more variables to create a label, then use an ODK Calculate to merge them into one variable.') }}</span>
                                         </div>
                                     {% else %}
                                         <hr>
@@ -60,15 +60,21 @@
                                         </div>
                                         <hr>
                                         <div style="margin-top: 10px" class="form-group">
-                                            <label><b>{{ _('Which variable will be used to search and select a case?') }}</b></label>
-                                            <input type="text" name="form_caseselector" {% if formDetails.form_caseselector != None %}value="{{ formDetails.form_caseselector }}" {% endif %} class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the case selector variable') }}')"  oninput="setCustomValidity('')">
-                                            <span class="form-text m-b-none text-success">{{ _('This will be used to search and select each case in follow-up forms. This variable MUST BE a select_one_from_file. The file MUST BE CSV.') }} <a href="https://docs.getodk.org/form-datasets/" target="_blank">{{ _('Read here about it') }}</a></span>
+                                            <label><b>{{ _('In the ODK Form that you are uploading into FormShare, which variable will be used to search and select a case?') }}</b></label>
+                                            <input type="text" name="form_caseselector" {% if formDetails.form_caseselector != None %}value="{{ formDetails.form_caseselector }}" {% endif %} class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the variable to search and select cases') }}')"  oninput="setCustomValidity('')">
+                                            <span class="form-text m-b-none text-success">{{ _('This variable MUST BE either a "select_one_from_file" (The file MUST BE CSV) or a "barcode"') }} <a href="https://docs.getodk.org/form-datasets/" target="_blank">{{ _('Read here about "select_one_from_file"') }}</a></span>
                                         </div>
                                         <hr>
                                         <div style="margin-top: 10px" class="form-group">
-                                            <label><b>{{ _('Which variable will be used to control duplicate submissions?') }}</b></label>
-                                            <input type="text" name="form_pkey" {% if formDetails.form_pkey != None %}value="{{ formDetails.form_pkey }}" {% endif %} class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the Primary Key') }}')"  oninput="setCustomValidity('')">
-                                            <span class="form-text m-b-none text-success">{{ _('This will become the Primary Key of the repository for this form. This MUST BE a calculate joining the the case selector variable with a datetime or other kind of variable/s.') }}</span>
+                                            <label><b>{{ _('In the ODK Form that you are uploading into FormShare, which variable will be used to record the date or the date and time of a new data point attached to a case?') }}</b></label>
+                                            <input type="text" name="form_casedatetime" {% if formDetails.form_casedatetime != None %}value="{{ formDetails.form_casedatetime }}" {% endif %} class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the variable to record date or date and time.') }}')"  oninput="setCustomValidity('')">
+                                            <span class="form-text m-b-none text-success">{{ _('Follow-up case form attach data to a case. Each case can have different data at different points in time. Each data point must have a date or a date and time. This variable MUST BE either "date" or "datetime".') }}</span>
+                                        </div>
+                                        <hr>
+                                        <div style="margin-top: 10px" class="form-group">
+                                            <label><b>{{ _('In the ODK Form that you are uploading into FormShare, which variable will be used to control duplicate cases?') }}</b></label>
+                                            <input type="text" name="form_pkey" {% if formDetails.form_pkey != None %}value="{{ formDetails.form_pkey }}" {% endif %} class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the variable to control duplicate cases') }}')"  oninput="setCustomValidity('')">
+                                            <span class="form-text m-b-none text-success">{{ _('To control duplicate cases, you need to join two or more variables to become UNIQUE. For example, use an ODK Calculate to join the variable that you selected above to search and select a case with the variable that you selected above to record the date of new data point attached to a case. This ODK Calculate will become the Primary Key of your ODK Form and CANNOT BE CHANGED afterwards.') }}</span>
                                         </div>
                                     {% endif %}
                                 {% endif %}

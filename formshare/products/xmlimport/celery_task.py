@@ -39,7 +39,7 @@ def internal_import_xml_files(
         url_to_project = "http://{}:{}{}/user/{}/project/{}".format(
             settings["server:main:host"],
             settings["server:main:port"],
-            settings["root"],
+            settings["server:main:root"],
             user,
             project_code,
         )

@@ -15507,9 +15507,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}".format(self.randonLogin, "case001"), status=200
             )
             assert "FS_error" not in res.headers
-            self.assertIn(
-                b"Which variable will be used to identify each case", res.body
-            )
+            self.assertIn(b"form_caselabel", res.body)
 
             # Edit a project. Get details
             res = self.testapp.get(

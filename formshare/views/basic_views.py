@@ -161,17 +161,10 @@ class LoginView(PublicView):
             user = data["user"]
             if user != "":
                 log.error(
-                    "Suspicious bot login from IP: {}. Agent: {}".format(
-                        self.request.remote_addr, self.request.user_agent
+                    "Suspicious bot login from IP: {}. Agent: {}. Email/Account: {}".format(
+                        self.request.remote_addr, self.request.user_agent, data["email"]
                     )
                 )
-                self.append_to_errors(
-                    self._(
-                        "FormShare thinks that you are a computer. "
-                        "Please type in all the information instead of using an autofill"
-                    )
-                )
-                return {}
             data.pop("user")
             login = data["email"]
             passwd = data["passwd"]
@@ -247,17 +240,10 @@ class RecoverPasswordView(PublicView):
             user = data["user"]
             if user != "":
                 log.error(
-                    "Suspicious bot password recovery from IP: {}. Agent: {}".format(
-                        self.request.remote_addr, self.request.user_agent
+                    "Suspicious bot password recovery from IP: {}. Agent: {}. Email: {}".format(
+                        self.request.remote_addr, self.request.user_agent, data["email"]
                     )
                 )
-                self.append_to_errors(
-                    self._(
-                        "FormShare thinks that you are a computer. "
-                        "Please type in all the information instead of using an autofill"
-                    )
-                )
-                return {}
             user = get_user_data(login, self.request)
             if user is not None:
                 user_data = get_formshare_user_data(self.request, user.email, True)
@@ -510,17 +496,12 @@ class RegisterView(PublicView):
             user = data["user_address"]
             if user != "Costa Rica":
                 log.error(
-                    "Suspicious bot register from IP: {}. Agent: {}".format(
-                        self.request.remote_addr, self.request.user_agent
+                    "Suspicious bot register from IP: {}. Agent: {}. Email: {} ".format(
+                        self.request.remote_addr,
+                        self.request.user_agent,
+                        data["user_email"],
                     )
                 )
-                self.append_to_errors(
-                    self._(
-                        "FormShare thinks that you are a computer. "
-                        "Please type in all the information instead of using an autofill"
-                    )
-                )
-                return {"next": next, "userdata": data}
             data.pop("user_address")
             data["user_email"] = data["user_email"].strip()
             if validators.email(data["user_email"]) and re.match(

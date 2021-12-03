@@ -245,23 +245,6 @@ class FunctionalTests(unittest.TestCase):
             self.randonLogin = random_login
             print("**************Random Login: {}".format(self.randonLogin))
 
-            # Join goes to 404
-            res = self.testapp.post(
-                "/join",
-                {
-                    "user_address": "",
-                    "user_email": random_login + "@qlands.com",
-                    "user_password": "123",
-                    "user_id": random_login,
-                    "user_password2": "123",
-                    "user_name": "Testing",
-                    "user_super": "1",
-                    "user_apikey": self.randonLoginKey,
-                },
-                status=200,
-            )
-            assert "FS_error" in res.headers
-
             # Register user fails. Password is too long
             res = self.testapp.post(
                 "/join",
@@ -283,7 +266,7 @@ class FunctionalTests(unittest.TestCase):
             res = self.testapp.post(
                 "/join",
                 {
-                    "user_address": "Costa Rica",
+                    "user_address": "",
                     "user_email": random_login + "@qlands.com",
                     "user_password": "123",
                     "user_id": random_login,
@@ -332,18 +315,10 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            # Recover goes to 404
-            res = self.testapp.post(
-                "/recover",
-                {"email": random_login + "@qlands.com", "user": "something"},
-                status=200,
-            )
-            assert "FS_error" in res.headers
-
             # Test recover the password
             res = self.testapp.post(
                 "/recover",
-                {"email": random_login + "@qlands.com", "user": ""},
+                {"email": random_login + "@qlands.com", "user": "some_thing"},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -384,14 +359,6 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
-            # Login fails
-            res = self.testapp.post(
-                "/login",
-                {"user": "test", "email": random_login, "passwd": "123"},
-                status=200,
-            )
-            assert "FS_error" in res.headers
-
             # Login fails wrong pass
             res = self.testapp.post(
                 "/login",
@@ -403,7 +370,7 @@ class FunctionalTests(unittest.TestCase):
             # Login succeed
             res = self.testapp.post(
                 "/login",
-                {"user": "", "email": random_login, "passwd": "123"},
+                {"user": "test", "email": random_login, "passwd": "123"},
                 status=302,
             )
             assert "FS_error" not in res.headers

@@ -50,7 +50,9 @@ def remove_collaborator_from_project(request, project, collaborator):
     try:
         request.dbsession.query(Userproject).filter(
             Userproject.project_id == project
-        ).filter(Userproject.user_id == collaborator).delete()
+        ).filter(Userproject.user_id == collaborator).filter(
+            Userproject.access_type != 1
+        ).delete()
         request.dbsession.flush()
     except Exception as e:
         request.dbsession.rollback()

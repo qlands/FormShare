@@ -63,7 +63,7 @@
                 <div class="ibox-content text-left">
                     <h2>{{ _('Add collaborator') }}</h2>
                     <small>{{ _('Search by username, full name or email address') }}</small>
-                    <form role="form" method="post" action="{{ request.url }}">
+                    <form class="require_busy" role="form" method="post" action="{{ request.url }}">
                         {{ form.secure_form(request) }}
                         <div class="row">
                             <div class="col-md-9">
@@ -86,7 +86,7 @@
                     <h4 class="modal-title">{{ _('Change role') }}</h4>
                     <small id="rolewho" class="font-bold">Changing role of Carlos Quiros</small>
                 </div>
-                <form role="form" method="post" action="{{ request.url }}">
+                <form class="require_busy" role="form" method="post" action="{{ request.url }}">
                     {{ form.secure_form(request) }}
                     <input type="hidden" id="collaborator_id" name="collaborator_id" value="">
                     <div class="modal-body">
@@ -139,6 +139,7 @@
                             form.appendChild(i);
 
                             document.body.appendChild(form);
+                            $("#busy").show();
                             form.submit();
                         }
                     });

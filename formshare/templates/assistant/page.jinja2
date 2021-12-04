@@ -108,7 +108,7 @@
                     <h4 class="modal-title">{{ _('Change password') }}</h4>
                     <small id="password_who" class="font-bold">{{ _('Change the password of') }} {{ activeAssistant.fullName }}</small>
                 </div>
-                <form class="m-t" id="change_form" role="form" method="post" action="{{ request.route_url('assistant_change_my_pass', userid=userid, projcode=projcode,_query={'next': request.url}) }}">
+                <form class="m-t require_busy" id="change_form" role="form" method="post" action="{{ request.route_url('assistant_change_my_pass', userid=userid, projcode=projcode,_query={'next': request.url}) }}">
                     {{ form.secure_form(request) }}
                     <input type="hidden" id="assistant_id" name="assistant_id" value="">
                     <div class="modal-body">
@@ -149,7 +149,7 @@
                     <h4 class="modal-title">{{ _('Change API key') }}</h4>
                     <small id="password_who" class="font-bold">{{ _('Change thr API key of') }} {{ activeAssistant.fullName }}</small>
                 </div>
-                <form class="m-t" id="change_key_form" role="form" method="post" action="{{ request.route_url('assistant_change_my_key', userid=userid, projcode=projcode,_query={'next': request.url}) }}">
+                <form class="m-t require_busy" id="change_key_form" role="form" method="post" action="{{ request.route_url('assistant_change_my_key', userid=userid, projcode=projcode,_query={'next': request.url}) }}">
                     {{ form.secure_form(request) }}
                     <input type="hidden" id="assistant_id" name="assistant_id" value="">
                     <div class="modal-body">

@@ -6,7 +6,7 @@
                 <i class="fas fa-minus-square modal-icon"></i>
                 <h4 class="modal-title">{{ _('Move submission to the logs') }}</h4>
             </div>
-            <form id="member_form" role="form" method="post" action="{{ request.route_url('deleteFormSubmission', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}">
+            <form class="require_busy" id="member_form" role="form" method="post" action="{{ request.route_url('deleteFormSubmission', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}">
                 {{ form.secure_form(request) }}
                 <input type="hidden" id="rowuuid" name="rowuuid" value="">
                 <div class="modal-body">

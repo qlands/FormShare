@@ -32,7 +32,7 @@
         <div class="ibox-content">
             <div style="margin-top: 0px" class="middle-box text-center">
                 {{ _('You have been requested to collaborate in the project') }}<br/><h3 style="color: #026AA8">"{{ projectDetails.project_name }}"</h3>{{ _('owned by') }}<br/><h3>{{ owner }}</h3>
-                <form class="m-t" role="form" method="post" action="{{ request.url }}">
+                <form class="m-t require_busy" role="form" method="post" action="{{ request.url }}">
                     {{ form.secure_form(request) }}
                     <div class="row">
                         <div class="col-md-6">

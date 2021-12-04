@@ -1,5 +1,5 @@
 {% block user_form %}
-    <form class="m-t" role="form" method="post" action="{{ request.url }}">
+    <form class="m-t require_busy" role="form" method="post" action="{{ request.url }}">
         {{ form.secure_form(request) }}
         {% block user_form_code %}
             <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('User name') }}</label>

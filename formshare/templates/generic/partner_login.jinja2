@@ -21,7 +21,7 @@
             </select>
         </div>
     {% endblock language_selector %}
-    <form class="m-t" role="form" method="post" action="{{ request.url }}">
+    <form class="m-t require_busy" role="form" method="post" action="{{ request.url }}">
         {{ form.secure_form(request) }}
         {% block loginform_fields %}
             <div class="form-group">

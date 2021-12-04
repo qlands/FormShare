@@ -8,7 +8,7 @@
                     <small id="grprolewho" class="font-bold">Changing privilege of Carlos Quiros</small>
                 {% endblock edit_group_header %}
             </div>
-            <form id="edit_group_form" role="form" method="post" action="">
+            <form class="require_busy" id="edit_group_form" role="form" method="post" action="">
                 {% block edit_group_form %}
                     {{ form.secure_form(request) }}
                     {% block edit_group_form_fields %}

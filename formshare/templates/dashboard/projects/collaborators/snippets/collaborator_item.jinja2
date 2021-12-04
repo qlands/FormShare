@@ -11,6 +11,9 @@
         <div class="col-md-4">
             {% block collaborator_item_badges %}
                 <div class="text-center">
+                    {% if collaborator.access_type == 1 %}
+                        <span class="badge badge-success">{{ _('Owner') }}</span>
+                    {% endif %}
                     {% if collaborator.access_type == 2 %}
                         <span class="badge badge-danger">{{ _('Administrator') }}</span>
                     {% endif %}
@@ -30,8 +33,10 @@
         <div class="col-md-4">
             {% block collaborator_item_actions %}
                 <div class="action-buttons text-center">
-                    <a urn="{{ collaborator.user_id }}" data-collaborator-role="{{ collaborator.access_type }}" data-collaborator-name="{{ collaborator.user_name }}" class="btn btn-white btn-sm change_role" data-toggle="modal" data-target="#myModal" ><i class="fas fa-exchange-alt"></i> {{ _('Change role') }} </a>
-                    <a urn="{{ request.route_url('collaborator_remove',userid=userid,projcode=projectDetails.project_code,collid=collaborator.user_id) }}" class="btn btn-white btn-sm remove_collaborator"><i style="color: red" class="fas fa-ban"></i> {{ _('Remove') }} </a>
+                    {% if collaborator.access_type != 1 %}
+                        <a urn="{{ collaborator.user_id }}" data-collaborator-role="{{ collaborator.access_type }}" data-collaborator-name="{{ collaborator.user_name }}" class="btn btn-white btn-sm change_role" data-toggle="modal" data-target="#myModal" ><i class="fas fa-exchange-alt"></i> {{ _('Change role') }} </a>
+                        <a urn="{{ request.route_url('collaborator_remove',userid=userid,projcode=projectDetails.project_code,collid=collaborator.user_id) }}" class="btn btn-white btn-sm remove_collaborator"><i style="color: red" class="fas fa-ban"></i> {{ _('Remove') }} </a>
+                    {% endif %}
                 </div>
             {% endblock collaborator_item_actions %}
         </div>

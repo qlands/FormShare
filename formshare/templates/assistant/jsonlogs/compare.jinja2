@@ -57,7 +57,7 @@
                 </div>
             {% endif %}
             {% if compData|length == 0 %}
-                <form class="dataset-form form-horizontal add-member-form" method='post'>
+                <form class="dataset-form form-horizontal add-member-form require_busy" method='post'>
                     <input type="hidden" name="csrf_token" value="{{ request.session.get_csrf_token() }}">
                     <div class="row-fluid">
                         <div class="control-group control-medium">

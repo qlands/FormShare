@@ -1,4 +1,4 @@
-<form class="m-t" role="form" method="post" action="{{ request.url }}">
+<form class="m-t require_busy" role="form" method="post" action="{{ request.url }}">
     {% block edit_form_form %}
         {{ form.secure_form(request) }}
         {% block edit_form_fields %}

@@ -31,7 +31,7 @@
                 {{ form.display_errors(errors) }}
             {% endblock login_errors %}
             {% block loginform %}
-                <form class="m-t" role="form" method="post" action="{{ request.url }}">
+                <form class="m-t require_busy" role="form" method="post" action="{{ request.url }}">
                     {{ form.secure_form(request) }}
                     <input id="user" type="text" name="user" class="form-control" placeholder="{{ _('Username') }}">
                     <div class="form-group">

@@ -118,7 +118,7 @@
                     <h4 class="modal-title">{{ _('Change field alias') }}</h4>
                     <small id="field_who" class="font-bold">{{ _('Change the alias for field:') }} Carlos Quiros</small>
                 </div>
-                <form class="m-t" id="change_form" role="form" method="post" action="{{ request.url }}">
+                <form class="m-t require_busy" id="change_form" role="form" method="post" action="{{ request.url }}">
                     {{ form.secure_form(request) }}
                     <input type="hidden" id="field_name" name="field_name" value="">
                     <div class="modal-body">
@@ -173,6 +173,7 @@
                 form.appendChild(action);
 
                 document.body.appendChild(form);
+                $("#busy").show();
                 form.submit();
             });
             $('.remove_field').click(function () {
@@ -201,6 +202,7 @@
                 form.appendChild(action);
 
                 document.body.appendChild(form);
+                $("#busy").show();
                 form.submit();
             });
             $('.change_alias').click(function () {

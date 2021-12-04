@@ -48,7 +48,7 @@
         <div class="ibox-content" id="ibox-content">
             <div class="row">
                 <div class="col-md-6">
-                    <form class="dataset-form form-horizontal add-member-form" method='post' action="{{ request.url }}">
+                    <form class="dataset-form form-horizontal add-member-form require_busy" method='post' action="{{ request.url }}">
                         <input type="hidden" name="csrf_token" value="{{ token }}">
                         <div class="form-group">
                             <label>{{ _('Table') }}</label>
@@ -65,7 +65,7 @@
                 </div>
                 <div class="col-md-6">
                     {% if table != None %}
-                        <form class="dataset-form form-horizontal add-member-form" method='post' action="{{ request.url }}">
+                        <form class="dataset-form form-horizontal add-member-form require_busy" method='post' action="{{ request.url }}">
                             <input type="hidden" name="csrf_token" value="{{ token }}">
                             <div class="form-group">
                                 <label>{{ _('Fields') }}</label>

@@ -7,7 +7,7 @@
 {% endblock logingheadmsg %}
 
 {% block loginform %}
-    <form class="m-t" role="form" method="post" action="{{ request.url }}">
+    <form class="m-t require_busy" role="form" method="post" action="{{ request.url }}">
         {{ form.secure_form(request) }}
 
         <input id="user_address" type="text" class="form-control" name="user_address" placeholder="{{ _('Address') }}" required="">

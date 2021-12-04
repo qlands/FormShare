@@ -8,7 +8,7 @@
                     <small id="rolewho" class="font-bold">Changing privilege of Carlos Quiros</small>
                 {% endblock edit_assistant_header %}
             </div>
-            <form id="edit_assistant_form" role="form" method="post" action="">
+            <form class="require_busy" id="edit_assistant_form" role="form" method="post" action="">
                 {% block edit_assistant_form %}
                     {{ form.secure_form(request) }}
                     {% block edit_assistant_form_fields %}

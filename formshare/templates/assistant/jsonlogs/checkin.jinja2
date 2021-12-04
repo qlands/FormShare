@@ -35,7 +35,7 @@
         </div>
         <div class="ibox-content">
             {{ form.display_errors(posterrors) }}
-            <form class="module-content dataset-form form-horizontal fileDownloadForm" method="post" enctype="multipart/form-data">
+            <form class="module-content dataset-form form-horizontal fileDownloadForm require_busy" method="post" enctype="multipart/form-data">
                 <input type="hidden" name="csrf_token" value="{{ request.session.get_csrf_token() }}">
 
 

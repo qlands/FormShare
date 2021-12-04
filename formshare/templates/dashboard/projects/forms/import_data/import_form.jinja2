@@ -34,7 +34,7 @@
                     </div>
                 </div>
                 <div class="ibox-content">
-                    <form role="form" method="post" enctype="multipart/form-data" action="{{ request.url }}">
+                    <form class="require_busy" role="form" method="post" enctype="multipart/form-data" action="{{ request.url }}">
                          {{ form.secure_form(request) }}
                         <div class="form-group row">
                             <label class="col-sm-2 col-form-label">{{ _('Source type') }}</label>

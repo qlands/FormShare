@@ -35,7 +35,7 @@
         </div>
         <div class="ibox-content">
             {{ form.display_errors(posterrors) }}
-            <form class="module-content dataset-form form-horizontal fileDownloadForm" method="post">
+            <form class="module-content dataset-form form-horizontal fileDownloadForm require_busy" method="post">
                 <input type="hidden" name="csrf_token" value="{{ request.session.get_csrf_token() }}">
                 <div class="control-group">
                     <label class="control-label" for="notes"> <span class="control-required" title="This field is required">*</span>  {{ _("Notes") }} </label>

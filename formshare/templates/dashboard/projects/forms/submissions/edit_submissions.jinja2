@@ -84,7 +84,7 @@
                         <i class="far fa-dizzy modal-icon"></i>
                         <h4 class="modal-title">{{ _('Delete all submissions') }}</h4>
                     </div>
-                    <form role="form" method="post" enctype="multipart/form-data" action="{{ request.route_url('deleteAllSubmissions', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}">
+                    <form class="require_busy" role="form" method="post" enctype="multipart/form-data" action="{{ request.route_url('deleteAllSubmissions', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}">
                         {{ form.secure_form(request) }}
                         <div class="modal-body">
                             <p><strong style="color: red">{{ _('You are going to delete all the submissions') }}</strong>. {{ _('Unless you want to start all over again, this is something that you should not do!') }}</p>

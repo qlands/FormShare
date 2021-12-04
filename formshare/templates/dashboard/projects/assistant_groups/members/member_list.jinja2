@@ -83,7 +83,7 @@
                     <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
                     <h4 class="modal-title">{{ _('Adding assistant') }}</h4>
                 </div>
-                <form id="member_form" role="form" method="post" action="{{ request.url }}">
+                <form class="require_busy" id="member_form" role="form" method="post" action="{{ request.url }}">
                     {{ form.secure_form(request) }}
                     <input type="hidden" id="group_id" name="group_id" value="">
                     <div class="form-group">
@@ -140,6 +140,7 @@
                             form.appendChild(i);
 
                             document.body.appendChild(form);
+                            $("#busy").show();
                             form.submit();
                         }
                     });

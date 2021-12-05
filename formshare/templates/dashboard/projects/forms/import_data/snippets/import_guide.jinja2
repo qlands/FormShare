@@ -18,18 +18,18 @@
                     <div class="tab-content">
                         <div role="tabpanel" id="example-formshare" class="tab-pane active">
                             <div class="panel-body">
-                                {{ _('FormShare is able to import submissions from FormShare 1.0 as individual JSON files or several in a Zip file. The following image shows how the zip the files.') }}
+                                {{ _('FormShare can import submissions from FormShare 1.0 as individual JSON files or several in a zip file. The following image shows how the zip the files.') }}
                                 <img style="margin-top: 5px; margin-bottom: 5px; margin-left: 30px" src="{{request.url_for_static('json_zip.png')}}">
                                 <br/>
-                                {{ _('Store the submission files in a zip file. The files cannot be inside directories. You can decide how to name each file and the zip file.') }}
+                                {{ _('Store the submission files in a zip file. The files cannot be inside directories. You can decide how to name each submission file and the zip file.') }}
                             </div>
                         </div>
                         <div role="tabpanel" id="example-collect" class="tab-pane">
                             <div class="panel-body">
-                                {{ _('FormShare is able to import ODK Collect XML files as long as they are saved in a zip. The following image shows how the zip the data.') }}
+                                {{ _('FormShare can import ODK Collect XML files. However, the files must be inside a zip. The following image shows how the zip the files.') }}
                                 <img style="margin-top: 5px; margin-bottom: 5px; margin-left: 30px" src="{{request.url_for_static('xml_zip.png')}}">
                                 <br/>
-                                {{ _('Store the submissions in separate directores. Each directory containing the xml data file and any media files if present. You can decide how to name each directory, each file and the zip file.') }}
+                                {{ _('Store the submissions in separate directories. Each directory must contain the XML data file and any media files (if present). You can decide how to name each directory, submission file, and zip file.') }}
                             </div>
                         </div>
 

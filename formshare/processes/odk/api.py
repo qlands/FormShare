@@ -293,10 +293,10 @@ def import_external_data(
             with zipfile.ZipFile(file_name, "r") as zip_ref:
                 zip_ref.extractall(temp_dir)
         else:
-            return False, "Invalid Zip file"
+            return False, "Invalid Zip file", None
     else:
         if import_type == 2:
-            return False, "The import file must be Zip"
+            return False, "The import file must be Zip", None
 
     project_code = get_project_code_from_id(request, user, project)
     geopoint_variable = get_form_geopoint(request, project, form)
@@ -319,6 +319,14 @@ def import_external_data(
             project_of_assistant,
             ignore_xform,
         )
+        next_page = request.route_url(
+            "form_details",
+            userid=user,
+            projcode=project_code,
+            formid=form,
+            _query={"tab": "task", "product": "fs1import"},
+            _anchor="products_and_tasks",
+        )
     if import_type == 2:
         assistant_password = get_assistant_password(
             request, user, project_of_assistant, assistant
@@ -333,11 +341,20 @@ def import_external_data(
             assistant_password,
             temp_dir,
         )
+        next_page = request.route_url(
+            "form_details",
+            userid=user,
+            projcode=project_code,
+            formid=form,
+            _query={"tab": "task", "product": "xmlimport"},
+            _anchor="products_and_tasks",
+        )
 
     if import_type > 2:
         # We call connected plugins to see if there is other ways to import
+        next_page = None
         for a_plugin in plugins.PluginImplementations(plugins.IImportExternalData):
-            a_plugin.import_external_data(
+            next_page = a_plugin.import_external_data(
                 request,
                 user,
                 project,
@@ -354,8 +371,9 @@ def import_external_data(
                 form_post_data,
                 ignore_xform,
             )
+            break
 
-    return True, ""
+    return True, "", next_page
 
 
 def check_jxform_file(

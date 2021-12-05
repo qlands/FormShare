@@ -33,6 +33,8 @@ def add_product_instance(
     file_mime,
     process_only=False,
     publishable=False,
+    report_updates=True,
+    product_description=None,
 ):
     if not process_only:
         process_only_int = 0
@@ -44,6 +46,10 @@ def add_product_instance(
         publishable = 1
     else:
         publishable = 0
+    if report_updates:
+        report_updates = 1
+    else:
+        report_updates = 0
     new_instance = Product(
         project_id=project,
         form_id=form,
@@ -56,6 +62,8 @@ def add_product_instance(
         output_id=task[-12:],
         process_only=process_only_int,
         publishable=publishable,
+        report_updates=report_updates,
+        product_desc=product_description,
     )
     try:
         request.dbsession.add(new_instance)

@@ -28,9 +28,9 @@
                     {% if output.product_published == 1 %}
                         <small class="float-right text-navy">{{ _('Published by') }} {{ output.published_by_name }} ({{ request.h.simple_date(output.date_published) }})</small>
                     {% endif %}
-{#                    {% if output.status == -2 %}#}
-{#                        <small class="float-right text-danger">{{ _('Cancelled') }}</small>#}
-{#                    {% endif %}#}
+                    {% if output.product_desc != None %}
+                        {{ output.product_desc }}<br/>
+                    {% endif %}
                     {% if output.status != -2 %}
                         {% if output.output_file == None %}{{ _('Ran by') }}{% else %}{{ _('Created by') }}{% endif %} <strong>{{ output.created_by_name }}</strong> {% if output.published == 1 %}<span class="label" style="color: white; background: cornflowerblue" title="{{ _('Public Access') }}">{{ _('Public') }}</span>{% endif %} <br>
                     {% else %}
@@ -43,7 +43,7 @@
                         <br/>
                         {% if output.status == 0 %}
                             {% if loop_index == 1 %}
-                                <span title="{{ _('This is the latest export of this product') }}" class="badge">{{ _('Latest') }}</span>
+                                <span title="{{ _('This is the latest generation of this product') }}" class="badge">{{ _('Latest') }}</span>
                             {% endif %}
                             {% if formDetails.lastindb != None %}
                                 {% set product_outdated = False %}
@@ -60,14 +60,17 @@
                                          {% set product_outdated = True %}
                                     {% endif %}
                                 {% endif %}
-                                {% if not product_outdated %}
-                                    <span class="badge badge-success">{{ _('Up to date') }}</span>
-                                {% else %}
-                                    <span title="{{ _('This product was created before the last submission and/or before the last data cleaning update and/or before the last fixed log entry') }}" class="badge badge-danger">{{ _('Outdated') }}</span>
+                                {% if output.report_updates == 1 %}
+                                    {% if not product_outdated %}
+                                        <span class="badge badge-success">{{ _('Up to date') }}</span>
+                                    {% else %}
+                                        <span title="{{ _('This product was created before the last submission and/or before the last data cleaning update and/or before the last fixed log entry') }}" class="badge badge-danger">{{ _('Outdated') }}</span>
+                                    {% endif %}
                                 {% endif %}
-
                             {% else %}
-                                <span title="{{ _('This product was created before submissions were deleted') }}" class="badge badge-danger">{{ _('Outdated') }}</span>
+                                {% if output.report_updates == 1 %}
+                                    <span title="{{ _('This product was created before submissions were deleted') }}" class="badge badge-danger">{{ _('Outdated') }}</span>
+                                {% endif %}
                             {% endif %}
                         {% endif %}
                     {% endif %}

@@ -699,7 +699,7 @@ class IImportExternalData(Interface):  # pragma: no cover
         :param import_type: Type of import > 2
         :param post_data: Data from the import page
         :param ignore_xform: Whether to ignore the ignore_xform ID while importing
-        :return: None
+        :return: Next url formed with request.route_url()
         """
         raise NotImplementedError(
             "import_external_data must be implemented in subclasses"

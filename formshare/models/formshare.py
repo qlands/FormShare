@@ -391,6 +391,8 @@ class Product(Base):
     output_id = Column(Unicode(64), nullable=False)
     output_mimetype = Column(Unicode(120))
     process_only = Column(INTEGER, server_default=text("'0'"))
+    report_updates = Column(INTEGER, server_default=text("'1'"))
+    product_desc = Column(Unicode(120))
     datetime_added = Column(DateTime)
     product_published = Column(INTEGER, server_default=text("'0'"))
     published_by = Column(ForeignKey("fsuser.user_id", ondelete="CASCADE"), index=True)

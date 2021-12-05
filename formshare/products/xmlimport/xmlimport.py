@@ -13,7 +13,7 @@ def xml_import(
     assistant_password,
     path_to_files,
 ):
-
+    _ = request.translate
     settings = {}
     for key, value in request.registry.settings.items():
         if isinstance(value, str):
@@ -44,4 +44,7 @@ def xml_import(
         report_file,
         "text/plain",
         False,
+        False,
+        False,
+        _("Report of the XML import"),
     )

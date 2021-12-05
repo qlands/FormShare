@@ -66,6 +66,8 @@ def register_product_instance(
     file_mime,
     process_only=False,
     publishable=False,
+    report_updates=True,
+    product_description=None,
 ):
     if product_found(product):
         repo_dir = request.registry.settings["repository.path"]
@@ -84,6 +86,8 @@ def register_product_instance(
             file_mime,
             process_only,
             publishable,
+            report_updates,
+            product_description,
         )
 
 

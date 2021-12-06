@@ -191,6 +191,13 @@ def create_resources(apppath, config):
         None,
     )
 
+    r.add_js_resource(
+        "formshare",
+        "tippy",
+        "js/plugins/tippy/tippy-bundle.umd.min.js",
+        "popper",
+    )
+
     # ------------------------------Collaborators, assistants and groups --------------------------------------
     r.add_css_resource(
         "formshare", "select2", "css/plugins/select2/select2.min.css", "bootstrap"

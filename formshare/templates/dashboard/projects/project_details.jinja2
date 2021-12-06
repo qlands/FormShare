@@ -32,6 +32,7 @@
     {% jsresource request,'formshare','switchery' %}
     {% jsresource request,'formshare','select2' %}
     {% jsresource request,'formshare','datepicker' %}
+    {% jsresource request,'formshare','tippy' %}
 
 {% endblock topScripts %}
 
@@ -92,6 +93,14 @@
     {% include 'dashboard/snippets/change_language.jinja2' %}
     <script>
         $(document).ready(function() {
+
+            tippy('#create_case_table', {
+                content: "{{ _('Click') }} <a style='color: orange'><b>{{ _('here') }}</b></a> {{ _('to read more') }}",
+                placement: 'left',
+                interactive: true,
+                allowHTML: true,
+            });
+
             let xform_upload_started = false;
             let file_upload_started = false;
             $('#upload_project_file_form').submit(function() {

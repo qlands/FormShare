@@ -9,6 +9,7 @@
         {% cssresource request,'formshare','bsmarkdown' %}
     {% else %}
         {% cssresource request,'formshare','leaflet_beautify_marker_icon' %}
+        {% jsresource request,'formshare','tippy' %}
     {% endif %}
 {% endblock css %}
 
@@ -146,6 +147,13 @@
     {% else %}
         <script>
             $(document).ready(function() {
+
+                tippy('#create_case_table', {
+                content: "{{ _('Click') }} <a style='color: orange'><b>{{ _('here') }}</b></a> {{ _('to read more') }}",
+                placement: 'left',
+                interactive: true,
+                allowHTML: true,
+            });
 
                 {% if activeUser.super == 1 %}
                     $('.spin-icon').click(function (){

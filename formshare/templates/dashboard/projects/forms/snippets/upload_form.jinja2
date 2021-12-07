@@ -73,28 +73,28 @@
                                         <hr>
                                         <div style="margin-top: 10px" class="form-group">
                                             <label><b>{{ _('Type of case form') }}</b></label><br/>
-                                            <label><input type="radio" checked value="2" id="case_followup" name="form_casetype"> {{ _('Simple follow-up') }}</label> <i title="{{ _('Follow-up forms just attach information to a case') }}" class="fas fa-info-circle"></i><br/>
-                                            <label><input type="radio" value="3" id="case_deactivate" name="form_casetype"> {{ _('Follow-up and deactivate') }}</label> <i title="{{ _('Deactivate forms change the status of a case to inactive.') }}&#10;{{ _('For example, a household that decides to exit a study') }}" class="fas fa-info-circle"></i><br/>
-                                            <label><input type="radio" value="4" id="case_activate" name="form_casetype"> {{ _('Follow-up and activate') }}</label> <i title="{{ _('Activate forms change the status of a case to active.') }}&#10;{{ _('For example, a household that decides to enter a study again') }}" class="fas fa-info-circle"></i><br/>
+                                            <label><input type="radio" checked value="2" id="case_followup" name="form_casetype"> {{ _('Simple follow-up') }}</label> <i id="info_follow_up" class="fas fa-info-circle"></i> |
+                                            <label><input type="radio" value="3" id="case_deactivate" name="form_casetype"> {{ _('Follow-up and deactivate') }}</label> <i id="info_deactivate" class="fas fa-info-circle"></i> |
+                                            <label><input type="radio" value="4" id="case_activate" name="form_casetype"> {{ _('Follow-up and activate') }}</label> <i id="info_activate" class="fas fa-info-circle"></i>
 {#                                            <span class="form-text m-b-none text-success">{{ _('Click on eac') }}</span>#}
                                         </div>
                                         <hr>
                                         <div style="margin-top: 10px" class="form-group">
                                             <label><b>{{ _('In this ODK Form that you are uploading into FormShare, which variable will be used to search and select a case?') }}</b></label>
                                             <input type="text" name="form_caseselector" class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the case selector variable') }}')"  oninput="setCustomValidity('')">
-                                            <span class="form-text m-b-none text-success">{{ _('This variable MUST BE either a "select_one_from_file" (The file MUST BE CSV) or a "barcode"') }}<br/><a style="color: orange" href="https://docs.getodk.org/form-datasets/" target="_blank">{{ _('Read here about "select_one_from_file"') }}</a></span>
+                                            <span class="form-text m-b-none text-success">{{ _('This variable MUST BE either a "select_one_from_file" (The file MUST BE CSV) or a "barcode".') }}<br/>{{ _('Download an example the CSV file ') }} <a style="color: orange" href="" target="_blank">{{ _('here') }}</a></span>
                                         </div>
                                         <hr>
                                         <div style="margin-top: 10px" class="form-group">
-                                            <label><b>{{ _('In this ODK Form that you are uploading into FormShare, which variable will be used to record the date or the date and time of a new data point attached to a case?') }}</b></label>
+                                            <label><b>{{ _('In this ODK Form that you are uploading into FormShare, which variable will be used to record the date of a new data point attached to a case?') }}</b></label>
                                             <input type="text" name="form_casedatetime" class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the case datetime variable') }}')"  oninput="setCustomValidity('')">
-                                            <span class="form-text m-b-none text-success">{{ _('Follow-up case form attach data to a case. Each case can have different data at different points in time. Each data point must have a date or a date and time. This variable MUST BE either "date" or "datetime".') }}</span>
+                                            <span class="form-text m-b-none text-success">{{ _('Follow-up forms attach data to a case. Each case can have different data at different points in time. Each data point must have a date. This variable MUST BE either "date" or "datetime".') }}</span>
                                         </div>
                                         <hr>
                                         <div style="margin-top: 10px" class="form-group">
-                                            <label><b>{{ _('In this ODK Form that you are uploading into FormShare, which variable will be used to control duplicate cases?') }}</b></label>
+                                            <label><b>{{ _('In this ODK Form that you are uploading into FormShare, which variable will be used to control duplicate data?') }}</b></label>
                                             <input type="text" name="form_pkey" class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the variable to control duplicate cases') }}')"  oninput="setCustomValidity('')">
-                                            <span class="form-text m-b-none text-success">{{ _('To control duplicate cases, you need to join two or more variables to become UNIQUE. For example, use an ODK Calculate to join the variable that you selected above to search and select a case with the variable that you selected above to record the date of new data point attached to a case. This ODK Calculate will become the Primary Key of your ODK Form and CANNOT BE CHANGED afterwards.') }}</span>
+                                            <span class="form-text m-b-none text-success">{{ _('Follow-up forms attach information to a case at different points in time. Therefore, the ID of the case + the date/datetime should be UNIQUE across time. You just indicated above: a) The variable used to search and select a case and b) The variable to record the date. In your ODK form join these two variables into a "calculate" variable and paste its name here. This variable will become the Primary Key of your ODK Form and CANNOT BE CHANGED afterwards.') }}</span>
                                         </div>
                                     {% endif %}
                                 {% endif %}

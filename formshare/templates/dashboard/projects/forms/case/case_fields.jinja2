@@ -1,7 +1,7 @@
 {% extends 'dashboard/page.jinja2' %}
 {% import 'dashboard/macros/form.jinja2' as form %}
 
-{% block titlesection %}{{ _("Case lookup table definition") }}{% endblock titlesection %}
+{% block titlesection %}{{ _("The real-time CSV case file") }}{% endblock titlesection %}
 
 {% block css %}
     {{ super() }}
@@ -28,7 +28,7 @@
             {% if created %}
                 <div class="alert alert-success alert-dismissable">
                     <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
-                    {{ _('The case lookup table has been created. You can adjust it below.') }}
+                    {{ _('The real-time CSV case file has been created. You can adjust it below.') }}
                 </div>
             {% endif %}
             {% block form_errors %}
@@ -37,10 +37,10 @@
             <div class="ibox">
                 <div class="ibox-content">
                     {% block case_list_heading %}
-                        <h2>{{ _('Case lookup table') }}</h2>
+                        <h2>{{ _('The real-time CSV case file') }}</h2>
                         <p>
-                            {{ _('The case lookup table provides information on each case that can be used in follow-up case forms. For example, the sex of a participant (e.g., female) could be used in follow-up case forms to ask specific questions according to sex (e.g., if female, do they have access to reproductive health services?)') }}<br/>
-                            {{ _('FormShare will create a CSV file using this table as described') }} <a href="https://docs.getodk.org/form-datasets/#building-selects-from-csv-files" target="_blank">{{ _('here') }}.</a>
+                            {{ _('The real-time CSV case file provides information on each case to follow-up case forms. For example, use the sex of a participant (e.g., female) in follow-up case forms to ask specific questions according to sex (e.g., if female, do they have access to reproductive health services?)') }}<br/><br/>
+                            {{ _('Each time a new case arrives in FormShare, the platform will update this CSV file. You can adjust below what information goes into the CSV file.') }}<br/><br/>{{ _('Click') }} <a style="color: #0a6aa1"><b>{{ _('here') }}</b></a> {{ _('to download an example of this file so you can use it in follow-up forms.') }}
                         </p>
                         {#                    <div class="input-group">#}
                         {#                        <input type="text" placeholder="{{ _('Search assistants') }} " class="input form-control">#}

@@ -149,11 +149,32 @@
             $(document).ready(function() {
 
                 tippy('#create_case_table', {
-                content: "{{ _('Click') }} <a style='color: orange'><b>{{ _('here') }}</b></a> {{ _('to read more') }}",
-                placement: 'left',
-                interactive: true,
-                allowHTML: true,
-            });
+                    content: "{{ _('Click') }} <a style='color: orange'><b>{{ _('here') }}</b></a> {{ _('to read more') }}",
+                    placement: 'left',
+                    interactive: true,
+                    allowHTML: true,
+                });
+
+                tippy('#info_follow_up', {
+                    content: "{{ _('Follow-up forms attach information to a case at different points in time.') }}<br/><br/>{{ _('Click') }} <a style='color: orange'><b>{{ _('here') }}</b></a> {{ _('to read more.') }}",
+                    placement: 'bottom',
+                    interactive: true,
+                    allowHTML: true,
+                });
+
+                tippy('#info_deactivate', {
+                    content: "{{ _('Deactivate forms change the status of a case to inactive.') }} {{ _('For example, a household that decides to exit a study.') }}<br/><br/>{{ _('Click') }} <a style='color: orange'><b>{{ _('here') }}</b></a> {{ _('to read more.') }}",
+                    placement: 'bottom',
+                    interactive: true,
+                    allowHTML: true,
+                });
+
+                tippy('#info_activate', {
+                    content: "{{ _('Activate forms change the status of a case to active.') }} {{ _('For example, a household that decides to enter a study again.') }}<br/><br/>{{ _('Click') }} <a style='color: orange'><b>{{ _('here') }}</b></a> {{ _('to read more.') }}",
+                    placement: 'bottom',
+                    interactive: true,
+                    allowHTML: true,
+                });
 
                 {% if activeUser.super == 1 %}
                     $('.spin-icon').click(function (){

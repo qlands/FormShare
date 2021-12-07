@@ -1,5 +1,5 @@
 <div class="col-sm-12">
-    <h2>{{ _('Case lookup table definition') }}</h2>
+    <h2>{{ _('Create or edit the real-time CSV case file') }}</h2>
     <ol class="breadcrumb">
         <li class="breadcrumb-item">
             <a href="{{ request.route_url("dashboard",userid=activeUser.login) }}">{{ _('Dashboard') }}</a>
@@ -11,7 +11,7 @@
             <a href="{{ request.route_url("project_details",userid=projectDetails.owner, projcode=projectDetails.project_code) }}">{{ projectDetails.project_name }}</a>
         </li>
         <li class="breadcrumb-item active">
-            <strong>{{ _('Case lookup table') }}</strong>
+            <strong>{{ _('Real-time CSV case file') }}</strong>
         </li>
     </ol>
 </div>

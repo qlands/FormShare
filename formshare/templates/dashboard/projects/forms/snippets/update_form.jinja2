@@ -56,19 +56,18 @@
                                             <label><input type="radio" {% if formDetails.form_caselabel == 2 %}checked{% endif %} value="2" id="case_followup" name="form_casetype"> {{ _('Simple follow-up form') }}</label><br/>
                                             <label><input type="radio" {% if formDetails.form_caselabel == 3 %}checked{% endif %} value="3" id="case_deactivate" name="form_casetype"> {{ _('Follow-up and deactivate case form') }}</label><br/>
                                             <label><input type="radio" {% if formDetails.form_caselabel == 4 %}checked{% endif %} value="4" id="case_activate" name="form_casetype"> {{ _('Follow-up and activate case form') }}</label>
-                                            <span class="form-text m-b-none text-success">{{ _('Follow-up forms just attach information to a case. Deactivate and Activate forms change the status of a case. For example, a household that decides to exit a study so no more data should be collected afterward about it.') }}</span>
                                         </div>
                                         <hr>
                                         <div style="margin-top: 10px" class="form-group">
                                             <label><b>{{ _('In the ODK Form that you are uploading into FormShare, which variable will be used to search and select a case?') }}</b></label>
                                             <input type="text" name="form_caseselector" {% if formDetails.form_caseselector != None %}value="{{ formDetails.form_caseselector }}" {% endif %} class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the variable to search and select cases') }}')"  oninput="setCustomValidity('')">
-                                            <span class="form-text m-b-none text-success">{{ _('This variable MUST BE either a "select_one_from_file" (The file MUST BE CSV) or a "barcode"') }} <a href="https://docs.getodk.org/form-datasets/" target="_blank">{{ _('Read here about "select_one_from_file"') }}</a></span>
+                                            <span class="form-text m-b-none text-success">{{ _('This variable MUST BE either a "select_one_from_file" (The file MUST BE CSV) or a "barcode".') }}<br/>{{ _('Download an example the CSV file ') }} <a style="color: orange" href="" target="_blank">{{ _('here') }}</a></span>
                                         </div>
                                         <hr>
                                         <div style="margin-top: 10px" class="form-group">
                                             <label><b>{{ _('In the ODK Form that you are uploading into FormShare, which variable will be used to record the date or the date and time of a new data point attached to a case?') }}</b></label>
                                             <input type="text" name="form_casedatetime" {% if formDetails.form_casedatetime != None %}value="{{ formDetails.form_casedatetime }}" {% endif %} class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the variable to record date or date and time.') }}')"  oninput="setCustomValidity('')">
-                                            <span class="form-text m-b-none text-success">{{ _('Follow-up case form attach data to a case. Each case can have different data at different points in time. Each data point must have a date or a date and time. This variable MUST BE either "date" or "datetime".') }}</span>
+                                            <span class="form-text m-b-none text-success">{{ _('Follow-up case forms attach data to a case. Each case can have different data at different points in time. Each data point must have a date. This variable MUST BE either "date" or "datetime".') }}</span>
                                         </div>
                                         <hr>
                                         <div style="margin-top: 10px" class="form-group">

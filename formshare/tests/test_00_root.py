@@ -15827,8 +15827,8 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
             assert "FS_error" not in res.headers
-            self.assertIn(b"case lookup table", res.body)
-            self.assertIn(b"Create the case lookup table before", res.body)
+            self.assertIn(b"real-time CSV case file", res.body)
+            self.assertIn(b"Create the real-time CSV case file before", res.body)
 
             # Open the case lookup table for a project that does not exist goes to 404
             self.testapp.get(
@@ -15861,8 +15861,8 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
             assert "FS_error" not in res.headers
-            self.assertIn(b"case lookup table", res.body)
-            self.assertNotIn(b"Create the case lookup table before", res.body)
+            self.assertIn(b"real-time CSV case file", res.body)
+            self.assertNotIn(b"Create the real-time CSV case file before", res.body)
 
             # Adds the field distrito
             res = self.testapp.post(
@@ -16201,7 +16201,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 status=200,
             )
-            self.assertIn(b"Linked to case lookup table", res.body)
+            self.assertIn(b"Linked to the real-time CSV case file", res.body)
 
             # Get the FormList. Empty list
             self.testapp.get(
@@ -16718,7 +16718,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 status=200,
             )
-            self.assertIn(b"Linked to case lookup table", res.body)
+            self.assertIn(b"Linked to the real-time CSV case file", res.body)
 
             # Creates the repository of the case creator
             res = self.testapp.post(
@@ -16878,7 +16878,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 status=200,
             )
-            self.assertIn(b"Linked to case lookup table", res.body)
+            self.assertIn(b"Linked to the real-time CSV case file", res.body)
 
             # Creates the repository of the case creator
             res = self.testapp.post(
@@ -17246,7 +17246,7 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
             self.assertFalse(b"Merge check pending" in res.body)
-            self.assertIn(b"Linked to case lookup table", res.body)
+            self.assertIn(b"Linked to the real-time CSV case file", res.body)
 
             # Show the merge repository page
             res = self.testapp.get(

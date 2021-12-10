@@ -53,7 +53,7 @@
                                     {% if projectDetails.total_forms == 0 %}
                                         <hr>
                                         <div style="margin-top: 10px" class="form-group">
-                                            <label><b>{{ _('In this ODK Form that you are uploading into FormShare, which variable will be used to indentify each case?') }}</b></label>
+                                            <label><b>{{ _('In this ODK Form that you are uploading into FormShare, which variable will be used to identify each case?') }}</b></label>
                                             <input type="text" name="form_pkey" class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the variable to identify each case') }}')"  oninput="setCustomValidity('')">
                                             <span class="form-text m-b-none text-success">{{ _('Each case must be UNIQUE. You need to select a variable from your ODK Form whose values will be UNIQUE across all the cases that you expect to have. If you need to join two or more variables to become UNIQUE, then use an ODK Calculate to merge them into one variable. This variable will become the Primary Key of your ODK Form and CANNOT BE CHANGED afterward.') }}</span>
                                         </div>
@@ -65,7 +65,7 @@
                                         </div>
                                         <hr>
                                         <div style="margin-top: 10px" class="form-group">
-                                            <label><b>{{ _('How many cases to do expect to have?') }}</b></label>
+                                            <label><b>{{ _('How many cases do you expect to have?') }}</b></label>
                                             <input type="number" name="form_target" value="0" class="form-control">
                                             <span class="form-text m-b-none">{{ _('Leave blank or indicate 0 if there is no target ') }}</span>
                                         </div>

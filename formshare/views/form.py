@@ -652,7 +652,7 @@ class FormDetails(PrivateView):
                         txt_message
                         + "\n"
                         + self._(
-                            "Please shorten then name of the tables and/or the selects and try again."
+                            "Please shorten the name of the tables and/or the selects and try again."
                         )
                     )
                 errors.append(txt_message)

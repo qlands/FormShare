@@ -291,6 +291,13 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Logout
+            res = self.testapp.post(
+                "/logout",
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
             # Register succeed of user for partner
             res = self.testapp.post(
                 "/join",
@@ -1730,6 +1737,30 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" in res.headers
 
+            # Upload a form fails. Tables with more than 64 characters
+            paths = ["resources", "forms", "bad_size", "bad_size.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "hhid"},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Upload form with 64 characters fixed pass.
+            paths = ["resources", "forms", "bad_size", "good_size.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "hhid"},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" not in res.headers
+
             paths = ["resources", "forms", "form08_OK.xlsx"]
             resource_file = os.path.join(self.path, *paths)
 
@@ -1930,6 +1961,22 @@ class FunctionalTests(unittest.TestCase):
                     self.randonLogin, self.project, "Justtest"
                 ),
                 {"form_pkey": "hid"},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Update a form fails. Tables with more than 64 characters
+            paths = ["resources", "forms", "bad_size", "bad_size.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/form/{}/updateodk".format(
+                    self.randonLogin,
+                    self.project,
+                    "Gender_Analysis_JOOUST_VLIR_OUS_Project_2021_Vers1",
+                ),
+                {"form_pkey": "hhid"},
                 status=302,
                 upload_files=[("xlsx", resource_file)],
             )
@@ -16059,6 +16106,21 @@ class FunctionalTests(unittest.TestCase):
                 {
                     "form_pkey": "survey_id",
                     "form_caseselector": "test",
+                    "form_casetype": "2",
+                },
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
+            # Upload a case follow up. Invalid case selector
+            paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, "case001"),
+                {
+                    "form_pkey": "survey_id",
+                    "form_caseselector": "start_date",
                     "form_casetype": "2",
                 },
                 status=302,

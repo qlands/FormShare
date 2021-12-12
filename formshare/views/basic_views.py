@@ -451,10 +451,8 @@ def log_out_view(request):
                 loc = request.route_url("dashboard", userid=current_user)
                 raise HTTPFound(location=loc)
         else:
-            policy = get_policy(request, "main")
-            headers = policy.forget(request)
             loc = request.route_url("home")
-            raise HTTPFound(location=loc, headers=headers)
+            raise HTTPFound(location=loc)
     else:
         loc = request.route_url("home")
         raise HTTPFound(location=loc)

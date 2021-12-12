@@ -615,6 +615,47 @@ class FormDetails(PrivateView):
                                 )
                         txt_message = txt_message + "\t"
                 errors.append(txt_message)
+            if created == 24:
+                # Table names with more than 64 characters
+                txt_message = (
+                    self._(
+                        "FormShare needs you to shorten the name of some of your tables."
+                    )
+                    + "\n"
+                )
+                txt_message = (
+                    txt_message
+                    + self._(
+                        "The following tables have a name longer than 64 characters:"
+                    )
+                    + "\n"
+                )
+                root = etree.fromstring(message)
+                tables_with_name_error = root.findall(".//table")
+                if tables_with_name_error:
+                    for a_table in tables_with_name_error:
+                        table_name = a_table.get("name")
+                        table_msel = a_table.get("msel")
+                        if table_msel == "false":
+                            txt_message = txt_message + "\t" + table_name + "\n"
+                        else:
+                            parts = table_name.split("_msel_")
+                            txt_message = (
+                                txt_message
+                                + "\t"
+                                + parts[0]
+                                + " with select "
+                                + parts[1]
+                                + "\n"
+                            )
+                    txt_message = (
+                        txt_message
+                        + "\n"
+                        + self._(
+                            "Please shorten then name of the tables and/or the selects and try again."
+                        )
+                    )
+                errors.append(txt_message)
             if created == 22:
                 errors.append(message)
             if created == 23:

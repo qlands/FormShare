@@ -166,6 +166,16 @@
                                             {% endfor %}
                                         </UL>
                                     {% endif %}
+                                    {% if result_code == 24 %}
+                                        <h2>{{ _('FormShare needs you to rename some of your tables') }}</h2>
+                                        {{ _('The following tables have a name with more than 64 characters:') }}
+                                        <UL>
+                                            {% for a_table in tables_with_name_error %}
+                                                <LI>{{ a_table }}</LI>
+                                            {% endfor %}
+                                        </UL>
+                                        {{ _('Please shorten the names of the tables and/or the selects and try again.') }}
+                                    {% endif %}
                                 {% endif %}
                             {% endif %}
                         </div>

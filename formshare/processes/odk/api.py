@@ -564,6 +564,52 @@ def check_jxform_file(
                     + _("Please remove the duplicated choices and try again.")
                 )
             return 21, message
+
+        if p.returncode == 24:
+            log.error(
+                ". Error: "
+                + str(p.returncode)
+                + "-"
+                + stderr.decode()
+                + " while checking PyXForm. Command line: "
+                + " ".join(args)
+            )
+            root = etree.fromstring(stdout)
+            tables_with_name_error = root.findall(".//table")
+            message = (
+                _("FormShare needs you to shorten the name of some of your tables.")
+                + "\n"
+            )
+            message = (
+                message
+                + _("The following tables have a name longer than 64 characters:")
+                + "\n"
+            )
+            if tables_with_name_error:
+                for a_table in tables_with_name_error:
+                    table_name = a_table.get("name")
+                    table_msel = a_table.get("msel")
+                    if table_msel == "false":
+                        message = message + "\t" + table_name + "\n"
+                    else:
+                        parts = table_name.split("_msel_")
+                        message = (
+                            message
+                            + "\t"
+                            + parts[0]
+                            + " with select "
+                            + parts[1]
+                            + "\n"
+                        )
+                message = (
+                    message
+                    + "\n"
+                    + _(
+                        "Please shorten the name of the tables and/or the selects and try again."
+                    )
+                )
+            return 24, message
+
         if (
             p.returncode == 18
         ):  # pragma: no cover . This only happens with old versions of PyXForm

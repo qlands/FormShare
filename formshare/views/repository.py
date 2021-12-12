@@ -61,6 +61,7 @@ class GenerateRepository(PrivateView):
         result_code = -1
         list_array = []
         duplicated_choices = []
+        tables_with_name_error = []
         languages = []
         default = False
         languages_string = ""
@@ -440,6 +441,26 @@ class GenerateRepository(PrivateView):
                                                 )
                                         duplicated_choices.append(option)
                                 stage = -1
+                            if result_code == 24:  # pragma: no cover
+                                # Tables with more than 64 characters
+                                root = etree.fromstring(message)
+                                tables_with_error = root.findall(".//table")
+                                if tables_with_error:
+                                    for a_table in tables_with_error:
+                                        table_name = a_table.get("name")
+                                        table_msel = a_table.get("msel")
+                                        if table_msel == "false":
+                                            tables_with_name_error.append(table_name)
+                                        else:
+                                            parts = table_name.split("_msel_")
+                                            tables_with_name_error.append(
+                                                parts[0]
+                                                + " "
+                                                + self._("with select")
+                                                + " "
+                                                + parts[1]
+                                            )
+                                stage = -1
 
                 return {
                     "form_data": form_data,
@@ -450,6 +471,7 @@ class GenerateRepository(PrivateView):
                     "result_code": result_code,
                     "list_array": list_array,
                     "duplicated_choices": duplicated_choices,
+                    "tables_with_name_error": tables_with_name_error,
                     "file_with_error": file_with_error,
                     "method": method,
                     "stage": stage,

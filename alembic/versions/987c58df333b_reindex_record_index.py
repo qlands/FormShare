@@ -75,7 +75,6 @@ def upgrade():
         .filter(Odkform.project_id == Userproject.project_id)
         .filter(Userproject.access_type == 1)
         .filter(Userproject.user_id == User.user_id)
-        .filter(Odkform.form_schema.isnot(None))
         .all()
     )
     if forms:

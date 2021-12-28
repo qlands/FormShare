@@ -11,6 +11,7 @@ from formshare.models import (
     Userproject,
     Odkform,
     Project,
+    TimeZone,
 )
 
 __all__ = [
@@ -25,9 +26,22 @@ __all__ = [
     "update_last_login",
     "get_user_id_with_email",
     "get_users",
+    "get_user_timezone",
 ]
 
 log = logging.getLogger("formshare")
+
+
+def get_user_timezone(request, user):
+    res = (
+        request.dbsession.query(
+            User.user_timezone, TimeZone.timezone_name, TimeZone.timezone_utc_offset
+        )
+        .filter(User.user_id == user)
+        .filter(User.user_timezone == TimeZone.timezone_code)
+        .first()
+    )
+    return map_from_schema(res)
 
 
 def get_user_stats(request, user):

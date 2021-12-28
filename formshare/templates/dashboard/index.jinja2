@@ -1,6 +1,18 @@
 {% extends 'dashboard/page.jinja2' %}
 {% import 'dashboard/macros/form.jinja2' as form %}
-
+{% if request.h.get_setting(request,'use_timezones','False') == 'True' %}
+    {% if selected_timezone == 'formshare' %}
+        {% set timezone = system_timezone %}
+    {% else %}
+        {% if selected_timezone == 'user' %}
+            {% set timezone = user_timezone.user_timezone %}
+        {% else %}
+            {% set timezone = activeProject.project_timezone %}
+        {% endif %}
+    {% endif %}
+{% else %}
+    {% set timezone = None %}
+{% endif %}
 {% block titlesection %}{{ _("Dashboard") }}{% endblock titlesection %}
 
 {% block css %}
@@ -36,7 +48,7 @@
                                 <h2>{{ _('You are viewing others account') }}</h2>
                             {% endif %}
                         {% endif %}
-                        <h3 style="color:white;">{{ _('Recent activity in project') }} "<a style="color: white" href="{{ request.route_url('project_details', userid=activeProject.owner, projcode=activeProject.project_code) }}" >{{ activeProject.project_name }}</a>"</h3>
+                        <h3 style="color:white;">{{ _('Recent activity in project') }} "<a style="color: white" href="{{ request.route_url('project_details', userid=activeProject.owner, projcode=activeProject.project_code) }}" >{{ activeProject.project_name }}</a>" {% if selected_timezone == 'project' and timezone != 'UTC'  %}<span class="badge badge-default" title=" {{ request.h.get_timezone_desc(request,timezone) }} ">UTC{{ request.h.get_timezone_offset(request,timezone) }}</span>{% endif %}</h3>
                         {{ form.display_errors(errors,true) }}
                         {% include 'dashboard/snippets/active_project_summary.jinja2' %}
                     </div>

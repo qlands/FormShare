@@ -194,7 +194,7 @@ def create_resources(apppath, config):
     r.add_js_resource(
         "formshare",
         "tippy",
-        "js/plugins/tippy/tippy-bundle.umd.min.js",
+        "js/plugins/tippy/tippy-bundle.iife.min.js",
         "popper",
     )
 

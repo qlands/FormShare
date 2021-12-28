@@ -1,6 +1,19 @@
 {% extends 'dashboard/page.jinja2' %}
 {% import 'dashboard/macros/form.jinja2' as form %}
 
+{% if request.h.get_setting(request,'use_timezones','False') == 'True' %}
+    {% if selected_timezone == 'formshare' %}
+        {% set timezone = system_timezone %}
+    {% else %}
+        {% if selected_timezone == 'user' %}
+            {% set timezone = user_timezone.user_timezone %}
+        {% else %}
+            {% set timezone = projectData.project_timezone %}
+        {% endif %}
+    {% endif %}
+{% else %}
+    {% set timezone = None %}
+{% endif %}
 
 {% block titlesection %}{{ _("Project") }} {% endblock titlesection %}
 
@@ -91,6 +104,7 @@
 {% block scripts %}
     {% jsresource request,'formshare','inspinia' %}
     {% include 'dashboard/snippets/change_language.jinja2' %}
+    {% include 'dashboard/snippets/change_timezone.jinja2' %}
     <script>
         $(document).ready(function() {
 

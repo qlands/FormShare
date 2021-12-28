@@ -12,6 +12,40 @@ from pattern.en import pluralize as pluralize_en
 from pattern.es import pluralize as pluralize_es
 import datetime
 import formshare.plugins as p
+from pytz import timezone
+from formshare.models import TimeZone
+from dateutil.parser import parse
+import logging
+
+log = logging.getLogger("formshare")
+
+
+def is_date(string, fuzzy=False):
+    try:
+        parse(string, fuzzy=fuzzy)
+        return True
+
+    except ValueError:
+        return False
+
+
+def convert_date(date):
+    try:
+        if not isinstance(date, datetime.date) and not isinstance(
+            date, datetime.datetime
+        ):
+            if isinstance(date, str):
+                if is_date(date):
+                    date = parse(date)
+                    return date
+                else:
+                    return "NA"
+            else:
+                return "NA"
+        else:
+            return date
+    except Exception as e:
+        log.error("Error while converting date '{}'. Error: {}".format(date, str(e)))
 
 
 class HelperAttributeDict(dict):
@@ -104,15 +138,19 @@ def month_from_number(month, locale="en", capitalize=True):
 
 
 @core_helper
-def readble_date(date, locale="en"):
+def readble_date(date, locale="en", timezone_to_use=None):
     """
     Returns a readable date"
     :param date: Datetime
     :param locale: Locale code
+    :param timezone_to_use: Timezone to use
     :return: A readable date
     """
     if date is None:
         return "NA"
+    date = convert_date(date)
+    if timezone_to_use is not None:
+        date = date.astimezone(timezone(timezone_to_use))
     ar = arrow.get(date)
     if locale == "es":
         return (
@@ -124,15 +162,19 @@ def readble_date(date, locale="en"):
 
 
 @core_helper
-def readble_date_with_time(date, locale="en"):
+def readble_date_with_time(date, locale="en", timezone_to_use=None):
     """
     Returns a readable date"
     :param date: Datetime
     :param locale: Locale code
+    :param timezone_to_use: Time zone to use
     :return: A readable date with time
     """
     if date is None:
         return "NA"
+    date = convert_date(date)
+    if timezone_to_use is not None:
+        date = date.astimezone(timezone(timezone_to_use))
     ar = arrow.get(date)
     if locale == "es":
         return (
@@ -144,20 +186,24 @@ def readble_date_with_time(date, locale="en"):
 
 
 @core_helper
-def simple_date(date):
+def simple_date(date, timezone_to_use=None):
     """
     Returns a readable date"
     :param date: Datetime
-    :return: A readable date
+    :param timezone_to_use: Time zone to use
+    :return: A si mple date
     """
     if date is None:
         return "NA"
+    date = convert_date(date)
+    if timezone_to_use is not None:
+        date = date.astimezone(timezone(timezone_to_use))
     ar = arrow.get(date)
     return ar.format("DD/MM/YYYY")
 
 
 @core_helper
-def simple_date_usa(date):
+def simple_date_usa(date, timezone_to_use=None):
     """
     Returns a readable date"
     :param date: Datetime
@@ -165,8 +211,43 @@ def simple_date_usa(date):
     """
     if date is None:
         return "NA"
+    date = convert_date(date)
+    if timezone_to_use is not None:
+        date = date.astimezone(timezone(timezone_to_use))
     ar = arrow.get(date)
     return ar.format("MM/DD/YYYY")
+
+
+@core_helper
+def get_timezone_desc(request, timezone_code):
+    """
+    Returns a readable date"
+    :param request: Pyramid request object
+    :param timezone_code: Timezone code
+    :return: Description of timezone
+    """
+    res = (
+        request.dbsession.query(TimeZone.timezone_name)
+        .filter(TimeZone.timezone_code == timezone_code)
+        .first()
+    )
+    return res[0]
+
+
+@core_helper
+def get_timezone_offset(request, timezone_code):
+    """
+    Returns a readable date"
+    :param request: Pyramid request object
+    :param timezone_code: Timezone code
+    :return: Description of timezone
+    """
+    res = (
+        request.dbsession.query(TimeZone.timezone_utc_offset)
+        .filter(TimeZone.timezone_code == timezone_code)
+        .first()
+    )
+    return res[0]
 
 
 @core_helper

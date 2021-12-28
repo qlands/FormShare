@@ -34,6 +34,7 @@ from formshare.processes.db import (
     get_project_partners,
     update_partner_options,
     remove_partner_from_project,
+    get_timezones,
 )
 from formshare.processes.elasticsearch.repository_index import (
     get_dataset_stats_for_project,
@@ -277,7 +278,10 @@ class AddProjectView(ProjectsView):
                 self.append_to_errors(self._("The project code cannot be empty"))
         else:
             project_details = {"project_public": 0, "project_case": 0}
-        return {"projectDetails": project_details}
+        return {
+            "projectDetails": project_details,
+            "timezones": get_timezones(self.request),
+        }
 
 
 class EditProjectView(ProjectsView):
@@ -350,7 +354,10 @@ class EditProjectView(ProjectsView):
             else:
                 self.append_to_errors(self._("The name cannot be empty"))
 
-        return {"projectDetails": project_details}
+        return {
+            "projectDetails": project_details,
+            "timezones": get_timezones(self.request),
+        }
 
 
 class ActivateProjectView(ProjectsView):

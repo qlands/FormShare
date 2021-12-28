@@ -6,7 +6,8 @@
                     <button id="cross_upload_form_button" type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
                     {% if not upload_for_merging %}
                         {% if projectDetails.project_case == 0 %}
-                            <h4 class="modal-title">{{ _('Upload form') }}</h4>
+                            <h4 class="modal-title">{{ _('Upload form') }}</h4><br/>
+                            <b>{{ _('A troubleshooting guide is available') }} <a target="_blank" href="{{ request.url_for_static('upload_infographic_en.pdf') }}" style="color: #0a6aa1">{{ _('here') }}</a></b>
                         {% else %}
                             <h4 class="modal-title">{{ _('Upload case form') }}</h4>
                         {% endif %}

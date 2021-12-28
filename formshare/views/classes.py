@@ -15,7 +15,7 @@ import json
 import logging
 import uuid
 from ast import literal_eval
-
+import datetime
 from babel import Locale
 from formencode.variabledecode import variable_decode
 from pyramid.httpexceptions import HTTPFound
@@ -33,8 +33,11 @@ from formshare.processes.db import (
     get_user_projects,
     get_project_from_assistant,
     get_user_by_api_key,
-    get_assistant_by_api_key,
+    get_user_timezone,
     get_partner_by_api_key,
+    get_timezone_offset,
+    get_timezone_name,
+    get_assistant_timezone,
 )
 
 log = logging.getLogger("formshare")
@@ -271,6 +274,32 @@ class PrivateView(object):
         else:
             self.classResult["rtl"] = True
         self.classResult["activeMenu"] = ""
+        self.classResult["selected_timezone"] = self.request.cookies.get(
+            "_TIMEZONE_", "formshare"
+        )
+        self.selected_timezone = self.request.cookies.get("_TIMEZONE_", "formshare")
+        self.classResult["system_timezone"] = (
+            datetime.datetime.utcnow().astimezone().tzname()
+        )
+        self.system_timezone = datetime.datetime.utcnow().astimezone().tzname()
+        if self.classResult["system_timezone"] != "UTC":
+            self.classResult["system_timezone_offset"] = get_timezone_offset(
+                self.request, self.classResult["system_timezone"]
+            )
+            self.classResult["system_timezone_name"] = get_timezone_name(
+                self.request, self.classResult["system_timezone"]
+            )
+            self.system_timezone_offset = get_timezone_offset(
+                self.request, self.classResult["system_timezone"]
+            )
+            self.system_timezone_name = get_timezone_name(
+                self.request, self.classResult["system_timezone"]
+            )
+        else:
+            self.classResult["system_timezone_offset"] = "+00:00"
+            self.classResult["system_timezone_name"] = "UTC"
+            self.system_timezone_offset = "+00:00"
+            self.system_timezone_name = "UTC"
 
     def append_to_errors(self, error):
         self.request.response.headers["FS_error"] = "true"
@@ -312,29 +341,23 @@ class PrivateView(object):
     def check_authorization(self):
         policy = self.get_policy("main")
         login_data = policy.authenticated_userid(self.request)
+        if self.request.method == "POST":
+            next_page = self.request.route_url("login")
+        else:
+            next_page = self.request.route_url(
+                "login", _query={"next": self.request.url}
+            )
         if login_data is not None:
             login_data = literal_eval(login_data)
             if login_data["group"] == "mainApp":
                 self.user = get_user_data(login_data["login"], self.request)
                 if self.user is None:
-                    raise HTTPFound(
-                        location=self.request.route_url(
-                            "login", _query={"next": self.request.url}
-                        )
-                    )
+                    raise HTTPFound(location=next_page)
                 self.check_post_put_delete()
             else:
-                raise HTTPFound(
-                    location=self.request.route_url(
-                        "login", _query={"next": self.request.url}
-                    )
-                )
+                raise HTTPFound(location=next_page)
         else:
-            raise HTTPFound(
-                location=self.request.route_url(
-                    "login", _query={"next": self.request.url}
-                )
-            )
+            raise HTTPFound(location=next_page)
 
     def __call__(self):
         error = self.request.session.pop_flash(queue="error")
@@ -420,6 +443,10 @@ class PrivateView(object):
                 },
             )
         self.request.response.headers.pop("FS_error", None)
+        self.classResult["user_timezone"] = get_user_timezone(
+            self.request, self.user.login
+        )
+        self.user_timezone = get_user_timezone(self.request, self.user.login)
         self.viewResult = self.process_view()
 
         if not self.returnRawViewResult:
@@ -583,6 +610,32 @@ class AssistantView(object):
         self.returnRawViewResult = False
         self.project_assistant = None
         self.checkCrossPost = True
+        self.resultDict["selected_timezone"] = self.request.cookies.get(
+            "_TIMEZONE_", "formshare"
+        )
+        self.selected_timezone = self.request.cookies.get("_TIMEZONE_", "formshare")
+        self.resultDict["system_timezone"] = (
+            datetime.datetime.utcnow().astimezone().tzname()
+        )
+        self.system_timezone = datetime.datetime.utcnow().astimezone().tzname()
+        if self.resultDict["system_timezone"] != "UTC":
+            self.resultDict["system_timezone_offset"] = get_timezone_offset(
+                self.request, self.resultDict["system_timezone"]
+            )
+            self.resultDict["system_timezone_name"] = get_timezone_name(
+                self.request, self.resultDict["system_timezone"]
+            )
+            self.system_timezone_offset = get_timezone_offset(
+                self.request, self.resultDict["system_timezone"]
+            )
+            self.system_timezone_name = get_timezone_name(
+                self.request, self.resultDict["system_timezone"]
+            )
+        else:
+            self.resultDict["system_timezone_offset"] = "+00:00"
+            self.resultDict["system_timezone_name"] = "UTC"
+            self.system_timezone_offset = "+00:00"
+            self.system_timezone_name = "UTC"
 
     def get_policy(self, policy_name):
         policies = self.request.policies()
@@ -610,6 +663,19 @@ class AssistantView(object):
 
         policy = self.get_policy("assistant")
         login_data = policy.authenticated_userid(self.request)
+        if self.request.method != "POST":
+            next_page = self.request.route_url(
+                "assistant_login",
+                userid=self.userID,
+                projcode=self.projectCode,
+                _query={"next": self.request.url},
+            )
+        else:
+            next_page = self.request.route_url(
+                "assistant_login",
+                userid=self.userID,
+                projcode=self.projectCode,
+            )
         if login_data is not None:
             login_data = literal_eval(login_data)
             if login_data["group"] == "collaborators":
@@ -620,32 +686,11 @@ class AssistantView(object):
                     self.project_assistant, login_data["login"], self.request
                 )
                 if self.assistant is None:
-                    return HTTPFound(
-                        location=self.request.route_url(
-                            "assistant_login",
-                            userid=self.userID,
-                            projcode=self.projectCode,
-                            _query={"next": self.request.url},
-                        )
-                    )
+                    return HTTPFound(next_page)
             else:
-                return HTTPFound(
-                    location=self.request.route_url(
-                        "assistant_login",
-                        userid=self.userID,
-                        projcode=self.projectCode,
-                        _query={"next": self.request.url},
-                    )
-                )
+                return HTTPFound(next_page)
         else:
-            return HTTPFound(
-                location=self.request.route_url(
-                    "assistant_login",
-                    userid=self.userID,
-                    projcode=self.projectCode,
-                    _query={"next": self.request.url},
-                )
-            )
+            return HTTPFound(next_page)
 
         if self.request.method == "POST":
             if (
@@ -673,6 +718,12 @@ class AssistantView(object):
         self.resultDict["userid"] = self.userID
         self.resultDict["projcode"] = self.projectCode
         self.resultDict["posterrors"] = self.errors
+        self.resultDict["assistant_timezone"] = get_assistant_timezone(
+            self.request, self.projectID, self.assistantID
+        )
+        self.assistant_timezone = get_assistant_timezone(
+            self.request, self.projectID, self.assistantID
+        )
         process_dict = self.process_view()
         if not self.returnRawViewResult:
             self.resultDict.update(process_dict)

@@ -2950,11 +2950,13 @@ class GetSubMissionInfo(PrivateView):
         form_id = self.request.matchdict["formid"]
         submission_id = self.request.matchdict["submissionid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
         if project_id is not None:
             project_found = False
             for project in self.user_projects:
                 if project["project_id"] == project_id:
                     project_found = True
+                    project_details = project
             if not project_found:
                 raise HTTPNotFound
         else:
@@ -3022,6 +3024,7 @@ class GetSubMissionInfo(PrivateView):
                 break
 
         return {
+            "projectDetails": project_details,
             "formData": form_data,
             "submissionData": submission_data,
             "submissionID": submission_id,

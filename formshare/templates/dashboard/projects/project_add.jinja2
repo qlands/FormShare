@@ -9,6 +9,7 @@
     {% cssresource request,'formshare','switchery' %}
     {% cssresource request,'formshare','colorpicker' %}
     {% cssresource request,'formshare','emoji' %}
+    {% cssresource request,'formshare','select2' %}
     <style>
         .evo-palette {
             background-color: lightgrey;
@@ -23,6 +24,7 @@
     {{ super() }}
     {% jsresource request,'formshare','markdown' %}
     {% jsresource request,'formshare','switchery' %}
+    {% jsresource request,'formshare','select2' %}
 {% endblock topScripts %}
 
 {% block breadcrumbs %}
@@ -55,6 +57,9 @@
     {% jsresource request,'formshare','colorpicker' %}
     <script>
         $(document).ready(function() {
+            {% if request.h.get_setting(request,'use_timezones','False') == 'True' %}
+                $("#project_timezone").select2();
+            {% endif %}
             var elem = document.querySelector('.js-switch');
             var switchery = new Switchery(elem, { color: '#1AB394' });
 

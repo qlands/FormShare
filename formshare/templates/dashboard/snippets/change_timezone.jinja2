@@ -1,0 +1,13 @@
+{% if request.h.get_setting(request,'use_timezones','False') == 'True' %}
+    <script>
+        $(document).ready(function() {
+            var selectedTimeZone = readCookie('_TIMEZONE_');
+            if (selectedTimeZone != null)
+                $('#timezone').val(selectedTimeZone);
+            $("#timezone").bind('change', function() {
+                setCookie('_TIMEZONE_', this.value, 365);
+                location.reload();
+            });
+        });
+    </script>
+{% endif %}

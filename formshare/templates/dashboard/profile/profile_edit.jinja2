@@ -6,11 +6,13 @@
 {% block css %}
     {{ super() }}
     {% cssresource request,'formshare','bsmarkdown' %}
+    {% cssresource request,'formshare','select2' %}
 {% endblock css %}
 
 {% block topScripts %}
     {{ super() }}
     {% jsresource request,'formshare','markdown' %}
+    {% jsresource request,'formshare','select2' %}
 {% endblock topScripts %}
 
 {% block breadcrumbs %}
@@ -50,6 +52,19 @@
                                     </div>
                                 </div>
                                 <div class="hr-line-dashed"></div>
+                                {% if request.h.get_setting(request,'use_timezones','False') == 'True' %}
+                                    <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Timezone') }}</label>
+                                        <div class="col-sm-10">
+                                            <select style="width: 100%" id="user_timezone" name="user_timezone" data-module="autocomplete" data-module-dropdown-class="lang-dropdown" data-module-container-class="lang-container">
+                                                {% for a_timezone in timezones %}
+                                                    <option value="{{ a_timezone.timezone_code }}" {% if a_timezone.timezone_code == userDetails.user_timezone %} selected {% endif %} >{{ a_timezone.timezone_name }} (UTC{{ a_timezone.timezone_utc_offset }})</option>
+                                                {% endfor %}
+                                            </select>
+                                            <span class="form-text m-b-none">{{ _("This should be your current timezone. As a reference, FormShare's timezone is ") }} {{ system_timezone_name }} {% if system_timezone != "UTC" %}(UTC{{ system_timezone_offset }}){% endif %}</span>
+                                        </div>
+                                    </div>
+                                    <div class="hr-line-dashed"></div>
+                                {% endif %}
                                 {% block profile_edit_controls_extra %}
 
                                 {% endblock profile_edit_controls_extra %}
@@ -118,6 +133,10 @@
         }
 
         $(document).ready(function() {
+            {% if request.h.get_setting(request,'use_timezones','False') == 'True' %}
+                $("#user_timezone").select2();
+            {% endif %}
+
             $('#genkey').click(function () {
                 $('#user_apikey').val(uuidv4());
             });

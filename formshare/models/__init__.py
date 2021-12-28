@@ -32,6 +32,7 @@ from formshare.models.formshare import (
     Partner,
     PartnerProject,
     PartnerForm,
+    TimeZone,
 )
 from formshare.models.schema import *
 

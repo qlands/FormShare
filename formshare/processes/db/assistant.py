@@ -16,6 +16,7 @@ from formshare.models import (
     Formacces,
     Formgrpacces,
     Collingroup,
+    TimeZone,
 )
 
 __all__ = [
@@ -31,9 +32,25 @@ __all__ = [
     "get_project_from_assistant",
     "get_assigned_assistants",
     "get_assistant_by_api_key",
+    "get_assistant_timezone",
 ]
 
 log = logging.getLogger("formshare")
+
+
+def get_assistant_timezone(request, project_id, coll_id):
+    res = (
+        request.dbsession.query(
+            Collaborator.coll_timezone,
+            TimeZone.timezone_name,
+            TimeZone.timezone_utc_offset,
+        )
+        .filter(Collaborator.project_id == project_id)
+        .filter(Collaborator.coll_id == coll_id)
+        .filter(Collaborator.coll_timezone == TimeZone.timezone_code)
+        .first()
+    )
+    return map_from_schema(res)
 
 
 def get_assigned_assistants(request, project, form):

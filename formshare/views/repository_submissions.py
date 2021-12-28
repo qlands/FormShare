@@ -249,16 +249,49 @@ class GetFormAudit(PrivateView):
             search_string = request_data.get("searchString", "")
             search_operator = request_data.get("searchOper", None)
 
-            field_names = [
-                "audit_date",
-                "audit_user",
-                "audit_action",
-                "audit_table",
-                "audit_column",
-                "audit_oldvalue",
-                "audit_newvalue",
-                "audit_key",
-            ]
+            if self.request.registry.settings.get("use_timezones", "False") == "True":
+                if self.selected_timezone == "formshare":
+                    timezone = self.system_timezone
+                else:
+                    if self.selected_timezone == "user":
+                        timezone = self.user_timezone["user_timezone"]
+                    else:
+                        timezone = project_details["project_timezone"]
+                if timezone != self.system_timezone:
+                    field_names = [
+                        "CONVERT_TZ(audit_date,'{}','{}') as audit_date".format(
+                            self.system_timezone, timezone
+                        ),
+                        "audit_user",
+                        "audit_action",
+                        "audit_table",
+                        "audit_column",
+                        "audit_oldvalue",
+                        "audit_newvalue",
+                        "audit_key",
+                    ]
+                else:
+                    field_names = [
+                        "audit_date",
+                        "audit_user",
+                        "audit_action",
+                        "audit_table",
+                        "audit_column",
+                        "audit_oldvalue",
+                        "audit_newvalue",
+                        "audit_key",
+                    ]
+            else:
+                field_names = [
+                    "audit_date",
+                    "audit_user",
+                    "audit_action",
+                    "audit_table",
+                    "audit_column",
+                    "audit_oldvalue",
+                    "audit_newvalue",
+                    "audit_key",
+                ]
 
             table_order_is_none = False
             if request_data["sidx"] == "":

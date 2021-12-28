@@ -77,6 +77,13 @@ class User(Base):
     tags = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     user_active = Column(INTEGER, server_default=text("'1'"))
     user_apikey = Column(Unicode(64))
+    user_timezone = Column(
+        ForeignKey("timezone.timezone_code", ondelete="RESTRICT"),
+        nullable=False,
+        server_default=text("'UTC'"),
+    )
+
+    timezone = relationship("TimeZone")
 
 
 class Project(Base):
@@ -92,8 +99,15 @@ class Project(Base):
     project_case = Column(INTEGER, server_default=text("'0'"))
     project_icon = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     project_hexcolor = Column(Unicode(60))
+    project_timezone = Column(
+        ForeignKey("timezone.timezone_code", ondelete="RESTRICT"),
+        nullable=False,
+        server_default=text("'UTC'"),
+    )
     extras = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     tags = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+
+    timezone = relationship("TimeZone")
 
 
 class Settings(Base):
@@ -139,10 +153,16 @@ class Collaborator(Base):
     coll_telephone = Column(Unicode(120))
     coll_prjshare = Column(INTEGER)
     coll_apikey = Column(Unicode(64))
+    coll_timezone = Column(
+        ForeignKey("timezone.timezone_code", ondelete="RESTRICT"),
+        nullable=False,
+        server_default=text("'UTC'"),
+    )
     extras = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     tags = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 
     project = relationship("Project")
+    timezone = relationship("TimeZone")
 
 
 class Partner(Base):
@@ -279,6 +299,14 @@ class FinishedTask(Base):
     task_id = Column(Unicode(64), primary_key=True, nullable=False)
     task_enumber = Column(INTEGER)
     task_error = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+
+
+class TimeZone(Base):
+    __tablename__ = "timezone"
+    timezone_code = Column(Unicode(64), primary_key=True, nullable=False)
+    timezone_name = Column(Unicode(64))
+    timezone_utc_offset = Column(Unicode(6))
+    timezone_utc_dst_offset = Column(Unicode(6))
 
 
 class Odkform(Base):

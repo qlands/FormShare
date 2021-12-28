@@ -7,12 +7,20 @@
             </dl>
             <dl class="row mb-0">
                 <div class="col-sm-4 text-sm-right"><dt>{{ _('Created') }}:</dt> </div>
-                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date(formDetails.form_cdate, request.locale_name) }}</dd></div>
+                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date_with_time(formDetails.form_cdate, request.locale_name, timezone) }}</dd></div>
             </dl>
             <dl class="row mb-0">
                 <div class="col-sm-4 text-sm-right"><dt>{{ _('Last updated') }}:</dt> </div>
-                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date(formDetails.form_cdate, request.locale_name) }}</dd></div>
+                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date_with_time(formDetails.form_cdate, request.locale_name, timezone) }}</dd></div>
             </dl>
+            {% if request.h.get_setting(request,'use_timezones','False') == 'True' %}
+                {% if selected_timezone == 'project' and timezone != 'UTC'  %}
+                    <dl class="row mb-0">
+                        <div class="col-sm-4 text-sm-right"><dt>{{ _('Timezone') }}:</dt> </div>
+                        <div class="col-sm-8 text-sm-left"> <dd class="mb-1" title="{{ request.h.get_timezone_desc(request,timezone) }}">UTC{{ request.h.get_timezone_offset(request,timezone) }}</dd></div>
+                    </dl>
+                {% endif %}
+            {% endif %}
             <dl class="row mb-0">
                 <div class="col-sm-4 text-sm-right"><dt>{{ _('Assistants') }}:</dt> </div>
                 <div class="col-sm-8 text-sm-left"> <dd class="mb-1"> {{ formassistants|length }} {% if formassistants|length == 0 and formgroups|length == 0 and projectDetails.access_type < 4 %} <span class="text-danger"><a data-toggle="modal" data-target="#add_assistant"> ({{ _('You need to assign one') }}</a>  )</span>{% else %} {% if projectDetails.access_type < 4 %}<span class="text-success"><a data-toggle="modal" data-target="#add_assistant"> [{{ _('Assign another one') }}]</a></span>{% endif %}{% endif %}</dd></div>
@@ -35,7 +43,7 @@
                 </div>
                 {% if formDetails.submissions > 0 %}
                     <div class="col-sm-8 text-sm-left">
-                        <dd class="mb-1">{{ request.h.readble_date_with_time(formDetails.last, request.locale_name) }} by {{ formDetails.bydetails.coll_name }}</dd>
+                        <dd class="mb-1">{{ request.h.readble_date_with_time(formDetails.last, request.locale_name, timezone) }} by {{ formDetails.bydetails.coll_name }}</dd>
                     </div>
                 {% else %}
                     <div class="col-sm-8 text-sm-left">
@@ -57,7 +65,7 @@
                             {% if formDetails.cleanedlast == "" %}
                                 <dd class="mb-1">{{ _('Not cleaned yet') }}</dd>
                             {% else %}
-                                <dd class="mb-1">{{ request.h.readble_date_with_time(formDetails.cleanedlast, request.locale_name) }} by {{ formDetails.cleanedby }}</dd>
+                                <dd class="mb-1">{{ request.h.readble_date_with_time(formDetails.cleanedlast, request.locale_name, timezone) }} by {{ formDetails.cleanedby }}</dd>
                             {% endif %}
                         </div>
                     </dl>

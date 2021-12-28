@@ -989,6 +989,12 @@ def get_request_data_jqgrid(
     mark_changed(request.dbsession)
     records = request.dbsession.execute(sql).fetchall()
     data = []
+
+    for i in range(len(fields)):
+        if fields[i].find(" as ") >= 0:
+            parts = fields[i].split(" as ")
+            fields[i] = parts[1]
+
     if records is not None:
         for record in records:
             a_record = {}

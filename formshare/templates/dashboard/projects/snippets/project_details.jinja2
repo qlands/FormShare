@@ -284,8 +284,16 @@
                                         </dl>
                                         <dl class="row mb-0">
                                             <div class="col-sm-4 text-sm-right"><dt>{{ _('Created') }}:</dt> </div>
-                                            <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date(projectData.project_cdate, request.locale_name) }}</dd></div>
+                                            <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date_with_time(projectData.project_cdate, request.locale_name, timezone) }}</dd></div>
                                         </dl>
+                                        {% if request.h.get_setting(request,'use_timezones','False') == 'True' %}
+                                            {% if selected_timezone == 'project' and timezone != 'UTC'  %}
+                                                <dl class="row mb-0">
+                                                    <div class="col-sm-4 text-sm-right"><dt>{{ _('Timezone') }}:</dt> </div>
+                                                    <div class="col-sm-8 text-sm-left"> <dd class="mb-1" title="{{ request.h.get_timezone_desc(request,timezone) }}">UTC{{ request.h.get_timezone_offset(request,timezone) }}</dd></div>
+                                                </dl>
+                                            {% endif %}
+                                        {% endif %}
                                     {% endblock project_stats_numbers %}
                                 </div>
                                 <div class="col-lg-6" id="cluster_info">
@@ -295,7 +303,7 @@
                                                 <dt>{{ _('Last Updated') }}:</dt>
                                             </div>
                                             <div class="col-sm-8 text-sm-left">
-                                                <dd class="mb-1">{{ request.h.readble_date(projectData.project_cdate, request.locale_name) }}</dd>
+                                                <dd class="mb-1">{{ request.h.readble_date_with_time(projectData.project_cdate, request.locale_name, timezone) }}</dd>
                                             </div>
                                         </dl>
                                         <dl class="row mb-0">
@@ -304,7 +312,7 @@
                                             </div>
                                             <div class="col-sm-8 text-sm-left">
                                                 {% if submissions > 0 %}
-                                                    <dd class="mb-1">{{ request.h.readble_date_with_time(last, request.locale_name) }} {{ _('by') }} <a class="text-info">{{ bydetails.coll_name }}</a></dd>
+                                                    <dd class="mb-1">{{ request.h.readble_date_with_time(last, request.locale_name, timezone) }} {{ _('by') }} <a class="text-info">{{ bydetails.coll_name }}</a></dd>
                                                 {% else %}
                                                     <dd class="mb-1"></dd>
                                                 {% endif %}

@@ -4,7 +4,7 @@ from pyramid.httpexceptions import HTTPNotFound, HTTPFound
 
 from formshare.config.auth import get_user_data
 from formshare.config.encdecdata import encode_data
-from formshare.processes.db import update_profile
+from formshare.processes.db import update_profile, get_timezones
 from formshare.processes.db.user import update_password
 from formshare.processes.elasticsearch.user_index import (
     get_user_index_manager,
@@ -129,4 +129,4 @@ class EditProfileView(ProfileView):
                         )
                 else:
                     raise HTTPNotFound()
-        return {}
+        return {"timezones": get_timezones(self.request)}

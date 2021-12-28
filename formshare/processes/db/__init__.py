@@ -10,3 +10,4 @@ from formshare.processes.db.project import *
 from formshare.processes.db.submission import *
 from formshare.processes.db.user import *
 from formshare.processes.db.partner import *
+from formshare.processes.db.timezone import *

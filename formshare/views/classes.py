@@ -38,6 +38,7 @@ from formshare.processes.db import (
     get_timezone_offset,
     get_timezone_name,
     get_assistant_timezone,
+    get_project_details,
 )
 
 log = logging.getLogger("formshare")
@@ -718,11 +719,14 @@ class AssistantView(object):
         self.resultDict["userid"] = self.userID
         self.resultDict["projcode"] = self.projectCode
         self.resultDict["posterrors"] = self.errors
+        self.resultDict["activeProject"] = get_project_details(
+            self.request, self.projectID
+        )
         self.resultDict["assistant_timezone"] = get_assistant_timezone(
-            self.request, self.projectID, self.assistantID
+            self.request, self.project_assistant, self.assistantID
         )
         self.assistant_timezone = get_assistant_timezone(
-            self.request, self.projectID, self.assistantID
+            self.request, self.project_assistant, self.assistantID
         )
         process_dict = self.process_view()
         if not self.returnRawViewResult:

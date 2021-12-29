@@ -17,6 +17,9 @@
                             <li><a data-toggle="modal" data-target="#myModalAPIKey">{{ _('Change my API key') }}</a></li>
                         </ul>
                     </li>
+                    <li style="margin-top: 15px">
+                        {{ _('Your are assisting in project ') }}: {{ activeProject.project_name }} {% if selected_timezone == 'project' and timezone != 'UTC'  %}<span class="badge badge-default" title=" {{ request.h.get_timezone_desc(request,timezone) }} ">UTC{{ request.h.get_timezone_offset(request,timezone) }}</span>{% endif %}
+                    </li>
 {#                    <li class="dropdown">#}
 {#                        <a aria-expanded="false" role="button" href="#" class="dropdown-toggle" data-toggle="dropdown"> Menu item</a>#}
 {#                        <ul role="menu" class="dropdown-menu" class="dropdown-menu" style="right: -135px">#}
@@ -47,6 +50,23 @@
 
                 </ul>
                 <ul class="nav navbar-top-links navbar-right">
+                    {% block header_timezone %}
+                        {% if request.h.get_setting(request,'use_timezones','False') == 'True' %}
+                            <li>
+                                <div>
+                                    {{ _('Time zone') }}:
+                                    <select id="timezone" style="margin-right: 10px">
+                                        {% block timezones_options %}
+                                            <option id="formshare" value="formshare">{{ _("FormShare's") }}: {{ system_timezone }}{% if system_timezone != "UTC" %} (UTC{{ system_timezone_offset }}){% endif %}</option>
+                                            <option id="user" value="user" title="{{ assistant_timezone.timezone_name }}">{{ _('Yours') }} (UTC{{ assistant_timezone.timezone_utc_offset }})</option>
+                                            <option id="project" value="project">{{ _('By project') }}</option>
+                                        {% endblock timezones_options %}
+                                    </select>
+                                </div>
+                            </li>
+                        {% endif %}
+                    {% endblock header_timezone %}
+
                     {% block language_menu_item %}
                         <li>
                             <div>

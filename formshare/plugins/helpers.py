@@ -203,6 +203,23 @@ def simple_date(date, timezone_to_use=None):
 
 
 @core_helper
+def simple_date_with_time(date, timezone_to_use=None):
+    """
+    Returns a readable date"
+    :param date: Datetime
+    :param timezone_to_use: Time zone to use
+    :return: A si mple date
+    """
+    if date is None:
+        return "NA"
+    date = convert_date(date)
+    if timezone_to_use is not None:
+        date = date.astimezone(timezone(timezone_to_use))
+    ar = arrow.get(date)
+    return ar.format("DD/MM/YYYY HH:mm:ss")
+
+
+@core_helper
 def simple_date_usa(date, timezone_to_use=None):
     """
     Returns a readable date"

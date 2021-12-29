@@ -1,6 +1,20 @@
 {% extends 'base.jinja2' %}
 {% import 'dashboard/macros/form.jinja2' as form %}
 
+{% if request.h.get_setting(request,'use_timezones','False') == 'True' %}
+    {% if selected_timezone == 'formshare' %}
+        {% set timezone = system_timezone %}
+    {% else %}
+        {% if selected_timezone == 'user' %}
+            {% set timezone = assistant_timezone.coll_timezone %}
+        {% else %}
+            {% set timezone = activeProject.project_timezone %}
+        {% endif %}
+    {% endif %}
+{% else %}
+    {% set timezone = None %}
+{% endif %}
+
 {% block css %}
     {% cssresource request,'formshare','style' %}
 {% endblock css %}
@@ -60,6 +74,15 @@
                 }
 
                 $(document).ready(function() {
+
+                    var selectedTimeZone = readCookie('_TIMEZONE_');
+                    if (selectedTimeZone != null)
+                        $('#timezone').val(selectedTimeZone);
+                    $("#timezone").bind('change', function() {
+                        setCookie('_TIMEZONE_', this.value, 365);
+                        location.reload();
+                    });
+
                     var selectedLanguage = readCookie('_LOCALE_');
                     if (selectedLanguage != null)
                         $('#language').val(selectedLanguage);

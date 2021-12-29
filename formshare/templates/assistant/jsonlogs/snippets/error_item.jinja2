@@ -11,7 +11,7 @@
         <div class="col-md-3">
             <div class="text-center">
                 <span title="{{ error.log_id }}">...-{{ error.log_short }}</span> <button class="btn btn-white btn-bitbucket clipboard" data-clipboard-text="{{ error.log_id }}" title="{{ _('Copy submission to clipboard') }}"><i class="far fa-copy"></i></button><br/>{% if error.error.moved %}{{ _('for') }}{% else %}{{ _('by') }}{% endif %} {{ error.enum_name }}<br/>
-                {{ error.log_dtime }}
+                {{ request.h.simple_date_with_time(error.log_dtime, timezone) }}
             </div>
         </div>
         <div class="col-md-3">
@@ -48,41 +48,41 @@
                     {% if error.lastentry != None %}
                         {% if error.lastentry.log_action == 5 %}
                             <br/>{{ error.lastentry.enum_name }} {{ _('canceled check-out') }}<br/>
-                            <span title="{{ _('Canceled date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
+                            <span title="{{ _('Canceled date') }}" class="date" style="font-size: 10px; color: lightgray">{{ request.h.simple_date_with_time(error.lastentry.log_dtime, timezone) }}</span>
                         {% endif %}
                         {% if error.lastentry.log_action == 6 %}
                             <br/> {{ error.lastentry.enum_name }} {{ _('canceled revision') }} <a href="{{ request.route_url('viewrevision', userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id,revisionid=error.lastentry.log_commit) }}">{{ error.lastentry.log_commit }}</a><br/>
-                            <span title="{{ _('Canceled date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
+                            <span title="{{ _('Canceled date') }}" class="date" style="font-size: 10px; color: lightgray">{{ request.h.simple_date_with_time(error.lastentry.log_dtime, timezone) }}</span>
                         {% endif %}
                         {% if error.lastentry.log_action == 7 %}
                             <br/> {{ error.lastentry.enum_name }} {{ _('pushed revision') }} <a href="{{ request.route_url('viewrevision', userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id,revisionid=error.lastentry.log_commit,_query={'pushed': true}) }}">{{ error.lastentry.log_commit }}</a> but failed<br/>
-                            <span title="{{ _('Failed date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
+                            <span title="{{ _('Failed date') }}" class="date" style="font-size: 10px; color: lightgray">{{ request.h.simple_date_with_time(error.lastentry.log_dtime, timezone) }}</span>
                         {% endif %}
                         {% if error.lastentry.log_action == 8 %}
                             <br/>{{ error.lastentry.enum_name }} {{ _('canceled disregard') }}<br/>
-                            <span title="{{ _('Canceled date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
+                            <span title="{{ _('Canceled date') }}" class="date" style="font-size: 10px; color: lightgray">{{ request.h.simple_date_with_time(error.lastentry.log_dtime, timezone) }}</span>
                         {% endif %}
                     {% endif %}
                 {% endif %}
                 {% if error.status == 2 %}
                     {{ _('Checked-out by') }} {{ error.lastentry.enum_name }}<br/>
-                    <span title="{{ _('Check-out date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
+                    <span title="{{ _('Check-out date') }}" class="date" style="font-size: 10px; color: lightgray">{{ request.h.simple_date_with_time(error.lastentry.log_dtime, timezone) }}</span>
                 {% endif %}
                 {% if error.status == 3 %}
                     {{ error.lastentry.enum_name }} {{ _('checked-in revision ID') }}: <a href="{{ request.route_url('viewrevision', userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id,revisionid=error.lastentry.log_commit) }}">{{ error.lastentry.log_commit }}</a><span class="label label-important" title="{{ _('To be pushed to the repository') }}">{{ _('To be pushed') }}</span> <br/>
-                    <span title="{{ _('Check-in date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
+                    <span title="{{ _('Check-in date') }}" class="date" style="font-size: 10px; color: lightgray">{{ request.h.simple_date_with_time(error.lastentry.log_dtime, timezone) }}</span>
                 {% endif %}
                 {% if error.status == 5 %}
                     {{ error.lastentry.enum_name }} {{ _('canceled check-out') }}<br/>
-                    <span title="{{ _('Canceled date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
+                    <span title="{{ _('Canceled date') }}" class="date" style="font-size: 10px; color: lightgray">{{ request.h.simple_date_with_time(error.lastentry.log_dtime, timezone) }}</span>
                 {% endif %}
                 {% if error.lastentry.log_action == 4 %}
                     <b style="color: orange">{{ _('Disregarded') }}</b> {{ _('by') }} {{ error.lastentry.enum_name }}<br/>
-                    <span title="{{ _('Disregarded date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
+                    <span title="{{ _('Disregarded date') }}" class="date" style="font-size: 10px; color: lightgray">{{ request.h.simple_date_with_time(error.lastentry.log_dtime, timezone) }}</span>
                 {% endif %}
                 {% if error.status == 0 %}
                     <b style="color: green">{{ _('Fixed') }}</b> {{ _('by') }} {{ error.lastentry.enum_name }} {% if error.lastentry.log_commit != None %}{{ _('in revision') }} <a href="{{ request.route_url('viewrevision', userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id,revisionid=error.lastentry.log_commit,_query={'pushed': true}) }}">{{ error.lastentry.log_commit }}</a>{% endif %}<br/>
-                    <span title="{{ _('Fixed date') }}" class="date" style="font-size: 10px; color: lightgray">{{ error.lastentry.log_dtime }}</span>
+                    <span title="{{ _('Fixed date') }}" class="date" style="font-size: 10px; color: lightgray">{{ request.h.simple_date_with_time(error.lastentry.log_dtime, timezone) }}</span>
                 {% endif %}
             </div>
         </div>

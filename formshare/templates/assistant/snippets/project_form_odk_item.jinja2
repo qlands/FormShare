@@ -5,10 +5,10 @@
     <div class="media-body ">
         <div class="row">
             <div class="col-md-12">
-                <span class="float-right">{{ _('Uploaded on') }} {{ request.h.readble_date(form.form_cdate, request.locale_name) }}</span>
+                <span class="float-right">{{ _('Uploaded on') }} {{ request.h.readble_date_with_time(form.form_cdate, request.locale_name, timezone) }}</span>
                 <strong>{{ form.form_name }}</strong><br/>
                 {% if form.last != None %}
-                    <span class="text-muted">{{ _('Last submission') }}: {{ request.h.readble_date_with_time(form.last, request.locale_name) }} {{ _('by') }} <span class="text-info">{{ form.bydetails.coll_name }}</span></span><br/>
+                    <span class="text-muted">{{ _('Last submission') }}: {{ request.h.readble_date_with_time(form.last, request.locale_name, timezone) }} {{ _('by') }} <span class="text-info">{{ form.bydetails.coll_name }}</span></span><br/>
                 {% else %}
                     <span class="text-muted">{{ _('Without submissions') }}</span>
                 {% endif %}

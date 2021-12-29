@@ -45,7 +45,7 @@
             </div>
         </div>
         <div class="ibox-content">
-            {{ _('You are comparing submission') }} <b>{{ submissionid }}</b> {{ _('made on') }} {{ data.log_dtime }} {{ _('by') }} {{ data.enum_name }}.
+            {{ _('You are comparing submission') }} <b style="color: #feb6ba;">{{ submissionid }}</b> {{ _('made on') }} {{ request.h.simple_date_with_time(data.log_dtime, timezone) }} {{ _('by') }} {{ data.enum_name }}.
             {% if error_summary|length > 0 %}
                 <div class="error-explanation alert alert-error">
                     <p>{{ _('The form contains invalid entries:') }}</p>
@@ -77,7 +77,7 @@
                 </form>
             {% else %}
                 <hr>
-                Against submission <b>{{ compData.submission_id }}</b> made on {{ compData.submission_dtime }} by {{ compData.enum_name }} {% if compData.submission_status == 0 %} which <b>is stored</b> in the repository. {% else %} which <b>is NOT stored</b> in the repository. {% endif %}
+                {{ _('Against submission') }} <b style="color: #97f295">{{ compData.submission_id }}</b> {{ _('made on') }} {{ request.h.simple_date_with_time(compData.submission_dtime, timezone) }} {{ _('by') }} {{ compData.enum_name }} {% if compData.submission_status == 0 %} <b> {{ _('which is stored in the repository') }}</b>. {% else %} <b>{{ _('which is NOT stored in the repository') }}</b>. {% endif %}
                 <hr>
                 <div id="diff">
                     <div class="d2h-wrapper">
@@ -88,7 +88,7 @@
     <path d="M6 5H2v-1h4v1zM2 8h7v-1H2v1z m0 2h7v-1H2v1z m0 2h7v-1H2v1z m10-7.5v9.5c0 0.55-0.45 1-1 1H1c-0.55 0-1-0.45-1-1V2c0-0.55 0.45-1 1-1h7.5l3.5 3.5z m-1 0.5L8 2H1v12h10V5z"></path>
 </svg></span>
     <span class="d2h-file-name">{{ submissionid }} → {{  compData.submission_id }}</span>
-    <span class="d2h-tag d2h-moved d2h-moved-tag">Different</span></span>
+    <span class="d2h-tag d2h-moved d2h-moved-tag">{{ _('Different') }}</span></span>
                             </div>
                             {{ diff }}
                         </div>

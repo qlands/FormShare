@@ -39,6 +39,7 @@ from formshare.processes.db import (
     get_timezone_name,
     get_assistant_timezone,
     get_project_details,
+    get_partner_timezone,
 )
 
 log = logging.getLogger("formshare")
@@ -760,6 +761,32 @@ class PartnerView(object):
             self.resultDict["rtl"] = True
         self.returnRawViewResult = False
         self.checkCrossPost = True
+        self.resultDict["selected_timezone"] = self.request.cookies.get(
+            "_TIMEZONE_", "formshare"
+        )
+        self.selected_timezone = self.request.cookies.get("_TIMEZONE_", "formshare")
+        self.resultDict["system_timezone"] = (
+            datetime.datetime.utcnow().astimezone().tzname()
+        )
+        self.system_timezone = datetime.datetime.utcnow().astimezone().tzname()
+        if self.resultDict["system_timezone"] != "UTC":
+            self.resultDict["system_timezone_offset"] = get_timezone_offset(
+                self.request, self.resultDict["system_timezone"]
+            )
+            self.resultDict["system_timezone_name"] = get_timezone_name(
+                self.request, self.resultDict["system_timezone"]
+            )
+            self.system_timezone_offset = get_timezone_offset(
+                self.request, self.resultDict["system_timezone"]
+            )
+            self.system_timezone_name = get_timezone_name(
+                self.request, self.resultDict["system_timezone"]
+            )
+        else:
+            self.resultDict["system_timezone_offset"] = "+00:00"
+            self.resultDict["system_timezone_name"] = "UTC"
+            self.system_timezone_offset = "+00:00"
+            self.system_timezone_name = "UTC"
 
     def get_policy(self, policy_name):
         policies = self.request.policies()
@@ -830,6 +857,10 @@ class PartnerView(object):
         self.partnerEmail = self.partner.email
         self.resultDict["activePartner"] = self.partner
         self.resultDict["posterrors"] = self.errors
+        self.resultDict["partner_timezone"] = get_partner_timezone(
+            self.request, self.partnerEmail
+        )
+        self.assistant_timezone = get_partner_timezone(self.request, self.partnerEmail)
         process_dict = self.process_view()
         if not self.returnRawViewResult:
             self.resultDict.update(process_dict)

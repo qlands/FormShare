@@ -180,10 +180,16 @@ class Partner(Base):
         ForeignKey("fsuser.user_id", ondelete="CASCADE"),
         nullable=False,
     )
+    partner_timezone = Column(
+        ForeignKey("timezone.timezone_code", ondelete="RESTRICT"),
+        nullable=False,
+        server_default=text("'UTC'"),
+    )
     extras = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     tags = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 
     fsuser = relationship("User")
+    timezone = relationship("TimeZone")
 
 
 class PartnerProject(Base):

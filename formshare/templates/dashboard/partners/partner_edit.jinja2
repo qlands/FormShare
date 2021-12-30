@@ -1,7 +1,19 @@
 {% extends 'dashboard/page.jinja2' %}
 {% import 'dashboard/macros/form.jinja2' as form %}
 
+{% set creating_partner = False %}
+
 {% block titlesection %}{{ _("Edit partner") }}{% endblock titlesection %}
+
+{% block css %}
+    {{ super() }}
+    {% cssresource request,'formshare','select2' %}
+{% endblock css %}
+
+{% block topScripts %}
+    {{ super() }}
+    {% jsresource request,'formshare','select2' %}
+{% endblock topScripts %}
 
 {% block breadcrumbs %}
     {% include 'dashboard/partners/snippets/brdcrbs_partneredit.jinja2' %}
@@ -69,6 +81,9 @@
             }
 
             $(document).ready(function() {
+                {% if request.h.get_setting(request,'use_timezones','False') == 'True' %}
+                    $("#partner_timezone").select2();
+                {% endif %}
                 $('#genkey').click(function () {
                     $('#partner_apikey').val(uuidv4());
                 });

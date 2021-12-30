@@ -47,6 +47,22 @@
 
                 </ul>
                 <ul class="nav navbar-top-links navbar-right">
+                    {% block header_timezone %}
+                        {% if request.h.get_setting(request,'use_timezones','False') == 'True' %}
+                            <li>
+                                <div>
+                                    {{ _('Time zone') }}:
+                                    <select id="timezone" style="margin-right: 10px">
+                                        {% block timezones_options %}
+                                            <option id="formshare" value="formshare">{{ _("FormShare's") }}: {{ system_timezone }}{% if system_timezone != "UTC" %} (UTC{{ system_timezone_offset }}){% endif %}</option>
+                                            <option id="user" value="user" title="{{ partner_timezone.timezone_name }}">{{ _('Yours') }} (UTC{{ partner_timezone.timezone_utc_offset }})</option>
+                                            <option id="project" value="project">{{ _('By project') }}</option>
+                                        {% endblock timezones_options %}
+                                    </select>
+                                </div>
+                            </li>
+                        {% endif %}
+                    {% endblock header_timezone %}
                     {% block language_menu_item %}
                         <li>
                             <div>

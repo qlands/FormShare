@@ -10,6 +10,7 @@ from formshare.processes.db.partner import (
     update_partner_password,
     delete_partner,
 )
+from formshare.processes.db.timezone import get_timezones
 from formshare.processes.db.user import get_user_details
 from formshare.config.encdecdata import encode_data
 import datetime
@@ -278,7 +279,11 @@ class AddPartnerView(PrivateView):
             else:
                 self.append_to_errors(self._("The email you provided is invalid"))
 
-        return {"userid": user_id, "partnerData": partner_details}
+        return {
+            "userid": user_id,
+            "partnerData": partner_details,
+            "timezones": get_timezones(self.request),
+        }
 
 
 class EditPartnerView(PrivateView):
@@ -440,7 +445,11 @@ class EditPartnerView(PrivateView):
                         )
                 else:
                     self.append_to_errors(self._("The password cannot be empty"))
-        return {"userid": user_id, "partnerData": partner_details}
+        return {
+            "userid": user_id,
+            "partnerData": partner_details,
+            "timezones": get_timezones(self.request),
+        }
 
 
 class DeletePartnerView(PrivateView):

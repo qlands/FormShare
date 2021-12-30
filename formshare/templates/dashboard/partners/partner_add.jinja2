@@ -3,6 +3,18 @@
 
 {% block titlesection %}{{ _("Add partner") }}{% endblock titlesection %}
 
+{% set creating_partner = True %}
+
+{% block css %}
+    {{ super() }}
+    {% cssresource request,'formshare','select2' %}
+{% endblock css %}
+
+{% block topScripts %}
+    {{ super() }}
+    {% jsresource request,'formshare','select2' %}
+{% endblock topScripts %}
+
 {% block breadcrumbs %}
     {% include 'dashboard/partners/snippets/brdcrbs_partneradd.jinja2' %}
 {% endblock breadcrumbs %}
@@ -31,3 +43,14 @@
         </div>
     </div>
 {% endblock maincontent %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function() {
+            {% if request.h.get_setting(request,'use_timezones','False') == 'True' %}
+                $("#partner_timezone").select2();
+            {% endif %}
+        });
+    </script>
+{% endblock scripts %}

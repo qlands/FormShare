@@ -1,12 +1,31 @@
 {% extends 'dashboard/partners/snippets/partner_form.jinja2' %}
 
+{% block partner_timezone %}
+    {% if request.h.get_setting(request,'use_timezones','False') == 'True' %}
+        <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Time zone') }}</label>
+            <div class="col-sm-10">
+                {% if partner_read_only == False %}
+                    <select style="width: 100%" id="partner_timezone" name="partner_timezone" data-module="autocomplete" data-module-dropdown-class="lang-dropdown" data-module-container-class="lang-container">
+                        {% for a_timezone in timezones %}
+                            <option value="{{ a_timezone.timezone_code }}" {% if a_timezone.timezone_code == partnerData.partner_timezone %} selected {% endif %} >{{ a_timezone.timezone_name }} (UTC{{ a_timezone.timezone_utc_offset }})</option>
+                        {% endfor %}
+                    </select>
+                {% else %}
+                    <input required readonly type="text" class="form-control" name="partner_timezone" value="{{ request.h.get_timezone_desc(request, partnerData.partner_timezone) }} (UTC{{ request.h.get_timezone_offset(request, partnerData.partner_timezone) }})">
+                {% endif %}
+                <span class="form-text m-b-none">{{ _("This should be the time zone where the partner performs activities. As a reference, FormShare's time zone is ") }} {{ system_timezone_name }} {% if system_timezone != "UTC" %}(UTC{{ system_timezone_offset }}){% endif %}</span>
+            </div>
+        </div>
+        <div class="hr-line-dashed"></div>
+    {% endif %}
+{% endblock partner_timezone %}
+
 {% block partner_form_passwords %}
 
 {% endblock partner_form_passwords %}
 
 {% block partner_form_controls_extra %}
     {{ super() }}
-    <div class="hr-line-dashed"></div>
     <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('API Key') }}</label>
         <div class="input-group col-sm-10">
             <input type="text" readonly class="form-control" id="partner_apikey" name="partner_apikey" value="{{ partnerData.partner_apikey }}">

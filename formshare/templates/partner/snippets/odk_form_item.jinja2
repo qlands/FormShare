@@ -24,11 +24,11 @@
                         {% endif %}
 
                         <br>
-                        <span class="text-muted">{{ _('Created on') }} {{ request.h.readble_date(form.form_cdate,request.locale_name) }}</span><br>
+                        <span class="text-muted">{{ _('Created on') }} {{ request.h.readble_date_with_time(form.form_cdate,request.locale_name, timezone) }}</span><br>
                         {% if form.stats[0] > 0  %}
-                            <span class="text-muted">{{ _('Last submission') }}: {{ request.h.readble_date_with_time(form.stats[1],request.locale_name) }}</span><br>
+                            <span class="text-muted">{{ _('Last submission') }}: {{ request.h.readble_date_with_time(form.stats[1],request.locale_name, timezone) }}</span><br>
                             {% if form.clean_stats[0] != None %}
-                                <span class="text-muted">{{ _('Last cleaned') }}: {{ request.h.readble_date_with_time(form.clean_stats[0],request.locale_name) }}</span><br>
+                                <span class="text-muted">{{ _('Last cleaned') }}: {{ request.h.readble_date_with_time(form.clean_stats[0],request.locale_name, timezone) }}</span><br>
                             {% endif %}
                         {% else %}
                             <span class="text-muted">{{ _('Without submissions') }}</span>
@@ -39,7 +39,7 @@
                             </div>
                         {% endif %}
                     {% endblock form_item_content %}
-                    {% if form.stats[0] > 0  %}{{ form.stats[0] }} {% if form.form_target > 0 %}of {{ form.form_target }} {% endif %} {{ _('submissions') }} : <strong>{{ form.stats[2] }} {{ _('in database') }}. {% if form.stats[3] > 0 %}{{ form.stats[3] }} {{ _('log entries') }} ({% endif %}{% if form.stats[4] > 0 %}{{ form.stats[4] }} {{ _('with errors') }}){% endif %}</strong> {% endif %}
+                    {% if form.stats[0] > 0  %}{{ form.stats[0] }} {% if form.form_target > 0 %}of {{ form.form_target }} {% endif %} {{ _('submissions') }} : <strong>{{ form.stats[2] }} {{ _('in database') }}. {% if form.stats[3] > 0 %}{{ form.stats[3] }} {{ _('log entries') }} {% endif %}{% if form.stats[4] > 0 %}({{ form.stats[4] }} {{ _('with errors') }}){% endif %}</strong> {% endif %}
                 </div>
             </div>
         </div>

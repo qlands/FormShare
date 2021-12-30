@@ -3,6 +3,16 @@
 
 {% block titlesection %}{{ _("Partner activity") }}{% endblock titlesection %}
 
+{% if request.h.get_setting(request,'use_timezones','False') == 'True' %}
+    {% if selected_timezone == 'formshare' %}
+        {% set timezone = system_timezone %}
+    {% else %}
+        {% set timezone = user_timezone.user_timezone %}
+    {% endif %}
+{% else %}
+    {% set timezone = None %}
+{% endif %}
+
 {% block css %}
     {{ super() }}
     <style>
@@ -37,6 +47,9 @@
                             <h3 class="timeline-header"><span>{{ request.h.month_from_number(a_month.month, request.locale_name) }}</span></h3>
                             <div class="activity-stream" style="margin-left: 20px">
                                 {% for an_activity in a_month.activities %}
+                                    {% if selected_timezone == 'project' %}
+                                        {% set timezone = an_activity.project_details.project_timezone %}
+                                    {% endif %}
                                     <div class="stream">
                                         <div class="stream-badge">
                                             {% if an_activity.type == "access" %}
@@ -55,14 +68,14 @@
                                                     {% if an_activity.type == "download" %}
                                                         <span>{{ _('Downloaded a') }} {{ an_activity.product_desc }}</span>
                                                     {% endif %}
-                                                    <span class="date" title="{{ an_activity.published }}">{{ request.h.readble_date(an_activity.published,request.locale_name) }}</span>
+                                                    <span class="date" title="{{ request.h.readble_date_with_time(an_activity.published,request.locale_name,timezone) }}">{{ request.h.readble_date(an_activity.published,request.locale_name,timezone) }}</span>
 {#                                                </a>#}
                                             </div>
                                             {% if an_activity.type == "access" %}
-                                                {{ _('Accessed form') }} <a href="{{ request.route_url('form_details',userid=an_activity.user_id,projcode=an_activity.project_details.project_code,formid=an_activity.form_id) }}">"{{ an_activity.form_details.form_name }}"</a> {{ _('of project') }} <a href="{{ request.route_url('project_details',userid=an_activity.user_id,projcode=an_activity.project_details.project_code) }}">"{{ an_activity.project_details.project_name }}"</a>
+                                                {{ _('Accessed form') }} <a href="{{ request.route_url('form_details',userid=an_activity.user_id,projcode=an_activity.project_details.project_code,formid=an_activity.form_id) }}">"{{ an_activity.form_details.form_name }}"</a> {{ _('of project') }} <a href="{{ request.route_url('project_details',userid=an_activity.user_id,projcode=an_activity.project_details.project_code) }}">"{{ an_activity.project_details.project_name }}"</a> {% if selected_timezone == 'project' and timezone != 'UTC'  %}<span class="badge badge-default" title=" {{ request.h.get_timezone_desc(request,an_activity.project_details.project_timezone) }} ">UTC{{ request.h.get_timezone_offset(request,an_activity.project_details.project_timezone) }}</span>{% endif %}
                                             {% endif %}
                                             {% if an_activity.type == "download" %}
-                                                {{ _('Downloaded the version with ID:') }} "{{ an_activity.output_id }}" {{ _('from the form') }} <a href="{{ request.route_url('form_details',userid=an_activity.user_id,projcode=an_activity.project_details.project_code,formid=an_activity.form_id) }}">"{{ an_activity.form_details.form_name }}"</a> {{ _('of project') }} <a href="{{ request.route_url('project_details',userid=an_activity.user_id,projcode=an_activity.project_details.project_code) }}">"{{ an_activity.project_details.project_name }}"</a>
+                                                {{ _('Downloaded the version with ID:') }} "{{ an_activity.output_id }}" {{ _('from the form') }} <a href="{{ request.route_url('form_details',userid=an_activity.user_id,projcode=an_activity.project_details.project_code,formid=an_activity.form_id) }}">"{{ an_activity.form_details.form_name }}"</a> {{ _('of project') }} <a href="{{ request.route_url('project_details',userid=an_activity.user_id,projcode=an_activity.project_details.project_code) }}">"{{ an_activity.project_details.project_name }}"</a> {% if selected_timezone == 'project' and timezone != 'UTC'  %}<span class="badge badge-default" title=" {{ request.h.get_timezone_desc(request,an_activity.project_details.project_timezone) }} ">UTC{{ request.h.get_timezone_offset(request,an_activity.project_details.project_timezone) }}</span>{% endif %}
                                             {% endif %}
                                         </div>
                                     </div>

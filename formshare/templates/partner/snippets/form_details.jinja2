@@ -3,11 +3,11 @@
         {% block form_details_header %}
             <dl class="row mb-0">
                 <div class="col-sm-4 text-sm-right"><dt>{{ _('Created') }}:</dt> </div>
-                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date(formDetails.form_cdate, request.locale_name) }}</dd></div>
+                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date_with_time(formDetails.form_cdate, request.locale_name, timezone) }}</dd></div>
             </dl>
             <dl class="row mb-0">
                 <div class="col-sm-4 text-sm-right"><dt>{{ _('Last updated') }}:</dt> </div>
-                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date(formDetails.form_cdate, request.locale_name) }}</dd></div>
+                <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ request.h.readble_date_with_time(formDetails.form_cdate, request.locale_name, timezone) }}</dd></div>
             </dl>
         {% endblock form_details_header %}
     </div>
@@ -23,7 +23,7 @@
                 </div>
                 {% if formDetails.submissions > 0 %}
                     <div class="col-sm-8 text-sm-left">
-                        <dd class="mb-1">{{ request.h.readble_date_with_time(formDetails.last, request.locale_name) }}</dd>
+                        <dd class="mb-1">{{ request.h.readble_date_with_time(formDetails.last, request.locale_name, timezone) }}</dd>
                     </div>
                 {% else %}
                     <div class="col-sm-8 text-sm-left">
@@ -45,7 +45,7 @@
                             {% if formDetails.cleanedlast == "" %}
                                 <dd class="mb-1">{{ _('Not cleaned yet') }}</dd>
                             {% else %}
-                                <dd class="mb-1">{{ request.h.readble_date_with_time(formDetails.cleanedlast, request.locale_name) }}</dd>
+                                <dd class="mb-1">{{ request.h.readble_date_with_time(formDetails.cleanedlast, request.locale_name, timezone) }}</dd>
                             {% endif %}
                         </div>
                     </dl>

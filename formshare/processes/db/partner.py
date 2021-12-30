@@ -17,6 +17,7 @@ from formshare.models import (
     Project,
     Odkform,
     Userproject,
+    TimeZone,
 )
 
 __all__ = [
@@ -39,9 +40,24 @@ __all__ = [
     "partner_has_project",
     "partner_has_form",
     "get_partner_by_api_key",
+    "get_partner_timezone",
 ]
 
 log = logging.getLogger("formshare")
+
+
+def get_partner_timezone(request, partner_email):
+    res = (
+        request.dbsession.query(
+            Partner.partner_timezone,
+            TimeZone.timezone_name,
+            TimeZone.timezone_utc_offset,
+        )
+        .filter(Partner.partner_email == partner_email)
+        .filter(Partner.partner_timezone == TimeZone.timezone_code)
+        .first()
+    )
+    return map_from_schema(res)
 
 
 def partner_exists(request, partner_email):
@@ -342,6 +358,7 @@ def get_projects_and_forms_by_partner(request, partner_id):
                     "project_id": a_form["project_id"],
                     "project_code": a_form["project_code"],
                     "project_name": a_form["project_name"],
+                    "project_timezone": a_form["project_timezone"],
                     "project_abstract": a_form["project_abstract"],
                     "time_bound": a_form["time_bound"],
                     "access_from": get_date(
@@ -451,6 +468,7 @@ def get_projects_and_forms_by_partner(request, partner_id):
                     "project_id": a_form["project_id"],
                     "project_code": a_form["project_code"],
                     "project_name": a_form["project_name"],
+                    "project_timezone": a_form["project_timezone"],
                     "project_abstract": a_form["project_abstract"],
                     "access_from": None,
                     "access_to": None,

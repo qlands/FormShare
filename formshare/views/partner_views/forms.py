@@ -193,6 +193,7 @@ class PartnerGetSubMissionInfo(PartnerView):
                     raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)
+        project_details = get_project_details(self.request, project_id)
         if form_data is None:
             raise HTTPNotFound
 
@@ -254,6 +255,7 @@ class PartnerGetSubMissionInfo(PartnerView):
                 break
 
         return {
+            "projectDetails": project_details,
             "formData": form_data,
             "submissionData": submission_data,
             "submissionID": submission_id,

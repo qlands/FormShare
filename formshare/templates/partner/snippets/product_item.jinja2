@@ -7,10 +7,10 @@
             <div class="media-body ">
                 {% block product_item_ready_head %}
                     {% if output.product_published == 1 %}
-                        <small class="float-right text-navy">{{ _('Published by') }} {{ output.published_by_name }} ({{ request.h.simple_date(output.date_published) }})</small>
+                        <small class="float-right text-navy">{{ _('Published by') }} {{ output.published_by_name }} ({{ request.h.simple_date_with_time(output.date_published, timezone) }})</small>
                     {% endif %}
                     {% if output.published == 1 %}<span class="label" style="color: white; background: cornflowerblue" title="{{ _('Public Access') }}">{{ _('Public') }}</span><br>{% endif %}
-                    <small class="text-muted">{{ _('Created on ') }} {{ request.h.readble_date_with_time(output.datetime_added,request.locale_name) }} {% if output.status == 0 %} {% if output.output_file != None %}- <span class="text-success"> {{ output.downloads }} {{ request.h.pluralize(_('download'),output.downloads,request.locale_name) }} {% if output.last_download != None %}({{ _('last') }}: {{ request.h.simple_date(output.last_download) }}){% endif %}</span>{% endif %} {% endif %}</small>
+                    <small class="text-muted">{{ _('Created on ') }} {{ request.h.readble_date_with_time(output.datetime_added,request.locale_name, timezone) }} {% if output.status == 0 %} {% if output.output_file != None %}- <span class="text-success"> {{ output.downloads }} {{ request.h.pluralize(_('download'),output.downloads,request.locale_name) }} {% if output.last_download != None %}({{ _('last') }}: {{ request.h.simple_date_with_time(output.last_download, timezone) }}){% endif %}</span>{% endif %} {% endif %}</small>
                     {% if output.output_file != None %}
                         <br/>
                         {% if output.status == 0 %}

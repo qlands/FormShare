@@ -88,6 +88,7 @@ class Partner(object):
         self.fullName = partner_data["partner_name"]
         self.create_by = partner_data["created_by"]
         self.organization = partner_data["partner_organization"]
+        self.timezone = partner_data["partner_timezone"]
         self.APIKey = partner_data["partner_apikey"]
 
     def check_password(self, password, request):

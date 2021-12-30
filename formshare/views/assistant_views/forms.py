@@ -19,7 +19,6 @@ from formshare.processes.db import (
     change_assistant_password,
     get_assistant_password,
     modify_assistant,
-    get_timezones,
 )
 from formshare.views.classes import AssistantView
 
@@ -62,7 +61,6 @@ class AssistantForms(AssistantView):
             "activeUser": None,
             "forms": forms,
             "projectDetails": get_project_details(self.request, self.projectID),
-            "timezones": get_timezones(self.request),
         }
 
 

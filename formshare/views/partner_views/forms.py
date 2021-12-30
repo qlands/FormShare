@@ -5,7 +5,11 @@ from formshare.processes.db.partner import (
     get_projects_and_forms_by_partner,
     partner_has_project,
     partner_has_form,
+    update_partner_password,
+    update_partner,
 )
+from formshare.config.auth import check_partner_login
+from formshare.config.encdecdata import encode_data
 from formshare.processes.db.form import (
     get_form_details,
     get_form_data,
@@ -14,7 +18,7 @@ from formshare.processes.db.form import (
 )
 from formshare.processes.db.project import get_project_id_from_name, get_project_details
 import datetime
-from pyramid.httpexceptions import HTTPNotFound
+from pyramid.httpexceptions import HTTPNotFound, HTTPFound
 from formshare.processes.submission.api import (
     get_gps_points_from_form,
     get_fields_from_table,
@@ -41,6 +45,130 @@ class PartnerForms(PartnerView):
             "projects": get_projects_and_forms_by_partner(self.request, self.partnerID),
             "today": datetime.date.today(),
         }
+
+
+class ChangeMyPartnerPassword(PartnerView):
+    def __init__(self, request):
+        PartnerView.__init__(self, request)
+        self.checkCrossPost = False
+
+    def process_view(self):
+        if self.request.method == "POST":
+            next_page = self.request.params.get("next") or self.request.route_url(
+                "partner_forms"
+            )
+            self.returnRawViewResult = True
+            partner_data = self.get_post_dict()
+            if partner_data["partner_password"] != "":
+                if (
+                    partner_data["partner_password"]
+                    == partner_data["partner_password2"]
+                ):
+                    if check_partner_login(
+                        self.request, self.partnerEmail, partner_data["old_password"]
+                    ):
+                        continue_change = True
+                        for plugin in p.PluginImplementations(p.IPartner):
+                            (
+                                continue_change,
+                                error_message,
+                            ) = plugin.before_password_change(
+                                self.request,
+                                self.partnerID,
+                                partner_data["partner_password"],
+                            )
+                            if not continue_change:
+                                self.add_error(error_message)
+                            break  # Only one plugging will be called to extend before_password_change
+                        if continue_change:
+                            encoded_password = encode_data(
+                                self.request, partner_data["partner_password"]
+                            )
+                            changed, message = update_partner_password(
+                                self.request,
+                                self.partnerID,
+                                encoded_password,
+                            )
+                            if changed:
+                                for plugin in p.PluginImplementations(p.IPartner):
+                                    plugin.after_password_change(
+                                        self.request,
+                                        self.partnerID,
+                                        partner_data["partner_password"],
+                                    )
+                                next_page = self.request.route_url("partner_logout")
+                                return HTTPFound(next_page)
+                            else:
+                                self.add_error(
+                                    self._("Unable to change the password: ") + message
+                                )
+                                return HTTPFound(
+                                    next_page, headers={"FS_error": "true"}
+                                )
+                        else:
+                            return HTTPFound(next_page, headers={"FS_error": "true"})
+                    else:
+                        self.add_error(self._("The old password is not correct"))
+                        return HTTPFound(next_page, headers={"FS_error": "true"})
+                else:
+                    self.add_error(
+                        self._("The password and its confirmation are not the same")
+                    )
+                    return HTTPFound(next_page, headers={"FS_error": "true"})
+            else:
+                self.add_error(self._("The password cannot be empty"))
+                return HTTPFound(next_page, headers={"FS_error": "true"})
+
+        else:
+            raise HTTPNotFound
+
+
+class PartnerChangeMyAPIKey(PartnerView):
+    def __init__(self, request):
+        PartnerView.__init__(self, request)
+        self.checkCrossPost = False
+
+    def process_view(self):
+        if self.request.method == "POST":
+            next_page = self.request.params.get("next") or self.request.route_url(
+                "partner_forms"
+            )
+            self.returnRawViewResult = True
+            partner_data = self.get_post_dict()
+            modified, message = update_partner(
+                self.request, self.partnerID, partner_data
+            )
+            if modified:
+                return HTTPFound(next_page)
+            else:
+                self.add_error(self._("Unable to change the key: ") + message)
+                return HTTPFound(next_page, headers={"FS_error": "true"})
+        else:
+            raise HTTPNotFound
+
+
+class PartnerChangeMyTimeZone(PartnerView):
+    def __init__(self, request):
+        PartnerView.__init__(self, request)
+        self.checkCrossPost = False
+
+    def process_view(self):
+        if self.request.method == "POST":
+            next_page = self.request.params.get("next") or self.request.route_url(
+                "partner_forms"
+            )
+            self.returnRawViewResult = True
+            partner_data = self.get_post_dict()
+            modified, message = update_partner(
+                self.request, self.partnerID, partner_data
+            )
+            if modified:
+                return HTTPFound(next_page)
+            else:
+                self.add_error(self._("Unable to change the time zone: ") + message)
+                return HTTPFound(next_page, headers={"FS_error": "true"})
+        else:
+            raise HTTPNotFound
 
 
 class PartnerFormDetails(PartnerView):

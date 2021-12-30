@@ -40,6 +40,7 @@ from formshare.processes.db import (
     get_assistant_timezone,
     get_project_details,
     get_partner_timezone,
+    get_timezones,
 )
 
 log = logging.getLogger("formshare")
@@ -609,6 +610,7 @@ class AssistantView(object):
             self.resultDict["rtl"] = False
         else:
             self.resultDict["rtl"] = True
+        self.resultDict["timezones"] = get_timezones(self.request)
         self.returnRawViewResult = False
         self.project_assistant = None
         self.checkCrossPost = True
@@ -761,6 +763,7 @@ class PartnerView(object):
             self.resultDict["rtl"] = True
         self.returnRawViewResult = False
         self.checkCrossPost = True
+        self.resultDict["timezones"] = get_timezones(self.request)
         self.resultDict["selected_timezone"] = self.request.cookies.get(
             "_TIMEZONE_", "formshare"
         )

@@ -412,33 +412,53 @@ class EditPartnerView(PrivateView):
                         partner_data["partner_password"]
                         == partner_data["partner_password2"]
                     ):
-                        encoded_password = encode_data(
-                            self.request, partner_data["partner_password"]
-                        )
-                        updated, message = update_partner_password(
-                            self.request, partner_to_modify, encoded_password
-                        )
-                        if updated:
-                            log.warning(
-                                "Tha user {} changed the password for partner {}".format(
-                                    user_id, partner_to_modify
-                                )
+                        continue_change = True
+                        for plugin in p.PluginImplementations(p.IPartner):
+                            (
+                                continue_change,
+                                error_message,
+                            ) = plugin.before_password_change(
+                                self.request,
+                                partner_to_modify,
+                                partner_data["partner_password"],
                             )
-                            self.returnRawViewResult = True
-                            self.request.session.flash(
-                                self._(
-                                    "The password for {} was modified".format(
-                                        partner_details["partner_name"]
+                            if not continue_change:
+                                self.append_to_errors(error_message)
+                            break  # Only one plugging will be called to extend before_password_change
+                        if continue_change:
+                            encoded_password = encode_data(
+                                self.request, partner_data["partner_password"]
+                            )
+                            updated, message = update_partner_password(
+                                self.request, partner_to_modify, encoded_password
+                            )
+                            if updated:
+                                for plugin in p.PluginImplementations(p.IPartner):
+                                    plugin.after_password_change(
+                                        self.request,
+                                        partner_to_modify,
+                                        partner_data["partner_password"],
+                                    )
+                                log.warning(
+                                    "Tha user {} changed the password for partner {}".format(
+                                        user_id, partner_to_modify
                                     )
                                 )
-                            )
-                            return HTTPFound(
-                                location=self.request.route_url(
-                                    "manage_partners", userid=user_id
+                                self.returnRawViewResult = True
+                                self.request.session.flash(
+                                    self._(
+                                        "The password for {} was modified".format(
+                                            partner_details["partner_name"]
+                                        )
+                                    )
                                 )
-                            )
-                        else:
-                            self.append_to_errors(message)
+                                return HTTPFound(
+                                    location=self.request.route_url(
+                                        "manage_partners", userid=user_id
+                                    )
+                                )
+                            else:
+                                self.append_to_errors(message)
                     else:
                         self.append_to_errors(
                             self._("The password and its confirmation are not the same")

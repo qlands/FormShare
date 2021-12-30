@@ -84,6 +84,13 @@
 
         <script>
             $(document).ready(function() {
+
+                {% if request.h.get_setting(request,'use_timezones','False') == 'True' %}
+                    $("#coll_timezone").select2({
+                        dropdownParent: $('#timezone_content'),
+                    });
+                {% endif %}
+
                 var diff2htmlUi = new Diff2HtmlUI();
                 diff2htmlUi.fileListCloseable("#diff", false);
                 diff2htmlUi.synchronisedScroll("#diff", false);

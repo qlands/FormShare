@@ -1411,6 +1411,31 @@ class IPartner(Interface):  # pragma: no cover
         """
         raise NotImplementedError("after_delete must be implemented in subclasses")
 
+    def before_password_change(self, request, partner_id, password):
+        """
+        Called by FormShare so plugins can perform actions changing the password a partner
+        :param request: ``pyramid.request`` object
+        :param partner_id: Partner ID
+        :param password: Assistant password
+        :return: True or false if the password should be changed. If False then
+        a message should state why. Example: return False, "My message"
+        """
+        raise NotImplementedError(
+            "before_password_change must be implemented in subclasses"
+        )
+
+    def after_password_change(self, request, partner_id, password):
+        """
+        Called by FormShare so plugins can perform actions after changing the password of a partner
+        :param request: ``pyramid.request`` object
+        :param partner_id: Partner ID
+        :param password: Assistant password
+        :return: None
+        """
+        raise NotImplementedError(
+            "after_password_change must be implemented in subclasses"
+        )
+
 
 class IEnvironment(Interface):  # pragma: no cover
     """

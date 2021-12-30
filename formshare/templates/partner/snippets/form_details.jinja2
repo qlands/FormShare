@@ -1,3 +1,10 @@
+{% if request.h.get_setting(request,'use_timezones','False') == 'True' %}
+    {% if selected_timezone == 'project' %}
+        {% set timezone = projectDetails.project_timezone %}
+    {% endif %}
+{% else %}
+    {% set timezone = None %}
+{% endif %}
 <div class="row">
     <div class="col-lg-6">
         {% block form_details_header %}

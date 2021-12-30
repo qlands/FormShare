@@ -31,6 +31,9 @@ from formshare.views.partner_views.forms import (
     GetPartnerMediaFile,
     PartnerDownloadPrivateProduct,
     PartnerDownloadPrivateProductByAPI,
+    ChangeMyPartnerPassword,
+    PartnerChangeMyAPIKey,
+    PartnerChangeMyTimeZone,
 )
 from formshare.views.assistant_views.jsonlogs import (
     JSONList,
@@ -1291,6 +1294,33 @@ def load_routes(config, settings):
                 "partner_logout",
                 "/partneraccess/logout",
                 partner_log_out_view,
+                None,
+            )
+        )
+
+        routes.append(
+            add_route(
+                "partner_change_my_pass",
+                "/partneraccess/changemypassword",
+                ChangeMyPartnerPassword,
+                None,
+            )
+        )
+
+        routes.append(
+            add_route(
+                "partner_change_my_apikey",
+                "/partneraccess/changemyapikey",
+                PartnerChangeMyAPIKey,
+                None,
+            )
+        )
+
+        routes.append(
+            add_route(
+                "partner_change_my_timezone",
+                "/partneraccess/changemytimezone",
+                PartnerChangeMyTimeZone,
                 None,
             )
         )

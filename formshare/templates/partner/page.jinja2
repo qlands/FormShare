@@ -3,11 +3,23 @@
 
 {% block css %}
     {% cssresource request,'formshare','style' %}
+    {% cssresource request,'formshare','select2' %}
 {% endblock css %}
+
+{% if request.h.get_setting(request,'use_timezones','False') == 'True' %}
+    {% if selected_timezone == 'formshare' %}
+        {% set timezone = system_timezone %}
+    {% else %}
+        {% set timezone = partner_timezone.partner_timezone %}
+    {% endif %}
+{% else %}
+    {% set timezone = None %}
+{% endif %}
 
 {% block topScripts %}
     {% jsresource request,'formshare','pace' %}
     {% jsresource request,'formshare','sweetalert' %}
+    {% jsresource request,'formshare','select2' %}
 {% endblock topScripts %}
 
 {% block body_tag %}
@@ -61,6 +73,12 @@
 
                 $(document).ready(function() {
 
+                    {% if request.h.get_setting(request,'use_timezones','False') == 'True' %}
+                        $("#partner_timezone").select2({
+                            dropdownParent: $('#timezone_content'),
+                        });
+                    {% endif %}
+
                     var selectedTimeZone = readCookie('_TIMEZONE_');
                     if (selectedTimeZone != null)
                         $('#timezone').val(selectedTimeZone);
@@ -79,7 +97,7 @@
                     });
 
                     $('#genkey').click(function () {
-                        $('#coll_apikey').val(uuidv4());
+                        $('#partner_apikey').val(uuidv4());
                     });
 
                 });
@@ -117,9 +135,8 @@
                     <h4 class="modal-title">{{ _('Change password') }}</h4>
                     <small id="password_who" class="font-bold">{{ _('Change the password of') }} {{ activePartner.fullName }}</small>
                 </div>
-                <form class="m-t require_busy" id="change_form" role="form" method="post" action="#">
+                <form class="m-t require_busy" id="change_form" role="form" method="post" action="{{ request.route_url('partner_change_my_pass',_query={'next': request.url}) }}">
                     {{ form.secure_form(request) }}
-                    <input type="hidden" id="partner_id" name="partner_id" value="">
                     <div class="modal-body">
                         <div class="form-group">
                             <label class="col-sm-2 col-form-label">{{ _('Old password') }}</label>
@@ -130,14 +147,14 @@
                         <div class="form-group">
                             <label class="col-sm-2 col-form-label">{{ _('Password') }}</label>
                             <div class="col-sm-10">
-                                <input type="password" class="form-control" name="coll_password">
+                                <input type="password" class="form-control" name="partner_password">
                             </div>
                         </div>
                         <div class="hr-line-dashed"></div>
                         <div class="form-group">
                             <label class="col-sm-2 col-form-label">{{ _('Confirmation') }}</label>
                             <div class="col-sm-10">
-                                <input type="password" class="form-control" name="coll_password2">
+                                <input type="password" class="form-control" name="partner_password2">
                             </div>
                         </div>
                     </div>
@@ -156,15 +173,14 @@
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">{{ _('Close') }}</span></button>
                     <h4 class="modal-title">{{ _('Change API key') }}</h4>
-                    <small id="password_who" class="font-bold">{{ _('Change thr API key of') }} {{ activePartner.fullName }}</small>
+                    <small id="password_who" class="font-bold">{{ _('Change the API key of') }} {{ activePartner.fullName }}</small>
                 </div>
-                <form class="m-t require_busy" id="change_key_form" role="form" method="post" action="#">
+                <form class="m-t require_busy" id="change_key_form" role="form" method="post" action="{{ request.route_url('partner_change_my_apikey',_query={'next': request.url}) }}">
                     {{ form.secure_form(request) }}
-                    <input type="hidden" id="partner_id_key" name="partner_id" value="">
                     <div class="modal-body">
                         <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('API Key') }}</label>
                             <div class="input-group col-sm-10">
-                                <input type="text" readonly class="form-control" id="coll_apikey" name="coll_apikey" value="{{ activePartner.APIKey }}">
+                                <input type="text" readonly class="form-control" id="partner_apikey" name="partner_apikey" value="{{ activePartner.APIKey }}">
                                 <span class="input-group-append">
                                     <button type="button" id="genkey" class="btn btn-default" title="{{ _('Generate new key') }}"><i class="fas fa-sync-alt"></i></button>
                                 </span>
@@ -179,6 +195,37 @@
             </div>
         </div>
     </div>
+    {% if request.h.get_setting(request,'use_timezones','False') == 'True' %}
+        <div class="modal inmodal" id="myModalTimeZone" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog">
+                <div id="timezone_content" class="modal-content animated fadeIn">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">{{ _('Close') }}</span></button>
+                        <h4 class="modal-title">{{ _('Change time zone') }}</h4>
+                        <small id="password_who" class="font-bold">{{ _('Change the time zone of') }} {{ activePartner.fullName }}</small>
+                    </div>
+                    <form class="m-t require_busy" id="change_key_form" role="form" method="post" action="{{ request.route_url('partner_change_my_timezone',_query={'next': request.url}) }}">
+                        {{ form.secure_form(request) }}
+                        <div class="modal-body">
+                            <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Time zone') }}</label>
+                                <div class="input-group col-sm-10">
+                                    <select style="width: 100%" id="partner_timezone" name="partner_timezone" data-module="autocomplete" data-module-dropdown-class="lang-dropdown" data-module-container-class="lang-container">
+                                        {% for a_timezone in timezones %}
+                                            <option value="{{ a_timezone.timezone_code }}" {% if a_timezone.timezone_code == activePartner.timezone %} selected {% endif %} >{{ a_timezone.timezone_name }} (UTC{{ a_timezone.timezone_utc_offset }})</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
+                            <button type="submit" name="change_timezone" class="btn btn-primary">{{ _('Change time zone') }}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 
     </body>
 {% endblock body_tag %}

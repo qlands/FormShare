@@ -289,7 +289,7 @@
                                         {% if request.h.get_setting(request,'use_timezones','False') == 'True' %}
                                             {% if selected_timezone == 'project' and timezone != 'UTC'  %}
                                                 <dl class="row mb-0">
-                                                    <div class="col-sm-4 text-sm-right"><dt>{{ _('Timezone') }}:</dt> </div>
+                                                    <div class="col-sm-4 text-sm-right"><dt>{{ _('Time zone') }}:</dt> </div>
                                                     <div class="col-sm-8 text-sm-left"> <dd class="mb-1" title="{{ request.h.get_timezone_desc(request,timezone) }}">UTC{{ request.h.get_timezone_offset(request,timezone) }}</dd></div>
                                                 </dl>
                                             {% endif %}

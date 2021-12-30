@@ -21,6 +21,7 @@ from formshare.views.assistant_views.forms import (
     ChangeMyAssistantPassword,
     GetQRCode,
     ChangeMyAPIKey,
+    ChangeMyTimeZone,
 )
 from formshare.views.partner_views.forms import (
     PartnerForms,
@@ -1018,6 +1019,15 @@ def load_routes(config, settings):
             "assistant_change_my_key",
             "/user/{userid}/project/{projcode}/assistantaccess/changemykey",
             ChangeMyAPIKey,
+            None,
+        )
+    )
+
+    routes.append(
+        add_route(
+            "assistant_change_my_timezone",
+            "/user/{userid}/project/{projcode}/assistantaccess/changemytimezone",
+            ChangeMyTimeZone,
             None,
         )
     )

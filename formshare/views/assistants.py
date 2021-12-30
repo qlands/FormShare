@@ -11,6 +11,7 @@ from formshare.processes.db import (
     modify_assistant,
     delete_assistant,
     change_assistant_password,
+    get_timezones,
 )
 from formshare.views.classes import PrivateView
 
@@ -158,6 +159,7 @@ class AddAssistantsView(PrivateView):
             "assistantData": assistant_data,
             "projectDetails": project_details,
             "userid": user_id,
+            "timezones": get_timezones(self.request),
         }
 
 
@@ -241,6 +243,7 @@ class EditAssistantsView(PrivateView):
             "assistantData": assistant_data,
             "projectDetails": project_details,
             "userid": user_id,
+            "timezones": get_timezones(self.request),
         }
 
 

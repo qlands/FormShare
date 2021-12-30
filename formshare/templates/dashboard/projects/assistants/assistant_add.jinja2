@@ -6,11 +6,13 @@
 {% block css %}
     {{ super() }}
     {% cssresource request,'formshare','switchery' %}
+    {% cssresource request,'formshare','select2' %}
 {% endblock css %}
 
 {% block topScripts %}
     {{ super() }}
     {% jsresource request,'formshare','switchery' %}
+    {% jsresource request,'formshare','select2' %}
 {% endblock topScripts %}
 
 {% block breadcrumbs %}
@@ -46,6 +48,11 @@
     {{ super() }}
     <script>
         $(document).ready(function() {
+
+            {% if request.h.get_setting(request,'use_timezones','False') == 'True' %}
+                $("#coll_timezone").select2();
+            {% endif %}
+
             var elem = document.querySelector('.js-switch');
             var switchery = new Switchery(elem, { color: '#1AB394' });
         });

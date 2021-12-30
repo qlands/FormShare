@@ -4,7 +4,7 @@
         {% block assistant_item_desc %}
             <div class="col-md-3">
                 <div class="text-center">
-                    {{ assistant.coll_name }}
+                    {{ assistant.coll_name }} ({{ assistant.coll_id }}) {% if request.h.get_setting(request,'use_timezones','False') == 'True' %}<span class="badge badge-default" title=" {{ request.h.get_timezone_desc(request,assistant.coll_timezone) }} ">UTC{{ request.h.get_timezone_offset(request,assistant.coll_timezone) }}</span>{% endif %}
                 </div>
             </div>
             <div class="col-md-3">

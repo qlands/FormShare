@@ -17,11 +17,13 @@
 
 {% block css %}
     {% cssresource request,'formshare','style' %}
+    {% cssresource request,'formshare','select2' %}
 {% endblock css %}
 
 {% block topScripts %}
     {% jsresource request,'formshare','pace' %}
     {% jsresource request,'formshare','sweetalert' %}
+    {% jsresource request,'formshare','select2' %}
 {% endblock topScripts %}
 
 {% block body_tag %}
@@ -75,6 +77,12 @@
 
                 $(document).ready(function() {
 
+                    {% if request.h.get_setting(request,'use_timezones','False') == 'True' %}
+                        $("#coll_timezone").select2({
+                            dropdownParent: $('#timezone_content'),
+                        });
+                    {% endif %}
+
                     var selectedTimeZone = readCookie('_TIMEZONE_');
                     if (selectedTimeZone != null)
                         $('#timezone').val(selectedTimeZone);
@@ -127,7 +135,7 @@
         <div class="modal-dialog">
             <div class="modal-content animated fadeIn">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">{{ _('Close') }}</span></button>
                     <h4 class="modal-title">{{ _('Change password') }}</h4>
                     <small id="password_who" class="font-bold">{{ _('Change the password of') }} {{ activeAssistant.fullName }}</small>
                 </div>
@@ -168,9 +176,9 @@
         <div class="modal-dialog">
             <div class="modal-content animated fadeIn">
                 <div class="modal-header">
-                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">{{ _('Close') }}</span></button>
                     <h4 class="modal-title">{{ _('Change API key') }}</h4>
-                    <small id="password_who" class="font-bold">{{ _('Change thr API key of') }} {{ activeAssistant.fullName }}</small>
+                    <small id="password_who" class="font-bold">{{ _('Change the API key of') }} {{ activeAssistant.fullName }}</small>
                 </div>
                 <form class="m-t require_busy" id="change_key_form" role="form" method="post" action="{{ request.route_url('assistant_change_my_key', userid=userid, projcode=projcode,_query={'next': request.url}) }}">
                     {{ form.secure_form(request) }}
@@ -193,6 +201,38 @@
             </div>
         </div>
     </div>
+    {% if request.h.get_setting(request,'use_timezones','False') == 'True' %}
+        <div class="modal inmodal" id="myModalTimezone" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog">
+                <div id="timezone_content" class="modal-content animated fadeIn">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">{{ _('Close') }}</span></button>
+                        <h4 class="modal-title">{{ _('Change time zone') }}</h4>
+                        <small id="password_who" class="font-bold">{{ _('Change the time zone of') }} {{ activeAssistant.fullName }}</small>
+                    </div>
+                    <form class="m-t require_busy" id="change_key_form" role="form" method="post" action="{{ request.route_url('assistant_change_my_timezone', userid=userid, projcode=projcode,_query={'next': request.url}) }}">
+                        {{ form.secure_form(request) }}
+                        <input type="hidden" id="assistant_id" name="assistant_id" value="">
+                        <div class="modal-body">
+                            <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Time zone') }}</label>
+                                <div class="input-group col-sm-10">
+                                    <select style="width: 100%" id="coll_timezone" name="coll_timezone" data-module="autocomplete" data-module-dropdown-class="lang-dropdown" data-module-container-class="lang-container">
+                                        {% for a_timezone in timezones %}
+                                            <option value="{{ a_timezone.timezone_code }}" {% if a_timezone.timezone_code == activeAssistant.timezone %} selected {% endif %} >{{ a_timezone.timezone_name }} (UTC{{ a_timezone.timezone_utc_offset }})</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
+                            <button type="submit" name="change_timezone" class="btn btn-primary">{{ _('Change time zone') }}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 
     </body>
 {% endblock body_tag %}

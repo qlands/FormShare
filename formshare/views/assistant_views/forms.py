@@ -19,6 +19,7 @@ from formshare.processes.db import (
     change_assistant_password,
     get_assistant_password,
     modify_assistant,
+    get_timezones,
 )
 from formshare.views.classes import AssistantView
 
@@ -61,6 +62,7 @@ class AssistantForms(AssistantView):
             "activeUser": None,
             "forms": forms,
             "projectDetails": get_project_details(self.request, self.projectID),
+            "timezones": get_timezones(self.request),
         }
 
 
@@ -174,6 +176,35 @@ class ChangeMyAPIKey(AssistantView):
                 return HTTPFound(next_page)
             else:
                 self.add_error(self._("Unable to change the key: ") + message)
+                return HTTPFound(next_page, headers={"FS_error": "true"})
+        else:
+            raise HTTPNotFound
+
+
+class ChangeMyTimeZone(AssistantView):
+    def __init__(self, request):
+        AssistantView.__init__(self, request)
+        self.checkCrossPost = False
+
+    def process_view(self):
+        if self.request.method == "POST":
+            next_page = self.request.params.get("next") or self.request.route_url(
+                "assistant_forms", userid=self.userID, projcode=self.projectCode
+            )
+            self.returnRawViewResult = True
+            assistant_data = self.get_post_dict()
+
+            project_of_assistant = get_project_from_assistant(
+                self.request, self.userID, self.projectID, self.assistantID
+            )
+
+            modified, message = modify_assistant(
+                self.request, project_of_assistant, self.assistantID, assistant_data
+            )
+            if modified:
+                return HTTPFound(next_page)
+            else:
+                self.add_error(self._("Unable to change the time zone: ") + message)
                 return HTTPFound(next_page, headers={"FS_error": "true"})
         else:
             raise HTTPNotFound

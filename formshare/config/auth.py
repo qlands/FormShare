@@ -66,6 +66,7 @@ class Assistant(object):
         self.projectID = project
         self.fullName = assistant_data["coll_name"]
         self.APIKey = assistant_data["coll_apikey"]
+        self.timezone = assistant_data["coll_timezone"]
 
     def check_password(self, password, request):
         self.set_gravatar_url(request, self.fullName, 45)

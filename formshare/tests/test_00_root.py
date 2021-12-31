@@ -18725,7 +18725,6 @@ class FunctionalTests(unittest.TestCase):
             assert "FS_error" not in res.headers
 
             # Partner change timezone pass
-            partner_api_key = get_partner_api_key(self.server_config, partner_id)
             res = self.testapp.post(
                 "/partneraccess/changemytimezone",
                 {"partner_timezone": "UTC"},

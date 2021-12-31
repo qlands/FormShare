@@ -2,7 +2,7 @@ version: 2
 jobs:
   py-3.8: &build-template
     docker:
-      - image: qlands/odktools_circleci:20211211
+      - image: qlands/odktools_circleci:20211231
       - image: docker.elastic.co/elasticsearch/elasticsearch:7.14.0
         environment:
           - bootstrap.memory_lock=true
@@ -47,6 +47,7 @@ jobs:
             pip install codecov --user
             /home/circleci/.local/bin/codecov
             mysql -h 127.0.0.1 -u root --ssl-mode=DISABLED --password=circleci --execute='CREATE SCHEMA IF NOT EXISTS formshare'
+            mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -h 127.0.0.1 -u root --password=circleci mysql
             python3 create_config.py --daemon --capture_output --mysql_host 127.0.0.1 --mysql_user_name root --mysql_user_password circleci --repository_path /opt/formshare_repository --odktools_path /opt/odktools --elastic_search_host localhost --elastic_search_port 9200 --formshare_host localhost --formshare_port 5900 --forwarded_allow_ip localhost --pid_file /opt/formshare_gunicorn/formshare.pid --error_log_file /opt/formshare_log/error_log /opt/formshare_config/development.ini
             ln -s /opt/formshare_config/development.ini ./development.ini
             python3 configure_celery.py ./development.ini

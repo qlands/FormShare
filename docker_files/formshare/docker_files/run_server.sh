@@ -10,6 +10,7 @@ fi
 /etc/init.d/mosquitto stop
 /etc/init.d/mosquitto start
 mysql -h $MYSQL_HOST_NAME -u $MYSQL_USER_NAME --ssl-mode=DISABLED --password=$MYSQL_USER_PASSWORD --execute='CREATE SCHEMA IF NOT EXISTS formshare'
+mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u $MYSQL_USER_NAME --password=$MYSQL_USER_PASSWORD mysql
 source /opt/formshare_env/bin/activate
 cd /opt/formshare
 elastic_search_ssl="${ELASTIC_SEARCH_SSL:=false}"

@@ -115,6 +115,7 @@ RUN npm install -g diff2html-cli
 
 # This is a patched MySQL Drivet to allow connections between Client 8.0 and Server 5.7.X
 COPY ./docker_files/sqldriver/libqsqlmysql.s_o /usr/lib/x86_64-linux-gnu/qt5/plugins/sqldrivers/libqsqlmysql.so
+COPY ./docker_files/timezone/mysql_tzinfo_to_sql /usr/bin
 COPY ./docker_files/mosquitto/mosquitto.conf /etc/mosquitto/conf.d/
 COPY ./docker_files/mosquitto/websocket.conf /etc/mosquitto/conf.d/
 COPY ./docker_files/mosquitto/access.acl /etc/mosquitto/conf.d/

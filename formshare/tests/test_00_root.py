@@ -6732,6 +6732,25 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Change the assistant timezone with get fails
+            self.testapp.get(
+                "/user/{}/project/{}/assistantaccess/changemytimezone".format(
+                    self.randonLogin, self.project
+                ),
+                {"coll_timezone": "UTC"},
+                status=404,
+            )
+
+            # Change the assistant key.
+            res = self.testapp.post(
+                "/user/{}/project/{}/assistantaccess/changemytimezone".format(
+                    self.randonLogin, self.project
+                ),
+                {"coll_timezone": "UTC"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
             # Get the assistant QR code
             self.testapp.get(
                 "/user/{}/project/{}/assistantaccess/form/{}/qrcode".format(
@@ -9596,6 +9615,68 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
 
+            # Change the timezone of the user to other any
+            res = self.testapp.post(
+                "/user/{}/profile/edit".format(self.randonLogin),
+                {
+                    "editprofile": "",
+                    "user_name": "FormShare",
+                    "user_about": "FormShare testing account",
+                    "user_timezone": "Pacific/Fiji",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            self.testapp.set_cookie("_TIMEZONE_", "user")
+
+            # Loads the audit data for the grid
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/audit/get"
+                "?callback=jQuery31104503466642261382_1578424030318".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "_search": "false",
+                    "nd": "1578156795454",
+                    "rows": "10",
+                    "page": "1",
+                    "sidx": "",
+                    "sord": "asc",
+                },
+                status=200,
+            )
+
+            # Change the timezone of the user to FormShares
+            res = self.testapp.post(
+                "/user/{}/profile/edit".format(self.randonLogin),
+                {
+                    "editprofile": "",
+                    "user_name": "FormShare",
+                    "user_about": "FormShare testing account",
+                    "user_timezone": datetime.datetime.utcnow().astimezone().tzname(),
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Loads the audit data for the grid
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/audit/get"
+                "?callback=jQuery31104503466642261382_1578424030318".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "_search": "false",
+                    "nd": "1578156795454",
+                    "rows": "10",
+                    "page": "1",
+                    "sidx": "",
+                    "sord": "asc",
+                },
+                status=200,
+            )
+
             self.testapp.post(
                 "/user/{}/project/{}/form/{}/audit/get"
                 "?callback=jQuery31104503466642261382_1578424030318".format(
@@ -9630,13 +9711,49 @@ class FunctionalTests(unittest.TestCase):
 
             h = helpers.helper_functions
             h.humanize_date(datetime.datetime.now())
+            h.humanize_date(datetime.datetime.now(), "es")
+            h.humanize_date(datetime.datetime.now(), "es")
             h.get_version()
+            h.month_from_number(12, "en", True)
+            h.month_from_number("12", "es", False)
+
             h.readble_date(datetime.datetime.now())
             h.readble_date(datetime.datetime.now(), "es")
+            h.readble_date(datetime.datetime.now(), "es", "UTC")
+            h.readble_date("2021-12-12 12:12:12", "es", "UTC")
+            h.readble_date("some", "es", "UTC")
+            h.readble_date(1, "es", "UTC")
+            h.readble_date(None, "es", "UTC")
+
             h.readble_date_with_time(datetime.datetime.now())
             h.readble_date_with_time(datetime.datetime.now(), "es")
+            h.readble_date_with_time(datetime.datetime.now(), "es", "UTC")
+            h.readble_date_with_time("2021-12-12 12:12:12", "es", "UTC")
+            h.readble_date_with_time("some", "es", "UTC")
+            h.readble_date_with_time(1, "es", "UTC")
+            h.readble_date_with_time(None, "es", "UTC")
+
             h.simple_date(datetime.datetime.now())
+            h.simple_date(datetime.datetime.now(), "UTC")
+            h.simple_date("2021-12-12 12:12:12", "UTC")
+            h.simple_date("some", "UTC")
+            h.simple_date(1, "UTC")
+            h.simple_date(None, "UTC")
+
+            h.simple_date_with_time(datetime.datetime.now())
+            h.simple_date_with_time(datetime.datetime.now(), "UTC")
+            h.simple_date_with_time("2021-12-12 12:12:12", "UTC")
+            h.simple_date_with_time("some", "UTC")
+            h.simple_date_with_time(1, "UTC")
+            h.simple_date_with_time(None, "UTC")
+
             h.simple_date_usa(datetime.datetime.now())
+            h.simple_date_usa(datetime.datetime.now(), "UTC")
+            h.simple_date_usa("2021-12-12 12:12:12", "UTC")
+            h.simple_date_usa("some", "UTC")
+            h.simple_date_usa(1, "UTC")
+            h.simple_date_usa(None, "UTC")
+
             h.pluralize("home", 1)
             h.pluralize("home", 2)
             h.pluralize("casa", 1, "es")
@@ -18543,6 +18660,85 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
             self.assertIn(b"data-title", res.body)
+
+            # Change password with get goes to 404
+            self.testapp.get(
+                "/partneraccess/changemypassword",
+                {"partner_password": ""},
+                status=404,
+            )
+
+            # Partner change password fails. Empty password
+            res = self.testapp.post(
+                "/partneraccess/changemypassword",
+                {"partner_password": ""},
+                status=302,
+            )
+            assert "FS_error" in res.headers
+
+            # Partner change password fails. Password are not the same
+            res = self.testapp.post(
+                "/partneraccess/changemypassword",
+                {"partner_password": "321", "partner_password2": "123"},
+                status=302,
+            )
+            assert "FS_error" in res.headers
+
+            # Partner change password fails. Old password is not correct
+            res = self.testapp.post(
+                "/partneraccess/changemypassword",
+                {
+                    "partner_password": "123",
+                    "partner_password2": "123",
+                    "old_password": "some",
+                },
+                status=302,
+            )
+            assert "FS_error" in res.headers
+
+            # Partner change password pass
+            res = self.testapp.post(
+                "/partneraccess/changemypassword",
+                {
+                    "partner_password": "123",
+                    "partner_password2": "123",
+                    "old_password": "123",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Change password with get goes to 404
+            self.testapp.get(
+                "/partneraccess/changemyapikey",
+                {"partner_apikey": ""},
+                status=404,
+            )
+
+            # Partner change API key pass
+            partner_api_key = get_partner_api_key(self.server_config, partner_id)
+            res = self.testapp.post(
+                "/partneraccess/changemyapikey",
+                {"partner_apikey": partner_api_key},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Partner change timezone pass
+            partner_api_key = get_partner_api_key(self.server_config, partner_id)
+            res = self.testapp.post(
+                "/partneraccess/changemytimezone",
+                {"partner_timezone": "UTC"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Change password with get goes to 404
+            self.testapp.get(
+                "/partneraccess/changemytimezone",
+                {"partner_timezone": "UTC"},
+                status=404,
+            )
 
             # Remove partner from project passes
             res = self.testapp.post(

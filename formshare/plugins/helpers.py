@@ -39,9 +39,9 @@ def convert_date(date):
                     date = parse(date)
                     return date
                 else:
-                    return "NA"
+                    return None
             else:
-                return "NA"
+                return None
         else:
             return date
     except Exception as e:
@@ -149,6 +149,8 @@ def readble_date(date, locale="en", timezone_to_use=None):
     if date is None:
         return "NA"
     date = convert_date(date)
+    if date is None:
+        return "NA"
     if timezone_to_use is not None:
         date = date.astimezone(timezone(timezone_to_use))
     ar = arrow.get(date)
@@ -173,6 +175,8 @@ def readble_date_with_time(date, locale="en", timezone_to_use=None):
     if date is None:
         return "NA"
     date = convert_date(date)
+    if date is None:
+        return "NA"
     if timezone_to_use is not None:
         date = date.astimezone(timezone(timezone_to_use))
     ar = arrow.get(date)
@@ -196,6 +200,8 @@ def simple_date(date, timezone_to_use=None):
     if date is None:
         return "NA"
     date = convert_date(date)
+    if date is None:
+        return "NA"
     if timezone_to_use is not None:
         date = date.astimezone(timezone(timezone_to_use))
     ar = arrow.get(date)
@@ -213,6 +219,8 @@ def simple_date_with_time(date, timezone_to_use=None):
     if date is None:
         return "NA"
     date = convert_date(date)
+    if date is None:
+        return "NA"
     if timezone_to_use is not None:
         date = date.astimezone(timezone(timezone_to_use))
     ar = arrow.get(date)
@@ -224,11 +232,14 @@ def simple_date_usa(date, timezone_to_use=None):
     """
     Returns a readable date"
     :param date: Datetime
+    :param timezone_to_use: Time Zone to use
     :return: A readable date
     """
     if date is None:
         return "NA"
     date = convert_date(date)
+    if date is None:
+        return "NA"
     if timezone_to_use is not None:
         date = date.astimezone(timezone(timezone_to_use))
     ar = arrow.get(date)

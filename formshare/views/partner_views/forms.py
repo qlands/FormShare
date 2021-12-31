@@ -118,7 +118,6 @@ class ChangeMyPartnerPassword(PartnerView):
             else:
                 self.add_error(self._("The password cannot be empty"))
                 return HTTPFound(next_page, headers={"FS_error": "true"})
-
         else:
             raise HTTPNotFound
 

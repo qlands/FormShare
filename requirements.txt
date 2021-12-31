@@ -48,7 +48,7 @@ jinja2-time==0.2.0
 joblib==1.0.1
 kombu==5.1.0
 linecache2==1.0.0
-lxml==4.6.3
+lxml==4.6.5
 Mako==1.1.5
 MarkupSafe==2.0.1
 more-itertools==8.10.0

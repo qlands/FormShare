@@ -17480,6 +17480,9 @@ class FunctionalTests(unittest.TestCase):
                 "deact_02.xml",
             ]
             submission_file = os.path.join(self.path, *paths)
+            print("Wait a bit more")
+            time.sleep(60)
+            print("After the merging of a form")
             self.testapp.post(
                 "/user/{}/project/{}/push".format(self.randonLogin, "case001"),
                 status=201,

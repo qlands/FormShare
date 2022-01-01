@@ -59,7 +59,7 @@
                                     <select id="timezone" style="margin-right: 10px">
                                         {% block timezones_options %}
                                             <option id="formshare" value="formshare">{{ _("FormShare's") }}: {{ system_timezone }}{% if system_timezone != "UTC" %} (UTC{{ system_timezone_offset }}){% endif %}</option>
-                                            <option id="user" value="user" title="{{ assistant_timezone.timezone_name }}">{{ _('Yours') }} (UTC{{ assistant_timezone.timezone_utc_offset }})</option>
+                                            <option id="user" value="user" title="{{ assistant_timezone.timezone_name }}">{{ _('Yours') }} {% if assistant_timezone.coll_timezone != "UTC" %}(UTC{{ assistant_timezone.timezone_utc_offset }}){% endif %}</option>
                                             <option id="project" value="project">{{ _('By project') }}</option>
                                         {% endblock timezones_options %}
                                     </select>

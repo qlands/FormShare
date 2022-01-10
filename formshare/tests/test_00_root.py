@@ -5577,6 +5577,15 @@ class FunctionalTests(unittest.TestCase):
                 status=404,
             )
 
+            # Call export to XLSX without type goes to 404
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/export".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {},
+                status=404,
+            )
+
             # Call export to XLSX
             self.testapp.post(
                 "/user/{}/project/{}/form/{}/export".format(
@@ -10540,6 +10549,39 @@ class FunctionalTests(unittest.TestCase):
             )
             self.assertTrue(b"This is the sub-version of" in res.body)
 
+            # Compare goes to 404 project not found
+            self.testapp.get(
+                "/user/{}/project/{}/compare/from/{}/to/{}".format(
+                    self.randonLogin,
+                    "Not_found",
+                    "tormenta20201105",
+                    "tormenta20201117",
+                ),
+                status=404,
+            )
+
+            # Compare goes to 404 form not found
+            self.testapp.get(
+                "/user/{}/project/{}/compare/from/{}/to/{}".format(
+                    self.randonLogin, self.project, "not_found", "tormenta20201117"
+                ),
+                status=404,
+            )
+
+            # Compare the changes between Forms
+            res = self.testapp.get(
+                "/user/{}/project/{}/compare/from/{}/to/{}".format(
+                    self.randonLogin,
+                    self.project,
+                    "tormenta20201105",
+                    "tormenta20201117",
+                ),
+                status=200,
+            )
+            self.assertTrue(
+                b"This new version does not have any structural changes" not in res.body
+            )
+
             # Get the details of a form tormenta20201105
             res = self.testapp.get(
                 "/user/{}/project/{}/form/{}".format(
@@ -14309,6 +14351,17 @@ class FunctionalTests(unittest.TestCase):
                     self.randonLogin,
                     self.project,
                     "asistencia_tecnica_2_complete_language",
+                ),
+                status=404,
+            )
+
+            # Compare goes to 404 form not found
+            self.testapp.get(
+                "/user/{}/project/{}/compare/from/{}/to/{}".format(
+                    self.randonLogin,
+                    self.project,
+                    "tormenta20201105",
+                    "tormenta20201117",
                 ),
                 status=404,
             )

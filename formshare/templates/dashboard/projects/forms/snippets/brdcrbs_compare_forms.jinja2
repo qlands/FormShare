@@ -1,0 +1,20 @@
+<div class="col-sm-12">
+    <h2>{{ _('Changes made to ') }} <span style="color: #0a6aa1">"{{ toFormDetails.form_id }}"</span> {{ _("from") }} <span style="color: #0a6aa1">"{{ fromFormDetails.form_id }}"</span></h2>
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{{ request.route_url("dashboard",userid=userid) }}">{{ _('Dashboard') }}</a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ request.route_url("projects",userid=userid) }}">{{ _('Projects') }}</a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ request.route_url("project_details",userid=userid, projcode=projectDetails.project_code) }}">{{ projectDetails.project_name }}</a>
+        </li>
+        <li class="breadcrumb-item">
+            <a href="{{ request.route_url("form_details",userid=userid, projcode=projectDetails.project_code, formid=toFormDetails.form_id) }}">{{ toFormDetails.form_name }}</a>
+        </li>
+        <li class="breadcrumb-item active">
+            <strong>{{ _('Compare form') }}</strong>
+        </li>
+    </ol>
+</div>

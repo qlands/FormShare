@@ -1,0 +1,35 @@
+<div class="panel panel-default">
+    <div class="panel-heading" style="background-color: {% if table_type == "added" %}green{% endif %}{% if table_type == "modified" %}orange{% endif %}{% if table_type == "deleted" %}orangered{% endif %}">
+        <h5 class="panel-title">
+            <a data-toggle="collapse" data-parent="#accordion_structure" href="#collapse_{{ a_table.name }}">{% if table_type == "added" %}{{ _('Added') }}{% endif %}{% if table_type == "modified" %}{{ _('Modified') }}{% endif %}{% if table_type == "deleted" %}{{ _('Deleted') }}{% endif %} - {{ a_table.desc }} ({{ a_table.name }})</a>
+        </h5>
+    </div>
+    <div id="collapse_{{ a_table.name }}" class="panel-collapse collapse in">
+        <div class="panel-body">
+            {% if table_type == "added" %}
+                {{ _('This table has been added with the following fields') }}:
+                <ul>
+                    {% for a_field in a_table.fields %}
+                        <li>{{ a_field.desc }} ({{ a_field.name }})</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            {% if table_type == "modified" %}
+                {{ _('Changes made') }}:
+                <ul>
+                    {% for a_field in a_table.fields %}
+                        <li>{{ a_field.desc }} ({{ a_field.name }}) - {% if a_field.type == "added" %}{{ _("Added") }}{% else %}{{ _('Deleted') }}{% endif %}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+            {% if table_type == "deleted" %}
+                {{ _('This table has been deleted. It had the following fields') }}:
+                <ul>
+                    {% for a_field in a_table.fields %}
+                        <li>{{ a_field.desc }} ({{ a_field.name }})</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    </div>
+</div>

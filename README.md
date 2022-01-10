@@ -35,10 +35,18 @@ FormShare **is for organizations** to install it in their server or cloud servic
     - Deactivate forms will deactivate cases. For example, a household that decides to exit a longitudinal study will not appear in follow-up forms after deactivation.
     - Activate forms will activate cases again.  For example, a household that decides to re-enter a longitudinal study will appear again in follow-up forms after activation.
     - Move information from case creator forms into follow-up, deactivation and activation forms. For example, the sex of a participant (e. g., female) could be used in follow-up case forms to ask specific questions according to sex (e. g., if female, do they have access to reproductive health services since our last visit?)
+- Support multiple time zones:
+  - FormShare's: This is the time zone of the Linux server running FormShare.
+  - User: This is the time zone of a user logged into FormShare.
+  - Project: Each project can have a different time zone. This should be the time zone where submissions happen.
+  - Assistant: This is the time zone of an assistant logged into FormShare.
+  - Partner: This is the time zone of a partner logged into FormShare.
+
 - User accounts and management
 - Group-based user permissions
 - Projects to organize users, permissions, and forms
 - Separate access for data collectors and data cleaners. This is useful when dealing with hundreds of data collectors that do not need a FormShare user access 
+- Separate access for partners: Partners are trusted individuals outside your organization that require access to products and other resources in FormShare to collaborate with you. For example, a professor at a university (a partner in your project) requiring a KML export to match GPS points with weather data. 
 - User collaborations at project level, e. g., you can allow a colleague to maintain certain aspects of your project.
 - Form and submission management
   - With easy setup of ODK Collect Projects using QR images

@@ -118,6 +118,7 @@ from formshare.views.form import (
     ExportData,
     ExportDataToXLSX,
     ExportDataToCSV,
+    CompareForms,
 )
 from formshare.views.odk import (
     ODKFormList,
@@ -904,6 +905,15 @@ def load_routes(config, settings):
             "/user/{userid}/project/{projcode}/form/{formid}/merge/into/{oldformid}",
             RepositoryMergeForm,
             "dashboard/projects/repository/merge_new_version.jinja2",
+        )
+    )
+
+    routes.append(
+        add_route(
+            "compare_forms",
+            "/user/{userid}/project/{projcode}/compare/from/{fromformid}/to/{toformid}",
+            CompareForms,
+            "dashboard/projects/forms/compare_forms.jinja2",
         )
     )
 

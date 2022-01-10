@@ -54,6 +54,7 @@ __all__ = [
     "get_gps_points_from_form",
     "get_gps_points_from_project",
     "get_tables_from_form",
+    "get_tables_from_original_form",
     "update_table_desc",
     "update_field_desc",
     "update_field_sensitive",
@@ -430,6 +431,93 @@ def json_to_csv(request, project, form):
             return False, _("Error while creating dummy file")
     else:
         return False, _("There are no submissions to download")
+
+
+def get_tables_from_original_form(request, project, form, include_lookups=False):
+    """
+    Get the tables as an array of dict from the original create XML file (Before merging)
+    :param request: Pyramid request object
+    :param project: Project ID
+    :param form: Form ID
+    :param include_lookups: If include lookups
+    :return: Return an array of tables as dict
+    """
+    _ = request.translate
+    result = []
+    odk_dir = get_odk_path(request)
+    form_directory = get_form_directory(request, project, form)
+    create_file = os.path.join(
+        odk_dir, *["forms", form_directory, "repository", "create.xml"]
+    )
+    if not os.path.isfile(create_file):
+        return []
+    tree = etree.parse(create_file)
+    root = tree.getroot()
+    element_lkp_tables = root.find(".//lkptables")
+    element_tables = root.find(".//tables")
+    # Append all tables
+    tables = element_tables.findall(".//table")
+    if tables:
+        for table in tables:
+            fields = []
+            sfields = []
+            num_sensitive = 0
+            for field in table.getchildren():
+                if field.tag == "field":
+                    desc = field.get("desc", "")
+                    if desc == "":
+                        desc = _("Without description")
+                    fields.append({"name": field.get("name"), "desc": desc})
+                    sfields.append(field.get("name") + "-" + desc)
+                    sensitive = field.get("sensitive", "false")
+                    if sensitive == "true":
+                        num_sensitive = num_sensitive + 1
+            if table.get("name").find("_msel_") >= 0:
+                multi = True
+            else:
+                multi = False
+            result.append(
+                {
+                    "name": table.get("name"),
+                    "desc": table.get("desc"),
+                    "fields": fields,
+                    "lookup": False,
+                    "multi": multi,
+                    "sfields": ",".join(sfields),
+                    "numsensitive": num_sensitive,
+                }
+            )
+    if include_lookups:
+        # Append all lookup tables
+        tables = element_lkp_tables.findall(".//table")
+        if tables:
+            for table in tables:
+                fields = []
+                sfields = []
+                num_sensitive = 0
+                for field in table.getchildren():
+                    if field.tag == "field":
+                        desc = field.get("desc", "")
+                        if desc == "":
+                            desc = _("Without description")
+                        fields.append({"name": field.get("name"), "desc": desc})
+                        sfields.append(field.get("name") + "-" + desc)
+                        sensitive = field.get("sensitive", "false")
+                        if sensitive == "true":
+                            num_sensitive = num_sensitive + 1
+                result.append(
+                    {
+                        "name": table.get("name"),
+                        "desc": table.get("desc"),
+                        "fields": fields,
+                        "lookup": True,
+                        "multi": False,
+                        "sfields": ",".join(sfields),
+                        "numsensitive": num_sensitive,
+                    }
+                )
+
+    return result
 
 
 def get_tables_from_form(request, project, form):

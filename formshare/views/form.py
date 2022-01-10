@@ -96,6 +96,7 @@ from formshare.processes.submission.api import (
     get_fields_from_table,
     list_submission_media_files,
     get_submission_media_file,
+    get_tables_from_original_form,
 )
 from formshare.products import get_form_products
 from formshare.products import stop_task
@@ -3970,4 +3971,113 @@ class DownloadKML(PrivateView):
             "formDetails": form_data,
             "userid": user_id,
             "fields": fields,
+        }
+
+
+def add_field_to_table(tables, table, field, field_type="added"):
+    table_found = False
+    for a_table in tables:
+        if a_table["name"] == table["name"]:
+            table_found = True
+            a_table["fields"].append(
+                {"name": field["name"], "desc": field["desc"], "type": field_type}
+            )
+            break
+    if not table_found:
+        tables.append(
+            {
+                "name": table["name"],
+                "desc": table["name"],
+                "fields": [
+                    {"name": field["name"], "desc": field["desc"], "type": field_type}
+                ],
+            }
+        )
+
+
+class CompareForms(PrivateView):
+    def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        project_code = self.request.matchdict["projcode"]
+        from_form_id = self.request.matchdict["fromformid"]
+        to_form_id = self.request.matchdict["toformid"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        from_form_data = get_form_data(self.request, project_id, from_form_id)
+        to_form_data = get_form_data(self.request, project_id, to_form_id)
+        if from_form_data is None or to_form_data is None:
+            raise HTTPNotFound
+
+        old_tables = get_tables_from_original_form(
+            self.request, project_id, from_form_id
+        )
+        new_tables = get_tables_from_original_form(self.request, project_id, to_form_id)
+
+        tables_added = []
+        for a_new_table in new_tables:
+            table_found = False
+            for a_old_table in old_tables:
+                if a_new_table["name"] == a_old_table["name"]:
+                    table_found = True
+            if not table_found:
+                tables_added.append(a_new_table)
+
+        tables_removed = []
+        for a_old_table in old_tables:
+            table_found = False
+            for a_new_table in new_tables:
+                if a_new_table["name"] == a_old_table["name"]:
+                    table_found = True
+            if not table_found:
+                tables_removed.append(a_old_table)
+
+        tables_modified = []
+
+        for a_new_table in new_tables:
+            for a_old_table in old_tables:
+                if a_new_table["name"] == a_old_table["name"]:
+                    for a_new_field in a_new_table["fields"]:
+                        field_found = False
+                        for an_old_field in a_old_table["fields"]:
+                            if a_new_field["name"] == an_old_field["name"]:
+                                field_found = True
+                        if not field_found:
+                            add_field_to_table(
+                                tables_modified, a_new_table, a_new_field
+                            )
+
+        for a_old_table in old_tables:
+            for a_new_table in new_tables:
+                if a_new_table["name"] == a_old_table["name"]:
+                    for an_old_field in a_old_table["fields"]:
+                        field_found = False
+                        for a_new_field in a_new_table["fields"]:
+                            if a_new_field["name"] == an_old_field["name"]:
+                                field_found = True
+                        if not field_found:
+                            add_field_to_table(
+                                tables_modified, a_old_table, an_old_field, "removed"
+                            )
+
+        return {
+            "projectDetails": project_details,
+            "fromformid": from_form_id,
+            "toformid": from_form_id,
+            "fromFormDetails": from_form_data,
+            "toFormDetails": to_form_data,
+            "userid": user_id,
+            "TablesAdded": tables_added,
+            "TablesRemoved": tables_removed,
+            "TablesModified": tables_modified,
         }

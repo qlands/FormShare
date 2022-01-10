@@ -116,6 +116,11 @@
                                     {% endif %}
                                     <li><a id="update_form_btn" class="btn btn-xs btn-white" data-toggle="modal" data-target="#update_form"><i class="fas fa-file-upload"></i> {{ _('Update ODK form') }} </a></li>
                                 {% endif %}
+                                {% if formDetails.parent_form != None %}
+                                    {% if formDetails.form_schema != None %}
+                                         <li><a href="{{ request.route_url('compare_forms', userid=projectDetails.owner, projcode=projectDetails.project_code,fromformid=formDetails.parent_form,toformid=formDetails.form_id) }}" class="btn btn-xs btn-white" title="{{ _('See structural changes made to this sub-version') }}" ><i class="fas fa-exchange-alt"></i> {{ _("What's new") }}</a></li>
+                                    {% endif %}
+                                {% endif %}
                                 {% if projectDetails.access_type <= 2 or formDetails.pubby.user_id == activeUser.id %}
                                     {% if formDetails.has_sub_version == None %}
                                         <li><a urn="{{ request.route_url('delete_form', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" class="btn btn-xs btn-white remove_form"><i style="color: red" class="far fa-trash-alt"></i> {{ _('Delete form') }}</a></li>

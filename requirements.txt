@@ -1,6 +1,7 @@
 alabaster==0.7.12
 alembic==1.7.3
-amqp==5.0.6
+amqp==5.0.9
+appdirs==1.4.4
 arrow==1.2.0
 attrs==21.2.0
 Babel==2.9.1
@@ -10,14 +11,14 @@ billiard==3.6.4.0
 binaryornot==0.4.4
 black==21.9b0
 boto==2.49.0
-celery==5.1.2
+celery==5.2.2
 certifi==2021.5.30
 cffi==1.14.6
 chardet==4.0.0
 charset-normalizer==2.0.6
 cheroot==8.5.2
 CherryPy==18.6.1
-click==7.1.2
+click==8.0.3
 click-didyoumean==0.3.0
 click-plugins==1.1.1
 click-repl==0.2.0
@@ -46,7 +47,7 @@ jaraco.text==3.5.1
 Jinja2==3.0.2
 jinja2-time==0.2.0
 joblib==1.0.1
-kombu==5.1.0
+kombu==5.2.3
 linecache2==1.0.0
 lxml==4.6.5
 Mako==1.1.5

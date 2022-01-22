@@ -8,8 +8,8 @@ RUN apt-add-repository -y ppa:mosquitto-dev/mosquitto-ppa
 RUN apt-get update
 
 RUN apt-get install -y build-essential qt5-default qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake mongodb jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client-8.0 openjdk-11-jdk sqlite3 libqt5sql5-sqlite git wget python3-venv tidy golang-go mosquitto curl nano
-RUN wget https://dev.mysql.com/get/mysql-apt-config_0.8.17-1_all.deb
-RUN dpkg -i ./mysql-apt-config_0.8.17-1_all.deb
+RUN wget https://dev.mysql.com/get/mysql-apt-config_0.8.22-1_all.deb
+RUN dpkg -i ./mysql-apt-config_0.8.22-1_all.deb
 RUN apt-get update
 RUN apt-get install mysql-shell
 

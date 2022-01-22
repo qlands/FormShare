@@ -201,6 +201,13 @@ def load_environment(settings, config, apppath, policy_array):
         "partnerproject",
         "partnerform",
     ]
+    for plugin in p.PluginImplementations(p.IDatabase):
+        schemas_allowed = plugin.update_extendable_tables(schemas_allowed)
+
+    # Call any connected plugins to update FormShare ORM. For example: Add new tables
+    for plugin in p.PluginImplementations(p.IDatabase):
+        plugin.update_orm(config)
+
     for plugin in p.PluginImplementations(p.ISchema):
         schema_fields = plugin.update_schema(config)
         for field in schema_fields:
@@ -208,10 +215,6 @@ def load_environment(settings, config, apppath, policy_array):
                 add_column_to_schema(
                     field["schema"], field["fieldname"], field["fielddesc"]
                 )
-
-    # Call any connected plugins to update FormShare ORM. For example: Add new tables
-    for plugin in p.PluginImplementations(p.IDatabase):
-        plugin.update_orm(config.registry["dbsession_metadata"])
 
     # jinjaEnv is used by the jinja2 extensions so we get it from the config
     config.get_jinja2_environment()

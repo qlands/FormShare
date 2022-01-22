@@ -22,7 +22,13 @@ def initialize_schema():
             fields.append(
                 {"name": column.name, "storage": "db", "comment": column.comment}
             )
-        _SCHEMA.append({"name": table.name, "fields": fields})
+        table_found = False
+        for a_table in _SCHEMA:
+            if a_table["name"] == table.name:
+                table_found = True
+                break
+        if not table_found:
+            _SCHEMA.append({"name": table.name, "fields": fields})
 
 
 def add_column_to_schema(table_name, field_name, field_comment):
@@ -86,6 +92,9 @@ def map_to_schema(model_class, data):
                 extra_data[key] = value
     if bool(extra_data):
         mapped_data["extras"] = json.dumps(extra_data)
+    print("*******************555")
+    print(mapped_data)
+    print("*******************555")
     if not bool(mapped_data):
         raise Exception(
             "The mapping for table {} is empty!".format(model_class.__table__.name)

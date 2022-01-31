@@ -18,6 +18,7 @@ depends_on = None
 
 def upgrade():
     timezone = datetime.datetime.utcnow().astimezone().tzname()
+    conn = op.get_bind()
     sql = "SELECT timezone.timezone_code FROM timezone WHERE timezone.timezone_code = '{}'".format(
         timezone
     )

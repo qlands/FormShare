@@ -18,6 +18,12 @@ depends_on = None
 
 def upgrade():
     timezone = datetime.datetime.utcnow().astimezone().tzname()
+    sql = "SELECT timezone.timezone_code FROM timezone WHERE timezone.timezone_code = '{}'".format(
+        timezone
+    )
+    res = conn.execute(sql)
+    if res is None:
+        timezone = "UTC"
     op.add_column(
         "fsuser",
         sa.Column(

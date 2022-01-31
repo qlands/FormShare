@@ -41,6 +41,7 @@ from formshare.processes.db import (
     get_project_details,
     get_partner_timezone,
     get_timezones,
+    timezone_exists,
 )
 
 log = logging.getLogger("formshare")
@@ -285,6 +286,14 @@ class PrivateView(object):
             datetime.datetime.utcnow().astimezone().tzname()
         )
         self.system_timezone = datetime.datetime.utcnow().astimezone().tzname()
+        if not timezone_exists(self.request, self.system_timezone):
+            log.error(
+                "Unable to find timezone with code '{}'. Going to UTC as defult".format(
+                    self.system_timezone
+                )
+            )
+            self.classResult["system_timezone"] = "UTC"
+            self.system_timezone = "UTC"
         if self.classResult["system_timezone"] != "UTC":
             self.classResult["system_timezone_offset"] = get_timezone_offset(
                 self.request, self.classResult["system_timezone"]
@@ -622,6 +631,14 @@ class AssistantView(object):
             datetime.datetime.utcnow().astimezone().tzname()
         )
         self.system_timezone = datetime.datetime.utcnow().astimezone().tzname()
+        if not timezone_exists(self.request, self.system_timezone):
+            log.error(
+                "Unable to find timezone with code '{}'. Going to UTC as defult".format(
+                    self.system_timezone
+                )
+            )
+            self.resultDict["system_timezone"] = "UTC"
+            self.system_timezone = "UTC"
         if self.resultDict["system_timezone"] != "UTC":
             self.resultDict["system_timezone_offset"] = get_timezone_offset(
                 self.request, self.resultDict["system_timezone"]
@@ -772,6 +789,14 @@ class PartnerView(object):
             datetime.datetime.utcnow().astimezone().tzname()
         )
         self.system_timezone = datetime.datetime.utcnow().astimezone().tzname()
+        if not timezone_exists(self.request, self.system_timezone):
+            log.error(
+                "Unable to find timezone with code '{}'. Going to UTC as defult".format(
+                    self.system_timezone
+                )
+            )
+            self.resultDict["system_timezone"] = "UTC"
+            self.system_timezone = "UTC"
         if self.resultDict["system_timezone"] != "UTC":
             self.resultDict["system_timezone_offset"] = get_timezone_offset(
                 self.request, self.resultDict["system_timezone"]

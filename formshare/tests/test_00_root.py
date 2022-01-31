@@ -9663,7 +9663,7 @@ class FunctionalTests(unittest.TestCase):
                     "editprofile": "",
                     "user_name": "FormShare",
                     "user_about": "FormShare testing account",
-                    "user_timezone": datetime.datetime.utcnow().astimezone().tzname(),
+                    "user_timezone": "UTC",
                 },
                 status=302,
             )

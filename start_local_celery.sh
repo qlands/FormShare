@@ -1,1 +1,1 @@
-celery -A formshare.config.celery_app worker --without-gossip --loglevel=info -Q FormShare
+celery -A formshare.config.celery_app worker --loglevel=info -Q FormShare

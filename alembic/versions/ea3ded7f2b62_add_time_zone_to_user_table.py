@@ -22,7 +22,7 @@ def upgrade():
     sql = "SELECT timezone.timezone_code FROM timezone WHERE timezone.timezone_code = '{}'".format(
         timezone
     )
-    res = conn.execute(sql)
+    res = conn.execute(sql).fetchone()
     if res is None:
         timezone = "UTC"
     op.add_column(

@@ -23,7 +23,7 @@ def upgrade():
         timezone
     )
     conn = op.get_bind()
-    res = conn.execute(sql)
+    res = conn.execute(sql).fetchone()
     if res is None:
         timezone = "UTC"
     op.add_column(

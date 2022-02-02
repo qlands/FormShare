@@ -92,9 +92,6 @@ def map_to_schema(model_class, data):
                 extra_data[key] = value
     if bool(extra_data):
         mapped_data["extras"] = json.dumps(extra_data)
-    print("*******************555")
-    print(mapped_data)
-    print("*******************555")
     if not bool(mapped_data):
         raise Exception(
             "The mapping for table {} is empty!".format(model_class.__table__.name)

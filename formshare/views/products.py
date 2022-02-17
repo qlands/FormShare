@@ -13,6 +13,7 @@ from formshare.processes.db import (
     set_output_public_state,
     delete_product,
 )
+from formshare.processes.odk.processes import get_assistant_permissions_on_a_form
 from formshare.views.classes import PrivateView, PublicView, APIView
 
 
@@ -139,7 +140,17 @@ class DownloadPrivateProductByAPI(APIView):
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         if project_id is None:
             raise HTTPNotFound
-        api_projects = get_user_projects(self.request, user_id, self.user["user_id"])
+        if not self.using_assistant:
+            api_projects = get_user_projects(
+                self.request, user_id, self.user["user_id"]
+            )
+        else:
+            permissions = get_assistant_permissions_on_a_form(
+                self.request, user_id, project_id, self.assistant_id, form_id
+            )
+            if permissions["enum_canclean"] == 0:
+                raise HTTPNotFound
+            api_projects = get_user_projects(self.request, user_id, user_id)
         project_found = False
         for project in api_projects:
             if project["project_id"] == project_id:

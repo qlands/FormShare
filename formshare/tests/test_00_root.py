@@ -142,6 +142,7 @@ class FunctionalTests(unittest.TestCase):
         self.working_dir = working_dir
         self.partner = ""
         self.case_project_id = ""
+        self.product_id = ""
 
     def test_all(self):
         def test_root():
@@ -5116,6 +5117,7 @@ class FunctionalTests(unittest.TestCase):
 
                 form_schema = form_details["form_schema"]
                 task_id = str(uuid.uuid4())
+                self.product_id = task_id
                 sql = (
                     "INSERT INTO product (project_id,form_id,product_id,output_file,output_mimetype,"
                     "celery_taskid,datetime_added,created_by,output_id,process_only,publishable) "
@@ -9420,6 +9422,19 @@ class FunctionalTests(unittest.TestCase):
                 status=401,
             )
 
+            # Check that the assistant can download a product using API
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/api_download/{}/output/{}?apikey={}".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "csv_private_export",
+                    self.product_id[-12:],
+                    self.assistantLoginKey,
+                ),
+                status=404,
+            )
+
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
                     self.randonLogin,
@@ -9441,6 +9456,19 @@ class FunctionalTests(unittest.TestCase):
                     "rowuuid": row_uuid,
                     "landcultivated": 14,
                 },
+                status=200,
+            )
+
+            # Check that the assistant can download a product using API
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/api_download/{}/output/{}?apikey={}".format(
+                    self.randonLogin,
+                    self.project,
+                    self.formID,
+                    "csv_private_export",
+                    self.product_id[-12:],
+                    self.assistantLoginKey,
+                ),
                 status=200,
             )
 

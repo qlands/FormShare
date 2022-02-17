@@ -521,7 +521,7 @@ class API1UpdateRepository(UpdateAPIView):
 
         user_id = get_project_owner(self.request, project_id)
 
-        assistan_data = get_assistant_by_api_key(self.request, project_id, self.api_key)
+        assistan_data = get_assistant_by_api_key(self.request, self.api_key)
         if not assistan_data:
             self.error = True
             self.error_code = 401

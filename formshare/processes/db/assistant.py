@@ -207,10 +207,9 @@ def get_assistant_data(request, project, assistant):
     return res
 
 
-def get_assistant_by_api_key(request, project, api_key):
+def get_assistant_by_api_key(request, api_key):
     res = map_from_schema(
         request.dbsession.query(Collaborator)
-        .filter(Collaborator.project_id == project)
         .filter(Collaborator.coll_apikey == api_key)
         .first()
     )

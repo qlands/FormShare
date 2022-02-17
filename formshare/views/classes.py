@@ -42,6 +42,7 @@ from formshare.processes.db import (
     get_partner_timezone,
     get_timezones,
     timezone_exists,
+    get_assistant_by_api_key,
 )
 
 log = logging.getLogger("formshare")
@@ -287,8 +288,8 @@ class PrivateView(object):
         )
         self.system_timezone = datetime.datetime.utcnow().astimezone().tzname()
         if not timezone_exists(self.request, self.system_timezone):
-            log.error(
-                "Unable to find timezone with code '{}'. Going to UTC as defult".format(
+            log.warning(
+                "Unable to find timezone with code '{}'. Going to UTC as default".format(
                     self.system_timezone
                 )
             )
@@ -632,8 +633,8 @@ class AssistantView(object):
         )
         self.system_timezone = datetime.datetime.utcnow().astimezone().tzname()
         if not timezone_exists(self.request, self.system_timezone):
-            log.error(
-                "Unable to find timezone with code '{}'. Going to UTC as defult".format(
+            log.warning(
+                "Unable to find timezone with code '{}'. Going to UTC as default".format(
                     self.system_timezone
                 )
             )
@@ -790,8 +791,8 @@ class PartnerView(object):
         )
         self.system_timezone = datetime.datetime.utcnow().astimezone().tzname()
         if not timezone_exists(self.request, self.system_timezone):
-            log.error(
-                "Unable to find timezone with code '{}'. Going to UTC as defult".format(
+            log.warning(
+                "Unable to find timezone with code '{}'. Going to UTC as default".format(
                     self.system_timezone
                 )
             )
@@ -912,6 +913,8 @@ class APIView(object):
         self.request = request
         self.user = None
         self.api_key = ""
+        self.using_assistant = False
+        self.assistant_id = ""
         self._ = self.request.translate
         self.error = False
 
@@ -923,19 +926,24 @@ class APIView(object):
         if self.api_key is not None:
             self.user = get_user_by_api_key(self.request, self.api_key)
             if self.user is None:
-                response = Response(
-                    content_type="application/json",
-                    status=401,
-                    body=json.dumps(
-                        {
-                            "error": self._(
-                                "This API key does not exist or is inactive"
-                            ),
-                            "error_type": "authentication",
-                        }
-                    ).encode(),
-                )
-                return response
+                assistant_data = get_assistant_by_api_key(self.request, self.api_key)
+                if assistant_data:
+                    self.using_assistant = True
+                    self.assistant_id = assistant_data["coll_id"]
+                else:
+                    response = Response(
+                        content_type="application/json",
+                        status=401,
+                        body=json.dumps(
+                            {
+                                "error": self._(
+                                    "This API key does not exist or is inactive"
+                                ),
+                                "error_type": "authentication",
+                            }
+                        ).encode(),
+                    )
+                    return response
         else:
             response = Response(
                 content_type="application/json",

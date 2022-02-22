@@ -237,10 +237,22 @@ class IDatabase(Interface):  # pragma: no cover
     def update_extendable_tables(self, tables_allowed):
         """
         Allow to add new tables to the list of tables allowed to have a flexible schema using extras
-        :param schemas_allowed: "Current list of tables allowed"
+        :param tables_allowed: "Current list of tables allowed"
         :return: Must return a modified version of tables_allowed
         """
-        raise NotImplementedError("after_create must be implemented in subclasses")
+        raise NotImplementedError(
+            "update_extendable_tables must be implemented in subclasses"
+        )
+
+    def update_extendable_modules(self, modules_allowed):
+        """
+        Allow to add new tables to the list of tables modules for the schema to filter
+        :param modules_allowed: "Current list of tables allowed"
+        :return: Must return a modified version of modules_allowed
+        """
+        raise NotImplementedError(
+            "update_extendable_modules must be implemented in subclasses"
+        )
 
 
 class IProject(Interface):  # pragma: no cover

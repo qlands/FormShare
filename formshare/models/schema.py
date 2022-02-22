@@ -10,9 +10,11 @@ __all__ = [
     "add_column_to_schema",
     "map_to_schema",
     "map_from_schema",
+    "add_modules_to_schema",
 ]
 
 _SCHEMA = []
+_MODULES = []
 
 
 def initialize_schema():
@@ -29,6 +31,11 @@ def initialize_schema():
                 break
         if not table_found:
             _SCHEMA.append({"name": table.name, "fields": fields})
+
+
+def add_modules_to_schema(module_list):
+    for a_module in module_list:
+        _MODULES.append(a_module)
 
 
 def add_column_to_schema(table_name, field_name, field_comment):
@@ -123,7 +130,7 @@ def map_from_schema(data):
                 # noinspection PyProtectedMember
                 dict_result = data._asdict()  # This is not private
                 for key, value in dict_result.items():
-                    if value.__class__.__module__ == "formshare.models.formshare":
+                    if value.__class__.__module__ in _MODULES:
                         for c in inspect(value).mapper.column_attrs:
                             if c.key != "extras":
                                 mapped_data[c.key] = getattr(value, c.key)
@@ -162,7 +169,7 @@ def map_from_schema(data):
                 # noinspection PyProtectedMember
                 dict_result = row._asdict()  # This is not private
                 for key, value in dict_result.items():
-                    if value.__class__.__module__ == "formshare.models.formshare":
+                    if value.__class__.__module__ in _MODULES:
                         for c in inspect(value).mapper.column_attrs:
                             if c.key != "extras":
                                 temp[c.key] = getattr(value, c.key)

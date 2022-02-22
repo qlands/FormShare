@@ -17,7 +17,7 @@ from formshare.config.jinja_extensions import (
 )
 from formshare.config.mainresources import create_resources
 from formshare.config.routes import load_routes
-from formshare.models import add_column_to_schema
+from formshare.models import add_column_to_schema, add_modules_to_schema
 from formshare.products import add_product
 from formshare.products.formshare_products import register_products
 
@@ -201,8 +201,16 @@ def load_environment(settings, config, apppath, policy_array):
         "partnerproject",
         "partnerform",
     ]
+
+    modules_allowed = ["formshare.models.formshare"]
+
     for plugin in p.PluginImplementations(p.IDatabase):
         schemas_allowed = plugin.update_extendable_tables(schemas_allowed)
+
+    for plugin in p.PluginImplementations(p.IDatabase):
+        modules_allowed = plugin.update_extendable_modules(modules_allowed)
+
+    add_modules_to_schema(modules_allowed)
 
     # Call any connected plugins to update FormShare ORM. For example: Add new tables
     for plugin in p.PluginImplementations(p.IDatabase):

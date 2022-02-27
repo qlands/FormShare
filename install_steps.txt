@@ -1,6 +1,5 @@
 Installation steps to build FormShare from source.
-Tested with Ubuntu Server 19.10, 20.04
-Tested with Ubuntu Server 18.04 (MariaDB only)
+Tested with Ubuntu Server 20.04
 
 Steps:
 
@@ -18,25 +17,19 @@ sudo apt-get update
 
 # ---------------------BEGIN OF IMPORTANT NOTE-------------------------
 You need to install, properly configure and run the following services
-- MariaDB or MySQL - You need root or other user with GRANT ALL ON *.*   .Check if the connection to MySQL works
-    - sudo apt-get install mariadb-server
-    - sudo mysql_secure_installation
-    or
+- MySQL - You need root or other user with GRANT ALL ON *.*   .Check if the connection to MySQL works
     - sudo apt-get install mysql-server
-    - sudo mysql_secure_installation
-- Elastic Search 6.X . We strongly recommend to use a Docker image for this
+    - sudo mysql_secure_installation.
+- Elastic Search 6.X . We strongly recommend using a Docker image for this
     - sudo apt-get install -y docker-compose
 # ---------------------END OF IMPORTANT NOTE-------------------------
 
 # Install dependencies
-
-# ---------------------BEGIN OF IMPORTANT NOTE-------------------------
-# If you want to use MySQL do:
-sudo apt-get install -y build-essential qt5-default qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake mongodb jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev openjdk-11-jdk sqlite3 libqt5sql5-sqlite git wget python3-venv
-# If you want to use MariaDB do:
-sudo apt-get install -y build-essential qt5-default qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake mongodb jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmariadbclient-dev libmariadb-dev mariadb-client openjdk-11-jdk sqlite3 libqt5sql5-sqlite git wget python3-venv
-sudo ln -s /usr/bin/mariadb_config /usr/bin/mysql_config
-# ---------------------END OF IMPORTANT NOTE-------------------------
+sudo apt-get install -y build-essential qt5-default qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake mongodb jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client-8.0 openjdk-11-jdk sqlite3 libqt5sql5-sqlite git wget python3-venv tidy golang-go mosquitto
+RUN wget https://dev.mysql.com/get/mysql-apt-config_0.8.22-1_all.deb
+RUN dpkg -i ./mysql-apt-config_0.8.22-1_all.deb
+RUN apt-get update
+RUN apt-get install mysql-shell
 
 # Installing ODK Tools
 

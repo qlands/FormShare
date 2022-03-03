@@ -99,6 +99,7 @@ from formshare.views.form import (
     DownloadSubmissionFiles,
     DownloadGPSPoints,
     DownloadPublicXLSData,
+    DownloadPublicZIPCSVData,
     UploadNewVersion,
     ActivateForm,
     DeActivateForm,
@@ -108,6 +109,7 @@ from formshare.views.form import (
     DownloadPublicCSV,
     DownloadPrivateCSV,
     DownloadPrivateXLSData,
+    DownloadPrivateZIPCSVData,
     GetSubMissionInfo,
     GetMediaFile,
     CaseLookUpTable,
@@ -118,6 +120,7 @@ from formshare.views.form import (
     ExportData,
     ExportDataToXLSX,
     ExportDataToCSV,
+    ExportDataToZIPCSV,
     CompareForms,
 )
 from formshare.views.odk import (
@@ -790,6 +793,14 @@ def load_routes(config, settings):
     )
     routes.append(
         add_route(
+            "form_export_zip_csv",
+            "/user/{userid}/project/{projcode}/form/{formid}/export/zip_csv",
+            ExportDataToZIPCSV,
+            "dashboard/projects/forms/export/zip_csv.jinja2",
+        )
+    )
+    routes.append(
+        add_route(
             "form_export_kml",
             "/user/{userid}/project/{projcode}/form/{formid}/export/kml",
             DownloadKML,
@@ -822,6 +833,24 @@ def load_routes(config, settings):
             "form_download_private_xlsx_data",
             "/user/{userid}/project/{projcode}/form/{formid}/generate/private_xlsx",
             DownloadPrivateXLSData,
+            None,
+        )
+    )
+
+    routes.append(
+        add_route(
+            "form_download_public_zip_csv_data",
+            "/user/{userid}/project/{projcode}/form/{formid}/generate/public_zip_csv",
+            DownloadPublicZIPCSVData,
+            None,
+        )
+    )
+
+    routes.append(
+        add_route(
+            "form_download_private_zip_csv_data",
+            "/user/{userid}/project/{projcode}/form/{formid}/generate/private_zip_csv",
+            DownloadPrivateZIPCSVData,
             None,
         )
     )

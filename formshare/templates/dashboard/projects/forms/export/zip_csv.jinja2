@@ -1,0 +1,50 @@
+{% extends 'dashboard/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block titlesection %}{{ _('Export to Zip CSV') }}{% endblock titlesection %}
+
+{% block breadcrumbs %}
+    {% include 'dashboard/projects/forms/export/snippets/brdcrbs_zip_csv.jinja2' %}
+{% endblock breadcrumbs %}
+
+{% block mainsection %}
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="wrapper wrapper-content">
+                <div class="ibox">
+                    <div class="ibox-content">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <div class="m-b-md">
+                                    <h2>{{ _('Export to Zip CSV') }} - {{ _('Options') }}</h2>
+                                    <form class="m-t require_busy" role="form" method="post" action="{{ request.url }}">
+                                       {{ form.secure_form(request) }}
+                                        <div class="form-group row"><label class="col-sm-4 col-form-label">{{ _('Type of export') }}</label>
+                                            <div class="col-sm-8">
+                                                <div class="i-checks"><label> <input type="radio" value="yes" name="publishable" checked=""> <i></i> {{ _('Publishable') }} ({{ _('Without sensitive data e.g., GPS') }})</label></div>
+                                                <div class="i-checks"><label> <input type="radio" value="no" name="publishable"> <i></i> {{ _('Unpublishable') }} ({{ _('With sensitive data e.g., GPS') }})</label></div>
+                                            </div>
+                                        </div>
+                                        <hr>
+                                        <div class="form-group row"><label class="col-sm-4 col-form-label">{{ _('Lookup options for selects and multi-selects') }}</label>
+                                            <div class="col-sm-8">
+                                                <div class="i-checks"><label> <input type="radio" value="1" name="labels" checked=""> <i></i> {{ _('Include option codes only') }} </label></div>
+                                                <div class="i-checks"><label> <input type="radio" value="2" name="labels"> <i></i> {{ _('Convert option codes into labels') }}</label></div>
+                                                <div class="i-checks"><label> <input type="radio" value="3" name="labels"> <i></i> {{ _('Include option codes and labels') }}</label></div>
+                                            </div>
+                                        </div>
+                                        <div class="form-group row">
+                                            <div class="col-sm-4 col-sm-offset-2">
+                                                <button class="btn btn-primary btn-sm" type="submit">{{ _('Generate') }}</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock mainsection %}

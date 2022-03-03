@@ -5315,6 +5315,63 @@ class FunctionalTests(unittest.TestCase):
                     status=200,
                 )
 
+            def mimic_celery_zip_csv_process():
+                from formshare.products.export.zip_csv.celery_task import (
+                    internal_build_zip_csv,
+                )
+
+                engine = create_engine(
+                    self.server_config["sqlalchemy.url"], poolclass=NullPool
+                )
+                form_details = get_form_details(
+                    self.server_config, self.projectID, self.formID
+                )
+                form_schema = form_details["form_schema"]
+                create_xml_file = form_details["form_createxmlfile"]
+                task_id = str(uuid.uuid4())
+
+                sql = (
+                    "INSERT INTO product (project_id,form_id,product_id,output_file,output_mimetype,"
+                    "celery_taskid,datetime_added,created_by,output_id,process_only,publishable) "
+                    "VALUES ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}',{})".format(
+                        self.projectID,
+                        self.formID,
+                        "zip_csv_public_export",
+                        self.working_dir + "/{}.zip".format(task_id),
+                        "application/zip",
+                        task_id,
+                        datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
+                        self.randonLogin,
+                        task_id[-12:],
+                        0,
+                        1,
+                    )
+                )
+                engine.execute(sql)
+                engine.dispose()
+                internal_build_zip_csv(
+                    self.server_config,
+                    self.server_config["repository.path"] + "/odk",
+                    form_schema,
+                    self.formID,
+                    create_xml_file,
+                    self.server_config["auth.opaque"],
+                    self.working_dir + "/{}.zip".format(task_id),
+                    True,
+                    "en",
+                )
+                store_task_status(task_id, self.server_config)
+                self.testapp.get(
+                    "/user/{}/project/{}/form/{}/private_download/{}/output/{}".format(
+                        self.randonLogin,
+                        self.project,
+                        self.formID,
+                        "zip_csv_public_export",
+                        task_id[-12:],
+                    ),
+                    status=200,
+                )
+
             def mimic_celery_kml_process():
                 from formshare.products.export.kml.celery_task import internal_build_kml
 
@@ -5451,6 +5508,31 @@ class FunctionalTests(unittest.TestCase):
 
             # Generate public XLSX for a project that does not exist goes to 404
             self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/public_zip_csv".format(
+                    self.randonLogin, "not_exist", self.formID
+                ),
+                status=404,
+            )
+
+            # Generate public XLSX for a form that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/public_zip_csv".format(
+                    self.randonLogin, self.project, "not_exist"
+                ),
+                status=404,
+            )
+
+            # Generate public XLSX
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/public_zip_csv".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Generate public XLSX for a project that does not exist goes to 404
+            self.testapp.get(
                 "/user/{}/project/{}/form/{}/generate/public_xlsx".format(
                     self.randonLogin, "not_exist", self.formID
                 ),
@@ -5555,6 +5637,31 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" not in res.headers
 
+            # Download a private zip csv for a project that does not exist goes tot 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/private_zip_csv".format(
+                    self.randonLogin, "not_exist", self.formID
+                ),
+                status=404,
+            )
+
+            # Download a private zip csv for a form that does not exist goes tot 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/private_zip_csv".format(
+                    self.randonLogin, self.project, "not_exist"
+                ),
+                status=404,
+            )
+
+            # Private private zip CSV
+            res = self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/private_zip_csv".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
             # Export data of a project that does not exist goes to 404
             self.testapp.get(
                 "/user/{}/project/{}/form/{}/export".format(
@@ -5632,6 +5739,17 @@ class FunctionalTests(unittest.TestCase):
                 status=302,
             )
 
+            # Call export to ZIP CSV
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/export".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "export_type": "ZIP_CSV",
+                },
+                status=302,
+            )
+
             # Call export to plugin
             self.testapp.post(
                 "/user/{}/project/{}/form/{}/export".format(
@@ -5694,6 +5812,55 @@ class FunctionalTests(unittest.TestCase):
             # Export to excel not publishable
             self.testapp.post(
                 "/user/{}/project/{}/form/{}/export/xlsx".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "publishable": "no",
+                    "labels": "3",
+                },
+                status=302,
+            )
+
+            # ------Zip CSV-----------------------
+            # Export data to zip csv of a project that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/export/zip_csv".format(
+                    self.randonLogin, "not_exist", self.formID
+                ),
+                status=404,
+            )
+
+            # Export data to zip csv of a form that does not exist goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/export/zip_csv".format(
+                    self.randonLogin, self.project, "not_exist"
+                ),
+                status=404,
+            )
+
+            # Export to zip csv goes to 200
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/export/zip_csv".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=200,
+            )
+
+            # Export to zip CSV publishable
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/export/zip_csv".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                {
+                    "publishable": "yes",
+                    "labels": "3",
+                },
+                status=302,
+            )
+
+            # Export to zip CSV not publishable
+            self.testapp.post(
+                "/user/{}/project/{}/form/{}/export/zip_csv".format(
                     self.randonLogin, self.project, self.formID
                 ),
                 {
@@ -5861,6 +6028,7 @@ class FunctionalTests(unittest.TestCase):
             mimic_celery_public_csv_process()
             mimic_celery_private_csv_process()
             mimic_celery_xlsx_process()
+            mimic_celery_zip_csv_process()
             mimic_celery_kml_process()
             mimic_celery_media_process()
             print("Testing repository downloads step 3 finished")
@@ -14563,9 +14731,25 @@ class FunctionalTests(unittest.TestCase):
                 status=404,
             )
 
+            # Download a private zip csv for a form that does not have access goes tot 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/private_zip_csv".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
             # Generate public XLSX when don't have access goes to 404
             self.testapp.get(
                 "/user/{}/project/{}/form/{}/generate/public_xlsx".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Generate public zip csv when don't have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/public_zip_csv".format(
                     self.randonLogin, self.project, self.formID
                 ),
                 status=404,
@@ -14694,6 +14878,14 @@ class FunctionalTests(unittest.TestCase):
             # Download XLSX of a form that does not have access goes to 404
             self.testapp.get(
                 "/user/{}/project/{}/form/{}/export/xlsx".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Download Zip CSV of a form that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/export/zip_csv".format(
                     self.randonLogin, self.project, self.formID
                 ),
                 status=404,
@@ -15428,9 +15620,25 @@ class FunctionalTests(unittest.TestCase):
                 status=404,
             )
 
+            # Generate public XLSX when don't have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/public_zip_csv".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
             # Download a private xls for a form that does not have access goes tot 404
             self.testapp.get(
                 "/user/{}/project/{}/form/{}/generate/private_xlsx".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Download a private zip CSV for a form that does not have access goes tot 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/generate/private_zip_csv".format(
                     self.randonLogin, self.project, self.formID
                 ),
                 status=404,
@@ -15463,6 +15671,14 @@ class FunctionalTests(unittest.TestCase):
             # Download XLSX of a form that does not have access goes to 404
             self.testapp.get(
                 "/user/{}/project/{}/form/{}/export/xlsx".format(
+                    self.randonLogin, self.project, self.formID
+                ),
+                status=404,
+            )
+
+            # Download XLSX of a form that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/form/{}/export/zip_csv".format(
                     self.randonLogin, self.project, self.formID
                 ),
                 status=404,

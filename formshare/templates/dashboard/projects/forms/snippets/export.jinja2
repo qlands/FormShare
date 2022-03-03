@@ -14,7 +14,8 @@
                                 <select name="export_type" style="width: 100%; !important;" class="form-control">
                                     {% block export_types %}
                                         <option value="XLSX">{{ _('XLSX') }}</option>
-                                        <option value="CSV">{{ _('CSV') }}</option>
+                                        <option value="CSV">{{ _('Flat CSV (One file)') }}</option>
+                                        <option value="ZIP_CSV">{{ _('Zip CSV (Multiple files)') }}</option>
                                         <option value="KML">{{ _('KML') }}</option>
                                         <option value="MEDIA">{{ _('Media (zip)') }}</option>
                                     {% endblock export_types %}

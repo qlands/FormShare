@@ -123,9 +123,13 @@ def get_product_description(request, product):
     if product == "kml_export":
         return _("KML")
     if product == "csv_public_export":
-        return _("Publishable CSV")
+        return _("Publishable Flat CSV")
     if product == "csv_private_export":
-        return _("Unpublishable CSV")
+        return _("Unpublishable Flat CSV")
+    if product == "zip_csv_public_export":
+        return _("Publishable Zip CSV")
+    if product == "zip_csv_private_export":
+        return _("Unpublishable Zip CSV")
     if product == "merge_form":
         return _("Merge Form")
     return _("Without description")

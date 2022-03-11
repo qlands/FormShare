@@ -4,7 +4,7 @@ msgstr ""
 "Project-Id-Version:  \n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2022-03-05 15:12-0600\n"
-"PO-Revision-Date: 2022-03-05 21:54-0600\n"
+"PO-Revision-Date: 2022-03-06 09:21-0600\n"
 "Last-Translator: Carlos Quiros <cquiros@qlands.com>\n"
 "Language: es\n"
 "Language-Team: English <kde-i18n-doc@kde.org>\n"
@@ -3730,7 +3730,7 @@ msgstr "Cambios realizados a"
 #: formshare/templates/dashboard/projects/forms/snippets/brdcrbs_compare_forms.jinja2:2
 #| msgid "form"
 msgid "from"
-msgstr "de"
+msgstr "desde"
 
 # | msgid "Merge form"
 #: formshare/templates/dashboard/projects/forms/snippets/brdcrbs_compare_forms.jinja2:17

@@ -81,12 +81,15 @@ def get_stream(request, bucket_id, file_name):
     return None
 
 
-def response_stream(stream, file_name, response):
+def response_stream(stream, file_name, response, unique_filename=None):
     content_type, content_enc = mimetypes.guess_type(file_name)
     if content_type is None:
         content_type = "application/binary"
     response.headers["Content-Type"] = content_type
-    response.content_disposition = 'attachment; filename="' + file_name + '"'
+    if unique_filename is None:
+        response.content_disposition = 'attachment; filename="' + file_name + '"'
+    else:
+        response.content_disposition = 'attachment; filename="' + unique_filename + '"'
     stream.seek(0, 2)
     file_size = stream.tell()
     stream.seek(0)

@@ -249,33 +249,41 @@ def simple_date_usa(date, timezone_to_use=None):
 @core_helper
 def get_timezone_desc(request, timezone_code):
     """
-    Returns a readable date"
+    Returns the timezone descripcion of a code"
     :param request: Pyramid request object
     :param timezone_code: Timezone code
     :return: Description of timezone
     """
-    res = (
-        request.dbsession.query(TimeZone.timezone_name)
-        .filter(TimeZone.timezone_code == timezone_code)
-        .first()
-    )
-    return res[0]
+    try:
+        res = (
+            request.dbsession.query(TimeZone.timezone_name)
+            .filter(TimeZone.timezone_code == timezone_code)
+            .first()
+        )
+        return res[0]
+    except Exception as e:
+        log.error("Error in get_timezone_desc: {}".format(str(e)))
+        return "Error"
 
 
 @core_helper
 def get_timezone_offset(request, timezone_code):
     """
-    Returns a readable date"
+    Returns the offset of a timezone"
     :param request: Pyramid request object
     :param timezone_code: Timezone code
     :return: Description of timezone
     """
-    res = (
-        request.dbsession.query(TimeZone.timezone_utc_offset)
-        .filter(TimeZone.timezone_code == timezone_code)
-        .first()
-    )
-    return res[0]
+    try:
+        res = (
+            request.dbsession.query(TimeZone.timezone_utc_offset)
+            .filter(TimeZone.timezone_code == timezone_code)
+            .first()
+        )
+        return res[0]
+    except Exception as e:
+        log.error("Error in get_timezone_offset: {}".format(str(e)))
+        return "Error"
 
 
 @core_helper

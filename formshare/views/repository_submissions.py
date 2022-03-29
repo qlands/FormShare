@@ -106,9 +106,6 @@ class ReviewAudit(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] >= 3:
-            raise HTTPNotFound
-
         form_data = get_form_details(self.request, user_id, project_id, form_id)
         if form_data is not None:
             if form_data["form_schema"] is None:
@@ -231,9 +228,6 @@ class GetFormAudit(PrivateView):
             if not project_found:
                 raise HTTPNotFound
         else:
-            raise HTTPNotFound
-
-        if project_details["access_type"] >= 3:
             raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)

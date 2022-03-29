@@ -9,16 +9,18 @@
         {% block form_important_links_content %}
             <div class="row">
                 <div class="col-lg-2">
-                    <a href="{{ request.route_url('editDictTables', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" title="{{ numsensitive }} {{ request.h.pluralize(_('field'),numsensitive,request.locale_name) }} {{ _('marked as sensitive among ') }}{{ numtables }} {{ request.h.pluralize(_('table'),numtables,request.locale_name) }}">
-                    <div class="widget navy-bg p-lg text-center" style="padding: 20px">
-                        <div class="m-b-n-sm">
-                            <i class="fas fa-eye-slash fa-2x"></i>
-                            <h4 class="font-bold no-margins">
-                                {{ _('Anonymize fields') }}
-                            </h4>
-                        </div>
-                    </div>
-                    </a>
+                    {% if projectDetails.access_type < 4 %}
+                        <a href="{{ request.route_url('editDictTables', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" title="{{ numsensitive }} {{ request.h.pluralize(_('field'),numsensitive,request.locale_name) }} {{ _('marked as sensitive among ') }}{{ numtables }} {{ request.h.pluralize(_('table'),numtables,request.locale_name) }}">
+                            <div class="widget navy-bg p-lg text-center" style="padding: 20px">
+                                <div class="m-b-n-sm">
+                                    <i class="fas fa-eye-slash fa-2x"></i>
+                                    <h4 class="font-bold no-margins">
+                                        {{ _('Anonymize fields') }}
+                                    </h4>
+                                </div>
+                            </div>
+                        </a>
+                    {% endif %}
                 </div>
                 {% if formDetails.indb > 0 %}
                     <div class="col-lg-2">
@@ -58,16 +60,18 @@
                         </a>
                     </div>
                     <div class="col-lg-2" data-id="demo">
-                        <a data-toggle="modal" data-target="#export">
-                            <div class="widget navy-bg p-lg text-center"  style="padding: 20px">
-                                <div class="m-b-n-sm">
-                                    <i class="fas fa-download fa-2x"></i>
-                                    <h4 class="font-bold no-margins">
-                                        {{ _('Export data') }}
-                                    </h4>
+                        {% if projectDetails.access_type < 4 %}
+                            <a data-toggle="modal" data-target="#export">
+                                <div class="widget navy-bg p-lg text-center"  style="padding: 20px">
+                                    <div class="m-b-n-sm">
+                                        <i class="fas fa-download fa-2x"></i>
+                                        <h4 class="font-bold no-margins">
+                                            {{ _('Export data') }}
+                                        </h4>
+                                    </div>
                                 </div>
-                            </div>
-                        </a>
+                            </a>
+                        {% endif %}
                     </div>
                 {% endif %}
             </div>

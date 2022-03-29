@@ -154,6 +154,9 @@
                 </div>
             </div>
         </div>
+        {% if formDetails.form_schema != None %}
+            {% include 'dashboard/projects/forms/snippets/api_examples.jinja2' %}
+        {% endif %}
         {% if projectDetails.access_type < 4 %}
             {% include 'dashboard/projects/forms/snippets/update_form.jinja2' %}
             {% include 'dashboard/projects/forms/snippets/upload_file.jinja2' %}
@@ -167,9 +170,6 @@
                 {% if form_partners|length > 0 %}
                     {% include 'dashboard/projects/forms/snippets/edit_link_partner.jinja2' %}
                 {% endif %}
-            {% endif %}
-            {% if formDetails.form_schema != None %}
-                {% include 'dashboard/projects/forms/snippets/api_examples.jinja2' %}
             {% endif %}
             {% set upload_for_merging = true %}
             {% set parent_project = projectDetails.project_id %}

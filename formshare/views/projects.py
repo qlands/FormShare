@@ -382,9 +382,6 @@ class ActivateProjectView(ProjectsView):
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] >= 4:
-            raise HTTPNotFound  # Don't edit a public or a project that I am just a member
-
         if self.request.method == "POST":
             next_page = self.request.params.get("next") or self.request.route_url(
                 "projects", userid=self.user.login
@@ -599,7 +596,9 @@ class RemoveFileFromProject(ProjectsView):
             )
             if removed:
                 delete_stream(self.request, project_id, file_name)
-                self.request.session.flash(self._("The files was removed successfully"))
+                self.request.session.flash(
+                    self._("The files were removed successfully")
+                )
                 return HTTPFound(location=next_page)
             else:
                 self.add_error(message)

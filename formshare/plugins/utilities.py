@@ -20,7 +20,7 @@ from formshare.processes.settings.settings import (
     delete_settings,
     get_settings,
 )
-from formshare.views.classes import PublicView, PrivateView, APIView
+from formshare.views.classes import PublicView, PrivateView, APIView, ProjectsView
 
 __all__ = [
     "add_templates_directory",
@@ -36,6 +36,8 @@ __all__ = [
     "add_field_to_form_schema",
     "FormSharePublicView",
     "FormSharePrivateView",
+    "FormShareAPIView",
+    "FormShareProjectsView",
     "FormShareSettings",
     "FormShareFormEditorView",
     "FormShareFormAdminView",
@@ -181,6 +183,17 @@ class FormShareAPIView(
 ):  # pragma: no cover - Tested by loading testing plugins but not Covered
     """
     A view class for plugins which require an API view.
+    """
+
+    def process_view(self):
+        raise NotImplementedError("process_view must be implemented in subclasses")
+
+
+class FormShareProjectsView(
+    ProjectsView
+):  # pragma: no cover - Tested by loading testing plugins but not Covered
+    """
+    A view class for plugins which require an Project view.
     """
 
     def process_view(self):

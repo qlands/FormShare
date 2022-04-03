@@ -24,6 +24,7 @@ __all__ = [
     "IPublicView",
     "IPrivateView",
     "IAssistantView",
+    "IPartnerView",
     "ILogOut",
     "IUserAuthorization",
     "IAPIRoutes",
@@ -870,19 +871,19 @@ class IAssistantView(Interface):  # pragma: no cover
 
     def before_processing_assistant_view(self, route_name, request, context):
         """
-        Called by FormShare's PrivateView class before processing a private view
+        Called by FormShare's AssistantView class before processing an assistant view
         :param route_name: The name of the route
         :param request: Pyramid request object
         :param context: Class context before processing the view
         :return: None
         """
         raise NotImplementedError(
-            "IPrivateView before_processing must be implemented in subclasses"
+            "IAssistantView before_processing_assistant_view must be implemented in subclasses"
         )
 
     def after_processing_assistant_view(self, route_name, request, context):
         """
-        Called by FormShare's PrivateView class after processing the dashboard view but just before returning the
+        Called by FormShare's AssistantView class after processing the view but just before returning the
         context
         :param route_name: The name of the route
         :param request: Pyramid request object
@@ -890,7 +891,38 @@ class IAssistantView(Interface):  # pragma: no cover
         :return: A modified version of context
         """
         raise NotImplementedError(
-            "IPrivateView after_processing must be implemented in subclasses"
+            "IAssistantView after_processing_assistant_view must be implemented in subclasses"
+        )
+
+
+class IPartnerView(Interface):  # pragma: no cover
+    """
+    Allows to hook into FormShare's partner class.
+    """
+
+    def before_processing_partner_view(self, route_name, request, context):
+        """
+        Called by FormShare's PartnerView class before processing a partner view
+        :param route_name: The name of the route
+        :param request: Pyramid request object
+        :param context: Class context before processing the view
+        :return: None
+        """
+        raise NotImplementedError(
+            "IPrivateView before_processing_partner_view must be implemented in subclasses"
+        )
+
+    def after_processing_partner_view(self, route_name, request, context):
+        """
+        Called by FormShare's PartnerView class after processing the view but just before returning the
+        context
+        :param route_name: The name of the route
+        :param request: Pyramid request object
+        :param context: Context of the view that will be returned to jinja2
+        :return: A modified version of context
+        """
+        raise NotImplementedError(
+            "IPrivateView after_processing_partner_view must be implemented in subclasses"
         )
 
 

@@ -729,7 +729,7 @@ class AssistantView(object):
             self.resultDict.update(process_dict)
             if self.request.matched_route is not None:
                 for plugin in p.PluginImplementations(p.IAssistantView):
-                    self.viewResult = plugin.after_processing_assistant_view(
+                    self.resultDict = plugin.after_processing_assistant_view(
                         self.request.matched_route.name, self.request, self.resultDict
                     )
             return self.resultDict
@@ -865,14 +865,28 @@ class PartnerView(object):
         self.partnerID = self.partner.id
         self.partnerEmail = self.partner.email
         self.resultDict["activePartner"] = self.partner
+        self.resultDict["partner_id"] = self.partnerID
+        self.resultDict["partner_email"] = self.partner.email
         self.resultDict["posterrors"] = self.errors
         self.resultDict["partner_timezone"] = get_partner_timezone(
             self.request, self.partnerEmail
         )
         self.assistant_timezone = get_partner_timezone(self.request, self.partnerEmail)
+
+        if self.request.matched_route is not None:
+            for plugin in p.PluginImplementations(p.IPartnerView):
+                plugin.before_processing_partner_view(
+                    self.request.matched_route.name, self.request, self.resultDict
+                )
+
         process_dict = self.process_view()
         if not self.returnRawViewResult:
             self.resultDict.update(process_dict)
+            if self.request.matched_route is not None:
+                for plugin in p.PluginImplementations(p.IPartnerView):
+                    self.resultDict = plugin.after_processing_partner_view(
+                        self.request.matched_route.name, self.request, self.resultDict
+                    )
             return self.resultDict
         else:
             return process_dict

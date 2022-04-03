@@ -19,7 +19,9 @@
                         </ul>
                     </li>
                     <li style="margin-top: 15px">
-                        {{ _('Your are assisting in project ') }}: {{ activeProject.project_name }} {% if selected_timezone == 'project' and timezone != 'UTC'  %}<span class="badge badge-default" title=" {{ request.h.get_timezone_desc(request,timezone) }} ">UTC{{ request.h.get_timezone_offset(request,timezone) }}</span>{% endif %}
+                        {% block assistant_project_message %}
+                            {{ _('Your are assisting in project ') }}: {{ activeProject.project_name }} {% if selected_timezone == 'project' and timezone != 'UTC'  %}<span class="badge badge-default" title=" {{ request.h.get_timezone_desc(request,timezone) }} ">UTC{{ request.h.get_timezone_offset(request,timezone) }}</span>{% endif %}
+                        {% endblock assistant_project_message %}
                     </li>
 {#                    <li class="dropdown">#}
 {#                        <a aria-expanded="false" role="button" href="#" class="dropdown-toggle" data-toggle="dropdown"> Menu item</a>#}

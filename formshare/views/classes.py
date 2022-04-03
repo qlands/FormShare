@@ -441,20 +441,21 @@ class PrivateView(object):
         self.classResult["errors"] = self.errors
         self.classResult["showWelcome"] = self.showWelcome
 
-        i_private_view_implementations = p.PluginImplementations(p.IPrivateView)
-        for plugin in i_private_view_implementations:
-            plugin.before_processing(
-                self.request,
-                {
-                    "returnRawViewResult": self.returnRawViewResult,
-                    "privateOnly": self.privateOnly,
-                    "viewingSelfAccount": self.viewingSelfAccount,
-                    "showWelcome": self.showWelcome,
-                    "checkCrossPost": self.checkCrossPost,
-                    "queryProjects": self.queryProjects,
-                    "user": self.user,
-                },
-            )
+        if self.request.matched_route is not None:
+            for plugin in p.PluginImplementations(p.IPrivateView):
+                plugin.before_processing(
+                    self.request.matched_route.name,
+                    self.request,
+                    {
+                        "returnRawViewResult": self.returnRawViewResult,
+                        "privateOnly": self.privateOnly,
+                        "viewingSelfAccount": self.viewingSelfAccount,
+                        "showWelcome": self.showWelcome,
+                        "checkCrossPost": self.checkCrossPost,
+                        "queryProjects": self.queryProjects,
+                        "user": self.user,
+                    },
+                )
         self.request.response.headers.pop("FS_error", None)
         self.classResult["user_timezone"] = get_user_timezone(
             self.request, self.user.login
@@ -464,56 +465,19 @@ class PrivateView(object):
 
         if not self.returnRawViewResult:
             if self.request.matched_route is not None:
-                if self.request.matched_route.name == "dashboard":
-                    i_view_implementations = p.PluginImplementations(p.IDashBoardView)
-                    for plugin in i_view_implementations:
-                        self.viewResult = plugin.after_dashboard_processing(
-                            self.request,
-                            {
-                                "returnRawViewResult": self.returnRawViewResult,
-                                "privateOnly": self.privateOnly,
-                                "viewingSelfAccount": self.viewingSelfAccount,
-                                "showWelcome": self.showWelcome,
-                                "checkCrossPost": self.checkCrossPost,
-                                "queryProjects": self.queryProjects,
-                                "user": self.user,
-                            },
-                            self.viewResult,
-                        )
-                if self.request.matched_route.name == "project_details":
-                    i_view_implementations = p.PluginImplementations(
-                        p.IProjectDetailsView
+                for plugin in p.PluginImplementations(p.IPrivateView):
+                    self.viewResult = plugin.after_processing(
+                        self.request.matched_route.name,
+                        self.request,
+                        {
+                            "showWelcome": self.showWelcome,
+                            "checkCrossPost": self.checkCrossPost,
+                            "user_projects": self.user_projects,
+                            "active_project": self.activeProject,
+                            "user": self.user,
+                        },
+                        self.viewResult,
                     )
-                    for plugin in i_view_implementations:
-                        self.viewResult = plugin.after_project_details_processing(
-                            self.request,
-                            {
-                                "returnRawViewResult": self.returnRawViewResult,
-                                "privateOnly": self.privateOnly,
-                                "viewingSelfAccount": self.viewingSelfAccount,
-                                "showWelcome": self.showWelcome,
-                                "checkCrossPost": self.checkCrossPost,
-                                "queryProjects": self.queryProjects,
-                                "user": self.user,
-                            },
-                            self.viewResult,
-                        )
-                if self.request.matched_route.name == "form_details":
-                    i_view_implementations = p.PluginImplementations(p.IFormDetailsView)
-                    for plugin in i_view_implementations:
-                        self.viewResult = plugin.after_form_details_processing(
-                            self.request,
-                            {
-                                "returnRawViewResult": self.returnRawViewResult,
-                                "privateOnly": self.privateOnly,
-                                "viewingSelfAccount": self.viewingSelfAccount,
-                                "showWelcome": self.showWelcome,
-                                "checkCrossPost": self.checkCrossPost,
-                                "queryProjects": self.queryProjects,
-                                "user": self.user,
-                            },
-                            self.viewResult,
-                        )
 
         if not self.returnRawViewResult:
             self.classResult.update(self.viewResult)
@@ -737,8 +701,11 @@ class AssistantView(object):
 
         self.assistantID = self.assistant.login
         self.resultDict["activeAssistant"] = self.assistant
+        self.resultDict["assistant_id"] = self.assistantID
         self.resultDict["userid"] = self.userID
         self.resultDict["projcode"] = self.projectCode
+        self.resultDict["project_id"] = self.projectID
+        self.resultDict["project_assistant"] = self.project_assistant
         self.resultDict["posterrors"] = self.errors
         self.resultDict["activeProject"] = get_project_details(
             self.request, self.projectID
@@ -749,9 +716,22 @@ class AssistantView(object):
         self.assistant_timezone = get_assistant_timezone(
             self.request, self.project_assistant, self.assistantID
         )
+
+        if self.request.matched_route is not None:
+            for plugin in p.PluginImplementations(p.IAssistantView):
+                plugin.before_processing_assistant_view(
+                    self.request.matched_route.name, self.request, self.resultDict
+                )
+
         process_dict = self.process_view()
+
         if not self.returnRawViewResult:
             self.resultDict.update(process_dict)
+            if self.request.matched_route is not None:
+                for plugin in p.PluginImplementations(p.IAssistantView):
+                    self.viewResult = plugin.after_processing_assistant_view(
+                        self.request.matched_route.name, self.request, self.resultDict
+                    )
             return self.resultDict
         else:
             return process_dict

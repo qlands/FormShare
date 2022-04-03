@@ -82,11 +82,6 @@
                             <li {% if activeMenu == 'groups' %}class="active" {% endif %}>
                                 <a href="{{ request.route_url('groups', userid=activeProject.owner,projcode=activeProject.project_code ) }}"><i style="margin-left: 20px" class="fas fa-users"></i> <span class="nav-label">{{ _('Assistant groups') }}</span></a>
                             </li>
-                            {% if request.h.get_setting(request,"allow.partner.access","False") == "True" %}
-                                <li {% if activeMenu == 'project_partners' %}class="active" {% endif %}>
-                                    <a href="#"><i style="margin-left: 20px" class="fas fa-hands-helping"></i> <span class="nav-label">{{ _('Linked partners') }}</span></a>
-                                </li>
-                            {% endif %}
 {#                            <li>#}
 {#                                <a href="#"><i style="margin-left: 10px" class="fab fa-wpforms"></i> <span class="nav-label">{{ _('Forms') }}</span></a>#}
 {#                            </li>#}

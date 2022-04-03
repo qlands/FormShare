@@ -23,10 +23,8 @@ __all__ = [
     "IRegistration",
     "IPublicView",
     "IPrivateView",
+    "IAssistantView",
     "ILogOut",
-    "IDashBoardView",
-    "IProjectDetailsView",
-    "IFormDetailsView",
     "IUserAuthorization",
     "IAPIRoutes",
     "IFormGroupAccess",
@@ -838,9 +836,10 @@ class IPrivateView(Interface):  # pragma: no cover
     Allows to hook into FormShare's private class.
     """
 
-    def before_processing(self, request, class_data):
+    def before_processing(self, route_name, request, class_data):
         """
         Called by FormShare's PrivateView class before processing a private view
+        :param route_name: The name of the route
         :param request: Pyramid request object
         :param class_data: Class parameters as dict
         :return: None
@@ -849,61 +848,49 @@ class IPrivateView(Interface):  # pragma: no cover
             "IPrivateView before_processing must be implemented in subclasses"
         )
 
-
-class IDashBoardView(Interface):  # pragma: no cover
-    """
-    Allows to hook into FormShare's dashboard view class.
-    """
-
-    def after_dashboard_processing(self, request, class_data, context):
+    def after_processing(self, route_name, request, class_data, context):
         """
         Called by FormShare's PrivateView class after processing the dashboard view but just before returning the
         context
+        :param route_name: The name of the route
         :param request: Pyramid request object
-        :param context: Context of the view
         :param class_data: Class parameters as dict
+        :param context: Context of the view that will be returned to jinja2
         :return: A modified version of context
         """
         raise NotImplementedError(
-            "IDashBoardView after_processing must be implemented in subclasses"
+            "IPrivateView after_processing must be implemented in subclasses"
         )
 
 
-class IProjectDetailsView(Interface):  # pragma: no cover
+class IAssistantView(Interface):  # pragma: no cover
     """
-    Allows to hook into FormShare's project details view class.
+    Allows to hook into FormShare's assistant class.
     """
 
-    def after_project_details_processing(self, request, class_data, context):
+    def before_processing_assistant_view(self, route_name, request, context):
         """
-        Called by FormShare's PrivateView class after processing the project details view but just before returning the
-        context
+        Called by FormShare's PrivateView class before processing a private view
+        :param route_name: The name of the route
         :param request: Pyramid request object
-        :param context: Context of the view
-        :param class_data: Class parameters as dict
-        :return: A modified version of context
+        :param context: Class context before processing the view
+        :return: None
         """
         raise NotImplementedError(
-            "IProjectDetailsView after_processing must be implemented in subclasses"
+            "IPrivateView before_processing must be implemented in subclasses"
         )
 
-
-class IFormDetailsView(Interface):  # pragma: no cover
-    """
-    Allows to hook into FormShare's form details view class.
-    """
-
-    def after_form_details_processing(self, request, class_data, context):
+    def after_processing_assistant_view(self, route_name, request, context):
         """
-        Called by FormShare's PrivateView class after processing the form details view but just before returning the
+        Called by FormShare's PrivateView class after processing the dashboard view but just before returning the
         context
+        :param route_name: The name of the route
         :param request: Pyramid request object
-        :param context: Context of the view
-        :param class_data: Class parameters as dict
+        :param context: Context of the view that will be returned to jinja2
         :return: A modified version of context
         """
         raise NotImplementedError(
-            "IFormDetailsView after_processing must be implemented in subclasses"
+            "IPrivateView after_processing must be implemented in subclasses"
         )
 
 

@@ -325,13 +325,6 @@ def get_form_color(form_id, form_color):
         return form_color
 
 
-def get_date(time_bound, date_time):
-    if time_bound == 1:
-        return date_time.date()
-    else:
-        return None
-
-
 def get_projects_and_forms_by_partner(request, partner_id):
     res = (
         request.dbsession.query(PartnerProject, Project, Userproject, Odkform)
@@ -361,10 +354,8 @@ def get_projects_and_forms_by_partner(request, partner_id):
                     "project_timezone": a_form["project_timezone"],
                     "project_abstract": a_form["project_abstract"],
                     "time_bound": a_form["time_bound"],
-                    "access_from": get_date(
-                        a_form["time_bound"], a_form["access_from"]
-                    ),
-                    "access_to": get_date(a_form["time_bound"], a_form["access_to"]),
+                    "access_from": a_form["access_from"],
+                    "access_to": a_form["access_to"],
                     "project_access": True,
                     "project_forms": [
                         {
@@ -506,12 +497,8 @@ def get_projects_and_forms_by_partner(request, partner_id):
                                 a_form["form_id"], a_form["form_hexcolor"]
                             ),
                             "time_bound": a_form["time_bound"],
-                            "access_from": get_date(
-                                a_form["time_bound"], a_form["access_from"]
-                            ),
-                            "access_to": get_date(
-                                a_form["time_bound"], a_form["access_to"]
-                            ),
+                            "access_from": a_form["access_from"],
+                            "access_to": a_form["access_to"],
                         }
                     ],
                 }
@@ -555,22 +542,14 @@ def get_projects_and_forms_by_partner(request, partner_id):
                             a_form["form_id"], a_form["form_hexcolor"]
                         ),
                         "time_bound": a_form["time_bound"],
-                        "access_from": get_date(
-                            a_form["time_bound"], a_form["access_from"]
-                        ),
-                        "access_to": get_date(
-                            a_form["time_bound"], a_form["access_to"]
-                        ),
+                        "access_from": a_form["access_from"],
+                        "access_to": a_form["access_to"],
                     }
                 )
             else:
                 a_child_form_found["time_bound"] = a_form["time_bound"]
-                a_child_form_found["access_from"] = get_date(
-                    a_form["time_bound"], a_form["access_from"]
-                )
-                a_child_form_found["access_to"] = get_date(
-                    a_form["time_bound"], a_form["access_to"]
-                )
+                a_child_form_found["access_from"] = a_form["access_from"]
+                a_child_form_found["access_to"] = a_form["access_to"]
     return projects_and_forms
 
 

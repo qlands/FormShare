@@ -441,6 +441,11 @@ class GenerateRepository(PrivateView):
                                                 )
                                         duplicated_choices.append(option)
                                 stage = -1
+                            if result_code == 25:  # pragma: no cover
+                                self.report_critical_error(
+                                    user_id, project_id, form_id, result_code, message
+                                )
+                                stage = -1
                             if result_code == 24:  # pragma: no cover
                                 # Tables with more than 64 characters
                                 root = etree.fromstring(message)

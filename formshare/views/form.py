@@ -620,6 +620,13 @@ class FormDetails(PrivateView):
                                 )
                         txt_message = txt_message + "\t"
                 errors.append(txt_message)
+            if created == 25:
+                txt_message = self._(
+                    "This ODK form mixes coded and not coded languages. "
+                    "For example label::English (en) and hint::English. "
+                    "You need to code all the elements that are marked for translation."
+                )
+                errors.append(txt_message)
             if created == 24:
                 # Table names with more than 64 characters
                 txt_message = (

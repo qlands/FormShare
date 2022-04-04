@@ -17,10 +17,9 @@
         <div class="feed-element" style="margin-top: 10px">
             <div class="ibox">
                 <div class="ibox-title" style="padding-right: 10px">
-{#                    This will be enable once we have project level outputs #}
-{#                    {% if a_project.project_access %}#}
+                    {% block project_header_extra%}
 {#                        <span class="label label-primary float-right"><a>{{ _('View project level outputs') }}</a></span>#}
-{#                    {% endif %}#}
+                    {% endblock project_header_extra %}
                     <h5>{{ a_project.project_name }} {% if selected_timezone == 'project' and timezone != 'UTC'  %}<span class="badge badge-default" title=" {{ request.h.get_timezone_desc(request,a_project.project_timezone) }} ">UTC{{ request.h.get_timezone_offset(request,a_project.project_timezone) }}</span>{% endif %}</h5>
                 </div>
                 <div class="ibox-content">

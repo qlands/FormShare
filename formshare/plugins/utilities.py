@@ -26,6 +26,7 @@ from formshare.views.classes import (
     APIView,
     ProjectsView,
     AssistantView,
+    PartnerView,
 )
 
 __all__ = [
@@ -212,6 +213,17 @@ class FormShareAssistantView(
 ):  # pragma: no cover - Tested by loading testing plugins but not Covered
     """
     A view class for plugins which require an Assistant view.
+    """
+
+    def process_view(self):
+        raise NotImplementedError("process_view must be implemented in subclasses")
+
+
+class FormSharePartnerView(
+    PartnerView
+):  # pragma: no cover - Tested by loading testing plugins but not Covered
+    """
+    A view class for plugins which require an Partner view.
     """
 
     def process_view(self):

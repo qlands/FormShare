@@ -623,8 +623,8 @@ class FormDetails(PrivateView):
             if created == 25:
                 txt_message = self._(
                     "This ODK form mixes coded and not coded languages. "
-                    "For example label::English (en) and hint::English. "
-                    "You need to code all the elements that are marked for translation."
+                    "For example label::English (en) and label::Español. "
+                    "You need to code all the labels that are marked for translation."
                 )
                 errors.append(txt_message)
             if created == 24:

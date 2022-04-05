@@ -871,7 +871,7 @@ class PartnerView(object):
         self.resultDict["partner_timezone"] = get_partner_timezone(
             self.request, self.partnerEmail
         )
-        self.assistant_timezone = get_partner_timezone(self.request, self.partnerEmail)
+        self.partner_timezone = get_partner_timezone(self.request, self.partnerEmail)
 
         if self.request.matched_route is not None:
             for plugin in p.PluginImplementations(p.IPartnerView):

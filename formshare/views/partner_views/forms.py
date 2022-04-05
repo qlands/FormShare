@@ -189,18 +189,18 @@ class PartnerFormDetails(PartnerView):
         if partner_project is not None:
             if partner_project["time_bound"] == 1:
                 if not (
-                    partner_project["access_from"].date()
+                    partner_project["access_from"]
                     <= datetime.date.today()
-                    <= partner_project["access_to"].date()
+                    <= partner_project["access_to"]
                 ):
                     raise HTTPNotFound
 
         if partner_form is not None:
             if partner_form["time_bound"] == 1:
                 if not (
-                    partner_form["access_from"].date()
+                    partner_form["access_from"]
                     <= datetime.date.today()
-                    <= partner_form["access_to"].date()
+                    <= partner_form["access_to"]
                 ):
                     raise HTTPNotFound
         project_details = get_project_details(self.request, project_id)
@@ -260,18 +260,18 @@ class PartnerDownloadGPSPoints(PartnerView):
         if partner_project is not None:
             if partner_project["time_bound"] == 1:
                 if not (
-                    partner_project["access_from"].date()
+                    partner_project["access_from"]
                     <= datetime.date.today()
-                    <= partner_project["access_to"].date()
+                    <= partner_project["access_to"]
                 ):
                     raise HTTPNotFound
 
         if partner_form is not None:
             if partner_form["time_bound"] == 1:
                 if not (
-                    partner_form["access_from"].date()
+                    partner_form["access_from"]
                     <= datetime.date.today()
-                    <= partner_form["access_to"].date()
+                    <= partner_form["access_to"]
                 ):
                     raise HTTPNotFound
 
@@ -304,18 +304,18 @@ class PartnerGetSubMissionInfo(PartnerView):
         if partner_project is not None:
             if partner_project["time_bound"] == 1:
                 if not (
-                    partner_project["access_from"].date()
+                    partner_project["access_from"]
                     <= datetime.date.today()
-                    <= partner_project["access_to"].date()
+                    <= partner_project["access_to"]
                 ):
                     raise HTTPNotFound
 
         if partner_form is not None:
             if partner_form["time_bound"] == 1:
                 if not (
-                    partner_form["access_from"].date()
+                    partner_form["access_from"]
                     <= datetime.date.today()
-                    <= partner_form["access_to"].date()
+                    <= partner_form["access_to"]
                 ):
                     raise HTTPNotFound
 
@@ -423,18 +423,18 @@ class GetPartnerMediaFile(PartnerView):
         if partner_project is not None:
             if partner_project["time_bound"] == 1:
                 if not (
-                    partner_project["access_from"].date()
+                    partner_project["access_from"]
                     <= datetime.date.today()
-                    <= partner_project["access_to"].date()
+                    <= partner_project["access_to"]
                 ):
                     raise HTTPNotFound
 
         if partner_form is not None:
             if partner_form["time_bound"] == 1:
                 if not (
-                    partner_form["access_from"].date()
+                    partner_form["access_from"]
                     <= datetime.date.today()
-                    <= partner_form["access_to"].date()
+                    <= partner_form["access_to"]
                 ):
                     raise HTTPNotFound
 
@@ -478,18 +478,18 @@ class PartnerDownloadPrivateProduct(PartnerView):
         if partner_project is not None:
             if partner_project["time_bound"] == 1:
                 if not (
-                    partner_project["access_from"].date()
+                    partner_project["access_from"]
                     <= datetime.date.today()
-                    <= partner_project["access_to"].date()
+                    <= partner_project["access_to"]
                 ):
                     raise HTTPNotFound
 
         if partner_form is not None:
             if partner_form["time_bound"] == 1:
                 if not (
-                    partner_form["access_from"].date()
+                    partner_form["access_from"]
                     <= datetime.date.today()
-                    <= partner_form["access_to"].date()
+                    <= partner_form["access_to"]
                 ):
                     raise HTTPNotFound
 
@@ -583,18 +583,18 @@ class PartnerDownloadPrivateProductByAPI(PartnerAPIView):
         if partner_project is not None:
             if partner_project["time_bound"] == 1:
                 if not (
-                    partner_project["access_from"].date()
+                    partner_project["access_from"]
                     <= datetime.date.today()
-                    <= partner_project["access_to"].date()
+                    <= partner_project["access_to"]
                 ):
                     raise HTTPNotFound
 
         if partner_form is not None:
             if partner_form["time_bound"] == 1:
                 if not (
-                    partner_form["access_from"].date()
+                    partner_form["access_from"]
                     <= datetime.date.today()
-                    <= partner_form["access_to"].date()
+                    <= partner_form["access_to"]
                 ):
                     raise HTTPNotFound
 

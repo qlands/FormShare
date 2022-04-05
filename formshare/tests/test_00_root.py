@@ -1738,6 +1738,18 @@ class FunctionalTests(unittest.TestCase):
             )
             assert "FS_error" in res.headers
 
+            # Upload a form fails. Bad language
+            paths = ["resources", "forms", "bad_language", "bad_language.xlsx"]
+            resource_file = os.path.join(self.path, *paths)
+
+            res = self.testapp.post(
+                "/user/{}/project/{}/forms/add".format(self.randonLogin, self.project),
+                {"form_pkey": "cedula"},
+                status=302,
+                upload_files=[("xlsx", resource_file)],
+            )
+            assert "FS_error" in res.headers
+
             # Upload a form fails. Tables with more than 64 characters
             paths = ["resources", "forms", "bad_size", "bad_size.xlsx"]
             resource_file = os.path.join(self.path, *paths)
@@ -15350,31 +15362,8 @@ class FunctionalTests(unittest.TestCase):
                 status=404,
             )
 
-            self.testapp.get(
-                "/user/{}/project/{}/form/{}/audit".format(
-                    self.randonLogin, self.project, self.formID
-                ),
-                status=404,
-            )
-
             self.testapp.post(
                 "/user/{}/project/{}/form/{}/submissions/get?callback=jQuery311038923674830152466_1578156795294".format(
-                    self.randonLogin, self.project, self.formID
-                ),
-                {
-                    "_search": "false",
-                    "nd": "1578156795454",
-                    "rows": "10",
-                    "page": "1",
-                    "sidx": "",
-                    "sord": "asc",
-                },
-                status=404,
-            )
-
-            self.testapp.post(
-                "/user/{}/project/{}/form/{}/audit/get"
-                "?callback=jQuery31104503466642261382_1578424030318".format(
                     self.randonLogin, self.project, self.formID
                 ),
                 {
@@ -15414,12 +15403,6 @@ class FunctionalTests(unittest.TestCase):
             # Delete a project that does not have access goes to 404
             self.testapp.post(
                 "/user/{}/project/{}/delete".format(self.randonLogin, "test001"),
-                status=404,
-            )
-
-            # Activate a project that does not have access goes to 404
-            self.testapp.post(
-                "/user/{}/project/{}/setactive".format(self.randonLogin, "test001"),
                 status=404,
             )
 

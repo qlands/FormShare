@@ -568,8 +568,8 @@ def check_jxform_file(
         if p.returncode == 25:
             message = _(
                 "This ODK form mixes coded and not coded languages. "
-                "For example label::English (en) and hint::English. "
-                "You need to code all the elements that are marked for translation."
+                "For example label::English (en) and label::Español. "
+                "You need to code all the labels that are marked for translation."
             )
             return 25, message
 

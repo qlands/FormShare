@@ -206,7 +206,7 @@
                         <h4 class="modal-title">{{ _('Change time zone') }}</h4>
                         <small id="password_who" class="font-bold">{{ _('Change the time zone of') }} {{ activePartner.fullName }}</small>
                     </div>
-                    <form class="m-t require_busy" id="change_key_form" role="form" method="post" action="{{ request.route_url('partner_change_my_timezone',_query={'next': request.url}) }}">
+                    <form class="m-t require_busy" id="change_timezone_form" role="form" method="post" action="{{ request.route_url('partner_change_my_timezone',_query={'next': request.url}) }}">
                         {{ form.secure_form(request) }}
                         <div class="modal-body">
                             <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Time zone') }}</label>

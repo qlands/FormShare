@@ -23,7 +23,9 @@
     {{ form.display_errors(posterrors) }}
     <div class="ibox">
         <div class="ibox-title">
-            <h5>{{ _('Project and Forms that you have access') }}</h5>
+            {% block partner_title %}
+                <h5>{{ _('Project and forms that you have access') }}</h5>
+            {% endblock %}
             <div class="ibox-tools">
                 <a class="collapse-link" style="margin-right: 10px">
                     <i class="fa fa-chevron-up"></i>
@@ -52,7 +54,9 @@
                                 {% for a_project in projects %}
                                     {% include 'partner/snippets/project_item.jinja2' %}
                                 {% endfor %}
+                                {% block projects_extra %}
 
+                                {% endblock projects_extra %}
                                 <div class="col-1 my-sizer-element" style="max-width: 1px; max-height: 1px"></div>
 
                             </div>

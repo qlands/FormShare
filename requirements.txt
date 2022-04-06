@@ -9,16 +9,16 @@ backports.csv==1.0.7
 beautifulsoup4==4.10.0
 billiard==3.6.4.0
 binaryornot==0.4.4
-black==21.9b0
+black==22.3.0
 boto==2.49.0
-celery==5.1.2
+celery==5.2.6
 certifi==2021.5.30
 cffi==1.14.6
 chardet==4.0.0
 charset-normalizer==2.0.6
 cheroot==8.5.2
 CherryPy==18.6.1
-click==7.1.2
+click==8.1.2
 click-didyoumean==0.3.0
 click-plugins==1.1.1
 click-repl==0.2.0
@@ -40,6 +40,7 @@ gunicorn==20.1.0
 hupper==1.10.3
 idna==3.2
 imagesize==1.2.0
+importlib-resources==5.4.0
 iniconfig==1.1.1
 jaraco.classes==3.2.1
 jaraco.collections==3.4.0
@@ -70,7 +71,7 @@ PasteDeploy==2.1.1
 pathspec==0.9.0
 Pattern==3.6
 pdfminer.six==20201018
-Pillow==9.0.0
+Pillow==9.0.1
 plaster==1.0
 plaster-pastedeploy==0.7
 platformdirs==2.4.0
@@ -141,7 +142,7 @@ urllib3==1.26.7
 validators==0.18.2
 venusian==3.0.0
 vine==5.0.0
-waitress==2.0.0
+waitress==2.1.1
 wcwidth==0.2.5
 WebHelpers2==2.0
 WebOb==1.8.7
@@ -149,6 +150,7 @@ WebTest==3.0.0
 wrapt==1.13.3
 xlrd==1.2.0
 zc.lockfile==2.0
+zipp==3.7.0
 zope.deprecation==4.4.0
 zope.event==4.5.0
 zope.interface==5.4.0

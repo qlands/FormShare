@@ -9,7 +9,7 @@ backports.csv==1.0.7
 beautifulsoup4==4.10.0
 billiard==3.6.4.0
 binaryornot==0.4.4
-black==22.3.0
+black==21.9b0
 boto==2.49.0
 celery==5.1.2
 certifi==2021.5.30

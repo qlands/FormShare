@@ -94,17 +94,14 @@
 {% endblock mainsection %}
 
 {% block body_end %}
-    {% if activeUser.super == 1 %}
+    {% if activeUser.super == 1 or request.h.get_setting(request,'show.settings.menu','False') == 'True' %}
         <div class="theme-config">
             <div class="theme-config-box">
                 <div class="spin-icon">
                     <i class="fa fa-cogs fa-spin"></i>
                 </div>
                 <div class="skin-settings">
-                    <div class="title">{{ _('Configure FormShare') }} <br>
-                        <small style="text-transform: none;font-weight: 400">
-                            {{ _('Core and plugin settings') }}
-                        </small></div>
+                    <div class="title">{{ _('Configure FormShare') }} <br></div>
                     {#                <div class="setings-item">#}
                     {#                    <span>#}
                     {#                        Fixed sidebar#}
@@ -120,16 +117,14 @@
                     {#                        </div>#}
                     {#                    </div>#}
                     {#                </div>#}
-
-                    <div class="title"><i class="fas fa-arrow-alt-circle-down"></i> {{ _('Plugins') }} <i class="fas fa-arrow-alt-circle-down"></i></div>
                     {% block settings_plugin_items %}
-{#                        <div class="setings-item default-skin">#}
-{#                    <span class="skin-name ">#}
-{#                         <a href="#">#}
-{#                             Enketo#}
-{#                         </a>#}
-{#                    </span>#}
-{#                        </div>#}
+                        {#                        <div class="setings-item default-skin">#}
+                        {#                    <span class="skin-name ">#}
+                        {#                         <a href="#">#}
+                        {#                             Enketo#}
+                        {#                         </a>#}
+                        {#                    </span>#}
+                        {#                        </div>#}
                     {% endblock settings_plugin_items %}
 
                 </div>
@@ -188,7 +183,7 @@
                     allowHTML: true,
                 });
 
-                {% if activeUser.super == 1 %}
+                {% if activeUser.super == 1 or request.h.get_setting(request,'show.settings.menu','False') == 'True' %}
                     $('.spin-icon').click(function (){
                         $(".theme-config-box").toggleClass("show");
                     });

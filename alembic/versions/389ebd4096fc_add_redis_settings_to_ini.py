@@ -54,7 +54,6 @@ def upgrade():
     modify_ini_file(
         config, "ADD", "app:formshare", "redis.sessions.secret", redis_sessions_secret
     )
-    modify_ini_file(config, "ADD", "app:formshare", "redis.sessions.timeout", "7200")
     modify_ini_file(
         config,
         "ADD",
@@ -80,7 +79,6 @@ def downgrade():
     config = configparser.ConfigParser()
     config.read(config_uri)
     modify_ini_file(config, "REMOVE", "app:formshare", "redis.sessions.secret")
-    modify_ini_file(config, "REMOVE", "app:formshare", "redis.sessions.timeout")
     modify_ini_file(config, "REMOVE", "app:formshare", "redis.sessions.cookie_name")
     modify_ini_file(config, "REMOVE", "app:formshare", "redis.sessions.host")
     modify_ini_file(config, "REMOVE", "app:formshare", "redis.sessions.port")

@@ -208,6 +208,47 @@ class ODKView(object):
         raise NotImplementedError("process_view must be implemented in subclasses")
 
 
+class ExceptionView(object):
+    """
+    This is the Exception view. Used for 404 and 500.
+    """
+
+    def __init__(self, request):
+        self.request = request
+        self._ = self.request.translate
+        self.resultDict = {"errors": []}
+        self.errors = []
+        self.returnRawViewResult = False
+        locale = Locale(request.locale_name)
+        if locale.character_order == "left-to-right":
+            self.resultDict["rtl"] = False
+        else:
+            self.resultDict["rtl"] = True
+
+    def __call__(self):
+        self.resultDict["errors"] = self.errors
+
+        self.request.response.headers.pop("FS_error", None)
+        process_dict = self.process_view()
+
+        if not self.returnRawViewResult:
+            self.resultDict.update(process_dict)
+            return self.resultDict
+        else:
+            return process_dict
+
+    def process_view(self):
+        raise NotImplementedError("process_view must be implemented in subclasses")
+
+    def get_post_dict(self):
+        dct = variable_decode(self.request.POST)
+        return dct
+
+    def append_to_errors(self, error):
+        self.request.response.headers["FS_error"] = "true"
+        self.errors.append(error)
+
+
 class PublicView(object):
     """
     This is the most basic public view. Used for 404 and 500. But then used for others more advanced classes
@@ -228,17 +269,23 @@ class PublicView(object):
     def __call__(self):
         self.resultDict["errors"] = self.errors
 
-        i_public_view_implementations = p.PluginImplementations(p.IPublicView)
-        for plugin in i_public_view_implementations:
-            plugin.before_processing(self.request)
+        if self.request.matched_route is not None:
+            for plugin in p.PluginImplementations(p.IPublicView):
+                continue_request = plugin.before_processing_public_view(
+                    self.request.matched_route.name, self.request
+                )
+                if not continue_request:
+                    raise HTTPNotFound()
 
         self.request.response.headers.pop("FS_error", None)
         process_dict = self.process_view()
 
-        for plugin in i_public_view_implementations:
-            process_dict = plugin.after_processing(self.request, process_dict)
-
         if not self.returnRawViewResult:
+            if self.request.matched_route is not None:
+                for plugin in p.PluginImplementations(p.IPublicView):
+                    process_dict = plugin.after_processing_public_view(
+                        self.request.matched_route.name, self.request, process_dict
+                    )
             self.resultDict.update(process_dict)
             return self.resultDict
         else:

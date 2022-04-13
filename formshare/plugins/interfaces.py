@@ -40,7 +40,7 @@ __all__ = [
     "IPartner",
     "IPartnerAuthentication",
     "IExport",
-    "IAssistantAuthentication"
+    "IAssistantAuthentication",
 ]
 
 
@@ -481,6 +481,7 @@ class IAssistantAuthentication(Interface):  # pragma: no cover
     """
     Allows to hook into the assistant authentication
     """
+
     def after_assistant_login(self, request, collaborator):
         """
         Called by FormShare so plugins can modify the login of assistants
@@ -816,19 +817,21 @@ class IPublicView(Interface):  # pragma: no cover
     Allows to hook into FormShare's view public class.
     """
 
-    def before_processing(self, request):
+    def before_processing_public_view(self, route_name, request):
         """
         Called by FormShare's PublicView class before processing a public view
+        :param route_name: Route name
         :param request: Pyramid request object
-        :return: None
+        :return: True if the request should continue or False it should not. In the case of False FormShare will raise a HTTPNotFound
         """
         raise NotImplementedError(
             "IPublicView before_processing must be implemented in subclasses"
         )
 
-    def after_processing(self, request, context):
+    def after_processing_public_view(self, route_name, request, context):
         """
         Called by FormShare's PublicView class after processing a public view but just before returning the context
+        :param route_name: Route name
         :param request: Pyramid request object
         :param context: Context of the view
         :return: A modified version of context

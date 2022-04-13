@@ -9,7 +9,7 @@ import validators
 from elasticfeeds.activity import Actor, Object, Activity
 from formencode.variabledecode import variable_decode
 from pyramid.httpexceptions import HTTPFound
-from pyramid.httpexceptions import HTTPNotFound, HTTPSeeOther
+from pyramid.httpexceptions import HTTPNotFound
 from pyramid.response import Response
 from pyramid.security import remember
 from pyramid.session import check_csrf_token
@@ -33,7 +33,7 @@ from formshare.processes.db import (
 from formshare.processes.elasticsearch.user_index import get_user_index_manager
 from formshare.processes.email.send_email import send_error_to_technical_team
 from formshare.processes.email.send_email import send_password_email
-from formshare.views.classes import PublicView
+from formshare.views.classes import PublicView, ExceptionView
 
 log = logging.getLogger("formshare")
 
@@ -62,7 +62,7 @@ class HomeView(PublicView):
         return {"activeUser": None}
 
 
-class NotFoundView(PublicView):
+class NotFoundView(ExceptionView):
     def process_view(self):
         self.request.response.status = 404
         return {}
@@ -81,7 +81,7 @@ class Gravatar(PublicView):
         return Response(avatar, 200, headers)
 
 
-class ErrorView(PublicView):
+class ErrorView(ExceptionView):
     def process_view(self):
         user = None
         policy = get_policy(self.request, "main")
@@ -139,7 +139,9 @@ class LoginView(PublicView):
                         self.returnRawViewResult = True
                         next_page = self.request.params.get(
                             "next"
-                        ) or self.request.route_url("dashboard", userid=current_user.login)
+                        ) or self.request.route_url(
+                            "dashboard", userid=current_user.login
+                        )
 
                         return HTTPFound(
                             location=next_page,

@@ -126,7 +126,7 @@ class ErrorView(PublicView):
 
 class LoginView(PublicView):
     def process_view(self):
-        # If we logged in then go to dashboard
+        # If we logged in then go to dashboard or next page
         next_page = self.request.params.get("next")
         if self.request.method == "GET":
             policy = get_policy(self.request, "main")
@@ -137,17 +137,13 @@ class LoginView(PublicView):
                     current_user = get_user_data(login_data["login"], self.request)
                     if current_user is not None:
                         self.returnRawViewResult = True
-                        if self.request.params.get("openid", None) is None:
-                            return HTTPFound(
-                                location=self.request.route_url(
-                                    "dashboard", userid=current_user.login
-                                ),
-                            )
-                        else:
-                            return HTTPSeeOther(
-                                location=next_page, headers=self.request.headers
-                            )
+                        next_page = self.request.params.get(
+                            "next"
+                        ) or self.request.route_url("dashboard", userid=current_user.login)
 
+                        return HTTPFound(
+                            location=next_page,
+                        )
         else:
             if (
                 self.request.registry.settings.get("perform_post_checks", "true")
@@ -192,10 +188,8 @@ class LoginView(PublicView):
                             "next"
                         ) or self.request.route_url("dashboard", userid=user.login)
                         self.returnRawViewResult = True
-                        if self.request.params.get("openid", None) is None:
-                            return HTTPFound(location=next_page, headers=headers)
-                        else:
-                            return HTTPSeeOther(location=next_page, headers=headers)
+
+                        return HTTPFound(location=next_page, headers=headers)
                 else:
                     log.error(
                         "Logging into account {} provided an invalid password. Message: {}".format(
@@ -308,11 +302,11 @@ class AssistantLoginView(PublicView):
                 if collaborator.check_password(passwd, self.request):
                     continue_login = True
                     # Load connected plugins and check if they modify the login authorization
-                    for plugin in p.PluginImplementations(p.IUserAuthentication):
+                    for plugin in p.PluginImplementations(p.IAssistantAuthentication):
                         (
                             continue_with_login,
                             error_message,
-                        ) = plugin.after_collaborator_login(self.request, collaborator)
+                        ) = plugin.after_assistant_login(self.request, collaborator)
                         if not continue_with_login:
                             self.append_to_errors(error_message)
                             continue_login = False
@@ -390,7 +384,7 @@ class PartnerLoginView(PublicView):
                         if not continue_with_login:
                             self.append_to_errors(error_message)
                             continue_login = False
-                        break  # Only one plugging will be called to extend after_collaborator_login
+                        break  # Only one plugging will be called to extend after_partner_login
                     if continue_login:
                         headers = remember(
                             self.request, str(login_data), policies=["partner"]

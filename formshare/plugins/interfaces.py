@@ -40,6 +40,7 @@ __all__ = [
     "IPartner",
     "IPartnerAuthentication",
     "IExport",
+    "IAssistantAuthentication"
 ]
 
 
@@ -475,7 +476,12 @@ class IUserAuthentication(Interface):  # pragma: no cover
             "on_authenticate_password must be implemented in subclasses"
         )
 
-    def after_collaborator_login(self, request, collaborator):
+
+class IAssistantAuthentication(Interface):  # pragma: no cover
+    """
+    Allows to hook into the assistant authentication
+    """
+    def after_assistant_login(self, request, collaborator):
         """
         Called by FormShare so plugins can modify the login of assistants
         :param request: ``pyramid.request`` object

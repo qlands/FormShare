@@ -92,7 +92,21 @@ def upgrade():
             index_name = "{}_{}_{}".format(user_id, project_code, form_id)
             if index_exists(es_connection, index_name):
                 reindex_dict = {
-                    "source": {"index": index_name},
+                    "source": {
+                        "index": index_name,
+                        "_source": [
+                            "project_id",
+                            "form_id",
+                            "submission_id",
+                            "_submitted_date",
+                            "_xform_id_string",
+                            "_submitted_by",
+                            "_user_id",
+                            "_project_code",
+                            "_geopoint",
+                            "_geolocation",
+                        ],
+                    },
                     "dest": {
                         "index": settings.get(
                             "elasticsearch.repository.index_name", "formshare_datasets"
@@ -120,6 +134,9 @@ def upgrade():
                         headers={"Content-Type": "application/json"},
                     )
                 if result.status_code != 200:
+                    print(reindex_dict)
+                    print("---------------------------")
+                    print(result.text)
                     exit(1)
                 print("Index: {} . Has been reindex".format(index_name))
             else:

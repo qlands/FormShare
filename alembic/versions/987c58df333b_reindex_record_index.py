@@ -119,8 +119,14 @@ def upgrade():
                         headers={"Content-Type": "application/json"},
                     )
                 if result.status_code != 200:
+                    print(reindex_dict)
+                    print("---------------------------")
+                    print(result.text)
                     exit(1)
+                print("-------------------------------------")
                 print("Index: {} . Has been reindex".format(index_name))
+                print("-------------------------------------")
+                print(result.text)
             else:
                 print("Index: {} . Does not exist".format(index_name))
         check_es_ready(settings)

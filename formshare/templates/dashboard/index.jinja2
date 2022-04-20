@@ -21,7 +21,6 @@
         {% cssresource request,'formshare','bsmarkdown' %}
     {% else %}
         {% cssresource request,'formshare','leaflet_beautify_marker_icon' %}
-        {% jsresource request,'formshare','tippy' %}
     {% endif %}
 {% endblock css %}
 
@@ -31,6 +30,7 @@
         {% jsresource request,'formshare','markdown' %}
         {% jsresource request,'formshare','clipboard' %}
     {% else %}
+        {% jsresource request,'formshare','tippy' %}
         {% jsresource request,'formshare','leaflet_beautify_marker_icon' %}
     {% endif %}
 {% endblock topScripts %}
@@ -135,6 +135,9 @@
 
 {% block scripts %}
     {{ super() }}
+    {% block dashboad_extra_imports %}
+
+    {% endblock dashboad_extra_imports %}
     {% if viewingSelfAccount == False %}
         <script>
             $(document).ready(function() {

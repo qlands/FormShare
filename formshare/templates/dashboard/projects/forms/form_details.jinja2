@@ -201,6 +201,9 @@
 {% block scripts %}
     <script src="https://cdnjs.cloudflare.com/ajax/libs/paho-mqtt/1.0.1/mqttws31.js" type="text/javascript"></script>
     {{ super() }}
+    {% block form_extra_imports %}
+
+    {% endblock form_extra_imports %}
     {% if formDetails.form_type == 1 %}
         <script>
             $(document).ready(function() {
@@ -435,71 +438,73 @@
 
                     {% set active_tab = request.params.get('tab',None) %}
                     var mymap;
-
                     function load_map()
                     {
-                        mymap = L.map('projmap').setView([51.505, -0.09], 13);
-                        L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
-                            attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://www.mapbox.com/map-feedback/" target="_blank">Improve this map</a></strong>',
-                            tileSize: 512,
-                            maxZoom: 18,
-                            zoomOffset: -1,
-                            id: 'mapbox/streets-v11',
-                            accessToken: 'pk.eyJ1IjoicWxhbmRzIiwiYSI6ImNqZHB1ZDh4YzEwZHEyeG1rcjc0NmFsNzIifQ.i3YebmNDByns1c1ixZE0bA'
-                        }).addTo(mymap);
+                        {% block form_load_map_function %}
+                            mymap = L.map('projmap').setView([51.505, -0.09], 13);
+                            L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+                                attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://www.mapbox.com/map-feedback/" target="_blank">Improve this map</a></strong>',
+                                tileSize: 512,
+                                maxZoom: 18,
+                                zoomOffset: -1,
+                                id: 'mapbox/streets-v11',
+                                accessToken: 'pk.eyJ1IjoicWxhbmRzIiwiYSI6ImNqZHB1ZDh4YzEwZHEyeG1rcjc0NmFsNzIifQ.i3YebmNDByns1c1ixZE0bA'
+                            }).addTo(mymap);
 
-                        var element = document.getElementById('mapbox');
-                        var full_screen = false;
-                        var normal_height = $("#projmap").height();
-                        new ResizeSensor(element, function() {
-                            var window_width = $(window).width();
-                            var element_width =  element.clientWidth;
-                            if ((element_width / window_width) >= 0.80)
-                            {
-                                $("#projmap").height($(window).height()-80);
-                                mymap.invalidateSize();
-                                //console.log('Changed to ' + element.clientWidth);
-                                full_screen = true;
-                            }
-                            else
-                            {
-                                if (full_screen)
+                            var element = document.getElementById('mapbox');
+                            var full_screen = false;
+                            var normal_height = $("#projmap").height();
+                            new ResizeSensor(element, function() {
+                                var window_width = $(window).width();
+                                var element_width =  element.clientWidth;
+                                if ((element_width / window_width) >= 0.80)
                                 {
-                                    $("#projmap").height(normal_height);
+                                    $("#projmap").height($(window).height()-80);
                                     mymap.invalidateSize();
-                                    //console.log('Back to ' + normal_height);
                                     //console.log('Changed to ' + element.clientWidth);
-                                    full_screen = false;
+                                    full_screen = true;
                                 }
-                            }
-                        });
-
-                        function onMarkerClick(e) {
-                            //alert(e.target.submission_id);
-
-                            let info_url = "{{ request.route_url('get_submission_info', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, submissionid='to-change') }}";
-                            let info_url_final = info_url.replace("to-change", e.target.submission_id) + " #submission_content";
-                            $('#submission_content').load(info_url_final);
-
-                            $('#submission_info').modal('show');
-                            $('#maker_table_id').height('100px')
-                        }
-
-                        $.getJSON("{{ request.route_url('form_download_gpspoints',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}", function( data ) {
-                            var markers = [];
-                            data.points.forEach(function(entry)
-                            {
-                                var latlng = L.latLng({ lat: entry.lati, lng: entry.long });
-                                var marker = L.marker(latlng).addTo(mymap);
-                                marker.submission_id = entry.key
-                                marker.on('click', onMarkerClick);
-                                //marker.bindPopup("<b>" + entry.key + "</b>");
-                                markers.push(marker);
+                                else
+                                {
+                                    if (full_screen)
+                                    {
+                                        $("#projmap").height(normal_height);
+                                        mymap.invalidateSize();
+                                        //console.log('Back to ' + normal_height);
+                                        //console.log('Changed to ' + element.clientWidth);
+                                        full_screen = false;
+                                    }
+                                }
                             });
-                            var group = new L.featureGroup(markers);
-                            mymap.fitBounds(group.getBounds());
-                        });
+
+                            function onMarkerClick(e) {
+                                //alert(e.target.submission_id);
+
+                                let info_url = "{{ request.route_url('get_submission_info', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, submissionid='to-change') }}";
+                                let info_url_final = info_url.replace("to-change", e.target.submission_id) + " #submission_content";
+                                $('#submission_content').load(info_url_final);
+
+                                $('#submission_info').modal('show');
+                                $('#maker_table_id').height('100px')
+                            }
+
+                            $.getJSON("{{ request.route_url('form_download_gpspoints',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}", function( data ) {
+                                var markers = [];
+                                data.points.forEach(function(entry)
+                                {
+                                    var latlng = L.latLng({ lat: entry.lati, lng: entry.long });
+                                    var marker = L.marker(latlng).addTo(mymap);
+                                    marker.submission_id = entry.key
+                                    marker.on('click', onMarkerClick);
+                                    //marker.bindPopup("<b>" + entry.key + "</b>");
+                                    markers.push(marker);
+                                });
+                                var group = new L.featureGroup(markers);
+                                mymap.fitBounds(group.getBounds());
+                            });
+                        {% endblock form_load_map_function %}
                     }
+
 
                     {% if formDetails.form_geopoint != None and formDetails.submissions > 0 and withgps > 0 %}
                         {% if active_tab == 'map' or active_tab == None %}

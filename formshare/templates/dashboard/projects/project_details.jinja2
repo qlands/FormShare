@@ -105,6 +105,9 @@
     {% jsresource request,'formshare','inspinia' %}
     {% include 'dashboard/snippets/change_language.jinja2' %}
     {% include 'dashboard/snippets/change_timezone.jinja2' %}
+    {% block project_extra_imports %}
+
+    {% endblock project_extra_imports %}
     <script>
         $(document).ready(function() {
 

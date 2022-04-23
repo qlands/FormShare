@@ -1,36 +1,43 @@
 <div id="inSlider" class="carousel slide" data-ride="carousel" >
+    {% block carousel_item_indicators %}
     <ol class="carousel-indicators">
         <li data-target="#inSlider" data-slide-to="0" class="active"></li>
         <li data-target="#inSlider" data-slide-to="1"></li>
     </ol>
+    {% endblock carousel_item_indicators %}
     <div class="carousel-inner" role="listbox">
-        <div class="carousel-item active">
-            <div class="container">
-                <div class="carousel-caption" style="margin-left: 60px; top: 20px;">
-                    <h1>{{ _('Welcome to') }} </br>FormShare</h1>
-                    <p>{{ _('The data management platform for mobile data collection') }}</p>
+        {% block carousel_item_items %}
+            {% block carousel_item_welcome %}
+                <div class="carousel-item active">
+                    <div class="container">
+                        <div class="carousel-caption" style="margin-left: 60px; top: 20px;">
+                            <h1>{{ _('Welcome to') }} </br>FormShare</h1>
+                            <p>{{ _('The data management platform for mobile data collection') }}</p>
+                        </div>
+                    </div>
+                    <!-- Set background for slide in css -->
+                    <!--
+                     CC-BY-NC-SA-2.0: https://creativecommons.org/licenses/by-nc-sa/2.0/
+                     Original image available at https://www.flickr.com/photos/cgiarconsortium/49083337222/in/gallery-ilri-72157627313870418/
+                     Sita Kumari (left), farmer, together with Pratima Baral (right), an ICT researcher at the International Maize and Wheat Improvement Center (CIMMYT). Photo by C. de Bode/CGIAR
+                     -->
+                    <div class="header-back" style="background-image:url({{request.url_for_static('header_three.jpg')}});"></div>
                 </div>
-            </div>
-            <!-- Set background for slide in css -->
-            <!--
-             CC-BY-NC-SA-2.0: https://creativecommons.org/licenses/by-nc-sa/2.0/
-             Original image available at https://www.flickr.com/photos/cgiarconsortium/49083337222/in/gallery-ilri-72157627313870418/
-             Sita Kumari (left), farmer, together with Pratima Baral (right), an ICT researcher at the International Maize and Wheat Improvement Center (CIMMYT). Photo by C. de Bode/CGIAR
-             -->
-            <div class="header-back" style="background-image:url({{request.url_for_static('header_three.jpg')}});"></div>
-
-        </div>
-        <div class="carousel-item">
-            <div class="container">
-                <div class="carousel-caption blank" style="margin-left: 60px; top: 20px;">
-                    <h1>{{ _('Built with') }}<br/>{{ _('Open source') }}</h1>
-                    <p>{{ _('FormShare combines technologies like') }} <br/>Open Data Kit (ODK), ElasticSearch and MySQL <br/> {{ _('to give you the best experience collecting and managing mobile data') }}</p>
-{#                    <p><a class="btn btn-lg btn-primary" href="#" role="button">Learn more</a></p>#}
+            {% endblock carousel_item_welcome %}
+            {% block carousel_extra_items %}
+                <div class="carousel-item">
+                    <div class="container">
+                        <div class="carousel-caption blank" style="margin-left: 60px; top: 20px;">
+                            <h1>{{ _('Built with') }}<br/>{{ _('Open source') }}</h1>
+                            <p>{{ _('FormShare combines technologies like') }} <br/>Open Data Kit (ODK), ElasticSearch and MySQL <br/> {{ _('to give you the best experience collecting and managing mobile data') }}</p>
+                            {#                    <p><a class="btn btn-lg btn-primary" href="#" role="button">Learn more</a></p>#}
+                        </div>
+                    </div>
+                    <!-- Set background for slide in css -->
+                    <div class="header-back" style="background-image:url({{request.url_for_static('header_five.jpg')}});"></div>
                 </div>
-            </div>
-            <!-- Set background for slide in css -->
-            <div class="header-back" style="background-image:url({{request.url_for_static('header_five.jpg')}});"></div>
-        </div>
+            {% endblock carousel_extra_items %}
+        {% endblock carousel_item_items %}
     </div>
     <a class="carousel-control-prev" href="#inSlider" style="width: 50px" role="button" data-slide="prev">
         <span class="carousel-control-prev-icon" aria-hidden="true"></span>

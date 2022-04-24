@@ -14971,6 +14971,14 @@ class FunctionalTests(unittest.TestCase):
                 status=404,
             )
 
+            # Example case csv for a project that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/caselookupcsv".format(
+                    self.randonLogin, "case001"
+                ),
+                status=404,
+            )
+
             paths = ["resources", "forms", "form08_OK.xlsx"]
             resource_file = os.path.join(self.path, *paths)
             # Updates a form to a project that does not has access goes to 404
@@ -15715,6 +15723,14 @@ class FunctionalTests(unittest.TestCase):
                 status=404,
             )
 
+            # Open the case lookup table for a project that does not have access goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/caselookupcsv".format(
+                    self.randonLogin, self.project
+                ),
+                status=404,
+            )
+
             # Activate a form that does not have access goes to 404
             self.testapp.post(
                 "/user/{}/project/{}/form/{}/activate".format(
@@ -15901,6 +15917,14 @@ class FunctionalTests(unittest.TestCase):
             # At this point there are no case creators
             self.testapp.get(
                 "/user/{}/project/{}/caselookuptable".format(
+                    self.randonLogin, "case001"
+                ),
+                status=404,
+            )
+
+            # At this point there are no case creators
+            self.testapp.get(
+                "/user/{}/project/{}/caselookupcsv".format(
                     self.randonLogin, "case001"
                 ),
                 status=404,
@@ -16231,6 +16255,14 @@ class FunctionalTests(unittest.TestCase):
                 status=404,
             )
 
+            # There are not case starts with repository
+            self.testapp.get(
+                "/user/{}/project/{}/caselookupcsv".format(
+                    self.randonLogin, "case001"
+                ),
+                status=404,
+            )
+
             # Creates the repository of the case creator
             res = self.testapp.post(
                 "/user/{}/project/{}/form/{}/repository/create".format(
@@ -16282,9 +16314,24 @@ class FunctionalTests(unittest.TestCase):
                 status=404,
             )
 
+            self.testapp.get(
+                "/user/{}/project/{}/caselookupcsv".format(
+                    self.randonLogin, "not_exist"
+                ),
+                status=404,
+            )
+
             # Open the case lookup table for a project that does not have cases management goes to 404
             self.testapp.get(
                 "/user/{}/project/{}/caselookuptable".format(
+                    self.randonLogin, self.project
+                ),
+                status=404,
+            )
+
+            # Open the case lookup table for a project that does not have cases management goes to 404
+            self.testapp.get(
+                "/user/{}/project/{}/caselookupcsv".format(
                     self.randonLogin, self.project
                 ),
                 status=404,
@@ -16298,6 +16345,14 @@ class FunctionalTests(unittest.TestCase):
                 status=200,
             )
             assert "FS_error" not in res.headers
+
+            # Generates del case example CSV
+            res = self.testapp.get(
+                "/user/{}/project/{}/caselookupcsv".format(
+                    self.randonLogin, "case001"
+                ),
+                status=200,
+            )
 
             # Get details of the project
             res = self.testapp.get(

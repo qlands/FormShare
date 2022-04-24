@@ -9,7 +9,12 @@
                             <h4 class="modal-title">{{ _('Upload form') }}</h4><br/>
                             <b>{{ _('A troubleshooting guide is available') }} <a target="_blank" href="{{ request.url_for_static('upload_infographic_en.pdf') }}" style="color: #0a6aa1">{{ _('here') }}</a></b>
                         {% else %}
-                            <h4 class="modal-title">{{ _('Upload case form') }}</h4>
+                            {% if forms|length == 0 %}
+                                <h4 class="modal-title">{{ _('Upload case creator form') }}</h4>
+                            {% else %}
+                                <h4 class="modal-title">{{ _('Upload case form') }}</h4>
+                            {% endif %}
+                            <b>{{ _('A guide on longitudinal forms is available') }} <a target="_blank" href="{{ request.url_for_static('longitudinal_infographic_en.pdf') }}" style="color: #0a6aa1">{{ _('here') }}</a></b>
                         {% endif %}
                     {% else %}
                         {% if projectDetails.project_case == 0 %}

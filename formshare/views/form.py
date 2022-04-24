@@ -8,7 +8,7 @@ import re
 import shutil
 import uuid
 from hashlib import md5
-
+import pandas as pd
 from lxml import etree
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from pyramid.response import FileResponse
@@ -3201,6 +3201,106 @@ class GetMediaFile(PrivateView):
             file_type = "application/octet-stream"
         response = FileResponse(file, request=self.request, content_type=file_type)
         response.content_disposition = 'attachment; filename="' + os.path.basename(file)
+        return response
+
+
+class CaseLookUpCSV(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+
+    def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        project_code = self.request.matchdict["projcode"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        if self.activeProject.get("project_id", None) == project_id:
+            self.set_active_menu("assistants")
+        else:
+            self.set_active_menu("projects")
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] >= 4:
+            raise HTTPNotFound
+
+        if project_details["project_case"] == 0:
+            raise HTTPNotFound
+
+        if project_details["total_case_creators"] == 0:
+            raise HTTPNotFound
+
+        if (
+            project_details["total_case_creators"] > 0
+            and project_details["total_case_creators_with_repository"] == 0
+        ):
+            raise HTTPNotFound
+
+        form_id = project_details["case_form"]
+        fields, checked = get_fields_from_table(
+            self.request, project_id, form_id, "maintable", [], False
+        )
+
+        form_data = get_form_data(self.request, project_id, form_id)
+        case_fields, created = get_case_lookup_fields(
+            self.request,
+            project_id,
+            form_data["form_pkey"],
+            form_data["form_caselabel"],
+        )
+        for a_field in fields:
+            a_field["checked"] = False
+            a_field["editable"] = 1
+            a_field["as"] = ""
+            for a_case_field in case_fields:
+                if a_field["name"] == a_case_field["field_name"]:
+                    a_field["checked"] = True
+                    a_field["editable"] = a_case_field["field_editable"]
+                    a_field["field_as"] = a_case_field["field_as"]
+                    break
+        csv_keys = ["list_name", "name", "label"]
+        for a_field in fields:
+            if a_field["editable"] == 1 and a_field["checked"] == True:
+                csv_keys.append(a_field["field_as"])
+        csv_array = []
+        for row in range(6):
+            data = {}
+            for a_key in csv_keys:
+                added = False
+                if a_key == "list_name":
+                    data["list_name"] = "list_of_cases"
+                    added = True
+                if a_key == "name":
+                    data["name"] = "Case id for row {}".format(row + 2)
+                    added = True
+                if a_key == "label":
+                    data["label"] = "Case label for row {}".format(row + 2)
+                    added = True
+                if not added:
+                    data[a_key] = "{} for row {}".format(a_key, row + 2)
+            csv_array.append(data)
+        df = pd.DataFrame.from_dict(csv_array)
+
+        repository_path = self.request.registry.settings["repository.path"]
+        if not os.path.exists(repository_path):
+            os.makedirs(repository_path)
+        unique_id = str(uuid.uuid4())
+        csv_file = os.path.join(repository_path, *["tmp", unique_id + ".csv"])
+        df.to_csv(csv_file, index=False, header=True)
+
+        response = FileResponse(csv_file, request=self.request, content_type="text/csv")
+        response.content_disposition = (
+            'attachment; filename="cases_of_' + project_code + '.csv"'
+        )
+        self.returnRawViewResult = True
         return response
 
 

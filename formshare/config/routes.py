@@ -113,6 +113,7 @@ from formshare.views.form import (
     GetSubMissionInfo,
     GetMediaFile,
     CaseLookUpTable,
+    CaseLookUpCSV,
     AddPartnerToForm,
     EditPartnerFormOptions,
     RemovePartnerFromForm,
@@ -346,6 +347,15 @@ def load_routes(config, settings):
             "/user/{userid}/project/{projcode}/caselookuptable",
             CaseLookUpTable,
             "dashboard/projects/forms/case/case_fields.jinja2",
+        )
+    )
+
+    routes.append(
+        add_route(
+            "project_case_lookup_table_example",
+            "/user/{userid}/project/{projcode}/caselookupcsv",
+            CaseLookUpCSV,
+            None,
         )
     )
 

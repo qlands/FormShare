@@ -40,7 +40,7 @@
                         <h2>{{ _('The real-time CSV case file') }}</h2>
                         <p>
                             {{ _('The real-time CSV case file provides information on each case to follow-up case forms. For example, use the sex of a participant (e.g., female) in follow-up case forms to ask specific questions according to sex (e.g., if female, do they have access to reproductive health services?)') }}<br/><br/>
-                            {{ _('Each time a new case arrives in FormShare, the platform will update this CSV file. You can adjust below what information goes into the CSV file.') }}<br/><br/>{{ _('Click') }} <a style="color: #0a6aa1"><b>{{ _('here') }}</b></a> {{ _('to download an example of this file so you can use it in follow-up forms.') }}
+                            {{ _('Each time a new case arrives in FormShare, the platform will update this CSV file. You can adjust below what information goes into the CSV file.') }}<br/><br/>{{ _('Click') }} <a style="color: #0a6aa1" href="{{ request.route_url('project_case_lookup_table_example', userid=projectDetails.owner, projcode=projectDetails.project_code) }}"><b>{{ _('here') }}</b></a> {{ _('to download an example of this file so you can use it in follow-up forms.') }} {{ _('A guide on longitudinal forms is available') }} <a target="_blank" href="{{ request.url_for_static('longitudinal_infographic_en.pdf') }}" style="color: #0a6aa1">{{ _('here') }}.</a>
                         </p>
                         {#                    <div class="input-group">#}
                         {#                        <input type="text" placeholder="{{ _('Search assistants') }} " class="input form-control">#}

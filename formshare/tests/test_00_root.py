@@ -14973,9 +14973,7 @@ class FunctionalTests(unittest.TestCase):
 
             # Example case csv for a project that does not have access goes to 404
             self.testapp.get(
-                "/user/{}/project/{}/caselookupcsv".format(
-                    self.randonLogin, "case001"
-                ),
+                "/user/{}/project/{}/caselookupcsv".format(self.randonLogin, "case001"),
                 status=404,
             )
 
@@ -15924,9 +15922,7 @@ class FunctionalTests(unittest.TestCase):
 
             # At this point there are no case creators
             self.testapp.get(
-                "/user/{}/project/{}/caselookupcsv".format(
-                    self.randonLogin, "case001"
-                ),
+                "/user/{}/project/{}/caselookupcsv".format(self.randonLogin, "case001"),
                 status=404,
             )
 
@@ -16257,9 +16253,7 @@ class FunctionalTests(unittest.TestCase):
 
             # There are not case starts with repository
             self.testapp.get(
-                "/user/{}/project/{}/caselookupcsv".format(
-                    self.randonLogin, "case001"
-                ),
+                "/user/{}/project/{}/caselookupcsv".format(self.randonLogin, "case001"),
                 status=404,
             )
 
@@ -16348,9 +16342,7 @@ class FunctionalTests(unittest.TestCase):
 
             # Generates del case example CSV
             res = self.testapp.get(
-                "/user/{}/project/{}/caselookupcsv".format(
-                    self.randonLogin, "case001"
-                ),
+                "/user/{}/project/{}/caselookupcsv".format(self.randonLogin, "case001"),
                 status=200,
             )
 

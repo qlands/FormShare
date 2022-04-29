@@ -3,7 +3,10 @@ import sys
 
 import transaction
 from pyramid.paster import get_appsettings, setup_logging
-from formshare.processes.elasticsearch.repository_index import create_dataset_index, add_dataset
+from formshare.processes.elasticsearch.repository_index import (
+    create_dataset_index,
+    add_dataset,
+)
 from formshare.models import Odkform
 from formshare.models import get_engine, get_session_factory, get_tm_session
 from formshare.models.meta import Base
@@ -36,10 +39,16 @@ def main():
             create_dataset_index(settings)
             for a_form in forms:
                 project_owner = get_project_owner(request, a_form.project_id)
-                project_code = get_project_code_from_id(request, project_owner, a_form.project_id)
+                project_code = get_project_code_from_id(
+                    request, project_owner, a_form.project_id
+                )
                 if a_form.form_schema is not None:
-                    sql = "SELECT surveyid,_submitted_date,_xform_id_string,_submitted_by," \
-                          "_geopoint,_latitude,_longitude FROM {}.maintable".format(a_form.form_schema)
+                    sql = (
+                        "SELECT surveyid,_submitted_date,_xform_id_string,_submitted_by,"
+                        "_geopoint,_latitude,_longitude FROM {}.maintable".format(
+                            a_form.form_schema
+                        )
+                    )
                     submissions = dbsession.execute(sql).fetchall()
                     for a_submission in submissions:
                         try:
@@ -54,7 +63,7 @@ def main():
                                 index_data["_geopoint"] = a_submission._geopoint
                                 index_data["_geolocation"] = {
                                     "lat": a_submission._latitude,
-                                    "lon": a_submission._longitude
+                                    "lon": a_submission._longitude,
                                 }
                             print(index_data)
                             add_dataset(
@@ -67,7 +76,11 @@ def main():
 
                             pass
                         except Exception as e:
-                            print("Error {} while recreating index form ID {}".format(str(e), ""))
+                            print(
+                                "Error {} while recreating index form ID {}".format(
+                                    str(e), ""
+                                )
+                            )
                 else:
                     pass
         except Exception as e:

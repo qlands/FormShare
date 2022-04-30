@@ -87,18 +87,15 @@ def main():
                             )
                 else:
                     form_directory = a_form.form_directory
-                    parts = [
-                        "odk",
-                        "forms",
-                        form_directory,
-                        "submissions",
-                        "*.json"
-                    ]
+                    parts = ["odk", "forms", form_directory, "submissions", "*.json"]
                     submissions = os.path.join(repository_directory, *parts)
                     files = glob.glob(submissions)
                     if files:
                         for a_file in files:
-                            if a_file.find(".original.") < 0 and a_file.find(".ordered.") < 0:
+                            if (
+                                a_file.find(".original.") < 0
+                                and a_file.find(".ordered.") < 0
+                            ):
                                 f = open(a_file, "r")
                                 data = json.load(f)
                                 submission_id = Path(a_file).stem
@@ -113,7 +110,7 @@ def main():
                                     index_data["_geopoint"] = data["_geopoint"]
                                     index_data["_geolocation"] = {
                                         "lat": data.get("_latitude"),
-                                        "lon": data.get("_longitude")
+                                        "lon": data.get("_longitude"),
                                     }
                                 else:
                                     index_data["_geopoint"] = ""

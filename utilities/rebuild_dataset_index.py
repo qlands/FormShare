@@ -1,6 +1,6 @@
 import argparse
 import sys
-
+import os
 import transaction
 from pyramid.paster import get_appsettings, setup_logging
 from formshare.processes.elasticsearch.repository_index import (
@@ -11,6 +11,9 @@ from formshare.models import Odkform
 from formshare.models import get_engine, get_session_factory, get_tm_session
 from formshare.models.meta import Base
 from formshare.processes.db.project import get_project_owner, get_project_code_from_id
+import glob
+import json
+from pathlib import Path
 
 
 class Request(object):
@@ -35,6 +38,7 @@ def main():
         dbsession = get_tm_session(session_factory, transaction.manager)
         request = Request(dbsession)
         try:
+            repository_directory = settings.get("repository.path", "")
             forms = dbsession.query(Odkform).all()
             create_dataset_index(settings)
             for a_form in forms:
@@ -65,6 +69,8 @@ def main():
                                     "lat": a_submission._latitude,
                                     "lon": a_submission._longitude,
                                 }
+                            else:
+                                index_data["_geopoint"] = ""
                             print(index_data)
                             add_dataset(
                                 settings,
@@ -73,8 +79,6 @@ def main():
                                 a_submission.surveyid,
                                 index_data,
                             )
-
-                            pass
                         except Exception as e:
                             print(
                                 "Error {} while recreating index form ID {}".format(
@@ -82,8 +86,48 @@ def main():
                                 )
                             )
                 else:
-                    pass
+                    form_directory = a_form.form_directory
+                    parts = [
+                        "odk",
+                        "forms",
+                        form_directory,
+                        "submissions",
+                        "*.json"
+                    ]
+                    submissions = os.path.join(repository_directory, *parts)
+                    files = glob.glob(submissions)
+                    if files:
+                        for a_file in files:
+                            if a_file.find(".original.") < 0 and a_file.find(".ordered.") < 0:
+                                f = open(a_file, "r")
+                                data = json.load(f)
+                                submission_id = Path(a_file).stem
+                                index_data = {
+                                    "_submitted_date": data.get("_submitted_date"),
+                                    "_xform_id_string": data.get("_xform_id_string"),
+                                    "_submitted_by": data.get("_submitted_by"),
+                                    "_user_id": data.get("_user_id"),
+                                    "_project_code": data.get("_project_code"),
+                                }
+                                if data.get("_geopoint", None) is not None:
+                                    index_data["_geopoint"] = data["_geopoint"]
+                                    index_data["_geolocation"] = {
+                                        "lat": data.get("_latitude"),
+                                        "lon": data.get("_longitude")
+                                    }
+                                else:
+                                    index_data["_geopoint"] = ""
+                                print(index_data)
+                                add_dataset(
+                                    settings,
+                                    a_form.project_id,
+                                    a_form.form_id,
+                                    submission_id,
+                                    index_data,
+                                )
+
         except Exception as e:
+            print("!!!! Error !!!!")
             print(str(e))
             sys.exit(1)
     engine.dispose()

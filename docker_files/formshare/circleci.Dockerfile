@@ -1,4 +1,4 @@
-FROM ubuntu:20.04
+FROM ubuntu:21.10
 
 MAINTAINER QLands Technology Consultants
 RUN apt-get update && apt-get -y upgrade
@@ -6,8 +6,12 @@ RUN apt-get install -y software-properties-common
 RUN add-apt-repository universe && add-apt-repository multiverse
 RUN apt-add-repository -y ppa:mosquitto-dev/mosquitto-ppa
 RUN apt-get update
+RUN apt-get install -y wget
+RUN wget -qO - https://www.mongodb.org/static/pgp/server-5.0.asc | apt-key add -
+RUN add-apt-repository 'deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/5.0 multiverse'
+RUN apt-get update
 
-RUN apt-get install -y build-essential qt5-default qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake mongodb jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client-8.0 openjdk-11-jdk sqlite3 libqt5sql5-sqlite git wget python3-venv tidy golang-go mosquitto curl nano
+RUN apt-get install -y build-essential qtbase5-dev qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client-8.0 openjdk-11-jdk sqlite3 libqt5sql5-sqlite git python3-venv tidy golang-go mosquitto curl nano mongodb-org
 RUN wget https://dev.mysql.com/get/mysql-apt-config_0.8.22-1_all.deb
 RUN dpkg -i ./mysql-apt-config_0.8.22-1_all.deb
 RUN apt-get update
@@ -23,11 +27,12 @@ ENV DEBIAN_FRONTEND=noninteractive
 # Debian Jessie is EOL'd and original repos don't work.
 # Switch to the archive mirror until we can get people to
 # switch to Stretch.
-RUN if grep -q Debian /etc/os-release && grep -q jessie /etc/os-release; then \
-	rm /etc/apt/sources.list \
-    && echo "deb http://archive.debian.org/debian/ jessie main" >> /etc/apt/sources.list \
-    && echo "deb http://security.debian.org/debian-security jessie/updates main" >> /etc/apt/sources.list \
-	; fi
+
+#RUN if grep -q Debian /etc/os-release && grep -q jessie /etc/os-release; then \
+#	rm /etc/apt/sources.list \
+#    && echo "deb http://archive.debian.org/debian/ jessie main" >> /etc/apt/sources.list \
+#    && echo "deb http://security.debian.org/debian-security jessie/updates main" >> /etc/apt/sources.list \
+#	; fi
 
 # Make sure PATH includes ~/.local/bin
 # https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=839155

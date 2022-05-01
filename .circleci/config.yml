@@ -34,8 +34,8 @@ jobs:
       - run:          
           name: Run servers
           command: |
-            sudo /etc/init.d/redis-server start
-            sudo service mongodb start
+            sudo service redis start
+            sudo service mongod start
             sudo service mosquitto start
             tail -f /dev/null
           background: true

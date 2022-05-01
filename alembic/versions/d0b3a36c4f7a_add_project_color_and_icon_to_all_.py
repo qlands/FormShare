@@ -9,7 +9,7 @@ from alembic import op
 from sqlalchemy.orm.session import Session
 from formshare.models.formshare import Project
 from formshare.processes.color_hash import ColorHash
-from emoji.unicode_codes.en import EMOJI_UNICODE_ENGLISH
+from emoji.unicode_codes import EMOJI_UNICODE_ENGLISH
 import random
 
 

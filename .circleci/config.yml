@@ -34,7 +34,7 @@ jobs:
       - run:          
           name: Run servers
           command: |
-            sudo service redis start
+            sudo service redis-server start
             sudo service mongod start
             sudo service mosquitto start
             tail -f /dev/null

@@ -1,6 +1,7 @@
 # .coveragerc to control coverage.py
 [run]
 source = formshare
+omit = */tests*,*/utilities*
 
 [paths]
 source =
@@ -8,6 +9,7 @@ source =
     */site-packages/
 
 [report]
+omit = */tests*,*/utilities*
 show_missing = True
 exclude_lines =
     pragma: no cover

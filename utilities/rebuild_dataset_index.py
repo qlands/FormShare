@@ -108,10 +108,23 @@ def main():
                                 }
                                 if data.get("_geopoint", None) is not None:
                                     index_data["_geopoint"] = data["_geopoint"]
-                                    index_data["_geolocation"] = {
-                                        "lat": data.get("_latitude"),
-                                        "lon": data.get("_longitude"),
-                                    }
+                                    if (
+                                        data.get("_latitude", None) is not None
+                                        and data.get("_longitude", None) is not None
+                                    ):
+                                        index_data["_geolocation"] = {
+                                            "lat": data.get("_latitude"),
+                                            "lon": data.get("_longitude"),
+                                        }
+                                    else:
+                                        parts = data["_geopoint"].split(" ")
+                                        if len(parts) > 1:
+                                            index_data["_geolocation"] = {
+                                                "lat": parts[0],
+                                                "lon": parts[1],
+                                            }
+                                        else:
+                                            index_data["_geopoint"] = ""
                                 else:
                                     index_data["_geopoint"] = ""
                                 print(index_data)

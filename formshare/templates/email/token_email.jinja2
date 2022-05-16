@@ -1,0 +1,18 @@
+{% block email_body %}
+    {% block email_hello %}
+        {{ _('Hello from FormShare') }}
+        https://formshare.org
+    {% endblock email_hello %}
+    {% block email_message %}
+        {{ _('This email is a security alert') }}.
+        {{ _('A new API Token has been requested using you API key and secret') }}.
+        {{ _('The token will expire on ') }} {{ token_expiration_date }}.
+
+        {{_('If you did not generate a token then your account has been compromised.
+        Login into FormShare and change your API credentials immediately!') }}
+    {% endblock email_message %}
+    {% block email_goodbye %}
+        {{ _('Regards') }},
+        {{ _('The FormShare team') }}
+    {% endblock email_goodbye %}
+{% endblock email_body %}

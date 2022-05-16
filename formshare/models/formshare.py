@@ -78,6 +78,9 @@ class User(Base):
     tags = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     user_active = Column(INTEGER, server_default=text("'1'"))
     user_apikey = Column(Unicode(64))
+    user_apisecret = Column(Unicode(64))
+    user_apitoken = Column(Unicode(64))
+    user_apitoken_expires_on = Column(DateTime)
     user_timezone = Column(
         ForeignKey("timezone.timezone_code", ondelete="RESTRICT"),
         nullable=False,
@@ -154,6 +157,9 @@ class Collaborator(Base):
     coll_telephone = Column(Unicode(120))
     coll_prjshare = Column(INTEGER)
     coll_apikey = Column(Unicode(64))
+    coll_apisecret = Column(Unicode(64))
+    coll_apitoken = Column(Unicode(64))
+    coll_apitoken_expires_on = Column(DateTime)
     coll_timezone = Column(
         ForeignKey("timezone.timezone_code", ondelete="RESTRICT"),
         nullable=False,

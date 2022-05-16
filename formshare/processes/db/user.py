@@ -1,6 +1,6 @@
 import datetime
 import logging
-
+import secrets
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 
@@ -226,6 +226,12 @@ def get_user_id_with_email(request, email):
 
 
 def update_profile(request, user, profile_data):
+    if "api_changed" in profile_data.keys():
+        if profile_data["api_changed"] == "1":
+            profile_data["user_apitoken"] = (
+                "invalid_" + secrets.token_hex(16) + "_invalid"
+            )
+        profile_data.pop("api_changed", None)
     mapped_data = map_to_schema(User, profile_data)
     try:
         request.dbsession.query(User).filter(User.user_id == user).update(mapped_data)

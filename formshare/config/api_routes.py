@@ -1,6 +1,7 @@
 import formshare.plugins as p
 from formshare.plugins.utilities import add_route
-from formshare.views.api import API1UploadFileToForm
+from formshare.views.api import API1UploadFileToForm, TokenView
+
 from formshare.views.repository_submissions import API1UpdateRepository
 
 api_route_list = []
@@ -38,6 +39,16 @@ def load_api_version_1_routes(config):
         append_to_routes(routes)
 
     # FormShare API routes
+
+    routes.append(
+        add_route(
+            "api1_request_token",
+            "/api/1/get_token",
+            TokenView,
+            None,
+        )
+    )
+
     routes.append(
         add_route(
             "API1UploadFileToForm",

@@ -681,6 +681,15 @@ class AssistantView(object):
         self.request.response.headers["FS_error"] = "true"
         self.errors.append(error)
 
+    def get_json_response(self, data, error_code=200):
+        json_data = {"result": data, "status": error_code}
+        response = Response(
+            content_type="application/json",
+            status=error_code,
+            body=json.dumps(json_data, indent=4, default=str).encode(),
+        )
+        return response
+
     def __call__(self):
         error = self.request.session.pop_flash(queue="error")
         if len(error) > 0:
@@ -693,6 +702,15 @@ class AssistantView(object):
         )
         if self.projectID is None:
             raise HTTPNotFound()
+
+        api_key = self.request.headers.get("api_key", None)
+        if api_key is not None:
+            api_password = self.request.headers.get("api_password", None)
+            if api_password is None:
+                return self.get_json_response(
+                    {"error": self._("You need to provide a password")}, 401
+                )
+            api_assistant = get_assistant_by_api_key(self.request, api_key)
 
         policy = self.get_policy("assistant")
         login_data = policy.authenticated_userid(self.request)

@@ -4,7 +4,7 @@ import re
 import traceback
 import uuid
 from ast import literal_eval
-
+import secrets
 import validators
 from elasticfeeds.activity import Actor, Object, Activity
 from formencode.variabledecode import variable_decode
@@ -487,7 +487,7 @@ class RegisterView(PublicView):
                     raise HTTPNotFound()
             data = variable_decode(self.request.POST)
 
-            user = data["user_address"]
+            user = data.get("user_address", "")
             if user != "Costa Rica":
                 log.error(
                     "Suspicious bot register from IP: {}. Agent: {}. Email: {} ".format(
@@ -496,7 +496,7 @@ class RegisterView(PublicView):
                         data["user_email"],
                     )
                 )
-            data.pop("user_address")
+            data.pop("user_address", None)
             data["user_email"] = data["user_email"].strip()
             if validators.email(data["user_email"]) and re.match(
                 r"^[A-Za-z0-9._@-]+$", data["user_email"]
@@ -508,6 +508,8 @@ class RegisterView(PublicView):
                                 data["user_cdate"] = datetime.datetime.now()
                                 if "user_apikey" not in data.keys():
                                     data["user_apikey"] = str(uuid.uuid4())
+                                if "user_apisecret" not in data.keys():
+                                    data["user_apisecret"] = secrets.token_hex(16)
                                 data["user_password"] = encode_data(
                                     self.request, data["user_password"]
                                 )
@@ -556,6 +558,7 @@ class RegisterView(PublicView):
                                         )
                                         user_index_data = data
                                         user_index_data.pop("user_apikey", None)
+                                        user_index_data.pop("user_apisecret", None)
                                         user_index_data.pop("user_password", None)
                                         user_index_data.pop("user_active", None)
                                         user_index_data.pop("user_cdate", None)

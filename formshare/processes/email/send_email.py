@@ -110,3 +110,35 @@ def send_collaboration_email(
         text,
         reply_to,
     )
+
+
+def send_token_email(request, email_to, token_expires_on):  # pragma: no cover
+    # This function is out of coverage because it requires an SMTP to be tested
+    jinjaEnv.add_extension(ext.i18n)
+    jinjaEnv.add_extension(ExtendThis)
+    _ = request.translate
+    email_from = request.registry.settings.get("mail.from", None)
+    reply_to = email_from
+    if email_from is None:
+        log.error(
+            "FormShare has no email settings in place. Email service is disabled."
+        )
+        return False
+    if email_from == "":
+        return False
+
+    text = render_template(
+        "email/token_email.jinja2",
+        {
+            "_": _,
+            "token_expiration_date": token_expires_on,
+        },
+    )
+    return send_email(
+        request,
+        email_from,
+        email_to,
+        _("FormShare - Token security alert"),
+        text,
+        reply_to,
+    )

@@ -79,6 +79,8 @@
             );
         }
 
+        const genRanHex = size => [...Array(size)].map(() => Math.floor(Math.random() * 16).toString(16)).join('');
+
         $(document).ready(function() {
             var elem = document.querySelector('.js-switch');
             var switchery = new Switchery(elem, { color: '#1AB394' });
@@ -88,6 +90,10 @@
 
             $('#genkey').click(function () {
                 $('#user_apikey').val(uuidv4());
+            });
+
+            $('#gensecret').click(function () {
+                $('#user_apisecret').val(genRanHex(32));
             });
 
         });

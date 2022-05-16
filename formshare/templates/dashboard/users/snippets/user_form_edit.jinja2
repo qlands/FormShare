@@ -25,6 +25,15 @@
         </div>
     </div>
     <div class="hr-line-dashed"></div>
+    <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('API Secret') }}</label>
+        <div class="input-group col-sm-10">
+            <input type="text" readonly class="form-control" id="user_apisecret" name="user_apisecret" value="{{ userData.user_apisecret }}">
+            <span class="input-group-append">
+                <button type="button" id="gensecret" class="btn btn-default" title="{{ _('Generate new secret') }}"><i class="fas fa-sync-alt"></i></button>
+            </span>
+        </div>
+    </div>
+    <div class="hr-line-dashed"></div>
 {% endblock user_form_controls_extra %}
 
 {% block user_form_actions %}

@@ -2,7 +2,7 @@ import datetime
 import logging
 import re
 import uuid
-
+import secrets
 import validators
 from elasticfeeds.activity import Actor, Object, Activity
 from pyramid.httpexceptions import HTTPNotFound, HTTPFound
@@ -111,6 +111,24 @@ class EditUserView(PrivateView):
                                     user_details["user_apikey"],
                                 )
                             )
+                            user_details["user_apitoken"] = (
+                                "invalid_" + secrets.token_hex(16) + "_invalid"
+                            )
+                        if (
+                            user_data["user_apisecret"]
+                            != user_details["user_apisecret"]
+                        ):
+                            log.warning(
+                                "Administrator {} changed the API secret of user {} from {} to {}".format(
+                                    user_id,
+                                    user_to_modify,
+                                    user_data["user_apisecret"],
+                                    user_details["user_apisecret"],
+                                )
+                            )
+                            user_details["user_apitoken"] = (
+                                "invalid_" + secrets.token_hex(16) + "_invalid"
+                            )
                         continue_edit = True
                         for plugin in p.PluginImplementations(p.IUser):
                             (data, continue_edit, error_message,) = plugin.before_edit(
@@ -136,6 +154,7 @@ class EditUserView(PrivateView):
                                 user_index = get_user_index_manager(self.request)
                                 user_index_data = user_details
                                 user_index_data.pop("user_apikey", None)
+                                user_index_data.pop("user_apisecret", None)
                                 user_index_data.pop("user_active", None)
                                 user_index_data.pop("csrf_token", None)
                                 user_index_data.pop("user_super", None)
@@ -255,6 +274,9 @@ class AddUserView(PrivateView):
                                     user_details.pop("user_password2", None)
                                     user_details["user_cdate"] = datetime.datetime.now()
                                     user_details["user_apikey"] = str(uuid.uuid4())
+                                    user_details["user_apisecret"] = secrets.token_hex(
+                                        16
+                                    )
                                     continue_creation = True
                                     for plugin in p.PluginImplementations(p.IUser):
                                         (
@@ -315,6 +337,7 @@ class AddUserView(PrivateView):
                                             )
                                             user_index_data = user_details
                                             user_index_data.pop("user_apikey", None)
+                                            user_index_data.pop("user_apisecret", None)
                                             user_index_data.pop("user_password", None)
                                             user_index_data.pop("user_active", None)
                                             user_index_data.pop("user_cdate", None)

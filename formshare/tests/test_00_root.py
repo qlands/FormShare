@@ -9,6 +9,7 @@ import uuid
 from sqlalchemy.pool import NullPool
 import pkg_resources
 from sqlalchemy import create_engine
+import secrets
 
 """
 This testing module test all routes. It launch start the server and test all the routes and processes
@@ -126,6 +127,7 @@ class FunctionalTests(unittest.TestCase):
         self.randonLogin = ""
         self.randonLoginPartner = ""
         self.randonLoginKey = ""
+        self.randonLoginSecret = ""
         self.server_config = server_config
         self.collaboratorLogin = ""
         self.project = ""
@@ -182,7 +184,6 @@ class FunctionalTests(unittest.TestCase):
             res = self.testapp.post(
                 "/join",
                 {
-                    "user_address": "Costa Rica",
                     "user_email": "test@qlands.com",
                     "user_password": "",
                     "user_id": "test",
@@ -197,7 +198,6 @@ class FunctionalTests(unittest.TestCase):
             res = self.testapp.post(
                 "/join",
                 {
-                    "user_address": "Costa Rica",
                     "user_email": "test@qlands.com",
                     "user_password": "123",
                     "user_id": "just@test",
@@ -212,7 +212,6 @@ class FunctionalTests(unittest.TestCase):
             res = self.testapp.post(
                 "/join",
                 {
-                    "user_address": "Costa Rica",
                     "user_email": "@test",
                     "user_password": "123",
                     "user_id": "test",
@@ -227,7 +226,6 @@ class FunctionalTests(unittest.TestCase):
             res = self.testapp.post(
                 "/join",
                 {
-                    "user_address": "Costa Rica",
                     "user_email": "test@qlands.com",
                     "user_password": "123",
                     "user_id": "test",
@@ -240,6 +238,7 @@ class FunctionalTests(unittest.TestCase):
 
             random_login = str(uuid.uuid4())
             self.randonLoginKey = random_login
+            self.randonLoginSecret = secrets.token_hex(16)
             random_login = random_login[-12:]
 
             #  random_login = "formshare"
@@ -250,7 +249,6 @@ class FunctionalTests(unittest.TestCase):
             res = self.testapp.post(
                 "/join",
                 {
-                    "user_address": "Costa Rica",
                     "user_email": random_login + "@qlands.com",
                     "user_password": "qwNEDKztEmtv165VDdoE55UaW7ubx2fqWDOerGWwPyyjkJY7a1V8ESxRKA7G",
                     "user_id": random_login,
@@ -258,6 +256,7 @@ class FunctionalTests(unittest.TestCase):
                     "user_name": "Testing",
                     "user_super": "1",
                     "user_apikey": self.randonLoginKey,
+                    "user_apisecret": self.randonLoginSecret,
                 },
                 status=200,
             )
@@ -267,7 +266,6 @@ class FunctionalTests(unittest.TestCase):
             res = self.testapp.post(
                 "/join",
                 {
-                    "user_address": "",
                     "user_email": random_login + "@qlands.com",
                     "user_password": "123",
                     "user_id": random_login,
@@ -275,6 +273,7 @@ class FunctionalTests(unittest.TestCase):
                     "user_name": "Testing",
                     "user_super": "1",
                     "user_apikey": self.randonLoginKey,
+                    "user_apisecret": self.randonLoginSecret,
                 },
                 status=302,
             )
@@ -303,7 +302,6 @@ class FunctionalTests(unittest.TestCase):
             res = self.testapp.post(
                 "/join",
                 {
-                    "user_address": "Costa Rica",
                     "user_email": random_login_partner + "@qlands.com",
                     "user_password": "123",
                     "user_id": random_login_partner,
@@ -311,6 +309,7 @@ class FunctionalTests(unittest.TestCase):
                     "user_name": "Testing Testing",
                     "user_super": "0",
                     "user_apikey": random_login_partner_key,
+                    "user_apisecret": secrets.token_hex(16),
                 },
                 status=302,
             )
@@ -513,6 +512,7 @@ class FunctionalTests(unittest.TestCase):
                     "modify": "",
                     "user_email": random_login + "@qlands.com",
                     "user_apikey": str(uuid.uuid4()),
+                    "user_apisecret": secrets.token_hex(16),
                     "user_active": "1",
                 },
                 status=302,
@@ -585,6 +585,55 @@ class FunctionalTests(unittest.TestCase):
             res = self.testapp.post(
                 "/user/{}/profile/edit".format(self.randonLogin),
                 {
+                    "api_changed": "0",
+                    "editprofile": "",
+                    "user_name": "FormShare",
+                    "user_about": "FormShare testing account",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Generate a API Token fails. Get was used
+            self.testapp.get("/api/1/get_token".format(self.randonLogin), status=400)
+
+            # Generate API token fails. No key or secret
+            self.testapp.post(
+                "/api/1/get_token",
+                {
+                    "some": "1",
+                },
+                status=400,
+            )
+
+            # Generate API token fails. API key does not exist
+            self.testapp.post(
+                "/api/1/get_token",
+                {
+                    "X-API-Key": "some",
+                    "X-API-Secret": "some",
+                },
+                status=401,
+            )
+
+            self.testapp.post(
+                "/api/1/get_token",
+                {
+                    "X-API-Key": self.randonLoginKey,
+                    "X-API-Secret": self.randonLoginSecret,
+                },
+                status=200,
+            )
+
+            self.randonLoginKey = str(uuid.uuid4())
+            self.randonLoginSecret = secrets.token_hex(16)
+            # Edit profile passes. Changing API key and secret
+            res = self.testapp.post(
+                "/user/{}/profile/edit".format(self.randonLogin),
+                {
+                    "api_changed": "1",
+                    "user_apikey": self.randonLoginKey,
+                    "user_apisecret": self.randonLoginSecret,
                     "editprofile": "",
                     "user_name": "FormShare",
                     "user_about": "FormShare testing account",
@@ -9837,6 +9886,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/profile/edit".format(self.randonLogin),
                 {
                     "editprofile": "",
+                    "api_changed": "0",
                     "user_name": "FormShare",
                     "user_about": "FormShare testing account",
                     "user_timezone": "Pacific/Fiji",
@@ -9869,6 +9919,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/profile/edit".format(self.randonLogin),
                 {
                     "editprofile": "",
+                    "api_changed": "0",
                     "user_name": "FormShare",
                     "user_about": "FormShare testing account",
                     "user_timezone": "UTC",
@@ -10027,7 +10078,6 @@ class FunctionalTests(unittest.TestCase):
             res = self.testapp.post(
                 "/join",
                 {
-                    "user_address": "Costa Rica",
                     "user_email": random_login + "@qlands.com",
                     "user_password": "123",
                     "user_id": random_login,
@@ -10035,6 +10085,7 @@ class FunctionalTests(unittest.TestCase):
                     "user_name": "T",
                     "user_super": "1",
                     "user_apikey": str(uuid.uuid4()),
+                    "user_apisecret": secrets.token_hex(16),
                 },
                 status=302,
             )
@@ -10221,7 +10272,6 @@ class FunctionalTests(unittest.TestCase):
                 res = self.testapp.post(
                     "/join",
                     {
-                        "user_address": "Costa Rica",
                         "user_email": random_login + "@qlands.com",
                         "user_password": "123",
                         "user_id": random_login,
@@ -10229,6 +10279,7 @@ class FunctionalTests(unittest.TestCase):
                         "user_name": "TT",
                         "user_super": "1",
                         "user_apikey": str(uuid.uuid4()),
+                        "user_apisecret": secrets.token_hex(16),
                     },
                     status=302,
                 )
@@ -13029,7 +13080,6 @@ class FunctionalTests(unittest.TestCase):
             res = self.testapp.post(
                 "/join",
                 {
-                    "user_address": "Costa Rica",
                     "user_email": collaborator_1 + "@qlands.com",
                     "user_password": "123",
                     "user_id": collaborator_1,
@@ -13037,6 +13087,7 @@ class FunctionalTests(unittest.TestCase):
                     "user_name": "TTT",
                     "user_super": "1",
                     "user_apikey": collaborator_1_key,
+                    "user_apisecret": secrets.token_hex(16),
                 },
                 status=302,
             )
@@ -13251,7 +13302,6 @@ class FunctionalTests(unittest.TestCase):
             res = self.testapp.post(
                 "/join",
                 {
-                    "user_address": "Costa Rica",
                     "user_email": collaborator_1 + "@qlands.com",
                     "user_password": "123",
                     "user_id": collaborator_1,
@@ -13259,6 +13309,7 @@ class FunctionalTests(unittest.TestCase):
                     "user_name": "TTTT",
                     "user_super": "1",
                     "user_apikey": collaborator_1_key,
+                    "user_apisecret": secrets.token_hex(16),
                 },
                 status=302,
             )
@@ -13288,7 +13339,6 @@ class FunctionalTests(unittest.TestCase):
             res = self.testapp.post(
                 "/join",
                 {
-                    "user_address": "Costa Rica",
                     "user_email": collaborator_2 + "@qlands.com",
                     "user_password": "123",
                     "user_id": collaborator_2,
@@ -13296,6 +13346,7 @@ class FunctionalTests(unittest.TestCase):
                     "user_name": "Testing",
                     "user_super": "1",
                     "user_apikey": collaborator_2_key,
+                    "user_apisecret": secrets.token_hex(16),
                 },
                 status=302,
             )
@@ -13325,7 +13376,6 @@ class FunctionalTests(unittest.TestCase):
             res = self.testapp.post(
                 "/join",
                 {
-                    "user_address": "Costa Rica",
                     "user_email": collaborator_3 + "@qlands.com",
                     "user_password": "123",
                     "user_id": collaborator_3,
@@ -13333,6 +13383,7 @@ class FunctionalTests(unittest.TestCase):
                     "user_name": "Testing",
                     "user_super": "1",
                     "user_apikey": collaborator_3_key,
+                    "user_apisecret": secrets.token_hex(16),
                 },
                 status=302,
             )
@@ -13483,7 +13534,6 @@ class FunctionalTests(unittest.TestCase):
             res = self.testapp.post(
                 "/join",
                 {
-                    "user_address": "Costa Rica",
                     "user_email": collaborator_1 + "@qlands.com",
                     "user_password": "123",
                     "user_id": collaborator_1,
@@ -13491,6 +13541,7 @@ class FunctionalTests(unittest.TestCase):
                     "user_name": "Testing",
                     "user_super": "1",
                     "user_apikey": collaborator_1_key,
+                    "user_apisecret": secrets.token_hex(16),
                 },
                 status=302,
             )
@@ -13520,7 +13571,6 @@ class FunctionalTests(unittest.TestCase):
             res = self.testapp.post(
                 "/join",
                 {
-                    "user_address": "Costa Rica",
                     "user_email": collaborator_2 + "@qlands.com",
                     "user_password": "123",
                     "user_id": collaborator_2,
@@ -13528,6 +13578,7 @@ class FunctionalTests(unittest.TestCase):
                     "user_name": "Testing",
                     "user_super": "1",
                     "user_apikey": collaborator_2_key,
+                    "user_apisecret": secrets.token_hex(16),
                 },
                 status=302,
             )
@@ -13599,7 +13650,6 @@ class FunctionalTests(unittest.TestCase):
             res = self.testapp.post(
                 "/join",
                 {
-                    "user_address": "Costa Rica",
                     "user_email": collaborator_1 + "@qlands.com",
                     "user_password": "123",
                     "user_id": collaborator_1,
@@ -13607,6 +13657,7 @@ class FunctionalTests(unittest.TestCase):
                     "user_name": "Testing",
                     "user_super": "1",
                     "user_apikey": collaborator_1_key,
+                    "user_apisecret": secrets.token_hex(16),
                 },
                 status=302,
             )
@@ -13636,7 +13687,6 @@ class FunctionalTests(unittest.TestCase):
             res = self.testapp.post(
                 "/join",
                 {
-                    "user_address": "Costa Rica",
                     "user_email": collaborator_2 + "@qlands.com",
                     "user_password": "123",
                     "user_id": collaborator_2,
@@ -13644,6 +13694,7 @@ class FunctionalTests(unittest.TestCase):
                     "user_name": "Testing",
                     "user_super": "1",
                     "user_apikey": collaborator_2_key,
+                    "user_apisecret": secrets.token_hex(16),
                 },
                 status=302,
             )
@@ -13721,7 +13772,6 @@ class FunctionalTests(unittest.TestCase):
             res = self.testapp.post(
                 "/join",
                 {
-                    "user_address": "Costa Rica",
                     "user_email": collaborator_1 + "@qlands.com",
                     "user_password": "123",
                     "user_id": collaborator_1,
@@ -13729,6 +13779,7 @@ class FunctionalTests(unittest.TestCase):
                     "user_name": "Testing",
                     "user_super": "1",
                     "user_apikey": collaborator_1_key,
+                    "user_apisecret": secrets.token_hex(16),
                 },
                 status=302,
             )
@@ -13758,7 +13809,6 @@ class FunctionalTests(unittest.TestCase):
             res = self.testapp.post(
                 "/join",
                 {
-                    "user_address": "Costa Rica",
                     "user_email": collaborator_2 + "@qlands.com",
                     "user_password": "123",
                     "user_id": collaborator_2,
@@ -13766,6 +13816,7 @@ class FunctionalTests(unittest.TestCase):
                     "user_name": "Testing",
                     "user_super": "1",
                     "user_apikey": collaborator_2_key,
+                    "user_apisecret": secrets.token_hex(16),
                 },
                 status=302,
             )
@@ -13868,7 +13919,6 @@ class FunctionalTests(unittest.TestCase):
             res = self.testapp.post(
                 "/join",
                 {
-                    "user_address": "Costa Rica",
                     "user_email": collaborator_1 + "@qlands.com",
                     "user_password": "123",
                     "user_id": collaborator_1,
@@ -13876,6 +13926,7 @@ class FunctionalTests(unittest.TestCase):
                     "user_name": "Testing",
                     "user_super": "1",
                     "user_apikey": collaborator_1_key,
+                    "user_apisecret": secrets.token_hex(16),
                 },
                 status=302,
             )
@@ -14527,13 +14578,13 @@ class FunctionalTests(unittest.TestCase):
             res = self.testapp.post(
                 "/join",
                 {
-                    "user_address": "Costa Rica",
                     "user_email": collaborator_1 + "@qlands.com",
                     "user_password": "123",
                     "user_id": collaborator_1,
                     "user_password2": "123",
                     "user_name": "Testing",
                     "user_apikey": collaborator_1_key,
+                    "user_apisecret": secrets.token_hex(16),
                 },
                 status=302,
             )

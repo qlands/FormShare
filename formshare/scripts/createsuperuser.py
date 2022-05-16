@@ -3,7 +3,7 @@ import datetime
 import getpass
 import time
 import uuid
-
+import secrets
 import requests
 import transaction
 import validators
@@ -89,12 +89,14 @@ def main(raw_args=None):
                     .first()
                     is None
                 ):
-                    api_pey = str(uuid.uuid4())
+                    api_key = str(uuid.uuid4())
+                    api_secret = secrets.token_hex(16)
                     new_user = User(
                         user_id=args.user_id,
                         user_email=args.user_email,
                         user_password=enc_pass,
-                        user_apikey=api_pey,
+                        user_apikey=api_key,
+                        user_apisecret=api_secret,
                         user_super=1,
                         user_active=1,
                         user_cdate=datetime.datetime.now(),

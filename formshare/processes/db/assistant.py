@@ -224,7 +224,8 @@ def delete_assistant(request, project, assistant):
         request.dbsession.flush()
         return True, ""
     except Exception as e:
-        request.dbsession.rollback()
+        # We had to remove this rollback. It seems to be creating problems now.
+        # request.dbsession.rollback()
         log.error(
             "Error {} while removing assistant {} from project {}".format(
                 str(e), assistant, project

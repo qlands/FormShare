@@ -11,7 +11,7 @@ RUN wget -qO - https://www.mongodb.org/static/pgp/server-5.0.asc | apt-key add -
 RUN add-apt-repository 'deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/5.0 multiverse'
 RUN apt-get update
 
-RUN apt-get install -y build-essential qtbase5-dev qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client-8.0 openjdk-11-jdk sqlite3 libqt5sql5-sqlite git python3-venv tidy golang-go mosquitto curl nano mongodb-org
+RUN apt-get install -y build-essential qtbase5-dev qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client-8.0 openjdk-18-jdk sqlite3 libqt5sql5-sqlite git python3-venv tidy golang-go mosquitto curl nano mongodb-org
 RUN wget https://dev.mysql.com/get/mysql-apt-config_0.8.22-1_all.deb
 RUN dpkg -i ./mysql-apt-config_0.8.22-1_all.deb
 RUN apt-get update

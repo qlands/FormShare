@@ -95,6 +95,20 @@ def get_last_task(config, project_id, form_id, product_id):
     return result
 
 
+def get_tokens_from_user(config, user_email):
+    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
+    sql = (
+        "SELECT user_password_reset_key,user_password_reset_token,user_password_reset_expires_on "
+        "FROM fsuser where user_email = '{}'".format(user_email)
+    )
+    result = engine.execute(sql).fetchone()
+    return {
+        "user_password_reset_key": result[0],
+        "user_password_reset_token": result[1],
+        "user_password_reset_expires_on": result[2],
+    }
+
+
 class FunctionalTests(unittest.TestCase):
     def setUp(self):
         if os.environ.get("FORMSHARE_PYTEST_RUNNING", "false") == "false":
@@ -325,7 +339,110 @@ class FunctionalTests(unittest.TestCase):
             # Test recover the password
             res = self.testapp.post(
                 "/recover",
+                {"email": random_login + "@qlands.org", "user": "some_thing"},
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Test recover the password
+            res = self.testapp.post(
+                "/recover",
                 {"email": random_login + "@qlands.com", "user": "some_thing"},
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+            time.sleep(2)
+
+            token_data = get_tokens_from_user(
+                self.server_config, random_login + "@qlands.com"
+            )
+
+            # Password reset for a key that does not exist goes to 404
+            self.testapp.get("/reset/{}/password".format("not_exist"), status=404)
+
+            # Load the password reset
+            self.testapp.get(
+                "/reset/{}/password".format(token_data["user_password_reset_key"]),
+                status=200,
+            )
+
+            # Posting with empty email fails
+            res = self.testapp.post(
+                "/reset/{}/password".format(token_data["user_password_reset_key"]),
+                {"email": "", "user": "some_thing"},
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Posting with email not exist fails
+            res = self.testapp.post(
+                "/reset/{}/password".format(token_data["user_password_reset_key"]),
+                {"email": "not_exist@qlands.com", "user": "some_thing"},
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Posting empty token
+            res = self.testapp.post(
+                "/reset/{}/password".format(token_data["user_password_reset_key"]),
+                {
+                    "email": random_login + "@qlands.com",
+                    "user": "some_thing",
+                    "token": "",
+                },
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Posting token not exist fails
+            res = self.testapp.post(
+                "/reset/{}/password".format(token_data["user_password_reset_key"]),
+                {
+                    "email": random_login + "@qlands.com",
+                    "user": "some_thing",
+                    "token": "not_exist",
+                },
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Posting empty password fails
+            res = self.testapp.post(
+                "/reset/{}/password".format(token_data["user_password_reset_key"]),
+                {
+                    "email": random_login + "@qlands.com",
+                    "user": "some_thing",
+                    "token": token_data["user_password_reset_token"],
+                    "password": "",
+                },
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Posting invalid password fails
+            res = self.testapp.post(
+                "/reset/{}/password".format(token_data["user_password_reset_key"]),
+                {
+                    "email": random_login + "@qlands.com",
+                    "user": "some_thing",
+                    "token": token_data["user_password_reset_token"],
+                    "password": "123",
+                    "password2": "321",
+                },
+                status=200,
+            )
+            assert "FS_error" in res.headers
+
+            # Password reset passes
+            res = self.testapp.post(
+                "/reset/{}/password".format(token_data["user_password_reset_key"]),
+                {
+                    "email": random_login + "@qlands.com",
+                    "user": "some_thing",
+                    "token": token_data["user_password_reset_token"],
+                    "password": "123",
+                    "password2": "123",
+                },
                 status=302,
             )
             assert "FS_error" not in res.headers

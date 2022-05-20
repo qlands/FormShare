@@ -238,14 +238,11 @@ class ResetPasswordView(PublicView):
                 if not safe:
                     raise HTTPNotFound()
             data = variable_decode(self.request.POST)
-            login = data["email"]
-            token = data["token"]
-            print("*****************888")
-            print(token)
-            print("*****************888")
-            new_password = data["password"].strip()
-            new_password2 = data["password2"].strip()
-            user = data["user"]
+            login = data.get("email", "")
+            token = data.get("token", "")
+            new_password = data.get("password", "").strip()
+            new_password2 = data.get("password2", "").strip()
+            user = data.get("user", "hola")
             if user != "":
                 log.error(
                     "Suspicious bot password recovery from IP: {}. Agent: {}. Email: {}".format(

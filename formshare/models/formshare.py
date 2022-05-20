@@ -81,6 +81,11 @@ class User(Base):
     user_apisecret = Column(Unicode(64))
     user_apitoken = Column(Unicode(64))
     user_apitoken_expires_on = Column(DateTime)
+
+    user_password_reset_key = Column(Unicode(64))
+    user_password_reset_token = Column(Unicode(64))
+    user_password_reset_expires_on = Column(DateTime)
+
     user_timezone = Column(
         ForeignKey("timezone.timezone_code", ondelete="RESTRICT"),
         nullable=False,

@@ -1,6 +1,6 @@
 import validators
 from sqlalchemy import func
-
+import datetime
 from formshare.config.encdecdata import decode_data
 from formshare.models import Collaborator as collaboratorModel
 from formshare.models import Partner as partnerModel
@@ -8,6 +8,7 @@ from formshare.models import User as userModel
 from formshare.models import map_from_schema
 from formshare.plugins.core import PluginImplementations
 from formshare.plugins.interfaces import IUserAuthentication
+from dateutil.relativedelta import relativedelta
 
 
 class User(object):
@@ -103,6 +104,41 @@ class Partner(object):
 
     # def get_partner_id(self):
     #     return self.id
+
+
+def reset_key_exists(request, reset_key):
+    res = (
+        request.dbsession.query(userModel)
+        .filter(userModel.user_password_reset_key == reset_key)
+        .first()
+    )
+    if res is not None:
+        return True
+    return False
+
+
+def set_password_reset_token(request, user_id, reset_key, reset_token):
+    token_expires_on = datetime.datetime.now() + relativedelta(hours=+24)
+    request.dbsession.query(userModel).filter(userModel.user_id == user_id).update(
+        {
+            "user_password_reset_key": reset_key,
+            "user_password_reset_token": reset_token,
+            "user_password_reset_expires_on": token_expires_on,
+        }
+    )
+
+
+def reset_password(request, user_id, reset_key, reset_token, new_password):
+    request.dbsession.query(userModel).filter(userModel.user_id == user_id).filter(
+        userModel.user_password_reset_key == reset_key
+    ).filter(userModel.user_password_reset_token == reset_token).update(
+        {
+            "user_password_reset_key": None,
+            "user_password_reset_token": None,
+            "user_password_reset_expires_on": None,
+            "user_password": new_password,
+        }
+    )
 
 
 def get_formshare_user_data(request, user, is_email):

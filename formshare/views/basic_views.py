@@ -18,8 +18,10 @@ import formshare.plugins as p
 from formshare.config.auth import (
     get_user_data,
     get_assistant_data,
-    get_formshare_user_data,
+    reset_key_exists,
     get_partner_data,
+    set_password_reset_token,
+    reset_password,
 )
 from formshare.config.elasticfeeds import get_manager
 from formshare.config.encdecdata import encode_data, decode_data
@@ -212,6 +214,89 @@ class RefreshSessionView(PublicView):
         return {}
 
 
+class ResetPasswordView(PublicView):
+    def process_view(self):
+        if (
+            self.request.registry.settings.get("mail.server.available", "false")
+            == "false"
+        ):
+            if (
+                self.request.registry.settings.get("ignore_email_check", "false")
+                == "false"
+            ):
+                raise HTTPNotFound()
+        reset_key = self.request.matchdict["reset_key"]
+        if not reset_key_exists(self.request, reset_key):
+            raise HTTPNotFound()
+
+        if self.request.method == "POST":
+            if (
+                self.request.registry.settings.get("perform_post_checks", "true")
+                == "true"
+            ):
+                safe = check_csrf_token(self.request, raises=False)
+                if not safe:
+                    raise HTTPNotFound()
+            data = variable_decode(self.request.POST)
+            login = data["email"]
+            token = data["token"]
+            print("*****************888")
+            print(token)
+            print("*****************888")
+            new_password = data["password"].strip()
+            new_password2 = data["password2"].strip()
+            user = data["user"]
+            if user != "":
+                log.error(
+                    "Suspicious bot password recovery from IP: {}. Agent: {}. Email: {}".format(
+                        self.request.remote_addr, self.request.user_agent, data["email"]
+                    )
+                )
+            user = get_user_data(login, self.request)
+            if user is not None:
+                if user.userData["user_password_reset_key"] == reset_key:
+                    if user.userData["user_password_reset_token"] == token:
+                        if (
+                            user.userData["user_password_reset_expires_on"]
+                            > datetime.datetime.now()
+                        ):
+                            if new_password != "":
+                                if new_password == new_password2:
+                                    new_password = encode_data(
+                                        self.request, new_password
+                                    )
+                                    reset_password(
+                                        self.request,
+                                        user.id,
+                                        reset_key,
+                                        token,
+                                        new_password,
+                                    )
+                                    self.returnRawViewResult = True
+                                    return HTTPFound(
+                                        location=self.request.route_url("login")
+                                    )
+                                else:
+                                    self.append_to_errors(
+                                        self._(
+                                            "The password and the confirmation are not the same"
+                                        )
+                                    )
+                            else:
+                                self.append_to_errors(
+                                    self._("The password cannot be empty")
+                                )
+                        else:
+                            self.append_to_errors(self._("Invalid token"))
+                    else:
+                        self.append_to_errors(self._("Invalid token"))
+                else:
+                    self.append_to_errors(self._("Invalid key"))
+            else:
+                self.append_to_errors(self._("User does not exist"))
+        return {}
+
+
 class RecoverPasswordView(PublicView):
     def process_view(self):
         if (
@@ -242,15 +327,16 @@ class RecoverPasswordView(PublicView):
                 )
             user = get_user_data(login, self.request)
             if user is not None:
-                user_data = get_formshare_user_data(self.request, user.email, True)
-                user_password = decode_data(
-                    self.request, user_data["user_password"].encode()
-                )
+                reset_key = str(uuid.uuid4())
+                reset_token = secrets.token_hex(16)
+                set_password_reset_token(self.request, user.id, reset_key, reset_token)
                 send_password_email(
-                    self.request, user.email, user_password.decode(), user.userData
+                    self.request, user.email, reset_token, reset_key, user.userData
                 )
-            self.returnRawViewResult = True
-            return HTTPFound(location=self.request.route_url("login"))
+                self.returnRawViewResult = True
+                return HTTPFound(location=self.request.route_url("login"))
+            else:
+                self.append_to_errors(self._("Invalid email"))
         return {}
 
 

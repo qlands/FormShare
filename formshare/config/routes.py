@@ -71,6 +71,7 @@ from formshare.views.basic_views import (
     partner_log_out_view,
     RefreshSessionView,
     RecoverPasswordView,
+    ResetPasswordView,
     ErrorView,
     Gravatar,
 )
@@ -240,6 +241,14 @@ def load_routes(config, settings):
             "/recover",
             RecoverPasswordView,
             "generic/recover_password.jinja2",
+        )
+    )
+    routes.append(
+        add_route(
+            "reset_password",
+            "/reset/{reset_key}/password",
+            ResetPasswordView,
+            "generic/reset_password.jinja2",
         )
     )
     routes.append(

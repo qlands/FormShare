@@ -35,7 +35,7 @@ def send_email(request, email_from, email_to, subject, message, reply_to=None):
     return True
 
 
-def send_password_email(request, email_to, current_password, user_dict):
+def send_password_email(request, email_to, reset_token, reset_key, user_dict):
     jinjaEnv.add_extension(ext.i18n)
     jinjaEnv.add_extension(ExtendThis)
     _ = request.translate
@@ -48,17 +48,19 @@ def send_password_email(request, email_to, current_password, user_dict):
     if email_from == "":
         return False
     date_string = readble_date(datetime.datetime.now(), request.locale_name)
+    reset_url = request.route_url("reset_password", reset_key=reset_key)
     text = render_template(
         "email/recover_email.jinja2",
         {
             "recovery_date": date_string,
-            "current_password": current_password,
+            "reset_token": reset_token,
             "user_dict": user_dict,
+            "reset_url": reset_url,
             "_": _,
         },
     )
     return send_email(
-        request, email_from, email_to, _("FormShare - Password request"), text
+        request, email_from, email_to, _("FormShare - Password reset request"), text
     )
 
 

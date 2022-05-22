@@ -612,21 +612,18 @@
 
                     assistant_item.click(function() {
                         var assistant_name = $( this ).attr('data-assistant-name');
-                        var assistant_role = $( this ).attr('data-assistant-role');
+                        var assistant_can_submit = $( this ).attr('data-assistant-can-submit');
+                        var assistant_can_clean = $( this ).attr('data-assistant-can-clean');
                         var action_url = $( this ).attr('urn');
                         $("#edit_assistant_form").prop('action',action_url)
                         $("#rolewho").text("{{ _('Changing the role of') }} " + assistant_name);
 
                         var role_submmit = $( "#role_submmit" );
                         var role_clean = $( "#role_clean" );
-                        var role_both = $( "#role_both" );
-                        if (assistant_role === "1")
+                        if (assistant_can_submit === "1")
                             role_submmit.prop( "checked", true );
-                        if (assistant_role === "2")
+                        if (assistant_can_clean === "1")
                             role_clean.prop( "checked", true );
-                        if (assistant_role === "3")
-                            role_both.prop( "checked", true );
-
                     });
                     {% if projectDetails.access_type < 4 %}
                         assistant_item.on("taphold", function()
@@ -666,21 +663,18 @@
 
                     group_item.click(function() {
                         var group_name = $( this ).attr('data-group-name');
-                        var group_role = $( this ).attr('data-group-role');
+                        var group_can_submit = $( this ).attr('data-group-can-submit');
+                        var group_can_clean = $( this ).attr('data-group-can-clean');
                         var action_url = $( this ).attr('urn');
                         $("#edit_group_form").prop('action',action_url)
                         $("#grprolewho").text("{{ _('Changing the role of') }} " + group_name);
 
                         var role_submmit = $( "#grp_role_submmit" );
                         var role_clean = $( "#grp_role_clean" );
-                        var role_both = $( "#grp_role_both" );
-                        if (group_role === "1")
+                        if (group_can_submit === "1")
                             role_submmit.prop( "checked", true );
-                        if (group_role === "2")
+                        if (group_can_clean === "1")
                             role_clean.prop( "checked", true );
-                        if (group_role === "3")
-                            role_both.prop( "checked", true );
-
                     });
                     {% if projectDetails.access_type < 4 %}
                         group_item.on("taphold", function()

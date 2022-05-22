@@ -26,9 +26,8 @@
                         <div class="form-group">
                             <label class="col-sm-2 col-form-label">{{ _('Privileges') }}</label>
                             <div class="col-sm-10">
-                                <label><input type="radio" checked value="1" id="role_admin" name="coll_privileges"> {{ _('Can Submit') }}</label><br/>
-                                <label><input type="radio" value="2" id="role_editor" name="coll_privileges"> {{ _('Can clean') }}</label><br/>
-                                <label><input type="radio" value="3" id="role_member" name="coll_privileges"> {{ _('Both') }}</label>
+                                <label><input type="checkbox" id="coll_can_submit" name="coll_can_submit"> {{ _('Can Submit') }}</label><br/>
+                                <label><input type="checkbox" id="coll_can_clean" name="coll_can_clean"> {{ _('Can clean') }}</label><br/>
                             </div>
                         </div>
                     {% endblock add_assistant_form_fields %}

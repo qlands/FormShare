@@ -42,6 +42,7 @@ __all__ = [
     "get_case_schema",
     "project_has_case_lookup_table",
     "invalid_aliases",
+    "project_has_crowdsourcing",
 ]
 
 log = logging.getLogger("formshare")
@@ -779,6 +780,18 @@ def project_has_case_lookup_table(request, project):
         return False
     else:
         return True
+
+
+def project_has_crowdsourcing(request, project_id):
+    res = (
+        request.dbsession.query(Project.project_formlist_auth)
+        .filter(Project.project_id == project_id)
+        .first()
+    )
+    if res[0] == 0:
+        return True
+    else:
+        return False
 
 
 def get_project_id_from_name(request, user, project_code):

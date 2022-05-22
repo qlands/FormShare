@@ -163,15 +163,17 @@ class AddProjectView(ProjectsView):
     def process_view(self):
         if self.request.method == "POST":
             project_details = self.get_post_dict()
-            # if "project_public" in project_details.keys():
-            #     project_details["project_public"] = 1
-            # else:
             project_details["project_public"] = 0
 
             if "project_case" in project_details.keys():
                 project_details["project_case"] = 1
             else:
                 project_details["project_case"] = 0
+
+            if "project_formlist_auth" in project_details.keys():
+                project_details["project_formlist_auth"] = 1
+            else:
+                project_details["project_formlist_auth"] = 0
 
             if project_details["project_abstract"] == "":
                 project_details["project_abstract"] = None
@@ -277,7 +279,11 @@ class AddProjectView(ProjectsView):
             else:
                 self.append_to_errors(self._("The project code cannot be empty"))
         else:
-            project_details = {"project_public": 0, "project_case": 0}
+            project_details = {
+                "project_public": 0,
+                "project_case": 0,
+                "project_formlist_auth": 1,
+            }
         return {
             "projectDetails": project_details,
             "timezones": get_timezones(self.request),
@@ -320,6 +326,11 @@ class EditProjectView(ProjectsView):
                 if total_forms == 0:
                     project_details["project_case"] = 0
 
+            if "project_formlist_auth" in project_details.keys():
+                project_details["project_formlist_auth"] = 1
+            else:
+                project_details["project_formlist_auth"] = 0
+
             project_details["project_code"] = project_code
 
             if project_details["project_hexcolor"] == "":
@@ -329,8 +340,6 @@ class EditProjectView(ProjectsView):
 
             if project_details["project_abstract"] == "":
                 project_details["project_abstract"] = None
-
-            #  TODO: If the project becomes private then we need to unwatched it from consumers
 
             if project_details["project_name"] != "":
                 next_page = self.request.params.get("next") or self.request.url

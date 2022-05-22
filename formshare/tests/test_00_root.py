@@ -829,6 +829,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_abstract": "",
                     "project_icon": "",
                     "project_hexcolor": "",
+                    "project_formlist_auth": 1,
                 },
                 status=200,
             )
@@ -842,6 +843,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_abstract": "",
                     "project_icon": "",
                     "project_hexcolor": "",
+                    "project_formlist_auth": 1,
                 },
                 status=200,
             )
@@ -856,6 +858,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_abstract": "",
                     "project_icon": "😁",
                     "project_hexcolor": "#9bbb59",
+                    "project_formlist_auth": 1,
                 },
                 status=302,
             )
@@ -870,6 +873,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_abstract": "",
                     "project_icon": "",
                     "project_hexcolor": "",
+                    "project_formlist_auth": 1,
                 },
                 status=302,
             )
@@ -884,6 +888,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_abstract": "",
                     "project_icon": "",
                     "project_hexcolor": "",
+                    "project_formlist_auth": 1,
                 },
                 status=200,
             )
@@ -911,6 +916,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_name": "",
                     "project_icon": "",
                     "project_hexcolor": "",
+                    "project_formlist_auth": 1,
                 },
                 status=200,
             )
@@ -942,6 +948,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_abstract": "",
                     "project_icon": "",
                     "project_hexcolor": "",
+                    "project_formlist_auth": 1,
                 },
                 status=302,
             )
@@ -979,6 +986,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_abstract": "",
                     "project_icon": "",
                     "project_hexcolor": "",
+                    "project_formlist_auth": 1,
                 },
                 status=302,
             )
@@ -2555,7 +2563,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
-                    "coll_privileges": "1",
+                    "coll_can_submit": "1",
                 },
                 status=404,
             )
@@ -2567,7 +2575,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
-                    "coll_privileges": "1",
+                    "coll_can_submit": "1",
                 },
                 status=404,
             )
@@ -2587,7 +2595,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
-                    "coll_privileges": "1",
+                    "coll_can_submit": "1",
                 },
                 status=302,
             )
@@ -2600,7 +2608,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
-                    "coll_privileges": "1",
+                    "coll_can_submit": "1",
                 },
                 status=302,
             )
@@ -2615,7 +2623,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.assistantLogin,
                 ),
-                {"coll_privileges": "3"},
+                {"coll_can_submit": "1", "coll_can_clean": "1"},
                 status=404,
             )
 
@@ -2628,7 +2636,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.assistantLogin,
                 ),
-                {"coll_privileges": "3"},
+                {"coll_can_submit": "1", "coll_can_clean": "1"},
                 status=404,
             )
 
@@ -2653,7 +2661,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.assistantLogin,
                 ),
-                {"coll_privileges": "3"},
+                {"coll_can_submit": "1", "coll_can_clean": "1"},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -2731,7 +2739,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/groups/add".format(
                     self.randonLogin, "project_dont_exist", "Justtest"
                 ),
-                {"group_id": self.assistantGroupID, "group_privilege": 1},
+                {"group_id": self.assistantGroupID, "group_can_submit": 1},
                 status=404,
             )
 
@@ -2740,7 +2748,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/groups/add".format(
                     self.randonLogin, self.project, "justtest_not_exist"
                 ),
-                {"group_id": self.assistantGroupID, "group_privilege": 1},
+                {"group_id": self.assistantGroupID, "group_can_submit": 1},
                 status=404,
             )
 
@@ -2757,7 +2765,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/groups/add".format(
                     self.randonLogin, self.project, "Justtest"
                 ),
-                {"group_id": self.assistantGroupID, "group_privilege": 1},
+                {"group_id": self.assistantGroupID, "group_can_submit": 1},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -2767,7 +2775,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/groups/add".format(
                     self.randonLogin, self.project, "Justtest"
                 ),
-                {"group_id": self.assistantGroupID, "group_privilege": 1},
+                {"group_id": self.assistantGroupID, "group_can_submit": 1},
                 status=302,
             )
             assert "FS_error" in res.headers
@@ -2780,7 +2788,7 @@ class FunctionalTests(unittest.TestCase):
                     "Justtest",
                     self.assistantGroupID,
                 ),
-                {"group_privilege": 3},
+                {"group_can_submit": 1, "group_can_clean": 1},
                 status=404,
             )
 
@@ -2792,7 +2800,7 @@ class FunctionalTests(unittest.TestCase):
                     "justtest_not_exist",
                     self.assistantGroupID,
                 ),
-                {"group_privilege": 3},
+                {"group_can_submit": 1, "group_can_clean": 1},
                 status=404,
             )
 
@@ -2809,7 +2817,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/group/{}/edit".format(
                     self.randonLogin, self.project, "Justtest", self.assistantGroupID
                 ),
-                {"group_privilege": 3},
+                {"group_can_submit": 1, "group_can_clean": 1},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -2860,7 +2868,8 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
-                    "coll_privileges": "3",
+                    "coll_can_submit": "1",
+                    "coll_can_clean": "1",
                 },
                 status=302,
             )
@@ -2888,7 +2897,8 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
-                    "coll_privileges": "3",
+                    "coll_can_submit": "1",
+                    "coll_can_clean": "1",
                 },
                 status=302,
             )
@@ -2970,7 +2980,8 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
-                    "coll_privileges": "3",
+                    "coll_can_submit": "1",
+                    "coll_can_clean": "1",
                 },
                 status=302,
             )
@@ -3096,7 +3107,8 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
-                    "coll_privileges": "3",
+                    "coll_can_submit": "1",
+                    "coll_can_clean": "1",
                 },
                 status=302,
             )
@@ -3175,7 +3187,8 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
-                    "coll_privileges": "3",
+                    "coll_can_submit": "1",
+                    "coll_can_clean": "1",
                 },
                 status=302,
             )
@@ -3323,6 +3336,44 @@ class FunctionalTests(unittest.TestCase):
                 ),
             )
 
+            # Edit the form as crowdsourcing
+            res = self.testapp.post(
+                "/user/{}/project/{}/edit".format(self.randonLogin, self.project),
+                {
+                    "project_code": self.project,
+                    "project_name": "Test project",
+                    "project_abstract": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
+            # Test getting the forms goes to 200 the assistant is not active but crowdsourcing
+            self.testapp.get(
+                "/user/{}/project/{}/formList".format(self.randonLogin, self.project),
+                status=200,
+                extra_environ=dict(
+                    FS_for_testing="true", FS_user_for_testing=self.assistantLogin
+                ),
+            )
+
+            # Edit the form as not crowdsourcing
+            res = self.testapp.post(
+                "/user/{}/project/{}/edit".format(self.randonLogin, self.project),
+                {
+                    "project_code": self.project,
+                    "project_name": "Test project",
+                    "project_abstract": "",
+                    "project_icon": "",
+                    "project_hexcolor": "",
+                    "project_formlist_auth": 1,
+                },
+                status=302,
+            )
+            assert "FS_error" not in res.headers
+
             # Activate the assistant
             res = self.testapp.post(
                 "/user/{}/project/{}/assistant/{}/edit".format(
@@ -3432,7 +3483,8 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
-                    "coll_privileges": "3",
+                    "coll_can_submit": "1",
+                    "coll_can_clean": "1",
                 },
                 status=302,
             )
@@ -3540,7 +3592,8 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
-                    "coll_privileges": "3",
+                    "coll_can_submit": "1",
+                    "coll_can_clean": "1",
                 },
                 status=302,
             )
@@ -3637,7 +3690,8 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
-                    "coll_privileges": "3",
+                    "coll_can_submit": "1",
+                    "coll_can_clean": "1",
                 },
                 status=302,
             )
@@ -4256,6 +4310,7 @@ class FunctionalTests(unittest.TestCase):
                         "project_abstract": "",
                         "project_icon": "",
                         "project_hexcolor": "",
+                        "project_formlist_auth": 1,
                     },
                     status=302,
                 )
@@ -4294,7 +4349,8 @@ class FunctionalTests(unittest.TestCase):
                     ),
                     {
                         "coll_id": "{}|{}".format(mimic_project_id, "mimic000"),
-                        "coll_privileges": "3",
+                        "coll_can_submit": "1",
+                        "coll_can_clean": "1",
                     },
                     status=302,
                 )
@@ -4412,6 +4468,7 @@ class FunctionalTests(unittest.TestCase):
                         "project_abstract": "",
                         "project_icon": "",
                         "project_hexcolor": "",
+                        "project_formlist_auth": 1,
                     },
                     status=302,
                 )
@@ -4451,7 +4508,8 @@ class FunctionalTests(unittest.TestCase):
                     ),
                     {
                         "coll_id": "{}|{}".format(mimic_project_id, "mimic001"),
-                        "coll_privileges": "3",
+                        "coll_can_submit": "1",
+                        "coll_can_clean": "1",
                     },
                     status=302,
                 )
@@ -4569,6 +4627,7 @@ class FunctionalTests(unittest.TestCase):
                         "project_abstract": "",
                         "project_icon": "",
                         "project_hexcolor": "",
+                        "project_formlist_auth": 1,
                     },
                     status=302,
                 )
@@ -4627,7 +4686,11 @@ class FunctionalTests(unittest.TestCase):
                     "/user/{}/project/{}/form/{}/groups/add".format(
                         self.randonLogin, mimic_grp_project, "LB_Sequia_MAG_20190123"
                     ),
-                    {"group_id": "grpmimic001", "group_privilege": 3},
+                    {
+                        "group_id": "grpmimic001",
+                        "group_can_submit": 1,
+                        "group_can_clean": 1,
+                    },
                     status=302,
                 )
                 assert "FS_error" not in res3.headers
@@ -6471,7 +6534,11 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/groups/add".format(
                     self.randonLogin, self.project, self.formID
                 ),
-                {"group_id": self.assistantGroupID, "group_privilege": 3},
+                {
+                    "group_id": self.assistantGroupID,
+                    "group_can_submit": 1,
+                    "group_can_clean": 1,
+                },
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -6483,7 +6550,8 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.projectID, self.assistantLogin2),
-                    "coll_privileges": "3",
+                    "coll_can_submit": "1",
+                    "coll_can_clean": "1",
                 },
                 status=302,
             )
@@ -7190,7 +7258,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.assistantLogin,
                 ),
-                {"coll_privileges": "1"},
+                {"coll_can_submit": "1"},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -7212,7 +7280,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.assistantLogin,
                 ),
-                {"coll_privileges": "3"},
+                {"coll_can_submit": "1", "coll_can_clean": "1"},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -7298,7 +7366,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.assistantLogin,
                 ),
-                {"coll_privileges": "1"},
+                {"coll_can_submit": "1"},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -7321,7 +7389,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.assistantLogin,
                 ),
-                {"coll_privileges": "3"},
+                {"coll_can_submit": "1", "coll_can_clean": "1"},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -7389,7 +7457,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.assistantLogin,
                 ),
-                {"coll_privileges": "1"},
+                {"coll_can_submit": "1"},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -7412,7 +7480,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.assistantLogin,
                 ),
-                {"coll_privileges": "3"},
+                {"coll_can_submit": "1", "coll_can_clean": "1"},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -7488,7 +7556,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.assistantLogin,
                 ),
-                {"coll_privileges": "1"},
+                {"coll_can_submit": "1"},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -7510,7 +7578,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.assistantLogin,
                 ),
-                {"coll_privileges": "3"},
+                {"coll_can_submit": "1", "coll_can_clean": "1"},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -7574,7 +7642,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.assistantLogin,
                 ),
-                {"coll_privileges": "1"},
+                {"coll_can_submit": "1"},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -7596,7 +7664,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.assistantLogin,
                 ),
-                {"coll_privileges": "3"},
+                {"coll_can_submit": "1", "coll_can_clean": "1"},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -7712,7 +7780,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.assistantLogin,
                 ),
-                {"coll_privileges": "1"},
+                {"coll_can_submit": "1"},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -7750,7 +7818,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.assistantLogin,
                 ),
-                {"coll_privileges": "3"},
+                {"coll_can_submit": "1", "coll_can_clean": "1"},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -7866,7 +7934,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.assistantLogin,
                 ),
-                {"coll_privileges": "1"},
+                {"coll_can_submit": "1"},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -7890,7 +7958,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.assistantLogin,
                 ),
-                {"coll_privileges": "3"},
+                {"coll_can_submit": "1", "coll_can_clean": "1"},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -7938,7 +8006,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.assistantLogin,
                 ),
-                {"coll_privileges": "1"},
+                {"coll_can_submit": "1"},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -7964,7 +8032,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.assistantLogin,
                 ),
-                {"coll_privileges": "3"},
+                {"coll_can_submit": "1", "coll_can_clean": "1"},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -8102,7 +8170,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.assistantLogin,
                 ),
-                {"coll_privileges": "1"},
+                {"coll_can_submit": "1"},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -8128,7 +8196,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.assistantLogin,
                 ),
-                {"coll_privileges": "3"},
+                {"coll_can_submit": "1", "coll_can_clean": "1"},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -8171,7 +8239,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.assistantLogin,
                 ),
-                {"coll_privileges": "1"},
+                {"coll_can_submit": "1"},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -8202,7 +8270,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.assistantLogin,
                 ),
-                {"coll_privileges": "3"},
+                {"coll_can_submit": "1", "coll_can_clean": "1"},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -8228,6 +8296,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_abstract": "",
                     "project_icon": "",
                     "project_hexcolor": "",
+                    "project_formlist_auth": 1,
                 },
                 status=302,
             )
@@ -8289,7 +8358,8 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(json2_project_id, "json2001"),
-                    "coll_privileges": "3",
+                    "coll_can_submit": "1",
+                    "coll_can_clean": "1",
                 },
                 status=302,
             )
@@ -8316,7 +8386,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(json2_project_id, "json2002"),
-                    "coll_privileges": "1",
+                    "coll_can_submit": "1",
                 },
                 status=302,
             )
@@ -8343,7 +8413,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(json2_project_id, "json2003"),
-                    "coll_privileges": "2",
+                    "coll_can_clean": "1",
                 },
                 status=302,
             )
@@ -8827,7 +8897,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/groups/add".format(
                     self.randonLogin, json2_project, json2_form
                 ),
-                {"group_id": "grp001", "group_privilege": 1},
+                {"group_id": "grp001", "group_can_submit": 1},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -8836,7 +8906,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/groups/add".format(
                     self.randonLogin, json2_project, json2_form
                 ),
-                {"group_id": "grp002", "group_privilege": 2},
+                {"group_id": "grp002", "group_can_clean": 1},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -8845,7 +8915,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/groups/add".format(
                     self.randonLogin, json2_project, json2_form
                 ),
-                {"group_id": "grp003", "group_privilege": 3},
+                {"group_id": "grp003", "group_can_submit": 1, "group_can_clean": 1},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -8957,6 +9027,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_abstract": "",
                     "project_icon": "",
                     "project_hexcolor": "",
+                    "project_formlist_auth": 1,
                 },
                 status=302,
             )
@@ -9018,7 +9089,8 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(json4_project_id, "json4001"),
-                    "coll_privileges": "3",
+                    "coll_can_submit": "1",
+                    "coll_can_clean": "1",
                 },
                 status=302,
             )
@@ -9163,7 +9235,7 @@ class FunctionalTests(unittest.TestCase):
                     json4_project_id,
                     "json4001",
                 ),
-                {"coll_privileges": "1"},
+                {"coll_can_submit": "1"},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -9184,7 +9256,7 @@ class FunctionalTests(unittest.TestCase):
                     json4_project_id,
                     "json4001",
                 ),
-                {"coll_privileges": "3"},
+                {"coll_can_submit": "1", "coll_can_clean": "1"},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -9239,6 +9311,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_abstract": "",
                     "project_icon": "",
                     "project_hexcolor": "",
+                    "project_formlist_auth": 1,
                 },
                 status=302,
             )
@@ -9300,7 +9373,8 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(json3_project_id, "json3001"),
-                    "coll_privileges": "3",
+                    "coll_can_submit": "1",
+                    "coll_can_clean": "1",
                 },
                 status=302,
             )
@@ -9752,7 +9826,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.assistantLogin,
                 ),
-                {"coll_privileges": "1"},
+                {"coll_can_submit": "1"},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -9789,7 +9863,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.assistantLogin,
                 ),
-                {"coll_privileges": "3"},
+                {"coll_can_submit": "1", "coll_can_clean": "1"},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -9839,7 +9913,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.projectID, "clean001"),
-                    "coll_privileges": "1",
+                    "coll_can_submit": "1",
                 },
                 status=302,
             )
@@ -10227,6 +10301,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_abstract": "",
                     "project_icon": "",
                     "project_hexcolor": "",
+                    "project_formlist_auth": 1,
                 },
                 status=302,
             )
@@ -10264,7 +10339,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(project_id, "assistant001"),
-                    "coll_privileges": "1",
+                    "coll_can_submit": "1",
                 },
                 status=302,
             )
@@ -10302,6 +10377,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_abstract": "",
                     "project_icon": "",
                     "project_hexcolor": "",
+                    "project_formlist_auth": 1,
                 },
                 status=302,
             )
@@ -10327,7 +10403,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(project_id, "assistant002"),
-                    "coll_privileges": "1",
+                    "coll_can_submit": "1",
                 },
                 status=302,
             )
@@ -10455,6 +10531,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_abstract": "",
                     "project_icon": "",
                     "project_hexcolor": "",
+                    "project_formlist_auth": 1,
                 },
                 status=302,
             )
@@ -11181,6 +11258,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_abstract": "",
                     "project_icon": "",
                     "project_hexcolor": "",
+                    "project_formlist_auth": 1,
                 },
                 status=302,
             )
@@ -11302,7 +11380,8 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(merge_project_id, "merge001"),
-                    "coll_privileges": "3",
+                    "coll_can_submit": "1",
+                    "coll_can_clean": "1",
                 },
                 status=302,
             )
@@ -11428,6 +11507,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_abstract": "",
                     "project_icon": "",
                     "project_hexcolor": "",
+                    "project_formlist_auth": 1,
                 },
                 status=302,
             )
@@ -11568,7 +11648,11 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/groups/add".format(
                     self.randonLogin, merge_project, "tormenta20201117"
                 ),
-                {"group_id": "grpmerge001", "group_privilege": 3},
+                {
+                    "group_id": "grpmerge001",
+                    "group_can_submit": 1,
+                    "group_can_clean": 1,
+                },
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -11693,6 +11777,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_abstract": "",
                     "project_icon": "",
                     "project_hexcolor": "",
+                    "project_formlist_auth": 1,
                 },
                 status=302,
             )
@@ -11814,7 +11899,8 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(merge_project_id, "merge003"),
-                    "coll_privileges": "3",
+                    "coll_can_submit": "1",
+                    "coll_can_clean": "1",
                 },
                 status=302,
             )
@@ -13107,7 +13193,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/groups/add".format(
                     self.randonLogin, self.project, "Justtest"
                 ),
-                {"group_id": "assgrp003", "group_privilege": 1},
+                {"group_id": "assgrp003", "group_can_submit": 1},
                 status=302,
             )
             assert "FS_error" not in res.headers
@@ -13155,7 +13241,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.projectID, "agrpssistant001"),
-                    "coll_privileges": "1",
+                    "coll_can_submit": "1",
                 },
                 status=302,
             )
@@ -13441,6 +13527,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_abstract": "",
                     "project_icon": "",
                     "project_hexcolor": "",
+                    "project_formlist_auth": 1,
                 },
                 status=302,
             )
@@ -13478,6 +13565,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_abstract": "",
                     "project_icon": "",
                     "project_hexcolor": "",
+                    "project_formlist_auth": 1,
                 },
                 status=302,
             )
@@ -13515,6 +13603,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_abstract": "",
                     "project_icon": "😁",
                     "project_hexcolor": "#9bbb59",
+                    "project_formlist_auth": 1,
                 },
                 status=302,
             )
@@ -13527,7 +13616,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
-                    "coll_privileges": "1",
+                    "coll_can_submit": "1",
                 },
                 status=404,
             )
@@ -13673,6 +13762,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_abstract": "",
                     "project_icon": "",
                     "project_hexcolor": "",
+                    "project_formlist_auth": 1,
                 },
                 status=302,
             )
@@ -13789,6 +13879,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_abstract": "",
                     "project_icon": "",
                     "project_hexcolor": "",
+                    "project_formlist_auth": 1,
                 },
                 status=302,
             )
@@ -13911,6 +14002,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_abstract": "",
                     "project_icon": "",
                     "project_hexcolor": "",
+                    "project_formlist_auth": 1,
                 },
                 status=302,
             )
@@ -13948,6 +14040,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_abstract": "",
                     "project_icon": "",
                     "project_hexcolor": "",
+                    "project_formlist_auth": 1,
                 },
                 status=302,
             )
@@ -14058,6 +14151,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_abstract": "",
                     "project_icon": "",
                     "project_hexcolor": "",
+                    "project_formlist_auth": 1,
                 },
                 status=302,
             )
@@ -14072,6 +14166,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_abstract": "",
                     "project_icon": "",
                     "project_hexcolor": "",
+                    "project_formlist_auth": 1,
                 },
                 status=302,
             )
@@ -14126,6 +14221,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_abstract": "",
                     "project_icon": "",
                     "project_hexcolor": "",
+                    "project_formlist_auth": 1,
                 },
                 status=302,
             )
@@ -14190,7 +14286,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(json2_project_id, access_assistant),
-                    "coll_privileges": "2",
+                    "coll_can_clean": "1",
                 },
                 status=302,
             )
@@ -14716,6 +14812,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_abstract": "",
                     "project_icon": "😁",
                     "project_hexcolor": "#9bbb59",
+                    "project_formlist_auth": 1,
                 },
                 status=302,
             )
@@ -14950,7 +15047,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
-                    "coll_privileges": "1",
+                    "coll_can_submit": "1",
                 },
                 status=404,
             )
@@ -14964,7 +15061,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.assistantLogin,
                 ),
-                {"coll_privileges": "3"},
+                {"coll_can_submit": "1", "coll_can_clean": "1"},
                 status=404,
             )
 
@@ -14985,7 +15082,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/groups/add".format(
                     self.randonLogin, self.project, self.formID
                 ),
-                {"group_id": self.assistantGroupID, "group_privilege": 1},
+                {"group_id": self.assistantGroupID, "group_can_submit": 1},
                 status=404,
             )
 
@@ -14994,7 +15091,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/group/{}/edit".format(
                     self.randonLogin, self.project, self.formID, self.assistantGroupID
                 ),
-                {"group_privilege": 3},
+                {"group_can_submit": 1, "group_can_clean": 1},
                 status=404,
             )
 
@@ -15003,7 +15100,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/group/{}/remove".format(
                     self.randonLogin, self.project, self.formID, self.assistantGroupID
                 ),
-                {"group_privilege": 3},
+                {"group_can_submit": 1, "group_can_clean": 1},
                 status=404,
             )
 
@@ -15712,7 +15809,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.projectID, self.assistantLogin),
-                    "coll_privileges": "1",
+                    "coll_can_submit": "1",
                 },
                 status=404,
             )
@@ -15726,7 +15823,7 @@ class FunctionalTests(unittest.TestCase):
                     self.projectID,
                     self.assistantLogin,
                 ),
-                {"coll_privileges": "3"},
+                {"coll_can_submit": "1", "coll_can_clean": "1"},
                 status=404,
             )
 
@@ -15747,7 +15844,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/groups/add".format(
                     self.randonLogin, self.project, self.formID
                 ),
-                {"group_id": self.assistantGroupID, "group_privilege": 1},
+                {"group_id": self.assistantGroupID, "group_can_submit": 1},
                 status=404,
             )
 
@@ -15756,7 +15853,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/group/{}/edit".format(
                     self.randonLogin, self.project, self.formID, self.assistantGroupID
                 ),
-                {"group_privilege": 3},
+                {"group_can_submit": 1, "group_can_clean": 1},
                 status=404,
             )
 
@@ -15765,7 +15862,7 @@ class FunctionalTests(unittest.TestCase):
                 "/user/{}/project/{}/form/{}/group/{}/remove".format(
                     self.randonLogin, self.project, self.formID, self.assistantGroupID
                 ),
-                {"group_privilege": 3},
+                {"group_can_submit": 1, "group_can_clean": 1},
                 status=404,
             )
 
@@ -16075,6 +16172,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_case": "",
                     "project_icon": "",
                     "project_hexcolor": "",
+                    "project_formlist_auth": 1,
                 },
                 status=302,
             )
@@ -16123,6 +16221,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_abstract": "",
                     "project_icon": "",
                     "project_hexcolor": "",
+                    "project_formlist_auth": 1,
                 },
                 status=302,
             )
@@ -16136,6 +16235,7 @@ class FunctionalTests(unittest.TestCase):
                     "project_case": "",
                     "project_icon": "",
                     "project_hexcolor": "",
+                    "project_formlist_auth": 1,
                 },
                 status=302,
             )
@@ -16316,7 +16416,8 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.case_project_id, "caseassistant001"),
-                    "coll_privileges": "3",
+                    "coll_can_submit": "1",
+                    "coll_can_clean": "1",
                 },
                 status=302,
             )
@@ -16826,7 +16927,8 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.case_project_id, "caseassistant001"),
-                    "coll_privileges": "3",
+                    "coll_can_submit": "1",
+                    "coll_can_clean": "1",
                 },
                 status=302,
             )
@@ -17343,7 +17445,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.case_project_id, "caseassistant001"),
-                    "coll_privileges": "1",
+                    "coll_can_submit": "1",
                 },
                 status=302,
             )
@@ -17503,7 +17605,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.case_project_id, "caseassistant001"),
-                    "coll_privileges": "1",
+                    "coll_can_submit": "1",
                 },
                 status=302,
             )
@@ -17693,7 +17795,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.case_project_id, "caseassistant001"),
-                    "coll_privileges": "1",
+                    "coll_can_submit": "1",
                 },
                 status=302,
             )
@@ -17863,7 +17965,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.case_project_id, "caseassistant001"),
-                    "coll_privileges": "1",
+                    "coll_can_submit": "1",
                 },
                 status=302,
             )
@@ -18076,7 +18178,7 @@ class FunctionalTests(unittest.TestCase):
                 ),
                 {
                     "coll_id": "{}|{}".format(self.case_project_id, "caseassistant001"),
-                    "coll_privileges": "1",
+                    "coll_can_submit": "1",
                 },
                 status=302,
             )

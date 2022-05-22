@@ -5,6 +5,7 @@ from formshare.processes.db import (
     is_assistant_active,
     get_assistant_password,
     assistant_has_form,
+    project_has_crowdsourcing,
 )
 from formshare.processes.odk.api import (
     get_manifest,
@@ -22,17 +23,26 @@ class ODKFormList(ODKView):
         user_id = self.request.matchdict["userid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         if project_id is not None:
-            if is_assistant_active(self.request, user_id, project_id, self.user):
-                if self.authorize(
-                    get_assistant_password(self.request, user_id, project_id, self.user)
-                ):
-                    return self.create_xmll_response(
-                        get_form_list(self.request, user_id, project_code, self.user)
-                    )
+            if not project_has_crowdsourcing(self.request, project_id):
+                if is_assistant_active(self.request, user_id, project_id, self.user):
+                    if self.authorize(
+                        get_assistant_password(
+                            self.request, user_id, project_id, self.user
+                        )
+                    ):
+                        return self.create_xmll_response(
+                            get_form_list(
+                                self.request, user_id, project_code, self.user
+                            )
+                        )
+                    else:
+                        return self.ask_for_credentials()
                 else:
                     return self.ask_for_credentials()
             else:
-                return self.ask_for_credentials()
+                return self.create_xmll_response(
+                    get_form_list(self.request, user_id, project_code, self.user)
+                )
         else:
             response = Response(status=404)
             return response

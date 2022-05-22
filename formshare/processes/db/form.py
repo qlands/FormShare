@@ -958,7 +958,7 @@ def get_assistant_forms(request, requested_project, assistant_project, assistant
         .filter(Formacces.project_id == assistant_project)
         .filter(Formacces.coll_id == assistant)
         .filter(Formacces.form_project == requested_project)
-        .filter(or_(Formacces.coll_privileges == 1, Formacces.coll_privileges == 3))
+        .filter(Formacces.coll_can_submit == 1)
         .filter(Odkform.form_accsub == 1)
         .all()
     )
@@ -981,12 +981,7 @@ def get_assistant_forms(request, requested_project, assistant_project, assistant
             .filter(Odkform.form_id == Formgrpacces.form_id)
             .filter(Formgrpacces.project_id == group.project_id)
             .filter(Formgrpacces.group_id == group.group_id)
-            .filter(
-                or_(
-                    Formgrpacces.group_privileges == 1,
-                    Formgrpacces.group_privileges == 3,
-                )
-            )
+            .filter(Formgrpacces.group_can_clean == 1)
             .filter(Odkform.form_accsub == 1)
             .all()
         )
@@ -1013,7 +1008,11 @@ def get_assistant_forms_for_cleaning(
 ):
     # Get all the forms that the user can submit data to and are active
     assistant_forms = (
-        request.dbsession.query(Odkform, Formacces.coll_privileges.label("privileges"))
+        request.dbsession.query(
+            Odkform,
+            Formacces.coll_can_clean.label("can_clean"),
+            Formacces.coll_can_submit.label("can_submit"),
+        )
         .filter(Odkform.project_id == Formacces.form_project)
         .filter(Odkform.form_id == Formacces.form_id)
         .filter(Formacces.project_id == assistant_project)
@@ -1037,7 +1036,9 @@ def get_assistant_forms_for_cleaning(
     for group in groups:
         res = (
             request.dbsession.query(
-                Odkform, Formgrpacces.group_privileges.label("privileges")
+                Odkform,
+                Formgrpacces.group_can_clean.label("can_clean"),
+                Formgrpacces.group_can_submit.label("can_submit"),
             )
             .filter(Odkform.project_id == Formgrpacces.form_project)
             .filter(Odkform.form_id == Formgrpacces.form_id)
@@ -1647,7 +1648,7 @@ def remove_assistant_from_form(request, project, form, from_project, assistant):
         return False, _("This form is blocked and cannot be changed at the moment.")
 
 
-def add_group_to_form(request, project, form, group, privilege):
+def add_group_to_form(request, project, form, group, can_submit, can_clean):
     _ = request.translate
     blocked = (
         request.dbsession.query(Odkform.form_blocked)
@@ -1662,7 +1663,8 @@ def add_group_to_form(request, project, form, group, privilege):
                 group_id=group,
                 form_project=project,
                 form_id=form,
-                group_privileges=privilege,
+                group_can_submit=can_submit,
+                group_can_clean=can_clean,
                 access_date=datetime.datetime.now(),
             )
             request.dbsession.add(new_access)
@@ -1699,7 +1701,7 @@ def get_form_groups(request, project, form):
     return mapped_data
 
 
-def update_group_privileges(request, project, form, group, privilege):
+def update_group_privileges(request, project, form, group, can_submit, can_clean):
     _ = request.translate
     blocked = (
         request.dbsession.query(Odkform.form_blocked)
@@ -1716,7 +1718,7 @@ def update_group_privileges(request, project, form, group, privilege):
             ).filter(
                 Formgrpacces.form_id == form
             ).update(
-                {"group_privileges": privilege}
+                {"group_can_submit": can_submit, "group_can_clean": can_clean}
             )
             request.dbsession.flush()
             return True, ""

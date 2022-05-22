@@ -366,13 +366,10 @@ def get_assistant_permissions_on_a_form(
         .first()
     )
     if assistant_access is not None:
-        if assistant_access.coll_privileges == 3:
-            privileges = {"enum_cansubmit": 1, "enum_canclean": 1}
-        else:
-            if assistant_access.coll_privileges == 1:
-                privileges = {"enum_cansubmit": 1, "enum_canclean": 0}
-            else:
-                privileges = {"enum_cansubmit": 0, "enum_canclean": 1}
+        privileges = {
+            "enum_cansubmit": assistant_access.coll_can_submit,
+            "enum_canclean": assistant_access.coll_can_clean,
+        }
 
     # Select the groups that user belongs to
     groups = (
@@ -392,13 +389,10 @@ def get_assistant_permissions_on_a_form(
             .first()
         )
         if res is not None:
-            if res.group_privileges == 3:
-                privileges = {"enum_cansubmit": 1, "enum_canclean": 1}
-            else:
-                if res.group_privileges == 1:
-                    privileges = {"enum_cansubmit": 1, "enum_canclean": 0}
-                else:
-                    privileges = {"enum_cansubmit": 0, "enum_canclean": 1}
+            privileges = {
+                "enum_cansubmit": res.group_can_submit,
+                "enum_canclean": res.group_can_clean,
+            }
 
     return privileges
 

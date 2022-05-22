@@ -1907,6 +1907,17 @@ class AddAssistant(PrivateView):
                 parts = assistant_data["coll_id"].split("|")
                 assistant_data["project_id"] = parts[0]
                 assistant_data["coll_id"] = parts[1]
+
+                if "coll_can_submit" in assistant_data.keys():
+                    assistant_data["coll_can_submit"] = 1
+                else:
+                    assistant_data["coll_can_submit"] = 0
+
+                if "coll_can_clean" in assistant_data.keys():
+                    assistant_data["coll_can_clean"] = 1
+                else:
+                    assistant_data["coll_can_clean"] = 0
+
                 if len(parts) == 2:
                     continue_creation = True
                     for plugin in p.PluginImplementations(p.IFormAccess):
@@ -2034,6 +2045,17 @@ class EditAssistant(PrivateView):
 
         if self.request.method == "POST":
             assistant_data = self.get_post_dict()
+
+            if "coll_can_submit" in assistant_data.keys():
+                assistant_data["coll_can_submit"] = 1
+            else:
+                assistant_data["coll_can_submit"] = 0
+
+            if "coll_can_clean" in assistant_data.keys():
+                assistant_data["coll_can_clean"] = 1
+            else:
+                assistant_data["coll_can_clean"] = 0
+
             continue_editing = True
             for plugin in p.PluginImplementations(p.IFormAccess):
                 data, continue_editing, error_message = plugin.before_editing_access(
@@ -2233,13 +2255,23 @@ class AddGroupToForm(PrivateView):
             assistant_data = self.get_post_dict()
             if "group_id" in assistant_data.keys():
                 if assistant_data["group_id"] != "":
-                    privilege = assistant_data["group_privilege"]
+                    if "group_can_submit" in assistant_data.keys():
+                        can_submit = 1
+                    else:
+                        can_submit = 0
+
+                    if "group_can_clean" in assistant_data.keys():
+                        can_clean = 1
+                    else:
+                        can_clean = 0
+
                     added, message = add_group_to_form(
                         self.request,
                         project_id,
                         form_id,
                         assistant_data["group_id"],
-                        privilege,
+                        can_submit,
+                        can_clean,
                     )
                     if added:
                         self.request.session.flash(
@@ -2320,9 +2352,18 @@ class EditFormGroup(PrivateView):
 
         if self.request.method == "POST":
             assistant_data = self.get_post_dict()
-            privilege = assistant_data["group_privilege"]
+            if "group_can_submit" in assistant_data.keys():
+                can_submit = 1
+            else:
+                can_submit = 0
+
+            if "group_can_clean" in assistant_data.keys():
+                can_clean = 1
+            else:
+                can_clean = 0
+
             updated, message = update_group_privileges(
-                self.request, project_id, form_id, group_id, privilege
+                self.request, project_id, form_id, group_id, can_submit, can_clean
             )
             if updated:
                 self.request.session.flash(self._("The role was changed successfully"))

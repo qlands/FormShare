@@ -34,6 +34,9 @@
                                 <div class="input-group">
                                     <input type="text" value="{{ request.route_url('project_details', userid=userid, projcode=projectData.project_code) }}" class="form-control"> <span class="input-group-append"> <a class="btn btn-white btn-bitbucket clipboard" data-clipboard-text="{{ request.route_url('project_details', userid=userid, projcode=projectData.project_code) }}" title="{{ _('Copy to clipboard') }}"><i class="far fa-copy"></i></a> </span>
                                 </div>
+                                {% if projectData.project_formlist_auth == 0 %}
+                                    <br/><span title="{{ _('Anyone can see the list of forms within this project') }}" class="label label-danger">{{ _('Crowdsourcing') }}</span>
+                                {% endif %}
                                 <hr>
                                 {% if projectData.project_abstract != None %}
                                     <textarea id="abstract_hidden" style="display:none;">{{ projectData.project_abstract }}</textarea>

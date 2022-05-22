@@ -33,7 +33,8 @@ class AssistantForms(AssistantView):
         for prj_form in project_forms:
             for ass_form in assistant_forms:
                 if prj_form["form_id"] == ass_form["form_id"]:
-                    prj_form["privileges"] = ass_form["privileges"]
+                    prj_form["can_clean"] = ass_form["can_clean"]
+                    prj_form["can_submit"] = ass_form["can_submit"]
                     forms.append(prj_form)
         for form in forms:
             (

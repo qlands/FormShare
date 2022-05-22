@@ -174,7 +174,6 @@ def add_assistant_to_group(request, project, group, assistant_project, assistant
         group_id=group,
         enum_project=assistant_project,
         coll_id=assistant,
-        coll_privileges=1,
         join_date=datetime.datetime.now(),
     )
     try:

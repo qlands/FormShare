@@ -107,6 +107,7 @@ class Project(Base):
     project_image = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     project_case = Column(INTEGER, server_default=text("'0'"))
     project_icon = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    project_formlist_auth = Column(INTEGER, server_default=text("'1'"))
     project_hexcolor = Column(Unicode(60))
     project_timezone = Column(
         ForeignKey("timezone.timezone_code", ondelete="RESTRICT"),
@@ -502,7 +503,6 @@ class Collingroup(Base):
     group_id = Column(Unicode(12), primary_key=True, nullable=False)
     enum_project = Column(Unicode(64), primary_key=True, nullable=False)
     coll_id = Column(Unicode(120), primary_key=True, nullable=False)
-    coll_privileges = Column(INTEGER)
     join_date = Column(DateTime)
 
     collaborator = relationship("Collaborator")
@@ -530,7 +530,9 @@ class Formacces(Base):
     coll_id = Column(Unicode(120), primary_key=True, nullable=False)
     form_project = Column(Unicode(64), primary_key=True, nullable=False)
     form_id = Column(Unicode(120), primary_key=True, nullable=False)
-    coll_privileges = Column(INTEGER)
+    coll_can_submit = Column(INTEGER, server_default=text("'0'"))
+    coll_can_clean = Column(INTEGER, server_default=text("'0'"))
+    coll_is_supervisor = Column(INTEGER, server_default=text("'0'"))
     access_date = Column(DateTime)
     extras = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 
@@ -559,7 +561,9 @@ class Formgrpacces(Base):
     group_id = Column(Unicode(12), primary_key=True, nullable=False)
     form_project = Column(Unicode(64), primary_key=True, nullable=False)
     form_id = Column(Unicode(120), primary_key=True, nullable=False)
-    group_privileges = Column(INTEGER)
+    group_can_submit = Column(INTEGER, server_default=text("'0'"))
+    group_can_clean = Column(INTEGER, server_default=text("'0'"))
+    group_is_supervisor = Column(INTEGER, server_default=text("'0'"))
     access_date = Column(DateTime)
     extras = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 

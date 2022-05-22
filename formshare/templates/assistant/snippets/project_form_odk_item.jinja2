@@ -17,17 +17,17 @@
                         <div class="progress-bar progress-bar-striped progress-bar-animated progress-bar-warning" style="width: {{ form.submissions*100/form.form_target }}%" role="progressbar" aria-valuenow="75" aria-valuemin="0" aria-valuemax="100"></div>
                     </div>
                 {% endif %}
-                Total: {{ form.submissions }} {% if form.form_target > 0 %}of {{ form.form_target }} {% endif %} submissions. {% if form.privileges == 2 or form.privileges == 3 %} {% if form.form_schema != None %} <strong><a href="{{ request.route_url('clean',userid=userid,projcode=projcode,formid=form.form_id) }}" class="text-success">{{ form.indb }} {{ _('in database') }}.</a> <a href="{{ request.route_url('errorlist',userid=userid,projcode=projcode,formid=form.form_id) }}" class="text-warning">{{ form.inlogs }} {{ _('in error logs') }}.</a>  <a href="{{ request.route_url('errorlist',userid=userid,projcode=projcode,formid=form.form_id) }}" class="text-danger">{{ form.inerror }} {{ _('with errors') }}</a>  </strong>{% endif %}{% endif %}
+                Total: {{ form.submissions }} {% if form.form_target > 0 %}of {{ form.form_target }} {% endif %} submissions. {% if form.can_clean == 1 %} {% if form.form_schema != None %} <strong><a href="{{ request.route_url('clean',userid=userid,projcode=projcode,formid=form.form_id) }}" class="text-success">{{ form.indb }} {{ _('in database') }}.</a> <a href="{{ request.route_url('errorlist',userid=userid,projcode=projcode,formid=form.form_id) }}" class="text-warning">{{ form.inlogs }} {{ _('in error logs') }}.</a>  <a href="{{ request.route_url('errorlist',userid=userid,projcode=projcode,formid=form.form_id) }}" class="text-danger">{{ form.inerror }} {{ _('with errors') }}</a>  </strong>{% endif %}{% endif %}
                 <br style="margin-top: 5px" />
-                {% if form.privileges == 1 or form.privileges == 3 %}
-                    {% if form.privileges == 3 %}
+                {% if form.can_submit == 1 or form.can_clean == 1 %}
+                    {% if form.can_clean == 1 %}
                         {{ _('My submissions') }}: {{ form.assistant_data.submissions }} {{ _('submissions') }}. {% if form.form_schema != None %}: <strong><a href="{{ request.route_url('clean',userid=userid,projcode=projcode,formid=form.form_id) }}" class="text-success">{{ form.assistant_data.indb }} {{ _('in database') }}.</a> <a href="{{ request.route_url('errorlist',userid=userid,projcode=projcode,formid=form.form_id) }}" class="text-warning">{{ form.assistant_data.inlogs }} {{ _('in error logs') }}.</a>  <a href="{{ request.route_url('errorlist',userid=userid,projcode=projcode,formid=form.form_id) }}" class="text-danger">{{ form.assistant_data.inerror }} {{ _('with errors') }}</a>  </strong>{% endif %}
                     {% else %}
                         {{ _('My submissions') }}: {{ form.assistant_data.submissions }} {{ _('submissions') }}. {% if form.form_schema != None %}: <strong><span class="text-success">{{ form.assistant_data.indb }} {{ _('in database') }}.</span> <span class="text-warning">{{ form.assistant_data.inlogs }} {{ _('in error logs') }}.</span>  <span class="text-danger">{{ form.assistant_data.inerror }} {{ _('with errors') }}</span>  </strong>{% endif %}
                     {% endif %}
                 {% endif %}
                 <div class="actions">
-                    {% if form.privileges == 1 or form.privileges == 3 %}
+                    {% if form.can_submit == 1 %}
                         <a data-toggle="modal" data-target="#qrcode" urn="{{ request.route_url('assistant_qr_code',userid=userid,projcode=projcode,formid=form.form_id) }}" class="btn btn-xs btn-white qrbutton"><i class="fas fa-qrcode"></i> {{ _('Show configuration QR') }} </a>
                     {% endif %}
                     {% if form.submissions > 0 %}

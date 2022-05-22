@@ -350,7 +350,7 @@ def get_one_assistant(db_session, project, form):
         db_session.query(Formacces)
         .filter(Formacces.form_project == project)
         .filter(Formacces.form_id == form)
-        .filter(or_(Formacces.coll_privileges == 1, Formacces.coll_privileges == 3))
+        .filter(Formacces.coll_can_submit == 1)
         .first()
     )
     if res is not None:
@@ -360,12 +360,7 @@ def get_one_assistant(db_session, project, form):
             db_session.query(Formgrpacces)
             .filter(Formgrpacces.form_project == project)
             .filter(Formgrpacces.form_id == form)
-            .filter(
-                or_(
-                    Formgrpacces.group_privileges == 1,
-                    Formgrpacces.group_privileges == 3,
-                )
-            )
+            .filter(Formgrpacces.group_can_submit == 1)
             .first()
         )
         if res is not None:

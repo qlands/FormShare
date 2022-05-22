@@ -31,16 +31,16 @@
                     <ul class="tag-list" style="padding: 0">
                         {% for group in formgroups %}
                             {% set group_role = _('Undefined') %}
-                            {% if group.group_privileges == 1 %}
+                            {% if group.group_can_submit == 1 %}
                                 {% set group_role = _('Submit') %}
                             {% endif %}
-                            {% if group.group_privileges == 2 %}
+                            {% if group.group_can_clean == 1 %}
                                 {% set group_role = _('Clean') %}
                             {% endif %}
-                            {% if group.group_privileges == 3 %}
+                            {% if group.group_can_submit == 1 and group.group_can_clean == 1 %}
                                 {% set group_role = _('Submit and clean') %}
                             {% endif %}
-                            <li><a title="{{ group_role }}" id="btn_edit_assistant" urn="{{ request.route_url('form_edit_group',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id,groupid=group.group_id) }}" data-toggle="modal" data-target="#edit_group" data-group-remove-url="{{ request.route_url('form_remove_group',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id,groupid=group.group_id) }}" data-group-role="{{ group.group_privileges }}" data-group-name="{{ group.group_desc }}" class="group-item"> {{ group.group_desc }}</a></li>
+                            <li><a title="{{ group_role }}" id="btn_edit_assistant" urn="{{ request.route_url('form_edit_group',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id,groupid=group.group_id) }}" data-toggle="modal" data-target="#edit_group" data-group-remove-url="{{ request.route_url('form_remove_group',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id,groupid=group.group_id) }}" data-group-can-submit="{{ group.group_can_submit }}" data-group-can-clean="{{ group.group_can_clean }}" data-group-name="{{ group.group_desc }}" class="group-item"> {{ group.group_desc }}</a></li>
                         {% endfor %}
                     </ul>
                 </div>

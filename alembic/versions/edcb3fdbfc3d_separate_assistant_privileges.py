@@ -7,8 +7,6 @@ Create Date: 2022-05-21 11:31:06.801347
 """
 from alembic import op
 import sqlalchemy as sa
-from formshare.models.formshare import Formacces, Formgrpacces
-from sqlalchemy.orm.session import Session
 
 # revision identifiers, used by Alembic.
 revision = "edcb3fdbfc3d"
@@ -69,30 +67,28 @@ def upgrade():
             nullable=True,
         ),
     )
-    session = Session(bind=op.get_bind())
+
+    conn = op.get_bind()
 
     # Separate the current assistant access
-    session.query(Formacces).filter(Formacces.coll_privileges == 1).update(
-        {"coll_can_submit": 1}
-    )
-    session.query(Formacces).filter(Formacces.coll_privileges == 2).update(
-        {"coll_can_clean": 1}
-    )
-    session.query(Formacces).filter(Formacces.coll_privileges == 3).update(
-        {"coll_can_submit": 1, "coll_can_clean": 1}
-    )
+    sql = "UPDATE formaccess SET coll_can_submit = 1, coll_can_clean = 0 WHERE coll_privileges = 1"
+    conn.execute(sql)
+
+    sql = "UPDATE formaccess SET coll_can_submit = 0, coll_can_clean = 1 WHERE coll_privileges = 2"
+    conn.execute(sql)
+
+    sql = "UPDATE formaccess SET coll_can_submit = 1, coll_can_clean = 1 WHERE coll_privileges = 3"
+    conn.execute(sql)
 
     # Separate curren group access
-    session.query(Formgrpacces).filter(Formgrpacces.group_privileges == 1).update(
-        {"group_can_submit": 1}
-    )
-    session.query(Formgrpacces).filter(Formgrpacces.group_privileges == 2).update(
-        {"group_can_clean": 1}
-    )
-    session.query(Formgrpacces).filter(Formgrpacces.group_privileges == 3).update(
-        {"group_can_submit": 1, "group_can_clean": 1}
-    )
-    session.commit()
+    sql = "UPDATE formgrpaccess SET group_can_submit = 1, group_can_clean = 0 WHERE group_privileges = 1"
+    conn.execute(sql)
+
+    sql = "UPDATE formgrpaccess SET group_can_submit = 0, group_can_clean = 1 WHERE group_privileges = 2"
+    conn.execute(sql)
+
+    sql = "UPDATE formgrpaccess SET group_can_submit = 1, group_can_clean = 1 WHERE group_privileges = 3"
+    conn.execute(sql)
 
 
 def downgrade():

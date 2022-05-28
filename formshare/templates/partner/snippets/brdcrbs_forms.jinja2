@@ -1,5 +1,5 @@
 <div class="col-sm-12">
-    <h2>{{ _('Partner outputs in Form') }} "{{ formDetails.form_name }}" of project "{{ projectDetails.project_name }}" {% if selected_timezone == 'project' and timezone != 'UTC'  %}<span class="badge badge-default" title=" {{ request.h.get_timezone_desc(request,projectDetails.project_timezone) }} ">UTC{{ request.h.get_timezone_offset(request,projectDetails.project_timezone) }}</span>{% endif %}</h2>
+    <h2>{{ _('Partner outputs in Form') }} "{{ formDetails.form_name }}" {{ _('of project') }} "{{ projectDetails.project_name }}" {% if selected_timezone == 'project' and timezone != 'UTC'  %}<span class="badge badge-default" title=" {{ request.h.get_timezone_desc(request,projectDetails.project_timezone) }} ">UTC{{ request.h.get_timezone_offset(request,projectDetails.project_timezone) }}</span>{% endif %}</h2>
     <ol class="breadcrumb">
         <li class="breadcrumb-item">
             <a href="{{ request.route_url("partner_forms") }}">{{ _('Dashboard') }}</a>

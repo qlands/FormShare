@@ -43,7 +43,7 @@
                 </div>
                 {% if formDetails.submissions > 0 %}
                     <div class="col-sm-8 text-sm-left">
-                        <dd class="mb-1">{{ request.h.readble_date_with_time(formDetails.last, request.locale_name, timezone) }} by {{ formDetails.bydetails.coll_name }}</dd>
+                        <dd class="mb-1">{{ request.h.readble_date_with_time(formDetails.last, request.locale_name, timezone) }} {% if projectDetails.project_formlist_auth == 1 %} {{ _('by') }} {{ formDetails.bydetails.coll_name }}{% endif %}</dd>
                     </div>
                 {% else %}
                     <div class="col-sm-8 text-sm-left">
@@ -59,10 +59,10 @@
                 {% if formDetails.form_schema != None %}
                     <dl class="row mb-0">
                         <div class="col-sm-4 text-sm-right">
-                            <dt>{{ _('Last cleaned') }}:</dt>
+                            <dt>{{ _('Last cleaned') }}: </dt>
                         </div>
                         <div class="col-sm-8 text-sm-left">
-                            {% if formDetails.cleanedlast == "" %}
+                            {% if formDetails.cleanedlast == "" or formDetails.cleanedlast == None %}
                                 <dd class="mb-1">{{ _('Not cleaned yet') }}</dd>
                             {% else %}
                                 <dd class="mb-1">{{ request.h.readble_date_with_time(formDetails.cleanedlast, request.locale_name, timezone) }} by {{ formDetails.cleanedby }}</dd>

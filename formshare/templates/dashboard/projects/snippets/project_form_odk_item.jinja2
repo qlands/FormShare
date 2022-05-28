@@ -35,7 +35,7 @@
 
                     <br>
                     {% if form.submissions > 0  %}
-                        <span class="text-muted">{{ _('Last submission') }}: {{ request.h.readble_date_with_time(form.last,request.locale_name,timezone) }} {{ _('by') }} <a class="text-info">{{ form.bydetails.coll_name }}</a></span><br>
+                        <span class="text-muted">{{ _('Last submission') }}: {{ request.h.readble_date_with_time(form.last,request.locale_name,timezone) }} {% if projectData.project_formlist_auth == 1 %} {{ _('by') }} <a class="text-info">{{ form.bydetails.coll_name }}</a>{% endif %}</span><br>
                     {% else %}
                         <span class="text-muted">{{ _('Without submissions') }}</span>
                     {% endif %}

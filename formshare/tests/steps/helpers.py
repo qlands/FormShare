@@ -1,0 +1,60 @@
+def t_e_s_t_helpers():
+    import formshare.plugins.helpers as helpers
+    import datetime
+
+    h = helpers.helper_functions
+    h.humanize_date(datetime.datetime.now())
+    h.humanize_date(datetime.datetime.now(), "es")
+    h.humanize_date(datetime.datetime.now(), "es")
+    h.get_version()
+    h.month_from_number(12, "en", True)
+    h.month_from_number("12", "es", False)
+
+    h.readble_date(datetime.datetime.now())
+    h.readble_date(datetime.datetime.now(), "es")
+    h.readble_date(datetime.datetime.now(), "es", "UTC")
+    h.readble_date("2021-12-12 12:12:12", "es", "UTC")
+    h.readble_date("some", "es", "UTC")
+    h.readble_date(1, "es", "UTC")
+    h.readble_date(None, "es", "UTC")
+
+    h.readble_date_with_time(datetime.datetime.now())
+    h.readble_date_with_time(datetime.datetime.now(), "es")
+    h.readble_date_with_time(datetime.datetime.now(), "es", "UTC")
+    h.readble_date_with_time("2021-12-12 12:12:12", "es", "UTC")
+    h.readble_date_with_time("some", "es", "UTC")
+    h.readble_date_with_time(1, "es", "UTC")
+    h.readble_date_with_time(None, "es", "UTC")
+
+    h.simple_date(datetime.datetime.now())
+    h.simple_date(datetime.datetime.now(), "UTC")
+    h.simple_date("2021-12-12 12:12:12", "UTC")
+    h.simple_date("some", "UTC")
+    h.simple_date(1, "UTC")
+    h.simple_date(None, "UTC")
+
+    h.simple_date_with_time(datetime.datetime.now())
+    h.simple_date_with_time(datetime.datetime.now(), "UTC")
+    h.simple_date_with_time("2021-12-12 12:12:12", "UTC")
+    h.simple_date_with_time("some", "UTC")
+    h.simple_date_with_time(1, "UTC")
+    h.simple_date_with_time(None, "UTC")
+
+    h.simple_date_usa(datetime.datetime.now())
+    h.simple_date_usa(datetime.datetime.now(), "UTC")
+    h.simple_date_usa("2021-12-12 12:12:12", "UTC")
+    h.simple_date_usa("some", "UTC")
+    h.simple_date_usa(1, "UTC")
+    h.simple_date_usa(None, "UTC")
+
+    h.pluralize("home", 1)
+    h.pluralize("home", 2)
+    h.pluralize("casa", 1, "es")
+    h.pluralize("casa", 2, "es")
+    h.is_valid_email("cquiros@qlands.com")
+    h.is_valid_url("https://formshare.org")
+    h.get_icon_from_mime_type("image")
+    h.get_icon_from_mime_type("video")
+    h.get_icon_from_mime_type("audio")
+    h.get_icon_from_mime_type("text/csv")
+    h.get_icon_from_mime_type("application/zip")

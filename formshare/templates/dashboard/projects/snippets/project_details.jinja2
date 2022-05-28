@@ -315,7 +315,7 @@
                                             </div>
                                             <div class="col-sm-8 text-sm-left">
                                                 {% if submissions > 0 %}
-                                                    <dd class="mb-1">{{ request.h.readble_date_with_time(last, request.locale_name, timezone) }} {{ _('by') }} <a class="text-info">{{ bydetails.coll_name }}</a></dd>
+                                                    <dd class="mb-1">{{ request.h.readble_date_with_time(last, request.locale_name, timezone) }} {% if projectData.project_formlist_auth == 1 %} {{ _('by') }} <a class="text-info">{{ bydetails.coll_name }}</a>{% endif %}</dd>
                                                 {% else %}
                                                     <dd class="mb-1"></dd>
                                                 {% endif %}

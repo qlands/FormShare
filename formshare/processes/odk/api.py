@@ -59,6 +59,8 @@ from formshare.processes.db import (
     get_case_form,
     get_field_details,
     get_assistant_password,
+    project_has_crowdsourcing,
+    get_all_project_forms,
 )
 from formshare.processes.elasticsearch.record_index import (
     add_record,
@@ -1785,7 +1787,10 @@ def get_form_list(request, user, project_code, assistant):
     assistant_project = get_project_from_assistant(request, user, project_id, assistant)
     prj_list = []
     odk_dir = get_odk_path(request)
-    forms = get_assistant_forms(request, project_id, assistant_project, assistant)
+    if not project_has_crowdsourcing(request, project_id):
+        forms = get_assistant_forms(request, project_id, assistant_project, assistant)
+    else:
+        forms = get_all_project_forms(request, project_id)
     for form in forms:
         path = os.path.join(odk_dir, *["forms", form["form_directory"], "*.json"])
         files = glob.glob(path)
@@ -2699,9 +2704,13 @@ def store_json_file(
                     stdout, stderr = p.communicate()
                     # An error 2 is an SQL error that goes to the logs
                     if p.returncode == 0 or p.returncode == 2:
-                        project_of_assistant = get_project_from_assistant(
-                            request, user, project, assistant
-                        )
+                        if not project_has_crowdsourcing(request, project):
+                            project_of_assistant = get_project_from_assistant(
+                                request, user, project, assistant
+                            )
+                        else:
+                            project_of_assistant = None
+                            assistant = None
                         added, message = add_submission(
                             request,
                             project,
@@ -3252,7 +3261,7 @@ def store_submission(request, user, project, assistant):
                     if form_data["form_blocked"] == 0:
                         if assistant_has_form(
                             request, user, project, xform_id, assistant
-                        ):
+                        ) or project_has_crowdsourcing(request, project):
                             media_path = os.path.join(
                                 odk_dir,
                                 *[

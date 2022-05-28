@@ -18,6 +18,7 @@ from formshare.models import (
 )
 from formshare.models import Odkform as Form
 from formshare.processes.db.assistant import get_project_from_assistant
+from formshare.processes.db.project import project_has_crowdsourcing
 
 log = logging.getLogger("formshare")
 
@@ -169,53 +170,114 @@ def get_last_log_entry(request, user, project, form, submission_id):
 
 
 def get_submission_details(request, project, form, submission):
-    res = (
-        request.dbsession.query(Submission, Collaborator)
-        .filter(Submission.enum_project == Collaborator.project_id)
-        .filter(Submission.coll_id == Collaborator.coll_id)
-        .filter(Submission.project_id == project)
-        .filter(Submission.form_id == form)
-        .filter(Submission.submission_id == submission)
-        .first()
-    )
+    if not project_has_crowdsourcing(request, project):
+        res = (
+            request.dbsession.query(Submission, Collaborator)
+            .filter(Submission.enum_project == Collaborator.project_id)
+            .filter(Submission.coll_id == Collaborator.coll_id)
+            .filter(Submission.project_id == project)
+            .filter(Submission.form_id == form)
+            .filter(Submission.submission_id == submission)
+            .first()
+        )
 
-    if res is not None:
-        mapped_data = map_from_schema(res)
-        return {
-            "submission_dtime": mapped_data["submission_dtime"],
-            "submission_id": mapped_data["submission_id"],
-            "enum_name": mapped_data["coll_name"],
-            "submission_status": mapped_data["submission_status"],
-        }
+        if res is not None:
+            mapped_data = map_from_schema(res)
+            return {
+                "submission_dtime": mapped_data["submission_dtime"],
+                "submission_id": mapped_data["submission_id"],
+                "enum_name": mapped_data["coll_name"],
+                "submission_status": mapped_data["submission_status"],
+            }
+        else:
+            return None
     else:
-        return None
+        res = (
+            request.dbsession.query(Submission)
+            .filter(Submission.project_id == project)
+            .filter(Submission.form_id == form)
+            .filter(Submission.submission_id == submission)
+            .first()
+        )
+
+        if res is not None:
+            mapped_data = map_from_schema(res)
+            return {
+                "submission_dtime": mapped_data["submission_dtime"],
+                "submission_id": mapped_data["submission_id"],
+                "enum_name": "public",
+                "submission_status": mapped_data["submission_status"],
+            }
+        else:
+            return None
 
 
 def get_submission_error_details(request, project, form, submission):
-    res = (
-        request.dbsession.query(Jsonlog, Collaborator)
-        .filter(Jsonlog.enum_project == Collaborator.project_id)
-        .filter(Jsonlog.coll_id == Collaborator.coll_id)
-        .filter(Jsonlog.project_id == project)
-        .filter(Jsonlog.form_id == form)
-        .filter(Jsonlog.log_id == submission)
-        .first()
-    )
+    if not project_has_crowdsourcing(request, project):
+        res = (
+            request.dbsession.query(Jsonlog, Collaborator)
+            .filter(Jsonlog.enum_project == Collaborator.project_id)
+            .filter(Jsonlog.coll_id == Collaborator.coll_id)
+            .filter(Jsonlog.project_id == project)
+            .filter(Jsonlog.form_id == form)
+            .filter(Jsonlog.log_id == submission)
+            .first()
+        )
 
-    if res is not None:
-        mapped_data = map_from_schema(res)
-        return {
-            "log_dtime": mapped_data["log_dtime"],
-            "json_file": mapped_data["json_file"],
-            "enum_name": mapped_data["coll_name"],
-            "status": mapped_data["status"],
-            "log_file": mapped_data["log_file"],
-        }
+        if res is not None:
+            mapped_data = map_from_schema(res)
+            return {
+                "log_dtime": mapped_data["log_dtime"],
+                "json_file": mapped_data["json_file"],
+                "enum_name": mapped_data["coll_name"],
+                "status": mapped_data["status"],
+                "log_file": mapped_data["log_file"],
+            }
+        else:
+            return None
     else:
-        return None
+        res = (
+            request.dbsession.query(Jsonlog)
+            .filter(Jsonlog.project_id == project)
+            .filter(Jsonlog.form_id == form)
+            .filter(Jsonlog.log_id == submission)
+            .first()
+        )
+
+        if res is not None:
+            mapped_data = map_from_schema(res)
+            return {
+                "log_dtime": mapped_data["log_dtime"],
+                "json_file": mapped_data["json_file"],
+                "enum_name": "public",
+                "status": mapped_data["status"],
+                "log_file": mapped_data["log_file"],
+            }
+        else:
+            return None
 
 
 def get_number_of_errors_by_assistant(request, project, form, assistant, with_status):
+    if project_has_crowdsourcing(request, project):
+        if with_status is None:
+            res = (
+                request.dbsession.query(Jsonlog)
+                .filter(Jsonlog.project_id == project)
+                .filter(Jsonlog.form_id == form)
+                .order_by(Jsonlog.log_dtime.desc())
+                .count()
+            )
+            return res
+        else:
+            res = (
+                request.dbsession.query(Jsonlog)
+                .filter(Jsonlog.project_id == project)
+                .filter(Jsonlog.form_id == form)
+                .filter(Jsonlog.status == with_status)
+                .order_by(Jsonlog.log_dtime.desc())
+                .count()
+            )
+            return res
     if assistant is None:
         if with_status is None:
             res = (
@@ -280,73 +342,134 @@ def apply_limit(start, page_size):
 def get_errors_by_assistant(
     request, user, project, form, assistant, start, page_size, with_status
 ):
-    result = []
-    if assistant is None:
-        if with_status is None:
-            query = (
-                request.dbsession.query(Jsonlog, Collaborator)
-                .filter(Jsonlog.enum_project == Collaborator.project_id)
-                .filter(Jsonlog.coll_id == Collaborator.coll_id)
-                .filter(Jsonlog.project_id == project)
-                .filter(Jsonlog.form_id == form)
-                .order_by(Jsonlog.log_dtime.desc())
-            )
+    if not project_has_crowdsourcing(request, project):
+        result = []
+        if assistant is None:
+            if with_status is None:
+                query = (
+                    request.dbsession.query(Jsonlog, Collaborator)
+                    .filter(Jsonlog.enum_project == Collaborator.project_id)
+                    .filter(Jsonlog.coll_id == Collaborator.coll_id)
+                    .filter(Jsonlog.project_id == project)
+                    .filter(Jsonlog.form_id == form)
+                    .order_by(Jsonlog.log_dtime.desc())
+                )
+            else:
+                query = (
+                    request.dbsession.query(Jsonlog, Collaborator)
+                    .filter(Jsonlog.enum_project == Collaborator.project_id)
+                    .filter(Jsonlog.coll_id == Collaborator.coll_id)
+                    .filter(Jsonlog.project_id == project)
+                    .filter(Jsonlog.form_id == form)
+                    .filter(Jsonlog.status == with_status)
+                    .order_by(Jsonlog.log_dtime.desc())
+                )
+            listen(query, "before_compile", apply_limit(start, page_size), retval=True)
+            res = query.all()
         else:
-            query = (
-                request.dbsession.query(Jsonlog, Collaborator)
-                .filter(Jsonlog.enum_project == Collaborator.project_id)
-                .filter(Jsonlog.coll_id == Collaborator.coll_id)
-                .filter(Jsonlog.project_id == project)
-                .filter(Jsonlog.form_id == form)
-                .filter(Jsonlog.status == with_status)
-                .order_by(Jsonlog.log_dtime.desc())
-            )
-        listen(query, "before_compile", apply_limit(start, page_size), retval=True)
-        res = query.all()
-    else:
-        if with_status is None:
-            query = (
-                request.dbsession.query(Jsonlog, Collaborator)
-                .filter(Jsonlog.enum_project == Collaborator.project_id)
-                .filter(Jsonlog.coll_id == Collaborator.coll_id)
-                .filter(Jsonlog.project_id == project)
-                .filter(Jsonlog.coll_id == assistant)
-                .filter(Jsonlog.form_id == form)
-                .order_by(Jsonlog.log_dtime.desc())
-            )
-        else:
-            query = (
-                request.dbsession.query(Jsonlog, Collaborator)
-                .filter(Jsonlog.enum_project == Collaborator.project_id)
-                .filter(Jsonlog.coll_id == Collaborator.coll_id)
-                .filter(Jsonlog.project_id == project)
-                .filter(Jsonlog.coll_id == assistant)
-                .filter(Jsonlog.form_id == form)
-                .filter(Jsonlog.status == with_status)
-                .order_by(Jsonlog.log_dtime.desc())
-            )
-        listen(query, "before_compile", apply_limit(start, page_size), retval=True)
-        res = query.all()
+            if with_status is None:
+                query = (
+                    request.dbsession.query(Jsonlog, Collaborator)
+                    .filter(Jsonlog.enum_project == Collaborator.project_id)
+                    .filter(Jsonlog.coll_id == Collaborator.coll_id)
+                    .filter(Jsonlog.project_id == project)
+                    .filter(Jsonlog.coll_id == assistant)
+                    .filter(Jsonlog.form_id == form)
+                    .order_by(Jsonlog.log_dtime.desc())
+                )
+            else:
+                query = (
+                    request.dbsession.query(Jsonlog, Collaborator)
+                    .filter(Jsonlog.enum_project == Collaborator.project_id)
+                    .filter(Jsonlog.coll_id == Collaborator.coll_id)
+                    .filter(Jsonlog.project_id == project)
+                    .filter(Jsonlog.coll_id == assistant)
+                    .filter(Jsonlog.form_id == form)
+                    .filter(Jsonlog.status == with_status)
+                    .order_by(Jsonlog.log_dtime.desc())
+                )
+            listen(query, "before_compile", apply_limit(start, page_size), retval=True)
+            res = query.all()
 
-    json_errors = map_from_schema(res)
-    for error in json_errors:
-        result.append(
-            {
-                "log_id": error["log_id"],
-                "log_dtime": error["log_dtime"],
-                "json_file": error["json_file"],
-                "error": get_error_description_from_file(
-                    request, project, form, error["log_file"]
-                ),
-                "status": error["status"],
-                "lastentry": get_last_log_entry(
-                    request, user, project, form, error["log_id"]
-                ),
-                "enum_name": error["coll_name"],
-                "log_short": error["log_id"][-12:],
-            }
-        )
-    return result
+        json_errors = map_from_schema(res)
+        for error in json_errors:
+            result.append(
+                {
+                    "log_id": error["log_id"],
+                    "log_dtime": error["log_dtime"],
+                    "json_file": error["json_file"],
+                    "error": get_error_description_from_file(
+                        request, project, form, error["log_file"]
+                    ),
+                    "status": error["status"],
+                    "lastentry": get_last_log_entry(
+                        request, user, project, form, error["log_id"]
+                    ),
+                    "enum_name": error["coll_name"],
+                    "log_short": error["log_id"][-12:],
+                }
+            )
+        return result
+    else:
+        result = []
+        if assistant is None:
+            if with_status is None:
+                query = (
+                    request.dbsession.query(Jsonlog)
+                    .filter(Jsonlog.project_id == project)
+                    .filter(Jsonlog.form_id == form)
+                    .order_by(Jsonlog.log_dtime.desc())
+                )
+            else:
+                query = (
+                    request.dbsession.query(Jsonlog)
+                    .filter(Jsonlog.project_id == project)
+                    .filter(Jsonlog.form_id == form)
+                    .filter(Jsonlog.status == with_status)
+                    .order_by(Jsonlog.log_dtime.desc())
+                )
+            listen(query, "before_compile", apply_limit(start, page_size), retval=True)
+            res = query.all()
+        else:
+            if with_status is None:
+                query = (
+                    request.dbsession.query(Jsonlog)
+                    .filter(Jsonlog.project_id == project)
+                    .filter(Jsonlog.coll_id == assistant)
+                    .filter(Jsonlog.form_id == form)
+                    .order_by(Jsonlog.log_dtime.desc())
+                )
+            else:
+                query = (
+                    request.dbsession.query(Jsonlog)
+                    .filter(Jsonlog.project_id == project)
+                    .filter(Jsonlog.coll_id == assistant)
+                    .filter(Jsonlog.form_id == form)
+                    .filter(Jsonlog.status == with_status)
+                    .order_by(Jsonlog.log_dtime.desc())
+                )
+            listen(query, "before_compile", apply_limit(start, page_size), retval=True)
+            res = query.all()
+
+        json_errors = map_from_schema(res)
+        for error in json_errors:
+            result.append(
+                {
+                    "log_id": error["log_id"],
+                    "log_dtime": error["log_dtime"],
+                    "json_file": error["json_file"],
+                    "error": get_error_description_from_file(
+                        request, project, form, error["log_file"]
+                    ),
+                    "status": error["status"],
+                    "lastentry": get_last_log_entry(
+                        request, user, project, form, error["log_id"]
+                    ),
+                    "enum_name": "public",
+                    "log_short": error["log_id"][-12:],
+                }
+            )
+        return result
 
 
 def get_assistant_permissions_on_a_form(

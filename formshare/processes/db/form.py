@@ -8,7 +8,6 @@ import os
 import shutil
 import uuid
 
-from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 
 from formshare.models import (
@@ -101,6 +100,7 @@ __all__ = [
     "alias_exists",
     "form_has_subversion",
     "field_exists",
+    "get_all_project_forms",
 ]
 
 log = logging.getLogger("formshare")
@@ -946,6 +946,14 @@ def get_project_forms(request, user, project):
                 else:
                     form["parent_form_data"] = None
 
+    return forms
+
+
+def get_all_project_forms(request, project_id):
+    res = (
+        request.dbsession.query(Odkform).filter(Odkform.project_id == project_id).all()
+    )
+    forms = map_from_schema(res)
     return forms
 
 

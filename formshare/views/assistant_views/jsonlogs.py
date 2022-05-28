@@ -141,6 +141,7 @@ class JSONList(AssistantView):
                 "formData": form_data,
                 "allPages": all_pages,
                 "status": status,
+                "project_has_crowdsourcing": self.project_has_crowdsourcing,
             }
         else:
             raise HTTPNotFound()
@@ -213,6 +214,7 @@ class JSONCompare(AssistantView):
                         "compData": comp_data,
                         "diff": diff,
                         "formData": form_data,
+                        "project_has_crowdsourcing": self.project_has_crowdsourcing,
                     }
                 else:
                     raise HTTPNotFound()

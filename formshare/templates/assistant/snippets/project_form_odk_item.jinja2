@@ -8,7 +8,7 @@
                 <span class="float-right">{{ _('Uploaded on') }} {{ request.h.readble_date_with_time(form.form_cdate, request.locale_name, timezone) }}</span>
                 <strong>{{ form.form_name }}</strong><br/>
                 {% if form.last != None %}
-                    <span class="text-muted">{{ _('Last submission') }}: {{ request.h.readble_date_with_time(form.last, request.locale_name, timezone) }} {{ _('by') }} <span class="text-info">{{ form.bydetails.coll_name }}</span></span><br/>
+                    <span class="text-muted">{{ _('Last submission') }}: {{ request.h.readble_date_with_time(form.last, request.locale_name, timezone) }} {% if projectDetails.project_formlist_auth == 1 %} {{ _('by') }} <span class="text-info">{{ form.bydetails.coll_name }}</span>{% endif %}</span><br/>
                 {% else %}
                     <span class="text-muted">{{ _('Without submissions') }}</span>
                 {% endif %}

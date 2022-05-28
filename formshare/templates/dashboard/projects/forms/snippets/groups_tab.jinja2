@@ -30,7 +30,7 @@
                     {% endif %}
                     <ul class="tag-list" style="padding: 0">
                         {% for group in formgroups %}
-                            {% set group_role = _('Undefined') %}
+                            {% set group_role = _('Without privileges') %}
                             {% if group.group_can_submit == 1 %}
                                 {% set group_role = _('Submit') %}
                             {% endif %}

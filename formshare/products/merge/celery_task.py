@@ -12,7 +12,6 @@ import transaction
 from celery.utils.log import get_task_logger
 from lxml import etree
 from sqlalchemy import create_engine
-from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import configure_mappers
 
@@ -30,6 +29,7 @@ from formshare.models import (
     Collingroup,
     DictTable,
     DictField,
+    Project,
 )
 from formshare.processes.elasticsearch.repository_index import delete_dataset_from_index
 from formshare.processes.email.send_async_email import send_async_email
@@ -346,6 +346,14 @@ def get_geopoint_variable(db_session, project, form):
 
 
 def get_one_assistant(db_session, project, form):
+    res = (
+        db_session.query(Project.project_formlist_auth)
+        .filter(Project.project_id == project)
+        .first()
+    )
+    if res[0] == 0:
+        return "public", "public"
+
     res = (
         db_session.query(Formacces)
         .filter(Formacces.form_project == project)
@@ -806,8 +814,8 @@ def internal_merge_into_repository(
                     email_to,
                     "Error while importing testing files",
                     "The process was not able to find an assistant. \n\n"
-                    "The testing files are in {}. You can import them later on".format(
-                        temp_path
+                    "The testing files for form {} of project {} are in {}. You can import them later on".format(
+                        a_form_id, project_id, temp_path
                     ),
                     None,
                     locale,

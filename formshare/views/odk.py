@@ -1,5 +1,4 @@
 from pyramid.response import Response
-
 from formshare.processes.db import (
     get_project_id_from_name,
     is_assistant_active,
@@ -55,56 +54,7 @@ class ODKPushData(ODKView):
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         if project_id is not None:
             if self.request.method == "POST":
-                if is_assistant_active(self.request, user_id, project_id, self.user):
-                    if self.authorize(
-                        get_assistant_password(
-                            self.request, user_id, project_id, self.user
-                        )
-                    ):
-                        stored, error = store_submission(
-                            self.request, user_id, project_id, self.user
-                        )
-                        if stored:
-                            response = Response(status=201)
-                            return response
-                        else:
-                            response = Response(status=error)
-                            return response
-                    else:
-                        return self.ask_for_credentials()
-                else:
-                    response = Response(status=401)
-                    return response
-            else:
-                response = Response(status=404)
-                return response
-        else:
-            response = Response(status=404)
-            return response
-
-
-class ODKSubmission(ODKView):
-    def process_view(self):
-        project_code = self.request.matchdict["projcode"]
-        user_id = self.request.matchdict["userid"]
-        project_id = get_project_id_from_name(self.request, user_id, project_code)
-        if project_id is not None:
-            if self.request.method == "HEAD":
-                if is_assistant_active(self.request, user_id, project_id, self.user):
-                    headers = [
-                        (
-                            "Location",
-                            self.request.route_url(
-                                "odkpush", userid=user_id, projcode=project_code
-                            ),
-                        )
-                    ]
-                    response = Response(headerlist=headers, status=204)
-                    return response
-                else:
-                    return self.ask_for_credentials()
-            else:
-                if self.request.method == "POST":
+                if not project_has_crowdsourcing(self.request, project_id):
                     if is_assistant_active(
                         self.request, user_id, project_id, self.user
                     ):
@@ -125,7 +75,96 @@ class ODKSubmission(ODKView):
                         else:
                             return self.ask_for_credentials()
                     else:
+                        response = Response(status=401)
+                        return response
+                else:
+                    self.user = "public"
+                    stored, error = store_submission(
+                        self.request, user_id, project_id, self.user
+                    )
+                    if stored:
+                        response = Response(status=201)
+                        return response
+                    else:
+                        response = Response(status=error)
+                        return response
+            else:
+                response = Response(status=404)
+                return response
+        else:
+            response = Response(status=404)
+            return response
+
+
+class ODKSubmission(ODKView):
+    def process_view(self):
+        project_code = self.request.matchdict["projcode"]
+        user_id = self.request.matchdict["userid"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        if project_id is not None:
+            if self.request.method == "HEAD":
+                if not project_has_crowdsourcing(self.request, project_id):
+                    if is_assistant_active(
+                        self.request, user_id, project_id, self.user
+                    ):
+                        headers = [
+                            (
+                                "Location",
+                                self.request.route_url(
+                                    "odkpush", userid=user_id, projcode=project_code
+                                ),
+                            )
+                        ]
+                        response = Response(headerlist=headers, status=204)
+                        return response
+                    else:
                         return self.ask_for_credentials()
+                else:
+                    headers = [
+                        (
+                            "Location",
+                            self.request.route_url(
+                                "odkpush", userid=user_id, projcode=project_code
+                            ),
+                        )
+                    ]
+                    response = Response(headerlist=headers, status=204)
+                    return response
+            else:
+                if self.request.method == "POST":
+                    if not project_has_crowdsourcing(self.request, project_id):
+                        if is_assistant_active(
+                            self.request, user_id, project_id, self.user
+                        ):
+                            if self.authorize(
+                                get_assistant_password(
+                                    self.request, user_id, project_id, self.user
+                                )
+                            ):
+                                stored, error = store_submission(
+                                    self.request, user_id, project_id, self.user
+                                )
+                                if stored:
+                                    response = Response(status=201)
+                                    return response
+                                else:
+                                    response = Response(status=error)
+                                    return response
+                            else:
+                                return self.ask_for_credentials()
+                        else:
+                            return self.ask_for_credentials()
+                    else:
+                        self.user = "public"
+                        stored, error = store_submission(
+                            self.request, user_id, project_id, self.user
+                        )
+                        if stored:
+                            response = Response(status=201)
+                            return response
+                        else:
+                            response = Response(status=error)
+                            return response
                 else:
                     response = Response(status=404)
                     return response
@@ -141,22 +180,25 @@ class ODKXMLForm(ODKView):
         user_id = self.request.matchdict["userid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         if project_id is not None:
-            if is_assistant_active(self.request, user_id, project_id, self.user):
-                if assistant_has_form(
-                    self.request, user_id, project_id, form_id, self.user
-                ):
-                    if self.authorize(
-                        get_assistant_password(
-                            self.request, user_id, project_id, self.user
-                        )
+            if not project_has_crowdsourcing(self.request, project_id):
+                if is_assistant_active(self.request, user_id, project_id, self.user):
+                    if assistant_has_form(
+                        self.request, user_id, project_id, form_id, self.user
                     ):
-                        return get_xml_form(self.request, project_id, form_id)
+                        if self.authorize(
+                            get_assistant_password(
+                                self.request, user_id, project_id, self.user
+                            )
+                        ):
+                            return get_xml_form(self.request, project_id, form_id)
+                        else:
+                            return self.ask_for_credentials()
                     else:
                         return self.ask_for_credentials()
                 else:
                     return self.ask_for_credentials()
             else:
-                return self.ask_for_credentials()
+                return get_xml_form(self.request, project_id, form_id)
         else:
             response = Response(status=404)
             return response
@@ -169,26 +211,37 @@ class ODKManifest(ODKView):
         user_id = self.request.matchdict["userid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         if project_id is not None:
-            if is_assistant_active(self.request, user_id, project_id, self.user):
-                if assistant_has_form(
-                    self.request, user_id, project_id, form_id, self.user
-                ):
-                    if self.authorize(
-                        get_assistant_password(
-                            self.request, user_id, project_id, self.user
-                        )
+            if not project_has_crowdsourcing(self.request, project_id):
+                if is_assistant_active(self.request, user_id, project_id, self.user):
+                    if assistant_has_form(
+                        self.request, user_id, project_id, form_id, self.user
                     ):
-                        return self.create_xmll_response(
-                            get_manifest(
-                                self.request, user_id, project_code, project_id, form_id
+                        if self.authorize(
+                            get_assistant_password(
+                                self.request, user_id, project_id, self.user
                             )
-                        )
+                        ):
+                            return self.create_xmll_response(
+                                get_manifest(
+                                    self.request,
+                                    user_id,
+                                    project_code,
+                                    project_id,
+                                    form_id,
+                                )
+                            )
+                        else:
+                            return self.ask_for_credentials()
                     else:
                         return self.ask_for_credentials()
                 else:
                     return self.ask_for_credentials()
             else:
-                return self.ask_for_credentials()
+                return self.create_xmll_response(
+                    get_manifest(
+                        self.request, user_id, project_code, project_id, form_id
+                    )
+                )
         else:
             response = Response(status=404)
             return response
@@ -202,24 +255,27 @@ class ODKMediaFile(ODKView):
         user_id = self.request.matchdict["userid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         if project_id is not None:
-            if is_assistant_active(self.request, user_id, project_id, self.user):
-                if assistant_has_form(
-                    self.request, user_id, project_id, form_id, self.user
-                ):
-                    if self.authorize(
-                        get_assistant_password(
-                            self.request, user_id, project_id, self.user
-                        )
+            if not project_has_crowdsourcing(self.request, project_id):
+                if is_assistant_active(self.request, user_id, project_id, self.user):
+                    if assistant_has_form(
+                        self.request, user_id, project_id, form_id, self.user
                     ):
-                        return get_media_file(
-                            self.request, project_id, form_id, file_id
-                        )
+                        if self.authorize(
+                            get_assistant_password(
+                                self.request, user_id, project_id, self.user
+                            )
+                        ):
+                            return get_media_file(
+                                self.request, project_id, form_id, file_id
+                            )
+                        else:
+                            return self.ask_for_credentials()
                     else:
                         return self.ask_for_credentials()
                 else:
                     return self.ask_for_credentials()
             else:
-                return self.ask_for_credentials()
+                return get_media_file(self.request, project_id, form_id, file_id)
         else:
             response = Response(status=404)
             return response

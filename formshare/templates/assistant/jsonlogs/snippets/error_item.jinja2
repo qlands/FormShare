@@ -10,7 +10,7 @@
     <div class="row">
         <div class="col-md-3">
             <div class="text-center">
-                <span title="{{ error.log_id }}">...-{{ error.log_short }}</span> <button class="btn btn-white btn-bitbucket clipboard" data-clipboard-text="{{ error.log_id }}" title="{{ _('Copy submission to clipboard') }}"><i class="far fa-copy"></i></button><br/>{% if error.error.moved %}{{ _('for') }}{% else %}{{ _('by') }}{% endif %} {{ error.enum_name }}<br/>
+                <span title="{{ error.log_id }}">...-{{ error.log_short }}</span> <button class="btn btn-white btn-bitbucket clipboard" data-clipboard-text="{{ error.log_id }}" title="{{ _('Copy submission to clipboard') }}"><i class="far fa-copy"></i></button>{% if project_has_crowdsourcing == False or error.error.moved %}<br/>{% endif %}{% if error.error.moved %}{{ _('for') }}{% else %}{% if project_has_crowdsourcing == False %}{{ _('by') }}{% endif %}{% endif %} {% if project_has_crowdsourcing == False %}{{ error.enum_name }}{% endif %}<br/>
                 {{ request.h.simple_date_with_time(error.log_dtime, timezone) }}
             </div>
         </div>

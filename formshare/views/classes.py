@@ -43,6 +43,7 @@ from formshare.processes.db import (
     get_timezones,
     timezone_exists,
     get_assistant_by_api_key,
+    project_has_crowdsourcing,
 )
 
 log = logging.getLogger("formshare")
@@ -620,6 +621,7 @@ class AssistantView(object):
     def __init__(self, request):
         self.request = request
         self.projectID = ""
+        self.project_has_crowdsourcing = False
         self.userID = ""
         self.projectCode = ""
         self.assistant = None
@@ -699,6 +701,9 @@ class AssistantView(object):
         self.projectCode = self.request.matchdict["projcode"]
         self.projectID = get_project_id_from_name(
             self.request, self.userID, self.projectCode
+        )
+        self.project_has_crowdsourcing = project_has_crowdsourcing(
+            self.request, self.projectID
         )
         if self.projectID is None:
             raise HTTPNotFound()

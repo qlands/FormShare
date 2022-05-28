@@ -35,21 +35,36 @@ def add_submission(
     status,
 ):
     try:
-        engine.execute(
-            "INSERT INTO submission (project_id,form_id,submission_id,submission_dtime,submission_status,"
-            "enum_project,coll_id,md5sum,original_md5sum)"
-            " VALUES ('{}','{}','{}','{}','{}','{}','{}','{}','{}')".format(
-                project,
-                form,
-                submission,
-                datetime.datetime.now().isoformat(),
-                status,
-                project_of_assistant,
-                assistant,
-                md5sum,
-                original_md5,
+        if project_of_assistant != "public" and assistant != "public":
+            engine.execute(
+                "INSERT INTO submission (project_id,form_id,submission_id,submission_dtime,submission_status,"
+                "enum_project,coll_id,md5sum,original_md5sum)"
+                " VALUES ('{}','{}','{}','{}','{}','{}','{}','{}','{}')".format(
+                    project,
+                    form,
+                    submission,
+                    datetime.datetime.now().isoformat(),
+                    status,
+                    project_of_assistant,
+                    assistant,
+                    md5sum,
+                    original_md5,
+                )
             )
-        )
+        else:
+            engine.execute(
+                "INSERT INTO submission (project_id,form_id,submission_id,submission_dtime,submission_status,"
+                "enum_project,coll_id,md5sum,original_md5sum)"
+                " VALUES ('{}','{}','{}','{}','{}',null,null,'{}','{}')".format(
+                    project,
+                    form,
+                    submission,
+                    datetime.datetime.now().isoformat(),
+                    status,
+                    md5sum,
+                    original_md5,
+                )
+            )
     except Exception as e:
         return False, str(e)
     return True, ""
@@ -68,21 +83,39 @@ def add_json_log(
     command_executed,
 ):
     try:
-        engine.execute(
-            "INSERT INTO jsonlog (form_id,project_id,log_id,log_dtime,json_file,log_file,status,"
-            "enum_project,coll_id,command_executed) values ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')".format(
-                form,
-                project,
-                submission,
-                datetime.datetime.now().isoformat(),
-                json_file,
-                log_file,
-                status,
-                project_of_assistant,
-                assistant,
-                command_executed.replace("'", "|"),
+        if project_of_assistant != "public" and assistant != "public":
+            engine.execute(
+                "INSERT INTO jsonlog (form_id,project_id,log_id,log_dtime,json_file,log_file,status,"
+                "enum_project,coll_id,command_executed) values ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')".format(
+                    form,
+                    project,
+                    submission,
+                    datetime.datetime.now().isoformat(),
+                    json_file,
+                    log_file,
+                    status,
+                    project_of_assistant,
+                    assistant,
+                    command_executed.replace("'", "|"),
+                )
             )
-        )
+        else:
+            engine.execute(
+                "INSERT INTO jsonlog (form_id,project_id,log_id,log_dtime,json_file,log_file,status,"
+                "enum_project,coll_id,command_executed) "
+                "values ('{}','{}','{}','{}','{}','{}','{}',null,null,'{}')".format(
+                    form,
+                    project,
+                    submission,
+                    datetime.datetime.now().isoformat(),
+                    json_file,
+                    log_file,
+                    status,
+                    project_of_assistant,
+                    assistant,
+                    command_executed.replace("'", "|"),
+                )
+            )
     except Exception as e:
         return False, str(e)
     return True, ""

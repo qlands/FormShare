@@ -22,7 +22,11 @@
                         <div class="form-group">
                             <label class="col-sm-2 col-form-label">{{ _('Privileges') }}</label>
                             <div class="col-sm-10">
-                                <label><input type="checkbox" name="group_can_submit"> {{ _('Can Submit') }}</label><br/>
+                                {% if projectDetails.project_formlist_auth == 1 %}
+                                    <label><input type="checkbox" name="group_can_submit"> {{ _('Can submit') }}</label><br/>
+                                {% else %}
+                                    <label class="text-danger"> {{ _('Anybody can submit') }}</label><br/>
+                                {% endif %}
                                 <label><input type="checkbox" name="group_can_clean"> {{ _('Can clean') }}</label><br/>
                             </div>
                         </div>

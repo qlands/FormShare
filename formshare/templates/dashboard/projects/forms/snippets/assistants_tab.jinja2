@@ -28,7 +28,7 @@
                     {% endif %}
                     <ul class="tag-list" style="padding: 0">
                         {% for assistant in formassistants %}
-                            {% set assistant_role = _('Undefined') %}
+                            {% set assistant_role = _('Without privileges') %}
                             {% if assistant.coll_can_submit == 1 %}
                                 {% set assistant_role = _('Submit') %}
                             {% endif %}

@@ -612,16 +612,20 @@
 
                     assistant_item.click(function() {
                         var assistant_name = $( this ).attr('data-assistant-name');
-                        var assistant_can_submit = $( this ).attr('data-assistant-can-submit');
                         var assistant_can_clean = $( this ).attr('data-assistant-can-clean');
                         var action_url = $( this ).attr('urn');
                         $("#edit_assistant_form").prop('action',action_url)
                         $("#rolewho").text("{{ _('Changing the role of') }} " + assistant_name);
 
-                        var role_submmit = $( "#role_submmit" );
+                        {% if projectDetails.project_formlist_auth == 1 %}
+                            var assistant_can_submit = $( this ).attr('data-assistant-can-submit');
+                            var role_submmit = $( "#role_submmit" );
+                            if (assistant_can_submit === "1")
+                                role_submmit.prop( "checked", true );
+                        {% endif %}
+
                         var role_clean = $( "#role_clean" );
-                        if (assistant_can_submit === "1")
-                            role_submmit.prop( "checked", true );
+
                         if (assistant_can_clean === "1")
                             role_clean.prop( "checked", true );
                     });
@@ -663,16 +667,21 @@
 
                     group_item.click(function() {
                         var group_name = $( this ).attr('data-group-name');
-                        var group_can_submit = $( this ).attr('data-group-can-submit');
+
                         var group_can_clean = $( this ).attr('data-group-can-clean');
                         var action_url = $( this ).attr('urn');
                         $("#edit_group_form").prop('action',action_url)
                         $("#grprolewho").text("{{ _('Changing the role of') }} " + group_name);
 
-                        var role_submmit = $( "#grp_role_submmit" );
+                        {% if projectDetails.project_formlist_auth == 1 %}
+                            var group_can_submit = $( this ).attr('data-group-can-submit');
+                            var role_submmit = $( "#grp_role_submmit" );
+                            if (group_can_submit === "1")
+                                role_submmit.prop( "checked", true );
+                        {% endif %}
+
                         var role_clean = $( "#grp_role_clean" );
-                        if (group_can_submit === "1")
-                            role_submmit.prop( "checked", true );
+
                         if (group_can_clean === "1")
                             role_clean.prop( "checked", true );
                     });

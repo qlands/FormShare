@@ -27,6 +27,7 @@ from formshare.models import (
     initialize_schema,
     DictTable,
     DictField,
+    Project,
 )
 from formshare.processes.elasticsearch.repository_index import delete_dataset_from_index
 from formshare.processes.email.send_async_email import send_async_email
@@ -162,6 +163,13 @@ def get_geopoint_variable(db_session, project, form):
 
 
 def get_one_assistant(db_session, project, form):
+    res = (
+        db_session.query(Project.project_formlist_auth)
+        .filter(Project.project_id == project)
+        .first()
+    )
+    if res[0] == 0:
+        return "public", "public"
     res = (
         db_session.query(Formacces)
         .filter(Formacces.form_project == project)

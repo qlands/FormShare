@@ -29,7 +29,7 @@ def t_e_s_t_form_merge(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"Merge check pending" in res.body)
+    test_object.root.assertTrue(b"Merge check pending" in res.body)
 
     paths = ["resources", "forms", "merge", "B", "cantones.csv"]
     resource_file = os.path.join(test_object.path, *paths)
@@ -82,7 +82,7 @@ def t_e_s_t_form_merge(test_object):
         ),
         status=200,
     )
-    test_object.assertFalse(b"Merge check pending" in res.body)
+    test_object.root.assertFalse(b"Merge check pending" in res.body)
 
     test_object.testapp.get(
         "/user/{}/project/{}/form/{}/merge/into/{}".format(
@@ -128,7 +128,7 @@ def t_e_s_t_form_merge(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"This is the sub-version of" in res.body)
+    test_object.root.assertTrue(b"This is the sub-version of" in res.body)
 
     # Compare goes to 404 project not found
     test_object.testapp.get(
@@ -162,7 +162,7 @@ def t_e_s_t_form_merge(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(
+    test_object.root.assertTrue(
         b"This new version does not have any structural changes" not in res.body
     )
 
@@ -173,7 +173,7 @@ def t_e_s_t_form_merge(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"is the sub-version of this form" in res.body)
+    test_object.root.assertTrue(b"is the sub-version of this form" in res.body)
 
     # Gets the details of a project
     res = test_object.testapp.get(
@@ -225,7 +225,7 @@ def t_e_s_t_form_merge(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"Merge check pending" in res.body)
+    test_object.root.assertTrue(b"Merge check pending" in res.body)
 
     paths = ["resources", "forms", "merge", "C", "cantones.csv"]
     resource_file = os.path.join(test_object.path, *paths)
@@ -256,7 +256,7 @@ def t_e_s_t_form_merge(test_object):
         ),
         status=200,
     )
-    test_object.assertFalse(b"Merge check pending" in res.body)
+    test_object.root.assertFalse(b"Merge check pending" in res.body)
 
     # Merge the repository using celery fails with message about values to ignore
     res = test_object.testapp.post(
@@ -269,7 +269,7 @@ def t_e_s_t_form_merge(test_object):
         status=200,
     )
     assert "FS_error" not in res.headers
-    test_object.assertTrue(b"There are changes in the descriptions" in res.body)
+    test_object.root.assertTrue(b"There are changes in the descriptions" in res.body)
 
     # Merge the repository using celery passes
     res = test_object.testapp.post(
@@ -293,7 +293,7 @@ def t_e_s_t_form_merge(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"This is the sub-version of" in res.body)
+    test_object.root.assertTrue(b"This is the sub-version of" in res.body)
 
     test_object.testapp.get(
         "/user/{}/project/{}/form/{}".format(
@@ -369,7 +369,7 @@ def t_e_s_t_form_merge(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"Without submissions" in res.body)
+    test_object.root.assertTrue(b"Without submissions" in res.body)
 
     # Delete the form
     res = test_object.testapp.post(

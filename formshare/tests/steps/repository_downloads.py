@@ -1123,7 +1123,7 @@ def t_e_s_t_repository_downloads(test_object):
         },
         status=302,
     )
-    test_object.assertNotIn(b"The process generated an error", res.body)
+    test_object.root.assertNotIn(b"The process generated an error", res.body)
 
     # Public CSV of a project that does not exist goes to 404
     test_object.testapp.get(
@@ -1184,7 +1184,7 @@ def t_e_s_t_repository_downloads(test_object):
         ),
         status=200,
     )
-    test_object.assertNotIn(b"The process generated an error", res.body)
+    test_object.root.assertNotIn(b"The process generated an error", res.body)
     print("Testing repository downloads step 2 finished")
     time.sleep(40)
     mimic_celery_public_csv_process()

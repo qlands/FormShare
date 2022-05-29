@@ -130,7 +130,7 @@ def t_e_s_t_form_merge_mimic_2(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"Merge check pending" in res.body)
+    test_object.root.assertTrue(b"Merge check pending" in res.body)
 
     paths = ["resources", "forms", "merge", "B", "cantones.csv"]
     resource_file = os.path.join(test_object.path, *paths)
@@ -191,7 +191,7 @@ def t_e_s_t_form_merge_mimic_2(test_object):
         ),
         status=200,
     )
-    test_object.assertFalse(b"Merge check pending" in res.body)
+    test_object.root.assertFalse(b"Merge check pending" in res.body)
 
     # Show the merge repository page
     res = test_object.testapp.get(
@@ -262,7 +262,7 @@ def t_e_s_t_form_merge_mimic_2(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"This is the sub-version of" in res.body)
+    test_object.root.assertTrue(b"This is the sub-version of" in res.body)
 
     # Get the details of a form tormenta20201105
     res = test_object.testapp.get(
@@ -271,4 +271,4 @@ def t_e_s_t_form_merge_mimic_2(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"is the sub-version of this form" in res.body)
+    test_object.root.assertTrue(b"is the sub-version of this form" in res.body)

@@ -280,7 +280,7 @@ def t_e_s_t_form_merge_language_control(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"Fix language" in res.body)
+    test_object.root.assertTrue(b"Fix language" in res.body)
 
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/delete".format(
@@ -324,7 +324,7 @@ def t_e_s_t_form_merge_language_control(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"Fix language" in res.body)
+    test_object.root.assertTrue(b"Fix language" in res.body)
 
     # Get the fix language page of a project that does not exist goes to 404
     test_object.testapp.get(
@@ -357,7 +357,7 @@ def t_e_s_t_form_merge_language_control(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"WAS NOT in multiple languages" in res.body)
+    test_object.root.assertTrue(b"WAS NOT in multiple languages" in res.body)
 
     # Post without setting the language does not pass
     res = test_object.testapp.post(
@@ -369,7 +369,9 @@ def t_e_s_t_form_merge_language_control(test_object):
         },
         status=200,
     )
-    test_object.assertTrue(b"You need to indicate the primary language" in res.body)
+    test_object.root.assertTrue(
+        b"You need to indicate the primary language" in res.body
+    )
 
     # Post without setting one of the languages code does not pass
     res = test_object.testapp.post(
@@ -382,7 +384,7 @@ def t_e_s_t_form_merge_language_control(test_object):
         },
         status=200,
     )
-    test_object.assertTrue(
+    test_object.root.assertTrue(
         b"You need to indicate a ISO 639-1 code for each language" in res.body
     )
 
@@ -398,7 +400,7 @@ def t_e_s_t_form_merge_language_control(test_object):
         },
         status=200,
     )
-    test_object.assertTrue(
+    test_object.root.assertTrue(
         b"Each language needs to have an unique ISO 639-1 code" in res.body
     )
 
@@ -422,7 +424,7 @@ def t_e_s_t_form_merge_language_control(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b" Merge repository " in res.body)
+    test_object.root.assertTrue(b" Merge repository " in res.body)
 
     test_object.testapp.get(
         "/user/{}/project/{}/form/{}/merge/into/{}".format(

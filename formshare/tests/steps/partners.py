@@ -191,7 +191,7 @@ def t_e_s_t_partners(test_object):
         "/user/{}/manage_partner/{}/edit".format(test_object.randonLogin, partner_id),
         status=200,
     )
-    test_object.assertNotIn(b"This partner was created", res.body)
+    test_object.root.assertNotIn(b"This partner was created", res.body)
 
     # Modify partner fail. Organization is empty
     res = test_object.testapp.post(
@@ -391,7 +391,7 @@ def t_e_s_t_partners(test_object):
         status=302,
     )
     assert "FS_error" not in res.headers
-    test_object.assertNotIn(b"This partner was created", res.body)
+    test_object.root.assertNotIn(b"This partner was created", res.body)
 
     time.sleep(10)  # Wait for ES to remove the partner
 
@@ -458,7 +458,7 @@ def t_e_s_t_partners(test_object):
         ),
         status=200,
     )
-    test_object.assertIn(b"This partner was created", res.body)
+    test_object.root.assertIn(b"This partner was created", res.body)
 
     # Random login partner cannot delete partner
     res = test_object.testapp.post(
@@ -991,7 +991,7 @@ def t_e_s_t_partners(test_object):
         "/partneraccess/dashboard",
         status=200,
     )
-    test_object.assertIn(b"data-title", res.body)
+    test_object.root.assertIn(b"data-title", res.body)
 
     # Change password with get goes to 404
     test_object.testapp.get(
@@ -1096,7 +1096,7 @@ def t_e_s_t_partners(test_object):
         "/partneraccess/dashboard",
         status=200,
     )
-    test_object.assertNotIn(b"data-title", res.body)
+    test_object.root.assertNotIn(b"data-title", res.body)
 
     # Add an partner to form again pass
     res = test_object.testapp.post(
@@ -1115,7 +1115,7 @@ def t_e_s_t_partners(test_object):
         "/partneraccess/dashboard",
         status=200,
     )
-    test_object.assertIn(b"data-title", res.body)
+    test_object.root.assertIn(b"data-title", res.body)
 
     # Add an partner to another form in same project
     res = test_object.testapp.post(
@@ -1137,7 +1137,7 @@ def t_e_s_t_partners(test_object):
         "/partneraccess/dashboard",
         status=200,
     )
-    test_object.assertIn(b"data-title", res.body)
+    test_object.root.assertIn(b"data-title", res.body)
 
     # Remove partner from form passes
     res = test_object.testapp.post(
@@ -1182,7 +1182,7 @@ def t_e_s_t_partners(test_object):
         "/partneraccess/dashboard",
         status=200,
     )
-    test_object.assertIn(b"data-title", res.body)
+    test_object.root.assertIn(b"data-title", res.body)
 
     # Add an partner to form again pass
     res = test_object.testapp.post(
@@ -1204,7 +1204,7 @@ def t_e_s_t_partners(test_object):
         "/partneraccess/dashboard",
         status=200,
     )
-    test_object.assertIn(b"data-title", res.body)
+    test_object.root.assertIn(b"data-title", res.body)
 
     # Add an partner to another form in same project
     res = test_object.testapp.post(
@@ -1226,7 +1226,7 @@ def t_e_s_t_partners(test_object):
         "/partneraccess/dashboard",
         status=200,
     )
-    test_object.assertIn(b"data-title", res.body)
+    test_object.root.assertIn(b"data-title", res.body)
 
     # Get the partner details of a form
     test_object.testapp.get(
@@ -1386,7 +1386,7 @@ def t_e_s_t_partners(test_object):
         ),
         status=200,
     )
-    test_object.assertIn(b'"timeline-header"', res.body)
+    test_object.root.assertIn(b'"timeline-header"', res.body)
 
     this_year = datetime.datetime.now().strftime("%Y")
     # Get the history of a partner current year
@@ -1396,7 +1396,7 @@ def t_e_s_t_partners(test_object):
         ),
         status=200,
     )
-    test_object.assertIn(b'"timeline-header"', res.body)
+    test_object.root.assertIn(b'"timeline-header"', res.body)
 
     # Get the history of a partner last year
     res = test_object.testapp.get(
@@ -1405,7 +1405,7 @@ def t_e_s_t_partners(test_object):
         ),
         status=200,
     )
-    test_object.assertNotIn(b'"timeline-header"', res.body)
+    test_object.root.assertNotIn(b'"timeline-header"', res.body)
 
     # Get the history of a partner invalid year
     res = test_object.testapp.get(
@@ -1414,7 +1414,7 @@ def t_e_s_t_partners(test_object):
         ),
         status=200,
     )
-    test_object.assertIn(b'"timeline-header"', res.body)
+    test_object.root.assertIn(b'"timeline-header"', res.body)
 
     # Get the available collaborators
     test_object.testapp.get(

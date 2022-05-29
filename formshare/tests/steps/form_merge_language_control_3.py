@@ -75,7 +75,7 @@ def t_e_s_t_form_merge_language_control_3(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"Merge check pending" in res.body)
+    test_object.root.assertTrue(b"Merge check pending" in res.body)
 
     # Uploads an external file that label::
     paths = [
@@ -106,7 +106,7 @@ def t_e_s_t_form_merge_language_control_3(test_object):
         ),
         status=200,
     )
-    test_object.assertFalse(b"Fix language" in res.body)
+    test_object.root.assertFalse(b"Fix language" in res.body)
 
     # Removes a file from a form
     res = test_object.testapp.post(
@@ -150,7 +150,7 @@ def t_e_s_t_form_merge_language_control_3(test_object):
         ),
         status=200,
     )
-    test_object.assertFalse(b"Fix language" in res.body)
+    test_object.root.assertFalse(b"Fix language" in res.body)
 
     # Removes a file from a form
     res = test_object.testapp.post(
@@ -193,7 +193,7 @@ def t_e_s_t_form_merge_language_control_3(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"Fix language" in res.body)
+    test_object.root.assertTrue(b"Fix language" in res.body)
 
     # Get the page for fixing the language pass
     res = test_object.testapp.get(
@@ -204,7 +204,7 @@ def t_e_s_t_form_merge_language_control_3(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(
+    test_object.root.assertTrue(
         b"without indicating a language. For example if you have a column called"
         in res.body
     )
@@ -233,7 +233,7 @@ def t_e_s_t_form_merge_language_control_3(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b" Merge repository " in res.body)
+    test_object.root.assertTrue(b" Merge repository " in res.body)
 
     # Delete the form asistencia_tecnica
     res = test_object.testapp.post(

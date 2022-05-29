@@ -47,7 +47,7 @@ def t_e_s_t_multilanguage_odk(test_object):
         {"form_pkey": "QID", "start_stage1": ""},
         status=200,
     )
-    test_object.assertIn(b"form_deflang", res.body)
+    test_object.root.assertIn(b"form_deflang", res.body)
 
     # Generate the repository using celery pass
     res = test_object.testapp.post(

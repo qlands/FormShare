@@ -95,4 +95,4 @@ def t_e_s_t_form_merge_language_control_5(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"Fix language" in res.body)
+    test_object.root.assertTrue(b"Fix language" in res.body)

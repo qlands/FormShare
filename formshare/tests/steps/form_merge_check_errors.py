@@ -66,7 +66,7 @@ def t_e_s_t_form_merge_check_errors(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"Unable to merge" in res.body)
+    test_object.root.assertTrue(b"Unable to merge" in res.body)
 
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/delete".format(
@@ -122,7 +122,7 @@ def t_e_s_t_form_merge_check_errors(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"Unable to merge" in res.body)
+    test_object.root.assertTrue(b"Unable to merge" in res.body)
 
     test_object.testapp.get(
         "/user/{}/project/{}/form/{}/merge/into/{}".format(
@@ -188,7 +188,7 @@ def t_e_s_t_form_merge_check_errors(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"Unable to merge" in res.body)
+    test_object.root.assertTrue(b"Unable to merge" in res.body)
 
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/delete".format(

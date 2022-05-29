@@ -54,7 +54,7 @@ def t_e_s_t_form_merge_language_control_4(test_object):
         },
         status=200,
     )
-    test_object.assertTrue(b"Primary language" in res.body)
+    test_object.root.assertTrue(b"Primary language" in res.body)
 
     # Generate the repository using celery
     res = test_object.testapp.post(
@@ -113,7 +113,7 @@ def t_e_s_t_form_merge_language_control_4(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"Fix language" in res.body)
+    test_object.root.assertTrue(b"Fix language" in res.body)
 
     # Get the page for fixing the language pass
     res = test_object.testapp.get(
@@ -124,7 +124,7 @@ def t_e_s_t_form_merge_language_control_4(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"The language called" in res.body)
+    test_object.root.assertTrue(b"The language called" in res.body)
 
     # Setting the language passes OK
     test_object.testapp.post(
@@ -150,7 +150,7 @@ def t_e_s_t_form_merge_language_control_4(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b" Merge repository " in res.body)
+    test_object.root.assertTrue(b" Merge repository " in res.body)
 
     # Delete the form asistencia_tecnica
     res = test_object.testapp.post(

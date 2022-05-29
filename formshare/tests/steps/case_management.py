@@ -24,7 +24,7 @@ def t_e_s_t_case_management(test_object):
         ),
         status=200,
     )
-    test_object.assertIn(b"Case creator", res.body)
+    test_object.root.assertIn(b"Case creator", res.body)
 
     # Edit a project. Get details. Cannot change project type
     res = test_object.testapp.get(
@@ -32,14 +32,14 @@ def t_e_s_t_case_management(test_object):
         status=200,
     )
     assert "FS_error" not in res.headers
-    test_object.assertIn(b"Read-only because the project has forms", res.body)
+    test_object.root.assertIn(b"Read-only because the project has forms", res.body)
 
     # Gets the details of a project. Upload Forms are inactive at the moment
     res = test_object.testapp.get(
         "/user/{}/project/{}".format(test_object.randonLogin, "case001"), status=200
     )
     assert "FS_error" not in res.headers
-    test_object.assertIn(
+    test_object.root.assertIn(
         b"You cannot add new forms while you have a case creator", res.body
     )
 
@@ -182,8 +182,8 @@ def t_e_s_t_case_management(test_object):
         ),
         status=200,
     )
-    test_object.assertIn(b"Case creator", res.body)
-    test_object.assertIn(b"With repository", res.body)
+    test_object.root.assertIn(b"Case creator", res.body)
+    test_object.root.assertIn(b"With repository", res.body)
 
     # Removes a rquired file fails
     res = test_object.testapp.post(
@@ -200,8 +200,8 @@ def t_e_s_t_case_management(test_object):
         status=200,
     )
     assert "FS_error" not in res.headers
-    test_object.assertIn(b"real-time CSV case file", res.body)
-    test_object.assertIn(b"Create the real-time CSV case file before", res.body)
+    test_object.root.assertIn(b"real-time CSV case file", res.body)
+    test_object.root.assertIn(b"Create the real-time CSV case file before", res.body)
 
     # Open the case lookup table for a project that does not exist goes to 404
     test_object.testapp.get(
@@ -255,8 +255,8 @@ def t_e_s_t_case_management(test_object):
         status=200,
     )
     assert "FS_error" not in res.headers
-    test_object.assertIn(b"real-time CSV case file", res.body)
-    test_object.assertNotIn(b"Create the real-time CSV case file before", res.body)
+    test_object.root.assertIn(b"real-time CSV case file", res.body)
+    test_object.root.assertNotIn(b"Create the real-time CSV case file before", res.body)
 
     # Adds the field distrito
     res = test_object.testapp.post(
@@ -611,7 +611,7 @@ def t_e_s_t_case_management(test_object):
         ),
         status=200,
     )
-    test_object.assertIn(b"Linked to the real-time CSV case file", res.body)
+    test_object.root.assertIn(b"Linked to the real-time CSV case file", res.body)
 
     # Get the FormList. Empty list
     test_object.testapp.get(
@@ -967,8 +967,8 @@ def t_e_s_t_case_management(test_object):
         ),
         status=200,
     )
-    test_object.assertIn(b"[Clean data]", res.body)
-    test_object.assertNotIn(b"[Manage errors]", res.body)
+    test_object.root.assertIn(b"[Clean data]", res.body)
+    test_object.root.assertNotIn(b"[Manage errors]", res.body)
 
     # Creates the repository of the case follow up
     res = test_object.testapp.post(
@@ -992,7 +992,7 @@ def t_e_s_t_case_management(test_object):
         ),
         status=200,
     )
-    test_object.assertIn(b"With repository", res.body)
+    test_object.root.assertIn(b"With repository", res.body)
 
     test_object.testapp.get(
         "/partneraccess/user/{}/project/{}/form/{}".format(
@@ -1053,8 +1053,8 @@ def t_e_s_t_case_management(test_object):
         ),
         status=200,
     )
-    test_object.assertIn(b"[Clean data]", res.body)
-    test_object.assertNotIn(b"[Manage errors]", res.body)
+    test_object.root.assertIn(b"[Clean data]", res.body)
+    test_object.root.assertNotIn(b"[Manage errors]", res.body)
 
     # Upload a case deactivate pass
     paths = ["resources", "forms", "case", "case_deactivate.xlsx"]
@@ -1128,7 +1128,7 @@ def t_e_s_t_case_management(test_object):
         ),
         status=200,
     )
-    test_object.assertIn(b"Linked to the real-time CSV case file", res.body)
+    test_object.root.assertIn(b"Linked to the real-time CSV case file", res.body)
 
     # Creates the repository of the case creator
     res = test_object.testapp.post(
@@ -1152,7 +1152,7 @@ def t_e_s_t_case_management(test_object):
         ),
         status=200,
     )
-    test_object.assertIn(b"With repository", res.body)
+    test_object.root.assertIn(b"With repository", res.body)
 
     test_object.testapp.get(
         "/user/{}/project/{}/{}/manifest".format(
@@ -1188,8 +1188,8 @@ def t_e_s_t_case_management(test_object):
         ),
         status=200,
     )
-    test_object.assertIn(b"[Clean data]", res.body)
-    test_object.assertNotIn(b"[Manage errors]", res.body)
+    test_object.root.assertIn(b"[Clean data]", res.body)
+    test_object.root.assertNotIn(b"[Manage errors]", res.body)
 
     creator_details = get_form_details(
         test_object.server_config, test_object.case_project_id, "case_start_20210311"
@@ -1288,7 +1288,7 @@ def t_e_s_t_case_management(test_object):
         ),
         status=200,
     )
-    test_object.assertIn(b"Linked to the real-time CSV case file", res.body)
+    test_object.root.assertIn(b"Linked to the real-time CSV case file", res.body)
 
     # Creates the repository of the case creator
     res = test_object.testapp.post(
@@ -1312,7 +1312,7 @@ def t_e_s_t_case_management(test_object):
         ),
         status=200,
     )
-    test_object.assertIn(b"With repository", res.body)
+    test_object.root.assertIn(b"With repository", res.body)
 
     test_object.testapp.get(
         "/user/{}/project/{}/{}/manifest".format(
@@ -1348,8 +1348,8 @@ def t_e_s_t_case_management(test_object):
         ),
         status=200,
     )
-    test_object.assertIn(b"[Clean data]", res.body)
-    test_object.assertNotIn(b"[Manage errors]", res.body)
+    test_object.root.assertIn(b"[Clean data]", res.body)
+    test_object.root.assertNotIn(b"[Manage errors]", res.body)
 
     creator_details = get_form_details(
         test_object.server_config, test_object.case_project_id, "case_start_20210311"
@@ -1391,8 +1391,8 @@ def t_e_s_t_case_management(test_object):
         ),
         status=200,
     )
-    test_object.assertIn(b"[Clean data]", res.body)
-    test_object.assertIn(b"[Manage errors]", res.body)
+    test_object.root.assertIn(b"[Clean data]", res.body)
+    test_object.root.assertIn(b"[Manage errors]", res.body)
 
     # Get the FormList. household.csv is created
     test_object.testapp.get(
@@ -1441,7 +1441,7 @@ def t_e_s_t_case_management(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"Merge check pending" in res.body)
+    test_object.root.assertTrue(b"Merge check pending" in res.body)
 
     # Uploads cantones
     paths = ["resources", "forms", "case", "cantones.csv"]
@@ -1473,7 +1473,7 @@ def t_e_s_t_case_management(test_object):
         ),
         status=200,
     )
-    test_object.assertFalse(b"Merge check pending" in res.body)
+    test_object.root.assertFalse(b"Merge check pending" in res.body)
 
     # Show the merge repository page
     res = test_object.testapp.get(
@@ -1507,7 +1507,7 @@ def t_e_s_t_case_management(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"This is the sub-version of" in res.body)
+    test_object.root.assertTrue(b"This is the sub-version of" in res.body)
 
     # Get the details of a form tormenta20201105
     res = test_object.testapp.get(
@@ -1516,7 +1516,7 @@ def t_e_s_t_case_management(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"is the sub-version of this form" in res.body)
+    test_object.root.assertTrue(b"is the sub-version of this form" in res.body)
 
     # Upload case 003
     paths = [
@@ -1543,8 +1543,8 @@ def t_e_s_t_case_management(test_object):
         ),
         status=200,
     )
-    test_object.assertIn(b"[Clean data]", res.body)
-    test_object.assertNotIn(b"[Manage errors]", res.body)
+    test_object.root.assertIn(b"[Clean data]", res.body)
+    test_object.root.assertNotIn(b"[Manage errors]", res.body)
 
     # Deactivate case 003
     paths = [
@@ -1611,7 +1611,7 @@ def t_e_s_t_case_management(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"Merge check pending" in res.body)
+    test_object.root.assertTrue(b"Merge check pending" in res.body)
 
     # Uploads cantones
     paths = ["resources", "forms", "case", "cantones.csv"]
@@ -1655,8 +1655,8 @@ def t_e_s_t_case_management(test_object):
         ),
         status=200,
     )
-    test_object.assertFalse(b"Merge check pending" in res.body)
-    test_object.assertIn(b"Linked to the real-time CSV case file", res.body)
+    test_object.root.assertFalse(b"Merge check pending" in res.body)
+    test_object.root.assertIn(b"Linked to the real-time CSV case file", res.body)
 
     # Show the merge repository page
     res = test_object.testapp.get(
@@ -1690,7 +1690,7 @@ def t_e_s_t_case_management(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"This is the sub-version of" in res.body)
+    test_object.root.assertTrue(b"This is the sub-version of" in res.body)
 
     # Get the details of a form tormenta20201105
     res = test_object.testapp.get(
@@ -1699,7 +1699,7 @@ def t_e_s_t_case_management(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"is the sub-version of this form" in res.body)
+    test_object.root.assertTrue(b"is the sub-version of this form" in res.body)
 
     # Deactivate case 002 using the merged form
     paths = [
@@ -1730,8 +1730,8 @@ def t_e_s_t_case_management(test_object):
         ),
         status=200,
     )
-    test_object.assertIn(b"[Clean data]", res.body)
-    test_object.assertNotIn(b"[Manage errors]", res.body)
+    test_object.root.assertIn(b"[Clean data]", res.body)
+    test_object.root.assertNotIn(b"[Manage errors]", res.body)
 
     res = engine.execute(
         "SELECT _active FROM {}.maintable WHERE hid = '{}'".format(
@@ -1768,8 +1768,8 @@ def t_e_s_t_case_management(test_object):
         ),
         status=200,
     )
-    test_object.assertIn(b"[Clean data]", res.body)
-    test_object.assertIn(b"[Manage errors]", res.body)
+    test_object.root.assertIn(b"[Clean data]", res.body)
+    test_object.root.assertIn(b"[Manage errors]", res.body)
 
     # Upload a case follow up barcode passes.
     paths = ["resources", "forms", "case", "case_follow_up_barcode.xlsx"]
@@ -1840,7 +1840,7 @@ def t_e_s_t_case_management(test_object):
         ),
         status=200,
     )
-    test_object.assertIn(b"With repository", res.body)
+    test_object.root.assertIn(b"With repository", res.body)
 
     # Follow up 001 with QR Code
     paths = [
@@ -1867,8 +1867,8 @@ def t_e_s_t_case_management(test_object):
         ),
         status=200,
     )
-    test_object.assertIn(b"[Clean data]", res.body)
-    test_object.assertNotIn(b"[Manage errors]", res.body)
+    test_object.root.assertIn(b"[Clean data]", res.body)
+    test_object.root.assertNotIn(b"[Manage errors]", res.body)
 
     # Follow up 002 with QR Code goes to the logs
     paths = [
@@ -1895,5 +1895,5 @@ def t_e_s_t_case_management(test_object):
         ),
         status=200,
     )
-    test_object.assertIn(b"[Clean data]", res.body)
-    test_object.assertIn(b"[Manage errors]", res.body)
+    test_object.root.assertIn(b"[Clean data]", res.body)
+    test_object.root.assertIn(b"[Manage errors]", res.body)

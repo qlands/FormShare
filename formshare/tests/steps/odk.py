@@ -44,7 +44,7 @@ def t_e_s_t_odk(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"Repository check pending" in res.body)
+    test_object.root.assertTrue(b"Repository check pending" in res.body)
 
     # Uploads a bad file to the form
     paths = ["resources", "forms", "complex_form", "cantones.csv"]
@@ -77,7 +77,7 @@ def t_e_s_t_odk(test_object):
         ),
         status=200,
     )
-    test_object.assertIn(b"This form cannot create a repository", res.body)
+    test_object.root.assertIn(b"This form cannot create a repository", res.body)
 
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/delete".format(
@@ -128,7 +128,7 @@ def t_e_s_t_odk(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"Repository check pending" in res.body)
+    test_object.root.assertTrue(b"Repository check pending" in res.body)
 
     # Uploads a bad file to the form
     paths = ["resources", "forms", "complex_form", "bad_csv", "cantones.csv"]
@@ -161,7 +161,7 @@ def t_e_s_t_odk(test_object):
         ),
         status=200,
     )
-    test_object.assertIn(b"This form cannot create a repository", res.body)
+    test_object.root.assertIn(b"This form cannot create a repository", res.body)
 
     # Remove a support file
     res = test_object.testapp.post(
@@ -194,7 +194,7 @@ def t_e_s_t_odk(test_object):
         ),
         status=200,
     )
-    test_object.assertFalse(b"Repository check pending" in res.body)
+    test_object.root.assertFalse(b"Repository check pending" in res.body)
 
     # Remove a support file
     res = test_object.testapp.post(
@@ -215,7 +215,7 @@ def t_e_s_t_odk(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"Repository check pending" in res.body)
+    test_object.root.assertTrue(b"Repository check pending" in res.body)
 
     # Uploads a file to the form
     paths = ["resources", "forms", "complex_form", "distritos.csv"]
@@ -236,7 +236,7 @@ def t_e_s_t_odk(test_object):
         ),
         status=200,
     )
-    test_object.assertFalse(b"Repository check pending" in res.body)
+    test_object.root.assertFalse(b"Repository check pending" in res.body)
 
     # Test getting the forms goes to 404
     test_object.testapp.get(

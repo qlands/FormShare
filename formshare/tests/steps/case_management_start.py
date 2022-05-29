@@ -41,14 +41,14 @@ def t_e_s_t_case_management_start(test_object):
         "/user/{}/projects".format(test_object.randonLogin), status=200
     )
     assert "FS_error" not in res.headers
-    test_object.assertIn(b"longitudinal workflow", res.body)
+    test_object.root.assertIn(b"longitudinal workflow", res.body)
 
     # Gets the details of a project
     res = test_object.testapp.get(
         "/user/{}/project/{}".format(test_object.randonLogin, "case001"), status=200
     )
     assert "FS_error" not in res.headers
-    test_object.assertIn(b"form_caselabel", res.body)
+    test_object.root.assertIn(b"form_caselabel", res.body)
 
     # Edit a project. Get details
     res = test_object.testapp.get(
@@ -56,7 +56,7 @@ def t_e_s_t_case_management_start(test_object):
         status=200,
     )
     assert "FS_error" not in res.headers
-    test_object.assertNotIn(b"Read-only because the project has forms", res.body)
+    test_object.root.assertNotIn(b"Read-only because the project has forms", res.body)
 
     res = test_object.testapp.post(
         "/user/{}/project/{}/edit".format(test_object.randonLogin, "case001"),
@@ -202,7 +202,7 @@ def t_e_s_t_case_management_start(test_object):
         ),
         status=200,
     )
-    test_object.assertIn(b"Case creator", res.body)
+    test_object.root.assertIn(b"Case creator", res.body)
 
     # Delete the case form
     res = test_object.testapp.post(

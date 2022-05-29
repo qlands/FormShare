@@ -30,7 +30,7 @@ def t_e_s_t_form_merge_language_control_2(test_object):
         {"form_pkey": "control", "start_stage1": ""},
         status=200,
     )
-    test_object.assertTrue(b"Primary language" in res.body)
+    test_object.root.assertTrue(b"Primary language" in res.body)
 
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/repository/create".format(
@@ -43,7 +43,9 @@ def t_e_s_t_form_merge_language_control_2(test_object):
         },
         status=200,
     )
-    test_object.assertTrue(b"You need to indicate the primary language" in res.body)
+    test_object.root.assertTrue(
+        b"You need to indicate the primary language" in res.body
+    )
 
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/repository/create".format(
@@ -57,7 +59,7 @@ def t_e_s_t_form_merge_language_control_2(test_object):
         },
         status=200,
     )
-    test_object.assertTrue(
+    test_object.root.assertTrue(
         b"You need to indicate a ISO 639-1 code for each language" in res.body
     )
 
@@ -75,7 +77,7 @@ def t_e_s_t_form_merge_language_control_2(test_object):
         },
         status=200,
     )
-    test_object.assertTrue(
+    test_object.root.assertTrue(
         b"Each language needs to have an unique ISO 639-1 code" in res.body
     )
 
@@ -131,7 +133,7 @@ def t_e_s_t_form_merge_language_control_2(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"Fix language" in res.body)
+    test_object.root.assertTrue(b"Fix language" in res.body)
 
     # Get the page for fixing the language pass
     res = test_object.testapp.get(
@@ -140,7 +142,7 @@ def t_e_s_t_form_merge_language_control_2(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"This version does not have any languages" in res.body)
+    test_object.root.assertTrue(b"This version does not have any languages" in res.body)
 
     # Setting the language passes OK
     test_object.testapp.post(
@@ -157,7 +159,7 @@ def t_e_s_t_form_merge_language_control_2(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b" Merge repository " in res.body)
+    test_object.root.assertTrue(b" Merge repository " in res.body)
 
     # Delete the form asistencia_tecnica
     res = test_object.testapp.post(

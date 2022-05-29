@@ -537,7 +537,7 @@ def t_e_s_t_repository(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"With repository" in res.body)
+    test_object.root.assertTrue(b"With repository" in res.body)
 
     test_object.testapp.get(
         "/user/{}/project/{}/form/{}/repository/create".format(

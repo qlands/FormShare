@@ -26,7 +26,7 @@ def t_e_s_t_form_merge_delete(test_object):
         ),
         status=200,
     )
-    test_object.assertTrue(b"Merge check pending" in res.body)
+    test_object.root.assertTrue(b"Merge check pending" in res.body)
 
     paths = ["resources", "forms", "merge", "B", "cantones.csv"]
     resource_file = os.path.join(test_object.path, *paths)
@@ -57,7 +57,7 @@ def t_e_s_t_form_merge_delete(test_object):
         ),
         status=200,
     )
-    test_object.assertFalse(b"Merge check pending" in res.body)
+    test_object.root.assertFalse(b"Merge check pending" in res.body)
 
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/delete".format(

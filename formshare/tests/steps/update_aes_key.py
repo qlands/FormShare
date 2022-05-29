@@ -1,7 +1,7 @@
 import os
 
 
-def t_e_s_t_update_aes_key():
+def t_e_s_t_update_aes_key(test_object):
     from formshare.scripts.updateaeskey import main as updateaeskey
 
     here = os.path.dirname(os.path.abspath(__file__)).split("/formshare/tests")[0]
@@ -13,6 +13,6 @@ def t_e_s_t_update_aes_key():
     res = updateaeskey(["--new_key", "123", ini_file])
     assert res == 1
 
-    print("Update AES Key with {}".format(self.server_config["aes.key"]))
-    updateaeskey(["--new_key", self.server_config["aes.key"], ini_file])
+    print("Update AES Key with {}".format(test_object.server_config["aes.key"]))
+    updateaeskey(["--new_key", test_object.server_config["aes.key"], ini_file])
     #  assert res == 0 We need to check why this fails in CI and not locally

@@ -103,7 +103,7 @@ def t_e_s_t_json_logs(test_object):
         status=404,
     )
 
-    # Change the assistant to submit only
+    # Change the assistant to both
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
             test_object.randonLogin,

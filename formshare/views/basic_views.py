@@ -159,11 +159,14 @@ class LoginView(PublicView):
             try:
                 user = data["user"]
             except KeyError:
+                data_items = []
+                for key, value in data.items():
+                    data_items.append(key + "|" + value)
                 log.error(
-                    "Suspicious bot login from IP: {}. Agent: {}. Email/Account: {}. Using method: {}".format(
+                    "Suspicious bot login from IP: {}. Agent: {}. Data items: {}. Using method: {}".format(
                         self.request.client_addr,
                         self.request.user_agent,
-                        data["email"],
+                        ",".join(data_items),
                         self.request.method,
                     )
                 )

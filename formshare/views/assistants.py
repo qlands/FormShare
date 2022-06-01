@@ -300,7 +300,9 @@ class DeleteAssistant(PrivateView):
                     )
                     return HTTPFound(next_page)
                 else:
-                    self.add_error("Unable to delete the assistant. Maybe the assistant already collected data?")
+                    self.add_error(
+                        "Unable to delete the assistant. Maybe the assistant already collected data?"
+                    )
                     return HTTPFound(next_page, headers={"FS_error": "true"})
             else:
                 return HTTPFound(next_page, headers={"FS_error": "true"})

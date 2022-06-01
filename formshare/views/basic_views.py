@@ -156,11 +156,23 @@ class LoginView(PublicView):
                     raise HTTPNotFound()
             data = self.get_post_dict()
 
-            user = data["user"]
+            try:
+                user = data["user"]
+            except KeyError:
+                log.error(
+                    "Suspicious bot login from IP: {}. Agent: {}. Email/Account: {}. Using method: {}".format(
+                        self.request.client_addr,
+                        self.request.user_agent,
+                        data["email"],
+                        self.request.method,
+                    )
+                )
+                user = ""
+
             if user != "":
                 log.error(
                     "Suspicious bot login from IP: {}. Agent: {}. Email/Account: {}".format(
-                        self.request.remote_addr, self.request.user_agent, data["email"]
+                        self.request.client_addr, self.request.user_agent, data["email"]
                     )
                 )
             data.pop("user")
@@ -237,7 +249,7 @@ class RecoverPasswordView(PublicView):
             if user != "":
                 log.error(
                     "Suspicious bot password recovery from IP: {}. Agent: {}. Email: {}".format(
-                        self.request.remote_addr, self.request.user_agent, data["email"]
+                        self.request.client_addr, self.request.user_agent, data["email"]
                     )
                 )
             user = get_user_data(login, self.request)
@@ -491,7 +503,7 @@ class RegisterView(PublicView):
             if user != "Costa Rica":
                 log.error(
                     "Suspicious bot register from IP: {}. Agent: {}. Email: {} ".format(
-                        self.request.remote_addr,
+                        self.request.client_addr,
                         self.request.user_agent,
                         data["user_email"],
                     )

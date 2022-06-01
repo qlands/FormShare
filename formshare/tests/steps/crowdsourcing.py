@@ -131,7 +131,7 @@ def t_e_s_t_crowdsourcing(test_object):
             ("filetoupload", submission_file),
             ("image", image_file),
             ("sound", sound_file),
-        ]
+        ],
     )
     time.sleep(5)  # Wait for ElasticSearch to store this
 
@@ -169,7 +169,7 @@ def t_e_s_t_crowdsourcing(test_object):
             ("filetoupload", submission_file),
             ("image", image_file),
             ("sound", sound_file),
-        ]
+        ],
     )
     time.sleep(5)  # Wait for ElasticSearch to store this
 
@@ -195,7 +195,7 @@ def t_e_s_t_crowdsourcing(test_object):
             ("filetoupload", submission_file),
             ("image", image_file),
             ("sound", sound_file),
-        ]
+        ],
     )
     time.sleep(5)  # Wait for ElasticSearch to store this
 

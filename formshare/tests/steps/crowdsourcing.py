@@ -1,10 +1,12 @@
-import os
 import json
+import os
 import time
-from .sql import get_form_details
+import uuid
+
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
-import uuid
+
+from .sql import get_form_details
 
 
 def t_e_s_t_crowdsourcing(test_object):
@@ -108,6 +110,36 @@ def t_e_s_t_crowdsourcing(test_object):
         status=302,
     )
     assert "FS_error" not in mimic_res.headers
+
+    # Get the XML Form
+    test_object.testapp.get(
+        "/user/{}/project/{}/{}/xmlform".format(
+            test_object.randonLogin, json2_project, json2_form
+        ),
+        status=200,
+    )
+
+    # Get the manifest pass
+    test_object.testapp.get(
+        "/user/{}/project/{}/{}/manifest".format(
+            test_object.randonLogin, json2_project, json2_form
+        ),
+        status=200,
+    )
+
+    # Gets a media file
+    test_object.testapp.get(
+        "/user/{}/project/{}/{}/manifest/mediafile/cantones.csv".format(
+            test_object.randonLogin, json2_project, json2_form
+        ),
+        status=200,
+    )
+
+    # Test the head
+    test_object.testapp.head(
+        "/user/{}/project/{}/submission".format(test_object.randonLogin, json2_project),
+        status=204,
+    )
 
     # Upload submission 1
     paths = [
@@ -281,5 +313,93 @@ def t_e_s_t_crowdsourcing(test_object):
             json2_form,
             duplicated_id,
         ),
+        status=200,
+    )
+
+    # Compare the against a submission
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/assistantaccess/form/{}/{}/compare".format(
+            test_object.randonLogin,
+            json2_project,
+            json2_form,
+            duplicated_id,
+        ),
+        {"submissionid": survey_id},
+        status=200,
+    )
+    assert "FS_error" not in res.headers
+
+    # Checkout the submission
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/assistantaccess/form/{}/{}/checkout".format(
+            test_object.randonLogin,
+            json2_project,
+            json2_form,
+            duplicated_id,
+        ),
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/assistantaccess/form/{}/{}/get".format(
+            test_object.randonLogin,
+            json2_project,
+            json2_form,
+            duplicated_id,
+        ),
+        status=200,
+    )
+    data = json.loads(res.body)
+    data["si_participa/section_household_info/RespondentDetails/I_D"] = "5018D5S387ABC2"
+    tmp = os.path.join(test_object.path, *["tmp"])
+    if not os.path.exists(tmp):
+        os.makedirs(tmp)
+    paths = ["tmp", duplicated_id + ".json"]
+    submission_file = os.path.join(test_object.path, *paths)
+
+    with open(submission_file, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+
+        # Checkin a file passes.
+        res = test_object.testapp.post(
+            "/user/{}/project/{}/assistantaccess/form/{}/{}/checkin".format(
+                test_object.randonLogin,
+                json2_project,
+                json2_form,
+                duplicated_id,
+            ),
+            {
+                "notes": "Some notes about the checkin submission {}".format(
+                    duplicated_id
+                ),
+                "sequence": "23a243c95547",
+            },
+            status=302,
+            upload_files=[("json", submission_file)],
+        )
+        assert "FS_error" not in res.headers
+
+    os.remove(submission_file)
+
+    # Push the revision.
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/push".format(
+            test_object.randonLogin,
+            json2_project,
+            json2_form,
+            duplicated_id,
+            "23a243c95547",
+        ),
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+
+    # Get the checkout
+    test_object.testapp.get(
+        "/user/{}/project/{}/assistantaccess/form/{}/errors".format(
+            test_object.randonLogin, json2_project, json2_form
+        ),
+        {"status": "fixed"},
         status=200,
     )

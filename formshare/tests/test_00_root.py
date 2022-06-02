@@ -1,79 +1,80 @@
 import datetime
 import json
 import os
+import time
 import unittest
 from types import SimpleNamespace
+
 import pkg_resources
-import time
-from .steps.root import t_e_s_t_root
-from .steps.login import t_e_s_t_login
-from .steps.dashboard import t_e_s_t_dashboard
-from .steps.profile import t_e_s_t_profile
-from .steps.projects import t_e_s_t_projects
-from .steps.collaborators import t_e_s_t_collaborators
-from .steps.assistants import t_e_s_t_assistants
-from .steps.assistant_groups import t_e_s_t_assistant_groups
-from .steps.forms import t_e_s_t_forms
-from .steps.multilanguage_odk import t_e_s_t_multilanguage_odk
-from .steps.support_zip_file import t_e_s_t_support_zip_file
-from .steps.external_select import t_e_s_t_external_select
-from .steps.update_form_missing_files import t_e_s_t_update_form_missing_files
-from .steps.odk import t_e_s_t_odk
-from .steps.repository import t_e_s_t_repository
-from .steps.repository_downloads import t_e_s_t_repository_downloads
-from .steps.import_data import t_e_s_t_import_data
-from .steps.repository_tasks import t_e_s_t_repository_tasks
+
+from .steps.api import t_e_s_t_api
 from .steps.assistant_access import t_e_s_t_assistant_access
-from .steps.json_logs import t_e_s_t_json_logs
-from .steps.json_logs_2 import t_e_s_t_json_logs_2
-from .steps.json_logs_4 import t_e_s_t_json_logs_4
-from .steps.json_logs_3 import t_e_s_t_json_logs_3
+from .steps.assistant_groups import t_e_s_t_assistant_groups
+from .steps.assistants import t_e_s_t_assistants
+from .steps.audit import t_e_s_t_audit
+from .steps.avatar_generator import t_e_s_t_avatar_generator
+from .steps.case_management import t_e_s_t_case_management
+from .steps.case_management_start import t_e_s_t_case_management_start
 from .steps.clean_interface import t_e_s_t_clean_interface
 from .steps.clean_interface_unauthorized import t_e_s_t_clean_interface_unauthorized
-from .steps.audit import t_e_s_t_audit
 from .steps.collaborator_access import t_e_s_t_collaborator_access
-from .steps.helpers import t_e_s_t_helpers
-from .steps.utility_functions import t_e_s_t_utility_functions
-from .steps.avatar_generator import t_e_s_t_avatar_generator
+from .steps.collaborator_projects import t_e_s_t_collaborator_projects
+from .steps.collaborator_projects_2 import t_e_s_t_collaborator_projects_2
+from .steps.collaborator_projects_3 import t_e_s_t_collaborator_projects_3
+from .steps.collaborator_projects_4 import t_e_s_t_collaborator_projects_4
+from .steps.collaborators import t_e_s_t_collaborators
 from .steps.color_hash_hex import t_e_s_t_color_hash_hex
-from .steps.one_user_assistant import t_e_s_t_one_user_assistant
+from .steps.configure_alembic import t_e_s_t_configure_alembic
+from .steps.configure_fluent import t_e_s_t_configure_fluent
+from .steps.configure_mysql import t_e_s_t_configure_mysql
+from .steps.configure_t_e_s_t_s import t_e_s_t_configure_t_e_s_t_s
+from .steps.create_super_user import t_e_s_t_create_super_user
+from .steps.dashboard import t_e_s_t_dashboard
+from .steps.delete_active_project import t_e_s_t_delete_active_project
+from .steps.delete_form_with_repository import t_e_s_t_delete_form_with_repository
+from .steps.disable_ssl import t_e_s_t_disable_ssl
+from .steps.error_pages import t_e_s_t_error_pages
+from .steps.external_select import t_e_s_t_external_select
 from .steps.five_collaborators import t_e_s_t_five_collaborators
-from .steps.form_merge_start import t_e_s_t_form_merge_start
+from .steps.form_access import t_e_s_t_form_access
+from .steps.form_merge import t_e_s_t_form_merge
 from .steps.form_merge_check_errors import t_e_s_t_form_merge_check_errors
 from .steps.form_merge_delete import t_e_s_t_form_merge_delete
-from .steps.form_merge import t_e_s_t_form_merge
-from .steps.form_merge_mimic import t_e_s_t_form_merge_mimic
-from .steps.form_merge_mimic_2 import t_e_s_t_form_merge_mimic_2
-from .steps.form_merge_mimic_3 import t_e_s_t_form_merge_mimic_3
 from .steps.form_merge_language_control import t_e_s_t_form_merge_language_control
 from .steps.form_merge_language_control_2 import t_e_s_t_form_merge_language_control_2
 from .steps.form_merge_language_control_3 import t_e_s_t_form_merge_language_control_3
 from .steps.form_merge_language_control_4 import t_e_s_t_form_merge_language_control_4
 from .steps.form_merge_language_control_5 import t_e_s_t_form_merge_language_control_5
+from .steps.form_merge_mimic import t_e_s_t_form_merge_mimic
+from .steps.form_merge_mimic_2 import t_e_s_t_form_merge_mimic_2
+from .steps.form_merge_mimic_3 import t_e_s_t_form_merge_mimic_3
+from .steps.form_merge_start import t_e_s_t_form_merge_start
+from .steps.forms import t_e_s_t_forms
 from .steps.group_assistant import t_e_s_t_group_assistant
-from .steps.delete_form_with_repository import t_e_s_t_delete_form_with_repository
-from .steps.api import t_e_s_t_api
-from .steps.plugin_utility_functions import t_e_s_t_plugin_utility_functions
-from .steps.collaborator_projects import t_e_s_t_collaborator_projects
-from .steps.collaborator_projects_2 import t_e_s_t_collaborator_projects_2
-from .steps.collaborator_projects_3 import t_e_s_t_collaborator_projects_3
-from .steps.collaborator_projects_4 import t_e_s_t_collaborator_projects_4
-from .steps.delete_active_project import t_e_s_t_delete_active_project
-from .steps.form_access import t_e_s_t_form_access
-from .steps.create_super_user import t_e_s_t_create_super_user
-from .steps.configure_alembic import t_e_s_t_configure_alembic
-from .steps.configure_fluent import t_e_s_t_configure_fluent
-from .steps.configure_mysql import t_e_s_t_configure_mysql
-from .steps.configure_t_e_s_t_s import t_e_s_t_configure_t_e_s_t_s
+from .steps.helpers import t_e_s_t_helpers
+from .steps.import_data import t_e_s_t_import_data
+from .steps.json_logs import t_e_s_t_json_logs
+from .steps.json_logs_2 import t_e_s_t_json_logs_2
+from .steps.json_logs_3 import t_e_s_t_json_logs_3
+from .steps.json_logs_4 import t_e_s_t_json_logs_4
+from .steps.login import t_e_s_t_login
 from .steps.modify_config import t_e_s_t_modify_config
-from .steps.disable_ssl import t_e_s_t_disable_ssl
-from .steps.update_aes_key import t_e_s_t_update_aes_key
-from .steps.unauthorized_access import t_e_s_t_unauthorized_access
-from .steps.case_management_start import t_e_s_t_case_management_start
-from .steps.case_management import t_e_s_t_case_management
+from .steps.multilanguage_odk import t_e_s_t_multilanguage_odk
+from .steps.odk import t_e_s_t_odk
+from .steps.one_user_assistant import t_e_s_t_one_user_assistant
 from .steps.partners import t_e_s_t_partners
-from .steps.error_pages import t_e_s_t_error_pages
-
+from .steps.plugin_utility_functions import t_e_s_t_plugin_utility_functions
+from .steps.profile import t_e_s_t_profile
+from .steps.projects import t_e_s_t_projects
+from .steps.repository import t_e_s_t_repository
+from .steps.repository_downloads import t_e_s_t_repository_downloads
+from .steps.repository_tasks import t_e_s_t_repository_tasks
+from .steps.root import t_e_s_t_root
+from .steps.support_zip_file import t_e_s_t_support_zip_file
+from .steps.unauthorized_access import t_e_s_t_unauthorized_access
+from .steps.update_aes_key import t_e_s_t_update_aes_key
+from .steps.update_form_missing_files import t_e_s_t_update_form_missing_files
+from .steps.utility_functions import t_e_s_t_utility_functions
 
 """
 This testing module test all routes. It launch start the server and test all the routes and processes

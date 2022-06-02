@@ -1,7 +1,7 @@
 import paginate
 
-from formshare.processes.elasticsearch.user_index import get_user_index_manager
 from formshare.processes.elasticsearch.partner_index import get_partner_index_manager
+from formshare.processes.elasticsearch.user_index import get_user_index_manager
 from formshare.views.classes import PrivateView
 
 

@@ -68,6 +68,7 @@ from formshare.processes.elasticsearch.record_index import (
 from formshare.processes.elasticsearch.repository_index import (
     add_dataset,
 )
+from formshare.processes.email.send_email import send_error_to_technical_team
 from formshare.processes.odk.processes import update_form_repository_info
 from formshare.processes.storage import (
     get_stream,
@@ -76,9 +77,8 @@ from formshare.processes.storage import (
     delete_stream,
 )
 from formshare.products.fs1import.fs1import import formshare_one_import_json
-from formshare.products.xmlimport.xmlimport import xml_import
 from formshare.products.repository import create_database_repository
-from formshare.processes.email.send_email import send_error_to_technical_team
+from formshare.products.xmlimport.xmlimport import xml_import
 
 log = logging.getLogger("formshare")
 

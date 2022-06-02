@@ -1,8 +1,9 @@
 import datetime
 import logging
 import re
-import uuid
 import secrets
+import uuid
+
 import validators
 from elasticfeeds.activity import Actor, Object, Activity
 from pyramid.httpexceptions import HTTPNotFound, HTTPFound

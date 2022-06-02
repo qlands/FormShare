@@ -6,9 +6,10 @@ import os
 import shutil
 from hashlib import md5
 from subprocess import Popen, PIPE
-from sqlalchemy.pool import NullPool
+
 from celery.utils.log import get_task_logger
 from sqlalchemy import create_engine
+from sqlalchemy.pool import NullPool
 
 from formshare.config.celery_app import celeryApp
 from formshare.config.celery_class import CeleryTask

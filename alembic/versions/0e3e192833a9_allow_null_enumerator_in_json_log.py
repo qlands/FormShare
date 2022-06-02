@@ -6,7 +6,6 @@ Create Date: 2022-05-25 06:50:47.905669
 
 """
 from alembic import op
-import sqlalchemy as sa
 from sqlalchemy.dialects import mysql
 
 # revision identifiers, used by Alembic.

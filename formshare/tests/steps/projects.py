@@ -1,5 +1,5 @@
-import uuid
 import os
+import uuid
 
 
 def t_e_s_t_projects(test_object):

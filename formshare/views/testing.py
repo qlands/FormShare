@@ -1,7 +1,6 @@
 from pyramid.httpexceptions import HTTPNotFound
 
 from formshare.plugins.utilities import FormSharePrivateView
-from formshare.views.classes import PartnerView, AssistantView
 from formshare.processes.db import get_project_id_from_name
 from formshare.processes.db.project import get_owned_project
 from formshare.processes.db.user import (
@@ -17,6 +16,7 @@ from formshare.processes.settings import (
     delete_settings,
     get_settings,
 )
+from formshare.views.classes import PartnerView, AssistantView
 
 
 class TestUserView(FormSharePrivateView):

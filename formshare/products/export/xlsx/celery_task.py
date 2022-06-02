@@ -1,8 +1,9 @@
 import gettext
 import os
+import time
 import uuid
 from subprocess import Popen, PIPE
-import time
+
 from celery.utils.log import get_task_logger
 
 from formshare.config.celery_app import celeryApp

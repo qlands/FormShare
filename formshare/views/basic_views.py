@@ -1,10 +1,11 @@
 import datetime
 import logging
 import re
+import secrets
 import traceback
 import uuid
 from ast import literal_eval
-import secrets
+
 import validators
 from elasticfeeds.activity import Actor, Object, Activity
 from formencode.variabledecode import variable_decode
@@ -24,7 +25,7 @@ from formshare.config.auth import (
     reset_password,
 )
 from formshare.config.elasticfeeds import get_manager
-from formshare.config.encdecdata import encode_data, decode_data
+from formshare.config.encdecdata import encode_data
 from formshare.processes.avatar import Avatar
 from formshare.processes.db import (
     register_user,

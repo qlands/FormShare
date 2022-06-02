@@ -1,6 +1,7 @@
 import secrets
-import uuid
 import time
+import uuid
+
 from .sql import get_tokens_from_user
 
 

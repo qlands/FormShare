@@ -1,6 +1,7 @@
+import os
+
 from formshare.products import register_product_instance
 from formshare.products.xmlimport.celery_task import import_xml_files
-import os
 
 
 def xml_import(

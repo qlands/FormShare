@@ -7,13 +7,14 @@ import time
 import traceback
 import uuid
 from subprocess import Popen, PIPE, check_call, CalledProcessError
-from sqlalchemy.pool import NullPool
+
 import transaction
 from celery.utils.log import get_task_logger
 from lxml import etree
 from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import configure_mappers
+from sqlalchemy.pool import NullPool
 
 from formshare.config.celery_app import celeryApp
 from formshare.config.celery_class import CeleryTask

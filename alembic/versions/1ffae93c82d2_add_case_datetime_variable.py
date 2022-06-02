@@ -5,11 +5,11 @@ Revises: 448376431f7b
 Create Date: 2021-11-27 07:23:54.698672
 
 """
-from alembic import op
 import sqlalchemy as sa
+from alembic import op
 from sqlalchemy.orm.session import Session
-from formshare.models.formshare import Odkform, DictField
 
+from formshare.models.formshare import Odkform, DictField
 
 # revision identifiers, used by Alembic.
 revision = "1ffae93c82d2"

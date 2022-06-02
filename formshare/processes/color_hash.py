@@ -18,9 +18,9 @@ c.hex
 """
 
 from __future__ import division
+
 from binascii import crc32
 from numbers import Number
-
 
 __all__ = ["ColorHash"]
 

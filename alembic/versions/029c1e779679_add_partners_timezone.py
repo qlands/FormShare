@@ -5,10 +5,10 @@ Revises: c397ca02529d
 Create Date: 2021-12-29 20:54:45.979560
 
 """
-from alembic import op
-import sqlalchemy as sa
 import datetime
 
+import sqlalchemy as sa
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "029c1e779679"

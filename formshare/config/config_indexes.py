@@ -4,12 +4,12 @@ import time
 import requests
 
 from formshare.config.elasticfeeds import configure_manager
-from formshare.processes.elasticsearch.user_index import configure_user_index_manager
 from formshare.processes.elasticsearch.partner_index import (
     configure_partner_index_manager,
 )
 from formshare.processes.elasticsearch.record_index import create_record_index
 from formshare.processes.elasticsearch.repository_index import create_dataset_index
+from formshare.processes.elasticsearch.user_index import configure_user_index_manager
 
 log = logging.getLogger("formshare")
 

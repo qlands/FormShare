@@ -1,6 +1,7 @@
-from .sql import get_form_details
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
+
+from .sql import get_form_details
 
 
 def t_e_s_t_clean_interface(test_object):

@@ -1,6 +1,15 @@
-from formshare.views.classes import PrivateView
-from pyramid.httpexceptions import HTTPNotFound, HTTPFound
+import datetime
+import logging
+import uuid
+
 import validators
+from elasticfeeds.aggregators import YearMonthAggregator
+from pyramid.httpexceptions import HTTPNotFound, HTTPFound
+
+import formshare.plugins as p
+from formshare.config.elasticfeeds import get_manager
+from formshare.config.encdecdata import encode_data
+from formshare.processes.db.form import get_form_data
 from formshare.processes.db.partner import (
     partner_exists,
     register_partner,
@@ -10,20 +19,12 @@ from formshare.processes.db.partner import (
     update_partner_password,
     delete_partner,
 )
+from formshare.processes.db.project import get_project_details
 from formshare.processes.db.timezone import get_timezones
 from formshare.processes.db.user import get_user_details
-from formshare.config.encdecdata import encode_data
-import datetime
-import uuid
-import formshare.plugins as p
 from formshare.processes.elasticsearch.partner_index import get_partner_index_manager
-import logging
-from formshare.config.elasticfeeds import get_manager
-from elasticfeeds.aggregators import YearMonthAggregator
-from formshare.processes.db.form import get_form_data
-from formshare.processes.db.project import get_project_details
 from formshare.products.products import get_product_description, get_product
-
+from formshare.views.classes import PrivateView
 
 log = logging.getLogger("formshare")
 

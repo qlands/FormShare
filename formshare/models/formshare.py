@@ -14,9 +14,9 @@ from sqlalchemy import (
     text,
     Unicode,
 )
+from sqlalchemy.dialects.mysql import MEDIUMTEXT
 from sqlalchemy.ext import mutable
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.mysql import MEDIUMTEXT
 
 from formshare.models.meta import Base
 

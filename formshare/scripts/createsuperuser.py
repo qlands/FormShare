@@ -1,9 +1,10 @@
 import argparse
 import datetime
 import getpass
+import secrets
 import time
 import uuid
-import secrets
+
 import requests
 import transaction
 import validators

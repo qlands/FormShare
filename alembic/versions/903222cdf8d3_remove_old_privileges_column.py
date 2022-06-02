@@ -5,12 +5,8 @@ Revises: edcb3fdbfc3d
 Create Date: 2022-05-21 11:54:35.060211
 
 """
-from alembic import op
 import sqlalchemy as sa
-from formshare.models.formshare import Formacces, Formgrpacces
-from sqlalchemy.orm.session import Session
-from sqlalchemy import or_, and_
-
+from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "903222cdf8d3"

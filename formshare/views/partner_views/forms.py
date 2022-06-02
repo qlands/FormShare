@@ -1,14 +1,15 @@
+import datetime
 import logging
+import mimetypes
+import os
 
-from formshare.views.classes import PartnerView, PartnerAPIView
-from formshare.processes.db.partner import (
-    get_projects_and_forms_by_partner,
-    partner_has_project,
-    partner_has_form,
-    update_partner_password,
-    update_partner,
-)
+from elasticfeeds.activity import Actor, Object, Activity
+from pyramid.httpexceptions import HTTPNotFound, HTTPFound
+from pyramid.response import FileResponse
+
+import formshare.plugins as p
 from formshare.config.auth import check_partner_login
+from formshare.config.elasticfeeds import get_manager
 from formshare.config.encdecdata import encode_data
 from formshare.processes.db.form import (
     get_form_details,
@@ -16,9 +17,18 @@ from formshare.processes.db.form import (
     get_maintable_information,
     get_forms_for_schema,
 )
+from formshare.processes.db.partner import (
+    get_projects_and_forms_by_partner,
+    partner_has_project,
+    partner_has_form,
+    update_partner_password,
+    update_partner,
+)
+from formshare.processes.db.products import get_product_output, update_download_counter
 from formshare.processes.db.project import get_project_id_from_name, get_project_details
-import datetime
-from pyramid.httpexceptions import HTTPNotFound, HTTPFound
+from formshare.processes.elasticsearch.repository_index import (
+    get_number_of_datasets_with_gps,
+)
 from formshare.processes.submission.api import (
     get_gps_points_from_form,
     get_fields_from_table,
@@ -26,17 +36,8 @@ from formshare.processes.submission.api import (
     list_submission_media_files,
     get_submission_media_file,
 )
-from formshare.processes.elasticsearch.repository_index import (
-    get_number_of_datasets_with_gps,
-)
-import mimetypes
-from pyramid.response import FileResponse
-import os
 from formshare.products.products import get_form_products
-from formshare.processes.db.products import get_product_output, update_download_counter
-import formshare.plugins as p
-from formshare.config.elasticfeeds import get_manager
-from elasticfeeds.activity import Actor, Object, Activity
+from formshare.views.classes import PartnerView, PartnerAPIView
 
 
 class PartnerForms(PartnerView):

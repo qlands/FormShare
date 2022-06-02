@@ -5,20 +5,21 @@ Revises: 987c58df333b
 Create Date: 2021-08-24 15:34:07.426472
 
 """
-from pyramid.paster import get_appsettings
+import json
+import time
+
+import requests
 from alembic import context
+from alembic import op
+from pyramid.paster import get_appsettings
+from sqlalchemy.orm.session import Session
+
+from formshare.models.formshare import Odkform, Userproject, User, Project
 from formshare.processes.elasticsearch.repository_index import (
     create_connection,
     index_exists,
     create_dataset_index,
 )
-from sqlalchemy.orm.session import Session
-from formshare.models.formshare import Odkform, Userproject, User, Project
-from alembic import op
-import time
-import requests
-import json
-
 
 # revision identifiers, used by Alembic.
 revision = "b70e2621058e"

@@ -1,9 +1,10 @@
-from requests.auth import HTTPDigestAuth
 import gettext
 import glob
-import requests
 import os
+
+import requests
 from celery.utils.log import get_task_logger
+from requests.auth import HTTPDigestAuth
 
 from formshare.config.celery_app import celeryApp
 from formshare.config.celery_class import CeleryTask

@@ -10,7 +10,7 @@ import uuid
 from collections import OrderedDict
 from decimal import Decimal
 from subprocess import Popen, PIPE
-from sqlalchemy.orm.session import Session
+
 import paginate
 import pandas as pd
 from PIL import Image
@@ -18,9 +18,11 @@ from lxml import etree
 from pandas import json_normalize
 from sqlalchemy import create_engine
 from sqlalchemy import exc
+from sqlalchemy.orm.session import Session
+from sqlalchemy.pool import NullPool
 from webhelpers2.html import literal
 from zope.sqlalchemy import mark_changed
-from sqlalchemy.pool import NullPool
+
 from formshare.models.formshare import Submission, Jsonlog
 from formshare.processes.color_hash import ColorHash
 from formshare.processes.db import (

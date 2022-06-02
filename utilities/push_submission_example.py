@@ -1,7 +1,8 @@
 import glob
+import os
+
 import requests
 from requests.auth import HTTPDigestAuth
-import os
 
 """
 This script uploads submissions into FormShare.

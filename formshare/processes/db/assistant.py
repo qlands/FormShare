@@ -1,7 +1,8 @@
 import datetime
 import logging
-from uuid import uuid4
 import secrets
+from uuid import uuid4
+
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 

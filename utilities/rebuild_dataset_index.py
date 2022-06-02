@@ -1,19 +1,21 @@
 import argparse
-import sys
+import glob
+import json
 import os
+import sys
+from pathlib import Path
+
 import transaction
 from pyramid.paster import get_appsettings, setup_logging
-from formshare.processes.elasticsearch.repository_index import (
-    create_dataset_index,
-    add_dataset,
-)
+
 from formshare.models import Odkform
 from formshare.models import get_engine, get_session_factory, get_tm_session
 from formshare.models.meta import Base
 from formshare.processes.db.project import get_project_owner, get_project_code_from_id
-import glob
-import json
-from pathlib import Path
+from formshare.processes.elasticsearch.repository_index import (
+    create_dataset_index,
+    add_dataset,
+)
 
 
 class Request(object):

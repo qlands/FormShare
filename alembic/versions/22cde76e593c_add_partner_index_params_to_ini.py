@@ -6,12 +6,12 @@ Create Date: 2021-08-15 18:53:50.724368
 
 """
 import configparser
-import shutil
 import os
+import shutil
+
 from alembic import context
 
 from formshare.scripts.modifyconfig import modify_ini_file
-
 
 # revision identifiers, used by Alembic.
 revision = "22cde76e593c"

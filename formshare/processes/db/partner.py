@@ -1,13 +1,8 @@
 import logging
-from formshare.processes.color_hash import ColorHash
+
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
-from formshare.processes.db.form import (
-    form_has_subversion,
-    get_form_data,
-    get_number_of_submissions_in_database,
-    get_last_clean_info,
-)
+
 from formshare.models import (
     map_to_schema,
     Partner,
@@ -18,6 +13,13 @@ from formshare.models import (
     Odkform,
     Userproject,
     TimeZone,
+)
+from formshare.processes.color_hash import ColorHash
+from formshare.processes.db.form import (
+    form_has_subversion,
+    get_form_data,
+    get_number_of_submissions_in_database,
+    get_last_clean_info,
 )
 
 __all__ = [

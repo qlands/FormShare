@@ -1,9 +1,11 @@
-from pyramid.response import Response
 import json
-from formshare.models import User, Collaborator
 import secrets
 from datetime import datetime
+
 from dateutil.relativedelta import relativedelta
+from pyramid.response import Response
+
+from formshare.models import User, Collaborator
 from formshare.processes.email.send_email import send_token_email
 
 

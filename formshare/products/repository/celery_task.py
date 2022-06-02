@@ -9,7 +9,6 @@ from subprocess import Popen, PIPE, check_call, CalledProcessError
 import transaction
 from celery.utils.log import get_task_logger
 from lxml import etree
-from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import configure_mappers
 

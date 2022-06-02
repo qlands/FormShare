@@ -23,18 +23,6 @@ from formshare.views.assistant_views.forms import (
     ChangeMyAPIKey,
     ChangeMyTimeZone,
 )
-from formshare.views.partner_views.forms import (
-    PartnerForms,
-    PartnerFormDetails,
-    PartnerDownloadGPSPoints,
-    PartnerGetSubMissionInfo,
-    GetPartnerMediaFile,
-    PartnerDownloadPrivateProduct,
-    PartnerDownloadPrivateProductByAPI,
-    ChangeMyPartnerPassword,
-    PartnerChangeMyAPIKey,
-    PartnerChangeMyTimeZone,
-)
 from formshare.views.assistant_views.jsonlogs import (
     JSONList,
     JSONCompare,
@@ -133,6 +121,25 @@ from formshare.views.odk import (
     ODKSubmission,
     ODKXMLForm,
 )
+from formshare.views.partner_views.forms import (
+    PartnerForms,
+    PartnerFormDetails,
+    PartnerDownloadGPSPoints,
+    PartnerGetSubMissionInfo,
+    GetPartnerMediaFile,
+    PartnerDownloadPrivateProduct,
+    PartnerDownloadPrivateProductByAPI,
+    ChangeMyPartnerPassword,
+    PartnerChangeMyAPIKey,
+    PartnerChangeMyTimeZone,
+)
+from formshare.views.partners import (
+    PartnersListView,
+    AddPartnerView,
+    EditPartnerView,
+    DeletePartnerView,
+    PartnerActivityView,
+)
 from formshare.views.products import (
     DownloadPrivateProduct,
     DownloadPublicProduct,
@@ -182,13 +189,6 @@ from formshare.views.testing import (
     TestAssistantErrorView,
 )
 from formshare.views.users import UsersListView, EditUserView, AddUserView
-from formshare.views.partners import (
-    PartnersListView,
-    AddPartnerView,
-    EditPartnerView,
-    DeletePartnerView,
-    PartnerActivityView,
-)
 
 log = logging.getLogger("formshare")
 

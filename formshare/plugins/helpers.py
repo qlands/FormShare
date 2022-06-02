@@ -5,17 +5,19 @@ Consists of functions to typically be used within templates, but also
 available to Controllers. This module is available to templates as 'request.h'.
 """
 
+import datetime
+import logging
+
 import arrow
 import timeago
 import validators
+from dateutil.parser import parse
 from pattern.en import pluralize as pluralize_en
 from pattern.es import pluralize as pluralize_es
-import datetime
-import formshare.plugins as p
 from pytz import timezone
+
+import formshare.plugins as p
 from formshare.models import TimeZone
-from dateutil.parser import parse
-import logging
 
 log = logging.getLogger("formshare")
 

@@ -1,5 +1,5 @@
-import uuid
 import secrets
+import uuid
 
 
 def t_e_s_t_collaborator_projects_2(test_object):

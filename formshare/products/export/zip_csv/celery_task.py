@@ -1,11 +1,13 @@
 import gettext
-import os
-import uuid
-from subprocess import Popen, PIPE
-import time
-from celery.utils.log import get_task_logger
-import zipfile
 import glob
+import os
+import time
+import uuid
+import zipfile
+from subprocess import Popen, PIPE
+
+from celery.utils.log import get_task_logger
+
 from formshare.config.celery_app import celeryApp
 from formshare.config.celery_class import CeleryTask
 from formshare.processes.email.send_async_email import send_async_email

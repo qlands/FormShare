@@ -7,14 +7,16 @@ import re
 import uuid
 import zlib
 from datetime import datetime
+
 import qrcode
 from elasticfeeds.activity import Actor, Object, Activity
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from pyramid.response import FileResponse
 from pyramid.response import Response
-from formshare.processes.color_hash import ColorHash
+
 import formshare.plugins as p
 from formshare.config.elasticfeeds import get_manager
+from formshare.processes.color_hash import ColorHash
 from formshare.processes.db import (
     add_project,
     modify_project,

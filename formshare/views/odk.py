@@ -1,4 +1,5 @@
 from pyramid.response import Response
+
 from formshare.processes.db import (
     get_project_id_from_name,
     is_assistant_active,

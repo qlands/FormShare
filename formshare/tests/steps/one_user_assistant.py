@@ -1,6 +1,6 @@
-import uuid
-import secrets
 import os
+import secrets
+import uuid
 
 
 def t_e_s_t_one_user_assistant(test_object):

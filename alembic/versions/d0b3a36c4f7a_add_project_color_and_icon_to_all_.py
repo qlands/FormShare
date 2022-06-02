@@ -5,13 +5,14 @@ Revises: d5b5f9171d34
 Create Date: 2021-07-29 15:27:36.822801
 
 """
-from alembic import op
-from sqlalchemy.orm.session import Session
-from formshare.models.formshare import Project
-from formshare.processes.color_hash import ColorHash
-from emoji.unicode_codes import EMOJI_UNICODE_ENGLISH
 import random
 
+from alembic import op
+from emoji.unicode_codes import EMOJI_UNICODE_ENGLISH
+from sqlalchemy.orm.session import Session
+
+from formshare.models.formshare import Project
+from formshare.processes.color_hash import ColorHash
 
 # revision identifiers, used by Alembic.
 revision = "d0b3a36c4f7a"

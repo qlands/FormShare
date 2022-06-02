@@ -1,10 +1,12 @@
+import datetime
 import os
-import uuid
 import time
-from .sql import get_form_details
+import uuid
+
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
-import datetime
+
+from .sql import get_form_details
 
 
 def t_e_s_t_form_merge_mimic_3(test_object):

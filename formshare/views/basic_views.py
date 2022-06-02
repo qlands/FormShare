@@ -164,7 +164,7 @@ class LoginView(PublicView):
                     data_items.append(key + "|" + value)
                 log.error(
                     "Suspicious bot login from IP: {}. Agent: {}. Data items: {}. Using method: {}".format(
-                        self.request.client_addr,
+                        self.request.remote_addr,
                         self.request.user_agent,
                         ",".join(data_items),
                         self.request.method,
@@ -175,7 +175,7 @@ class LoginView(PublicView):
             if user != "":
                 log.error(
                     "Suspicious bot login from IP: {}. Agent: {}. Email/Account: {}".format(
-                        self.request.client_addr, self.request.user_agent, data["email"]
+                        self.request.remote_addr, self.request.user_agent, data["email"]
                     )
                 )
             data.pop("user", None)
@@ -254,7 +254,7 @@ class RecoverPasswordView(PublicView):
             if user != "":
                 log.error(
                     "Suspicious bot password recovery from IP: {}. Agent: {}. Email: {}".format(
-                        self.request.client_addr, self.request.user_agent, data["email"]
+                        self.request.remote_addr, self.request.user_agent, data["email"]
                     )
                 )
             user = get_user_data(login, self.request)
@@ -508,7 +508,7 @@ class RegisterView(PublicView):
             if user != "Costa Rica":
                 log.error(
                     "Suspicious bot register from IP: {}. Agent: {}. Email: {} ".format(
-                        self.request.client_addr,
+                        self.request.remote_addr,
                         self.request.user_agent,
                         data["user_email"],
                     )

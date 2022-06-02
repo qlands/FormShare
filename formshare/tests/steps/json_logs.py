@@ -674,6 +674,20 @@ def t_e_s_t_json_logs(test_object):
         status=200,
     )
 
+    # Loads the revision review page for a revision that does not exist
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/view".format(
+            test_object.randonLogin,
+            test_object.project,
+            test_object.formID,
+            duplicated_id,
+            "not_found",
+        ),
+        {"pushed": ""},
+        status=200,
+    )
+    assert "FS_error" in res.headers
+
     # Loads the revision review page
     test_object.testapp.get(
         "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/view".format(
@@ -685,6 +699,19 @@ def t_e_s_t_json_logs(test_object):
         ),
         status=200,
     )
+
+    # Loads the revision review page of a revision that does not exist
+    red = test_object.testapp.get(
+        "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/view".format(
+            test_object.randonLogin,
+            test_object.project,
+            test_object.formID,
+            duplicated_id,
+            "no exiss",
+        ),
+        status=200,
+    )
+    assert "FS_error" in res.headers
 
     # Loads the revision review page a second time
     test_object.testapp.get(

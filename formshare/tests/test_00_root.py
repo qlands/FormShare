@@ -29,6 +29,7 @@ from .steps.configure_fluent import t_e_s_t_configure_fluent
 from .steps.configure_mysql import t_e_s_t_configure_mysql
 from .steps.configure_t_e_s_t_s import t_e_s_t_configure_t_e_s_t_s
 from .steps.create_super_user import t_e_s_t_create_super_user
+from .steps.crowdsourcing import t_e_s_t_crowdsourcing
 from .steps.dashboard import t_e_s_t_dashboard
 from .steps.delete_active_project import t_e_s_t_delete_active_project
 from .steps.delete_form_with_repository import t_e_s_t_delete_form_with_repository
@@ -288,6 +289,8 @@ class FunctionalTests(unittest.TestCase):
         t_e_s_t_update_aes_key(self.test_object)
         print("Testing error pages")
         t_e_s_t_error_pages(self.test_object)
+        print("Testing crowdsourcing")
+        t_e_s_t_crowdsourcing(self.test_object)
 
         show_health()
         end_time = datetime.datetime.now()

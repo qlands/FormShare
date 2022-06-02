@@ -3388,7 +3388,7 @@ def store_submission(request, user, project, assistant):
 def get_html_from_diff(request, project, form, submission, revision):
     odk_dir = get_odk_path(request)
     form_directory = get_form_directory(request, project, form)
-
+    _ = request.translate
     diff_file = os.path.join(
         odk_dir,
         *[
@@ -3414,6 +3414,16 @@ def get_html_from_diff(request, project, form, submission, revision):
         ]
     )
 
+    if not os.path.exists(diff_file):
+        message = (
+            "Generating Diff HTML file error. Diff file for commit {} "
+            "does not exist".format(diff_file)
+        )
+        log.error(message)
+        return 1, _(
+            "Generating Diff HTML file error. Diff file for such commit does not exist"
+        )
+
     if not os.path.exists(html_file):
         args = ["diff2html", "-s", "side", "-o", "stdout", "-i", "file", diff_file]
 
@@ -3425,7 +3435,12 @@ def get_html_from_diff(request, project, form, submission, revision):
             soup = BeautifulSoup(open(html_file), "html.parser")
             for diff in soup.find_all("div", {"class": "d2h-files-diff"}):
                 return 0, diff
-            return 0, ""
+            log.error(
+                "BeautifulSoup was not able to find difference data in file {}".format(
+                    html_file
+                )
+            )
+            return 1, "BeautifulSoup was not able to find difference data"
         else:
             message = (
                 "Generating HTML "
@@ -3442,6 +3457,12 @@ def get_html_from_diff(request, project, form, submission, revision):
         soup = BeautifulSoup(open(html_file), "html.parser")
         for diff in soup.find_all("div", {"class": "d2h-files-diff"}):
             return 0, diff
+        log.error(
+            "BeautifulSoup was not able to find difference data in file {}".format(
+                html_file
+            )
+        )
+        return 1, "BeautifulSoup was not able to find difference data"
 
 
 def generate_diff(request, project, form, json_file_a, json_file_b):

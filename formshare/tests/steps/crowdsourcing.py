@@ -176,7 +176,7 @@ def t_e_s_t_crowdsourcing(test_object):
         status=302,
     )
     assert "FS_error" not in res.headers
-
+    print("Crowdsourcing. Waiting for repository")
     time.sleep(60)  # Wait for Celery to finish
 
     # Upload submission 2 goes to logs
@@ -361,24 +361,22 @@ def t_e_s_t_crowdsourcing(test_object):
     with open(submission_file, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
-        # Checkin a file passes.
-        res = test_object.testapp.post(
-            "/user/{}/project/{}/assistantaccess/form/{}/{}/checkin".format(
-                test_object.randonLogin,
-                json2_project,
-                json2_form,
-                duplicated_id,
-            ),
-            {
-                "notes": "Some notes about the checkin submission {}".format(
-                    duplicated_id
-                ),
-                "sequence": "23a243c95547",
-            },
-            status=302,
-            upload_files=[("json", submission_file)],
-        )
-        assert "FS_error" not in res.headers
+    # Checkin a file passes.
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/assistantaccess/form/{}/{}/checkin".format(
+            test_object.randonLogin,
+            json2_project,
+            json2_form,
+            duplicated_id,
+        ),
+        {
+            "notes": "Some notes about the checkin submission {}".format(duplicated_id),
+            "sequence": "23a243c95547",
+        },
+        status=302,
+        upload_files=[("json", submission_file)],
+    )
+    assert "FS_error" not in res.headers
 
     os.remove(submission_file)
 

@@ -160,6 +160,9 @@ class ODKView(object):
         return response
 
     def __call__(self):
+        project_code = self.request.matchdict["projcode"]
+        user_id = self.request.matchdict["userid"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
         testing_calls = self.request.encget("FS_for_testing", default="false")
         if "Authorization" in self.request.headers or testing_calls == "true":
             if testing_calls == "false":  # pragma: no cover
@@ -186,20 +189,24 @@ class ODKView(object):
                 self.user = self.request.encget("FS_user_for_testing", default="None")
                 return self.process_view()
         else:
-            headers = [
-                (
-                    "WWW-Authenticate",
-                    'Digest realm="'
-                    + self.realm
-                    + '",qop="auth,auth-int",nonce="'
-                    + self.nonce
-                    + '",opaque="'
-                    + self.opaque
-                    + '"',
-                )
-            ]
-            reponse = Response(status=401, headerlist=headers)
-            return reponse
+            if not project_has_crowdsourcing(self.request, project_id):
+                headers = [
+                    (
+                        "WWW-Authenticate",
+                        'Digest realm="'
+                        + self.realm
+                        + '",qop="auth,auth-int",nonce="'
+                        + self.nonce
+                        + '",opaque="'
+                        + self.opaque
+                        + '"',
+                    )
+                ]
+                reponse = Response(status=401, headerlist=headers)
+                return reponse
+            else:
+                self.user = ""
+                return self.process_view()
 
     def process_view(self):
         # At this point children of odkView have:

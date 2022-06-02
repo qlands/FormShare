@@ -466,6 +466,7 @@ class JSONViewRevision(AssistantView):
                     self.request, self.projectID, form_id, submission_id, revision_id
                 )
                 if error_code != 0:
+                    self.append_to_errors(diff)
                     diff = None
                 else:
                     diff = literal(diff)

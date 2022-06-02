@@ -178,7 +178,9 @@ class LoginView(PublicView):
                         self.request.client_addr, self.request.user_agent, data["email"]
                     )
                 )
-            data.pop("user")
+            data.pop("user", None)
+            if "email" not in data.keys():
+                raise HTTPNotFound()
             login = data["email"]
             passwd = data["passwd"]
             user = get_user_data(login, self.request)

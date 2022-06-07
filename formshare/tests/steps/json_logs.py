@@ -701,7 +701,7 @@ def t_e_s_t_json_logs(test_object):
     )
 
     # Loads the revision review page of a revision that does not exist
-    red = test_object.testapp.get(
+    res = test_object.testapp.get(
         "/user/{}/project/{}/assistantaccess/form/{}/{}/{}/view".format(
             test_object.randonLogin,
             test_object.project,
@@ -1255,7 +1255,7 @@ def t_e_s_t_json_logs(test_object):
         status=404,
     )
 
-    # Edit an assistant to clean submmit and clean
+    # Edit an assistant to clean submit and clean
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
             test_object.randonLogin,

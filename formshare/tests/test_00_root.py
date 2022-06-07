@@ -83,7 +83,7 @@ We allocated all in one testing function because separating them in different te
 the environment processes multiple times and crash FormShare.
 
 Before running this test you need to do:
-    export FORMSHARE_PYTEST_RUNNING=true' before running PyTest
+    'export FORMSHARE_PYTEST_RUNNING=true' before running PyTest
 before running pytest or start_local_celery
 
 """

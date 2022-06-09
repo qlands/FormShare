@@ -3678,7 +3678,7 @@ class EditPartnerFormOptions(PrivateView):
             )
             if updated:
                 self.request.session.flash(
-                    self._("The partner was added successfully updated")
+                    self._("The partner was successfully updated")
                 )
                 next_page = self.request.route_url(
                     "form_details",
@@ -3738,7 +3738,7 @@ class RemovePartnerFromForm(PrivateView):
             )
             if removed:
                 self.request.session.flash(
-                    self._("The partner was added successfully removed from this form")
+                    self._("The partner was successfully removed from this form")
                 )
                 next_page = self.request.route_url(
                     "form_details",

@@ -1,1 +1,1 @@
-sudo docker build --rm -t qlands/odktools_circleci:20220516 -f ./circleci.Dockerfile .
+sudo docker build --rm -t qlands/odktools_circleci:20220612 -f ./circleci.Dockerfile .

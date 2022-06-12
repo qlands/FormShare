@@ -9,18 +9,14 @@ description: This is the official documentation of FormShare
 
 With FormShare you can create data collection projects, upload ODK Forms, manage submissions, perform data cleaning, create data products, and analyze data with the tools of your choice.
 
-FormShare is [open source](https://github.com/qlands/FormShare) and offered for free to individials and small organizations at [https://formshare.org](https://formshare.org)
+FormShare is [open source](https://github.com/qlands/FormShare) and offered for free to individuals and small organizations at [https://formshare.org](https://formshare.org)
 {% endhint %}
 
 ## Getting Started
 
-**Got 2 minutes?** Check out a video overview of our product:
+**Got 2 minutes?** Check out this video overview about FormShare:
 
 {% embed url="https://www.loom.com/share/3bfa83acc9fd41b7b98b803ba9197d90" %}
-
-{% hint style="info" %}
-**Good to know:** A succinct video overview is a great way to introduce folks to your product. Embed a Loom, Vimeo, or YouTube video and you're good to go! We love this video from the fine folks at [Loom](https://loom.com) as a perfect example of a succinct feature overview.
-{% endhint %}
 
 ### Guides: Jump right in
 

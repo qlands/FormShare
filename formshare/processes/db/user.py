@@ -4,7 +4,8 @@ import secrets
 
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
-
+from sqlalchemy import create_engine
+from sqlalchemy.pool import NullPool
 from formshare.models import (
     map_to_schema,
     User,
@@ -245,15 +246,23 @@ def update_profile(request, user, profile_data):
 
 
 def update_last_login(request, user):
+    engine = create_engine(
+        request.registry.settings.get("sqlalchemy.url"), poolclass=NullPool
+    )
+    connection = engine.connect()
+    string_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    sql = "UPDATE fsuser set user_llogin = '{}' WHERE user_id = '{}'".format(
+        string_date, user
+    )
     try:
-        request.dbsession.query(User).filter(User.user_id == user).update(
-            {"user_llogin": datetime.datetime.now()}
-        )
-        request.dbsession.flush()
+        connection.execute(sql)
+        connection.invalidate()
+        engine.dispose()
         return True, ""
     except Exception as e:
-        request.dbsession.rollback()
         log.error("Error {} when updating last login for user {}".format(str(e), user))
+        connection.invalidate()
+        engine.dispose()
         return False, str(e)
 
 

@@ -396,7 +396,6 @@ class PrivateView(object):
                 if not safe:
                     self.request.session.pop_flash()
                     log.error("SECURITY-CSRF error at {} ".format(self.request.url))
-                    update_last_login(self.request, self.user.login)
                     raise HTTPFound(self.request.route_url("refresh"))
                 else:
                     if self.checkCrossPost:
@@ -519,6 +518,7 @@ class PrivateView(object):
             self.request, self.user.login
         )
         self.user_timezone = get_user_timezone(self.request, self.user.login)
+        update_last_login(self.request, self.user.login)
         self.viewResult = self.process_view()
 
         if not self.returnRawViewResult:

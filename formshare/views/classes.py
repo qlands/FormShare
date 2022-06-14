@@ -45,6 +45,7 @@ from formshare.processes.db import (
     timezone_exists,
     get_assistant_by_api_key,
     project_has_crowdsourcing,
+    update_last_login,
 )
 
 log = logging.getLogger("formshare")
@@ -395,6 +396,7 @@ class PrivateView(object):
                 if not safe:
                     self.request.session.pop_flash()
                     log.error("SECURITY-CSRF error at {} ".format(self.request.url))
+                    update_last_login(self.request, self.user.login)
                     raise HTTPFound(self.request.route_url("refresh"))
                 else:
                     if self.checkCrossPost:

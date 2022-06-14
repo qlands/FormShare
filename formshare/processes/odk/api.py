@@ -575,6 +575,14 @@ def check_jxform_file(
             )
             return 25, message
 
+        if p.returncode == 17:
+            message = _(
+                "The variable to control duplicate submissions has an invalid type. "
+                "E.g., the variable cannot be note, picture, video, sound, select_multiple, or geo-spacial. "
+                "The most appropriate types are text, datetime, barcode, calculate, select_one, or integer"
+            )
+            return 17, message
+
         if p.returncode == 24:
             log.error(
                 ". Error: "

@@ -56,6 +56,19 @@ def t_e_s_t_forms(test_object):
     )
     assert "FS_error" in res.headers
 
+    # Upload a form a fails. Invalid key type
+    paths = ["resources", "forms", "form10.xlsx"]
+    resource_file = os.path.join(test_object.path, *paths)
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/forms/add".format(
+            test_object.randonLogin, test_object.project
+        ),
+        {"form_pkey": "qid"},
+        status=302,
+        upload_files=[("xlsx", resource_file)],
+    )
+    assert "FS_error" in res.headers
+
     # Uploads a form fails. Invalid ID
     paths = ["resources", "forms", "form02.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)

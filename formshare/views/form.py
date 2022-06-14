@@ -562,7 +562,14 @@ class FormDetails(PrivateView):
                 )
             if created == 17:
                 # Primary key is invalid
-                errors.append(self._("The primary key is invalid."))
+                errors.append(
+                    self._(
+                        "The variable to control duplicate submissions has an invalid type. "
+                        "E.g., the variable cannot be note, picture, video, sound, select_multiple, "
+                        "or geo-spacial. The most appropriate types are text, datetime, barcode, "
+                        "calculate, select_one, or integer."
+                    )
+                )
             if created == 18:
                 # Duplicate tables. Report issue because this was checked before
                 self.report_critical_error(

@@ -249,7 +249,16 @@ def update_last_login(request, user):
     engine = create_engine(
         request.registry.settings.get("sqlalchemy.url"), poolclass=NullPool
     )
-    connection = engine.connect()
+    try:
+        connection = engine.connect()
+    except Exception as e:
+        engine.dispose()
+        log.error(
+            "Error {} when updating last login for user {}. Cannot connect to MySQL".format(
+                str(e), user
+            )
+        )
+        return False, str(e)
     string_date = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     sql = "UPDATE fsuser set user_llogin = '{}' WHERE user_id = '{}'".format(
         string_date, user

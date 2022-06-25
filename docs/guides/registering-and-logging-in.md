@@ -3,7 +3,7 @@
 ### Registration
 
 {% hint style="info" %}
-The "Sign up button" may not appear if you configure FormShare to now allow online registration. See the section "Post-install configuration" for more information.
+The "Sign up button" may not appear if you configure FormShare to not allow online registration. See the section "Post-install configuration" for more information.
 {% endhint %}
 
 To start using FormShare click on the "Sign up" button in the main menu.
@@ -40,8 +40,14 @@ To request a password request click on the "Forgot password" link on the login p
 
 ![](../.gitbook/assets/change\_password.png)
 
-The reset password will appear. You need to indicate your email. FormShare will send you instructions on how to change your password. FormShare then will take you to the download page. FormShare does not tell you whether an email exists to avoid malicious email discovery.
+The reset password will appear. You need to indicate your email. FormShare will send you instructions on how to change your password. FormShare then will take you to the download page. **FormShare does not tell you whether an email exists to avoid malicious email discovery**.
 
 ![](../.gitbook/assets/reset\_password.png)
 
-The email with instructions for changing your password comes with a password reset token. You have 24 hours to change
+The email with instructions for changing your password comes with a password reset token. You have 24 hours to change your password. Click on the link in your email. This will take you to the password reset page. You need to provide the following information:
+
+* Email address: Your email address.
+* Password reset token: The token as it appears in your password reset email.
+* New password: The new password and its confirmation.
+
+![](../.gitbook/assets/password\_reset.png)

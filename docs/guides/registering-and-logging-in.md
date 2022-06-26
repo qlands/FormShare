@@ -19,7 +19,7 @@ The registration page will appear. You need to provide the following information
 
 ![The registration page](../.gitbook/assets/register.png)
 
-Once the registration is completed, you will be able to create your first project.
+If there are problems with any of the fields, FormShare will tell you the problem and enable you to correct it. When the fields are filled in correctly, FormShare will create your user account and automatically log you in. Afterward, you will be able to create your first project.
 
 ### **Login**
 

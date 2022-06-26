@@ -6,24 +6,33 @@
 
 * [Registering and logging in](guides/registering-and-logging-in.md)
 * [Creating your first project](guides/creating-your-first-project.md)
-* [Creating your first task](guides/creating-your-first-task.md)
-* [Advanced permissions](guides/advanced-permissions.md)
+* [Uploading your first ODK Form](guides/creating-your-first-task.md)
+* [Create a form repository](guides/advanced-permissions.md)
 
 ## Fundamentals
 
+* [The dashboard](fundamentals/the-dashboard.md)
 * [Projects](fundamentals/projects.md)
-* [Members](fundamentals/members.md)
-* [Task Lists](fundamentals/task-lists.md)
-* [Tasks](fundamentals/tasks.md)
+* [Collaborators](fundamentals/members.md)
+* [Forms](fundamentals/task-lists.md)
+* [Assistants](fundamentals/tasks.md)
+* [Repositories](fundamentals/repositories.md)
+* [Partners](fundamentals/partners.md)
 
-## Use Cases
+## Data management
 
-* [For Designers](use-cases/for-designers/README.md)
-  * [Figma Integration](use-cases/for-designers/figma-integration.md)
-* [For Engineers](use-cases/for-engineers/README.md)
-  * [GitHub Integration](use-cases/for-engineers/github-integration.md)
-* [For Support](use-cases/for-support/README.md)
-  * [Intercom Integration](use-cases/for-support/intercom-integration.md)
+* [Data curation](data-management/for-designers/README.md)
+  * [Cleaning data in a repository](data-management/for-designers/figma-integration.md)
+  * [Submissions with errors](data-management/for-designers/submissions-with-errors.md)
+  * [Working with submissions](data-management/for-designers/working-with-submissions.md)
+* [Longitudinal data collection](data-management/for-engineers/README.md)
+  * [Case creator forms](data-management/for-engineers/github-integration.md)
+  * [The real-time CSV file](data-management/for-engineers/the-real-time-csv-file.md)
+  * [Follow-up forms](data-management/for-engineers/follow-up-forms.md)
+  * [Activating / de-activating a case](data-management/for-engineers/activating-de-activating-a-case.md)
+* [The data dictionary](data-management/for-support/README.md)
+  * [Marking fields as sensitive](data-management/for-support/intercom-integration.md)
+* [Data products](data-management/data-products.md)
 
 ## Extras
 

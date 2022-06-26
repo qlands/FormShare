@@ -20,7 +20,3 @@ To add a project you will need to provide the following information:
 * Requires authentication to accept data (optional): By default, data collectors require to enter their credentials to submit data. Uncheck this option to have public/crowdsourcing submissions.
 
 Click on the "Add project button" to add the project. If there are problems with any of the fields, FormShare will tell you the problem and enable you to correct it. When the fields are filled in correctly, FormShare will create your project and take you to the "Project Details" page to upload your first form. Other information related to projects is covered in the "[Project](../fundamentals/projects.md)" section.
-
-Projects are containers for task lists. Think of them as a library for everything your team needs to get done to complete or ship a project.
-
-Hit the big '+' button in your sidebar and select 'New Project' from the menu that pops up. Give your project a name, and you're good to go!

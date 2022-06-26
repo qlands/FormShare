@@ -21,17 +21,17 @@
 
 ## Data management
 
-* [Data curation](data-management/for-designers/README.md)
-  * [Cleaning data in a repository](data-management/for-designers/figma-integration.md)
+* [Data curation](use-cases/for-designers/README.md)
+  * [Cleaning data in a repository](use-cases/for-designers/figma-integration.md)
   * [Submissions with errors](data-management/for-designers/submissions-with-errors.md)
   * [Working with submissions](data-management/for-designers/working-with-submissions.md)
-* [Longitudinal data collection](data-management/for-engineers/README.md)
-  * [Case creator forms](data-management/for-engineers/github-integration.md)
+* [Longitudinal data collection](use-cases/for-engineers/README.md)
+  * [Case creator forms](use-cases/for-engineers/github-integration.md)
   * [The real-time CSV file](data-management/for-engineers/the-real-time-csv-file.md)
   * [Follow-up forms](data-management/for-engineers/follow-up-forms.md)
   * [Activating / de-activating a case](data-management/for-engineers/activating-de-activating-a-case.md)
-* [The data dictionary](data-management/for-support/README.md)
-  * [Marking fields as sensitive](data-management/for-support/intercom-integration.md)
+* [The data dictionary](use-cases/for-support/README.md)
+  * [Marking fields as sensitive](use-cases/for-support/intercom-integration.md)
 * [Data products](data-management/data-products.md)
 
 ## Extras

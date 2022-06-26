@@ -1,6 +1,6 @@
 # Registering and logging in
 
-### Registration
+## Registration
 
 {% hint style="info" %}
 The "Sign up button" may not appear if you configure FormShare to not allow online registration. See the section "Post-install configuration" for more information.
@@ -21,7 +21,7 @@ The registration page will appear. You need to provide the following information
 
 If there are problems with any of the fields, FormShare will tell you the problem and enable you to correct it. When the fields are filled in correctly, FormShare will create your user account and automatically log you in. Afterward, you will be able to create your first project.
 
-### **Login**
+## **Login**
 
 If you log out from FormShare click on the "Sign in" button to login an again.
 
@@ -34,7 +34,7 @@ The login page will appear. You need to provide the following information:
 
 ![](../.gitbook/assets/login.png)
 
-### Change my password
+## Change my password
 
 To request a password request click on the "Forgot password" link on the login page
 

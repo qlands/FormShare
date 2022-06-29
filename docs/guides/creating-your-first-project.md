@@ -6,7 +6,7 @@ Upon registration, FormShare will take you to the Dashboard. The dashboard is th
 
 Click on the "Create a new project" button to create a new project. The "Add new project" screen will appear.
 
-![](../.gitbook/assets/add\_project.png)
+![](<../.gitbook/assets/add\_project\_odk (1).png>)
 
 To add a project you will need to provide the following information:
 

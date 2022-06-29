@@ -13,6 +13,7 @@ from formshare.processes.odk.api import (
     get_form_list,
     get_xml_form,
     store_submission,
+    store_json_submission,
 )
 from formshare.views.classes import ODKView
 
@@ -65,6 +66,55 @@ class ODKPushData(ODKView):
                             )
                         ):
                             stored, error = store_submission(
+                                self.request, user_id, project_id, self.user
+                            )
+                            if stored:
+                                response = Response(status=201)
+                                return response
+                            else:
+                                response = Response(status=error)
+                                return response
+                        else:
+                            return self.ask_for_credentials()
+                    else:
+                        response = Response(status=401)
+                        return response
+                else:
+                    self.user = "public"
+                    stored, error = store_submission(
+                        self.request, user_id, project_id, self.user
+                    )
+                    if stored:
+                        response = Response(status=201)
+                        return response
+                    else:
+                        response = Response(status=error)
+                        return response
+            else:
+                response = Response(status=404)
+                return response
+        else:
+            response = Response(status=404)
+            return response
+
+
+class ODKPushJSONData(ODKView):
+    def process_view(self):
+        project_code = self.request.matchdict["projcode"]
+        user_id = self.request.matchdict["userid"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        if project_id is not None:
+            if self.request.method == "POST":
+                if not project_has_crowdsourcing(self.request, project_id):
+                    if is_assistant_active(
+                        self.request, user_id, project_id, self.user
+                    ):
+                        if self.authorize(
+                            get_assistant_password(
+                                self.request, user_id, project_id, self.user
+                            )
+                        ):
+                            stored, error = store_json_submission(
                                 self.request, user_id, project_id, self.user
                             )
                             if stored:

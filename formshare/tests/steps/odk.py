@@ -724,6 +724,15 @@ def t_e_s_t_odk(test_object):
     ]
     submission_file = os.path.join(test_object.path, *paths)
 
+    paths = [
+        "resources",
+        "forms",
+        "complex_form",
+        "submissions_norepo",
+        "submission001.json",
+    ]
+    submission_file_json = os.path.join(test_object.path, *paths)
+
     paths = ["resources", "forms", "complex_form", "image001.png"]
     image_file = os.path.join(test_object.path, *paths)
 
@@ -829,9 +838,34 @@ def t_e_s_t_odk(test_object):
         ),
     )
 
+    # Push JSON to a project that does not exist goes to 404
+    test_object.testapp.post(
+        "/user/{}/project/{}/push_json".format(test_object.randonLogin, "not exist"),
+        status=404,
+        upload_files=[
+            ("filetoupload", submission_file_json),
+            ("image", image_file),
+            ("sound", sound_file),
+        ],
+        extra_environ=dict(
+            FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
+        ),
+    )
+
     # Push using get goes to 404
     test_object.testapp.get(
         "/user/{}/project/{}/push".format(test_object.randonLogin, test_object.project),
+        status=404,
+        extra_environ=dict(
+            FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
+        ),
+    )
+
+    # Push to JSON using get goes to 404
+    test_object.testapp.get(
+        "/user/{}/project/{}/push_json".format(
+            test_object.randonLogin, test_object.project
+        ),
         status=404,
         extra_environ=dict(
             FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
@@ -865,6 +899,22 @@ def t_e_s_t_odk(test_object):
         ),
     )
 
+    # Push to JSON with inactive assistant goes to 401
+    test_object.testapp.post(
+        "/user/{}/project/{}/push_json".format(
+            test_object.randonLogin, test_object.project
+        ),
+        status=401,
+        upload_files=[
+            ("filetoupload", submission_file_json),
+            ("image", image_file),
+            ("sound", sound_file),
+        ],
+        extra_environ=dict(
+            FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
+        ),
+    )
+
     # Activate the assistant
     res = test_object.testapp.post(
         "/user/{}/project/{}/assistant/{}/edit".format(
@@ -879,11 +929,28 @@ def t_e_s_t_odk(test_object):
     )
     assert "FS_error" not in res.headers
 
+    # Push submission pass
     test_object.testapp.post(
         "/user/{}/project/{}/push".format(test_object.randonLogin, test_object.project),
         status=201,
         upload_files=[
             ("filetoupload", submission_file),
+            ("image", image_file),
+            ("sound", sound_file),
+        ],
+        extra_environ=dict(
+            FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
+        ),
+    )
+
+    # Push JSONsubmission pass
+    test_object.testapp.post(
+        "/user/{}/project/{}/push_json".format(
+            test_object.randonLogin, test_object.project
+        ),
+        status=201,
+        upload_files=[
+            ("filetoupload", submission_file_json),
             ("image", image_file),
             ("sound", sound_file),
         ],
@@ -904,14 +971,40 @@ def t_e_s_t_odk(test_object):
     ]
     submission_file = os.path.join(test_object.path, *paths)
 
+    paths = [
+        "resources",
+        "forms",
+        "complex_form",
+        "submissions_norepo",
+        "submission001.json",
+    ]
+    submission_file_json = os.path.join(test_object.path, *paths)
+
     paths = ["resources", "forms", "complex_form", "image001.png"]
     image_file = os.path.join(test_object.path, *paths)
 
+    # Push the image
     test_object.testapp.post(
         "/user/{}/project/{}/push".format(test_object.randonLogin, test_object.project),
         status=201,
         upload_files=[
             ("filetoupload", submission_file),
+            ("image2", image_file),
+            ("sound", sound_file),
+        ],
+        extra_environ=dict(
+            FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
+        ),
+    )
+
+    # Push the image using JSON
+    test_object.testapp.post(
+        "/user/{}/project/{}/push_json".format(
+            test_object.randonLogin, test_object.project
+        ),
+        status=201,
+        upload_files=[
+            ("filetoupload", submission_file_json),
             ("image2", image_file),
             ("sound", sound_file),
         ],

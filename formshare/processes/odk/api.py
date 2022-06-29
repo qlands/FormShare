@@ -93,6 +93,7 @@ __all__ = [
     "move_media_files",
     "convert_xml_to_json",
     "store_submission",
+    "store_json_submission",
     "get_html_from_diff",
     "generate_diff",
     "store_new_version",
@@ -3187,6 +3188,187 @@ def convert_xml_to_json(
             + " ".join(args)
         )
         return 1, ""
+
+
+def store_json_submission(request, user, project, assistant):
+    odk_dir = get_odk_path(request)
+    unique_id = uuid4()
+    path = os.path.join(odk_dir, *["submissions", str(unique_id)])
+    os.makedirs(path)
+    json_file = ""
+    for key in request.POST.keys():
+        try:
+            if key != "*isIncomplete*":
+                filename = request.POST[key].filename
+                if os.path.isabs(filename):
+                    filename = os.path.basename(filename)
+                slash_index = filename.find("\\")
+                if slash_index >= 0:
+                    filename = filename[slash_index + 1 :]
+                if filename.upper().find(".JSON") >= 0:
+                    filename = str(unique_id) + ".json"
+                else:
+                    if filename == "xml_submission_file":
+                        filename = str(unique_id) + ".json"
+                input_file = request.POST[key].file
+                file_path = os.path.join(path, filename)
+                if file_path.upper().find(".JSON") >= 0:
+                    json_file = file_path
+                temp_file_path = file_path + "~"
+                input_file.seek(0)
+                with open(temp_file_path, "wb") as output_file:
+                    shutil.copyfileobj(input_file, output_file)
+                os.rename(temp_file_path, file_path)
+            else:
+                log.error(
+                    "Incomplete submission {} in project {} of user {} with assistant {}".format(
+                        unique_id, project, user, assistant
+                    )
+                )
+        except Exception as e:
+            log.error(
+                "Submission "
+                + str(unique_id)
+                + " has POST error key: "
+                + key
+                + " Error: "
+                + str(e)
+                + ". URL: "
+                + request.url
+            )
+    if json_file != "":
+        f = open(json_file)
+        json_file_data = json.load(f)
+        f.close()
+        xform_id = json_file_data.get("_xform_id_string")
+        if xform_id is not None:
+            form_data = get_form_data(request, project, xform_id)
+            if form_data is not None:
+                if form_data["form_accsub"] == 1:
+                    if form_data["form_blocked"] == 0:
+                        if assistant_has_form(
+                            request, user, project, xform_id, assistant
+                        ) or project_has_crowdsourcing(request, project):
+                            media_path = os.path.join(
+                                odk_dir,
+                                *[
+                                    "forms",
+                                    form_data["form_directory"],
+                                    "submissions",
+                                    str(unique_id),
+                                    "diffs",
+                                ]
+                            )
+                            os.makedirs(media_path)
+                            media_path = os.path.join(
+                                odk_dir,
+                                *[
+                                    "forms",
+                                    form_data["form_directory"],
+                                    "submissions",
+                                    str(unique_id),
+                                ]
+                            )
+                            target_path = os.path.join(
+                                odk_dir,
+                                *["forms", form_data["form_directory"], "submissions"]
+                            )
+                            path = os.path.join(path, *["*.*"])
+                            files = glob.glob(path)
+                            json_file = ""
+                            for file in files:
+                                base_file = os.path.basename(file)
+                                if base_file.upper().find(".JSON") >= 0:
+                                    target_file = os.path.join(target_path, base_file)
+                                    json_file = target_file
+                                    shutil.move(file, target_file)
+
+                            for file in files:
+                                base_file = os.path.basename(file)
+                                if base_file.upper().find(".JSON") < 0:
+                                    target_file = os.path.join(media_path, base_file)
+                                    shutil.move(file, target_file)
+
+                            if json_file != "":
+                                # ---------
+                                temp_json_file = json_file.replace(".json", ".tmp.json")
+                                shutil.copyfile(json_file, temp_json_file)
+                                ordered_json_file = json_file.replace(
+                                    ".json", ".ordered.json"
+                                )
+                                submission_id = os.path.basename(json_file)
+                                submission_id = submission_id.replace(".json", "")
+                                continue_processing = 0
+                                for a_plugin in plugins.PluginImplementations(
+                                    plugins.IJSONSubmission
+                                ):
+                                    (
+                                        continue_processing,
+                                        message,
+                                    ) = a_plugin.before_processing_submission(
+                                        request,
+                                        user,
+                                        project,
+                                        xform_id,
+                                        assistant,
+                                        temp_json_file,
+                                    )
+                                if continue_processing == 0:
+                                    res_code, message = store_json_file(
+                                        request,
+                                        submission_id,
+                                        temp_json_file,
+                                        json_file,
+                                        ordered_json_file,
+                                        odk_dir,
+                                        form_data["form_directory"],
+                                        form_data["form_schema"],
+                                        user,
+                                        project,
+                                        xform_id,
+                                        assistant,
+                                    )
+                                else:
+                                    res_code = continue_processing
+                                if res_code == 0:
+                                    return True, 201
+                                else:
+                                    if res_code == 1:
+                                        return False, 500
+                                    else:
+                                        return True, 201
+                            else:
+                                return False, 404
+                        else:
+                            log.error(
+                                "Enumerator %s cannot submit data to %s",
+                                assistant,
+                                xform_id,
+                            )
+                            return False, 404
+                    else:
+                        log.error(
+                            "The form {} is blocked and cannot accept submissions at the moment".format(
+                                xform_id
+                            )
+                        )
+                        return False, 404
+                else:
+                    log.error(
+                        "The form {} does not accept submissions".format(xform_id)
+                    )
+                    return False, 404
+            else:
+                log.error(
+                    "Submission for ID %s does not exist in the database", xform_id
+                )
+                return False, 404
+        else:
+            log.error("Submission does not have and ID")
+            return False, 404
+    else:
+        log.error("Submission does not have an XML file")
+        return False, 500
 
 
 def store_submission(request, user, project, assistant):

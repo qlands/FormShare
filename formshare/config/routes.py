@@ -118,6 +118,7 @@ from formshare.views.odk import (
     ODKManifest,
     ODKMediaFile,
     ODKPushData,
+    ODKPushJSONData,
     ODKSubmission,
     ODKXMLForm,
 )
@@ -1299,6 +1300,14 @@ def load_routes(config, settings):
     routes.append(
         add_route(
             "odkpush", "/user/{userid}/project/{projcode}/push", ODKPushData, None
+        )
+    )
+    routes.append(
+        add_route(
+            "odkpushjson",
+            "/user/{userid}/project/{projcode}/push_json",
+            ODKPushJSONData,
+            None,
         )
     )
     routes.append(

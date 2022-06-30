@@ -2,7 +2,7 @@ import secrets
 import time
 import uuid
 
-from .sql import get_tokens_from_user
+from .sql import get_tokens_from_user, change_user_status
 
 
 def t_e_s_t_login(test_object):
@@ -323,6 +323,18 @@ def t_e_s_t_login(test_object):
         status=200,
     )
     assert "FS_error" in res.headers
+
+    # Change the status to inactive
+    change_user_status(test_object.server_config, random_login, 0)
+    # Login fails wrong pass
+    res = test_object.testapp.post(
+        "/login",
+        {"user": "test", "email": random_login, "passwd": "123"},
+        status=200,
+    )
+    assert "FS_error" in res.headers
+
+    change_user_status(test_object.server_config, random_login, 1)
 
     # Login succeed
     res = test_object.testapp.post(

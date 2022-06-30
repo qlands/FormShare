@@ -255,11 +255,8 @@ def check_partner_login(request, partner_email, password):
         .filter(partnerModel.partner_email == partner_email.lower())
         .first()
     )
-    if result is None:
-        return False
+    cpass = decode_data(request, result.partner_password.encode())
+    if cpass == bytearray(password.encode()):
+        return True
     else:
-        cpass = decode_data(request, result.partner_password.encode())
-        if cpass == bytearray(password.encode()):
-            return True
-        else:
-            return False
+        return False

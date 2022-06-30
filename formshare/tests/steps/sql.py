@@ -9,6 +9,7 @@ def store_task_status(task, config):
     engine.execute(
         "INSERT INTO finishedtask (task_id,task_enumber) VALUES ('{}',0)".format(task)
     )
+    engine.dispose()
 
 
 def get_form_details(config, project, form):
@@ -90,3 +91,15 @@ def get_tokens_from_user(config, user_email):
         "user_password_reset_token": result[1],
         "user_password_reset_expires_on": result[2],
     }
+
+
+def change_user_status(config, user_id, status):
+    from sqlalchemy import create_engine
+
+    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
+    engine.execute(
+        "UPDATE fsuser set user_active = {} WHERE user_id = '{}'".format(
+            status, user_id
+        )
+    )
+    engine.dispose()

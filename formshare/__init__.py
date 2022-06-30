@@ -5,7 +5,7 @@ if (
     os.environ.get("FORMSHARE_PYTEST_RUNNING", "false") == "false"
     and os.environ.get("FORMSHARE_RUN_FROM_CELERY", "false") == "false"
 ):
-    if sys.version_info[0] == 3 and sys.version_info[1] >= 6:
+    if sys.version_info[0] == 3 and sys.version_info[1] >= 6:  # pragma: no cover
         import gevent.monkey
 
         gevent.monkey.patch_all()

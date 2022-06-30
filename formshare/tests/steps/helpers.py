@@ -8,6 +8,7 @@ def t_e_s_t_helpers():
     h.humanize_date(datetime.datetime.now(), "es")
     h.get_version()
     h.month_from_number(12, "en", True)
+    h.month_from_number("a", "en", True)
     h.month_from_number("12", "es", False)
 
     h.readble_date(datetime.datetime.now())

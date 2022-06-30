@@ -28,7 +28,7 @@ def configure_manager(settings):
         url_prefix = None
 
     try:
-        use_ssl = settings["elasticfeeds.use_ssl"]
+        use_ssl = settings.get("elasticfeeds.use_ssl", "False")
         if use_ssl == "True":
             use_ssl = True
         else:

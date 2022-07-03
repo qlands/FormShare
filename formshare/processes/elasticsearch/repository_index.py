@@ -239,7 +239,9 @@ def create_dataset_index(settings):
                         number_of_shards, number_of_replicas
                     ),
                 )
+                connection.close()
             except RequestError as e:
+                connection.close()
                 if e.status_code == 400:
                     if e.error.find("already_exists") >= 0:
                         pass
@@ -247,6 +249,8 @@ def create_dataset_index(settings):
                         raise e
                 else:
                     raise e
+        else:
+            connection.close()
     else:
         raise RequestError("Cannot connect to ElasticSearch")
 
@@ -319,7 +323,9 @@ def delete_from_dataset_index(settings, project_id, form_id, submission_id):
                 index=index_name,
                 body=_get_submission_search_dict(project_id, form_id, submission_id),
             )
+            connection.close()
         except RequestError as e:
+            connection.close()
             if e.status_code == 400:
                 if e.error.find("already_exists") >= 0:
                     pass
@@ -339,7 +345,9 @@ def delete_dataset_from_index(settings, project_id, form_id):
             connection.delete_by_query(
                 index=index_name, body=_get_dateset_search_dict(project_id, form_id)
             )
+            connection.close()
         except RequestError as e:
+            connection.close()
             if e.status_code == 400:
                 if e.error.find("already_exists") >= 0:
                     pass
@@ -359,7 +367,9 @@ def delete_dataset_index_by_project(settings, project_id):
             connection.delete_by_query(
                 index=index_name, body=_get_project_search_dict(project_id)
             )
+            connection.close()
         except RequestError as e:
+            connection.close()
             if e.status_code == 400:
                 if e.error.find("already_exists") >= 0:
                     pass
@@ -379,6 +389,7 @@ def add_dataset(settings, project_id, form_id, submission_id, data_dict):
     connection = create_connection(settings)
     if connection is not None:
         connection.index(index=index_name, id=submission_id, body=data_dict)
+        connection.close()
     else:
         raise RequestError("Cannot connect to ElasticSearch")
 
@@ -391,6 +402,7 @@ def get_dataset_stats_for_form(settings, project_id, form_id):
             es_result = connection.search(
                 index=index_name, body=get_search_dict_by_form(project_id, form_id)
             )
+            connection.close()
             if es_result["hits"]["total"]["value"] > 0:
                 for hit in es_result["hits"]["hits"]:
                     return (
@@ -401,6 +413,7 @@ def get_dataset_stats_for_form(settings, project_id, form_id):
             else:
                 return 0, None, None
         except NotFoundError:
+            connection.close()
             return 0, None, None
     else:
         raise RequestError("Cannot connect to ElasticSearch")
@@ -420,6 +433,7 @@ def get_number_of_datasets_with_gps(settings, project_id, forms):
                     res = res + es_result["hits"]["total"]["value"]
             except NotFoundError:
                 pass
+        connection.close()
     else:
         raise RequestError("Cannot connect to ElasticSearch")
     return res
@@ -433,11 +447,13 @@ def get_all_datasets_with_gps(settings, project_id, form_id, size=0):
                 index=get_index_name(settings),
                 body=get_datasets_with_gps(project_id, form_id, size),
             )
+            connection.close()
             if es_result["hits"]["total"]["value"] > 0:
                 return es_result["hits"]["hits"]
             else:
                 return []
         except NotFoundError:
+            connection.close()
             return []
     else:
         raise RequestError("Cannot connect to ElasticSearch")
@@ -451,11 +467,13 @@ def get_number_of_datasets_with_gps_in_project(settings, project_id):
             es_result = connection.search(
                 index=index_name, body=get_projects_with_gps(project_id)
             )
+            connection.close()
             if es_result["hits"]["total"]["value"] > 0:
                 return es_result["hits"]["total"]["value"]
             else:
                 return 0
         except NotFoundError:
+            connection.close()
             return 0
     else:
         raise RequestError("Cannot connect to ElasticSearch")
@@ -472,6 +490,7 @@ def get_datasets_from_form(
                 index=index_name,
                 body=get_datasets_dict(project_id, form_id, query_from, query_size),
             )
+            connection.close()
             result = []
             if es_result["hits"]["total"]["value"] > 0:
                 for hit in es_result["hits"]["hits"]:
@@ -482,6 +501,7 @@ def get_datasets_from_form(
             else:
                 return 0, []
         except NotFoundError:
+            connection.close()
             return 0, []
     else:
         raise RequestError("Cannot connect to ElasticSearch")
@@ -496,6 +516,7 @@ def get_datasets_from_project(settings, project_id, query_from=None, query_size=
                 index=index_name,
                 body=get_projects_dict(project_id, query_from, query_size),
             )
+            connection.close()
             result = []
             if es_result["hits"]["total"]["value"] > 0:
                 for hit in es_result["hits"]["hits"]:
@@ -504,6 +525,7 @@ def get_datasets_from_project(settings, project_id, query_from=None, query_size=
             else:
                 return 0, []
         except NotFoundError:
+            connection.close()
             return 0, []
     else:
         raise RequestError("Cannot connect to ElasticSearch")
@@ -517,6 +539,7 @@ def get_dataset_stats_for_project(settings, project_id):
             es_result = connection.search(
                 index=index_name, body=get_search_dict_by_project(project_id)
             )
+            connection.close()
             if es_result["hits"]["total"]["value"] > 0:
                 for hit in es_result["hits"]["hits"]:
                     return (
@@ -528,6 +551,7 @@ def get_dataset_stats_for_project(settings, project_id):
             else:
                 return 0, None, None, None
         except NotFoundError:
+            connection.close()
             return 0, None, None, None
     else:
         raise RequestError("Cannot connect to ElasticSearch")

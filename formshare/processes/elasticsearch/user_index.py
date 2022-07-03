@@ -185,7 +185,9 @@ class UserIndexManager(object):
                             number_of_shards, number_of_replicas
                         ),
                     )
+                    connection.close()
                 except RequestError as e:
+                    connection.close()
                     if e.status_code == 400:
                         if e.error.find("already_exists") >= 0:
                             pass
@@ -193,7 +195,8 @@ class UserIndexManager(object):
                             raise e
                     else:
                         raise e
-
+            else:
+                connection.close()
         else:
             raise RequestError("Cannot connect to ElasticSearch")
 
@@ -208,6 +211,7 @@ class UserIndexManager(object):
             res = connection.search(
                 index=self.index_name, body=_get_user_search_dict(user_id)
             )
+            connection.close()
             if res["hits"]["total"]["value"] > 0:
                 return True
         else:
@@ -226,6 +230,7 @@ class UserIndexManager(object):
             connection = self.create_connection()
             if connection is not None:
                 connection.index(index=self.index_name, id=user_id, body=data_dict)
+                connection.close()
             else:
                 raise RequestError("Cannot connect to ElasticSearch")
         else:
@@ -245,6 +250,7 @@ class UserIndexManager(object):
                     index=self.index_name,
                     body=_get_user_search_dict(user_id),
                 )
+                connection.close()
                 return True
             else:
                 raise RequestError("Cannot connect to ElasticSearch")
@@ -267,6 +273,7 @@ class UserIndexManager(object):
                     id=user_id,
                     body=es_data_dict,
                 )
+                connection.close()
                 return True
             else:
                 raise RequestError("Cannot connect to ElasticSearch")
@@ -292,6 +299,7 @@ class UserIndexManager(object):
         connection = self.create_connection()
         if connection is not None:
             es_result = connection.search(index=self.index_name, body=query_dict)
+            connection.close()
             if es_result["hits"]["total"]["value"] > 0:
                 total = es_result["hits"]["total"]["value"]
                 for hit in es_result["hits"]["hits"]:

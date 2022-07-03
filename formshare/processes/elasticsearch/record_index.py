@@ -142,7 +142,9 @@ def create_record_index(settings):
                         number_of_shards, number_of_replicas
                     ),
                 )
+                connection.close()
             except RequestError as e:
+                connection.close()
                 if e.status_code == 400:
                     if e.error.find("already_exists") >= 0:
                         pass
@@ -150,6 +152,8 @@ def create_record_index(settings):
                         raise e
                 else:
                     raise e
+        else:
+            connection.close()
     else:
         raise RequestError("Cannot connect to ElasticSearch")
 
@@ -163,7 +167,9 @@ def delete_form_records(settings, project_id, form_id):
                 index=index_name,
                 body=_get_record_search_dict(project_id, form_id),
             )
+            connection.close()
         except RequestError as e:
+            connection.close()
             if e.status_code == 400:
                 if e.error.find("already_exists") >= 0:
                     pass
@@ -181,7 +187,9 @@ def delete_from_record_index(settings, record_uuid):
         try:
             index_name = get_index_name(settings)
             connection.delete(index=index_name, id=record_uuid)
+            connection.close()
         except RequestError as e:
+            connection.close()
             if e.status_code == 400:
                 if e.error.find("already_exists") >= 0:
                     pass
@@ -204,6 +212,7 @@ def add_record(settings, project_id, form_id, schema, table, record_uuid):
             "table": table,
         }
         connection.index(index=index_name, id=record_uuid, body=data_dict)
+        connection.close()
     else:
         raise RequestError("Cannot connect to ElasticSearch")
 
@@ -229,8 +238,10 @@ def get_table(settings, record_uuid):
                 query_dict = {"query": {"match": {"_id": record_uuid + "\n"}}}
                 es_result = connection.search(index=index_name, body=query_dict)
             if es_result["hits"]["total"]["value"] == 0:
+                connection.close()
                 return None, None
             else:
+                connection.close()
                 return (
                     es_result["hits"]["hits"][0]["_source"]["schema"],
                     es_result["hits"]["hits"][0]["_source"]["table"],
@@ -254,8 +265,10 @@ def get_project_and_form(settings, record_uuid):
                 query_dict = {"query": {"match": {"_id": record_uuid + "\n"}}}
                 es_result = connection.search(index=index_name, body=query_dict)
             if es_result["hits"]["total"]["value"] == 0:
+                connection.close()
                 return None, None
             else:
+                connection.close()
                 return (
                     es_result["hits"]["hits"][0]["_source"]["project_id"],
                     es_result["hits"]["hits"][0]["_source"]["form_id"],

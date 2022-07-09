@@ -16,7 +16,8 @@
 * [Collaborators](fundamentals/members.md)
 * [Forms](fundamentals/task-lists.md)
 * [Assistants](fundamentals/tasks.md)
-* [Repositories](fundamentals/repositories.md)
+* [Repositories](fundamentals/repositories/README.md)
+  * [How FormShare stores data?](fundamentals/repositories/how-formshare-stores-data.md)
 * [Partners](fundamentals/partners.md)
 
 ## Data management

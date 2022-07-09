@@ -4,7 +4,13 @@ Upon registration, FormShare will take you to the Dashboard. The dashboard is th
 
 ![](../.gitbook/assets/empty\_dashboard\_captions.png)
 
-Click on the "Create a new project" button to create a new project. The "Add new project" screen will appear.
+1. **Dashboard:** Click on this link to access the dashboard at any time.
+2. **Projects:** Click on this link to access the current list of projects.
+3. **Profile:** Click on your name to access your profile.
+4. **Time zone:** Pull down this list to change the timezone of the current page.
+5. **Language:** Pull down this list to change the language of the application.
+6. **Sign out:** Click this link to exit FormShare.
+7. **Create project:** Click on the "Create a new project" button to add a new project. The "Add new project" screen will appear.
 
 ![](<../.gitbook/assets/add\_project\_odk (1).png>)
 

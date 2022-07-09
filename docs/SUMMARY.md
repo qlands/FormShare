@@ -7,6 +7,8 @@
 * [Registering and logging in](guides/registering-and-logging-in.md)
 * [Creating your first project](guides/creating-your-first-project.md)
 * [Uploading your first ODK Form](guides/creating-your-first-task.md)
+* [Create and assign assistants](guides/create-and-assign-assistants.md)
+* [Test your form](guides/test-your-form.md)
 * [Create a form repository](guides/advanced-permissions.md)
 
 ## Fundamentals
@@ -14,7 +16,8 @@
 * [The dashboard](fundamentals/the-dashboard.md)
 * [Projects](fundamentals/projects.md)
 * [Collaborators](fundamentals/members.md)
-* [Forms](fundamentals/task-lists.md)
+* [Forms](fundamentals/task-lists/README.md)
+  * [Common errors in a form](fundamentals/task-lists/common-errors-in-a-form.md)
 * [Assistants](fundamentals/tasks.md)
 * [Repositories](fundamentals/repositories/README.md)
   * [How FormShare stores data?](fundamentals/repositories/how-formshare-stores-data.md)

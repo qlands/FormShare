@@ -2,7 +2,7 @@
 
 After creating a new project, FormShare will take you to the projects details page. In an empty project, you are directed to upload a new form.
 
-![](../.gitbook/assets/empty\_project\_captions.png)
+![](../../.gitbook/assets/empty\_project\_captions.png)
 
 1. Active project: Click on this link to access the details of the active project.
 2. Collaborators: Click on this link to access the list of collaborators in the <mark style="color:red;">**active**</mark> project.
@@ -23,7 +23,7 @@ Active vs current projects: Active project is the project shown in the dashboard
 
 The "Add New Form" button will show the "Upload new form" screen.
 
-![](../.gitbook/assets/upload\_form.png)
+![](../../.gitbook/assets/upload\_form.png)
 
 To upload a new form, you need to provide the following information:
 
@@ -40,14 +40,14 @@ _Let’s imagine that you are surveying cattle in a rural village and each anima
 
 If there are problems with your form, FormShare will tell you the problem and enable you to correct it.&#x20;
 
-![](../.gitbook/assets/form\_error.png)
+![](../../.gitbook/assets/form\_error.png)
 
 {% hint style="info" %}
 **Why my form uploads fine on other platforms but not on FormShare?**
 
-FormShare creates a [MySQL database for each form](../fundamentals/repositories/how-formshare-stores-data.md). This has several advantages compared to other platforms but it poses more restrictions. For example, the image above indicates that you cannot have a variable called "name". This is because "name" is a restricted keyword in MySQL or SQL language.
+FormShare creates a [MySQL database for each form](../../fundamentals/repositories/how-formshare-stores-data.md). This has several advantages compared to other platforms but it poses more restrictions. For example, the image above indicates that you cannot have a variable called "name". This is because "name" is a restricted keyword in MySQL or SQL language.
 
-The section "[Common errors in a Form](../fundamentals/task-lists/common-errors-in-a-form.md)" provides information about each error that FormShare would detect in your form.
+The section "[Common errors in a Form](../../fundamentals/task-lists/common-errors-in-a-form.md)" provides information about each error that FormShare would detect in your form.
 {% endhint %}
 
 If the form is fine, FormShare will take you to the details of your form. Afterward, you will be able to create and assign assistants and start collecting your data.

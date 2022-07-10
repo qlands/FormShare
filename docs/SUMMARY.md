@@ -6,10 +6,10 @@
 
 * [Registering and logging in](guides/registering-and-logging-in.md)
 * [Creating your first project](guides/creating-your-first-project.md)
-* [Uploading your first ODK Form](guides/creating-your-first-task.md)
-* [Create and assign assistants](guides/create-and-assign-assistants.md)
-* [Test your form](guides/test-your-form.md)
-* [Create a form repository](guides/advanced-permissions.md)
+* [Uploading your first ODK Form](guides/creating-your-first-task/README.md)
+  * [Create and assign assistants](guides/creating-your-first-task/create-and-assign-assistants.md)
+  * [Test your form](guides/creating-your-first-task/test-your-form.md)
+  * [Create a form repository](guides/creating-your-first-task/advanced-permissions.md)
 
 ## Fundamentals
 

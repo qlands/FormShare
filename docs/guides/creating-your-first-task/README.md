@@ -45,7 +45,7 @@ If there are problems with your form, FormShare will tell you the problem and en
 {% hint style="info" %}
 **Why my form uploads fine on other platforms but not on FormShare?**
 
-FormShare creates a [MySQL database for each form](../../fundamentals/repositories/how-formshare-stores-data.md). This has several advantages compared to other platforms but it poses more restrictions. For example, the image above indicates that you cannot have a variable called "name". This is because "name" is a restricted keyword in MySQL or SQL language.
+FormShare creates a [MySQL database for each form](../../fundamentals/repositories/how-does-formshare-stores-my-data.md). This has several advantages compared to other platforms but it poses more restrictions. For example, the image above indicates that you cannot have a variable called "name". This is because "name" is a restricted keyword in MySQL or SQL language.
 
 The section "[Common errors in a Form](../../fundamentals/task-lists/common-errors-in-a-form.md)" provides information about each error that FormShare would detect in your form.
 {% endhint %}

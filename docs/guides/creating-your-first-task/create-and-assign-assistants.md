@@ -4,7 +4,7 @@ After uploading a new form, FormShare will take you to the form details page.
 
 ![](../../.gitbook/assets/form\_details\_01\_captions.png)
 
-1\. Testing stage: Every form that you upload to FormShare is stored first in a **testing stage**. This means that FormShare hasn't created a [repository for it](../../fundamentals/repositories/how-formshare-stores-data.md). The testing stage allows you to test your form and easily update it with fixed versions without the need of [merging data into a repository](../../data-management/for-designers/working-with-submissions.md).
+1\. Testing stage: Every form that you upload to FormShare is stored first in a **testing stage**. This means that FormShare hasn't created a [repository for it](../../fundamentals/repositories/how-does-formshare-stores-my-data.md). The testing stage allows you to test your form and easily update it with fixed versions without the need of [merging data into a repository](../../data-management/for-designers/working-with-submissions.md).
 
 {% hint style="warning" %}
 Important Note: <mark style="color:red;">**Submissions received to a form in the testing stage are considered test data**</mark>. This means that any <mark style="color:red;">**submissions will be discarded**</mark> every time that you upload a new version of the form.
@@ -19,7 +19,7 @@ This behavior **is not the same** when your form has a repository. The section "
 4\. Delete: The delete button deletes the forms and all their data.
 
 {% hint style="info" %}
-FormShare does not physically (from the hard drive) removes any submissions. If you remove a form FormShare will remove it from the FormShare database and will not be accessible through the interface but its repository in MySQL will remain intact but marked as deleted. The same for any files and products generated in the form. The section "[How FormShare stores data](../../fundamentals/repositories/how-formshare-stores-data.md)" covers more details about this.
+FormShare does not physically (from the hard drive) removes any submissions. If you remove a form FormShare will remove it from the FormShare database and will not be accessible through the interface but its repository in MySQL will remain intact but marked as deleted. The same for any files and products generated in the form. The section "[How FormShare stores data](../../fundamentals/repositories/how-does-formshare-stores-my-data.md)" covers more details about this.
 {% endhint %}
 
 5\. Update ODK Form: As indicated in point 1 above, forms in a testing stage can be updated easily at any time. To update the form click on the "Update ODK Form" button. The "Upload new version" window will appear:
@@ -42,7 +42,7 @@ Remember: To control duplicate submissions, you need to select a variable from y
 6\. Downloads: Submissions received to a form in the testing stage are considered test data. At this stage, FormShare provides minimal download types:
 
 * Download ODK form: This will download the ODK form in Excel format
-* Download data in CSV format: This is a "[Flat CSV file](../../data-management/data-products/flat-csv-one-csv-file.md)". FormShare does not [resolve option labels or multi-select fields](../../fundamentals/repositories/how-formshare-stores-data.md) for data in the testing stage.
+* Download data in CSV format: This is a "[Flat CSV file](../../data-management/data-products/flat-csv-one-csv-file.md)". FormShare does not [resolve option labels or multi-select fields](../../fundamentals/repositories/how-does-formshare-stores-my-data.md) for data in the testing stage.
 * Download submitted media: This is a Zip file containing any media submitted to the form. Media files will be separated by [submission ID](../../fundamentals/submissions.md).
 
 7\. Form files: ODK forms can use supporting files when collecting data. These files can be data or media files. If your form uses data files, e.g., CSV files, FormShare will alert you if such files are missing. FormShare will finish checking your form once you attach all necessary data files.

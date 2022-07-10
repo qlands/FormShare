@@ -20,7 +20,8 @@
   * [Common errors in a form](fundamentals/task-lists/common-errors-in-a-form.md)
 * [Assistants](fundamentals/tasks.md)
 * [Repositories](fundamentals/repositories/README.md)
-  * [How FormShare stores data?](fundamentals/repositories/how-formshare-stores-data.md)
+  * [How does FormShare stores my data?](fundamentals/repositories/how-does-formshare-stores-my-data.md)
+  * [Merging subversions of a form](fundamentals/repositories/merging-subversions-of-a-form.md)
 * [Submissions](fundamentals/submissions.md)
 * [Partners](fundamentals/partners.md)
 

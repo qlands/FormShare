@@ -21,6 +21,7 @@
 * [Assistants](fundamentals/tasks.md)
 * [Repositories](fundamentals/repositories/README.md)
   * [How FormShare stores data?](fundamentals/repositories/how-formshare-stores-data.md)
+* [Submissions](fundamentals/submissions.md)
 * [Partners](fundamentals/partners.md)
 
 ## Data management
@@ -36,7 +37,8 @@
   * [Activating / de-activating a case](data-management/for-engineers/activating-de-activating-a-case.md)
 * [The data dictionary](use-cases/for-support/README.md)
   * [Marking fields as sensitive](use-cases/for-support/intercom-integration.md)
-* [Data products](data-management/data-products.md)
+* [Data products](data-management/data-products/README.md)
+  * [Flat CSV (One CSV file)](data-management/data-products/flat-csv-one-csv-file.md)
 
 ## Extras
 

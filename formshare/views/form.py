@@ -115,6 +115,11 @@ from formshare.products.export.zip_csv import (
     generate_private_zip_csv_file,
     generate_public_zip_csv_file,
 )
+from formshare.products.export.zip_json import (
+    generate_private_zip_json_file,
+    generate_public_zip_json_file,
+)
+
 from formshare.views.classes import PrivateView
 
 log = logging.getLogger("formshare")
@@ -2602,6 +2607,70 @@ class DownloadPublicZIPCSVData(PrivateView):
         return HTTPFound(location=next_page)
 
 
+class DownloadPublicZIPJSONData(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.checkCrossPost = False
+        self.returnRawViewResult = True
+
+    def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        project_code = self.request.matchdict["projcode"]
+        form_id = self.request.matchdict["formid"]
+        options = int(self.request.params.get("options", "1"))
+        if "multiselects" in self.request.params.keys():
+            include_multiselects = True
+        else:
+            include_multiselects = False
+        if "lookups" in self.request.params.keys():
+            include_lookups = True
+        else:
+            include_lookups = False
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+
+        if project_details["access_type"] >= 4:
+            raise HTTPNotFound
+
+        odk_dir = get_odk_path(self.request)
+        generate_public_zip_json_file(
+            self.request,
+            self.user.id,
+            project_id,
+            form_id,
+            odk_dir,
+            form_data["form_schema"],
+            options,
+            include_multiselects,
+            include_lookups,
+        )
+
+        next_page = self.request.route_url(
+            "form_details",
+            userid=user_id,
+            projcode=project_code,
+            formid=form_id,
+            _query={"tab": "task", "product": "zip_json_public_export"},
+            _anchor="products_and_tasks",
+        )
+        self.returnRawViewResult = True
+        return HTTPFound(location=next_page)
+
+
 class DownloadPrivateXLSData(PrivateView):
     def __init__(self, request):
         PrivateView.__init__(self, request)
@@ -2704,6 +2773,70 @@ class DownloadPrivateZIPCSVData(PrivateView):
             projcode=project_code,
             formid=form_id,
             _query={"tab": "task", "product": "zip_csv_private_export"},
+            _anchor="products_and_tasks",
+        )
+        self.returnRawViewResult = True
+        return HTTPFound(location=next_page)
+
+
+class DownloadPrivateZIPJSONData(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.checkCrossPost = False
+        self.returnRawViewResult = True
+
+    def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        project_code = self.request.matchdict["projcode"]
+        form_id = self.request.matchdict["formid"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        options = int(self.request.params.get("options", "1"))
+        if "multiselects" in self.request.params.keys():
+            include_multiselects = True
+        else:
+            include_multiselects = False
+        if "lookups" in self.request.params.keys():
+            include_lookups = True
+        else:
+            include_lookups = False
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+
+        if project_details["access_type"] >= 4:
+            raise HTTPNotFound
+
+        odk_dir = get_odk_path(self.request)
+        generate_private_zip_json_file(
+            self.request,
+            self.user.id,
+            project_id,
+            form_id,
+            odk_dir,
+            form_data["form_schema"],
+            options,
+            include_multiselects,
+            include_lookups,
+        )
+
+        next_page = self.request.route_url(
+            "form_details",
+            userid=user_id,
+            projcode=project_code,
+            formid=form_id,
+            _query={"tab": "task", "product": "zip_json_private_export"},
             _anchor="products_and_tasks",
         )
         self.returnRawViewResult = True
@@ -4037,6 +4170,15 @@ class ExportData(PrivateView):
                             formid=form_id,
                         )
                     )
+                if export_data["export_type"] == "ZIP_JSON":
+                    return HTTPFound(
+                        location=self.request.route_url(
+                            "form_export_zip_json",
+                            userid=user_id,
+                            projcode=project_code,
+                            formid=form_id,
+                        )
+                    )
                 if export_data["export_type"] == "KML":
                     return HTTPFound(
                         location=self.request.route_url(
@@ -4170,6 +4312,68 @@ class ExportDataToZIPCSV(PrivateView):
                     projcode=project_code,
                     formid=form_id,
                     _query={"options": options_type},
+                )
+                return HTTPFound(location=location)
+
+        return {
+            "projectDetails": project_details,
+            "formid": form_id,
+            "formDetails": form_data,
+            "userid": user_id,
+        }
+
+
+class ExportDataToZIPJSON(PrivateView):
+    def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        project_code = self.request.matchdict["projcode"]
+        form_id = self.request.matchdict["formid"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        project_details = {}
+        if project_id is not None:
+            project_found = False
+            for project in self.user_projects:
+                if project["project_id"] == project_id:
+                    project_found = True
+                    project_details = project
+            if not project_found:
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if project_details["access_type"] >= 4:
+            raise HTTPNotFound
+
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+
+        if self.request.method == "POST":
+            export_data = self.get_post_dict()
+            options_type = int(export_data["labels"])
+            self.returnRawViewResult = True
+            options_dict = {"options": options_type}
+            if "multiselects" in export_data.keys():
+                options_dict["multiselects"] = 1
+            if "lookups" in export_data.keys():
+                options_dict["lookups"] = 1
+
+            if export_data["publishable"] == "yes":
+                location = self.request.route_url(
+                    "form_download_public_zip_json_data",
+                    userid=user_id,
+                    projcode=project_code,
+                    formid=form_id,
+                    _query=options_dict,
+                )
+                return HTTPFound(location=location)
+            if export_data["publishable"] == "no":
+                location = self.request.route_url(
+                    "form_download_private_zip_json_data",
+                    userid=user_id,
+                    projcode=project_code,
+                    formid=form_id,
+                    _query=options_dict,
                 )
                 return HTTPFound(location=location)
 

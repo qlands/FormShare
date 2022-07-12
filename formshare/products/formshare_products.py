@@ -76,4 +76,18 @@ def register_products():
     add_metadata_to_product(new_product, "Licence", "AGPL")
     products.append(new_product)
 
+    new_product = create_product("zip_json_public_export", False, "far fa-file-archive")
+    add_metadata_to_product(new_product, "author", "QLands Technology Consultants")
+    add_metadata_to_product(new_product, "version", "1.0")
+    add_metadata_to_product(new_product, "Licence", "AGPL")
+    products.append(new_product)
+
+    new_product = create_product(
+        "zip_json_private_export", False, "far fa-file-archive"
+    )
+    add_metadata_to_product(new_product, "author", "QLands Technology Consultants")
+    add_metadata_to_product(new_product, "version", "1.0")
+    add_metadata_to_product(new_product, "Licence", "AGPL")
+    products.append(new_product)
+
     return products

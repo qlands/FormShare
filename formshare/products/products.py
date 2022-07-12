@@ -130,6 +130,10 @@ def get_product_description(request, product):
         return _("Publishable Zip CSV")
     if product == "zip_csv_private_export":
         return _("Unpublishable Zip CSV")
+    if product == "zip_json_public_export":
+        return _("Publishable Zip JSON")
+    if product == "zip_json_private_export":
+        return _("Unpublishable Zip JSON")
     if product == "merge_form":
         return _("Merge Form")
     return _("Without description")

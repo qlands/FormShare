@@ -3,7 +3,7 @@ import os
 import datetime
 import requests
 from requests.auth import HTTPDigestAuth
-from multiprocessing import Process, Manager
+from multiprocessing import Process
 import numpy as np
 
 """

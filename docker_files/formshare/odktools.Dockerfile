@@ -19,6 +19,7 @@ RUN apt-get install mysql-shell
 
 RUN npm install -g diff2html
 RUN npm install -g diff2html-cli
+RUN npm install -g json2csv
 
 COPY ./docker_files/timezone/mysql_tzinfo_to_sql /usr/bin
 

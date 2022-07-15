@@ -15,7 +15,7 @@ import paginate
 import pandas as pd
 from PIL import Image
 from lxml import etree
-from pandas import json_normalize
+from pandas import json_normalize, read_csv
 from sqlalchemy import create_engine
 from sqlalchemy import exc
 from sqlalchemy.orm.session import Session
@@ -283,23 +283,55 @@ def gather_array_sizes(data, array_dict):
                     gather_array_sizes(an_item, array_dict)
 
 
-def flatten_json(y, separator="/"):
-    out = OrderedDict()
+# def flatten_json(y, separator="/"):
+#     out = OrderedDict()
+#
+#     def flatten(x, name=""):
+#         if type(x) is OrderedDict:
+#             for a in x:
+#                 flatten(x[a], name + a + separator)
+#         elif type(x) is list:
+#             i = 1
+#             for a in x:
+#                 flatten(a, name + "[" + str(i) + "]" + separator)
+#                 i += 1
+#         else:
+#             out[name[:-1]] = x
+#
+#     flatten(y)
+#     return out
 
-    def flatten(x, name=""):
-        if type(x) is OrderedDict:
-            for a in x:
-                flatten(x[a], name + a + separator)
-        elif type(x) is list:
-            i = 1
-            for a in x:
-                flatten(a, name + "[" + str(i) + "]" + separator)
-                i += 1
-        else:
-            out[name[:-1]] = x
 
-    flatten(y)
-    return out
+def flatten_json_2(request, temp_directory, input_file):
+    repository_path = request.registry.settings["repository.path"]
+    paths = ["tmp", temp_directory]
+    temp_dir = os.path.join(repository_path, *paths)
+    if not os.path.exists(temp_dir):
+        os.makedirs(temp_dir)
+
+    temp_id = str(uuid.uuid4())
+    paths = ["tmp", temp_directory, temp_id + ".csv"]
+    output_file = os.path.join(repository_path, *paths)
+
+    args = [
+        "json2csv",
+        "--flatten-objects",
+        "--flatten-arrays",
+        "--flatten-separator",
+        "/",
+        "-i",
+        input_file,
+        "-o",
+        output_file,
+    ]
+
+    p = Popen(args, stdout=PIPE, stderr=PIPE)
+    stdout, stderr = p.communicate()
+    if p.returncode == 0:
+        return output_file
+    else:
+        print(stderr)
+    return None
 
 
 def separate_multi_selects(data, table_name, tree_root):
@@ -357,7 +389,6 @@ def json_to_csv(request, project, form):
             with open(aFile) as json_file:
                 data = json.load(json_file)
                 gather_array_sizes(data, array_dict)
-                separate_multi_selects(data, "maintable", root_create)
                 new_data = data
             if new_data is not None:
                 with open(aFile, "w") as outfile:
@@ -397,38 +428,37 @@ def json_to_csv(request, project, form):
         p = Popen(args, stdout=PIPE, stderr=PIPE)
         p.communicate()
         if p.returncode == 0:
-            try:
-                dataframe_array = []
-                # Adds the dummy
-                with open(dummy_json) as json_file:
-                    data = json.load(json_file, object_pairs_hook=OrderedDict)
-                flat = flatten_json(data)
-                temp = json_normalize(flat)
+            # try:
+            temp_directory = str(uuid.uuid4())
+            dataframe_array = []
+            # Adds the dummy
+            csv_file = flatten_json_2(request, temp_directory, dummy_json)
+            if csv_file is not None:
+                temp = read_csv(csv_file)
                 cols = []
                 for col in temp.columns:
                     cols.append(col.replace(".", ""))
                 temp.columns = cols
                 dataframe_array.append(temp)
 
-                for file in files:
-                    with open(file) as json_file:
-                        data = json.load(json_file, object_pairs_hook=OrderedDict)
-                    flat = flatten_json(data)
-                    temp = json_normalize(flat)
+            for file in files:
+                csv_file = flatten_json_2(request, temp_directory, file)
+                if csv_file is not None:
+                    temp = read_csv(csv_file)
                     cols = []
                     for col in temp.columns:
                         cols.append(col.replace(".", ""))
                     temp.columns = cols
                     dataframe_array.append(temp)
-                join = pd.concat(dataframe_array, sort=False)
-                join = join.iloc[1:]
-                paths = ["tmp", uid + ".csv"]
-                csv_file = os.path.join(odk_dir, *paths)
+            join = pd.concat(dataframe_array, sort=False)
+            join = join.iloc[1:]
+            paths = ["tmp", uid + ".csv"]
+            csv_file = os.path.join(odk_dir, *paths)
 
-                join.to_csv(csv_file, index=False, encoding="utf-8")
-                return True, csv_file
-            except Exception as e:
-                return False, str(e)
+            join.to_csv(csv_file, index=False, encoding="utf-8")
+            return True, csv_file
+            # except Exception as e:
+            #     return False, str(e)
         else:
             return False, _("Error while creating dummy file")
     else:

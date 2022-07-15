@@ -7,7 +7,6 @@ import os
 import re
 import shutil
 import uuid
-from collections import OrderedDict
 from decimal import Decimal
 from subprocess import Popen, PIPE
 
@@ -15,7 +14,7 @@ import paginate
 import pandas as pd
 from PIL import Image
 from lxml import etree
-from pandas import json_normalize, read_csv
+from pandas import read_csv
 from sqlalchemy import create_engine
 from sqlalchemy import exc
 from sqlalchemy.orm.session import Session

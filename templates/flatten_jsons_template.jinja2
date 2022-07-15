@@ -1,48 +1,51 @@
 #!{{ path_to_python }}
 
 import multiprocessing
-from collections import OrderedDict
 import glob
 import os
-import json
 import pandas as pd
-from pandas import json_normalize
+from subprocess import Popen, PIPE
 import argparse
 from multiprocessing import Process, Manager
 import numpy as np
+from pandas import read_csv
 
 
-def flatten_json(y, separator="/"):
-    out = OrderedDict()
+def flatten_json_2(input_file):
+    output_file = input_file.replace(".json", ".csv")
+    output_file = output_file.replace(".djson", ".csv")
 
-    def flatten(x, name=""):
-        if type(x) is OrderedDict:
-            for a in x:
-                flatten(x[a], name + a + separator)
-        elif type(x) is list:
-            i = 1
-            for a in x:
-                flatten(a, name + "[" + str(i) + "]" + separator)
-                i += 1
-        else:
-            out[name[:-1]] = x.replace("\r\n", "").replace("\n", "").replace(",", "")
+    args = [
+        "json2csv",
+        "--flatten-objects",
+        "--flatten-arrays",
+        "--flatten-separator",
+        "/",
+        "-i",
+        input_file,
+        "-o",
+        output_file,
+    ]
 
-    flatten(y)
-    return out
+    p = Popen(args, stdout=PIPE, stderr=PIPE)
+    stdout, stderr = p.communicate()
+    if p.returncode == 0:
+        return output_file
+    else:
+        print(stderr)
+    return None
 
 
 def flatten_files(files, dataframe):
     for file in files:
-        with open(file) as json_file:
-            data = json.load(json_file, object_pairs_hook=OrderedDict)
-
-        flat = flatten_json(data)
-        temp = json_normalize(flat)
-        cols = []
-        for col in temp.columns:
-            cols.append(col.replace(".", ""))
-        temp.columns = cols
-        dataframe.append(temp)
+        csv_file = flatten_json_2(file)
+        if csv_file is not None:
+            temp = read_csv(csv_file)
+            cols = []
+            for col in temp.columns:
+                cols.append(col.replace(".", ""))
+            temp.columns = cols
+            dataframe.append(temp)
 
 
 def main(raw_args=None):
@@ -60,10 +63,12 @@ def main(raw_args=None):
         exit(1)
 
     df = Manager().list()
-    with open(args.dummy_json) as json_file:
-        data = json.load(json_file, object_pairs_hook=OrderedDict)
-    flat = flatten_json(data)
-    temp = json_normalize(flat)
+
+    dummy_csv = flatten_json_2(args.dummy_json)
+    if dummy_csv is None:
+        print("Error while flattening the dummy JSON")
+        exit(1)
+    temp = read_csv(dummy_csv)
     cols = []
     for col in temp.columns:
         cols.append(col.replace(".", ""))
@@ -78,7 +83,7 @@ def main(raw_args=None):
         exit(1)
 
     # print("Processing with {} threads".format(multiprocessing.cpu_count()))
-    arrays = np.array_split(np.array(files), multiprocessing.cpu_count())
+    arrays = np.array_split(np.array(files), multiprocessing.cpu_count()-2)
 
     threads = list()
     for ii in range(len(arrays)):

@@ -33,18 +33,22 @@
                                                 <div class="i-checks"><label> <input id="labels3" type="radio" value="3" name="labels"> <i></i> {{ _('Include option codes and labels') }}</label></div>
                                             </div>
                                         </div>
-                                        <hr>
-                                        <div class="form-group row multiselects"><label class="col-sm-4 col-form-label">{{ _('Multiselects') }}</label>
-                                            <div class="col-sm-8">
-                                                <div class="i-checks"><label> <input type="checkbox" value="1" id="multiselects" name="multiselects"> <i></i> {{ _('Export multiselect tables') }} </label></div>
-                                                <span class="form-text m-b-none">{{ _('When checked, FormShare will create a JSON file for each multiselect table, but it will not resolve multiselect fields. Click') }} <a>{{ _('here') }}</a> {{ _('for more information about how FormShare stores "select_multiple" variables.') }}</span>
+                                        <div class="multiselects">
+                                            <hr>
+                                            <div class="form-group row"><label class="col-sm-4 col-form-label">{{ _('Multiselects') }}</label>
+                                                <div class="col-sm-8">
+                                                    <div class="i-checks"><label> <input type="checkbox" value="1" id="multiselects" name="multiselects"> <i></i> {{ _('Export multiselect tables') }} </label></div>
+                                                    <span class="form-text m-b-none">{{ _('When checked, FormShare will create a JSON file for each multiselect table, but it will not resolve multiselect fields. Click') }} <a><span style="color: red">{{ _('here') }}</span></a> {{ _('for more information about how FormShare stores "select_multiple" variables.') }}</span>
+                                                </div>
                                             </div>
                                         </div>
-                                        <hr>
-                                        <div class="form-group row multiselects"><label class="col-sm-4 col-form-label">{{ _('Lookups') }}</label>
-                                            <div class="col-sm-8">
-                                                <div class="i-checks"><label> <input type="checkbox" value="1" id="lookups" name="lookups"> <i></i> {{ _('Export lookup tables') }} </label></div>
-                                                <span class="form-text m-b-none">{{ _('When checked, FormShare will create a JSON file for each lookup table, but it will not resolve option labels. Click') }} <a>{{ _('here') }}</a> {{ _('for more information about how FormShare stores "select_one" variables.') }}</span>
+                                        <div class="multiselects">
+                                            <hr>
+                                            <div class="form-group row"><label class="col-sm-4 col-form-label">{{ _('Lookups') }}</label>
+                                                <div class="col-sm-8">
+                                                    <div class="i-checks"><label> <input type="checkbox" value="1" id="lookups" name="lookups"> <i></i> {{ _('Export lookup tables') }} </label></div>
+                                                    <span class="form-text m-b-none">{{ _('When checked, FormShare will create a JSON file for each lookup table, but it will not resolve option labels. Click') }} <a><span style="color: red">{{ _('here') }}</span></a> {{ _('for more information about how FormShare stores "select_one" variables.') }}</span>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="form-group row">

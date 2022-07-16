@@ -9,7 +9,15 @@ from formshare.products.export.zip_csv.celery_task import build_zip_csv
 
 
 def generate_public_zip_csv_file(
-    request, user, project, form, odk_dir, form_schema, options=1
+    request,
+    user,
+    project,
+    form,
+    odk_dir,
+    form_schema,
+    options=1,
+    include_multiselect=False,
+    include_lookups=False,
 ):
     settings = {}
     for key, value in request.registry.settings.items():
@@ -35,6 +43,8 @@ def generate_public_zip_csv_file(
             True,
             request.locale_name,
             options,
+            include_multiselect,
+            include_lookups,
         ),
         queue="FormShare",
     )
@@ -53,7 +63,15 @@ def generate_public_zip_csv_file(
 
 
 def generate_private_zip_csv_file(
-    request, user, project, form, odk_dir, form_schema, options=1
+    request,
+    user,
+    project,
+    form,
+    odk_dir,
+    form_schema,
+    options=1,
+    include_multiselect=False,
+    include_lookups=False,
 ):
     settings = {}
     for key, value in request.registry.settings.items():
@@ -79,6 +97,8 @@ def generate_private_zip_csv_file(
             False,
             request.locale_name,
             options,
+            include_multiselect,
+            include_lookups,
         ),
         queue="FormShare",
     )

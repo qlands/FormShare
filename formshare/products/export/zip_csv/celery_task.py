@@ -38,6 +38,8 @@ def internal_build_zip_csv(
     protect_sensitive,
     locale,
     options=1,
+    include_multiselect=False,
+    include_lookups=False,
 ):
     if (
         os.environ.get("FORMSHARE_PYTEST_RUNNING", "false") == "true"
@@ -58,7 +60,7 @@ def internal_build_zip_csv(
     odk_tools_dir = settings["odktools.path"]
 
     paths = [odk_tools_dir, "utilities", "MySQLToCSV", "mysqltocsv"]
-    mysql_to_xlsx = os.path.join(odk_dir, *paths)
+    mysql_to_csv = os.path.join(odk_dir, *paths)
 
     uid = str(uuid.uuid4())
 
@@ -72,7 +74,7 @@ def internal_build_zip_csv(
     os.makedirs(output_path)
 
     args = [
-        mysql_to_xlsx,
+        mysql_to_csv,
         "-H " + mysql_host,
         "-P " + mysql_port,
         "-u " + mysql_user,
@@ -87,6 +89,10 @@ def internal_build_zip_csv(
     ]
     if protect_sensitive:
         args.append("-c")
+    if include_multiselect:
+        args.append("-m")
+    if include_lookups:
+        args.append("-l")
 
     log.info(" ".join(args))
 
@@ -146,6 +152,8 @@ def build_zip_csv(
     protect_sensitive,
     locale,
     options=1,
+    include_multiselect=False,
+    include_lookups=False,
 ):
     internal_build_zip_csv(
         settings,
@@ -158,4 +166,6 @@ def build_zip_csv(
         protect_sensitive,
         locale,
         options,
+        include_multiselect=False,
+        include_lookups=False,
     )

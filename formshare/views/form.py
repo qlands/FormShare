@@ -2564,6 +2564,14 @@ class DownloadPublicZIPCSVData(PrivateView):
         project_code = self.request.matchdict["projcode"]
         form_id = self.request.matchdict["formid"]
         options = int(self.request.params.get("options", "1"))
+        if "multiselects" in self.request.params.keys():
+            include_multiselect = True
+        else:
+            include_multiselect = False
+        if "lookups" in self.request.params.keys():
+            include_lookups = True
+        else:
+            include_lookups = False
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         project_details = {}
         if project_id is not None:
@@ -2593,6 +2601,8 @@ class DownloadPublicZIPCSVData(PrivateView):
             odk_dir,
             form_data["form_schema"],
             options,
+            include_multiselect,
+            include_lookups,
         )
 
         next_page = self.request.route_url(
@@ -2737,6 +2747,14 @@ class DownloadPrivateZIPCSVData(PrivateView):
         form_id = self.request.matchdict["formid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         options = int(self.request.params.get("options", "1"))
+        if "multiselects" in self.request.params.keys():
+            include_multiselect = True
+        else:
+            include_multiselect = False
+        if "lookups" in self.request.params.keys():
+            include_lookups = True
+        else:
+            include_lookups = False
         project_details = {}
         if project_id is not None:
             project_found = False
@@ -2764,7 +2782,9 @@ class DownloadPrivateZIPCSVData(PrivateView):
             form_id,
             odk_dir,
             form_data["form_schema"],
-            options=options,
+            options,
+            include_multiselect,
+            include_lookups,
         )
 
         next_page = self.request.route_url(
@@ -4296,13 +4316,18 @@ class ExportDataToZIPCSV(PrivateView):
             export_data = self.get_post_dict()
             options_type = int(export_data["labels"])
             self.returnRawViewResult = True
+            query_dict = {"options": options_type}
+            if "multiselects" in export_data.keys():
+                query_dict["multiselects"] = 1
+            if "lookups" in export_data.keys():
+                query_dict["lookups"] = 1
             if export_data["publishable"] == "yes":
                 location = self.request.route_url(
                     "form_download_public_zip_csv_data",
                     userid=user_id,
                     projcode=project_code,
                     formid=form_id,
-                    _query={"options": options_type},
+                    _query=query_dict,
                 )
                 return HTTPFound(location=location)
             if export_data["publishable"] == "no":
@@ -4311,7 +4336,7 @@ class ExportDataToZIPCSV(PrivateView):
                     userid=user_id,
                     projcode=project_code,
                     formid=form_id,
-                    _query={"options": options_type},
+                    _query=query_dict,
                 )
                 return HTTPFound(location=location)
 

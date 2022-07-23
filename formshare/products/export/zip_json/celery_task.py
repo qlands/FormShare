@@ -73,9 +73,11 @@ def internal_build_zip_json(
     output_path = os.path.join(odk_dir, *paths)
     os.makedirs(output_path)
 
-    num_cores = multiprocessing.cpu_count() - 2
-    if num_cores <= 0:
-        num_cores = 1
+    num_workers = (
+        multiprocessing.cpu_count() - int(settings.get("server:threads", "1")) - 1
+    )
+    if num_workers <= 0:
+        num_workers = 1
 
     args = [
         mysql_to_xlsx,
@@ -87,10 +89,9 @@ def internal_build_zip_json(
         "-x " + create_xml,
         "-o " + output_path,
         "-T " + temp_dir,
-        "-f " + form_id,
         "-e " + encryption_key,
         "-r {}".format(options),
-        "-w {}".format(num_cores),
+        "-w {}".format(num_workers),
     ]
     if protect_sensitive:
         args.append("-c")

@@ -13,7 +13,7 @@ if (
 
 from pyramid.config import Configurator
 import os
-import configparser
+from configparser import ConfigParser, NoOptionError
 from pyramid.authentication import AuthTktAuthenticationPolicy
 from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid_authstack import AuthenticationStackPolicy
@@ -23,15 +23,21 @@ from formshare.config.config_indexes import configure_indexes
 
 def main(global_config, **settings):
     if global_config is not None:  # pragma: no cover
-        config = configparser.ConfigParser()
+        config = ConfigParser()
         config.read(global_config["__file__"])
         host = config.get("server:main", "host")
+        try:
+            threads = config.get("server:main", "port")
+        except NoOptionError:
+            threads = "1"
         port = config.get("server:main", "port")
         composite_section = dict(config.items("composite:main"))
         composite_section.pop("use")
+        settings["server:threads"] = threads
         settings["server:main:host"] = host
         settings["server:main:port"] = port
         settings["server:main:root"] = list(composite_section.keys())[0]
+        settings["global:config:file"] = global_config["__file__"]
 
     """This function returns a Pyramid WSGI application."""
     auth_policy = AuthenticationStackPolicy()

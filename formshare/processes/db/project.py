@@ -788,10 +788,12 @@ def project_has_crowdsourcing(request, project_id):
         .filter(Project.project_id == project_id)
         .first()
     )
-    if res[0] == 0:
-        return True
-    else:
-        return False
+    if res is not None:
+        if res[0] == 0:
+            return True
+        else:
+            return False
+    return False
 
 
 def get_project_id_from_name(request, user, project_code):

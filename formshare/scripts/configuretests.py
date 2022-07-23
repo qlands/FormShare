@@ -47,6 +47,7 @@ def main(raw_args=None):
         print("Path to FormShare does not exits")
         return 1
 
+    global_config_file = os.path.abspath(args.ini_path)
     formshare_path = os.path.abspath(args.formshare_path)
 
     if args.json_file == "":
@@ -123,6 +124,7 @@ def main(raw_args=None):
         "server_main_host": server_main_host,
         "server_main_port": server_main_port,
         "server_main_root": server_main_root,
+        "global_config_file": global_config_file,
     }
 
     rendered_template = template_environment.get_template("test_config.jinja2").render(

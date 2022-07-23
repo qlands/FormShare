@@ -2,7 +2,7 @@ import zope.sqlalchemy
 from sqlalchemy import engine_from_config
 from sqlalchemy.orm import configure_mappers
 from sqlalchemy.orm import sessionmaker
-
+import os
 from formshare.models.formshare import (
     Base,
     Collaboratorlog,
@@ -48,13 +48,14 @@ def get_engine(settings, prefix="sqlalchemy."):
     pool_size = int(settings.get("pool.size", "30"))
     max_overflow = int(settings.get("pool.max.overflow", "10"))
     pool_recycle = int(settings.get("pool.recycle", "2000"))
-    return engine_from_config(
+    engine = engine_from_config(
         settings,
         prefix,
         pool_recycle=pool_recycle,
         pool_size=pool_size,
         max_overflow=max_overflow,
     )
+    return engine
 
 
 def get_session_factory(engine):
@@ -105,8 +106,24 @@ def includeme(config):
 
     # use pyramid_retry to retry a request when transient exceptions occur
     config.include("pyramid_retry")
-
-    session_factory = get_session_factory(get_engine(settings))
+    engine = get_engine(settings)
+    engine.execute("PURGE BINARY LOGS BEFORE '2999-12-12 23:59:59';")
+    schemas = engine.execute("show schemas").fetchall()
+    path_to_init_file = os.path.dirname(
+        os.path.realpath(settings["global:config:file"])
+    )
+    with open(path_to_init_file + "/temp_tables.log", "w") as myfile:
+        for an_schema in schemas:
+            if an_schema[0].find("FS_") == 0:
+                tables = engine.execute(
+                    "SHOW TABLES FROM {}".format(an_schema[0])
+                ).fetchall()
+                for a_table in tables:
+                    if a_table[0].find("TMP_") == 0:
+                        myfile.write(
+                            "DROP TABLE {}.{};\n".format(an_schema[0], a_table[0])
+                        )
+    session_factory = get_session_factory(engine)
     config.registry["dbsession_factory"] = session_factory
     config.registry["dbsession_metadata"] = Base.metadata
 

@@ -416,7 +416,7 @@ def t_e_s_t_repository_downloads(test_object):
             status=200,
         )
 
-    def mimic_celery_xlsx_process():
+    def mimic_celery_xlsx_process(protect, resolve):
         from formshare.products.export.xlsx.celery_task import (
             internal_build_xlsx,
         )
@@ -458,8 +458,9 @@ def t_e_s_t_repository_downloads(test_object):
             create_xml_file,
             test_object.server_config["auth.opaque"],
             test_object.working_dir + "/{}.xlsx".format(task_id),
-            True,
+            protect,
             "en",
+            resolve,
         )
         store_task_status(task_id, test_object.server_config)
         test_object.testapp.get(
@@ -473,7 +474,9 @@ def t_e_s_t_repository_downloads(test_object):
             status=200,
         )
 
-    def mimic_celery_zip_csv_process():
+    def mimic_celery_zip_csv_process(
+        protect, resolve, include_multiselects, include_lookups
+    ):
         from formshare.products.export.zip_csv.celery_task import (
             internal_build_zip_csv,
         )
@@ -515,8 +518,11 @@ def t_e_s_t_repository_downloads(test_object):
             create_xml_file,
             test_object.server_config["auth.opaque"],
             test_object.working_dir + "/{}.zip".format(task_id),
-            True,
+            protect,
             "en",
+            resolve,
+            include_multiselects,
+            include_lookups,
         )
         store_task_status(task_id, test_object.server_config)
         test_object.testapp.get(
@@ -525,6 +531,68 @@ def t_e_s_t_repository_downloads(test_object):
                 test_object.project,
                 test_object.formID,
                 "zip_csv_public_export",
+                task_id[-12:],
+            ),
+            status=200,
+        )
+
+    def mimic_celery_zip_json_process(
+        protect, resolve, include_multiselects, include_lookups
+    ):
+        from formshare.products.export.zip_json.celery_task import (
+            internal_build_zip_json,
+        )
+
+        engine = create_engine(
+            test_object.server_config["sqlalchemy.url"], poolclass=NullPool
+        )
+        form_details = get_form_details(
+            test_object.server_config, test_object.projectID, test_object.formID
+        )
+        form_schema = form_details["form_schema"]
+        create_xml_file = form_details["form_createxmlfile"]
+        task_id = str(uuid.uuid4())
+
+        sql = (
+            "INSERT INTO product (project_id,form_id,product_id,output_file,output_mimetype,"
+            "celery_taskid,datetime_added,created_by,output_id,process_only,publishable) "
+            "VALUES ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}',{})".format(
+                test_object.projectID,
+                test_object.formID,
+                "zip_json_public_export",
+                test_object.working_dir + "/{}.zip".format(task_id),
+                "application/zip",
+                task_id,
+                datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f"),
+                test_object.randonLogin,
+                task_id[-12:],
+                0,
+                1,
+            )
+        )
+        engine.execute(sql)
+        engine.dispose()
+        internal_build_zip_json(
+            test_object.server_config,
+            test_object.server_config["repository.path"] + "/odk",
+            form_schema,
+            test_object.formID,
+            create_xml_file,
+            test_object.server_config["auth.opaque"],
+            test_object.working_dir + "/{}.zip".format(task_id),
+            protect,
+            "en",
+            resolve,
+            include_multiselects,
+            include_lookups,
+        )
+        store_task_status(task_id, test_object.server_config)
+        test_object.testapp.get(
+            "/user/{}/project/{}/form/{}/private_download/{}/output/{}".format(
+                test_object.randonLogin,
+                test_object.project,
+                test_object.formID,
+                "zip_json_public_export",
                 task_id[-12:],
             ),
             status=200,
@@ -1010,7 +1078,73 @@ def t_e_s_t_repository_downloads(test_object):
         status=200,
     )
 
-    # Export to zip CSV publishable
+    # -------Public CSV
+
+    # Export to zip CSV publishable no resolve with multiselect and lookups
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/zip_csv".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "yes",
+            "labels": "1",
+            "lookups": 1,
+            "multiselects": 1,
+        },
+        status=302,
+    )
+
+    # Export to zip CSV publishable no resolve with lookups
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/zip_csv".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "yes",
+            "labels": "1",
+            "lookups": 1,
+        },
+        status=302,
+    )
+
+    # Export to zip CSV publishable no resolve with multiselecy
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/zip_csv".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "yes",
+            "labels": "1",
+            "multiselects": 1,
+        },
+        status=302,
+    )
+
+    # Export to zip CSV publishable no resolve no lookups no multiselects
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/zip_csv".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "yes",
+            "labels": "1",
+        },
+        status=302,
+    )
+
+    # Export to zip CSV publishable no resolve no lookups no multiselects
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/zip_csv".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "yes",
+            "labels": "2",
+        },
+        status=302,
+    )
+
+    # Export to zip CSV publishable no resolve no lookups no multiselects
     test_object.testapp.post(
         "/user/{}/project/{}/form/{}/export/zip_csv".format(
             test_object.randonLogin, test_object.project, test_object.formID
@@ -1022,9 +1156,229 @@ def t_e_s_t_repository_downloads(test_object):
         status=302,
     )
 
-    # Export to zip CSV not publishable
+    # ---- Private zip csv
+    # Export to zip CSV publishable no resolve with multiselect and lookups
     test_object.testapp.post(
         "/user/{}/project/{}/form/{}/export/zip_csv".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "no",
+            "labels": "1",
+            "lookups": 1,
+            "multiselects": 1,
+        },
+        status=302,
+    )
+
+    # Export to zip CSV publishable no resolve with lookups
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/zip_csv".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "no",
+            "labels": "1",
+            "lookups": 1,
+        },
+        status=302,
+    )
+
+    # Export to zip CSV publishable no resolve with multiselecy
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/zip_csv".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "no",
+            "labels": "1",
+            "multiselects": 1,
+        },
+        status=302,
+    )
+
+    # Export to zip CSV publishable no resolve no lookups no multiselects
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/zip_csv".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "no",
+            "labels": "1",
+        },
+        status=302,
+    )
+
+    # Export to zip CSV publishable no resolve no lookups no multiselects
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/zip_csv".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "no",
+            "labels": "2",
+        },
+        status=302,
+    )
+
+    # Export to zip CSV publishable no resolve no lookups no multiselects
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/zip_csv".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "no",
+            "labels": "3",
+        },
+        status=302,
+    )
+
+    # -------Public JSON
+
+    # Export to zip JSON publishable no resolve with multiselect and lookups
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/zip_json".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "yes",
+            "labels": "1",
+            "lookups": 1,
+            "multiselects": 1,
+        },
+        status=302,
+    )
+
+    # Export to zip JSON publishable no resolve with lookups
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/zip_json".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "yes",
+            "labels": "1",
+            "lookups": 1,
+        },
+        status=302,
+    )
+
+    # Export to zip JSON publishable no resolve with multiselecy
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/zip_json".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "yes",
+            "labels": "1",
+            "multiselects": 1,
+        },
+        status=302,
+    )
+
+    # Export to zip JSON publishable no resolve no lookups no multiselects
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/zip_json".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "yes",
+            "labels": "1",
+        },
+        status=302,
+    )
+
+    # Export to zip JSON publishable no resolve no lookups no multiselects
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/zip_json".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "yes",
+            "labels": "2",
+        },
+        status=302,
+    )
+
+    # Export to zip JSON publishable no resolve no lookups no multiselects
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/zip_json".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "yes",
+            "labels": "3",
+        },
+        status=302,
+    )
+
+    # ---- Private zip json
+    # Export to zip JSON private no resolve with multiselect and lookups
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/zip_json".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "no",
+            "labels": "1",
+            "lookups": 1,
+            "multiselects": 1,
+        },
+        status=302,
+    )
+
+    # Export to zip JSON private no resolve with lookups
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/zip_json".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "no",
+            "labels": "1",
+            "lookups": 1,
+        },
+        status=302,
+    )
+
+    # Export to zip JSON private no resolve with multiselecy
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/zip_json".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "no",
+            "labels": "1",
+            "multiselects": 1,
+        },
+        status=302,
+    )
+
+    # Export to zip JSON private no resolve no lookups no multiselects
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/zip_json".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "no",
+            "labels": "1",
+        },
+        status=302,
+    )
+
+    # Export to zip JSON private no resolve no lookups no multiselects
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/zip_json".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "no",
+            "labels": "2",
+        },
+        status=302,
+    )
+
+    # Export to zip JSON private no resolve no lookups no multiselects
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/zip_json".format(
             test_object.randonLogin, test_object.project, test_object.formID
         ),
         {
@@ -1191,8 +1545,36 @@ def t_e_s_t_repository_downloads(test_object):
     time.sleep(40)
     mimic_celery_public_csv_process()
     mimic_celery_private_csv_process()
-    mimic_celery_xlsx_process()
-    mimic_celery_zip_csv_process()
+
+    mimic_celery_xlsx_process(True, 1)
+    mimic_celery_xlsx_process(True, 2)
+    mimic_celery_xlsx_process(True, 3)
+    mimic_celery_xlsx_process(False, 1)
+    mimic_celery_xlsx_process(False, 2)
+    mimic_celery_xlsx_process(False, 3)
+
+    mimic_celery_zip_csv_process(True, 1, True, True)
+    mimic_celery_zip_csv_process(True, 1, False, True)
+    mimic_celery_zip_csv_process(True, 1, False, False)
+    mimic_celery_zip_csv_process(True, 2, False, False)
+    mimic_celery_zip_csv_process(True, 3, False, False)
+    mimic_celery_zip_csv_process(False, 1, True, True)
+    mimic_celery_zip_csv_process(False, 1, False, True)
+    mimic_celery_zip_csv_process(False, 1, False, False)
+    mimic_celery_zip_csv_process(False, 2, False, False)
+    mimic_celery_zip_csv_process(False, 3, False, False)
+
+    mimic_celery_zip_json_process(True, 1, True, True)
+    mimic_celery_zip_json_process(True, 1, False, True)
+    mimic_celery_zip_json_process(True, 1, False, False)
+    mimic_celery_zip_json_process(True, 2, False, False)
+    mimic_celery_zip_json_process(True, 3, False, False)
+    mimic_celery_zip_json_process(False, 1, True, True)
+    mimic_celery_zip_json_process(False, 1, False, True)
+    mimic_celery_zip_json_process(False, 1, False, False)
+    mimic_celery_zip_json_process(False, 2, False, False)
+    mimic_celery_zip_json_process(False, 3, False, False)
+
     mimic_celery_kml_process()
     mimic_celery_media_process()
     print("Testing repository downloads step 3 finished")

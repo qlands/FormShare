@@ -5,7 +5,7 @@ import time
 import uuid
 import zipfile
 from subprocess import Popen, PIPE
-
+import multiprocessing
 from celery.utils.log import get_task_logger
 
 from formshare.config.celery_app import celeryApp
@@ -73,6 +73,12 @@ def internal_build_zip_csv(
     output_path = os.path.join(odk_dir, *paths)
     os.makedirs(output_path)
 
+    num_workers = (
+        multiprocessing.cpu_count() - int(settings.get("server:threads", "1")) - 1
+    )
+    if num_workers <= 0:
+        num_workers = 1
+
     args = [
         mysql_to_csv,
         "-H " + mysql_host,
@@ -83,9 +89,9 @@ def internal_build_zip_csv(
         "-x " + create_xml,
         "-o " + output_path,
         "-T " + temp_dir,
-        "-f " + form_id,
         "-e " + encryption_key,
         "-r {}".format(options),
+        "-w {}".format(num_workers),
     ]
     if protect_sensitive:
         args.append("-c")

@@ -35,7 +35,7 @@ jobs:
           name: Run servers
           command: |
             sudo /etc/init.d/redis-server start
-            sudo mongod --fork -f /etc/mongod.conf
+            sudo service mongodb start
             sudo service mosquitto start
             tail -f /dev/null
           background: true

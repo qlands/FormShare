@@ -21,7 +21,7 @@ jobs:
           - MYSQL_ROOT_PASSWORD=circleci
         ports:
           - 3306:3306
-    resource_class: medium+
+    resource_class: large
     working_directory: ~/work
     steps:
       - checkout

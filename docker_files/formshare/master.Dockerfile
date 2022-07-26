@@ -1,4 +1,4 @@
-FROM qlands/odktools:20220607
+FROM qlands/odktools:20220727
 
 MAINTAINER QLands Technology Consultants
 

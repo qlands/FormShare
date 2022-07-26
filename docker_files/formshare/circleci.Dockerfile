@@ -1,4 +1,4 @@
-FROM ubuntu:21.10
+FROM ubuntu:20.04
 
 MAINTAINER QLands Technology Consultants
 RUN apt-get update && apt-get -y upgrade
@@ -6,16 +6,18 @@ RUN apt-get install -y software-properties-common
 RUN add-apt-repository universe && add-apt-repository multiverse
 RUN apt-add-repository -y ppa:mosquitto-dev/mosquitto-ppa
 RUN apt-get update
-RUN apt-get install -y wget
-RUN wget -qO - https://www.mongodb.org/static/pgp/server-5.0.asc | apt-key add -
-RUN add-apt-repository 'deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/5.0 multiverse'
-RUN apt-get update
 
-RUN apt-get install -y build-essential qtbase5-dev qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client-8.0 openjdk-18-jdk sqlite3 libqt5sql5-sqlite git python3-venv tidy golang-go mosquitto curl nano mongodb-org
+RUN apt-get install -y build-essential qt5-default qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake mongodb jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client-8.0 sqlite3 libqt5sql5-sqlite git wget python3-venv tidy golang-go mosquitto curl nano
 RUN wget https://dev.mysql.com/get/mysql-apt-config_0.8.22-1_all.deb
 RUN dpkg -i ./mysql-apt-config_0.8.22-1_all.deb
 RUN apt-get update
 RUN apt-get install mysql-shell
+
+RUN apt install -y libc6-x32 libc6-i386
+RUN wget https://download.oracle.com/java/18/latest/jdk-18_linux-x64_bin.deb
+RUN apt-get install -y libasound2
+RUN DEBIAN_FRONTEND=noninteractive dpkg -i jdk-18_linux-x64_bin.deb
+RUN update-alternatives --install /usr/bin/java java /usr/lib/jvm/jdk-18/bin/java 1
 
 # ---------------From Circle CI
 # make Apt non-interactive

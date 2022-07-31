@@ -38,7 +38,7 @@
                                             <div class="form-group row"><label class="col-sm-4 col-form-label">{{ _('Multiselects') }}</label>
                                                 <div class="col-sm-8">
                                                     <div class="i-checks"><label> <input type="checkbox" value="1" id="multiselects" name="multiselects"> <i></i> {{ _('Export multiselect tables') }} </label></div>
-                                                    <span class="form-text m-b-none">{{ _('When checked, FormShare will create a CSV file for each multiselect table. But will not resolve multiselect fields. Click') }} <a><span style="color: red">{{ _('here') }}</span></a> {{ _('for more information about how FormShare stores "select_multiple" variables.') }}</span>
+                                                    <span class="form-text m-b-none">{{ _('When checked, FormShare will create a CSV file for each multiselect table. But will not resolve multiselect fields. Click') }} <a href="{{ request.url_for_static('formshare_storage_en.pdf') }}" target="_blank"><span style="color: red">{{ _('here') }}</span></a> {{ _('for more information about how FormShare stores "select_multiple" variables.') }}</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -47,7 +47,7 @@
                                             <div class="form-group row"><label class="col-sm-4 col-form-label">{{ _('Lookups') }}</label>
                                                 <div class="col-sm-8">
                                                     <div class="i-checks"><label> <input type="checkbox" value="1" id="lookups" name="lookups"> <i></i> {{ _('Export lookup tables') }} </label></div>
-                                                    <span class="form-text m-b-none">{{ _('When checked, FormShare will create a CSV file for each lookup table, but it will not resolve option labels. Click') }} <a><span style="color: red">{{ _('here') }}</span></a> {{ _('for more information about how FormShare stores "select_one" variables.') }}</span>
+                                                    <span class="form-text m-b-none">{{ _('When checked, FormShare will create a CSV file for each lookup table, but it will not resolve option labels. Click') }} <a href="{{ request.url_for_static('formshare_storage_en.pdf') }}" target="_blank"><span style="color: red">{{ _('here') }}</span></a> {{ _('for more information about how FormShare stores "select_one" variables.') }}</span>
                                                 </div>
                                             </div>
                                         </div>

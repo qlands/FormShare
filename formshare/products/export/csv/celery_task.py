@@ -178,6 +178,14 @@ def internal_build_csv(
                         None,
                         locale,
                     )
+                    log.error(
+                        "Error while creating the flattening the JSON files. Error: "
+                        + stderr.decode("utf-8")
+                        + "-"
+                        + stdout.decode("utf-8")
+                        + "-: "
+                        + " ".join(args)
+                    )
                     raise DummyError(
                         _("Error while creating the flattening the JSON files")
                     )

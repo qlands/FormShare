@@ -86,7 +86,7 @@ def main(raw_args=None):
     num_workers = multiprocessing.cpu_count() - 2
     if num_workers <= 0:
         num_workers = 1
-    arrays = np.array_split(num_workers)
+    arrays = np.array_split(np.array(files), num_workers)
 
     threads = list()
     for ii in range(len(arrays)):

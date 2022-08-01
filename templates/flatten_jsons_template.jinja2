@@ -83,7 +83,10 @@ def main(raw_args=None):
         exit(1)
 
     # print("Processing with {} threads".format(multiprocessing.cpu_count()))
-    arrays = np.array_split(np.array(files), multiprocessing.cpu_count()-2)
+    num_workers = multiprocessing.cpu_count() - 2
+    if num_workers <= 0:
+        num_workers = 1
+    arrays = np.array_split(num_workers)
 
     threads = list()
     for ii in range(len(arrays)):

@@ -159,7 +159,8 @@ def t_e_s_t_json_logs_4(test_object):
     form_details = get_form_details(
         test_object.server_config, json4_project_id, json4_form
     )
-
+    print("Wait a bit longer for slower machines")
+    time.sleep(10)  # Wait a bit longer for slower machines
     engine = create_engine(
         test_object.server_config["sqlalchemy.url"], poolclass=NullPool
     )

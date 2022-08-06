@@ -430,6 +430,7 @@ class PrivateView(object):
             raise HTTPFound(location=next_page)
 
     def __call__(self):
+        start_time = datetime.datetime.now()
         error = self.request.session.pop_flash(queue="error")
         if len(error) > 0:
             self.append_to_errors(error[0].replace("|error", ""))
@@ -536,7 +537,19 @@ class PrivateView(object):
                         },
                         self.viewResult,
                     )
-
+        end_time = datetime.datetime.now()
+        time_delta = end_time - start_time
+        total_seconds = time_delta.total_seconds()
+        if (
+            self.request.registry.settings.get("report_processing_time", "false")
+            == "true"
+        ):
+            if self.request.matched_route is not None:
+                log.error(
+                    "Processing {} by {} took {} seconds".format(
+                        self.request.matched_route.name, self.user.login, total_seconds
+                    )
+                )
         if not self.returnRawViewResult:
             self.classResult.update(self.viewResult)
             return self.classResult

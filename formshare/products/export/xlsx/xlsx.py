@@ -9,7 +9,15 @@ from formshare.products.export.xlsx.celery_task import build_xlsx
 
 
 def generate_public_xlsx_file(
-    request, user, project, form, odk_dir, form_schema, options=1
+    request,
+    user,
+    project,
+    form,
+    odk_dir,
+    form_schema,
+    options=1,
+    include_multiselect=False,
+    include_lookups=False,
 ):
     settings = {}
     for key, value in request.registry.settings.items():
@@ -28,13 +36,14 @@ def generate_public_xlsx_file(
             settings,
             odk_dir,
             form_schema,
-            form,
             create_xml_file,
             request.registry.settings["auth.opaque"],
             xlsx_file,
             True,
             request.locale_name,
             options,
+            include_multiselect,
+            include_lookups,
         ),
         queue="FormShare",
     )
@@ -53,7 +62,15 @@ def generate_public_xlsx_file(
 
 
 def generate_private_xlsx_file(
-    request, user, project, form, odk_dir, form_schema, options=1
+    request,
+    user,
+    project,
+    form,
+    odk_dir,
+    form_schema,
+    options=1,
+    include_multiselect=False,
+    include_lookups=False,
 ):
     settings = {}
     for key, value in request.registry.settings.items():
@@ -72,13 +89,14 @@ def generate_private_xlsx_file(
             settings,
             odk_dir,
             form_schema,
-            form,
             create_xml_file,
             request.registry.settings["auth.opaque"],
             xlsx_file,
             False,
             request.locale_name,
             options,
+            include_multiselect,
+            include_lookups,
         ),
         queue="FormShare",
     )

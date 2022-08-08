@@ -416,7 +416,9 @@ def t_e_s_t_repository_downloads(test_object):
             status=200,
         )
 
-    def mimic_celery_xlsx_process(protect, resolve):
+    def mimic_celery_xlsx_process(
+        protect, resolve, include_multiselect, include_lookup
+    ):
         from formshare.products.export.xlsx.celery_task import (
             internal_build_xlsx,
         )
@@ -454,13 +456,14 @@ def t_e_s_t_repository_downloads(test_object):
             test_object.server_config,
             test_object.server_config["repository.path"] + "/odk",
             form_schema,
-            test_object.formID,
             create_xml_file,
             test_object.server_config["auth.opaque"],
             test_object.working_dir + "/{}.xlsx".format(task_id),
             protect,
             "en",
             resolve,
+            include_multiselect,
+            include_lookup,
         )
         store_task_status(task_id, test_object.server_config)
         test_object.testapp.get(
@@ -1029,7 +1032,71 @@ def t_e_s_t_repository_downloads(test_object):
         status=200,
     )
 
-    # Export to excel publishable
+    # Export to excel publishable just codes
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/xlsx".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "yes",
+            "labels": "1",
+        },
+        status=302,
+    )
+
+    # Export to excel publishable just codes and multiselects
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/xlsx".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "yes",
+            "labels": "1",
+            "multiselects": "1",
+        },
+        status=302,
+    )
+
+    # Export to excel publishable just codes and lookups
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/xlsx".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "yes",
+            "labels": "1",
+            "lookups": "1",
+        },
+        status=302,
+    )
+
+    # Export to excel publishable just codes with multiselects and lookups
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/xlsx".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "yes",
+            "labels": "1",
+            "multiselects": "1",
+            "lookups": "1",
+        },
+        status=302,
+    )
+
+    # Export to excel publishable labels instead of codes
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/xlsx".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "yes",
+            "labels": "2",
+        },
+        status=302,
+    )
+
+    # Export to excel publishable labels and codes
     test_object.testapp.post(
         "/user/{}/project/{}/form/{}/export/xlsx".format(
             test_object.randonLogin, test_object.project, test_object.formID
@@ -1041,7 +1108,71 @@ def t_e_s_t_repository_downloads(test_object):
         status=302,
     )
 
-    # Export to excel not publishable
+    # Export to excel not publishable. Just codes
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/xlsx".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "no",
+            "labels": "1",
+        },
+        status=302,
+    )
+
+    # Export to excel not publishable. Just codes with multiselects
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/xlsx".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "no",
+            "labels": "1",
+            "multiselects": "1",
+        },
+        status=302,
+    )
+
+    # Export to excel not publishable. Just codes with lookups
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/xlsx".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "no",
+            "labels": "1",
+            "lookups": "1",
+        },
+        status=302,
+    )
+
+    # Export to excel not publishable. Just codes with multiselects and lookups
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/xlsx".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "no",
+            "labels": "1",
+            "multiselects": "1",
+            "lookups": "1",
+        },
+        status=302,
+    )
+
+    # Export to excel not publishable. Labels instead of codes
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/export/xlsx".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "publishable": "no",
+            "labels": "2",
+        },
+        status=302,
+    )
+
+    # Export to excel not publishable. Labels and codes
     test_object.testapp.post(
         "/user/{}/project/{}/form/{}/export/xlsx".format(
             test_object.randonLogin, test_object.project, test_object.formID
@@ -1546,12 +1677,19 @@ def t_e_s_t_repository_downloads(test_object):
     mimic_celery_public_csv_process()
     mimic_celery_private_csv_process()
 
-    mimic_celery_xlsx_process(True, 1)
-    mimic_celery_xlsx_process(True, 2)
-    mimic_celery_xlsx_process(True, 3)
-    mimic_celery_xlsx_process(False, 1)
-    mimic_celery_xlsx_process(False, 2)
-    mimic_celery_xlsx_process(False, 3)
+    mimic_celery_xlsx_process(True, 1, False, False)
+    mimic_celery_xlsx_process(True, 1, True, False)
+    mimic_celery_xlsx_process(True, 1, False, True)
+    mimic_celery_xlsx_process(True, 1, True, True)
+    mimic_celery_xlsx_process(True, 2, False, False)
+    mimic_celery_xlsx_process(True, 3, False, False)
+
+    mimic_celery_xlsx_process(False, 1, False, False)
+    mimic_celery_xlsx_process(False, 1, True, False)
+    mimic_celery_xlsx_process(False, 1, False, True)
+    mimic_celery_xlsx_process(False, 1, True, True)
+    mimic_celery_xlsx_process(False, 2, False, False)
+    mimic_celery_xlsx_process(False, 3, False, False)
 
     mimic_celery_zip_csv_process(True, 1, True, True)
     mimic_celery_zip_csv_process(True, 1, False, True)

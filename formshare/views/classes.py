@@ -46,6 +46,7 @@ from formshare.processes.db import (
     get_assistant_by_api_key,
     project_has_crowdsourcing,
     update_last_login,
+    get_project_access_type,
 )
 
 log = logging.getLogger("formshare")
@@ -588,21 +589,15 @@ class PrivateView(object):
         project_code = self.request.matchdict.get("projcode", None)
         if user_id is not None and project_code is not None:
             project_id = get_project_id_from_name(self.request, user_id, project_code)
-            project_details = {}
             if project_id is not None:
-                project_found = False
-                for project in self.user_projects:
-                    if project["project_id"] == project_id:
-                        project_found = True
-                        project_details = project
-                if not project_found:
-                    return 5
+                if project_id is not None:
+                    return get_project_access_type(self.request, project_id, user_id, self.user.login)
+                else:
+                    raise HTTPNotFound
             else:
                 return 5
         else:
             return 5
-
-        return project_details["access_type"]
 
 
 class DashboardView(PrivateView):

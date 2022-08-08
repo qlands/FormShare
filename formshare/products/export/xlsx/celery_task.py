@@ -3,7 +3,7 @@ import os
 import time
 import uuid
 from subprocess import Popen, PIPE
-
+import multiprocessing
 from celery.utils.log import get_task_logger
 
 from formshare.config.celery_app import celeryApp
@@ -29,13 +29,14 @@ def internal_build_xlsx(
     settings,
     odk_dir,
     form_schema,
-    form_id,
     create_xml,
     encryption_key,
     xlsx_file,
     protect_sensitive,
     locale,
     options=1,
+    include_multiselect=False,
+    include_lookups=False,
 ):
     if (
         os.environ.get("FORMSHARE_PYTEST_RUNNING", "false") == "true"
@@ -64,6 +65,12 @@ def internal_build_xlsx(
     temp_dir = os.path.join(odk_dir, *paths)
     os.makedirs(temp_dir)
 
+    num_workers = (
+        multiprocessing.cpu_count() - int(settings.get("server:threads", "1")) - 1
+    )
+    if num_workers <= 0:
+        num_workers = 1
+
     args = [
         mysql_to_xlsx,
         "-H " + mysql_host,
@@ -74,12 +81,16 @@ def internal_build_xlsx(
         "-x " + create_xml,
         "-o " + xlsx_file,
         "-T " + temp_dir,
-        "-f " + form_id,
         "-e " + encryption_key,
         "-r {}".format(options),
+        "-w {}".format(num_workers),
     ]
     if protect_sensitive:
         args.append("-c")
+    if include_multiselect:
+        args.append("-m")
+    if include_lookups:
+        args.append("-l")
 
     log.info(" ".join(args))
 
@@ -137,23 +148,25 @@ def build_xlsx(
     settings,
     odk_dir,
     form_schema,
-    form_id,
     create_xml,
     encryption_key,
     xlsx_file,
     protect_sensitive,
     locale,
     options=1,
+    include_multiselect=False,
+    include_lookups=False,
 ):
     internal_build_xlsx(
         settings,
         odk_dir,
         form_schema,
-        form_id,
         create_xml,
         encryption_key,
         xlsx_file,
         protect_sensitive,
         locale,
         options,
+        include_multiselect,
+        include_lookups,
     )

@@ -28,9 +28,27 @@
                                         <hr>
                                         <div class="form-group row"><label class="col-sm-4 col-form-label">{{ _('Lookup options for selects and multi-selects') }}</label>
                                             <div class="col-sm-8">
-                                                <div class="i-checks"><label> <input type="radio" value="1" name="labels" checked=""> <i></i> {{ _('Include option codes only') }} </label></div>
-                                                <div class="i-checks"><label> <input type="radio" value="2" name="labels"> <i></i> {{ _('Convert option codes into labels') }}</label></div>
-                                                <div class="i-checks"><label> <input type="radio" value="3" name="labels"> <i></i> {{ _('Include option codes and labels') }}</label></div>
+                                                <div class="i-checks"><label> <input type="radio" id="labels1" value="1" name="labels" checked=""> <i></i> {{ _('Include option codes only') }} </label></div>
+                                                <div class="i-checks"><label> <input type="radio" id="labels2" value="2" name="labels"> <i></i> {{ _('Convert option codes into labels') }}</label></div>
+                                                <div class="i-checks"><label> <input type="radio" id="labels3" value="3" name="labels"> <i></i> {{ _('Include option codes and labels') }}</label></div>
+                                            </div>
+                                        </div>
+                                        <div class="multiselects">
+                                            <hr>
+                                            <div class="form-group row"><label class="col-sm-4 col-form-label">{{ _('Multiselects') }}</label>
+                                                <div class="col-sm-8">
+                                                    <div class="i-checks"><label> <input type="checkbox" value="1" id="multiselects" name="multiselects"> <i></i> {{ _('Export multiselect tables') }} </label></div>
+                                                    <span class="form-text m-b-none">{{ _('When checked, FormShare will create a CSV file for each multiselect table. But will not resolve multiselect fields. Click') }} <a href="{{ request.url_for_static('formshare_storage_en.pdf') }}" target="_blank"><span style="color: red">{{ _('here') }}</span></a> {{ _('for more information about how FormShare stores "select_multiple" variables.') }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="multiselects">
+                                            <hr>
+                                            <div class="form-group row"><label class="col-sm-4 col-form-label">{{ _('Lookups') }}</label>
+                                                <div class="col-sm-8">
+                                                    <div class="i-checks"><label> <input type="checkbox" value="1" id="lookups" name="lookups"> <i></i> {{ _('Export lookup tables') }} </label></div>
+                                                    <span class="form-text m-b-none">{{ _('When checked, FormShare will create a CSV file for each lookup table, but it will not resolve option labels. Click') }} <a href="{{ request.url_for_static('formshare_storage_en.pdf') }}" target="_blank"><span style="color: red">{{ _('here') }}</span></a> {{ _('for more information about how FormShare stores "select_one" variables.') }}</span>
+                                                </div>
                                             </div>
                                         </div>
                                         <div class="form-group row">
@@ -48,3 +66,25 @@
         </div>
     </div>
 {% endblock mainsection %}
+
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function() {
+            $( "#labels1" ).click(function() {
+                $( ".multiselects" ).show();
+            });
+            $( "#labels2" ).click(function() {
+                $( ".multiselects" ).hide();
+                $( "#multiselects" ).prop( "checked", false );
+                $( "#lookups" ).prop( "checked", false );
+            });
+            $( "#labels3" ).click(function() {
+                $( ".multiselects" ).hide();
+                $( "#multiselects" ).prop( "checked", false );
+                $( "#lookups" ).prop( "checked", false );
+            });
+        });
+    </script>
+{% endblock scripts %}

@@ -6,7 +6,7 @@ from pyramid.httpexceptions import HTTPNotFound
 
 from formshare.processes.db import (
     get_project_id_from_name,
-    get_project_access_type,
+    api_get_project_access_type,
     get_form_data,
     add_file_to_form,
 )
@@ -36,7 +36,7 @@ class API1UploadFileToForm(APIView):
             project_id = get_project_id_from_name(
                 self.request, project_user, project_code
             )
-            access_type = get_project_access_type(self.request, user_id, project_id)
+            access_type = api_get_project_access_type(self.request, user_id, project_id)
             if access_type is None:
                 self.return_error(
                     "authorization",

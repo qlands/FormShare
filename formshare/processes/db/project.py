@@ -35,6 +35,7 @@ __all__ = [
     "set_project_as_active",
     "get_project_owner",
     "get_project_access_type",
+    "api_get_project_access_type",
     "get_owned_project",
     "get_number_of_case_creators",
     "get_number_of_case_creators_with_repository",
@@ -810,7 +811,7 @@ def get_project_id_from_name(request, user, project_code):
     return None
 
 
-def get_project_access_type(request, user, project_id):
+def api_get_project_access_type(request, user, project_id):
     res = (
         request.dbsession.query(Userproject.access_type)
         .filter(Userproject.user_id == user)
@@ -1286,6 +1287,34 @@ def remove_file_from_project(request, project, file_name):
 def get_project_details(request, project):
     res = request.dbsession.query(Project).filter(Project.project_id == project).first()
     if res is not None:
-        return map_from_schema(res)
+        mapped_data = map_from_schema(res)
+        res = (
+            request.dbsession.query(Userproject.user_id)
+            .filter(Userproject.project_id == project)
+            .filter(Userproject.access_type == 1)
+            .first()
+        )
+        if res is not None:
+            mapped_data["owner"] = res.user_id
+        else:
+            log.error("Cannot find owner for project {}".format(project))
+            mapped_data["owner"] = None
+        return mapped_data
     else:
         return None
+
+
+def get_project_access_type(request, project_id, user_id, logged_user):
+    if user_id == logged_user:
+        return 1
+    else:
+        res = (
+            request.dbsession.query(Userproject.access_type)
+            .filter(Userproject.project_id == project_id)
+            .filter(Userproject.user_id == logged_user)
+            .filter(Userproject.project_accepted == 1)
+            .first()
+        )
+        if res is None:
+            return 5  # Five is not access at all
+        return res.access_type

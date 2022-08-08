@@ -13,6 +13,7 @@ from formshare.processes.db import (
     get_project_details,
     get_form_data,
     get_project_owner,
+    get_project_access_type
 )
 from formshare.processes.settings.settings import (
     store_settings,
@@ -251,20 +252,12 @@ class FormShareFormEditorView(
         project_code = self.request.matchdict["projcode"]
         form_id = self.request.matchdict["formid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
         if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-                    project_details = project
-            if not project_found:
-                raise HTTPNotFound
+            if get_project_access_type(self.request, project_id, user_id, self.user.login) >= 4:
+                raise HTTPNotFound  # Don't edit a public or a project that I am just a member
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] >= 4:
-            raise HTTPNotFound  # Don't edit a public or a project that I am just a member
         self.user_id = user_id
         self.project_code = project_code
         self.project_id = project_id
@@ -294,20 +287,12 @@ class FormShareFormAdminView(
         project_code = self.request.matchdict["projcode"]
         form_id = self.request.matchdict["formid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
         if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-                    project_details = project
-            if not project_found:
-                raise HTTPNotFound
+            if get_project_access_type(self.request, project_id, user_id, self.user.login) >= 3:
+                raise HTTPNotFound  # Don't edit a public or a project that I am just a member
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] >= 3:
-            raise HTTPNotFound  # Don't edit a public or a project that I am just a member
         self.user_id = user_id
         self.project_code = project_code
         self.project_id = project_id

@@ -82,9 +82,23 @@ def t_e_s_t_unauthorized_access(test_object):
     )
     assert "FS_error" not in res.headers
 
-    # Add a project succeed.
-    res = test_object.testapp.post(
+    # Add a project to a user that is not the logged user goes to 404
+    test_object.testapp.post(
         "/user/{}/projects/add".format(test_object.randonLogin),
+        {
+            "project_code": "coll1_test001",
+            "project_name": "Test project collaborator 1",
+            "project_abstract": "",
+            "project_icon": "😁",
+            "project_hexcolor": "#9bbb59",
+            "project_formlist_auth": 1,
+        },
+        status=404,
+    )
+
+    # Add a project to collaborator 1
+    res = test_object.testapp.post(
+        "/user/{}/projects/add".format(collaborator_1),
         {
             "project_code": "coll1_test001",
             "project_name": "Test project collaborator 1",

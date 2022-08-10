@@ -226,8 +226,7 @@ def t_e_s_t_collaborator_projects(test_object):
     assert "FS_error" not in res.headers
 
     # Collaborator 2 goes to dashboard of collaborator 1
-    res = test_object.testapp.get("/user/{}".format(collaborator_1), status=200)
-    assert "FS_error" not in res.headers
+    test_object.testapp.get("/user/{}".format(collaborator_1), status=404)
 
     # Collaborator remove itself as collaborator
     # Remove the collaborator

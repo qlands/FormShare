@@ -17,79 +17,51 @@
 
 {% block css %}
     {{ super() }}
-    {% if viewingSelfAccount == False %}
-        {% cssresource request,'formshare','bsmarkdown' %}
-    {% else %}
-        {% cssresource request,'formshare','leaflet_beautify_marker_icon' %}
-    {% endif %}
+    {% cssresource request,'formshare','leaflet_beautify_marker_icon' %}
 {% endblock css %}
 
 {% block topScripts %}
     {{ super() }}
-    {% if viewingSelfAccount == False %}
-        {% jsresource request,'formshare','markdown' %}
-        {% jsresource request,'formshare','clipboard' %}
-    {% else %}
-        {% jsresource request,'formshare','tippy' %}
-        {% jsresource request,'formshare','leaflet_beautify_marker_icon' %}
-    {% endif %}
+    {% jsresource request,'formshare','tippy' %}
+    {% jsresource request,'formshare','leaflet_beautify_marker_icon' %}
 {% endblock topScripts %}
 
 {% block dashheader %}
-    {% if viewingSelfAccount %}
-        {% if userProjects|length > 0 %}
-            <div class="row border-bottom dashboard-header" style="background-color: #676a6c">
-                {% block project_list_section %}
-                    <div class="col-md-12">
-                        {% if activeUser != None  %}
-                            {% if viewingSelfAccount %}
-                                <h2 style="color: white">{{ _('Welcome') }}</h2>
-                            {% else %}
-                                <h2>{{ _('You are viewing others account') }}</h2>
-                            {% endif %}
-                        {% endif %}
-                        <h3 style="color:white;">{{ _('Recent activity in project') }} "<a style="color: white" href="{{ request.route_url('project_details', userid=activeProject.owner, projcode=activeProject.project_code) }}" >{{ activeProject.project_name }}</a>" {% if selected_timezone == 'project' and timezone != 'UTC'  %}<span class="badge badge-default" title=" {{ request.h.get_timezone_desc(request,timezone) }} ">UTC{{ request.h.get_timezone_offset(request,timezone) }}</span>{% endif %}</h3>
-                        {{ form.display_errors(errors,true) }}
-                        {% include 'dashboard/snippets/active_project_summary.jinja2' %}
-                    </div>
-                {% endblock project_list_section %}
-            </div>
-        {% endif %}
+
+    {% if projectData %}
+        <div class="row border-bottom dashboard-header" style="background-color: #676a6c">
+            {% block project_list_section %}
+                <div class="col-md-12">
+                    {% if activeUser != None  %}
+                        <h2 style="color: white">{{ _('Welcome') }}</h2>
+                    {% endif %}
+                    <h3 style="color:white;">{{ _('Recent activity in project') }} "<a style="color: white" href="{{ request.route_url('project_details', userid=activeProject.owner, projcode=activeProject.project_code) }}" >{{ activeProject.project_name }}</a>" {% if selected_timezone == 'project' and timezone != 'UTC'  %}<span class="badge badge-default" title=" {{ request.h.get_timezone_desc(request,timezone) }} ">UTC{{ request.h.get_timezone_offset(request,timezone) }}</span>{% endif %}</h3>
+                    {{ form.display_errors(errors,true) }}
+                    {% include 'dashboard/snippets/active_project_summary.jinja2' %}
+                </div>
+            {% endblock project_list_section %}
+        </div>
     {% endif %}
 {% endblock %}
 
-{% block maincontent %}
-    {% if viewingSelfAccount %}
-        {{ super() }}
-    {% else %}
-        {% include 'dashboard/profile/snippets/profile_head.jinja2' %}
-        {% include 'dashboard/profile/snippets/profile_details.jinja2' %}
-    {% endif %}
-
-{% endblock maincontent %}
-
 {% block mainsection %}
-    {% if viewingSelfAccount %}
-        {% if userProjects|length > 0 %}
-            <div>
-                <h3>{{ _('Account summary') }}</h3>
-            </div>
-            {% include 'dashboard/snippets/account_summary.jinja2' %}
-            {% set upload_for_merging = false %}
-            {% set action_url = request.route_url('form_add',userid=activeProject.owner,projcode=activeProject.project_code,_query={'next': request.url}) %}
-            {% include 'dashboard/projects/forms/snippets/upload_form.jinja2' %}
-        {% else %}
-            <div class="middle-box text-center animated fadeInDown">
-                <h1><i class="fas fa-folder-plus"></i></h1>
-                <h3 class="font-bold">{{ _('It seems that you are new here!') }}</h3>
-                <div class="error-desc">
-
-                    <button type="button" onclick="location.href='{{ request.route_url('projects_add',userid=activeUser.login,_query={'next':request.url}) }}';" class="btn btn-w-m btn-success">{{ _('Create a new project') }}</button>
-                </div>
-            </div>
-        {% endif %}
+    {% if projectData %}
+        <div>
+            <h3>{{ _('Account summary') }}</h3>
+        </div>
+        {% include 'dashboard/snippets/account_summary.jinja2' %}
+        {% set upload_for_merging = false %}
+        {% set action_url = request.route_url('form_add',userid=activeProject.owner,projcode=activeProject.project_code,_query={'next': request.url}) %}
+        {% include 'dashboard/projects/forms/snippets/upload_form.jinja2' %}
     {% else %}
-        {{ super() }}
+        <div class="middle-box text-center animated fadeInDown">
+            <h1><i class="fas fa-folder-plus"></i></h1>
+            <h3 class="font-bold">{{ _('It seems that you are new here!') }}</h3>
+            <div class="error-desc">
+
+                <button type="button" onclick="location.href='{{ request.route_url('projects_add',userid=activeUser.login,_query={'next':request.url}) }}';" class="btn btn-w-m btn-success">{{ _('Create a new project') }}</button>
+            </div>
+        </div>
     {% endif %}
 {% endblock mainsection %}
 
@@ -138,122 +110,13 @@
     {% block dashboad_extra_imports %}
 
     {% endblock dashboad_extra_imports %}
-    {% if viewingSelfAccount == False %}
-        <script>
-            $(document).ready(function() {
-                $('.scroll_content2').slimscroll();
-                new ClipboardJS('.clipboard');
 
-                {% if userDetails.user_about != None %}
+    <script>
+        $(document).ready(function() {
 
-                    var val = $("#bio_hidden").val();
-                    document.getElementById('profile_bio').innerHTML = markdown.toHTML(val);
-
-                    $('.scroll_content').slimscroll();
-
-                {% endif %}
-            });
-        </script>
-    {% else %}
-        <script>
-            $(document).ready(function() {
-
-                tippy('#create_case_table', {
-                    content: "{{ _('Click') }} <a target='_blank' href='{{request.url_for_static('longitudinal_infographic_en.pdf')}}' style='color: orange'><b>{{ _('here') }}</b></a> {{ _('to read more') }}",
-                    placement: 'left',
-                    interactive: true,
-                    allowHTML: true,
-                });
-
-                tippy('#info_follow_up', {
-                    content: "{{ _('Follow-up forms attach information to a case at different points in time.') }}",
-                    placement: 'bottom',
-                    interactive: true,
-                    allowHTML: true,
-                });
-
-                tippy('#info_deactivate', {
-                    content: "{{ _('Deactivate forms change the status of a case to inactive.') }} {{ _('For example, a household that decides to exit a study.') }}",
-                    placement: 'bottom',
-                    interactive: true,
-                    allowHTML: true,
-                });
-
-                tippy('#info_activate', {
-                    content: "{{ _('Activate forms change the status of a case to active.') }} {{ _('For example, a household that decides to enter a study again.') }}",
-                    placement: 'bottom',
-                    interactive: true,
-                    allowHTML: true,
-                });
-
-                {% if activeUser.super == 1 or request.h.get_setting(request,'show.settings.menu','False') == 'True' %}
-                    $('.spin-icon').click(function (){
-                        $(".theme-config-box").toggleClass("show");
-                    });
-                {% endif %}
-
-                let xform_upload_started = false;
-                $('#form_upload_form').submit(function() {
-                    $(this).find("button[type='submit']").prop('disabled',true);
-                    xform_upload_started = true;
-                });
-
-                $('#upload_form').on('hidden.bs.modal', function () {
-                    if (xform_upload_started)
-                        location.reload();
-                });
-
-                {% include 'dashboard/projects/forms/snippets/upload_form_js.jinja2' %}
-
-                {% for form in forms %}
-                    {% include 'dashboard/projects/snippets/project_form_odk_item_js.jinja2' %}
-                {% endfor %}
-
-                $('.scroll_content').slimscroll({'height':300});
-
-                $('.remove_form').click(function () {
-                    var action_url = $( this ).attr('urn');
-                    var has_parent = $( this ).attr('data-has-parent');
-                    var text = "";
-                    var title = "";
-                    if (has_parent === "true") {
-                        text = "{{ _('Warning, you are going to delete a form that is a subversion of another form. This means that you will REMOVE ALL the data, including previous versions of the data as well!!!') }}";
-                        title = "{{ _('Are you sure, really really sure?') }}";
-                    }
-                    else {
-                        text = "{{ _('All the data in this form will be deleted!') }}";
-                        title = "{{ _('Are you sure?') }}";
-                    }
-                    swal({
-                            title: title,
-                            text: text,
-                            type: "warning",
-                            showCancelButton: true,
-                            confirmButtonColor: "#DD6B55",
-                            confirmButtonText: "{{ _('Yes, delete this form!') }}",
-                            cancelButtonText: "{{ _('Oops!, cancel!') }}",
-                            closeOnConfirm: true,
-                            closeOnCancel: true },
-                        function (isConfirm) {
-                            if (isConfirm) {
-                                var form = document.createElement('form');
-                                form.setAttribute('method', 'post');
-                                form.setAttribute('action', action_url);
-                                form.style.display = 'hidden';
-
-                                var i = document.createElement("input"); //input element, text
-                                i.setAttribute('type',"text");
-                                i.setAttribute('name',"csrf_token");
-                                i.setAttribute('value','{{ request.session.get_csrf_token() }}');
-                                form.appendChild(i);
-
-                                document.body.appendChild(form);
-                                $("#busy").show();
-                                form.submit();
-                            }
-                        });
-                });
-
+            let info_url = "{{ request.route_url('user_projects', userid=projectDetails.owner) }}";
+            $('#ajax_user_projects').html('{{ _('Loading...') }}');
+            $('#ajax_user_projects').load(info_url, function() {
                 $('.set_active').click(function () {
                     var action_url = $( this ).attr('urn');
                     swal({
@@ -287,15 +150,112 @@
                 });
 
                 $('.delete_project').click(function () {
+                    var action_url = $( this ).attr('urn');
+                    swal({
+                            title: "{{ _('Are you sure?') }}",
+                            text: "{{ _('All the data in this project will be deleted!') }}",
+                            type: "warning",
+                            showCancelButton: true,
+                            confirmButtonColor: "#DD6B55",
+                            confirmButtonText: "{{ _('Yes, delete it!') }}",
+                            cancelButtonText: "{{ _('Oops, cancel!') }}",
+                            closeOnConfirm: true,
+                            closeOnCancel: true },
+                        function (isConfirm) {
+                            if (isConfirm) {
+                                var form = document.createElement('form');
+                                form.setAttribute('method', 'post');
+                                form.setAttribute('action', action_url);
+                                form.style.display = 'hidden';
+
+                                var i = document.createElement("input"); //input element, text
+                                i.setAttribute('type',"text");
+                                i.setAttribute('name',"csrf_token");
+                                i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                                form.appendChild(i);
+
+                                document.body.appendChild(form);
+                                $("#busy").show();
+                                form.submit();
+                            }
+                        });
+                });
+            });
+
+            tippy('#create_case_table', {
+                content: "{{ _('Click') }} <a target='_blank' href='{{request.url_for_static('longitudinal_infographic_en.pdf')}}' style='color: orange'><b>{{ _('here') }}</b></a> {{ _('to read more') }}",
+                placement: 'left',
+                interactive: true,
+                allowHTML: true,
+            });
+
+            tippy('#info_follow_up', {
+                content: "{{ _('Follow-up forms attach information to a case at different points in time.') }}",
+                placement: 'bottom',
+                interactive: true,
+                allowHTML: true,
+            });
+
+            tippy('#info_deactivate', {
+                content: "{{ _('Deactivate forms change the status of a case to inactive.') }} {{ _('For example, a household that decides to exit a study.') }}",
+                placement: 'bottom',
+                interactive: true,
+                allowHTML: true,
+            });
+
+            tippy('#info_activate', {
+                content: "{{ _('Activate forms change the status of a case to active.') }} {{ _('For example, a household that decides to enter a study again.') }}",
+                placement: 'bottom',
+                interactive: true,
+                allowHTML: true,
+            });
+
+            {% if activeUser.super == 1 or request.h.get_setting(request,'show.settings.menu','False') == 'True' %}
+                $('.spin-icon').click(function (){
+                    $(".theme-config-box").toggleClass("show");
+                });
+            {% endif %}
+
+            let xform_upload_started = false;
+            $('#form_upload_form').submit(function() {
+                $(this).find("button[type='submit']").prop('disabled',true);
+                xform_upload_started = true;
+            });
+
+            $('#upload_form').on('hidden.bs.modal', function () {
+                if (xform_upload_started)
+                    location.reload();
+            });
+
+            {% include 'dashboard/projects/forms/snippets/upload_form_js.jinja2' %}
+
+            {% for form in forms %}
+                {% include 'dashboard/projects/snippets/project_form_odk_item_js.jinja2' %}
+            {% endfor %}
+
+            $('.scroll_content').slimscroll({'height':300});
+
+            $('.remove_form').click(function () {
                 var action_url = $( this ).attr('urn');
+                var has_parent = $( this ).attr('data-has-parent');
+                var text = "";
+                var title = "";
+                if (has_parent === "true") {
+                    text = "{{ _('Warning, you are going to delete a form that is a subversion of another form. This means that you will REMOVE ALL the data, including previous versions of the data as well!!!') }}";
+                    title = "{{ _('Are you sure, really really sure?') }}";
+                }
+                else {
+                    text = "{{ _('All the data in this form will be deleted!') }}";
+                    title = "{{ _('Are you sure?') }}";
+                }
                 swal({
-                        title: "{{ _('Are you sure?') }}",
-                        text: "{{ _('All the data in this project will be deleted!') }}",
+                        title: title,
+                        text: text,
                         type: "warning",
                         showCancelButton: true,
                         confirmButtonColor: "#DD6B55",
-                        confirmButtonText: "{{ _('Yes, delete it!') }}",
-                        cancelButtonText: "{{ _('Oops, cancel!') }}",
+                        confirmButtonText: "{{ _('Yes, delete this form!') }}",
+                        cancelButtonText: "{{ _('Oops!, cancel!') }}",
                         closeOnConfirm: true,
                         closeOnCancel: true },
                     function (isConfirm) {
@@ -318,103 +278,102 @@
                     });
             });
 
-                $('.change-status').click(function () {
-                    var action_url = $( this ).attr('urn');
-                    var title = $( this ).attr('data-title');
-                    var message = $( this ).attr('data-message');
-                    swal({
-                            title: title,
-                            text: message,
-                            type: "warning",
-                            showCancelButton: true,
-                            confirmButtonColor: "#DD6B55",
-                            confirmButtonText: "{{ _('Yes, go ahead!') }}",
-                            cancelButtonText: "{{ _('Oops!, cancel!') }}",
-                            closeOnConfirm: true,
-                            closeOnCancel: true },
-                        function (isConfirm) {
-                            if (isConfirm) {
-                                var form = document.createElement('form');
-                                form.setAttribute('method', 'post');
-                                form.setAttribute('action', action_url);
-                                form.style.display = 'hidden';
+            $('.change-status').click(function () {
+                var action_url = $( this ).attr('urn');
+                var title = $( this ).attr('data-title');
+                var message = $( this ).attr('data-message');
+                swal({
+                        title: title,
+                        text: message,
+                        type: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#DD6B55",
+                        confirmButtonText: "{{ _('Yes, go ahead!') }}",
+                        cancelButtonText: "{{ _('Oops!, cancel!') }}",
+                        closeOnConfirm: true,
+                        closeOnCancel: true },
+                    function (isConfirm) {
+                        if (isConfirm) {
+                            var form = document.createElement('form');
+                            form.setAttribute('method', 'post');
+                            form.setAttribute('action', action_url);
+                            form.style.display = 'hidden';
 
-                                var i = document.createElement("input"); //input element, text
-                                i.setAttribute('type',"text");
-                                i.setAttribute('name',"csrf_token");
-                                i.setAttribute('value','{{ request.session.get_csrf_token() }}');
-                                form.appendChild(i);
+                            var i = document.createElement("input"); //input element, text
+                            i.setAttribute('type',"text");
+                            i.setAttribute('name',"csrf_token");
+                            i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                            form.appendChild(i);
 
-                                document.body.appendChild(form);
-                                $("#busy").show();
-                                form.submit();
-                            }
-                        });
-                });
-
-                {% if submissions > 0 and withgps > 0 %}
-                    {% block dashboard_map_process %}
-                        var mymap = L.map('projmap').setView([51.505, -0.09], 13);
-                        L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
-                            attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://www.mapbox.com/map-feedback/" target="_blank">Improve this map</a></strong>',
-                            tileSize: 512,
-                            maxZoom: 18,
-                            zoomOffset: -1,
-                            id: 'mapbox/streets-v11',
-                            accessToken: 'pk.eyJ1IjoicWxhbmRzIiwiYSI6ImNqZHB1ZDh4YzEwZHEyeG1rcjc0NmFsNzIifQ.i3YebmNDByns1c1ixZE0bA'
-                        }).addTo(mymap);
-
-                        var element = document.getElementById('mapbox');
-                        var full_screen = false;
-                        var normal_height = $("#projmap").height();
-                        new ResizeSensor(element, function() {
-                            var window_width = $(window).width();
-                            var element_width =  element.clientWidth;
-                            if ((element_width / window_width) >= 0.80)
-                            {
-                                $("#projmap").height($(window).height()-80);
-                                mymap.invalidateSize();
-                                //console.log('Changed to ' + element.clientWidth);
-                                full_screen = true;
-                            }
-                            else
-                            {
-                                if (full_screen)
-                                {
-                                    $("#projmap").height(normal_height);
-                                    mymap.invalidateSize();
-                                    //console.log('Back to ' + normal_height);
-                                    //console.log('Changed to ' + element.clientWidth);
-                                    full_screen = false;
-                                }
-                            }
-                        });
-
-                        function get_more(query_from, query_size)
-                        {
-                            let url = new URL("{{ request.route_url('project_download_gpspoints',userid=active_project_owner,projcode=projectData.project_code) }}");
-                            url.searchParams.append('from', query_from);
-                            url.searchParams.append('size', query_size);
-
-                            $.getJSON(url, function( data ) {
-                                var markers = [];
-                                data.points.forEach(function(entry)
-                                {
-                                    var marker = L.marker([entry.lati, entry.long], {
-                                        icon: L.BeautifyIcon.icon(entry.options),
-                                        draggable: false
-                                    }).addTo(mymap);
-                                    markers.push(marker);
-                                });
-                                var group = new L.featureGroup(markers);
-                                mymap.fitBounds(group.getBounds());
-                            });
+                            document.body.appendChild(form);
+                            $("#busy").show();
+                            form.submit();
                         }
-                        get_more(0,10000);
-                    {% endblock dashboard_map_process %}
-                {% endif %}
+                    });
             });
-        </script>
-    {% endif %}
+
+            {% if submissions > 0 and withgps > 0 %}
+                {% block dashboard_map_process %}
+                    var mymap = L.map('projmap').setView([51.505, -0.09], 13);
+                    L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+                        attribution: '© <a href="https://www.mapbox.com/about/maps/">Mapbox</a> © <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://www.mapbox.com/map-feedback/" target="_blank">Improve this map</a></strong>',
+                        tileSize: 512,
+                        maxZoom: 18,
+                        zoomOffset: -1,
+                        id: 'mapbox/streets-v11',
+                        accessToken: 'pk.eyJ1IjoicWxhbmRzIiwiYSI6ImNqZHB1ZDh4YzEwZHEyeG1rcjc0NmFsNzIifQ.i3YebmNDByns1c1ixZE0bA'
+                    }).addTo(mymap);
+
+                    var element = document.getElementById('mapbox');
+                    var full_screen = false;
+                    var normal_height = $("#projmap").height();
+                    new ResizeSensor(element, function() {
+                        var window_width = $(window).width();
+                        var element_width =  element.clientWidth;
+                        if ((element_width / window_width) >= 0.80)
+                        {
+                            $("#projmap").height($(window).height()-80);
+                            mymap.invalidateSize();
+                            //console.log('Changed to ' + element.clientWidth);
+                            full_screen = true;
+                        }
+                        else
+                        {
+                            if (full_screen)
+                            {
+                                $("#projmap").height(normal_height);
+                                mymap.invalidateSize();
+                                //console.log('Back to ' + normal_height);
+                                //console.log('Changed to ' + element.clientWidth);
+                                full_screen = false;
+                            }
+                        }
+                    });
+
+                    function get_more(query_from, query_size)
+                    {
+                        let url = new URL("{{ request.route_url('project_download_gpspoints',userid=active_project_owner,projcode=projectData.project_code) }}");
+                        url.searchParams.append('from', query_from);
+                        url.searchParams.append('size', query_size);
+
+                        $.getJSON(url, function( data ) {
+                            var markers = [];
+                            data.points.forEach(function(entry)
+                            {
+                                var marker = L.marker([entry.lati, entry.long], {
+                                    icon: L.BeautifyIcon.icon(entry.options),
+                                    draggable: false
+                                }).addTo(mymap);
+                                markers.push(marker);
+                            });
+                            var group = new L.featureGroup(markers);
+                            mymap.fitBounds(group.getBounds());
+                        });
+                    }
+                    get_more(0,10000);
+                {% endblock dashboard_map_process %}
+            {% endif %}
+        });
+    </script>
 {% endblock scripts %}
 

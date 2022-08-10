@@ -1,7 +1,7 @@
 from pyramid.httpexceptions import HTTPNotFound
 
 from formshare.plugins.utilities import FormSharePrivateView
-from formshare.processes.db import get_project_id_from_name
+from formshare.processes.db import get_project_id_from_name, get_project_access_type
 from formshare.processes.db.project import get_owned_project
 from formshare.processes.db.user import (
     get_users,
@@ -49,19 +49,16 @@ class TestFormView(FormSharePrivateView):
         form_id = self.request.matchdict["formid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         self.get_project_access_level()
-        project_details = {}
+
         if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-                    project_details = project
-            if not project_found:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 4
+            ):
                 raise HTTPNotFound
         else:
-            raise HTTPNotFound
-
-        if project_details["access_type"] > 4:
             raise HTTPNotFound
 
         datasets = get_all_datasets_with_gps(

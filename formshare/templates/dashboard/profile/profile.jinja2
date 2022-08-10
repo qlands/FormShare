@@ -32,6 +32,77 @@
     {{ super() }}
     <script>
         $(document).ready(function() {
+
+            let info_url = "{{ request.route_url('user_projects', userid=activeUser.login) }}";
+            $('#ajax_user_projects').html('{{ _('Loading...') }}');
+            $('#ajax_user_projects').load(info_url, function() {
+
+                $('.set_active').click(function () {
+                    var action_url = $( this ).attr('urn');
+                    swal({
+                            title: "{{ _('Changing active project') }}",
+                            text: "{{ _('Are you sure that you want this project as active?') }}",
+                            type: "warning",
+                            showCancelButton: true,
+                            confirmButtonColor: "#DD6B55",
+                            confirmButtonText: "{{ _('Yes, go ahead') }}",
+                            cancelButtonText: "{{ _('Oops, cancel!') }}",
+                            closeOnConfirm: true,
+                            closeOnCancel: true },
+                        function (isConfirm) {
+                            if (isConfirm) {
+                                var form = document.createElement('form');
+                                form.setAttribute('method', 'post');
+                                form.setAttribute('action', action_url);
+                                form.style.display = 'hidden';
+
+                                var i = document.createElement("input"); //input element, text
+                                i.setAttribute('type',"text");
+                                i.setAttribute('name',"csrf_token");
+                                i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                                form.appendChild(i);
+
+                                document.body.appendChild(form);
+                                $("#busy").show();
+                                form.submit();
+                            }
+                        });
+                });
+
+                $('.delete_project').click(function () {
+                    var action_url = $( this ).attr('urn');
+                    swal({
+                            title: "{{ _('Are you sure?') }}",
+                            text: "{{ _('All the data in this project will be deleted!') }}",
+                            type: "warning",
+                            showCancelButton: true,
+                            confirmButtonColor: "#DD6B55",
+                            confirmButtonText: "{{ _('Yes, delete it!') }}",
+                            cancelButtonText: "{{ _('Oops, cancel!') }}",
+                            closeOnConfirm: true,
+                            closeOnCancel: true },
+                        function (isConfirm) {
+                            if (isConfirm) {
+                                var form = document.createElement('form');
+                                form.setAttribute('method', 'post');
+                                form.setAttribute('action', action_url);
+                                form.style.display = 'hidden';
+
+                                var i = document.createElement("input"); //input element, text
+                                i.setAttribute('type',"text");
+                                i.setAttribute('name',"csrf_token");
+                                i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                                form.appendChild(i);
+
+                                document.body.appendChild(form);
+                                $("#busy").show();
+                                form.submit();
+                            }
+                        });
+                }); 
+
+            });
+
             $('.scroll_content2').slimscroll();
             new ClipboardJS('.clipboard');
 

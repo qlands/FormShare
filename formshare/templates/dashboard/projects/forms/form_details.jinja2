@@ -482,6 +482,7 @@
 
                                 let info_url = "{{ request.route_url('get_submission_info', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, submissionid='to-change') }}";
                                 let info_url_final = info_url.replace("to-change", e.target.submission_id) + " #submission_content";
+                                $('#submission_content').html('{{ _('Loading...') }}');
                                 $('#submission_content').load(info_url_final);
 
                                 $('#submission_info').modal('show');

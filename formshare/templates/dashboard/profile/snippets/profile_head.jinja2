@@ -20,7 +20,7 @@
                 <div class="">
                     <div>
                         <h2 class="no-margins">
-                            {{ userDetails.user_name }} {% if viewingSelfAccount and request.registry.settings['auth.allow_edit_profile_name'] == 'true' %} <a href="{{ request.route_url('profile_edit',userid=activeUser.login) }}"><i class="fas fa-pencil-alt text-warning" title="{{ _('Edit') }}"></i></a> {% endif %}
+                            {{ userDetails.user_name }} {% if request.registry.settings['auth.allow_edit_profile_name'] == 'true' %} <a href="{{ request.route_url('profile_edit',userid=activeUser.login) }}"><i class="fas fa-pencil-alt text-warning" title="{{ _('Edit') }}"></i></a> {% endif %}
                         </h2>
                     </div>
                 </div>
@@ -39,12 +39,10 @@
                     <div class="col-sm-8 text-sm-left"><dd class="mb-1">  {{ request.h.get_timezone_desc(request, userDetails.user_timezone) }}</dd> </div>
                 </dl>
             {% endif %}
-            {% if viewingSelfAccount %}
                 <dl class="row mb-0">
                     <div class="col-sm-4 text-sm-right"><dt>{{ _('API key') }}:</dt> </div>
                     <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ userDetails.user_apikey }} <button class="btn btn-xs btn-default clipboard" data-clipboard-text="{{ userDetails.user_apikey }}"><i class="far fa-clipboard" title="{{ _('Copy to clipboard') }}"></i></button></dd></div>
                 </dl>
-            {% endif %}
             <dl class="row mb-0">
                 <div class="col-sm-4 text-sm-right"><dt>{{ _('Collaborators') }}:</dt> </div>
                 <div class="col-sm-8 text-sm-left"> <dd class="mb-1">  {{ userDetails.user_stats.collaborators|length }}</dd></div>

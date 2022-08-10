@@ -12,7 +12,7 @@ from formshare.processes.db import (
     add_assistant_to_group,
     remove_assistant_from_group,
     get_project_details,
-    get_project_access_type
+    get_project_access_type,
 )
 from formshare.views.classes import PrivateView
 
@@ -35,7 +35,12 @@ class GroupListView(PrivateView):
                 self.set_active_menu("projects")
 
         if project_id is not None:
-            if get_project_access_type(self.request, project_id, user_id, self.user.login) > 4:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                > 4
+            ):
                 raise HTTPNotFound
             project_details = get_project_details(self.request, project_id)
         else:
@@ -62,7 +67,12 @@ class AddGroupView(PrivateView):
             else:
                 self.set_active_menu("projects")
         if project_id is not None:
-            if get_project_access_type(self.request, project_id, user_id, self.user.login) >= 4:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 4
+            ):
                 raise HTTPNotFound
             project_details = get_project_details(self.request, project_id)
         else:
@@ -113,7 +123,12 @@ class EditGroupView(PrivateView):
                 self.set_active_menu("projects")
 
         if project_id is not None:
-            if get_project_access_type(self.request, project_id, user_id, self.user.login) >= 4:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 4
+            ):
                 raise HTTPNotFound
             project_details = get_project_details(self.request, project_id)
         else:
@@ -165,7 +180,12 @@ class DeleteGroup(PrivateView):
         project_id = get_project_id_from_name(self.request, user_id, project_code)
 
         if project_id is not None:
-            if get_project_access_type(self.request, project_id, user_id, self.user.login) >= 4:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 4
+            ):
                 raise HTTPNotFound
         else:
             raise HTTPNotFound
@@ -207,15 +227,16 @@ class GroupMembersView(PrivateView):
                 self.set_active_menu("groups")
             else:
                 self.set_active_menu("projects")
-        project_details = {}
+
         if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-                    project_details = project
-            if not project_found:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                > 4
+            ):
                 raise HTTPNotFound
+            project_details = get_project_details(self.request, project_id)
         else:
             raise HTTPNotFound
 
@@ -274,7 +295,12 @@ class RemoveMember(PrivateView):
         project_id = get_project_id_from_name(self.request, user_id, project_code)
 
         if project_id is not None:
-            if get_project_access_type(self.request, project_id, user_id, self.user.login) >= 4:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 4
+            ):
                 raise HTTPNotFound
         else:
             raise HTTPNotFound

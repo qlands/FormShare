@@ -32,10 +32,12 @@ __all__ = [
     "remove_file_from_project",
     "get_project_code_from_id",
     "get_project_details",
+    "get_extended_project_details",
     "set_project_as_active",
     "get_project_owner",
     "get_project_access_type",
     "api_get_project_access_type",
+    "get_active_project_access_type",
     "get_owned_project",
     "get_number_of_case_creators",
     "get_number_of_case_creators_with_repository",
@@ -44,6 +46,7 @@ __all__ = [
     "project_has_case_lookup_table",
     "invalid_aliases",
     "project_has_crowdsourcing",
+    "get_forms_number",
 ]
 
 log = logging.getLogger("formshare")
@@ -1024,53 +1027,60 @@ def get_active_project(request, user):
         .first()
     )
     mapped_data = map_from_schema(res)
-    user_projects = get_user_projects(request, user, user)
-    if res is not None:
-        for project in user_projects:
-            if project["project_id"] == mapped_data["project_id"]:
-                mapped_data["access_type"] = project["access_type"]
-                mapped_data["owner"] = project["owner"]
-    else:
-        if (
-            len(user_projects) > 0
-        ):  # pragma: no cover   . TODO: Monitor if error appears in logs
-            log.error("Possible unused code used. URL {}".format(request.url))
-            last_project = (
-                request.dbsession.query(Userproject)
-                .filter(Userproject.user_id == user)
-                .filter(Userproject.project_accepted == 1)
-                .order_by(Userproject.access_date.desc())
+    if mapped_data:
+        if mapped_data["access_type"] == 1:
+            mapped_data["owner"] = user
+            return mapped_data
+        else:
+            res = (
+                request.dbsession.query(Userproject.user_id)
+                .filter(Userproject.project_id == mapped_data["project_id"])
+                .filter(Userproject.access_type == 1)
                 .first()
             )
-            if last_project is not None:
-                last_project_id = last_project.project_id
-                request.dbsession.query(Userproject).filter(
-                    Userproject.user_id == user
-                ).filter(Userproject.project_id == last_project_id).update(
-                    {"project_active": 1}
+            if res is not None:
+                mapped_data["owner"] = res.user_id
+                return mapped_data
+            else:
+                log.error(
+                    "Project {} does not have an owner".format(
+                        mapped_data["project_id"]
+                    )
                 )
-                try:
-                    request.dbsession.flush()
-                except Exception as e:
-                    request.dbsession.rollback()
-                    log.error("Error {} while getting an active project".format(str(e)))
-
+                return {}
+    else:
+        res = (
+            request.dbsession.query(Project, Userproject)
+            .filter(Project.project_id == Userproject.project_id)
+            .filter(Userproject.user_id == user)
+            .filter(Userproject.project_accepted == 1)
+            .first()
+        )
+        if res is not None:
+            mapped_data = map_from_schema(res)
+            if mapped_data["access_type"] == 1:
+                request.dbsession.query(Userproject).filter(
+                    Userproject.project_id == mapped_data["project_id"]
+                ).filter(Userproject.user_id == user).update({"project_active": 1})
+                mapped_data["owner"] = user
+                return mapped_data
+            else:
                 res = (
-                    request.dbsession.query(Project, Userproject)
-                    .filter(Project.project_id == Userproject.project_id)
-                    .filter(Userproject.user_id == user)
-                    .filter(Userproject.project_active == 1)
-                    .filter(Userproject.project_accepted == 1)
+                    request.dbsession.query(Userproject.user_id)
+                    .filter(Userproject.project_id == mapped_data["project_id"])
+                    .filter(Userproject.access_type == 1)
                     .first()
                 )
-                mapped_data = map_from_schema(res)
                 if res is not None:
-                    for project in user_projects:
-                        if project["project_id"] == mapped_data["project_id"]:
-                            mapped_data["access_type"] = project["access_type"]
-                            mapped_data["owner"] = project["owner"]
-
-    return mapped_data
+                    request.dbsession.query(Userproject).filter(
+                        Userproject.project_id == mapped_data["project_id"]
+                    ).filter(Userproject.user_id == user).update({"project_active": 1})
+                    mapped_data["owner"] = res.user_id
+                    return mapped_data
+                else:
+                    return {}
+        else:
+            return {}
 
 
 def add_project(request, user, project_data):
@@ -1298,10 +1308,51 @@ def get_project_details(request, project):
             mapped_data["owner"] = res.user_id
         else:
             log.error("Cannot find owner for project {}".format(project))
-            mapped_data["owner"] = None
+            return {}
         return mapped_data
     else:
         return None
+
+
+def get_extended_project_details(request, user, project_id):
+    res = (
+        request.dbsession.query(Project)
+        .filter(Project.project_id == project_id)
+        .first()
+    )
+    project = map_from_schema(res)
+
+    submissions, last, by, form = get_dataset_stats_for_project(
+        request.registry.settings, project["project_id"]
+    )
+    if last is not None:
+        project["last_submission"] = dateutil.parser.parse(last)
+    else:
+        project["last_submission"] = None
+    project["total_submissions"] = submissions
+    project["last_submission_by"] = by
+    project["last_submission_by_details"] = get_by_details(
+        request, user, project["project_id"], by
+    )
+    project["last_submission_form"] = form
+    project["last_submission_form_details"] = get_form_data(
+        request, project["project_id"], form
+    )
+    project["total_forms"] = get_forms_number(request, project["project_id"])
+    project["owner"] = get_project_owner(request, project["project_id"])
+    project["total_case_creators"] = get_number_of_case_creators(
+        request, project["project_id"]
+    )
+    project[
+        "total_case_creators_with_repository"
+    ] = get_number_of_case_creators_with_repository(request, project["project_id"])
+    project["case_form"] = get_case_form(request, project["project_id"])
+    project["case_schema"] = get_case_schema(request, project["project_id"])
+    project["has_case_lookup_table"] = project_has_case_lookup_table(
+        request, project["project_id"]
+    )
+
+    return project
 
 
 def get_project_access_type(request, project_id, user_id, logged_user):
@@ -1318,3 +1369,16 @@ def get_project_access_type(request, project_id, user_id, logged_user):
         if res is None:
             return 5  # Five is not access at all
         return res.access_type
+
+
+def get_active_project_access_type(request, project_id, logged_user):
+    res = (
+        request.dbsession.query(Userproject.access_type)
+        .filter(Userproject.project_id == project_id)
+        .filter(Userproject.user_id == logged_user)
+        .filter(Userproject.project_accepted == 1)
+        .first()
+    )
+    if res is None:
+        return 5  # Five is not access at all
+    return res.access_type

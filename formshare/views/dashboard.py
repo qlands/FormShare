@@ -8,7 +8,9 @@ from formshare.processes.db import (
     get_by_details,
     get_project_groups,
     get_project_files,
-    get_project_owner,
+    get_active_project_access_type,
+    get_extended_project_details,
+    get_user_projects,
 )
 from formshare.processes.elasticsearch.repository_index import (
     get_dataset_stats_for_project,
@@ -20,32 +22,25 @@ from formshare.views.classes import DashboardView
 class UserDashBoardView(DashboardView):
     def process_view(self):
         user_id = self.request.matchdict["userid"]
-        project_data = {}
+        if user_id != self.user.id:
+            raise HTTPNotFound
         if self.activeProject:
-            project_found = False
-            for project in self.user_projects:
-                if user_id == self.user.id:
-                    if project["project_id"] == self.activeProject["project_id"]:
-                        project_found = True
-                        project_data = project
-                        if self.user is not None:
-                            project_data["user_collaborates"] = is_collaborator(
-                                self.request,
-                                self.user.login,
-                                self.activeProject["project_id"],
-                            )
-                        else:
-                            project_data["user_collaborates"] = False
-                else:
-                    project_found = True
-                    project_data = project
-                    if self.user is not None:
-                        project_data["user_collaborates"] = is_collaborator(
-                            self.request, self.user.login, project["project_id"]
-                        )
-                    else:
-                        project_data["user_collaborates"] = False
-            if not project_found:
+            user_projects = get_user_projects(self.request, user_id, user_id)
+
+            project_data = get_extended_project_details(
+                self.request, user_id, self.activeProject["project_id"]
+            )
+            access_type = get_active_project_access_type(
+                self.request, self.activeProject["project_id"], self.user.login
+            )
+            project_data["access_type"] = access_type
+            if project_data:
+                project_data["user_collaborates"] = is_collaborator(
+                    self.request,
+                    self.user.login,
+                    self.activeProject["project_id"],
+                )
+            else:
                 raise HTTPNotFound
 
             assistants, more_assistants = get_project_assistants(
@@ -57,7 +52,7 @@ class UserDashBoardView(DashboardView):
                 )
             else:
                 raise HTTPNotFound
-            owner = get_project_owner(self.request, self.activeProject["project_id"])
+            owner = self.activeProject["owner"]
             forms = get_project_forms(
                 self.request, owner, self.activeProject["project_id"]
             )
@@ -78,6 +73,7 @@ class UserDashBoardView(DashboardView):
                 self.request, user_id, self.activeProject["project_id"], by
             )
             return {
+                "userProjects": user_projects,
                 "projectData": project_data,
                 "projectDetails": project_data,
                 "userid": user_id,

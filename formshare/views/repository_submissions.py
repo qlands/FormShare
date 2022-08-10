@@ -10,6 +10,8 @@ from formshare.processes.db import (
     get_form_details,
     get_all_assistants,
     get_assistant_by_api_key,
+    get_project_access_type,
+    get_project_details,
 )
 from formshare.processes.elasticsearch.record_index import (
     get_project_and_form,
@@ -37,19 +39,16 @@ class ManageSubmissions(PrivateView):
         project_code = self.request.matchdict["projcode"]
         form_id = self.request.matchdict["formid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
-        if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-                    project_details = project
-            if not project_found:
-                raise HTTPNotFound
-        else:
-            raise HTTPNotFound
 
-        if project_details["access_type"] >= 3:
+        if project_id is not None:
+            access_type = get_project_access_type(
+                self.request, project_id, user_id, self.user.login
+            )
+            if access_type >= 3:
+                raise HTTPNotFound
+            project_details = get_project_details(self.request, project_id)
+            project_details["access_type"] = access_type
+        else:
             raise HTTPNotFound
 
         form_data = get_form_details(self.request, user_id, project_id, form_id)
@@ -94,15 +93,16 @@ class ReviewAudit(PrivateView):
         project_code = self.request.matchdict["projcode"]
         form_id = self.request.matchdict["formid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
+
         if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-                    project_details = project
-            if not project_found:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                > 4
+            ):
                 raise HTTPNotFound
+            project_details = get_project_details(self.request, project_id)
         else:
             raise HTTPNotFound
 
@@ -145,19 +145,16 @@ class GetFormSubmissions(PrivateView):
         project_code = self.request.matchdict["projcode"]
         form_id = self.request.matchdict["formid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
+
         if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-                    project_details = project
-            if not project_found:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 3
+            ):
                 raise HTTPNotFound
         else:
-            raise HTTPNotFound
-
-        if project_details["access_type"] >= 3:
             raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)
@@ -218,15 +215,16 @@ class GetFormAudit(PrivateView):
         project_code = self.request.matchdict["projcode"]
         form_id = self.request.matchdict["formid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
+
         if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-                    project_details = project
-            if not project_found:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                > 4
+            ):
                 raise HTTPNotFound
+            project_details = get_project_details(self.request, project_id)
         else:
             raise HTTPNotFound
 
@@ -330,19 +328,17 @@ class DeleteFormSubmission(PrivateView):
         project_code = self.request.matchdict["projcode"]
         form_id = self.request.matchdict["formid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
-        if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-                    project_details = project
-            if not project_found:
-                raise HTTPNotFound
-        else:
-            raise HTTPNotFound
 
-        if project_details["access_type"] >= 3:
+        if project_id is not None:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 3
+            ):
+                raise HTTPNotFound
+            project_details = get_project_details(self.request, project_id)
+        else:
             raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)
@@ -408,19 +404,17 @@ class DeleteAllSubmissions(PrivateView):
         project_code = self.request.matchdict["projcode"]
         form_id = self.request.matchdict["formid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
-        if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-                    project_details = project
-            if not project_found:
-                raise HTTPNotFound
-        else:
-            raise HTTPNotFound
 
-        if project_details["access_type"] >= 3:
+        if project_id is not None:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 3
+            ):
+                raise HTTPNotFound
+            project_details = get_project_details(self.request, project_id)
+        else:
             raise HTTPNotFound
 
         form_data = get_form_data(self.request, project_id, form_id)

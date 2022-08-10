@@ -37,6 +37,13 @@ from formshare.processes.db import (
     update_partner_options,
     remove_partner_from_project,
     get_timezones,
+    get_project_access_type,
+    get_project_details,
+    get_extended_project_details,
+    get_user_projects,
+    get_forms_number,
+    get_number_of_case_creators,
+    get_number_of_case_creators_with_repository,
 )
 from formshare.processes.elasticsearch.repository_index import (
     get_dataset_stats_for_project,
@@ -63,18 +70,18 @@ class ProjectStoredFileView(ProjectsView):
         file_name = self.request.matchdict["filename"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-            if project_found:
-                stream = get_stream(self.request, project_id, file_name)
-                if stream is not None:
-                    self.returnRawViewResult = True
-                    response = Response()
-                    return response_stream(stream, file_name, response)
-                else:
-                    raise HTTPNotFound
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 4
+            ):
+                raise HTTPNotFound
+            stream = get_stream(self.request, project_id, file_name)
+            if stream is not None:
+                self.returnRawViewResult = True
+                response = Response()
+                return response_stream(stream, file_name, response)
             else:
                 raise HTTPNotFound
         else:
@@ -86,7 +93,10 @@ class ProjectListView(ProjectsView):
         user_id = self.request.matchdict["userid"]
         if user_id != self.user.login:
             raise HTTPNotFound()
-        return {}
+
+        user_projects = get_user_projects(self.request, self.userID, self.userID)
+
+        return {"userProjects": user_projects}
 
 
 class ProjectDetailsView(ProjectsView):
@@ -94,23 +104,23 @@ class ProjectDetailsView(ProjectsView):
         user_id = self.request.matchdict["userid"]
         project_code = self.request.matchdict["projcode"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_data = {}
+
         if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-                    project_data = project
-                    if self.user is not None:
-                        project_data["user_collaborates"] = is_collaborator(
-                            self.request, self.user.login, project_id
-                        )
-                    else:
-                        project_data["user_collaborates"] = False
-            if not project_found:
+            access_type = get_project_access_type(
+                self.request, project_id, user_id, self.user.login
+            )
+            if access_type > 4:
                 raise HTTPNotFound
+            project_data = get_extended_project_details(
+                self.request, user_id, project_id
+            )
+            project_data["access_type"] = access_type
         else:
             raise HTTPNotFound
+
+        project_data["user_collaborates"] = is_collaborator(
+            self.request, self.user.login, project_id
+        )
 
         assistants, more_assistants = get_project_assistants(
             self.request, project_id, 8
@@ -163,6 +173,10 @@ class AddProjectView(ProjectsView):
         self.privateOnly = True
 
     def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        if user_id != self.user.login:
+            raise HTTPNotFound()
+
         if self.request.method == "POST":
             project_details = self.get_post_dict()
             project_details["project_public"] = 0
@@ -301,22 +315,21 @@ class EditProjectView(ProjectsView):
         user_id = self.request.matchdict["userid"]
         project_code = self.request.matchdict["projcode"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
+
         if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-                    project_details = project
-            if not project_found:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 4
+            ):
                 raise HTTPNotFound
+            project_details = get_project_details(self.request, project_id)
         else:
             raise HTTPNotFound
 
-        if project_details["access_type"] >= 4:
-            raise HTTPNotFound  # Don't edit a public or a project that I am just a member
-
-        total_forms = project_details["total_forms"]
+        total_forms = get_forms_number(self.request, project_id)
+        project_details["total_forms"] = total_forms
 
         if self.request.method == "POST":
             project_details = self.get_post_dict()
@@ -381,14 +394,14 @@ class ActivateProjectView(ProjectsView):
         user_id = self.request.matchdict["userid"]
         project_code = self.request.matchdict["projcode"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
+
         if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-                    project_details = project
-            if not project_found:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                > 4
+            ):
                 raise HTTPNotFound
         else:
             raise HTTPNotFound
@@ -421,20 +434,17 @@ class DeleteProjectView(ProjectsView):
         user_id = self.request.matchdict["userid"]
         project_code = self.request.matchdict["projcode"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
+
         if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-                    project_details = project
-            if not project_found:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                != 1
+            ):
                 raise HTTPNotFound
         else:
             raise HTTPNotFound
-
-        if project_details["access_type"] != 1:
-            raise HTTPNotFound  # Don't edit a public or a project that I am just a member
 
         if self.request.method == "POST":
             next_page = self.request.params.get("next") or self.request.route_url(
@@ -478,20 +488,17 @@ class AddFileToProject(ProjectsView):
         user_id = self.request.matchdict["userid"]
         project_code = self.request.matchdict["projcode"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
+
         if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-                    project_details = project
-            if not project_found:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 4
+            ):
                 raise HTTPNotFound
         else:
             raise HTTPNotFound
-
-        if project_details["access_type"] >= 4:
-            raise HTTPNotFound  # Don't edit a public or a project that I am just a member
 
         if self.request.method == "POST":
             files = self.request.POST.getall("filetoupload")
@@ -581,20 +588,17 @@ class RemoveFileFromProject(ProjectsView):
         project_code = self.request.matchdict["projcode"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         file_name = self.request.matchdict["filename"]
-        project_details = {}
+
         if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-                    project_details = project
-            if not project_found:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 4
+            ):
                 raise HTTPNotFound
         else:
             raise HTTPNotFound
-
-        if project_details["access_type"] >= 4:
-            raise HTTPNotFound  # Don't edit a public or a project that I am just a member
 
         if self.request.method == "POST":
             self.returnRawViewResult = True
@@ -638,12 +642,14 @@ class DownloadProjectGPSPoints(ProjectsView):
         if query_size is None:
             query_size = 10000
         project_id = get_project_id_from_name(self.request, user_id, project_code)
+
         if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-            if not project_found:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                > 4
+            ):
                 raise HTTPNotFound
         else:
             raise HTTPNotFound
@@ -660,15 +666,16 @@ class GetProjectQRCode(ProjectsView):
         project_code = self.request.matchdict["projcode"]
 
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
+
         if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-                    project_details = project
-            if not project_found:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                > 4
+            ):
                 raise HTTPNotFound
+            project_details = get_project_details(self.request, project_id)
         else:
             raise HTTPNotFound
 
@@ -721,20 +728,18 @@ class AddPartnerToProject(ProjectsView):
         user_id = self.request.matchdict["userid"]
         project_code = self.request.matchdict["projcode"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
+
         if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-                    project_details = project
-            if not project_found:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 4
+            ):
                 raise HTTPNotFound
+            project_details = get_project_details(self.request, project_id)
         else:
             raise HTTPNotFound
-
-        if project_details["access_type"] >= 4:
-            raise HTTPNotFound  # Don't edit a public or a project that I am just a member
 
         if self.request.method == "POST":
             form_data = self.get_post_dict()
@@ -815,20 +820,17 @@ class EditPartnerOptions(ProjectsView):
         project_code = self.request.matchdict["projcode"]
         partner_id = self.request.matchdict["partnerid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
+
         if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-                    project_details = project
-            if not project_found:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 4
+            ):
                 raise HTTPNotFound
         else:
             raise HTTPNotFound
-
-        if project_details["access_type"] >= 4:
-            raise HTTPNotFound  # Don't edit a public or a project that I am just a member
 
         if self.request.method == "POST":
             form_data = self.get_post_dict()
@@ -895,20 +897,17 @@ class RemovePartnerFromProject(ProjectsView):
         project_code = self.request.matchdict["projcode"]
         partner_id = self.request.matchdict["partnerid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
+
         if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-                    project_details = project
-            if not project_found:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 4
+            ):
                 raise HTTPNotFound
         else:
             raise HTTPNotFound
-
-        if project_details["access_type"] >= 4:
-            raise HTTPNotFound  # Don't edit a public or a project that I am just a member
 
         if self.request.method == "POST":
             self.returnRawViewResult = True

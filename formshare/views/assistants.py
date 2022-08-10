@@ -13,7 +13,7 @@ from formshare.processes.db import (
     change_assistant_password,
     get_timezones,
     get_project_details,
-    get_project_access_type
+    get_project_access_type,
 )
 from formshare.views.classes import PrivateView
 
@@ -33,7 +33,12 @@ class AssistantsListView(PrivateView):
             self.set_active_menu("projects")
 
         if project_id is not None:
-            if get_project_access_type(self.request, project_id, user_id, self.user.login) >= 4:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 4
+            ):
                 raise HTTPNotFound
             project_details = get_project_details(self.request, project_id)
         else:
@@ -62,7 +67,12 @@ class AddAssistantsView(PrivateView):
             self.set_active_menu("projects")
 
         if project_id is not None:
-            if get_project_access_type(self.request, project_id, user_id, self.user.login) >= 4:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 4
+            ):
                 raise HTTPNotFound
             project_details = get_project_details(self.request, project_id)
         else:
@@ -167,7 +177,12 @@ class EditAssistantsView(PrivateView):
             self.set_active_menu("projects")
 
         if project_id is not None:
-            if get_project_access_type(self.request, project_id, user_id, self.user.login) >= 4:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 4
+            ):
                 raise HTTPNotFound
             project_details = get_project_details(self.request, project_id)
         else:
@@ -240,7 +255,12 @@ class DeleteAssistant(PrivateView):
         project_id = get_project_id_from_name(self.request, user_id, project_code)
 
         if project_id is not None:
-            if get_project_access_type(self.request, project_id, user_id, self.user.login) >= 4:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 4
+            ):
                 raise HTTPNotFound
         else:
             raise HTTPNotFound
@@ -297,7 +317,12 @@ class ChangeAssistantPassword(PrivateView):
         project_id = get_project_id_from_name(self.request, user_id, project_code)
 
         if project_id is not None:
-            if get_project_access_type(self.request, project_id, user_id, self.user.login) >= 4:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 4
+            ):
                 raise HTTPNotFound
         else:
             raise HTTPNotFound

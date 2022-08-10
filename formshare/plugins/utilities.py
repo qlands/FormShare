@@ -13,7 +13,7 @@ from formshare.processes.db import (
     get_project_details,
     get_form_data,
     get_project_owner,
-    get_project_access_type
+    get_project_access_type,
 )
 from formshare.processes.settings.settings import (
     store_settings,
@@ -253,7 +253,12 @@ class FormShareFormEditorView(
         form_id = self.request.matchdict["formid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         if project_id is not None:
-            if get_project_access_type(self.request, project_id, user_id, self.user.login) >= 4:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 4
+            ):
                 raise HTTPNotFound  # Don't edit a public or a project that I am just a member
         else:
             raise HTTPNotFound
@@ -288,7 +293,12 @@ class FormShareFormAdminView(
         form_id = self.request.matchdict["formid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         if project_id is not None:
-            if get_project_access_type(self.request, project_id, user_id, self.user.login) >= 3:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 3
+            ):
                 raise HTTPNotFound  # Don't edit a public or a project that I am just a member
         else:
             raise HTTPNotFound

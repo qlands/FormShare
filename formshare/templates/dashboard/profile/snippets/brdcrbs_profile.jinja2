@@ -1,5 +1,4 @@
 <div class="col-sm-12">
-    {% if viewingSelfAccount %}
     <h2>{{ _('My profile') }}</h2>
     <ol class="breadcrumb">
         <li class="breadcrumb-item">
@@ -9,7 +8,4 @@
             <strong>{{ _('Profile') }}</strong>
         </li>
     </ol>
-    {% else %}
-        <h2>{{ _('Profile of') }} {{ userDetails.user_name }}</h2>
-    {% endif %}
 </div>

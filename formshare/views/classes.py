@@ -325,11 +325,9 @@ class PrivateView(object):
         self.viewResult = {}
         self.returnRawViewResult = False
         self.privateOnly = True
-        self.viewingSelfAccount = True
         self.showWelcome = False
         self.checkCrossPost = True
         self.queryProjects = True
-        self.user_projects = []
         self.activeProject = {}
         locale = Locale(request.locale_name)
         if locale.character_order == "left-to-right":
@@ -471,24 +469,6 @@ class PrivateView(object):
                 )
 
         self.classResult["activeUser"] = self.user
-        if self.user.login != self.userID:
-            self.viewingSelfAccount = False
-
-        if self.queryProjects:
-            if self.user is not None:
-                if self.userID == self.user.login:
-                    self.user_projects = get_user_projects(
-                        self.request, self.userID, self.userID
-                    )
-                else:
-                    self.user_projects = get_user_projects(
-                        self.request, self.userID, self.user.login
-                    )
-            else:
-                raise HTTPNotFound()
-            self.classResult["userProjects"] = self.user_projects
-        else:
-            self.classResult["userProjects"] = []
 
         if self.user is not None:
             self.activeProject = get_active_project(self.request, self.user.login)
@@ -496,7 +476,6 @@ class PrivateView(object):
         else:
             self.classResult["activeProject"] = {}
 
-        self.classResult["viewingSelfAccount"] = self.viewingSelfAccount
         self.classResult["errors"] = self.errors
         self.classResult["showWelcome"] = self.showWelcome
 
@@ -508,7 +487,6 @@ class PrivateView(object):
                     {
                         "returnRawViewResult": self.returnRawViewResult,
                         "privateOnly": self.privateOnly,
-                        "viewingSelfAccount": self.viewingSelfAccount,
                         "showWelcome": self.showWelcome,
                         "checkCrossPost": self.checkCrossPost,
                         "queryProjects": self.queryProjects,
@@ -532,7 +510,6 @@ class PrivateView(object):
                         {
                             "showWelcome": self.showWelcome,
                             "checkCrossPost": self.checkCrossPost,
-                            "user_projects": self.user_projects,
                             "active_project": self.activeProject,
                             "user": self.user,
                         },
@@ -591,7 +568,9 @@ class PrivateView(object):
             project_id = get_project_id_from_name(self.request, user_id, project_code)
             if project_id is not None:
                 if project_id is not None:
-                    return get_project_access_type(self.request, project_id, user_id, self.user.login)
+                    return get_project_access_type(
+                        self.request, project_id, user_id, self.user.login
+                    )
                 else:
                     raise HTTPNotFound
             else:

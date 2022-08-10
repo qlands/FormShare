@@ -4,11 +4,9 @@
             <h5>{{ _('About') }} {{ userDetails.user_name  }}</h5>
             <div class="ibox-tools">
                 {% block about_tab_tools %}
-                    {% if viewingSelfAccount %}
-                        <a href="{{ request.route_url('profile_edit',userid=activeUser.login) }}" style="margin-right: 10px">
-                            <i class="fas fa-pencil-alt text-warning" title="{{ _('Edit') }}"></i>
-                        </a>
-                    {% endif %}
+                    <a href="{{ request.route_url('profile_edit',userid=activeUser.login) }}" style="margin-right: 10px">
+                        <i class="fas fa-pencil-alt text-warning" title="{{ _('Edit') }}"></i>
+                    </a>
                     <a class="collapse-link" style="margin-right: 10px">
                         <i class="fas fa-chevron-up"></i>
                     </a>
@@ -29,7 +27,7 @@
                     </small>
                 </div>
             {% else %}
-                <small id="profile_bio">{{ _('Without bio') }}</small> {% if viewingSelfAccount %} <a href="{{ request.route_url('profile_edit',userid=activeUser.login) }}"><i class="fas fa-pencil-alt text-warning" title="{{ _('Edit') }}"></i></a> {% endif %}
+                <small id="profile_bio">{{ _('Without bio') }}</small> <a href="{{ request.route_url('profile_edit',userid=activeUser.login) }}"><i class="fas fa-pencil-alt text-warning" title="{{ _('Edit') }}"></i></a>
             {% endif %}
         {% endblock about_tab_content %}
     </div>

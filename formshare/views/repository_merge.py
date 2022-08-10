@@ -4,7 +4,12 @@ import os
 from lxml import etree
 from pyramid.httpexceptions import HTTPNotFound, HTTPFound
 
-from formshare.processes.db import get_project_id_from_name, update_form
+from formshare.processes.db import (
+    get_project_id_from_name,
+    update_form,
+    get_project_access_type,
+    get_project_details,
+)
 from formshare.processes.email.send_email import send_error_to_technical_team
 from formshare.processes.odk.api import get_odk_path, merge_versions
 from formshare.processes.odk.processes import get_form_data
@@ -26,19 +31,17 @@ class RepositoryMergeForm(PrivateView):
         old_form_id = self.request.matchdict["oldformid"]
 
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
-        if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-                    project_details = project
-            if not project_found:
-                raise HTTPNotFound
-        else:
-            raise HTTPNotFound
 
-        if project_details["access_type"] >= 4:
+        if project_id is not None:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 4
+            ):
+                raise HTTPNotFound
+            project_details = get_project_details(self.request, project_id)
+        else:
             raise HTTPNotFound
 
         new_form_data = get_form_data(project_id, new_form_id, self.request)

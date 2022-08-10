@@ -4,7 +4,7 @@ from pyramid.httpexceptions import HTTPNotFound, HTTPFound
 
 from formshare.config.auth import get_user_data
 from formshare.config.encdecdata import encode_data
-from formshare.processes.db import update_profile, get_timezones
+from formshare.processes.db import update_profile, get_timezones, get_user_projects
 from formshare.processes.db.user import update_password
 from formshare.processes.elasticsearch.user_index import (
     get_user_index_manager,
@@ -24,7 +24,7 @@ class UserProfileView(ProfileView):
         user_id = self.request.matchdict["userid"]
         if user_id != self.user.login:
             raise HTTPNotFound()
-        return {}
+        return {"userProjects": get_user_projects(self.request, user_id, user_id)}
 
 
 class EditProfileView(ProfileView):

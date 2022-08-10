@@ -5,7 +5,11 @@ import os
 from lxml import etree
 from pyramid.httpexceptions import HTTPNotFound, HTTPFound
 
-from formshare.processes.db import get_project_id_from_name
+from formshare.processes.db import (
+    get_project_id_from_name,
+    get_project_access_type,
+    get_project_details,
+)
 from formshare.processes.elasticsearch.repository_index import delete_dataset_from_index
 from formshare.processes.email.send_email import send_error_to_technical_team
 from formshare.processes.odk.api import create_repository, get_odk_path
@@ -42,19 +46,17 @@ class GenerateRepository(PrivateView):
         project_code = self.request.matchdict["projcode"]
         form_id = self.request.matchdict["formid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
-        if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-                    project_details = project
-            if not project_found:
-                raise HTTPNotFound
-        else:
-            raise HTTPNotFound
 
-        if project_details["access_type"] >= 4:
+        if project_id is not None:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 4
+            ):
+                raise HTTPNotFound
+            project_details = get_project_details(self.request, project_id)
+        else:
             raise HTTPNotFound
 
         form_data = get_form_data(project_id, form_id, self.request)

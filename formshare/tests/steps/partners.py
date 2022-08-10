@@ -172,6 +172,10 @@ def t_e_s_t_partners(test_object):
     )
     assert "FS_error" not in res.headers
 
+    print("Wait 20 seconds for ES to store the partners")
+    time.sleep(20)
+    print("OK. Continue")
+
     # Add a new partner fail. Partner already exists
     res = test_object.testapp.post(
         "/user/{}/manage_partners/add".format(test_object.randonLogin),
@@ -384,6 +388,10 @@ def t_e_s_t_partners(test_object):
         "/user/{}/manage_partner/{}/delete".format(test_object.randonLogin, partner_id),
         status=404,
     )
+
+    print("Wait 20 seconds for ES index things before deleting")
+    time.sleep(20)
+    print("OK. Continue")
 
     # Delete partner passes
     res = test_object.testapp.post(

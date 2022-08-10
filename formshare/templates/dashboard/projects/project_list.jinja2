@@ -8,47 +8,26 @@
 {% endblock css %}
 
 {% block topScripts %}
-    {% if viewingSelfAccount == False %}
-        {% jsresource request,'formshare','markdown' %}
-        {% jsresource request,'formshare','clipboard' %}
-    {% else %}
-        {% jsresource request,'formshare','sweetalert' %}
-    {% endif %}
+    {% jsresource request,'formshare','sweetalert' %}
 {% endblock topScripts %}
 
 {% block dashheader %}
     {% block breadcrumbs %}
-        {% if viewingSelfAccount %}
-            <div class="row wrapper border-bottom white-bg page-heading">
-                {% include 'dashboard/projects/snippets/brdcrbs_prjlist.jinja2' %}
-            </div>
-        {% endif %}
+        <div class="row wrapper border-bottom white-bg page-heading">
+            {% include 'dashboard/projects/snippets/brdcrbs_prjlist.jinja2' %}
+        </div>
     {% endblock breadcrumbs %}
 {% endblock dashheader %}
 
-{% block maincontent %}
-    {% if viewingSelfAccount %}
-        {{ super() }}
-    {% else %}
-        {% include 'dashboard/profile/snippets/profile_head.jinja2' %}
-        {% include 'dashboard/projects/snippets/project_tab.jinja2' %}
-    {% endif %}
-
-{% endblock maincontent %}
-
 {% block mainsection %}
-    {% if viewingSelfAccount %}
-        {% if activeUser != None %}
-            <div class="row" style="margin-top: 20px">
-                <div class="col-md-12" style="text-align: right">
-                    <a href="{{ request.route_url('projects_add',userid=activeUser.login,_query={'next':request.route_url('projects',userid=activeUser.login)}) }}" class="btn btn-primary btn-xs" style="margin-right: 20px">{{ _('Create new project') }}</a>
-                </div>
+    {% if activeUser != None %}
+        <div class="row" style="margin-top: 20px">
+            <div class="col-md-12" style="text-align: right">
+                <a href="{{ request.route_url('projects_add',userid=activeUser.login,_query={'next':request.route_url('projects',userid=activeUser.login)}) }}" class="btn btn-primary btn-xs" style="margin-right: 20px">{{ _('Create new project') }}</a>
             </div>
-        {% endif %}
-        {% include 'dashboard/projects/snippets/project_tab_content.jinja2' %}
-    {% else %}
-        {{ super() }}
+        </div>
     {% endif %}
+    {% include 'dashboard/projects/snippets/project_tab_content.jinja2' %}
 {% endblock mainsection %}
 
 {% block scripts %}

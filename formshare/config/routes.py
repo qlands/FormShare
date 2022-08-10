@@ -331,6 +331,15 @@ def load_routes(config, settings):
 
     routes.append(
         add_route(
+            "user_projects",
+            "/user/{userid}/user_projects",
+            ProjectListView,
+            "dashboard/projects/user_projects.jinja2",
+        )
+    )
+
+    routes.append(
+        add_route(
             "project_details",
             "/user/{userid}/project/{projcode}",
             ProjectDetailsView,

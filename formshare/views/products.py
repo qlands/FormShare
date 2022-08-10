@@ -12,6 +12,7 @@ from formshare.processes.db import (
     output_exists,
     set_output_public_state,
     delete_product,
+    get_project_access_type,
 )
 from formshare.processes.odk.processes import get_assistant_permissions_on_a_form
 from formshare.views.classes import PrivateView, PublicView, APIView
@@ -30,12 +31,14 @@ class DownloadPrivateProduct(PrivateView):
         product_id = self.request.matchdict["productid"]
         output_id = self.request.matchdict["outputid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
+
         if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-            if not project_found:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                > 4
+            ):
                 raise HTTPNotFound
         else:
             raise HTTPNotFound
@@ -208,19 +211,16 @@ class PublishProduct(PrivateView):
         product_id = self.request.matchdict["productid"]
         output_id = self.request.matchdict["outputid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
+
         if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-                    project_details = project
-            if not project_found:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 4
+            ):
                 raise HTTPNotFound
         else:
-            raise HTTPNotFound
-
-        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         if self.request.method == "POST":
@@ -261,19 +261,16 @@ class UnPublishProduct(PrivateView):
         product_id = self.request.matchdict["productid"]
         output_id = self.request.matchdict["outputid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
+
         if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-                    project_details = project
-            if not project_found:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 4
+            ):
                 raise HTTPNotFound
         else:
-            raise HTTPNotFound
-
-        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         if self.request.method == "POST":
@@ -314,19 +311,16 @@ class DeleteProduct(PrivateView):
         product_id = self.request.matchdict["productid"]
         output_id = self.request.matchdict["outputid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
-        project_details = {}
+
         if project_id is not None:
-            project_found = False
-            for project in self.user_projects:
-                if project["project_id"] == project_id:
-                    project_found = True
-                    project_details = project
-            if not project_found:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 4
+            ):
                 raise HTTPNotFound
         else:
-            raise HTTPNotFound
-
-        if project_details["access_type"] >= 4:
             raise HTTPNotFound
 
         if self.request.method == "POST":

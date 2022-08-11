@@ -1,10 +1,11 @@
+import datetime
 import glob
 import os
-import datetime
+from multiprocessing import Process
+
+import numpy as np
 import requests
 from requests.auth import HTTPDigestAuth
-from multiprocessing import Process
-import numpy as np
 
 """
 This script uploads submissions into FormShare.

@@ -42,8 +42,6 @@ from formshare.processes.db import (
     get_extended_project_details,
     get_user_projects,
     get_forms_number,
-    get_number_of_case_creators,
-    get_number_of_case_creators_with_repository,
 )
 from formshare.processes.elasticsearch.repository_index import (
     get_dataset_stats_for_project,

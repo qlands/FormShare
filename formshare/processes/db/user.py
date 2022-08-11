@@ -2,10 +2,11 @@ import datetime
 import logging
 import secrets
 
+from sqlalchemy import create_engine
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
+
 from formshare.models import (
     map_to_schema,
     User,

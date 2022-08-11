@@ -1,6 +1,6 @@
 import glob
-import os
 import imghdr
+import os
 
 """
 This script fixes jpg images that for some reason were stored with ~ 

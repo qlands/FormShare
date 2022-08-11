@@ -1,8 +1,10 @@
+import os
+
 import zope.sqlalchemy
 from sqlalchemy import engine_from_config
 from sqlalchemy.orm import configure_mappers
 from sqlalchemy.orm import sessionmaker
-import os
+
 from formshare.models.formshare import (
     Base,
     Collaboratorlog,

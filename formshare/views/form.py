@@ -125,7 +125,6 @@ from formshare.products.export.zip_json import (
     generate_private_zip_json_file,
     generate_public_zip_json_file,
 )
-
 from formshare.views.classes import PrivateView
 
 log = logging.getLogger("formshare")

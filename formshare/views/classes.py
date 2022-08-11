@@ -31,7 +31,6 @@ from formshare.processes.db import (
     user_exists,
     get_user_details,
     get_active_project,
-    get_user_projects,
     get_project_from_assistant,
     get_user_by_api_key,
     get_user_timezone,

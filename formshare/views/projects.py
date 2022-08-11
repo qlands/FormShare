@@ -94,9 +94,10 @@ class ProjectListView(ProjectsView):
         if user_id != self.user.login:
             raise HTTPNotFound()
 
+        next_url = self.request.params.get("next", self.request.url)
         user_projects = get_user_projects(self.request, self.userID, self.userID)
 
-        return {"userProjects": user_projects}
+        return {"userProjects": user_projects, "next": next_url}
 
 
 class ProjectDetailsView(ProjectsView):

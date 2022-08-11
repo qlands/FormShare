@@ -343,3 +343,12 @@ def t_e_s_t_projects(test_object):
         status=200,
     )
     assert "FS_error" not in res.headers
+
+
+def t_e_s_t_delete_projects(test_object):
+    # Delete a project with form will show message
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/delete".format(test_object.randonLogin, "mergemimic1"),
+        status=302,
+    )
+    assert "FS_error" in res.headers

@@ -1201,7 +1201,7 @@ def delete_project(request, user, project):
                 )
                 request.dbsession.flush()
     except IntegrityError as e:
-        request.dbsession.rollback()
+        # request.dbsession.rollback()
         log.error("Error {} while deleting project {}".format(str(e), project))
         return (
             False,

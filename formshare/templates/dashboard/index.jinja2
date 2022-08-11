@@ -114,7 +114,7 @@
     <script>
         $(document).ready(function() {
 
-            let info_url = "{{ request.route_url('user_projects', userid=projectDetails.owner) }}";
+            let info_url = "{{ request.route_url('user_projects', userid=projectDetails.owner, _query={'next':request.url}) }}";
             $('#ajax_user_projects').html('{{ _('Loading...') }}');
             $('#ajax_user_projects').load(info_url, function() {
                 $('.set_active').click(function () {

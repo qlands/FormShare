@@ -1,4 +1,5 @@
 {% extends 'dashboard/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
 
 {% block titlesection %}{{ _("Profile") }}{% endblock titlesection %}
 
@@ -19,6 +20,7 @@
 
 {% block maincontent %}
     {% block profile_head %}
+        {{ form.display_errors(errors,true) }}
         {% include 'dashboard/profile/snippets/profile_head.jinja2' %}
     {% endblock profile_head %}
 
@@ -33,7 +35,7 @@
     <script>
         $(document).ready(function() {
 
-            let info_url = "{{ request.route_url('user_projects', userid=activeUser.login) }}";
+            let info_url = "{{ request.route_url('user_projects', userid=activeUser.login, _query={'next':request.url}) }}";
             $('#ajax_user_projects').html('{{ _('Loading...') }}');
             $('#ajax_user_projects').load(info_url, function() {
 
@@ -99,7 +101,7 @@
                                 form.submit();
                             }
                         });
-                }); 
+                });
 
             });
 

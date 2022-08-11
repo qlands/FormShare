@@ -33,13 +33,13 @@
     <div class="col-md-4">
         {% block project_item_actions %}
             {% if project.project_active == 0 %}
-                <a urn="{{ request.route_url('project_setactive',userid=project.owner,projcode=project.project_code,_query={'next':request.url}) }}" class="btn btn-white btn-sm set_active"><i class="fas fa-star" style="color: #1c84c6"></i> {{ _('Set as active') }} </a>
+                <a urn="{{ request.route_url('project_setactive',userid=project.owner,projcode=project.project_code,_query={'next':next}) }}" class="btn btn-white btn-sm set_active"><i class="fas fa-star" style="color: #1c84c6"></i> {{ _('Set as active') }} </a>
             {% endif %}
             {% if project.access_type < 4 %}
                 <a href="{{ request.route_url('project_edit',userid=project.owner,projcode=project.project_code) }}" class="btn btn-white btn-sm"><i class="fas fa-pencil-alt text-warning"></i> {{ _('Edit') }} </a>
             {% endif %}
             {% if project.access_type == 1 %}
-                <a urn="{{ request.route_url('project_delete',userid=project.owner,projcode=project.project_code,_query={'next':request.url}) }}" class="btn btn-white btn-sm delete_project"><i class="fas fa-trash text-danger"></i> {{ _('Delete') }} </a>
+                <a urn="{{ request.route_url('project_delete',userid=project.owner,projcode=project.project_code,_query={'next':next}) }}" class="btn btn-white btn-sm delete_project"><i class="fas fa-trash text-danger"></i> {{ _('Delete') }} </a>
             {% endif %}
         {% endblock project_item_actions %}
     </div>

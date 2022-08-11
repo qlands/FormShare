@@ -66,7 +66,7 @@ from .steps.one_user_assistant import t_e_s_t_one_user_assistant
 from .steps.partners import t_e_s_t_partners
 from .steps.plugin_utility_functions import t_e_s_t_plugin_utility_functions
 from .steps.profile import t_e_s_t_profile
-from .steps.projects import t_e_s_t_projects
+from .steps.projects import t_e_s_t_projects, t_e_s_t_delete_projects
 from .steps.repository import t_e_s_t_repository
 from .steps.repository_downloads import t_e_s_t_repository_downloads
 from .steps.repository_tasks import t_e_s_t_repository_tasks
@@ -291,6 +291,8 @@ class FunctionalTests(unittest.TestCase):
         t_e_s_t_error_pages(self.test_object)
         print("Testing crowdsourcing")
         t_e_s_t_crowdsourcing(self.test_object)
+        print("Testing delete project with data")
+        t_e_s_t_delete_projects(self.test_object)
 
         show_health()
         end_time = datetime.datetime.now()

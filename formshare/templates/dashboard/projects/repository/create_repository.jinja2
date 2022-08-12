@@ -190,8 +190,10 @@
     {{ super() }}
     <script>
         $(document).ready(function() {
-            var elem = document.querySelector('.js-switch');
-            var switchery = new Switchery(elem, { color: '#1AB394' });
+            {% if has_submit_assistant %}
+                var elem = document.querySelector('.js-switch');
+                var switchery = new Switchery(elem, { color: '#1AB394' });
+            {% endif %}
             $('#repform').submit(function() {
                 $(this).find("button[type='submit']").prop('disabled',true);
             });

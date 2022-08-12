@@ -513,12 +513,53 @@ def t_e_s_t_repository(test_object):
     )
 
     # Gets the repository page
-    test_object.testapp.get(
+    res = test_object.testapp.get(
         "/user/{}/project/{}/form/{}/repository/create".format(
             test_object.randonLogin, test_object.project, test_object.formID
         ),
         status=200,
     )
+    test_object.root.assertTrue(b"delete all testing data" in res.body)
+
+    # Remove the assistant from the form
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/assistant/{}/{}/remove".format(
+            test_object.randonLogin,
+            test_object.project,
+            test_object.formID,
+            test_object.projectID,
+            test_object.assistantLogin,
+        ),
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+
+    # Gets the repository page
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/repository/create".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        status=200,
+    )
+    test_object.root.assertTrue(
+        b"The form does not have an assistant that can submit data" in res.body
+    )
+
+    # Add an assistant to a form succeeds
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/assistants/add".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "coll_id": "{}|{}".format(
+                test_object.projectID, test_object.assistantLogin
+            ),
+            "coll_can_submit": "1",
+            "coll_can_clean": "1",
+        },
+        status=302,
+    )
+    assert "FS_error" not in res.headers
 
     # Generate the repository using celery
     res = test_object.testapp.post(

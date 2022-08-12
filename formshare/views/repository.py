@@ -9,6 +9,7 @@ from formshare.processes.db import (
     get_project_id_from_name,
     get_project_access_type,
     get_project_details,
+    get_one_assistant,
 )
 from formshare.processes.elasticsearch.repository_index import delete_dataset_from_index
 from formshare.processes.email.send_email import send_error_to_technical_team
@@ -58,6 +59,11 @@ class GenerateRepository(PrivateView):
             project_details = get_project_details(self.request, project_id)
         else:
             raise HTTPNotFound
+
+        has_submit_assistant = True
+        project, assistant = get_one_assistant(self.request, project_id, form_id)
+        if project is None:
+            has_submit_assistant = False
 
         form_data = get_form_data(project_id, form_id, self.request)
         result_code = -1
@@ -487,6 +493,7 @@ class GenerateRepository(PrivateView):
                     "primary_key": primary_key,
                     "discard_testing_data": discard_testing_data,
                     "default": default,
+                    "has_submit_assistant": has_submit_assistant,
                 }
             else:
                 raise HTTPNotFound()

@@ -34,9 +34,55 @@ __all__ = [
     "get_assigned_assistants",
     "get_assistant_by_api_key",
     "get_assistant_timezone",
+    "get_one_assistant",
 ]
 
 log = logging.getLogger("formshare")
+
+
+def get_one_assistant(request, project, form):
+    res = (
+        request.dbsession.query(Project.project_formlist_auth)
+        .filter(Project.project_id == project)
+        .first()
+    )
+    if res[0] == 0:
+        return "public", "public"
+    res = (
+        request.dbsession.query(Formacces)
+        .filter(Formacces.form_project == project)
+        .filter(Formacces.form_id == form)
+        .filter(Formacces.coll_can_submit == 1)
+        .first()
+    )
+    if res is not None:
+        return res.coll_id, res.project_id
+    else:
+        res = (
+            request.dbsession.query(Formgrpacces)
+            .filter(Formgrpacces.form_project == project)
+            .filter(Formgrpacces.form_id == form)
+            .filter(Formgrpacces.group_can_submit == 1)
+            .first()
+        )
+        if res is not None:
+            project_id = res.project_id
+            group_id = res.group_id
+            res = (
+                request.dbsession.query(Collingroup)
+                .filter(Collingroup.project_id == project_id)
+                .filter(Collingroup.group_id == group_id)
+                .first()
+            )
+            if res is not None:
+                return (
+                    res.coll_id,
+                    res.enum_project,
+                )
+            else:
+                return None, None
+        else:
+            return None, None
 
 
 def get_assistant_timezone(request, project_id, coll_id):

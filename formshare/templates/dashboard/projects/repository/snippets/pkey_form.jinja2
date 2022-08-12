@@ -1,9 +1,14 @@
 <input type="hidden" name="csrf_token" value="{{ request.session.get_csrf_token() }}">
 <input type="hidden" name="start_stage1" value = "">
 <div class="form-group">
-    <label class="text-danger">{{ _('Discard / delete all testing data (Option is "No" by default)') }}</label>
-    <input type="checkbox" name="discard_testing_data" class="js-switch"/>
-    <span class="form-text m-b-none text-warning">{{ _('Change the switch if you want to start with a clean repository') }}</span>
+    {% if has_submit_assistant %}
+        <label class="text-danger">{{ _('Discard / delete all testing data (Option is "No" by default)') }}</label>
+        <input type="checkbox" name="discard_testing_data" class="js-switch"/>
+        <span class="form-text m-b-none text-warning">{{ _('Change the switch if you want to start with a clean repository') }}</span>
+    {% else %}
+        <input type="hidden" name="discard_testing_data"/>
+        <label class="text-danger">{{ _("The form does not have an assistant that can submit data. If you proceed all testing data will get discarded!!!") }}</label>
+    {% endif %}
 </div>
 <hr>
 {% if form_data.form_pkey == None %}

@@ -79,9 +79,14 @@
                                             <input type="hidden" name="valuestoignore" value="{{ valuestoignore }}">
                                         {% endif %}
                                         <div class="form-group">
-                                            <label class="text-danger">{{ _('Discard all testing data (Option is "No" by default)') }}</label>
-                                            <input type="checkbox" name="discard_testing_data" class="js-switch"/>
-                                            <span class="form-text m-b-none text-warning">{{ _('Change the switch if you DO NOT WANT to append the testing data into the repository') }}</span>
+                                            {% if has_submit_assistant %}
+                                                <label class="text-danger">{{ _('Discard all testing data (Option is "No" by default)') }}</label>
+                                                <input type="checkbox" name="discard_testing_data" class="js-switch"/>
+                                                <span class="form-text m-b-none text-warning">{{ _('Change the switch if you DO NOT WANT to append the testing data into the repository') }}</span>
+                                            {% else %}
+                                                <input type="hidden" name="discard_testing_data"/>
+                                                <label class="text-danger">{{ _("The form does not have an assistant that can submit data. If you proceed all testing data will get discarded!!!") }}</label>
+                                            {% endif %}
                                         </div>
                                         {% block merge_form_actions %}
                                             {% if errortype != 1 %}
@@ -105,8 +110,10 @@
     {{ super() }}
     <script>
         $(document).ready(function() {
-            var elem = document.querySelector('.js-switch');
-            var switchery = new Switchery(elem, { color: '#1AB394' });
+            {% if has_submit_assistant %}
+                var elem = document.querySelector('.js-switch');
+                var switchery = new Switchery(elem, { color: '#1AB394' });
+            {% endif %}
             $('#form_update_form').submit(function() {
                 $(this).find("button[type='submit']").prop('disabled',true);
             });

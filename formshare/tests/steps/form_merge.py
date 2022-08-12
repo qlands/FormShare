@@ -94,6 +94,22 @@ def t_e_s_t_form_merge(test_object):
         status=404,
     )
 
+    # Add an assistant to a form succeeds
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/assistants/add".format(
+            test_object.randonLogin, test_object.project, "tormenta20201117"
+        ),
+        {
+            "coll_id": "{}|{}".format(
+                test_object.projectID, test_object.assistantLogin
+            ),
+            "coll_can_submit": "1",
+            "coll_can_clean": "1",
+        },
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+
     # Show the merge repository page
     res = test_object.testapp.get(
         "/user/{}/project/{}/form/{}/merge/into/{}".format(
@@ -105,6 +121,35 @@ def t_e_s_t_form_merge(test_object):
         status=200,
     )
     assert "FS_error" not in res.headers
+    test_object.root.assertTrue(b"Discard all testing data" in res.body)
+
+    # Remove the assistant from the form
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/assistant/{}/{}/remove".format(
+            test_object.randonLogin,
+            test_object.project,
+            "tormenta20201117",
+            test_object.projectID,
+            test_object.assistantLogin,
+        ),
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+
+    # Show the merge repository page
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/merge/into/{}".format(
+            test_object.randonLogin,
+            test_object.project,
+            "tormenta20201117",
+            "tormenta20201105",
+        ),
+        status=200,
+    )
+    assert "FS_error" not in res.headers
+    test_object.root.assertTrue(
+        b"The form does not have an assistant that can submit data" in res.body
+    )
 
     # Merge the repository using celery
     res = test_object.testapp.post(

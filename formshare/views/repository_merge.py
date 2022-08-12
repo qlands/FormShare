@@ -9,6 +9,7 @@ from formshare.processes.db import (
     update_form,
     get_project_access_type,
     get_project_details,
+    get_one_assistant,
 )
 from formshare.processes.email.send_email import send_error_to_technical_team
 from formshare.processes.odk.api import get_odk_path, merge_versions
@@ -43,6 +44,11 @@ class RepositoryMergeForm(PrivateView):
             project_details = get_project_details(self.request, project_id)
         else:
             raise HTTPNotFound
+
+        has_submit_assistant = True
+        project, assistant = get_one_assistant(self.request, project_id, new_form_id)
+        if project is None:
+            has_submit_assistant = False
 
         new_form_data = get_form_data(project_id, new_form_id, self.request)
         old_form_data = get_form_data(project_id, old_form_id, self.request)
@@ -223,4 +229,5 @@ class RepositoryMergeForm(PrivateView):
             "merge_errors": errors,
             "errortype": error_type,
             "valuestoignore": ";".join(values_to_ignore),
+            "has_submit_assistant": has_submit_assistant,
         }

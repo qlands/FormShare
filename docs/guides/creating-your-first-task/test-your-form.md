@@ -23,10 +23,12 @@ Though FormShare checks for certain errors in your form it does not check:
 {% hint style="warning" %}
 **Remember**: <mark style="color:red;">**Submissions received to a form in the testing stage are considered test data**</mark>. This means that any <mark style="color:red;">**submissions will be discarded**</mark> every time that you upload a new version of the form.
 
-This behavior **is not the same** when your form has a repository. The section "[Working with submissions](../../data-management/for-designers/working-with-submissions.md)" discusses how to perform updates to a form with a repository.
+This behavior **is not the same** when your form has a repository. The section "[Merging subversions of a form](../../fundamentals/repositories/merging-subversions-of-a-form.md)" discusses how to perform updates to a form with a repository.
 {% endhint %}
 
-3\. Statistics: This section show statistics about your testing data. This information will change every time you receive new submissions. When you have submissions with GPS data your can explore each submission
+3\. Statistics: This section show statistics about your testing data. This information will change every time you receive new submissions. When you have submissions with GPS data you can explore each submission
+
+4\. Basic downloads: During the "testing stage" you can download the testing data in CSV format (Flat CSV / One file) and download any media submitted with the submissions. These are basic downloads. **More download formats will be available after you create a repository.**
 
 ![](../../.gitbook/assets/submission\_details\_captions.png)
 

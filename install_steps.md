@@ -4,19 +4,20 @@
 
 ## Installation steps
 
-### Grab this server IP address. 
-
-This IP address will be used later on
-
-```sh
-ifconfig
-```
-
 ### Update the system
 
 ```sh
 sudo apt-get update
 sudo apt-get -y upgrade
+```
+
+### Grab this server IP address. 
+
+This IP address will be used later on
+
+```sh
+sudo apt install net-tools
+ifconfig
 ```
 
 ### Update repositories

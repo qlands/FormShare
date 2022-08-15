@@ -1,8 +1,10 @@
-# Installation steps to build FormShare from source.
+# Installation steps to build FormShare from source for production or development
 
-**Tested with Ubuntu Server 21.10**
+**Tested with Ubuntu Server 20.04**
 
-## Grab this server IP address. 
+## Installation steps
+
+### Grab this server IP address. 
 
 This IP address will be used later on
 
@@ -10,35 +12,21 @@ This IP address will be used later on
 ifconfig
 ```
 
-## Update system and add repositories
+### Update the system
 
-```shell
+```sh
 sudo apt-get update
 sudo apt-get -y upgrade
+```
+
+### Update repositories
+
+```sh
 sudo apt-get install -y software-properties-common
 sudo add-apt-repository universe
 sudo add-apt-repository multiverse
+sudo apt-add-repository -y ppa:mosquitto-dev/mosquitto-ppa
 sudo apt-get update
-```
-
-## Install main servers
-
-FormShare depends on MySQL 8.X and Elasticsearch 7.X . **FormShare does not support MySQL 5.X or any version of Maria DB.**
-
-### MySQL 8.X 
-
-```sh
-sudo apt-get install mysql-server
-sudo mysql_secure_installation
-```
-
-FormShare creates schemas, triggers, users and other structures in MySQL. Therefore, your need root or other users with sufficient permissions. 
-
-Check if the connection works for both localhost and IP: 
-
-```sh
-mysql -u [root] -p
-mysql -h [IP] -u [root] -p
 ```
 
 ### Elasticsearch 7.X
@@ -46,7 +34,7 @@ mysql -h [IP] -u [root] -p
 We strongly recommend to use a Docker image for this:
 
 ```sh
-sudo apt-get install -y docker-compose
+sudo apt-get install -y docker-compose curl
 sudo sysctl -w vm.max_map_count=262144
 echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.d/60-vm-max_map_count.conf
 cd /opt
@@ -56,59 +44,138 @@ sudo mkdir data
 sudo mkdir data2
 sudo chmod g+w data
 sudo chmod g+w data2
-wget https://raw.githubusercontent.com/qlands/FormShare/master-2.0/docker_compose_just_elastic/docker-compose.yml
-sudo docker-compose up [-d]
+sudo wget https://raw.githubusercontent.com/qlands/FormShare/master-2.0/docker_compose_just_elastic/docker-compose.yml
+sudo docker-compose up -d
+# Give 5 minutes for Elasticsearch to load
 ```
 
-## Install dependencies
-```sh
-wget -qO - https://www.mongodb.org/static/pgp/server-5.0.asc | sudo apt-key add -
-sudo add-apt-repository 'deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/5.0 multiverse'
-sudo apt-get update
+**Note: Elasticsearch will run in localhost in the port 9200**
 
-sudo apt-get install -y build-essential qtbase5-dev qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client-8.0 openjdk-11-jdk sqlite3 libqt5sql5-sqlite git python3-venv tidy golang-go mosquitto curl nano mongodb-org
-wget https://dev.mysql.com/get/mysql-apt-config_0.8.22-1_all.deb
+Test Elasticsearch
+
+```
+curl http://localhost:9200
+```
+
+Result:
+
+```json
+{
+  "name" : "fses01",
+  "cluster_name" : "fs-es-cluster",
+  "cluster_uuid" : "nw_UT5VBTHOpW2l2Y745DA",
+  "version" : {
+    "number" : "7.14.2",
+    "build_flavor" : "default",
+    "build_type" : "docker",
+    "build_hash" : "6bc13727ce758c0e943c3c21653b3da82f627f75",
+    "build_date" : "2021-09-15T10:18:09.722761972Z",
+    "build_snapshot" : false,
+    "lucene_version" : "8.9.0",
+    "minimum_wire_compatibility_version" : "6.8.0",
+    "minimum_index_compatibility_version" : "6.0.0-beta1"
+  },
+  "tagline" : "You Know, for Search"
+}
+
+```
+
+### Install system dependencies
+
+```sh
+sudo apt-get install -y mysql-server build-essential qt5-default qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake mongodb jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client-8.0 sqlite3 libqt5sql5-sqlite git wget python3-venv tidy golang-go mosquitto nano
+```
+
+### Update MySQL root password
+
+```sh
+sudo mysql -u root -p
+```
+
+```mysql
+create user 'root'@'%' IDENTIFIED WITH mysql_native_password by 'my_secure_password';
+grant all on *.* to 'root'@'%';
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password by 'my_secure_password';
+flush privileges;
+```
+
+### Add MySQL Shell repository
+
+```sh
+sudo wget https://dev.mysql.com/get/mysql-apt-config_0.8.22-1_all.deb
 sudo dpkg -i ./mysql-apt-config_0.8.22-1_all.deb
+```
+
+### Install MySQL Shell
+
+```sh
 sudo apt-get update
 sudo apt-get install mysql-shell
-
-sudo npm install -g diff2html
-sudo npm install -g diff2html-cli
-
-wget https://github.com/BurntSushi/xsv/releases/download/0.13.0/xsv-0.13.0-x86_64-unknown-linux-musl.tar.gz
-tar xvfz xsv-0.13.0-x86_64-unknown-linux-musl.tar.gz
-sudo cp xsv /bin
-
-git clone https://github.com/qlands/csv2xlsx.git
-cd csv2xlsx
-go build
-sudo cp csv2xlsx /bin
 ```
 
-## Install ODK Tools
+### Upgrade Java SDK
+
+```sh
+sudo apt install -y libc6-x32 libc6-i386
+sudo wget https://download.oracle.com/java/18/latest/jdk-18_linux-x64_bin.deb
+sudo dpkg -i jdk-18_linux-x64_bin.deb
+sudo update-alternatives --install /usr/bin/java java /usr/lib/jvm/jdk-18/bin/java 1
+```
+
+### Install third-party tools
+
+```sh
+sudo npm install -g diff2html
+sudo npm install -g diff2html-cli
+sudo npm install -g json2csv
+
+sudo wget https://github.com/BurntSushi/xsv/releases/download/0.13.0/xsv-0.13.0-x86_64-unknown-linux-musl.tar.gz
+sudo tar xvfz xsv-0.13.0-x86_64-unknown-linux-musl.tar.gz
+sudo cp xsv /bin
+
+sudo git clone https://github.com/qlands/csv2xlsx.git
+cd csv2xlsx
+sudo go build
+sudo cp csv2xlsx /bin
+
+```
+
+### Install ODK Tools
 
 ```sh
 cd /opt
+sudo mkdir odktools-deps
 sudo git clone https://github.com/qlands/odktools.git
 
-sudo mkdir odktools-deps
 cd /opt/odktools-deps
-sudo wget --user=user https://github.com/mongodb/mongo-c-driver/releases/download/1.6.1/mongo-c-driver-1.6.1.tar.gz
-sudo wget --user=user https://github.com/jmcnamara/libxlsxwriter/archive/RELEASE_0.7.6.tar.gz
-sudo wget https://downloads.sourceforge.net/project/quazip/quazip/0.7.3/quazip-0.7.3.tar.gz
+sudo wget https://github.com/mongodb/mongo-c-driver/releases/download/1.21.1/mongo-c-driver-1.21.1.tar.gz
+sudo wget https://github.com/mongodb/mongo-cxx-driver/releases/download/r3.6.7/mongo-cxx-driver-r3.6.7.tar.gz
+sudo wget https://github.com/jmcnamara/libxlsxwriter/archive/refs/tags/RELEASE_1.1.4.tar.gz
+sudo wget https://github.com/stachenov/quazip/archive/refs/tags/v1.3.tar.gz
 sudo git clone https://github.com/rgamble/libcsv.git
 
-sudo tar xvfz mongo-c-driver-1.6.1.tar.gz
-cd /opt/odktools-deps/mongo-c-driver-1.6.1
-sudo ./configure
+sudo tar xvfz mongo-c-driver-1.21.1.tar.gz
+cd /opt/odktools-deps/mongo-c-driver-1.21.1
+sudo mkdir build_here
+cd /opt/odktools-deps/mongo-c-driver-1.21.1/build_here
+sudo cmake ..
 sudo make
 sudo make install
 cd /opt/odktools-deps
 
-sudo tar xvfz quazip-0.7.3.tar.gz
-cd /opt/odktools-deps/quazip-0.7.3
+sudo tar xvfz mongo-cxx-driver-r3.6.7.tar.gz
+cd /opt/odktools-deps/mongo-cxx-driver-r3.6.7
+sudo mkdir build_here
+cd /opt/odktools-deps/mongo-cxx-driver-r3.6.7/build_here
+sudo cmake -DCMAKE_C_FLAGS:STRING="-O2 -fPIC" -DCMAKE_CXX_FLAGS:STRING="-O2 -fPIC" -DBSONCXX_POLY_USE_BOOST=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
+sudo make
+sudo make install
+cd /opt/odktools-deps
+
+sudo tar xvfz v1.3.tar.gz
+cd /opt/odktools-deps/quazip-1.3
 sudo mkdir build
-cd /opt/odktools-deps/quazip-0.7.3/build
+cd /opt/odktools-deps/quazip-1.3/build
 sudo cmake -DCMAKE_C_FLAGS:STRING="-fPIC" -DCMAKE_CXX_FLAGS:STRING="-fPIC" ..
 sudo make
 sudo make install
@@ -117,10 +184,10 @@ cd /opt/odktools-deps
 sudo ln -s /usr/bin/aclocal-1.16 /usr/bin/aclocal-1.14
 sudo ln -s /usr/bin/automake-1.16 /usr/bin/automake-1.14
 
-sudo tar xvfz RELEASE_0.7.6.tar.gz
-cd /opt/odktools-deps/libxlsxwriter-RELEASE_0.7.6
+sudo tar xvfz RELEASE_1.1.4.tar.gz
+cd /opt/odktools-deps/libxlsxwriter-RELEASE_1.1.4
 sudo mkdir build
-cd /opt/odktools-deps/libxlsxwriter-RELEASE_0.7.6/build
+cd /opt/odktools-deps/libxlsxwriter-RELEASE_1.1.4/build
 sudo cmake ..
 sudo make
 sudo make install
@@ -131,19 +198,23 @@ sudo ./configure
 sudo make
 sudo make install
 
-cd /opt/odktools/dependencies/mongo-cxx-driver-r3.1.1
-sudo mkdir build
-cd /opt/odktools/dependencies/mongo-cxx-driver-r3.1.1/build
-sudo cmake -DCMAKE_C_FLAGS:STRING="-O2 -fPIC" -DCMAKE_CXX_FLAGS:STRING="-O2 -fPIC" -DBSONCXX_POLY_USE_BOOST=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
-sudo make
-sudo make install
 cd /opt/odktools
 
 sudo qmake
 sudo make
+
+sudo ldconfig
+
+sudo apt-get update
+sudo apt-get install -y locales 
+sudo sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen 
+sudo dpkg-reconfigure --frontend=noninteractive locales \
+sudo update-locale LANG=en_US.UTF-8
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
 ```
 
-## Setup FormShare's directory structures
+### Setup FormShare's directory structures
 
 ```sh
 cd /opt
@@ -163,14 +234,16 @@ sudo chown $whoami formshare_config
 sudo chown $whoami formshare_plugins
 ```
 
-## Create a separate Python environment for FormShare
+### Create a separate Python environment for FormShare
 ```sh
 cd /opt
 sudo python3 -m venv formshare_env
 sudo chown -R $whoami formshare_env
 ```
 
-## Grab the FormShare source code
+### Grab the FormShare source code
+
+#### **Stable**
 
 ```sh
 cd /opt
@@ -178,7 +251,15 @@ sudo git clone https://github.com/qlands/FormShare.git -b stable-2.18.0 formshar
 sudo chown -R $whoami formshare
 ```
 
-## Install and configure FormShare
+#### **For development**
+
+```sh
+cd /opt
+sudo git clone https://github.com/qlands/FormShare.git -b master-2.0 formshare
+sudo chown -R $whoami formshare
+```
+
+### Install and configure FormShare
 
 **You need to replace [parameter] according to your installation**
 
@@ -190,12 +271,13 @@ pip install wheel
 pip install -r /opt/formshare/requirements.txt
 python /opt/formshare/download_nltk_packages.py
 
+# The following lines are for running an stable version
 sudo cp /opt/formshare/docker_files/formshare/docker_files/etc/default/celery_formshare /etc/default/celery_formshare
 sudo cp /opt/formshare/docker_files/formshare/docker_files/etc/init.d/celery_formshare /etc/init.d/celery_formshare
-
 sudo chmod +x /etc/init.d/celery_formshare
 sudo chmod 640 /etc/default/celery_formshare
 sudo ldconfig
+# --end
 
 sudo service redis-server start
 sudo service mongodb start
@@ -203,8 +285,15 @@ sudo service mongodb start
 mysql -h [MYSQL_HOST_NAME] -u [MYSQL_USER_NAME] --password=[MYSQL_USER_PASSWORD] --execute='CREATE SCHEMA IF NOT EXISTS formshare'
 
 cd /opt/formshare
+
 python create_config.py --daemon --capture_output --mysql_host [MYSQL_HOST_NAME] --mysql_user_name [MYSQL_USER_NAME] --mysql_user_password [MYSQL_USER_PASSWORD] --repository_path /opt/formshare_repository --odktools_path /opt/odktools --elastic_search_host [ELASTIC_SEARCH_HOST] --elastic_search_port [ELASTIC_SEARCH_PORT] --formshare_host [THIS_SERVER_IP_ADDRESS] --formshare_port 5900 --forwarded_allow_ip [THIS_SERVER_IP_ADDRESS] --pid_file /opt/formshare_gunicorn/formshare.pid --error_log_file /opt/formshare_log/error_log /opt/formshare_config/development.ini
+
 ln -s /opt/formshare_config/development.ini ./development.ini
+
+# If you are running FormShare for development purposes.
+# Edit development.ini
+# Comment lines from 162 to 164
+# --end
 
 python configure_celery.py ./development.ini
 python setup.py develop
@@ -219,7 +308,7 @@ create_superuser --user_id [FORMSHARE_ADMIN_USER] --user_email [FORMSHARE_ADMIN_
 deactivate
 ```
 
-## Start the Celery and FormShare 
+### Start the Celery and FormShare (If running a stable version)
 ```sh
 sudo /etc/init.d/celery_formshare start
 source /opt/formshare_env/bin/activate
@@ -229,9 +318,41 @@ pserve ./development.ini
 # The process ID of FormShare will be in /opt/formshare_gunicorn/formshare.pid
 ```
 
-## Access FormShare
+### Start the Celery and FormShare (If running for development)
+
+```sh
+source /opt/formshare_env/bin/activate
+cd /opt/formshare
+./start_local_celery_for_testing.sh
+# Celery log will be in /opt/formshare/celery.log
+# Celery process ID will be in /opt/formshare/celerypid.log
+pserve ./development.ini
+```
+
+### Access FormShare
 
 ```htaccess
 http://[THIS_SERVER_IP_ADDRESS]:5900/formshare
+```
+
+## If you are developing plug-ins
+
+```sh
+cd /opt/formshare_plugins
+cookiecutter https://github.com/qlands/formshare-cookiecutter-plugin
+# Follow the instructions
+cd [my_plugin_directory]
+python setup.py develop
+cd /opt/formshare
+# Edit development.ini
+# Add the following line AFTER LINE 77:
+formshare.plugins = [my_plugin]
+pserve ./development.ini
+```
+
+## Access a custom plug-in page in FormShare
+
+```htaccess
+http://[THIS_SERVER_IP_ADDRESS]:5900/formshare/mypublicview
 ```
 

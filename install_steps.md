@@ -2,6 +2,11 @@
 
 **Tested with Ubuntu Server 20.04**
 
+## Important notes that many forget!
+- **Follow the instructions line by line! Do not skip lines!**
+
+- **You need to replace anything that is between [ ] according to your installation INCLUDING the [ ]. For example, replace [ELASTIC_SEARCH_HOST] for localhost**
+
 ## Installation steps
 
 ### Update the system
@@ -94,9 +99,9 @@ sudo mysql -u root -p
 ```
 
 ```mysql
-create user 'root'@'%' IDENTIFIED WITH mysql_native_password by 'my_secure_password';
+create user 'root'@'%' IDENTIFIED WITH mysql_native_password by '[my_secure_password]';
 grant all on *.* to 'root'@'%';
-ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password by 'my_secure_password';
+ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password by '[my_secure_password]';
 flush privileges;
 ```
 

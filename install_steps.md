@@ -1,6 +1,12 @@
 # Installation steps to build FormShare from source for production or development
 
-**Tested with Ubuntu Server 20.04**
+**Tested with Ubuntu 20.04**
+
+**This WILL NOT work on Ubuntu 22.04**
+
+**Minimum memory requirements**
+- For production running in an Ubuntu Server 20.4: 8GB
+- For development running in an Ubuntu Desktop 20.4: 16GB
 
 ## Important notes that many forget!
 - **Follow the instructions line by line! Do not skip lines!**

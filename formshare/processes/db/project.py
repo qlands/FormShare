@@ -950,6 +950,8 @@ def get_user_projects(request, user, logged_user):
             .filter(Project.project_id == Userproject.project_id)
             .filter(Userproject.user_id == user)
             .filter(Userproject.project_accepted == 1)
+            .order_by(Userproject.project_active.desc())
+            .order_by(Project.project_cdate.asc())
             .all()
         )
         projects = map_from_schema(res)

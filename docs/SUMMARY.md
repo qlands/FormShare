@@ -47,6 +47,6 @@
   * [Private vs public products](data-management/data-products/private-vs-public-products.md)
   * [Flat CSV (One CSV file)](data-management/data-products/flat-csv-one-csv-file.md)
 
-## Extras
+## Technical pages
 
-* [Keyboard Shortcuts](extras/keyboard-shortcuts.md)
+* [Settings](technical-pages/keyboard-shortcuts.md)

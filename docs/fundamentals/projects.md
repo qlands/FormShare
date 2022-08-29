@@ -53,6 +53,11 @@ The project details page shows different elements that a project has. Here you c
 10. **Project files:** You can attach any kind of file to a project. For example, you can attach guidelines, policies, good practices, etc. These files are available to you and those collaborating with you on the project.
 11. **Edit**: Click on the "Edit" button to [edit ](projects.md#undefined)the details of the project. For example, to change its description or its abstract.
 12. **Delete**: Click on the "Delete" button to [delete](projects.md#undefined) the project. <mark style="color:red;">**Note: When you delete a project you will delete all its forms and submissions**</mark>**.** Deleting a project will create a log in the platform for auditing purposes.
+13. **Project partners**: You can link any number of [partners](partners.md) to a project. When you link a partner to a project they can access any data of any form inside the project. You can also link partners to individual forms to allow more limited access.
+
+{% hint style="info" %}
+Note on Partners: Partners access is a feature that is not present by default in a FormShare installation. See the "[Partner settings](../technical-pages/keyboard-shortcuts.md#partners)" for information about how to activate this feature.
+{% endhint %}
 
 ## Edit a project
 

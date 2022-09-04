@@ -43,9 +43,15 @@ The section "[Common errors in a Form](common-errors-in-a-form.md)" provides inf
 
 If the form is fine, FormShare will take you to the details of the form. The form will be ready for testing.
 
-## Forms without repository - The testing stage
+## The two stages of a Form
 
-After uploading a new form, FormShare will take make it available in a testing stage. The form details page will appear.
+An ODK form in FormShare can be in two stages: "Testing" and "With repository". The main difference is that forms **without a repository** store submissions temporarily as JSON files with limited tools and export options. On the other hand, forms **with a repository** store submissions as relational data in a relational database with ample tools and export options.
+
+### The testing stage
+
+#### Details and tools of form in testing stage
+
+After uploading a new form, FormShare will take make it available in a testing stage. The "Form Details" page will appear.
 
 ![](../../.gitbook/assets/form\_details\_01\_captions.png)
 
@@ -94,7 +100,7 @@ Remember: To control duplicate submissions, you need to select a variable from y
 
 ![](../../.gitbook/assets/add\_files\_and\_check\_pending.png)
 
-To add a file click on the "+" button. You can select one or more files and decide to overwrite or not current files.
+To add a file click on the "+" button. You can select one or more files and decide whether to overwrite or not current files.
 
 {% hint style="warning" %}
 Case sensitive file names: FormShare is case sensitive, therefore if you declare a file in your ODK form called "Regions.csv" then you need to attach "**R**egions.csv" and not "**r**egions.csv".
@@ -110,7 +116,7 @@ An assistant can submit data and/or clean data. Click on the "Add assistant" but
 
 10\. Assigned assistant groups. You can assign groups to a form in the same way that you assign assistants. Each group can submit data and/or clean data. Details on assistant groups are covered in the section "[Assistants](../tasks.md)".
 
-## Testing a Form
+#### Testing a Form
 
 {% hint style="info" %}
 We have noticed that 90% of the users do not test their forms before generating a repository. Even though FormShare allows [merging different versions of a form](../repositories/merging-subversions-of-a-form.md) into one common repository, such a procedure is simpler when the form is in a testing stage.
@@ -140,7 +146,7 @@ This behavior **is not the same** when your form has a repository. The section "
 
 4\. Basic downloads: During the "testing stage" you can download the testing data in CSV format (Flat CSV / One file) and download any media submitted with the submissions. These are basic downloads. **More download formats will be available after you create a repository.**
 
-### Testing data with GPS information
+#### Testing data with GPS information
 
 ![](../../.gitbook/assets/submission\_details\_captions.png)
 
@@ -150,7 +156,7 @@ This behavior **is not the same** when your form has a repository. The section "
 
 Once you are satisfied with the testing. You can create a repository to start collecting "Real" data.
 
-## Create a repository
+### Create a repository
 
 {% hint style="info" %}
 **FormShare stores submission data in a repository**. Details of this are covered in the section "[How does FormShare stores my data?](../repositories/how-does-formshare-stores-my-data.md)".
@@ -177,7 +183,7 @@ FormShare will start generating your repository
 
 ![](../../.gitbook/assets/generating\_repository.png)
 
-## Forms with a repository
+### The repository stage
 
 Once FormShare finalizes creating the repository it will show the "Form details" page with more options and utilities.
 
@@ -193,3 +199,27 @@ Once FormShare finalizes creating the repository it will show the "Form details"
 8. **Import external data**: FormShare allows you to import data from FormShare 1.0 (JSON), ODK Central (XML), and third-party platforms in JSON format. This is covered in more detail in the section "[Import external data](../submissions/import-external-data.md)"
 9. **The audit log**: FormShare logs any change in the data regardless of the method used (e.g., Web interface, API, etc). This is covered in more detail in the section "[The audit log](../../data-management/for-designers/figma-integration/the-audit-log.md)".
 10. **Export data**: Now that the form has a repository, it is possible to export the data in different formats like Excel, and JSON. This is covered in more detail in the section "[Data products](../../data-management/data-products/)".
+
+## Edit the metadata of a form
+
+<figure><img src="../../.gitbook/assets/edit_form_details.png" alt=""><figcaption></figcaption></figure>
+
+1. You can edit the metadata of a form whether it is in testing or with a repository. Click on the yellow pencil (✏️) to edit the metadata. The "Form's metadata" page will appear.&#x20;
+
+<figure><img src="../../.gitbook/assets/edit_metadata_captions.png" alt=""><figcaption></figcaption></figure>
+
+1\. **Target number of submissions**: This is optional and relevant for those forms that have a target number of submissions. For example, a household survey for a Master's thesis where a minimum of 400 households is required. **Note: This is not a cap on the number of submissions, you can receive more submissions than the target number.**
+
+2\. **Active:** You can activate and deactivate a form at any time. **An active form accepts submissions.**&#x20;
+
+3\. **Color**: Each form has a color to quickly identify it on maps and lists.
+
+<figure><img src="../../.gitbook/assets/form_color_example.png" alt=""><figcaption></figcaption></figure>
+
+## Delete a form
+
+Before you delete a form you need to be sure that you want to proceed with such action.
+
+![](../../.gitbook/assets/delete\_form\_message.png)
+
+<mark style="color:red;">**Note: When you delete a form you will delete its data**</mark>**.** Deleting a form will create a log in the platform for auditing purposes. This log entry will contain the user deleting the form along with the date and time when the form was deleted.

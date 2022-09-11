@@ -38,11 +38,11 @@ This error occurs when you have a variable that is also a restricted word in For
 
 FormShare will tell you which variables have invalid names. Fix the problem by renaming the variables.
 
-## Identical choices <a href="#identical-choices" id="identical-choices"></a>
+## Identical choice lists <a href="#identical-choices" id="identical-choices"></a>
 
-> Message from FromShare: The following choices are identical.
+> Message from FromShare: The following choice lists are identical.
 
-This error happens when two or more lists in the "Choices" sheet have the same options/items. The example below has the problem, the list sex\__owner is identical to the list sex\__pet.
+This error happens when two or more choice lists in the "Choices" sheet have the same options/items. The example below has the problem, the choice list sexˍowner is identical to the choce list sexˍpet.
 
 {% embed url="https://docs.google.com/spreadsheets/d/1VGeabvyWKHKoJG-N0-QfaonjKY3YQU2bQ6mYVF66fDk/edit?usp=sharing" %}
 
@@ -121,8 +121,81 @@ FormShare can read external CSV files and import their contents into the databas
 
 Fix this problem by checking the file in a CSV reader like MS Excel.
 
-## Choice  list with duplicate option <a href="#duplicate_option" id="duplicate_option"></a>
+## Choice list with duplicate option <a href="#duplicate_option" id="duplicate_option"></a>
 
 > Message from FormShare: The following options are duplicated in the ODK you just submitted
 
-In an ODK you can have cascading choices with repeated options by marking the "allow\_choice\_duplicates" setting as true. However, FormShare does not allow duplicate options.
+{% hint style="info" %}
+**What are cascading choices?**
+
+Cascading choices are sets of choice lists whose options depend on the selection of a previously selected option in another list. For example, your form may first ask the region where a respondent is from, and then in the next question list only the towns of that region.
+
+You can design your ODK in such a way that in the choice list of towns the town code may repeat itself, however, it will be unique within the context of a region. <mark style="color:red;">**This is not a good practice**</mark>.&#x20;
+
+To facilitate analysis, choice codes/names should be unique within a single choice list. If two choices from the same list have the same code/name, even if they are unique within the context of an earlier selected option, it will be harder to tell apart in an analysis.
+{% endhint %}
+
+In an ODK you can have cascading choices with duplicated options by marking the "allowˍchoiceduplicates" setting as true. However, FormShare does not allow duplicate options. **FormShare supports cascading choices** but you need to make each choice unique no matter the context. Using the above example, you can make the town code unique by concatenating the code of the region <mark style="color:blue;">\[regionˍcode]</mark><mark style="color:red;">**-**</mark><mark style="color:green;">\[townˍcode]</mark>.
+
+{% hint style="info" %}
+**Why FormShare does not allow duplicate options?**&#x20;
+
+FormShare [stores submissions as relational data](../repositories/how-does-formshare-stores-my-data.md).  Choice lists are stored as lookup tables, for example, the choice lists called "regions" will create the lookup table called "lkpˍregions". Each lookup table has a **primary key**, for example, the primary key of the lookup table of "lkpˍregions" is "regionsˍcode". A **primary key must be unique** and this is why FormShare does not allow duplicate options.
+{% endhint %}
+
+Fix this problem by making unique all codes/names within an option list.
+
+## Malformed language <a href="#malformed_language" id="malformed_language"></a>
+
+> Message from FormShare: Malformed language in your ODK. You have label:X (Y) when it must be label::X (Y). With two colons (::).
+
+FormShare is able to store the description of variables and options in multiple languages. The [ODK standard for translating an ODK](https://docs.getodk.org/form-language/) has evolved over time. In the beginning, the translation of an ODK was done using, for example, label::Español. Currently, it is done by adding the [ISO 639-1 code](https://en.wikipedia.org/wiki/List\_of\_ISO\_639-1\_codes), for example, label::Español (es).
+
+{% hint style="warning" %}
+Please note that:&#x20;
+
+1. You need to have <mark style="color:purple;">**two colons**</mark> (<mark style="color:purple;">**::**</mark>) to indicate translation. For example, label<mark style="color:purple;">**::**</mark>
+2. You need to have a space between the description of the language and its code. The standard is label<mark style="color:purple;">**::**</mark><mark style="color:blue;">\[Language description]</mark><mark style="color:red;">\[space]</mark><mark style="color:green;">(</mark><mark style="color:blue;">\[language code]</mark><mark style="color:green;">)</mark>
+{% endhint %}
+
+FormShare is indicating that some of your translations have only one colon, for example, label<mark style="color:red;">**:**</mark>Español (es). Check your translations and fix the problem by adding a second colon.
+
+## Choice list with names but not labels <a href="#names_but_no_labels" id="names_but_no_labels"></a>
+
+> Message from FormShare: You have choice lists with names but not labels. Did you missed the :: between label and language? Like label<mark style="color:red;">**:**</mark>English (en)
+
+FormShare is able to store the description of variables and options in multiple languages. The [ODK standard for translating an ODK](https://docs.getodk.org/form-language/) has evolved over time. In the beginning, the translation of an ODK was done using, for example, label::Español. Currently, it is done by adding the [ISO 639-1 code](https://en.wikipedia.org/wiki/List\_of\_ISO\_639-1\_codes), for example, label::Español (es).
+
+{% hint style="warning" %}
+Please note that:&#x20;
+
+1. You need to have <mark style="color:purple;">**two colons**</mark> (<mark style="color:purple;">**::**</mark>) to indicate translation. For example, label<mark style="color:purple;">**::**</mark>
+2. You need to have a space between the description of the language and its code. The standard is label<mark style="color:purple;">**::**</mark><mark style="color:blue;">\[Language description]</mark><mark style="color:red;">\[space]</mark><mark style="color:green;">(</mark><mark style="color:blue;">\[language code]</mark><mark style="color:green;">)</mark>
+{% endhint %}
+
+FormShare is indicating that in the "choices" sheet there is a label with only one colon. For example label<mark style="color:red;">**:**</mark>English (en). Check your labels in the "choices" sheet and fix the problem by adding a second colon.
+
+## Tables with more than 60 selects
+
+> Message from FormShare: FormShare manages your data in a better way but by doing so it has more restrictions. The following tables have more than 60 selects
+
+FormShare creates a relational database to store the submissions by reading the structure of your ODK. This is covered in detail in the section "[How does FormShare stores my data?](../repositories/how-does-formshare-stores-my-data.md)" but for now two points are important to describe this error:
+
+1. FormShare stores "repeats" as separate tables, however, "groups" **are not**.
+2. FormShare stores all variables (questions, notes, calculations, etc.) **outside repeats** into a table called "maintable".
+
+We tend to organize our ODK forms in sections with questions around a topic. For example: "livestock inputs" or "crops sales". These sections have type = "begin/end group". Because FormShare does not create tables for "groups" if your ODK has many questions then "maintable" will end up with several columns. If your ODK form has many selects across several groups, then the "maintable" could potentially have more than 60 selects. FormShare can only handle 60 selects per table.
+
+{% hint style="info" %}
+**Why FormShare can only handle up to 60 selects per table?**&#x20;
+
+FormShare stores your submissions in a [MySQL](https://en.wikipedia.org/wiki/MySQL) relational database. MySQL supports up to 64 indexes per table (see MySQL [scalability and limits](https://dev.mysql.com/doc/refman/8.0/en/features.html)). FormShare puts such restriction in 60 to take into account primary keys.
+{% endhint %}
+
+{% hint style="warning" %}
+This restriction can appear in the maintable or in any repeat. FormShare will tell you which table/s has the problem.
+{% endhint %}
+
+You can bypass this restriction by enclosing your groups inside repeats <mark style="color:red;">**BUT WITH**</mark> **repeat\_count = 1**. A repeat with repeat\_count = 1 will behave in the same way as a group, but FormShare will create a new table for it to store all its variables. This will separate your sections into different tables making your data more structured and more understandable for others.
+
+The following example shows an ODK that will report more than 60 selects in the maintable

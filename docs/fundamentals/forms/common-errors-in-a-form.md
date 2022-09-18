@@ -179,12 +179,14 @@ FormShare is indicating that in the "choices" sheet there is a label with only o
 
 > Message from FormShare: FormShare manages your data in a better way but by doing so it has more restrictions. The following tables have more than 60 selects
 
+### Why FormShare has this restriction?
+
 FormShare creates a relational database to store the submissions by reading the structure of your ODK. This is covered in detail in the section "[How does FormShare stores my data?](../repositories/how-does-formshare-stores-my-data.md)" but for now two points are important to describe this error:
 
 1. FormShare stores "repeats" as separate tables, however, "groups" **are not**.
 2. FormShare stores all variables (questions, notes, calculations, etc.) **outside repeats** into a table called "maintable".
 
-We tend to organize our ODK forms in sections with questions around a topic. For example: "livestock inputs" or "crops sales". These sections have type = "begin/end group". Because FormShare does not create tables for "groups" if your ODK has many questions then "maintable" will end up with several columns. If your ODK form has many selects across several groups, then the "maintable" could potentially have more than 60 selects. FormShare can only handle 60 selects per table.
+We tend to organize our surveys in sections with questions around a topic. For example: "livestock inputs" or "crops sales". These sections have "type = begin/end group". Because FormShare does not create tables for "groups" if your survey has many questions then "maintable" will end up with several columns. If your survey has many selects across several groups, then the "maintable" could potentially have more than 60 selects. FormShare can only handle 60 selects per table.
 
 {% hint style="info" %}
 **Why FormShare can only handle up to 60 selects per table?**&#x20;
@@ -193,9 +195,23 @@ FormShare stores your submissions in a [MySQL](https://en.wikipedia.org/wiki/MyS
 {% endhint %}
 
 {% hint style="warning" %}
-This restriction can appear in the maintable or in any repeat. FormShare will tell you which table/s has the problem.
+This restriction can appear in "maintable" or in any "repeat". FormShare will tell you which table/s overpass this restriction.
 {% endhint %}
 
-You can bypass this restriction by enclosing your groups inside repeats <mark style="color:red;">**BUT WITH**</mark> **repeat\_count = 1**. A repeat with repeat\_count = 1 will behave in the same way as a group, but FormShare will create a new table for it to store all its variables. This will separate your sections into different tables making your data more structured and more understandable for others.
+### How to bypass this restriction?
 
-The following example shows an ODK that will report more than 60 selects in the maintable
+You can bypass this restriction by enclosing your groups inside "repeats" <mark style="color:red;">**BUT WITH**</mark> "**repeat\_count = 1"**. A "repeat" with "repeat\_count = 1" will behave in the same way as a "group", but FormShare will create a new table for it to store all its variables. This will separate your sections into different tables but also will make your data more structured and more understandable for others.
+
+The following [example](https://docs.google.com/spreadsheets/d/1qjA05BKykZwEXZXAz0xJ7Md34Iztvn9p/edit?usp=sharing\&ouid=103626200274447715602\&rtpof=true\&sd=true) is a real ODK survey that will report more than 60 selects in "maintable".  The example also shows the different topics across the survey and has a possible solution to bypass the restriction in the sheet called "survey\_fixed".
+
+{% embed url="https://docs.google.com/spreadsheets/d/1qjA05BKykZwEXZXAz0xJ7Md34Iztvn9p/edit?ouid=103626200274447715602&rtpof=true&sd=true&usp=sharing" %}
+
+{% hint style="info" %}
+**How to use control variables inside a repeat**
+
+When you separate sections of your survey inside "repeats with repeat\_count = 1" the variables within are not directly accessible in other sections of the survey. However, you can extract them from a repeat using a "calculate" with the function:
+
+indexed-repeat(${variableˍtoˍextract}, ${repeatˍname}, <mark style="color:red;">**1**</mark>)
+
+See line 661 in the sheet "survey\_fixed" of the [example above](https://docs.google.com/spreadsheets/d/1qjA05BKykZwEXZXAz0xJ7Md34Iztvn9p/edit?usp=sharing\&ouid=103626200274447715602\&rtpof=true\&sd=true).
+{% endhint %}

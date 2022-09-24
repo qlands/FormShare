@@ -20,6 +20,17 @@
                     {% else %}
                         <span class="label label-primary">{{ _('Active') }}</span>
                     {% endif %}
+                    {% if form.maximum_reached == True %}
+                        <span title="{{ _('Create a repository to continue receiving submissions. \nThe limit is') }} {{ form.maximum }} {{ _('test submissions.') }}" class="label label-danger">{{ _('Blocked') }} <i style="color: black" class="fas fa-info-circle"></i></span>
+                    {% else %}
+                        {% if form.form_schema == None %}
+                            {% if form.submissions > 0  %}
+                                {% if form.submissions / form.maximum >= 0.75  %}
+                                    <span title="{{ _('You will need to create a repository soon to continue receiving submissions. \nThe limit is') }} {{ form.maximum }} {{ _('test submissions.') }}" class="label label-warning">{{ _('Near maximum') }} <i style="color: black" class="fas fa-info-circle"></i></span>
+                                {% endif %}
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
                     {% if form.form_geopoint != None %}
                         <span class="label label-default">{{ _('Geo-referenced') }}</span>
                     {% endif %}

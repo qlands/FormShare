@@ -1,7 +1,7 @@
 {% extends 'dashboard/page.jinja2' %}
 {% import 'dashboard/macros/form.jinja2' as form %}
 
-{% block titlesection %}{{ _("Edit form") }}{% endblock titlesection %}
+{% block titlesection %}{{ _("Edit form's metadata") }}{% endblock titlesection %}
 
 {% block css %}
     {{ super() }}
@@ -29,7 +29,7 @@
 {% block maincontent %}
     <div class="ibox">
         <div class="ibox-title">
-            <h5>{{ _('Current information') }}</h5>
+            <h5>{{ _('Current metadata') }}</h5>
             <div class="ibox-tools">
                 <a class="fullscreen-link">
                     <i class="fa fa-expand"></i>

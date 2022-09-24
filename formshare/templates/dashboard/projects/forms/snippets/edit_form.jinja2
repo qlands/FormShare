@@ -4,8 +4,8 @@
         {% block edit_form_fields %}
             <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Name') }}</label>
                 <div class="col-sm-10">
-                    <input type="text" class="form-control" name="form_name" value="{{ formData.form_name }}">
-                    <span class="form-text m-b-none">{{ _('This will change the name in FormShare but not in the ODK file') }}</span>
+                    <input type="text" class="form-control" readonly name="form_name" value="{{ formData.form_name }}">
+                    <span class="form-text m-b-none">{{ _('This name comes from the ODK file and cannot be changed') }}</span>
                 </div>
             </div>
             <div class="hr-line-dashed"></div>

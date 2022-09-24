@@ -1,5 +1,5 @@
 <div class="col-sm-12">
-    <h2>{{ _('Edit') }} {{ formData.form_name }}</h2>
+    <h2>{{ _('Metadata of') }} "{{ formData.form_name }}"</h2>
     <ol class="breadcrumb">
         <li class="breadcrumb-item">
             <a href="{{ request.route_url("dashboard",userid=activeUser.login) }}">{{ _('Dashboard') }}</a>
@@ -14,7 +14,7 @@
             <a href="{{ request.route_url("form_details",userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formData.form_id) }}">{{ formData.form_name }}</a>
         </li>
         <li class="breadcrumb-item active">
-            <strong>Edit</strong>
+            <strong>{{ _('Edit metadata') }}</strong>
         </li>
     </ol>
 </div>

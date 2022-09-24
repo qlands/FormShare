@@ -6,7 +6,7 @@
                 {% block info_tab_tools %}
                     {% if projectDetails.access_type < 4 %}
                         <a href="{{ request.route_url('form_edit',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" style="margin-right: 10px">
-                            <i class="fa fa-pencil text-warning" title="{{ _('Edit') }}"></i>
+                            <i class="fa fa-pencil text-warning" title="{{ _('Edit metadata') }}"></i>
                         </a>
                     {% endif %}
                     <a class="collapse-link" style="margin-right: 10px">

@@ -67,6 +67,7 @@ from formshare.processes.elasticsearch.record_index import (
 )
 from formshare.processes.elasticsearch.repository_index import (
     add_dataset,
+    get_dataset_stats_for_form,
 )
 from formshare.processes.email.send_email import send_error_to_technical_team
 from formshare.processes.odk.processes import update_form_repository_info
@@ -543,7 +544,7 @@ def check_jxform_file(
             message = (
                 _("FormShare thoroughly checks your ODK for inconsistencies.") + "\n"
             )
-            message = message + _("The following choices are identical:") + "\n"
+            message = message + _("The following choice lists are identical:") + "\n"
             if duplicated_tables:
                 for a_table in duplicated_tables:
                     choice_name = a_table.get("name")
@@ -579,7 +580,7 @@ def check_jxform_file(
         if p.returncode == 17:
             message = _(
                 "The variable to control duplicate submissions has an invalid type. "
-                "E.g., the variable cannot be note, picture, video, sound, select_multiple, or geo-spacial. "
+                "E.g., the variable cannot be note, picture, video, sound, select_multiple, or geospatial. "
                 "The most appropriate types are text, datetime, barcode, calculate, select_one, or integer"
             )
             return 17, message
@@ -666,7 +667,11 @@ def check_jxform_file(
                 )
             return 18, message
         if p.returncode == 14:
-            message = 'The following files have invalid characters like extra ". Only _ is allowed : \n'
+            message = (
+                "The following CSV files have invalid characters in column headers. "
+                'For example, like extra spaces". '
+                "Only _ is allowed : \n"
+            )
             root = etree.fromstring(stdout)
             files_with_problems = root.findall(".//file")
             if files_with_problems:
@@ -747,8 +752,9 @@ def check_jxform_file(
             return (
                 8,
                 _(
-                    "You have choices but not labels. Did you missed the :: between label and language? "
-                    "Like label::English (en)"
+                    "You have choice lists with names but not labels. "
+                    "Did you missed the :: between label and language? "
+                    "Like label:English (en)"
                 ),
             )
 
@@ -3367,7 +3373,7 @@ def store_json_submission(request, user, project, assistant):
             log.error("Submission does not have and ID")
             return False, 404
     else:
-        log.error("Submission does not have an XML file")
+        log.error("Submission does not have an JSON file")
         return False, 500
 
 
@@ -3448,6 +3454,14 @@ def store_submission(request, user, project, assistant):
             form_data = get_form_data(request, project, xform_id)
             if form_data is not None:
                 if form_data["form_accsub"] == 1:
+                    if form_data["form_schema"] is None:
+                        total, t1, t2 = get_dataset_stats_for_form(
+                            request.registry.settings, project, xform_id
+                        )
+                        if total >= int(
+                            request.registry.settings.get("maximum.testing", "200")
+                        ):
+                            form_data["form_blocked"] = 1
                     if form_data["form_blocked"] == 0:
                         if assistant_has_form(
                             request, user, project, xform_id, assistant

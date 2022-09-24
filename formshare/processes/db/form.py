@@ -897,6 +897,15 @@ def get_project_forms(request, user, project):
                 request, form["project_id"], form["form_id"]
             )
             form["submissions"] = submissions
+            form["maximum"] = int(
+                request.registry.settings.get("maximum.testing", "200")
+            )
+            if submissions >= int(
+                request.registry.settings.get("maximum.testing", "200")
+            ):
+                form["maximum_reached"] = True
+            else:
+                form["maximum_reached"] = False
             form["last"] = last
             form["by"] = by
             form["bydetails"] = get_by_details(request, user, form["project_id"], by)
@@ -923,6 +932,8 @@ def get_project_forms(request, user, project):
                 request, form["project_id"], form["form_id"]
             )
             form["submissions"] = submissions
+            form["maximum_reached"] = False
+            form["maximum"] = 1
             form["last"] = last
             form["indb"] = in_database
             form["inlogs"] = in_logs

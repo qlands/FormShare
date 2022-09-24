@@ -12,11 +12,11 @@ msgstr ""
 msgid "The user account does not exist or the password is invalid"
 msgstr "Le compte utilisateur n’existe pas ou le mot de passe est incorrect"
 
-#: formshare/processes/db/assistant.py:252
+#: formshare/processes/db/assistant.py:298
 msgid "The assistant already exists in your account. You do not need to duplicate assistants, just mark them as \"Share among projects\" to use them across projects."
 msgstr "L’assistant existe déjà dans votre compte. Vous n’avez pas besoin de dupliquer les assistants, il suffit de les marquer comme « Partager entre les projets » pour les utiliser à travers les projets."
 
-#: formshare/processes/db/assistant.py:272 formshare/processes/db/assistant.py:295
+#: formshare/processes/db/assistant.py:318 formshare/processes/db/assistant.py:341
 msgid "The assistant is already part of this project"
 msgstr "L’assistant fait déjà partie de ce projet"
 
@@ -42,16 +42,16 @@ msgstr "Impossible de retirer le membre"
 msgid "The collaborator is already part of this project"
 msgstr "Le collaborateur fait déjà partie de ce projet"
 
-#: formshare/processes/db/form.py:1321 formshare/processes/db/form.py:1375
-#: formshare/processes/db/form.py:1406 formshare/processes/db/form.py:1483
-#: formshare/processes/db/form.py:1512 formshare/processes/db/form.py:1574
-#: formshare/processes/db/form.py:1624 formshare/processes/db/form.py:1656
-#: formshare/processes/db/form.py:1696 formshare/processes/db/form.py:1741
-#: formshare/processes/db/form.py:1771
+#: formshare/processes/db/form.py:1343 formshare/processes/db/form.py:1397
+#: formshare/processes/db/form.py:1428 formshare/processes/db/form.py:1505
+#: formshare/processes/db/form.py:1534 formshare/processes/db/form.py:1596
+#: formshare/processes/db/form.py:1646 formshare/processes/db/form.py:1678
+#: formshare/processes/db/form.py:1718 formshare/processes/db/form.py:1763
+#: formshare/processes/db/form.py:1793
 msgid "This form is blocked and cannot be changed at the moment."
 msgstr "Ce formulaire est bloqué et ne peut pas être changé pour le moment."
 
-#: formshare/processes/db/form.py:1462 formshare/processes/db/project.py:1266
+#: formshare/processes/db/form.py:1484 formshare/processes/db/project.py:1268
 msgid "The file {} already exist"
 msgstr "Le fichier {} existe déjà"
 
@@ -78,27 +78,27 @@ msgstr "Impossible de supprimer le fichier produit"
 msgid "The output does not exist"
 msgstr "Le résultat n'existe pas"
 
-#: formshare/processes/db/project.py:1130
+#: formshare/processes/db/project.py:1132
 msgid "Error allocating access"
 msgstr "Erreur d'attribution d'accès"
 
-#: formshare/processes/db/project.py:1143
+#: formshare/processes/db/project.py:1145
 msgid "The project already exists"
 msgstr "Le projet existe déjà"
 
-#: formshare/processes/db/project.py:1155
+#: formshare/processes/db/project.py:1157
 msgid "A project with name '{}' already exists in your account"
 msgstr "Un projet avec le nom '{}' existe déjà dans votre compte"
 
-#: formshare/processes/db/project.py:1208
+#: formshare/processes/db/project.py:1210
 msgid "If you have forms with submissions, first you need to delete such forms"
 msgstr "Si vous avez des formulaires avec des soumissions, vous devez d’abord supprimer ces formulaires"
 
-#: formshare/processes/db/user.py:141
+#: formshare/processes/db/user.py:142
 msgid "Username is already taken"
 msgstr "Le nom d'utilisateur est déjà utilisé"
 
-#: formshare/processes/db/user.py:150
+#: formshare/processes/db/user.py:151
 msgid "Email is invalid"
 msgstr "Adresse e-mail non valide"
 
@@ -114,124 +114,116 @@ msgstr "FormShare - Demande de collaboration"
 msgid "FormShare - Token security alert"
 msgstr "Alerte de sécurité du jeton"
 
-#: formshare/processes/odk/api.py:459
+#: formshare/processes/odk/api.py:460
 msgid "The primary key variable does not exist or is inside a repeat"
 msgstr "La variable clé primaire n’existe pas ou se trouve à l’intérieur d’une répétition"
 
-#: formshare/processes/odk/api.py:473 formshare/processes/odk/api.py:522
-#: formshare/processes/odk/api.py:544 formshare/processes/odk/api.py:646
-#: formshare/processes/odk/api.py:698 formshare/views/form.py:480
+#: formshare/processes/odk/api.py:474 formshare/processes/odk/api.py:523
+#: formshare/processes/odk/api.py:545 formshare/processes/odk/api.py:647
+#: formshare/processes/odk/api.py:703 formshare/views/form.py:479
 msgid "FormShare thoroughly checks your ODK for inconsistencies."
 msgstr "FormShare vérifie soigneusement votre ODK pour les incohérences."
 
-#: formshare/processes/odk/api.py:477
+#: formshare/processes/odk/api.py:478
 msgid "The following variables are duplicated within repeats or outside repeats in the ODK you just submitted:"
 msgstr "Les variables suivantes sont dupliquées à l'intérieur ou à l'extérieur des répétitions dans l'ODK que vous venez de soumettre :"
 
-#: formshare/processes/odk/api.py:487
+#: formshare/processes/odk/api.py:488
 msgid "Outside any repeat"
 msgstr "En dehors de toute répétition"
 
-#: formshare/processes/odk/api.py:489
+#: formshare/processes/odk/api.py:490
 msgid "In repeat: {}"
 msgstr "En répétition : {}"
 
-#: formshare/processes/odk/api.py:498
+#: formshare/processes/odk/api.py:499
 msgid "Variable: {}"
 msgstr "Variable : {}"
 
-#: formshare/processes/odk/api.py:504 formshare/processes/odk/api.py:662
+#: formshare/processes/odk/api.py:505 formshare/processes/odk/api.py:663
 msgid "Please note that FormShare only allows basic Latin letters, digits 0-9, dollar and underscore in repeat, group and variable names."
 msgstr "Veuillez noter que FormShare n’autorise que les lettres latines de base, les chiffres 0-9, le dollar et le soulignement dans les noms répétitifs, de groupe et les variables."
 
-#: formshare/processes/odk/api.py:524
+#: formshare/processes/odk/api.py:525
 msgid "The following variables have invalid names:"
 msgstr "Les variables suivantes ont des noms incorrects :"
 
-#: formshare/processes/odk/api.py:530
+#: formshare/processes/odk/api.py:531
 msgid "Please change those names and try again."
 msgstr "S’il vous plaît changer ces noms et essayer à nouveau."
 
-#: formshare/processes/odk/api.py:546
-msgid "The following choices are identical:"
-msgstr "Les choix suivants sont identiques :"
-
-#: formshare/processes/odk/api.py:559
+#: formshare/processes/odk/api.py:560
 msgid " with the following duplicates: "
 msgstr " avec les doublons suivants : "
 
-#: formshare/processes/odk/api.py:567
+#: formshare/processes/odk/api.py:568
 msgid "Please remove the duplicated choices and try again."
 msgstr "S’il vous plaît supprimer les choix dupliqués et essayer à nouveau."
 
-#: formshare/processes/odk/api.py:572 formshare/views/form.py:643
+#: formshare/processes/odk/api.py:573 formshare/views/form.py:642
 msgid "This ODK form mixes coded and not coded languages. For example label::English (en) and label::Español. You need to code all the labels that are marked for translation."
 msgstr "Ce formulaire ODK mélange des langues codées et non codées. Par exemple label::English (en) et label::Español. Il est nécessaire d'encoder toutes les étiquettes qui sont marqués pour être traduits."
 
-#: formshare/processes/odk/api.py:599 formshare/views/form.py:652
+#: formshare/processes/odk/api.py:600 formshare/views/form.py:651
 msgid "FormShare needs you to shorten the name of some of your tables."
 msgstr "FormShare vous oblige à raccourcir le nom de certaines de vos tables."
 
 #. | msgid "The following tables have more than 64 selects: "
 #. | msgid "The following tables have more than 60 selects: "
-#: formshare/processes/odk/api.py:604 formshare/views/form.py:659
+#: formshare/processes/odk/api.py:605 formshare/views/form.py:658
 msgid "The following tables have a name longer than 64 characters:"
 msgstr "Les tables suivantes ont un nom de plus de 64 caractères :"
 
-#: formshare/processes/odk/api.py:626 formshare/views/form.py:685
+#: formshare/processes/odk/api.py:627 formshare/views/form.py:684
 msgid "Please shorten the name of the tables and/or the selects and try again."
 msgstr "Raccourcissez le nom des tables et/ou des listes de sélection et réessayez."
 
-#: formshare/processes/odk/api.py:650
+#: formshare/processes/odk/api.py:651
 msgid "The following repeats are duplicated in the ODK you just submitted:"
 msgstr "Les répétitions suivantes sont dupliquées dans l’ODK que vous venez de soumettre :"
 
-#: formshare/processes/odk/api.py:658
+#: formshare/processes/odk/api.py:659
 msgid "Repeat: {}"
 msgstr "Répéter: {}"
 
-#: formshare/processes/odk/api.py:702 formshare/views/form.py:485
+#: formshare/processes/odk/api.py:707 formshare/views/form.py:484
 msgid "The following options are duplicated in the ODK you just submitted:"
 msgstr "Les options suivantes sont dupliquées dans l’ODK que vous venez de soumettre :"
 
-#: formshare/processes/odk/api.py:714 formshare/views/form.py:497
+#: formshare/processes/odk/api.py:719 formshare/views/form.py:496
 msgid "Option {} in variable {}"
 msgstr "Option {} en variable {}"
 
-#: formshare/processes/odk/api.py:732
+#: formshare/processes/odk/api.py:737
 msgid "Malformed language in your ODK. You have label:X (Y) when it must be label::X (Y). With two colons (::)"
 msgstr "Mauvaise langue dans votre ODK. Vous avez label:X (Y) alors qu'il devrait êtrelabel::X (Y). Avec deux points (::)"
 
-#: formshare/processes/odk/api.py:749
-msgid "You have choices but not labels. Did you missed the :: between label and language? Like label::English (en)"
-msgstr "Vous avez des options mais pas d'étiquettes. Avez-vous mis :: entre label etlangage? Comme label::English (en)"
-
-#: formshare/processes/odk/api.py:766
+#: formshare/processes/odk/api.py:772
 msgid "FormShare manages your data in a better way but by doing so it has more restrictions."
 msgstr "FormShare gère vos données d’une meilleure manière, mais ce faisant, il a plus de restrictions."
 
 #. | msgid "The following tables have more than 64 selects: "
-#: formshare/processes/odk/api.py:772
+#: formshare/processes/odk/api.py:778
 msgid "The following tables have more than 60 selects: "
 msgstr "Les tableaux suivants ont plus de 60 sélections : "
 
-#: formshare/processes/odk/api.py:780
+#: formshare/processes/odk/api.py:786
 msgid " with "
 msgstr " avec "
 
-#: formshare/processes/odk/api.py:780
+#: formshare/processes/odk/api.py:786
 msgid " selects"
 msgstr " sélectionne"
 
-#: formshare/processes/odk/api.py:785
+#: formshare/processes/odk/api.py:791
 msgid "Some information on this restriction and how to correct it:"
 msgstr "Quelques informations sur cette restriction et comment la corriger :"
 
-#: formshare/processes/odk/api.py:790
+#: formshare/processes/odk/api.py:796
 msgid "We tend to organize our ODK forms in sections with questions around a topic. For example: \"livestock inputs\" or \"crops sales\"."
 msgstr "Nous avons tendance à organiser nos formulaires ODK en sections avec des questions autour d’un sujet. Par exemple : « intrants pour le bétail » ou « ventes de cultures »."
 
-#: formshare/processes/odk/api.py:798
+#: formshare/processes/odk/api.py:804
 msgid "These sections have type = \"begin/end group\". We also organize questions that must be repeated in sections with type = \"begin/end repeat.\""
 msgstr "Ces sections ont le type = «démarrer/terminer groupe». Nous organisons également des questions qui doivent être répétées dans les sections avec type = \"démarrer / terminer répétition.\""
 
@@ -245,38 +237,38 @@ msgstr "Ces sections ont le type = «démarrer/terminer groupe». Nous organison
 #. could"
 #. | " potentially have more than 64 selects. FormShare can only handle 64 "
 #. | "selects per table."
-#: formshare/processes/odk/api.py:806
+#: formshare/processes/odk/api.py:812
 msgid "FormShare stores repeats as separate tables (like different Excel sheets) however groups are not stored as repeats. FormShare stores all items (questions, notes, calculations, etc.) outside repeats into a table called \"maintable\". Thus \"maintable\" usually end up with several items and if your ODK form has many selects, then the \"maintable\" could potentially have more than 60 selects. FormShare can only handle 60 selects per table."
 msgstr "FormShare conserve les répétitions sous forme de tableaux séparés (comme différentes feuilles Excel) mais les groupes ne sont pas rangés sous forme de répétitions. FormShare stocke tous les éléments (questions, notes, calculs, etc.) à l’extérieur des répétitions dans un tableau appelé «maintable». Ainsi, «maintable» se retrouvent généralement avec plusieurs éléments, et si votre formulaire ODK a de nombreuses sélections, alors le «maintable» peut potentiellement avoir plus de 60 sélections. FormShare ne peut gérer que 60 sélections par tableau."
 
-#: formshare/processes/odk/api.py:818
+#: formshare/processes/odk/api.py:824
 msgid "You can bypass this restriction by creating groups of items inside repeats BUT WITH repeat_count = 1. A repeat with repeat_count = 1 will behave in the same way as a group, but FormShare will create a new table for it to store all its items. Eventually if you export the data to Excel your items will be organized in different sheets each representing a table."
 msgstr "Vous pouvez contourner cette restriction en créant des groupes d’éléments à l’intérieur des répétitions, MAIS AVEC repeat_count = 1. Une répétition avec repeat_count = 1 se comportera de la même manière qu’un groupe, mais FormShare créera un nouveau tableau pour stocker tous ses éléments. Finalement, si vous exportez les données vers Excel, vos éléments seront organisés dans différentes feuilles représentant chacune un tableau."
 
-#: formshare/processes/odk/api.py:827
+#: formshare/processes/odk/api.py:833
 msgid "Please edit your ODK XLSX/XLS file, group several items inside repeats with repeat_count = 1 and try to upload the form again."
 msgstr "Veuillez modifier votre fichier ODK XLSX/XLS, regrouper plusieurs éléments à l’intérieur des répétitions avec repeat_count = 1 et essayer de télécharger le formulaire à nouveau."
 
-#: formshare/processes/odk/api.py:873 formshare/processes/odk/api.py:1311
+#: formshare/processes/odk/api.py:879 formshare/processes/odk/api.py:1317
 msgid "No file was attached"
 msgstr "Aucun fichier n’a été joint"
 
-#: formshare/processes/odk/api.py:895 formshare/processes/odk/api.py:1334
+#: formshare/processes/odk/api.py:901 formshare/processes/odk/api.py:1340
 msgid "Invalid file type"
 msgstr "Type de fichier incorrect"
 
-#: formshare/processes/odk/api.py:964 formshare/processes/odk/api.py:1405
+#: formshare/processes/odk/api.py:970 formshare/processes/odk/api.py:1411
 msgid "The variable {} used to identify the cases is invalid. Only text, calculates or integers are allowed."
 msgstr "La variable {} utilisée pour identifier les observations n'est pas valide. Seuls le texte, les calculs ou les nombres entiers sont autorisés."
 
-#: formshare/processes/odk/api.py:985 formshare/processes/odk/api.py:1426
+#: formshare/processes/odk/api.py:991 formshare/processes/odk/api.py:1432
 msgid "The variable {} used to label cases was not found or is invalid. Only text, calculates or integers are allowed."
 msgstr "La variable {} utilisée pour étiqueter les observations n'est pas valide. Seuls le texte, les calculs ou les nombres entiers sont autorisés."
 
 #. | msgid "" "The variable {} used to search and select cases was not found or
 #. | is " "invalid. The variable must be select_one_from_file using a CSV
 #. file."
-#: formshare/processes/odk/api.py:1013
+#: formshare/processes/odk/api.py:1019
 msgid "The variable {} used to search and select cases was not found or is invalid. The variable must be select_one_from_file using a CSV file or a barcode"
 msgstr "La variable {} utilisée pour rechercher et sélectionner des observations n'a pas été trouvée ou n'est pas valide. La variable doit être select_one_from_file à l'aide d'un fichier CSV ou une variable de code-barres."
 
@@ -286,42 +278,42 @@ msgstr "La variable {} utilisée pour rechercher et sélectionner des observatio
 #. | is " "invalid. The variable must be select_one_from_file using a CSV file
 #. or
 #. | a " "barcode."
-#: formshare/processes/odk/api.py:1028 formshare/processes/odk/api.py:1470
+#: formshare/processes/odk/api.py:1034 formshare/processes/odk/api.py:1476
 msgid "The variable {} used to record a date or date and time was not found or is invalid. The variable must be date or datetime."
 msgstr "La variable {} utilisée pour enregistrer la date n'a pas été trouvée ou n'est pas valide. La variable doit être \"date\" ou \"datetime\"."
 
-#: formshare/processes/odk/api.py:1250
+#: formshare/processes/odk/api.py:1256
 msgid "The form already exists in this project"
 msgstr "Le formulaire existe déjà dans ce projet"
 
-#: formshare/processes/odk/api.py:1254 formshare/processes/odk/api.py:1742
+#: formshare/processes/odk/api.py:1260 formshare/processes/odk/api.py:1748
 msgid "The form ID has especial characters. FormShare only allows letters, numbers and underscores(_)"
 msgstr "L’ID du formulaire a des caractères spéciaux. FormShare n’autorise que les lettres, les chiffres et les soulignements."
 
-#: formshare/processes/odk/api.py:1261
+#: formshare/processes/odk/api.py:1267
 msgid "Cannot find XForm ID. Please include this ODK form in an issue on  "
 msgstr "Impossible de trouver XForm ID. Veuillez inclure ce formulaire ODK dans un problème sur "
 
 #. | msgid "" "The variable {} used to search and select cases was not found or
 #. | is " "invalid. The variable must be select_one_from_file using a CSV
 #. file."
-#: formshare/processes/odk/api.py:1454
+#: formshare/processes/odk/api.py:1460
 msgid "The variable {} used to search and select cases was not found or is invalid. The variable must be select_one_from_file using a CSV file or a barcode."
 msgstr "La variable {} utilisée pour rechercher et sélectionner des observations n'a pas été trouvée ou n'est pas valide. La variable doit être select_one_from_file à l'aide d'un fichier CSV ou une variable de code-barres."
 
-#: formshare/processes/odk/api.py:1730
+#: formshare/processes/odk/api.py:1736
 msgid "The form does not exist in this project"
 msgstr "Le formulaire n’existe pas dans ce projet"
 
-#: formshare/processes/odk/api.py:1734
+#: formshare/processes/odk/api.py:1740
 msgid "The \"form_id\" of the current form does not match the \"form_id\" of the one you uploaded. You cannot update a form with another form."
 msgstr "Le \"form_id\" du formulaire actuel ne correspond pas au \"form_id\" de celui que vous avez téléchargé. Vous ne pouvez pas mettre à jour un formulaire avec un autre formulaire."
 
-#: formshare/processes/odk/api.py:1749
+#: formshare/processes/odk/api.py:1755
 msgid "Cannot find XForm ID. Please post the form as an issue on "
 msgstr "Impossible de trouver XForm ID. S’il vous plaît poster le formulaire comme un problème sur "
 
-#: formshare/processes/odk/api.py:2476
+#: formshare/processes/odk/api.py:2482
 msgid "The language \"{}\" is missing in this version of the form and cannot be merged.\n"
 "\n"
 "Use the \"Fix language\" button to set the languages in this version of the ODK Form."
@@ -329,13 +321,13 @@ msgstr "La langue \"{}\" n'est pas présente dans cette version du formulaire et
 "\n"
 "Utilisez le bouton \"Corriger la langue\" pour configurer les langues dans cette version dele formulaire ODK."
 
-#: formshare/processes/odk/api.py:2482
+#: formshare/processes/odk/api.py:2488
 msgid "The language called \"default\" appears when you have a \"label\" without indicating a language. For example if you had a column called \"label\" and another called \"label:English (es)\" then \"default\" refers to the language of \"label\" which was not indicated in the previous version of this ODK Form.\n"
 "\n"
 "In this new version you added the language to the \"label\" therefore \"default\" does not exists"
 msgstr "La langue appelée \"default\" apparaît lorsque vous avez un \"label\" sans indiquer la langue. Par exemple, si vous aviez une colonne appelée \"label\"et un autre appelé \"label::English (es)\", puis \"default\" fait référence aulangue du \"label\" dont la langue n'était pas indiquée dans la version précédente dece formulaire ODK. \\ n\\ nDans cette nouvelle version, ajout de la langue à \"label\", donc\"default\" n'existe pas"
 
-#: formshare/processes/odk/api.py:2498
+#: formshare/processes/odk/api.py:2504
 msgid "This version of the form is in multiple languages but the previous one was not and therefore and cannot be merged.\n"
 "\n"
 "Use the \"Fix language\" button to set the languages in this version of the ODK Form."
@@ -343,7 +335,7 @@ msgstr "Cette version du formulaire est en plusieurs langues, mais la précéden
 "\n"
 "Utilisez le bouton \"Corriger la langue\" pour configurer les langues dans cette version duFormulaire ODK."
 
-#: formshare/processes/odk/api.py:3613
+#: formshare/processes/odk/api.py:3634
 msgid "Generating Diff HTML file error. Diff file for such commit does not exist"
 msgstr "Erreur de génération du fichier d'erreur Diff HTML. Le fichier diff n'existe pas"
 
@@ -541,15 +533,15 @@ msgstr "Création de fichier zip vide"
 msgid "There are no media files"
 msgstr "Il n’y a pas de fichiers multimédias"
 
-#: formshare/products/export/xlsx/celery_task.py:129
+#: formshare/products/export/xlsx/celery_task.py:130
 msgid "A worksheet name has been repeated. Excel only allow 30 characters in the worksheet name. You can fix this by editing the dictionary and change the description of the tables to a maximum of 30 characters."
 msgstr "Un nom de feuille de travail a été répété. Excel n’autorise que 30 caractères dans le nom de la feuille de travail. Vous pouvez corriger cela en modifiant le dictionnaire et la description des tableaux à un maximum de 30 caractères."
 
-#: formshare/products/export/xlsx/celery_task.py:138
+#: formshare/products/export/xlsx/celery_task.py:139
 msgid "Unknown error while creating the XLSX. Sorry about this. Please report this error as an issue on https://github.com/qlands/FormShare"
 msgstr "Erreur inconnue lors de la création du XLSX. Désolé pour ça. Veuillez signaler cette erreur comme un problème sur https://github.com/qlands/FormShare"
 
-#: formshare/products/export/zip_csv/celery_task.py:141
+#: formshare/products/export/zip_csv/celery_task.py:142
 msgid "Unknown error while creating the CSV Zip. Sorry about this. Please report this error as an issue on https://github.com/qlands/FormShare"
 msgstr "Erreur inconnue lors de la création de CSV Zip. Désolé. Veuillez signaler cette erreur comme un problème à https://github.com/qlands/FormShare"
 
@@ -867,7 +859,7 @@ msgstr "Fuseau horaire"
 #: formshare/templates/assistant/clean/snippets/brdcrbs_clean.jinja2:8
 #: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:94
 #: formshare/templates/dashboard/projects/forms/snippets/links_tab.jinja2:27
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:54
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:73
 #: formshare/templates/partner/snippets/form_details.jinja2:81
 msgid "Clean data"
 msgstr "Données propres"
@@ -1037,7 +1029,7 @@ msgstr "fait sur"
 #: formshare/templates/assistant/snippets/project_form_odk_item.jinja2:11
 #: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:46
 #: formshare/templates/dashboard/projects/snippets/project_details.jinja2:318
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:38
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:57
 #: formshare/templates/dashboard/projects/snippets/project_item.jinja2:27
 msgid "by"
 msgstr "par"
@@ -1560,7 +1552,7 @@ msgstr "Téléchargé sur"
 
 #: formshare/templates/assistant/snippets/project_form_odk_item.jinja2:11
 #: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:39
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:38
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:57
 #: formshare/templates/dashboard/projects/snippets/project_item.jinja2:27
 #: formshare/templates/partner/snippets/form_details.jinja2:26
 #: formshare/templates/partner/snippets/odk_form_item.jinja2:29
@@ -1569,7 +1561,7 @@ msgstr "Dernière demande"
 
 #: formshare/templates/assistant/snippets/project_form_odk_item.jinja2:13
 #: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:51
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:40
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:59
 #: formshare/templates/dashboard/projects/snippets/project_item.jinja2:29
 #: formshare/templates/partner/snippets/form_details.jinja2:38
 #: formshare/templates/partner/snippets/odk_form_item.jinja2:34
@@ -1579,7 +1571,7 @@ msgstr "Sans demande"
 #: formshare/templates/assistant/snippets/project_form_odk_item.jinja2:20
 #: formshare/templates/assistant/snippets/project_form_odk_item.jinja2:24
 #: formshare/templates/assistant/snippets/project_form_odk_item.jinja2:26
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:48
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:67
 #: formshare/templates/partner/snippets/odk_form_item.jinja2:42
 msgid "in database"
 msgstr "dans la base de données"
@@ -1593,7 +1585,7 @@ msgstr "dans les journaux d’erreur"
 #: formshare/templates/assistant/snippets/project_form_odk_item.jinja2:20
 #: formshare/templates/assistant/snippets/project_form_odk_item.jinja2:24
 #: formshare/templates/assistant/snippets/project_form_odk_item.jinja2:26
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:48
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:67
 #: formshare/templates/partner/snippets/odk_form_item.jinja2:42
 msgid "with errors"
 msgstr "avec des erreurs"
@@ -1605,7 +1597,7 @@ msgstr "Mes demandes"
 
 #: formshare/templates/assistant/snippets/project_form_odk_item.jinja2:24
 #: formshare/templates/assistant/snippets/project_form_odk_item.jinja2:26
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:48
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:67
 #: formshare/templates/partner/snippets/odk_form_item.jinja2:42
 msgid "submissions"
 msgstr "demandes"
@@ -1870,7 +1862,6 @@ msgstr "Modifier le partenaire"
 #: formshare/templates/dashboard/partners/partner_edit.jinja2:26
 #: formshare/templates/dashboard/projects/assistant_groups/group_edit.jinja2:31
 #: formshare/templates/dashboard/projects/assistants/assistant_edit.jinja2:26
-#: formshare/templates/dashboard/projects/forms/form_edit.jinja2:32
 #: formshare/templates/dashboard/users/user_edit.jinja2:24
 msgid "Current information"
 msgstr "Informations actuelles"
@@ -2071,12 +2062,10 @@ msgstr "À propos"
 #: formshare/templates/dashboard/profile/snippets/profile_head.jinja2:23
 #: formshare/templates/dashboard/projects/assistant_groups/snippets/group_item.jinja2:26
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_item.jinja2:39
-#: formshare/templates/dashboard/projects/forms/snippets/brdcrbs_frmedit.jinja2:2
-#: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:9
 #: formshare/templates/dashboard/projects/snippets/brdcrbs_prjedit.jinja2:14
 #: formshare/templates/dashboard/projects/snippets/project_details.jinja2:14
 #: formshare/templates/dashboard/projects/snippets/project_details.jinja2:49
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:61
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:80
 #: formshare/templates/dashboard/projects/snippets/project_item.jinja2:39
 msgid "Edit"
 msgstr "Modifier"
@@ -2363,7 +2352,7 @@ msgstr "Membres"
 #: formshare/templates/dashboard/projects/assistants/snippets/assistant_item.jinja2:40
 #: formshare/templates/dashboard/projects/forms/snippets/product_item.jinja2:109
 #: formshare/templates/dashboard/projects/forms/snippets/product_item.jinja2:114
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:65
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:84
 #: formshare/templates/dashboard/projects/snippets/project_item.jinja2:42
 msgid "Delete"
 msgstr "Supprimer"
@@ -2606,10 +2595,6 @@ msgstr "Oui, je VAIS PRENDRE LE RISQUE! Publiez-le"
 #: formshare/templates/dashboard/projects/forms/form_details.jinja2:675
 msgid "Changing the role of"
 msgstr "Changer le rôle de"
-
-#: formshare/templates/dashboard/projects/forms/form_edit.jinja2:4
-msgid "Edit form"
-msgstr "Modifier le formulaire"
 
 #: formshare/templates/dashboard/projects/forms/case/case_fields.jinja2:4
 #: formshare/templates/dashboard/projects/forms/case/case_fields.jinja2:40
@@ -3389,10 +3374,6 @@ msgstr "Changer le privilège"
 msgid "Change privileges"
 msgstr "Changer les privilèges"
 
-#: formshare/templates/dashboard/projects/forms/snippets/edit_form.jinja2:8
-msgid "This will change the name in FormShare but not in the ODK file"
-msgstr "Cela changera le nom dans FormShare, mais pas dans le fichier ODK"
-
 #: formshare/templates/dashboard/projects/forms/snippets/edit_form.jinja2:12
 msgid "Target number of submissions"
 msgstr "Nombre cible de demandes"
@@ -3577,102 +3558,102 @@ msgstr "Entrées de journal"
 msgid "View logs"
 msgstr "Voir les journaux"
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:123
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:141
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:165
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:190
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:140
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:158
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:183
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:208
 msgid "Important note!"
 msgstr "Note importante!"
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:125
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:143
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:142
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:160
 msgid "This form is in testing stage. This means that you can update it at all times and submissions are for testing purposes. "
 msgstr "Ce formulaire est en phase de test. Cela signifie que vous pouvez le mettre à jour n'importe quand et les demandes sont à des fins de test. "
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:127
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:145
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:144
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:162
 msgid "This form is in testing stage. This means that you can update it at all times and cases are for testing purposes. "
 msgstr "Ce formulaire est en phase de test. Cela signifie que vous pouvez le mettre à jour à tout moment et que les cas sont à des fins de test."
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:130
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:148
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:147
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:165
 msgid "When you finished testing the form you can"
 msgstr "Lorsque vous avez terminé de tester le formulaire, vous pouvez"
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:130
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:147
 msgid "create a repository for the form"
 msgstr "créer un référentiel pour le formulaire"
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:130
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:148
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:147
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:165
 msgid "and start collecting \"real\" data."
 msgstr "et commencez à collecter des données \"réelles\"."
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:134
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:137
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:153
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:151
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:154
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:170
 msgid "IMPORTANT INFORMATION:"
 msgstr "UNE INFORMATION IMPORTANT:"
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:134
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:151
 msgid "FormShare has checked your form and it has problems. FormShare will not be able to create a repository from it."
 msgstr "FormShare a vérifié votre formulaire et il a des problèmes. FormShare ne sera pas en mesure de créer un référentiel à partir de lui."
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:134
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:151
 msgid "Click here to see the problems."
 msgstr "Cliquez ici pour voir les problèmes."
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:137
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:154
 msgid "FormShare needs you to upload all required files before it can check your form completely"
 msgstr "FormShare a besoin que vous téléchargiez tous les fichiers requis avant qu’il puisse vérifier votre formulaire complètement"
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:148
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:165
 msgid "merge it into the repository of "
 msgstr "le fusionner dans le référentiel de "
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:151
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:168
 msgid "However you will not be able merge it into the repository of"
 msgstr "Cependant, ce formulaire ne peut pas être fusionné dans le référentiel de"
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:151
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:168
 msgid "Click here to see the problems"
 msgstr "Cliquez ici pour voir les problèmes."
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:153
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:170
 msgid "FormShare needs you to upload all required files before it pre-checks the form for merging"
 msgstr "FormShare a besoin que vous téléchargiez tous les fichiers requis avant de pré-vérifier le formulaire de fusion."
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:166
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:184
 msgid "This form is still in testing stage. Your last attempt to generate its repository reported an error. This is unexpected and an email has been sent to the technical team. A representative will contact you ASAP with a solution."
 msgstr "Ce formulaire est encore en phase de test. Votre dernière tentative de générer son référentiel a signalé une erreur. C’est inattendu et un e-mail a été envoyé à l’équipe technique. Un représentant vous contactera dès que possible avec une solution."
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:167
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:192
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:185
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:210
 msgid "If the problem has been corrected please"
 msgstr "Si le problème a été corrigé"
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:167
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:185
 msgid "try again"
 msgstr "veuillez réessayer"
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:179
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:197
 msgid "FormShare is generating your repository."
 msgstr "FormShare génère votre référentiel."
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:180
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:204
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:198
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:222
 msgid "Scheduling...."
 msgstr "Planification...."
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:191
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:209
 msgid "This form is still in testing stage. Your last attempt to merge it reported an error. This is unexpected and an email has been sent to the technical team. A representative will contact you ASAP with a solution."
 msgstr "Ce formulaire est encore en phase de test. Votre dernière tentative de le fusionner a signalé une erreur. C’est inattendu et un e-mail a été envoyé à l’équipe technique. Un représentant vous contactera dès que possible avec une solution."
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:192
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:210
 msgid "try again."
 msgstr "veuillez réessayer"
 
-#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:203
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:221
 msgid "FormShare is merging this form."
 msgstr "FormShare fusionne ce formulaire."
 
@@ -3828,7 +3809,7 @@ msgid "Doesn't accept submissions"
 msgstr "N’accepte pas les demandes"
 
 #: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:59
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:24
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:43
 #: formshare/templates/partner/snippets/odk_form_item.jinja2:14
 msgid "Geo-referenced"
 msgstr "Géoréférencées"
@@ -3839,25 +3820,25 @@ msgstr "Ce formulaire créera des cas une fois le référentiel généré"
 
 #: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:63
 #: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:65
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:27
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:46
 #: formshare/templates/partner/snippets/odk_form_item.jinja2:17
 msgid "Case creator"
 msgstr "Générateur de cas"
 
 #: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:65
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:27
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:46
 #: formshare/templates/partner/snippets/odk_form_item.jinja2:17
 msgid "This form creates cases"
 msgstr "Ce formulaire crée des cas"
 
 #: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:69
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:30
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:49
 #: formshare/templates/partner/snippets/odk_form_item.jinja2:20
 msgid "is the sub-version of this form."
 msgstr "est la sous-version de ce formulaire."
 
 #: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:69
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:30
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:49
 #: formshare/templates/partner/snippets/odk_form_item.jinja2:20
 msgid "With sub-version"
 msgstr "Avec sous-version"
@@ -3889,7 +3870,7 @@ msgstr "Incapable de fusionner"
 #: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:95
 #: formshare/templates/dashboard/projects/repository/create_repository.jinja2:84
 #: formshare/templates/dashboard/projects/repository/snippets/brdcrbs_repository.jinja2:17
-#: formshare/templates/dashboard/projects/repository/snippets/pkey_form.jinja2:20
+#: formshare/templates/dashboard/projects/repository/snippets/pkey_form.jinja2:25
 msgid "Create repository"
 msgstr "Créer un référentiel"
 
@@ -3965,12 +3946,12 @@ msgid "Click / Tap and hold to copy"
 msgstr "Cliquez / Appuyez et maintenez pour copier"
 
 #: formshare/templates/dashboard/projects/forms/snippets/links_tab.jinja2:23
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:51
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:70
 msgid "Download ODK form"
 msgstr "Télécharger le formulaire ODK"
 
 #: formshare/templates/dashboard/projects/forms/snippets/links_tab.jinja2:30
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:55
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:74
 msgid "Clean error logs"
 msgstr "Nettoyer les journaux d’erreur"
 
@@ -4179,7 +4160,7 @@ msgstr "Outils de référentiel"
 
 #: formshare/templates/dashboard/projects/forms/snippets/repository_tab.jinja2:24
 #: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:4
-#: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:88
+#: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:93
 #: formshare/templates/dashboard/projects/repository/snippets/brdcrbs_merge.jinja2:17
 msgid "Merge new version"
 msgstr "Fusionner la nouvelle version"
@@ -4829,15 +4810,15 @@ msgstr "VOS PROPRES RISQUES"
 msgid "by trying again"
 msgstr "en essayant à nouveau"
 
-#: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:82
+#: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:83
 msgid "Discard all testing data (Option is \"No\" by default)"
 msgstr "Jetez toutes les données de test (l’option est « Non » par défaut)"
 
-#: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:84
+#: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:85
 msgid "Change the switch if you DO NOT WANT to append the testing data into the repository"
 msgstr "Basculez le commutateur si vous NE VOULEZ PAS ajouter les données de test au référentiel"
 
-#: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:90
+#: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:95
 msgid "Accept changes and merge new version"
 msgstr "Accepter les modifications et fusionner la nouvelle version"
 
@@ -4853,19 +4834,19 @@ msgstr "Fusion d’une nouvelle version de la forme ODK en "
 msgid "Creating repository for "
 msgstr "Création d'un référentiel pour "
 
-#: formshare/templates/dashboard/projects/repository/snippets/pkey_form.jinja2:4
+#: formshare/templates/dashboard/projects/repository/snippets/pkey_form.jinja2:5
 msgid "Discard / delete all testing data (Option is \"No\" by default)"
 msgstr "Jeter / supprimer toutes les données de test (l'option est « Non » par défaut)"
 
-#: formshare/templates/dashboard/projects/repository/snippets/pkey_form.jinja2:6
+#: formshare/templates/dashboard/projects/repository/snippets/pkey_form.jinja2:7
 msgid "Change the switch if you want to start with a clean repository"
 msgstr "Basculez le commutateur si vous souhaitez commencer avec un référentiel propre"
 
-#: formshare/templates/dashboard/projects/repository/snippets/pkey_form.jinja2:11
+#: formshare/templates/dashboard/projects/repository/snippets/pkey_form.jinja2:16
 msgid "Which variable will be used to control duplicate submissions?"
 msgstr "Quelle variable sera utilisée pour contrôler les soumissions en double?"
 
-#: formshare/templates/dashboard/projects/repository/snippets/pkey_form.jinja2:13
+#: formshare/templates/dashboard/projects/repository/snippets/pkey_form.jinja2:18
 msgid "This will become the Primary Key of the repository. If you have more than one variable then use an ODK Calculate to join them."
 msgstr "Cela deviendra la clé primaire du référentiel. Si vous avez plus d’une variable, utilisez un ODK Calculate pour les joindre."
 
@@ -5061,51 +5042,51 @@ msgstr "Ajouter un projet"
 msgid "Read-only because the project has forms"
 msgstr "Lecture seule car le projet comporte des formulaires"
 
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:33
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:52
 #: formshare/templates/partner/snippets/odk_form_item.jinja2:23
 msgid "This form is the sub-version of"
 msgstr "Ce formulaire est la sous-version de"
 
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:33
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:52
 #: formshare/templates/partner/snippets/odk_form_item.jinja2:23
 msgid "Is sub-version"
 msgstr "Est sous-version"
 
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:48
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:67
 #: formshare/templates/partner/snippets/odk_form_item.jinja2:42
 msgid "log entries"
 msgstr "entrées de journal"
 
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:60
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:79
 msgid "Activate form"
 msgstr "Activer le formulaire"
 
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:60
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:79
 msgid "Are you sure that you want to activate this form?"
 msgstr "Etes-vous sûr que vous voulez activer ce formulaire ?"
 
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:60
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:79
 msgid "Deactivate form"
 msgstr "Désactiver le formulaire"
 
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:60
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:79
 msgid "Are you sure that you want to deactivate this form?"
 msgstr "Etes-vous sûr que vous voulez désactiver ce formulaire ?"
 
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:60
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:79
 #: formshare/templates/dashboard/projects/snippets/project_item.jinja2:36
 msgid "Set as active"
 msgstr "Définir comme actif"
 
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:60
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:79
 msgid "Set as inactive"
 msgstr "Définir comme inactif"
 
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:68
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:87
 msgid "Update form and more..."
 msgstr "Mettre à jour le formulaire et plus encore..."
 
-#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:68
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:87
 msgid "Data downloads and more..."
 msgstr "Téléchargements de données et plus encore..."
 
@@ -5671,7 +5652,7 @@ msgstr "Le groupe a été supprimé avec succès"
 msgid "Unable to delete the group: "
 msgstr "Impossible de supprimer le groupe : "
 
-#: formshare/views/assistant_groups.py:264 formshare/views/form.py:1955
+#: formshare/views/assistant_groups.py:264 formshare/views/form.py:1954
 msgid "The assistant was added successfully"
 msgstr "L’assistant a été ajouté avec succès"
 
@@ -5761,28 +5742,28 @@ msgstr "Le compte partenaire n'existe pas ou le mot de passe n'est pas valide"
 msgid "The password must be less than 50 characters"
 msgstr "Le mot de passe doit être inférieur à 50 caractères"
 
-#: formshare/views/classes.py:713
+#: formshare/views/classes.py:712
 msgid "You need to provide a password"
 msgstr "Vous devez fournir un mot de passe"
 
-#: formshare/views/classes.py:1000 formshare/views/classes.py:1330
+#: formshare/views/classes.py:999 formshare/views/classes.py:1329
 msgid "This API key does not exist or is inactive"
 msgstr "Cette clé API n’existe pas ou est inactive"
 
-#: formshare/views/classes.py:1014 formshare/views/classes.py:1346
+#: formshare/views/classes.py:1013 formshare/views/classes.py:1345
 msgid "You need to specify an API key"
 msgstr "Vous devez spécifier une clé API"
 
-#: formshare/views/classes.py:1042 formshare/views/classes.py:1281
-#: formshare/views/classes.py:1374
+#: formshare/views/classes.py:1041 formshare/views/classes.py:1280
+#: formshare/views/classes.py:1373
 msgid "The following keys were not present in the submitted JSON"
 msgstr "Les clés suivantes n’étaient pas présentes dans le JSON soumis"
 
-#: formshare/views/classes.py:1239
+#: formshare/views/classes.py:1238
 msgid "You need to specify a rowuuid"
 msgstr "Vous devez spécifier un rowuuid"
 
-#: formshare/views/classes.py:1251
+#: formshare/views/classes.py:1250
 msgid "You need to specify an assistant API key (apikey)"
 msgstr "Vous devez indiquer une clé API depuis un assistant"
 
@@ -5830,34 +5811,34 @@ msgstr "Vous avez refusé la collaboration"
 msgid "Unable to decline the collaboration: "
 msgstr "Impossible de refuser la collaboration : "
 
-#: formshare/views/form.py:303 formshare/views/repository_merge.py:138
+#: formshare/views/form.py:302 formshare/views/repository_merge.py:144
 msgid "The repeat \"{}\" changed parent from \"{}\" to \"{}\". You must rename the repeat before merging"
 msgstr "La répétition \"{}\" a changé de parent de \"{}\" à \"{}\". Vous devez renommer la répétition avant de fusionner"
 
-#: formshare/views/form.py:316 formshare/views/repository_merge.py:151
+#: formshare/views/form.py:315 formshare/views/repository_merge.py:157
 msgid "The parent repeat \"{}\" of repeat \"{}\" does not exist anymore. You must rename the repeat \"{}\" before merging"
 msgstr "La répétition parent \"{}\"de la répétition \"{}\" n’existe plus. Vous devez renommer la répétition \"{}\" avant de fusionner"
 
-#: formshare/views/form.py:328
+#: formshare/views/form.py:327
 msgid "The variable \"{}\" in repeat \"{}\" changed type. You must rename the variable before merging."
 msgstr "La variable \"{}\" dans la répétition \"{}\" a changé de type. Vous devez renommer la variable avant de fusionner."
 
-#: formshare/views/form.py:340
+#: formshare/views/form.py:339
 msgid "The variable \"{}\" in repeat \"{}\" has a different choice list name. You must rename the variable before merging. "
 msgstr "La variable \"{}\" dans la répétition \"{}\" a un nom de liste de choix différent. Vous devez renommer la variable avant de fusionner. "
 
-#: formshare/views/form.py:363 formshare/views/repository_merge.py:207
+#: formshare/views/form.py:362 formshare/views/repository_merge.py:213
 msgid "Unknown error while merging. A message has been sent to the support team and they will contact you ASAP."
 msgstr "Erreur inconnue lors de la fusion. Un message a été envoyé à l’équipe d'assistance et ils vous contacteront dès que possible."
 
-#: formshare/views/form.py:376 formshare/views/form.py:387
-#: formshare/views/form.py:398 formshare/views/form.py:409
-#: formshare/views/form.py:445 formshare/views/form.py:590
-#: formshare/views/form.py:601 formshare/views/form.py:612
+#: formshare/views/form.py:375 formshare/views/form.py:386
+#: formshare/views/form.py:397 formshare/views/form.py:408
+#: formshare/views/form.py:444 formshare/views/form.py:589
+#: formshare/views/form.py:600 formshare/views/form.py:611
 msgid "An unexpected error occurred while processing the merge. An email has been sent to the technical team and they will contact you ASAP."
 msgstr "Une erreur inattendue s’est produite lors du traitement de la fusion. Un e-mail a été envoyé à l’équipe technique et ils vous contacteront dès que possible."
 
-#: formshare/views/form.py:417
+#: formshare/views/form.py:416
 msgid "This new version of the form has multiple languages when the previous one did not.\n"
 "\n"
 "Use the \"Fix language\" button to set the languages in this version of the ODK Form."
@@ -5865,7 +5846,7 @@ msgstr "Cette nouvelle version du formulaire a plusieurs langues alors que la pr
 "\n"
 "Utilisez le bouton \"Corriger la langue\" pour définir les langues dans cette version du formulaire ODK."
 
-#: formshare/views/form.py:426
+#: formshare/views/form.py:425
 msgid "This version of the ODK Form differs in the languages used. The following languages are undefined:\n"
 "\n"
 ""
@@ -5873,199 +5854,199 @@ msgstr "Cette version du formulaire ODK diffère dans les langues utilisées. Le
 "\n"
 ""
 
-#: formshare/views/form.py:507 formshare/views/repository.py:374
+#: formshare/views/form.py:506 formshare/views/repository.py:380
 msgid "The primary key was not found in the ODK form or is inside a repeat"
 msgstr "La clé primaire n'a pas été trouvée dans le formulaire ODK ou se trouve dans une \"répétition\""
 
-#: formshare/views/form.py:515 formshare/views/form.py:537
+#: formshare/views/form.py:514 formshare/views/form.py:536
 msgid "The following files are missing and you need to attach them:"
 msgstr "Les fichiers suivants sont manquants et vous devez les joindre :"
 
-#: formshare/views/form.py:522
+#: formshare/views/form.py:521
 msgid "There was an error while processing some of the XML resource files:"
 msgstr "Il y a eu une erreur lors du traitement de certains fichiers de ressources XML :"
 
-#: formshare/views/form.py:545
+#: formshare/views/form.py:544
 msgid "The following CSV resource files have invalid characters:"
 msgstr "Les fichiers de ressources CSV suivants ont des caractères incorrects :"
 
-#: formshare/views/form.py:552
+#: formshare/views/form.py:551
 msgid "There was an error while processing some of the CSV resource files:"
 msgstr "Il y a eu une erreur lors du traitement de certains fichiers de ressources CSV :"
 
-#: formshare/views/form.py:569
+#: formshare/views/form.py:568
 msgid "An unexpected error occurred while processing the search expression. An email has been sent to the technical team and they will contact you ASAP."
 msgstr "Une erreur inattendue s'est produite lors du traitement de l'expression de recherche. Un e-mail a été envoyé à l'équipe technique qui vous répondra dans les plus brefs délais."
 
-#: formshare/views/repository.py:405
+#: formshare/views/repository.py:411
 msgid "The primary key is invalid."
 msgstr "La clé primaire est incorrecte."
 
-#: formshare/views/form.py:620
+#: formshare/views/form.py:619
 msgid "The following choices are duplicated in your ODK:"
 msgstr "Les choix suivants sont dupliqués dans votre ODK :"
 
-#: formshare/views/form.py:631
+#: formshare/views/form.py:630
 msgid "with the following duplicates:"
 msgstr "avec les doublons suivants :"
 
-#: formshare/views/form.py:950
+#: formshare/views/form.py:949
 msgid "You need to indicate a primary key"
 msgstr "Vous devez indiquer une clé primaire"
 
-#: formshare/views/form.py:981 formshare/views/form.py:1196
+#: formshare/views/form.py:980 formshare/views/form.py:1195
 msgid "You need to indicate a variable for labeling the cases"
 msgstr "Vous devez indiquer une variable pour étiqueter les cas"
 
-#: formshare/views/form.py:995 formshare/views/form.py:1209
+#: formshare/views/form.py:994 formshare/views/form.py:1208
 msgid "The labeling variable and the variable to identify each case cannot be the same"
 msgstr "La variable pour étiqueter les observations et la variable pour les identifier ne peuvent pas être les mêmes"
 
-#: formshare/views/form.py:1011 formshare/views/form.py:1223
+#: formshare/views/form.py:1010 formshare/views/form.py:1222
 msgid "You need to indicate a type of case form"
 msgstr "Vous devez indiquer le type de formulaire de cas"
 
-#: formshare/views/form.py:1025 formshare/views/form.py:1236
+#: formshare/views/form.py:1024 formshare/views/form.py:1235
 msgid "You need to indicate a variable for searching and selecting cases"
 msgstr "Vous devez indiquer la variable pour rechercher et sélectionner les cas"
 
-#: formshare/views/form.py:1042 formshare/views/form.py:1250
+#: formshare/views/form.py:1041 formshare/views/form.py:1249
 msgid "The variable for searching and selecting cases cannot be the same as the primary key"
 msgstr "La variable pour rechercher et sélectionner des observations ne peut pas être la même que la clé primaire"
 
-#: formshare/views/form.py:1060 formshare/views/form.py:1266
+#: formshare/views/form.py:1059 formshare/views/form.py:1265
 msgid "You need to indicate a variable that records date or date and time"
 msgstr "Vous devez indiquer une variable qui stocke une date ou une date et une heure"
 
-#: formshare/views/form.py:1079 formshare/views/form.py:1283
+#: formshare/views/form.py:1078 formshare/views/form.py:1282
 msgid "The variable for recording a date or a date and time cannot be the same as the primary key or the case selector variable"
 msgstr "La variable pour enregistrer une date ou une date et une heure ne peut pas être la même que la clé primaire ou la variable de sélection de cas"
 
-#: formshare/views/form.py:1110
+#: formshare/views/form.py:1109
 msgid "The form was added successfully"
 msgstr "Le formulaire a été ajouté avec succès"
 
-#: formshare/views/form.py:1128 formshare/views/form.py:1326
+#: formshare/views/form.py:1127 formshare/views/form.py:1325
 msgid "Unable to upload the form: "
 msgstr "Impossible de télécharger le formulaire : "
 
-#: formshare/views/form.py:1173
+#: formshare/views/form.py:1172
 msgid "You need to specify a primary key"
 msgstr "Vous devez spécifier une clé primaire"
 
-#: formshare/views/form.py:1316
+#: formshare/views/form.py:1315
 msgid "The ODK form was successfully updated"
 msgstr "Le formulaire ODK a été mis à jour avec succès"
 
-#: formshare/views/form.py:1375
+#: formshare/views/form.py:1374
 msgid "The form was edited successfully"
 msgstr "Le formulaire a été modifié avec succès"
 
-#: formshare/views/form.py:1494
+#: formshare/views/form.py:1493
 msgid "The form was deleted successfully"
 msgstr "Le formulaire a été supprimé avec succès"
 
-#: formshare/views/form.py:1550
+#: formshare/views/form.py:1549
 msgid "The form was activated successfully"
 msgstr "Le formulaire a été activé avec succès"
 
-#: formshare/views/form.py:1600
+#: formshare/views/form.py:1599
 msgid "The form was deactivated successfully"
 msgstr "Le formulaire a été désactivé avec succès"
 
-#: formshare/views/form.py:1711 formshare/views/projects.py:546
+#: formshare/views/form.py:1710 formshare/views/projects.py:544
 msgid "No files were attached"
 msgstr "Aucun fichier n’a été joint"
 
-#: formshare/views/form.py:1715 formshare/views/form.py:1722
-#: formshare/views/projects.py:550 formshare/views/projects.py:557
+#: formshare/views/form.py:1714 formshare/views/form.py:1721
+#: formshare/views/projects.py:548 formshare/views/projects.py:555
 msgid "Error {} encountered. A log entry has been produced"
 msgstr "Erreur {} survenue. Une entrée de journal a été produite"
 
-#: formshare/views/form.py:1728 formshare/views/projects.py:564
+#: formshare/views/form.py:1727 formshare/views/projects.py:562
 msgid "The file was uploaded successfully"
 msgstr "Fichier téléchargé avec succès"
 
-#: formshare/views/form.py:1732 formshare/views/projects.py:568
+#: formshare/views/form.py:1731 formshare/views/projects.py:566
 msgid "The files were uploaded successfully"
 msgstr "Les fichiers ont été téléchargés avec succès"
 
-#: formshare/views/form.py:1787
+#: formshare/views/form.py:1786
 msgid "You cannot remove this file because it is required by the repository"
 msgstr "Vous ne pouvez pas supprimer ce fichier parce qu’il est requis par le référentiel"
 
-#: formshare/views/form.py:1811
+#: formshare/views/form.py:1810
 msgid "The files was removed successfully"
 msgstr "Les fichiers ont été supprimés avec succès"
 
-#: formshare/views/form.py:2090
+#: formshare/views/form.py:2089
 msgid "The information was changed successfully"
 msgstr "Les informations ont été modifiées avec succès"
 
-#: formshare/views/form.py:2183
+#: formshare/views/form.py:2182
 msgid "The assistant was removed successfully"
 msgstr "L’assistant a été retiré avec succès"
 
-#: formshare/views/form.py:2265
+#: formshare/views/form.py:2264
 msgid "The group was added successfully"
 msgstr "Le groupe a été ajouté avec succès"
 
-#: formshare/views/form.py:2353
+#: formshare/views/form.py:2352
 msgid "The role was changed successfully"
 msgstr "Le rôle a été modifié avec succès"
 
-#: formshare/views/form.py:2408
+#: formshare/views/form.py:2407
 msgid "The group was removed successfully"
 msgstr "Le groupe a été retiré avec succès"
 
-#: formshare/views/form.py:3217
+#: formshare/views/form.py:3216
 msgid "The process was stopped successfully"
 msgstr "Le processus a été arrêté avec succès"
 
-#: formshare/views/form.py:3223
+#: formshare/views/form.py:3222
 msgid "FormShare was not able to stop the process"
 msgstr "FormShare n’a pas été en mesure d’arrêter le processus"
 
-#: formshare/views/form.py:3555
+#: formshare/views/form.py:3554
 msgid "Such alias already exist"
 msgstr "L'alias existe déjà"
 
-#: formshare/views/form.py:3559
+#: formshare/views/form.py:3558
 msgid "Such field does not exist"
 msgstr "Le champ n'existe pas"
 
-#: formshare/views/form.py:3563
+#: formshare/views/form.py:3562
 msgid "The alias cannot be a number"
 msgstr "L'alias ne peut pas être un nombre"
 
-#: formshare/views/form.py:3566
+#: formshare/views/form.py:3565
 msgid "The alias is invalid"
 msgstr "L'alias n'est pas valide"
 
-#: formshare/views/form.py:3569
+#: formshare/views/form.py:3568
 msgid "The alias has invalid characters. Only underscore (_) is allowed"
 msgstr "L'alias contient des caractères incorrects. Seul le soulignement (_) est autorisé"
 
-#: formshare/views/form.py:3655 formshare/views/form.py:3667
-#: formshare/views/form.py:3777 formshare/views/form.py:3787
-#: formshare/views/projects.py:765 formshare/views/projects.py:774
-#: formshare/views/projects.py:853 formshare/views/projects.py:860
+#: formshare/views/form.py:3654 formshare/views/form.py:3666
+#: formshare/views/form.py:3776 formshare/views/form.py:3786
+#: formshare/views/projects.py:763 formshare/views/projects.py:772
+#: formshare/views/projects.py:851 formshare/views/projects.py:858
 msgid "Invalid dates"
 msgstr "Dates invalides"
 
-#: formshare/views/form.py:3687
+#: formshare/views/form.py:3686
 msgid "The partner was added successfully to this form"
 msgstr "Le partenaire a été ajouté avec succès à ce formulaire"
 
-#: formshare/views/form.py:3961 formshare/views/repository.py:106
+#: formshare/views/form.py:3960 formshare/views/repository.py:112
 msgid "You need to indicate the primary language"
 msgstr "Vous devez indiquer la langue principale"
 
-#: formshare/views/form.py:4010 formshare/views/repository.py:157
+#: formshare/views/form.py:4009 formshare/views/repository.py:163
 msgid "Each language needs to have an unique ISO 639-1 code"
 msgstr "Chaque langue doit avoir un code ISO 639-1 unique"
 
-#: formshare/views/form.py:4017 formshare/views/repository.py:164
+#: formshare/views/form.py:4016 formshare/views/repository.py:170
 msgid "You need to indicate a ISO 639-1 code for each language"
 msgstr "Vous devez indiquer un code ISO 639-1 pour chaque langue"
 
@@ -6074,7 +6055,7 @@ msgid "The organization cannot be empty"
 msgstr "L'organisation ne peut pas être vide"
 
 #: formshare/views/partners.py:179 formshare/views/partners.py:323
-#: formshare/views/profile.py:85 formshare/views/projects.py:380
+#: formshare/views/profile.py:85 formshare/views/projects.py:378
 msgid "The name cannot be empty"
 msgstr "Le nom ne peut pas être vide"
 
@@ -6147,83 +6128,83 @@ msgstr "Vous devez spécifier un nouveau mot de passe"
 msgid "You need to specify the old password"
 msgstr "Vous devez spécifier l’ancien mot de passe"
 
-#: formshare/views/projects.py:284
+#: formshare/views/projects.py:282
 msgid "The project has been created"
 msgstr "Le projet a été créé"
 
-#: formshare/views/projects.py:292
+#: formshare/views/projects.py:290
 msgid "The project code has invalid characters. Only underscore (_) is allowed"
 msgstr "Le code du projet a des caractères incorrects. Seul le soulignement (_) est autorisé"
 
-#: formshare/views/projects.py:297
+#: formshare/views/projects.py:295
 msgid "The project code cannot be empty"
 msgstr "Le code du projet ne peut pas être vide"
 
-#: formshare/views/projects.py:374
+#: formshare/views/projects.py:372
 msgid "The project has been modified"
 msgstr "Le projet a été modifié"
 
-#: formshare/views/projects.py:419
+#: formshare/views/projects.py:417
 msgid "The active project has changed"
 msgstr "Le projet actif a changé"
 
-#: formshare/views/projects.py:422
+#: formshare/views/projects.py:420
 msgid "Error activating project: "
 msgstr "Projet d’activation d’erreurs : "
 
-#: formshare/views/projects.py:472
+#: formshare/views/projects.py:470
 msgid "The project was deleted successfully"
 msgstr "Le projet a été supprimé avec succès"
 
-#: formshare/views/projects.py:476
+#: formshare/views/projects.py:474
 msgid "Unable to delete the project: "
 msgstr "Impossible de supprimer le projet: "
 
-#: formshare/views/projects.py:616
+#: formshare/views/projects.py:614
 msgid "The files were removed successfully"
 msgstr "Les fichiers ont été supprimés avec succès"
 
-#: formshare/views/projects.py:793
+#: formshare/views/projects.py:791
 msgid "The partner was successfully linked to this project"
 msgstr "Le partenaire a été associé à ce projet avec succès"
 
-#: formshare/views/projects.py:803
+#: formshare/views/projects.py:801
 msgid "You need to indicate a partner"
 msgstr "Vous devez indiquer un partenaire"
 
-#: formshare/views/form.py:3801 formshare/views/projects.py:876
+#: formshare/views/form.py:3800 formshare/views/projects.py:874
 msgid "The partner was successfully updated"
 msgstr "Le partenaire a été mis à jour avec succès"
 
-#: formshare/views/projects.py:923
+#: formshare/views/projects.py:921
 msgid "The partner was successfully removed from this project"
 msgstr "Le partenaire a été supprimé avec succès de ce projet"
 
-#: formshare/views/repository.py:89
+#: formshare/views/repository.py:95
 msgid "The primary key cannot be empty"
 msgstr "La clé primaire ne peut pas être vide"
 
-#: formshare/views/repository.py:205
+#: formshare/views/repository.py:211
 msgid "FormShare is creating the repository"
 msgstr "FormShare crée le référenciel"
 
-#: formshare/views/repository.py:466
+#: formshare/views/repository.py:472
 msgid "with select"
 msgstr "avec listes de sélection"
 
-#: formshare/views/repository_merge.py:118
+#: formshare/views/repository_merge.py:124
 msgid "FormShare is merging the form."
 msgstr "FormShare fusionne le formulaire."
 
-#: formshare/views/repository_merge.py:165
+#: formshare/views/repository_merge.py:171
 msgid "The field \"{}\" in table \"{}\" changed type. You must rename the field before merging."
 msgstr "Le champ \"{}\" dans le tableau \"{}\" a changé de type. Vous devez renommer le champ avant de fusionner."
 
-#: formshare/views/repository_merge.py:180
+#: formshare/views/repository_merge.py:186
 msgid "The option \"{}\" in lookup table \"{}\" changed description from \"{}\" to \"{}\"."
 msgstr "L’option \"{}\" dans le tableau de recherche \"{}\" a changé la description de \"{}\" à \"{}\"."
 
-#: formshare/views/repository_merge.py:193
+#: formshare/views/repository_merge.py:199
 msgid "The field \"{}\" in table \"{}\" changed relationship"
 msgstr "Le champ \"{}\"dans le tableau \"{}\" a changé la relation"
 
@@ -6348,15 +6329,11 @@ msgstr "Vous devez fournir une explication lorsque vous ne tenez pas compte d’
 msgid "You need to provide an explanation when canceling a disregard"
 msgstr "Vous devez fournir une explication lors de l’annulation d’une non-prise en compte"
 
-#: formshare/views/form.py:3858
+#: formshare/views/form.py:3857
 msgid "The partner was successfully removed from this form"
 msgstr "Le partenaire a été supprimé avec succès de ce formulaire."
 
-#: formshare/processes/odk/api.py:580
-msgid "The variable to control duplicate submissions has an invalid type. E.g., the variable cannot be note, picture, video, sound, select_multiple, or geo-spacial. The most appropriate types are text, datetime, barcode, calculate, select_one, or integer"
-msgstr "La variable permettant de contrôler les soumissions en double est d'un type non valide. Par exemple, la variable ne peut pas être note, image, vidéo, son, select_multiple ou géospatiale. Les types les plus appropriés sont le texte, la date et l'heure, le code-barres, le calcul, le select_one ou le nombre entier."
-
-#: formshare/views/form.py:577
+#: formshare/views/form.py:576
 msgid "The variable to control duplicate submissions has an invalid type. E.g., the variable cannot be note, picture, video, sound, select_multiple, or geo-spacial. The most appropriate types are text, datetime, barcode, calculate, select_one, or integer."
 msgstr "La variable permettant de contrôler les soumissions en double est d'un type non valide. Par exemple, la variable ne peut pas être note, image, vidéo, son, select_multiple ou géospatiale. Les types les plus appropriés sont le texte, la date et l'heure, le code-barres, le calcul, le select_one ou le nombre entier."
 
@@ -6368,7 +6345,7 @@ msgstr "Zip JSON publiable"
 msgid "Unpublishable Zip JSON"
 msgstr "Zip JSON non publiable"
 
-#: formshare/products/export/zip_json/celery_task.py:141
+#: formshare/products/export/zip_json/celery_task.py:142
 msgid "Unknown error while creating the JSON Zip. Sorry about this. Please report this error as an issue on https://github.com/qlands/FormShare"
 msgstr "Erreur inconnue lors de la création du Zip JSON. Désolé. Veuillez signaler cette erreur comme un problème à https://github.com/qlands/FormShare."
 
@@ -6457,4 +6434,110 @@ msgstr "Nous vous enverrons un courriel avec des instructions"
 #: formshare/templates/dashboard/projects/forms/form_details.jinja2:485
 msgid "Loading..."
 msgstr "Chargement..."
+
+#: formshare/processes/odk/api.py:547
+msgid "The following choice lists are identical:"
+msgstr "Les listes de sélection suivantes sont identiques :"
+
+#: formshare/processes/odk/api.py:581
+msgid "The variable to control duplicate submissions has an invalid type. E.g., the variable cannot be note, picture, video, sound, select_multiple, or geospatial. The most appropriate types are text, datetime, barcode, calculate, select_one, or integer"
+msgstr "La variable pour contrôler les soumissions en double a un type invalide. Par exemple, la variable ne peut pas être note, image, vidéo, son, select_multiple ou géospatiale. Les types les plus appropriés sont le texte, la date et l'heure, le code-barres, le calcul, le select_one ou le nombre entier."
+
+#: formshare/processes/odk/api.py:754
+msgid "You have choice lists with names but not labels. Did you missed the :: between label and language? Like label:English (en)"
+msgstr "Vous avez des listes de sélection avec des noms mais pas d'étiquettes, avez-vous manqué le : : entre l'étiquette et la langue ? En tant qu'étiquette : English (en)"
+
+#: formshare/templates/dashboard/projects/forms/form_edit.jinja2:4
+msgid "Edit form's metadata"
+msgstr "Modifier les métadonnées du formulaire"
+
+#: formshare/templates/dashboard/projects/forms/form_edit.jinja2:32
+msgid "Current metadata"
+msgstr "Métadonnées actuelles"
+
+#: formshare/templates/dashboard/projects/forms/snippets/brdcrbs_frmedit.jinja2:2
+msgid "Metadata of"
+msgstr "Métadonnées de"
+
+#: formshare/templates/dashboard/projects/forms/snippets/brdcrbs_frmedit.jinja2:17
+#: formshare/templates/dashboard/projects/forms/snippets/info_tab.jinja2:9
+msgid "Edit metadata"
+msgstr "Modifier les métadonnées"
+
+#: formshare/templates/dashboard/projects/forms/snippets/edit_form.jinja2:8
+msgid "This name comes from the ODK file and cannot be changed"
+msgstr "Ce nom provient du fichier ODK et ne peut être modifié."
+
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:124
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:129
+msgid "Your form has been blocked"
+msgstr "Votre formulaire a été bloqué"
+
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:125
+msgid "Create the repository to continue receiving submissions. The limit is"
+msgstr "Créez le référentiel pour continuer à recevoir des soumissions. La limite est"
+
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:125
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:25
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:34
+msgid "test submissions."
+msgstr "les expéditions de test."
+
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:126
+msgid "After you create the repository, you can receive any number of submissions."
+msgstr "Après avoir créé le référentiel, le formulaire peut recevoir un nombre quelconque de soumissions."
+
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:127
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:132
+msgid "Create the repository"
+msgstr "Créer le référentiel"
+
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:130
+msgid "Create the repository to continue receiving cases. The limit is"
+msgstr "Créez le référentiel pour continuer à recevoir des cas. La limite est"
+
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:130
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:27
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:36
+msgid "test cases."
+msgstr "les cas de test."
+
+#: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:131
+msgid "After you create the repository, you can receive any number of cases."
+msgstr "Après avoir créé le référentiel, le formulaire peut recevoir un nombre quelconque de cas."
+
+#: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:88
+#: formshare/templates/dashboard/projects/repository/snippets/pkey_form.jinja2:10
+msgid "The form does not have an assistant that can submit data. If you proceed all testing data will get discarded!!!"
+msgstr "Le formulaire ne dispose pas d'un assistant permettant de soumettre des données. Le cas échéant, toutes les données d'essai seront rejetées !!!!."
+
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:25
+msgid "Create a repository to continue receiving submissions. The limit is"
+msgstr "Créez un dépôt pour continuer à recevoir des soumissions. La limite est"
+
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:25
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:27
+msgid "Blocked"
+msgstr "Bloqué"
+
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:27
+msgid "Create a repository to continue receiving cases. The limit is"
+msgstr "Créez un référentiel pour continuer à recevoir des cas. La limite est"
+
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:34
+msgid "You will need to create a repository soon to continue receiving submissions. The limit is"
+msgstr "Vous devrez bientôt créer un dépôt pour continuer à recevoir des soumissions. La limite est"
+
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:34
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:36
+msgid "Near maximum"
+msgstr "Près de la limite"
+
+#: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:36
+msgid "You will need to create a repository soon to continue receiving cases. The limit is"
+msgstr "Vous devrez bientôt créer un référentiel pour continuer à recevoir des cas. La limite est"
+
+#: formshare/templates/dashboard/projects/snippets/project_item.jinja2:18
+msgid "This is your active project"
+msgstr "Il s'agit de leur projet actif"
 

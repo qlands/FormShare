@@ -402,11 +402,17 @@ def get_dataset_stats_for_form(settings, project_id, form_id):
             es_result = connection.search(
                 index=index_name, body=get_search_dict_by_form(project_id, form_id)
             )
+            count_body = get_search_dict_by_form(project_id, form_id)
+            count_body.pop("size", None)
+            count_body.pop("sort", None)
+
+            count_result = connection.count(index=index_name, body=count_body)
+
             connection.close()
             if es_result["hits"]["total"]["value"] > 0:
                 for hit in es_result["hits"]["hits"]:
                     return (
-                        es_result["hits"]["total"]["value"],
+                        count_result["count"],
                         hit["_source"]["_submitted_date"],
                         hit["_source"]["_submitted_by"],
                     )
@@ -539,11 +545,18 @@ def get_dataset_stats_for_project(settings, project_id):
             es_result = connection.search(
                 index=index_name, body=get_search_dict_by_project(project_id)
             )
+            count_body = get_search_dict_by_project(project_id)
+            count_body.pop("size", None)
+            count_body.pop("sort", None)
+            count_result = connection.count(
+                index=index_name,
+                body=count_body,
+            )
             connection.close()
             if es_result["hits"]["total"]["value"] > 0:
                 for hit in es_result["hits"]["hits"]:
                     return (
-                        es_result["hits"]["total"]["value"],
+                        count_result["count"],
                         hit["_source"]["_submitted_date"],
                         hit["_source"]["_submitted_by"],
                         hit["_source"]["_xform_id_string"],

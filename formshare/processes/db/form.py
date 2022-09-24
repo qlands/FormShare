@@ -803,6 +803,17 @@ def get_form_details(request, user, project, form):
                 request, project, result["form_id"]
             )
             result["submissions"] = submissions
+
+            result["maximum"] = int(
+                request.registry.settings.get("maximum.testing", "200")
+            )
+            if submissions >= int(
+                request.registry.settings.get("maximum.testing", "200")
+            ):
+                result["maximum_reached"] = True
+            else:
+                result["maximum_reached"] = False
+
             result["last"] = last
             result["cleanedlast"] = None
             result["fixedlast"] = None

@@ -23,9 +23,9 @@ path_to_submissions = /home/me/submissions/*/
 
 """
 
-path_to_submissions = "/path/to/the/submissions/*/"
-url_to_project = "http://localhost:5900/user/me/project/my_project"
-assistant_to_use = "assistant"
+path_to_submissions = "/home/cquiros/ipas/jsons/*/"
+url_to_project = "http://192.168.40.254:5900/user/cquiros/project/example"
+assistant_to_use = "cquiros"
 assistant_password = "123"
 
 
@@ -45,6 +45,7 @@ def process_directories(directories):
             )
             if r.status_code != 201:
                 print("{}-{}".format(r.status_code, a_directory))
+                exit(1)
             for a_file in files_array:
                 file_name = os.path.basename(a_file)
                 files[file_name].close()

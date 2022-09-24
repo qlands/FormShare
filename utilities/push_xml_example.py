@@ -5,8 +5,8 @@ import requests
 from requests.auth import HTTPDigestAuth
 
 """
-This script uploads submissions into FormShare.
-It is useful when submissions are coming from External sources like ODK Briefcase
+This script uploads submissions in XML format into FormShare using one thread.
+Use this tool to import few submissions from External sources like BriefCase of Central
 Each submission must be a directory containing the XML and medias files. For example:
 /home/me/submissions/submission_001/submission_001.xml
 /home/me/submissions/submission_001/image1.jpg
@@ -20,11 +20,13 @@ path_to_submissions = /home/me/submissions/*/
 
 """
 
-path_to_submissions = "/home/me/submissions/*/"
-url_to_project = "http://192.168.0.10:5900/user/me/project/my_project"
+path_to_submissions = "/path/to/the/submissions/*/"
+url_to_project = "http://localhost:5900/user/me/project/my_project"
 assistant_to_use = "assistant"
 assistant_password = "123"
 
+print(url_to_project)
+print(path_to_submissions)
 for a_directory in glob.iglob(path_to_submissions):
     files = {}
     files_array = []
@@ -38,5 +40,9 @@ for a_directory in glob.iglob(path_to_submissions):
             auth=HTTPDigestAuth(assistant_to_use, assistant_password),
             files=files,
         )
-        print(files_array)
-        print(r.status_code)
+        if r.status_code != 201:
+            print("{}-{}".format(r.status_code, a_directory))
+
+        for a_file in files_array:
+            file_name = os.path.basename(a_file)
+            files[file_name].close()

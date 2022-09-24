@@ -8,8 +8,8 @@ import requests
 from requests.auth import HTTPDigestAuth
 
 """
-This script uploads submissions into FormShare.
-It is useful when submissions are coming from External sources like Ona
+This script uploads submissions in JSON format into FormShare using several threads.
+Use this tool to import a very high number of submissions from External sources like Ona
 Each submission must be a directory containing the JSON and medias files. For example:
 /home/me/submissions/submission_001/submission_001.json
 /home/me/submissions/submission_001/image1.jpg
@@ -43,15 +43,21 @@ def process_directories(directories):
                 auth=HTTPDigestAuth(assistant_to_use, assistant_password),
                 files=files,
             )
-            print(r.status_code)
+            if r.status_code != 201:
+                print("{}-{}".format(r.status_code, a_directory))
             for a_file in files_array:
                 file_name = os.path.basename(a_file)
                 files[file_name].close()
 
 
+print(url_to_project)
 print(path_to_submissions)
 start_time = datetime.datetime.now()
 
+# You can increase the number of threads to [number-of-cores]
+# However, the FormShare installation receiving the submissions must be running
+# with the same or higher number of threads as you are sending.
+# See https://docs.gunicorn.org/en/latest/settings.html#threads
 number_of_threads = 6
 directory_list = glob.glob(path_to_submissions)
 arrays = np.array_split(np.array(directory_list), number_of_threads)

@@ -23,9 +23,9 @@ path_to_submissions = /home/me/submissions/*/
 
 """
 
-path_to_submissions = "/home/cquiros/ipas/jsons/*/"
-url_to_project = "http://192.168.40.254:5900/user/cquiros/project/example"
-assistant_to_use = "cquiros"
+path_to_submissions = "/path/to/the/submissions/*/"
+url_to_project = "http://localhost:5900/user/me/project/my_project"
+assistant_to_use = "assistant"
 assistant_password = "123"
 
 

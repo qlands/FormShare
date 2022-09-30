@@ -50,7 +50,7 @@ jaraco.functools==3.5.0
 jaraco.text==3.8.0
 Jinja2==3.1.2
 jinja2-time==0.2.0
-joblib==1.1.0
+joblib==1.2.0
 kombu==5.2.4
 linecache2==1.0.0
 lxml==4.9.1

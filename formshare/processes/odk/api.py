@@ -3254,9 +3254,11 @@ def store_json_submission(request, user, project, assistant):
                     total, t1, t2 = get_dataset_stats_for_form(
                         request.registry.settings, project, xform_id
                     )
-                    if total >= int(
-                        request.registry.settings.get("maximum.testing", "200")
-                    ) and form_data["form_schema"] is None:
+                    if (
+                        total
+                        >= int(request.registry.settings.get("maximum.testing", "200"))
+                        and form_data["form_schema"] is None
+                    ):
                         form_data["form_blocked"] = 1
                     if form_data["form_blocked"] == 0:
                         if assistant_has_form(

@@ -3256,7 +3256,7 @@ def store_json_submission(request, user, project, assistant):
                     )
                     if total >= int(
                         request.registry.settings.get("maximum.testing", "200")
-                    ):
+                    ) and form_data["form_schema"] is None:
                         form_data["form_blocked"] = 1
                     if form_data["form_blocked"] == 0:
                         if assistant_has_form(

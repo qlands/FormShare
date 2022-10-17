@@ -229,8 +229,7 @@ class IDatabase(Interface):  # pragma: no cover
     def update_orm(self, config):
         """
         Called by FormShare so plugins can add new tables to FormShare ORM
-
-        :param metadata: FormShare ORM metadata object
+        :param config: FormShare ORM metadata object
 
         """
 
@@ -402,10 +401,9 @@ class IRegistration(Interface):  # pragma: no cover
     def before_register(self, request, registrant):
         """
         Called by FormShare so plugins can do something before registering a user
-
         :param request: ``pyramid.request`` object
         :param registrant: Dictionary containing the details of the registrant
-        :return Return a modified version of registrant, true or false if the registrant should be added. If False then
+        :return a modified version of registrant, true or false if the registrant should be added. If False then
         a message should state why
 
         """
@@ -414,10 +412,9 @@ class IRegistration(Interface):  # pragma: no cover
     def after_register(self, request, registrant):
         """
         Called by FormShare so plugins do something after registering a user
-
         :param request: ``pyramid.request`` object
         :param registrant: Dictionary containing the details of the registrant
-        :return Return the next page that will be loaded after the registration. If empty or None the the Formshare
+        :return The next page that will be loaded after the registration. If empty or None then the FormShare
         dashboard will be loaded
 
         """
@@ -434,10 +431,9 @@ class IUserAuthentication(Interface):  # pragma: no cover
     def after_login(self, request, user):
         """
         Called by FormShare so plugins can modify the login of users
-
         :param request: ``pyramid.request`` object
         :param user: user object
-        :return Return true or false if the login should continue. If False then a message should state why
+        :return True or false if the login should continue. If False then a message should state why
 
         """
         raise NotImplementedError("after_login must be implemented in subclasses")
@@ -445,11 +441,10 @@ class IUserAuthentication(Interface):  # pragma: no cover
     def on_authenticate_user(self, request, user_id, user_is_email):
         """
         Called by FormShare so plugins can modify the way FormShare gather information about the user
-
         :param request: ``pyramid.request`` object
         :param user_id: The user ID trying to authenticate
         :param user_is_email: Whether the user is an email
-        :return Return None and and empty Dict to indicate that Forshare should get this in the normal way.
+        :return None and an empty Dict to indicate that FormShare should get this in the normal way.
                 False and None if the user must be denied.
                 Otherwise true and then the Dict MUST contain at least the following keys:
                 user_id : With the same userID authenticating
@@ -464,13 +459,12 @@ class IUserAuthentication(Interface):  # pragma: no cover
     def on_authenticate_password(self, request, user_data, password):
         """
         Called by FormShare so plugins can modify the way FormShare gather information about the user
-
         :param request: ``pyramid.request`` object
         :param user_data: The user data
         :param password: The password as is typed in the FormShare interface
-        :return Return None, None to indicate that Forshare should get this in the normal way.
-                False,"Message why" if the password is not correct.
-                Otherwise True, ""
+        :return None, None to indicate that ForShare should get this in the normal way or
+                False,"Message why" if the password is not correct or
+                True, ""
         """
         raise NotImplementedError(
             "on_authenticate_password must be implemented in subclasses"
@@ -519,9 +513,8 @@ class IUserAuthorization(Interface):  # pragma: no cover
     def before_check_authorization(self, request):
         """
         Called by FormShare so plugins can modify the normal authorization of users
-
         :param request: ``pyramid.request`` object
-        :return Return true or false if FormShare should check the authorization of a user.
+        :return True or false if FormShare should check the authorization of a user.
 
         """
         raise NotImplementedError(
@@ -532,7 +525,7 @@ class IUserAuthorization(Interface):  # pragma: no cover
         """
         Called by FormShare so plugins can perform their own way of authorizing a user.
         :param request:
-        :return: True, Authorized user name or False, ""
+        :return: True, Authorized username or False, ""
         """
         raise NotImplementedError(
             "custom_authorization must be implemented in subclasses"
@@ -572,9 +565,8 @@ class IProduct(Interface):  # pragma: no cover
     def register_products(self, config):
         """
         Called by FormShare so plugins can add new products with Celery as task manager
-
         :param config: ``pyramid.config`` object
-        :return Must returns a dict array [{'code':'productCode', 'hidden': False, 'icon':'fas fa-box-open',
+        :return Must return a dict array [{'code':'productCode', 'hidden': False, 'icon':'fas fa-box-open',
         'metadata':{'key':value}}]
         """
         raise NotImplementedError("register_products must be implemented in subclasses")
@@ -595,7 +587,7 @@ class IProduct(Interface):  # pragma: no cover
         self, request, project, form, product, output, file_name, mime_type
     ):
         """
-        Called before the a product gets downloaded. Must return true to indicate that the download should proceed.
+        Called before a product gets downloaded. Must return true to indicate that the download should proceed
         :param request: Pyramid request object
         :param project: Project ID
         :param form: Form ID
@@ -613,7 +605,7 @@ class IProduct(Interface):  # pragma: no cover
         self, request, partner, project, form, product, output, file_name, mime_type
     ):
         """
-        Called before the a product gets downloaded. Must return true to indicate that the download should proceed.
+        Called before a product gets downloaded. Must return true to indicate that the download should proceed
         :param request: Pyramid request object
         :param partner: Partner ID
         :param project: Project ID
@@ -632,7 +624,7 @@ class IProduct(Interface):  # pragma: no cover
         self, request, project, form, product, output, file_name, mime_type
     ):
         """
-        Called before the a product gets downloaded. Must return true to indicate that the download should proceed.
+        Called before a product gets downloaded. Must return true to indicate that the download should proceed
         :param request: Pyramid request object
         :param project: Project ID
         :param form: Form ID
@@ -650,7 +642,7 @@ class IProduct(Interface):  # pragma: no cover
         self, request, project, form, product, output, file_name, mime_type
     ):
         """
-        Called before the a product gets downloaded. Must return true to indicate that the download should proceed.
+        Called before a product gets downloaded. Must return true to indicate that the download should proceed
         :param request: Pyramid request object
         :param project: Project ID
         :param form: Form ID
@@ -668,7 +660,7 @@ class IProduct(Interface):  # pragma: no cover
         self, request, partner, project, form, product, output, file_name, mime_type
     ):
         """
-        Called before the a product gets downloaded. Must return true to indicate that the download should proceed.
+        Called before a product gets downloaded. Must return true to indicate that the download should proceed
         :param request: Pyramid request object
         :param project: Project ID
         :param partner: Partner ID
@@ -1562,7 +1554,7 @@ class IJSONSubmission(Interface):  # pragma: no cover
         :param form: XForm ID
         :param assistant: Assistant ID submitting the JSON file
         :param submission: Submission ID
-        :param error: Whether or not FormShare stored the JSON file. 0 = stored, 2 = in logs
+        :param error: Whether FormShare stored the JSON file. 0 = stored, 2 = in logs
         :param json_file: JSON submission file
         :return: None
         """

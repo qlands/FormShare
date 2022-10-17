@@ -81,6 +81,8 @@ class User(Base):
     user_apisecret = Column(Unicode(64))
     user_apitoken = Column(Unicode(64))
     user_apitoken_expires_on = Column(DateTime)
+    user_query_user = Column(Unicode(64))
+    user_query_password = Column(Unicode(256))
 
     user_password_reset_key = Column(Unicode(64))
     user_password_reset_token = Column(Unicode(64))
@@ -166,6 +168,8 @@ class Collaborator(Base):
     coll_apisecret = Column(Unicode(64))
     coll_apitoken = Column(Unicode(64))
     coll_apitoken_expires_on = Column(DateTime)
+    coll_query_user = Column(Unicode(64))
+    coll_query_password = Column(Unicode(256))
     coll_timezone = Column(
         ForeignKey("timezone.timezone_code", ondelete="RESTRICT"),
         nullable=False,
@@ -189,6 +193,8 @@ class Partner(Base):
     partner_cdate = Column(DateTime)
     partner_telephone = Column(Unicode(120))
     partner_apikey = Column(Unicode(64))
+    partner_query_user = Column(Unicode(64))
+    partner_query_password = Column(Unicode(256))
     created_by = Column(
         ForeignKey("fsuser.user_id", ondelete="CASCADE"),
         nullable=False,
@@ -227,6 +233,7 @@ class PartnerProject(Base):
     time_bound = Column(INTEGER, server_default=text("'0'"))
     access_from = Column(Date)
     access_to = Column(Date)
+    query_access = Column(INTEGER, server_default=text("'0'"))
     extras = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     tags = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 
@@ -260,6 +267,7 @@ class PartnerForm(Base):
     time_bound = Column(INTEGER, server_default=text("'0'"))
     access_from = Column(Date)
     access_to = Column(Date)
+    query_access = Column(INTEGER, server_default=text("'0'"))
     extras = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     tags = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 
@@ -532,6 +540,7 @@ class Formacces(Base):
     form_id = Column(Unicode(120), primary_key=True, nullable=False)
     coll_can_submit = Column(INTEGER, server_default=text("'0'"))
     coll_can_clean = Column(INTEGER, server_default=text("'0'"))
+    coll_can_query = Column(INTEGER, server_default=text("'0'"))
     coll_is_supervisor = Column(INTEGER, server_default=text("'0'"))
     access_date = Column(DateTime)
     extras = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))

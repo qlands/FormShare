@@ -673,10 +673,11 @@ class RegisterView(PublicView):
                                         for plugin in p.PluginImplementations(
                                             p.IRegistration
                                         ):
-                                            plugin_next_page = plugin.after_register(
+                                            result_next_page = plugin.after_register(
                                                 self.request, data
                                             )
-                                            break  # Only one plugging will be called to extend after_register
+                                            if result_next_page is not None:
+                                                plugin_next_page = result_next_page
                                         if plugin_next_page is not None:
                                             if plugin_next_page != "":
                                                 if plugin_next_page != next_page:

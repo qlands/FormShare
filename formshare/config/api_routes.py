@@ -35,7 +35,7 @@ def load_api_version_1_routes(config):
     """
     routes = []
     for plugin in p.PluginImplementations(p.IAPIRoutes):
-        routes = plugin.before_mapping(config)
+        routes = plugin.before_api_mapping(config)
         append_to_routes(routes)
 
     # FormShare API routes
@@ -72,7 +72,7 @@ def load_api_version_1_routes(config):
 
     # Call connected plugins to add any routes after FormShare
     for plugin in p.PluginImplementations(p.IAPIRoutes):
-        routes = plugin.after_mapping(config)
+        routes = plugin.after_api_mapping(config)
         append_to_routes(routes)
 
     # Now add the routes and views to the Pyramid config

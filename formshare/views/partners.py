@@ -202,16 +202,18 @@ class AddPartnerView(PrivateView):
                             partner_details["created_by"] = user_id
                             continue_creation = True
                             for plugin in p.PluginImplementations(p.IPartner):
-                                (
-                                    data,
-                                    continue_creation,
-                                    error_message,
-                                ) = plugin.before_create(self.request, partner_details)
-                                if not continue_creation:
-                                    self.append_to_errors(error_message)
-                                else:
-                                    partner_details = data
-                                break  # Only one plugging will be called to extend before_create
+                                if continue_creation:
+                                    (
+                                        data,
+                                        continue_creation,
+                                        error_message,
+                                    ) = plugin.before_creating_partner(
+                                        self.request, partner_details
+                                    )
+                                    if not continue_creation:
+                                        self.append_to_errors(error_message)
+                                    else:
+                                        partner_details = data
                             if continue_creation:
                                 added, error_message = register_partner(
                                     self.request, partner_details
@@ -252,7 +254,7 @@ class AddPartnerView(PrivateView):
                                         "manage_partners", userid=user_id
                                     )
                                     for plugin in p.PluginImplementations(p.IPartner):
-                                        plugin.after_create(
+                                        plugin.after_creating_partner(
                                             self.request, partner_details
                                         )
                                     log.error(
@@ -361,21 +363,25 @@ class EditPartnerView(PrivateView):
                             )
                         continue_edit = True
                         for plugin in p.PluginImplementations(p.IPartner):
-                            (data, continue_edit, error_message,) = plugin.before_edit(
-                                self.request, partner_to_modify, partner_data
-                            )
-                            if not continue_edit:
-                                self.append_to_errors(error_message)
-                            else:
-                                partner_details = data
-                            break  # Only one plugging will be called to extend before_create
+                            if continue_edit:
+                                (
+                                    data,
+                                    continue_edit,
+                                    error_message,
+                                ) = plugin.before_editing_partner(
+                                    self.request, partner_to_modify, partner_data
+                                )
+                                if not continue_edit:
+                                    self.append_to_errors(error_message)
+                                else:
+                                    partner_details = data
                         if continue_edit:
                             res, message = update_partner(
                                 self.request, partner_to_modify, partner_data
                             )
                             if res:
                                 for plugin in p.PluginImplementations(p.IPartner):
-                                    plugin.after_edit(
+                                    plugin.after_editing_partner(
                                         self.request,
                                         partner_to_modify,
                                         partner_data,
@@ -415,17 +421,17 @@ class EditPartnerView(PrivateView):
                     ):
                         continue_change = True
                         for plugin in p.PluginImplementations(p.IPartner):
-                            (
-                                continue_change,
-                                error_message,
-                            ) = plugin.before_password_change(
-                                self.request,
-                                partner_to_modify,
-                                partner_data["partner_password"],
-                            )
-                            if not continue_change:
-                                self.append_to_errors(error_message)
-                            break  # Only one plugging will be called to extend before_password_change
+                            if continue_change:
+                                (
+                                    continue_change,
+                                    error_message,
+                                ) = plugin.before_partner_password_change(
+                                    self.request,
+                                    partner_to_modify,
+                                    partner_data["partner_password"],
+                                )
+                                if not continue_change:
+                                    self.append_to_errors(error_message)
                         if continue_change:
                             encoded_password = encode_data(
                                 self.request, partner_data["partner_password"]
@@ -435,7 +441,7 @@ class EditPartnerView(PrivateView):
                             )
                             if updated:
                                 for plugin in p.PluginImplementations(p.IPartner):
-                                    plugin.after_password_change(
+                                    plugin.after_partner_password_change(
                                         self.request,
                                         partner_to_modify,
                                         partner_data["partner_password"],
@@ -513,25 +519,25 @@ class DeletePartnerView(PrivateView):
                     )
             continue_delete = True
             for plugin in p.PluginImplementations(p.IPartner):
-                (continue_delete, error_message,) = plugin.before_delete(
-                    self.request, partner_to_delete, partner_details
-                )
-                if not continue_delete:
-                    self.add_error(error_message)
-                    self.returnRawViewResult = True
-                    return HTTPFound(
-                        location=self.request.route_url(
-                            "manage_partners",
-                            userid=user_id,
-                        ),
-                        headers={"FS_error": "true"},
+                if continue_delete:
+                    (continue_delete, error_message,) = plugin.before_deleting_partner(
+                        self.request, partner_to_delete, partner_details
                     )
-                break  # Only one plugging will be called to extend before_create
+                    if not continue_delete:
+                        self.add_error(error_message)
+                        self.returnRawViewResult = True
+                        return HTTPFound(
+                            location=self.request.route_url(
+                                "manage_partners",
+                                userid=user_id,
+                            ),
+                            headers={"FS_error": "true"},
+                        )
             if continue_delete:
                 deleted, error_message = delete_partner(self.request, partner_to_delete)
                 if deleted:
                     for plugin in p.PluginImplementations(p.IPartner):
-                        plugin.after_delete(
+                        plugin.after_deleting_partner(
                             self.request,
                             partner_to_delete,
                         )

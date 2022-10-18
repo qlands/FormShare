@@ -204,14 +204,18 @@ class AddProjectView(ProjectsView):
 
                     continue_creation = True
                     for plugin in p.PluginImplementations(p.IProject):
-                        data, continue_creation, error_message = plugin.before_create(
-                            self.request, self.user.login, project_details
-                        )
-                        if not continue_creation:
-                            self.append_to_errors(error_message)
-                        else:
-                            project_details = data
-                        break  # Only one plugging will be called to extend before_create
+                        if continue_creation:
+                            (
+                                data,
+                                continue_creation,
+                                error_message,
+                            ) = plugin.before_creating_project(
+                                self.request, self.user.login, project_details
+                            )
+                            if not continue_creation:
+                                self.append_to_errors(error_message)
+                            else:
+                                project_details = data
 
                     if continue_creation:
                         if project_details["project_hexcolor"] == "":
@@ -224,7 +228,7 @@ class AddProjectView(ProjectsView):
                         )
                         if added:
                             for plugin in p.PluginImplementations(p.IProject):
-                                plugin.after_create(
+                                plugin.after_creating_project(
                                     self.request, self.user.login, project_details
                                 )
 

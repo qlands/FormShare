@@ -132,21 +132,26 @@ class EditUserView(PrivateView):
                             )
                         continue_edit = True
                         for plugin in p.PluginImplementations(p.IUser):
-                            (data, continue_edit, error_message,) = plugin.before_edit(
-                                self.request, user_to_modify, user_details
-                            )
-                            if not continue_edit:
-                                self.append_to_errors(error_message)
-                            else:
-                                user_details = data
-                            break  # Only one plugging will be called to extend before_create
+                            if continue_edit:
+                                (
+                                    data,
+                                    plugin_continue_edit,
+                                    error_message,
+                                ) = plugin.before_editing_user(
+                                    self.request, user_to_modify, user_details
+                                )
+                                if not plugin_continue_edit:
+                                    continue_edit = False
+                                    self.append_to_errors(error_message)
+                                else:
+                                    user_details = data
                         if continue_edit:
                             res, message = update_profile(
                                 self.request, user_to_modify, user_details
                             )
                             if res:
                                 for plugin in p.PluginImplementations(p.IUser):
-                                    plugin.after_edit(
+                                    plugin.after_editing_user(
                                         self.request,
                                         user_to_modify,
                                         user_details,
@@ -280,18 +285,20 @@ class AddUserView(PrivateView):
                                     )
                                     continue_creation = True
                                     for plugin in p.PluginImplementations(p.IUser):
-                                        (
-                                            data,
-                                            continue_creation,
-                                            error_message,
-                                        ) = plugin.before_create(
-                                            self.request, user_details
-                                        )
-                                        if not continue_creation:
-                                            self.append_to_errors(error_message)
-                                        else:
-                                            user_details = data
-                                        break  # Only one plugging will be called to extend before_create
+                                        if continue_creation:
+                                            (
+                                                data,
+                                                plugin_continue_creation,
+                                                error_message,
+                                            ) = plugin.before_creating_user(
+                                                self.request, user_details
+                                            )
+                                            if not plugin_continue_creation:
+                                                continue_creation = False
+                                                self.append_to_errors(error_message)
+                                            else:
+                                                user_details = data
+
                                     if continue_creation:
                                         added, error_message = register_user(
                                             self.request, user_details
@@ -302,7 +309,7 @@ class AddUserView(PrivateView):
                                             for plugin in p.PluginImplementations(
                                                 p.IUser
                                             ):
-                                                plugin.after_create(
+                                                plugin.after_creating_user(
                                                     self.request,
                                                     user_details,
                                                 )
@@ -349,22 +356,6 @@ class AddUserView(PrivateView):
                                             next_page = self.request.route_url(
                                                 "manage_users", userid=user_id
                                             )
-                                            plugin_next_page = ""
-                                            for plugin in p.PluginImplementations(
-                                                p.IRegistration
-                                            ):
-                                                result_next_page = (
-                                                    plugin.after_register(
-                                                        self.request, user_details
-                                                    )
-                                                )
-                                                if result_next_page is not None:
-                                                    plugin_next_page = result_next_page
-
-                                            if plugin_next_page is not None:
-                                                if plugin_next_page != "":
-                                                    if plugin_next_page != next_page:
-                                                        next_page = plugin_next_page
                                             self.request.session.flash(
                                                 self._(
                                                     "The user was added successfully"

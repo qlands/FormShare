@@ -104,7 +104,7 @@ class IAPIRoutes(Interface):  # pragma: no cover
 
     """
 
-    def before_mapping(self, config):
+    def before_api_mapping(self, config):
         """
         Called before the mapping of API routes made by FormShare.
 
@@ -114,7 +114,7 @@ class IAPIRoutes(Interface):  # pragma: no cover
         """
         raise NotImplementedError("before_mapping must be implemented in subclasses")
 
-    def after_mapping(self, config):
+    def after_api_mapping(self, config):
         """
         Called after the mapping of API routes made by FormShare.
 
@@ -259,7 +259,7 @@ class IProject(Interface):  # pragma: no cover
     Allows to hook into the processes that create, update and delete projects
     """
 
-    def before_create(self, request, user, project_data):
+    def before_creating_project(self, request, user, project_data):
         """
         Called by FormShare so plugins can perform actions before adding a project
         :param request: ``pyramid.request`` object
@@ -270,7 +270,7 @@ class IProject(Interface):  # pragma: no cover
         """
         raise NotImplementedError("before_create must be implemented in subclasses")
 
-    def after_create(self, request, user, project_data):
+    def after_creating_project(self, request, user, project_data):
         """
         Called by FormShare so plugins can perform actions before adding a project
         :param request: ``pyramid.request`` object
@@ -981,7 +981,7 @@ class IAssistant(Interface):  # pragma: no cover
     Allows to hook into the processes that create, update and delete assistants
     """
 
-    def before_create(self, request, user, project, assistant_data):
+    def before_creating_assistant(self, request, user, project, assistant_data):
         """
         Called by FormShare so plugins can perform actions before adding an assistant
         :param request: ``pyramid.request`` object
@@ -993,7 +993,7 @@ class IAssistant(Interface):  # pragma: no cover
         """
         raise NotImplementedError("before_create must be implemented in subclasses")
 
-    def after_create(self, request, user, project, assistant_data):
+    def after_creating_assistant(self, request, user, project, assistant_data):
         """
         Called by FormShare so plugins can perform actions before adding an assistant
         :param request: ``pyramid.request`` object
@@ -1004,7 +1004,9 @@ class IAssistant(Interface):  # pragma: no cover
         """
         raise NotImplementedError("after_create must be implemented in subclasses")
 
-    def before_edit(self, request, user, project, assistant, assistant_data):
+    def before_editing_assistant(
+        self, request, user, project, assistant, assistant_data
+    ):
         """
         Called by FormShare so plugins can perform actions before editing an assistant
         :param request: ``pyramid.request`` object
@@ -1017,7 +1019,9 @@ class IAssistant(Interface):  # pragma: no cover
         """
         raise NotImplementedError("before_create must be implemented in subclasses")
 
-    def after_edit(self, request, user, project, assistant, assistant_data):
+    def after_editing_assistant(
+        self, request, user, project, assistant, assistant_data
+    ):
         """
         Called by FormShare so plugins can perform actions before editing an assistant
         :param request: ``pyramid.request`` object
@@ -1029,7 +1033,7 @@ class IAssistant(Interface):  # pragma: no cover
         """
         raise NotImplementedError("after_create must be implemented in subclasses")
 
-    def before_delete(self, request, user, project, assistant):
+    def before_deleting_assistant(self, request, user, project, assistant):
         """
         Called by FormShare so plugins can perform actions before deleting an assistant
         :param request: ``pyramid.request`` object
@@ -1041,7 +1045,7 @@ class IAssistant(Interface):  # pragma: no cover
         """
         raise NotImplementedError("before_create must be implemented in subclasses")
 
-    def after_delete(self, request, user, project, assistant):
+    def after_deleting_assistant(self, request, user, project, assistant):
         """
         Called by FormShare so plugins can perform actions before deleting an assistant
         :param request: ``pyramid.request`` object
@@ -1052,7 +1056,9 @@ class IAssistant(Interface):  # pragma: no cover
         """
         raise NotImplementedError("after_create must be implemented in subclasses")
 
-    def before_password_change(self, request, user, project, assistant, password):
+    def before_assistant_password_change(
+        self, request, user, project, assistant, password
+    ):
         """
         Called by FormShare so plugins can perform actions changing the password an assistant
         :param request: ``pyramid.request`` object
@@ -1065,7 +1071,9 @@ class IAssistant(Interface):  # pragma: no cover
         """
         raise NotImplementedError("before_create must be implemented in subclasses")
 
-    def after_password_change(self, request, user, project, assistant, password):
+    def after_assistant_password_change(
+        self, request, user, project, assistant, password
+    ):
         """
         Called by FormShare so plugins can perform actions before changing the password of an assistant
         :param request: ``pyramid.request`` object
@@ -1083,7 +1091,7 @@ class IAssistantGroup(Interface):  # pragma: no cover
     Allows to hook into the processes that create, update and delete assistant groups
     """
 
-    def before_create(self, request, user, project, group_data):
+    def before_creating_group(self, request, user, project, group_data):
         """
         Called by FormShare so plugins can perform actions before adding an assistant group
         :param request: ``pyramid.request`` object
@@ -1095,7 +1103,7 @@ class IAssistantGroup(Interface):  # pragma: no cover
         """
         raise NotImplementedError("before_create must be implemented in subclasses")
 
-    def after_create(self, request, user, project, group_data):
+    def after_creating_group(self, request, user, project, group_data):
         """
         Called by FormShare so plugins can perform actions before adding a group
         :param request: ``pyramid.request`` object
@@ -1106,7 +1114,7 @@ class IAssistantGroup(Interface):  # pragma: no cover
         """
         raise NotImplementedError("after_create must be implemented in subclasses")
 
-    def before_edit(self, request, user, project, assistant, group_data):
+    def before_editing_group(self, request, user, project, assistant, group_data):
         """
         Called by FormShare so plugins can perform actions before editing a group
         :param request: ``pyramid.request`` object
@@ -1119,7 +1127,7 @@ class IAssistantGroup(Interface):  # pragma: no cover
         """
         raise NotImplementedError("before_edit must be group_data in subclasses")
 
-    def after_edit(self, request, user, project, assistant, group_data):
+    def after_editing_group(self, request, user, project, assistant, group_data):
         """
         Called by FormShare so plugins can perform actions before editing an assistant
         :param request: ``pyramid.request`` object
@@ -1131,7 +1139,7 @@ class IAssistantGroup(Interface):  # pragma: no cover
         """
         raise NotImplementedError("after_edit must be implemented in subclasses")
 
-    def before_delete(self, request, user, project, group, group_data):
+    def before_deleting_group(self, request, user, project, group, group_data):
         """
         Called by FormShare so plugins can perform actions before deleting a group
         :param request: ``pyramid.request`` object
@@ -1144,7 +1152,7 @@ class IAssistantGroup(Interface):  # pragma: no cover
         """
         raise NotImplementedError("before_delete must be implemented in subclasses")
 
-    def after_delete(self, request, user, project, group, group_data):
+    def after_deleting_group(self, request, user, project, group, group_data):
         """
         Called by FormShare so plugins can perform actions before deleting a group
         :param request: ``pyramid.request`` object
@@ -1162,7 +1170,7 @@ class IFormAccess(Interface):  # pragma: no cover
     Allows to hook into the processes that gives assistant access to a form
     """
 
-    def before_giving_access(
+    def before_giving_access_to_assistant(
         self,
         request,
         user,
@@ -1189,7 +1197,7 @@ class IFormAccess(Interface):  # pragma: no cover
             "before_giving_access must be implemented in subclasses"
         )
 
-    def after_giving_access(
+    def after_giving_access_to_assistant(
         self,
         request,
         user,
@@ -1214,7 +1222,7 @@ class IFormAccess(Interface):  # pragma: no cover
             "after_giving_access must be implemented in subclasses"
         )
 
-    def before_editing_access(
+    def before_editing_assistant_access(
         self,
         request,
         user,
@@ -1241,7 +1249,7 @@ class IFormAccess(Interface):  # pragma: no cover
             "before_editing_access must be implemented in subclasses"
         )
 
-    def after_editing_access(
+    def after_editing_assistant_access(
         self,
         request,
         user,
@@ -1266,7 +1274,7 @@ class IFormAccess(Interface):  # pragma: no cover
             "after_editing_access must be implemented in subclasses"
         )
 
-    def before_revoking_access(
+    def before_revoking_assistant_access(
         self, request, user, project, form, assistant_project, assistant_id
     ):
         """
@@ -1285,7 +1293,7 @@ class IFormAccess(Interface):  # pragma: no cover
             "before_giving_access must be implemented in subclasses"
         )
 
-    def after_revoking_access(
+    def after_revoking_assistant_access(
         self, request, user, project, form, assistant_project, assistant_id
     ):
         """
@@ -1308,7 +1316,7 @@ class IFormGroupAccess(Interface):  # pragma: no cover
     Allows to hook into the processes that gives group access to a form
     """
 
-    def before_giving_access(
+    def before_giving_access_to_group(
         self, request, user, project, form, group_project, assistant_group
     ):
         """
@@ -1324,7 +1332,7 @@ class IFormGroupAccess(Interface):  # pragma: no cover
         """
         raise NotImplementedError("before_create must be implemented in subclasses")
 
-    def after_giving_access(
+    def after_giving_access_to_group(
         self, request, user, project, form, group_project, group_id
     ):
         """
@@ -1345,9 +1353,9 @@ class IUser(Interface):  # pragma: no cover
     Allows to hook into the processes that creates and updates users
     """
 
-    def before_create(self, request, user_data):
+    def before_creating_user(self, request, user_data):
         """
-        Called by FormShare so plugins can perform actions before adding an user
+        Called by FormShare so plugins can perform actions before adding a user
         :param request: ``pyramid.request`` object
         :param user_data: User information to be added
         :return: Return a modified version of user_data, true or false if the assistant should be added.
@@ -1355,7 +1363,7 @@ class IUser(Interface):  # pragma: no cover
         """
         raise NotImplementedError("before_create must be implemented in subclasses")
 
-    def after_create(self, request, user_data):
+    def after_creating_user(self, request, user_data):
         """
         Called by FormShare so plugins can perform actions before adding an user
         :param request: ``pyramid.request`` object
@@ -1364,7 +1372,7 @@ class IUser(Interface):  # pragma: no cover
         """
         raise NotImplementedError("after_create must be implemented in subclasses")
 
-    def before_edit(self, request, user, user_data):
+    def before_editing_user(self, request, user, user_data):
         """
         Called by FormShare so plugins can perform actions before editing an assistant
         :param request: ``pyramid.request`` object
@@ -1375,7 +1383,7 @@ class IUser(Interface):  # pragma: no cover
         """
         raise NotImplementedError("before_edit must be implemented in subclasses")
 
-    def after_edit(self, request, user, user_data):
+    def after_editing_user(self, request, user, user_data):
         """
         Called by FormShare so plugins can perform actions before editing an user
         :param request: ``pyramid.request`` object
@@ -1391,7 +1399,7 @@ class IPartner(Interface):  # pragma: no cover
     Allows to hook into the processes that creates and updates partners
     """
 
-    def before_create(self, request, partner_data):
+    def before_creating_partner(self, request, partner_data):
         """
         Called by FormShare so plugins can perform actions before adding an partner
         :param request: ``pyramid.request`` object
@@ -1401,7 +1409,7 @@ class IPartner(Interface):  # pragma: no cover
         """
         raise NotImplementedError("before_create must be implemented in subclasses")
 
-    def after_create(self, request, partner_data):
+    def after_creating_partner(self, request, partner_data):
         """
         Called by FormShare so plugins can perform actions after adding an partner
         :param request: ``pyramid.request`` object
@@ -1410,7 +1418,7 @@ class IPartner(Interface):  # pragma: no cover
         """
         raise NotImplementedError("after_create must be implemented in subclasses")
 
-    def before_edit(self, request, partner_id, partner_data):
+    def before_editing_partner(self, request, partner_id, partner_data):
         """
         Called by FormShare so plugins can perform actions before editing a partner
         :param request: ``pyramid.request`` object
@@ -1421,7 +1429,7 @@ class IPartner(Interface):  # pragma: no cover
         """
         raise NotImplementedError("before_edit must be implemented in subclasses")
 
-    def after_edit(self, request, partner_id, partner_data):
+    def after_editing_partner(self, request, partner_id, partner_data):
         """
         Called by FormShare so plugins can perform actions after editing a partner
         :param request: ``pyramid.request`` object
@@ -1431,7 +1439,7 @@ class IPartner(Interface):  # pragma: no cover
         """
         raise NotImplementedError("after_edit must be implemented in subclasses")
 
-    def before_delete(self, request, partner_id, partner_data):
+    def before_deleting_partner(self, request, partner_id, partner_data):
         """
         Called by FormShare so plugins can perform actions before deleting a partner
         :param request: ``pyramid.request`` object
@@ -1442,7 +1450,7 @@ class IPartner(Interface):  # pragma: no cover
         """
         raise NotImplementedError("before_delete must be implemented in subclasses")
 
-    def after_delete(self, request, partner_id):
+    def after_deleting_partner(self, request, partner_id):
         """
         Called by FormShare so plugins can perform actions after deleting a partner
         :param request: ``pyramid.request`` object
@@ -1451,7 +1459,7 @@ class IPartner(Interface):  # pragma: no cover
         """
         raise NotImplementedError("after_delete must be implemented in subclasses")
 
-    def before_password_change(self, request, partner_id, password):
+    def before_partner_password_change(self, request, partner_id, password):
         """
         Called by FormShare so plugins can perform actions changing the password a partner
         :param request: ``pyramid.request`` object
@@ -1464,7 +1472,7 @@ class IPartner(Interface):  # pragma: no cover
             "before_password_change must be implemented in subclasses"
         )
 
-    def after_password_change(self, request, partner_id, password):
+    def after_partner_password_change(self, request, partner_id, password):
         """
         Called by FormShare so plugins can perform actions after changing the password of a partner
         :param request: ``pyramid.request`` object

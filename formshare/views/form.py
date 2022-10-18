@@ -1920,7 +1920,7 @@ class AddAssistant(PrivateView):
                             data,
                             continue_creation,
                             error_message,
-                        ) = plugin.before_giving_access(
+                        ) = plugin.before_giving_access_to_assistant(
                             self.request,
                             user_id,
                             project_id,
@@ -1940,7 +1940,7 @@ class AddAssistant(PrivateView):
                         )
                         if added:
                             for plugin in p.PluginImplementations(p.IFormAccess):
-                                plugin.after_giving_access(
+                                plugin.after_giving_access_to_assistant(
                                     self.request,
                                     user_id,
                                     project_id,
@@ -2050,7 +2050,11 @@ class EditAssistant(PrivateView):
 
             continue_editing = True
             for plugin in p.PluginImplementations(p.IFormAccess):
-                data, continue_editing, error_message = plugin.before_editing_access(
+                (
+                    data,
+                    continue_editing,
+                    error_message,
+                ) = plugin.before_editing_assistant_access(
                     self.request,
                     user_id,
                     project_id,
@@ -2075,7 +2079,7 @@ class EditAssistant(PrivateView):
                 )
                 if updated:
                     for plugin in p.PluginImplementations(p.IFormAccess):
-                        plugin.after_editing_access(
+                        plugin.after_editing_assistant_access(
                             self.request,
                             user_id,
                             project_id,
@@ -2149,7 +2153,10 @@ class RemoveAssistant(PrivateView):
         if self.request.method == "POST":
             continue_remove = True
             for plugin in p.PluginImplementations(p.IFormAccess):
-                continue_remove, error_message = plugin.before_revoking_access(
+                (
+                    continue_remove,
+                    error_message,
+                ) = plugin.before_revoking_assistant_access(
                     self.request,
                     user_id,
                     project_id,
@@ -2170,7 +2177,7 @@ class RemoveAssistant(PrivateView):
                 )
                 if removed:
                     for plugin in p.PluginImplementations(p.IFormAccess):
-                        plugin.after_revoking_access(
+                        plugin.after_revoking_assistant_access(
                             self.request,
                             user_id,
                             project_id,

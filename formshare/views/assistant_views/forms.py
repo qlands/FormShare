@@ -91,19 +91,20 @@ class ChangeMyAssistantPassword(AssistantView):
                     ):
                         continue_change = True
                         for plugin in p.PluginImplementations(p.IAssistant):
-                            (
-                                continue_change,
-                                error_message,
-                            ) = plugin.before_password_change(
-                                self.request,
-                                user_id,
-                                project_of_assistant,
-                                self.assistantID,
-                                assistant_data["coll_password"],
-                            )
-                            if not continue_change:
-                                self.add_error(error_message)
-                            break  # Only one plugging will be called to extend before_password_change
+                            if continue_change:
+                                (
+                                    continue_change,
+                                    error_message,
+                                ) = plugin.before_assistant_password_change(
+                                    self.request,
+                                    user_id,
+                                    project_of_assistant,
+                                    self.assistantID,
+                                    assistant_data["coll_password"],
+                                )
+                                if not continue_change:
+                                    self.add_error(error_message)
+
                         if continue_change:
                             changed, message = change_assistant_password(
                                 self.request,
@@ -113,7 +114,7 @@ class ChangeMyAssistantPassword(AssistantView):
                             )
                             if changed:
                                 for plugin in p.PluginImplementations(p.IAssistant):
-                                    plugin.after_password_change(
+                                    plugin.after_assistant_password_change(
                                         self.request,
                                         user_id,
                                         project_of_assistant,

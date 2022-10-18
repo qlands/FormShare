@@ -95,18 +95,21 @@ class AddAssistantsView(PrivateView):
                         if assistant_data["coll_password"] != "":
                             continue_creation = True
                             for plugin in p.PluginImplementations(p.IAssistant):
-                                (
-                                    data,
-                                    continue_creation,
-                                    error_message,
-                                ) = plugin.before_create(
-                                    self.request, user_id, project_id, assistant_data
-                                )
-                                if not continue_creation:
-                                    self.append_to_errors(error_message)
-                                else:
-                                    assistant_data = data
-                                break  # Only one plugging will be called to extend before_create
+                                if continue_creation:
+                                    (
+                                        data,
+                                        continue_creation,
+                                        error_message,
+                                    ) = plugin.before_creating_assistant(
+                                        self.request,
+                                        user_id,
+                                        project_id,
+                                        assistant_data,
+                                    )
+                                    if not continue_creation:
+                                        self.append_to_errors(error_message)
+                                    else:
+                                        assistant_data = data
                             if continue_creation:
                                 next_page = self.request.params.get(
                                     "next"
@@ -118,7 +121,7 @@ class AddAssistantsView(PrivateView):
                                 )
                                 if added:
                                     for plugin in p.PluginImplementations(p.IAssistant):
-                                        plugin.after_create(
+                                        plugin.after_creating_assistant(
                                             self.request,
                                             user_id,
                                             project_id,
@@ -202,14 +205,19 @@ class EditAssistantsView(PrivateView):
             assistant_data.pop("coll_id")
             continue_editing = True
             for plugin in p.PluginImplementations(p.IAssistant):
-                (data, continue_editing, error_message,) = plugin.before_edit(
-                    self.request, user_id, project_id, assistant_id, assistant_data
-                )
-                if not continue_editing:
-                    self.append_to_errors(error_message)
-                else:
-                    assistant_data = data
-                break  # Only one plugging will be called to extend before_create
+                if continue_editing:
+                    (
+                        data,
+                        continue_editing,
+                        error_message,
+                    ) = plugin.before_editing_assistant(
+                        self.request, user_id, project_id, assistant_id, assistant_data
+                    )
+                    if not continue_editing:
+                        self.append_to_errors(error_message)
+                    else:
+                        assistant_data = data
+
             if continue_editing:
                 next_page = self.request.params.get("next") or self.request.route_url(
                     "assistants", userid=user_id, projcode=project_code
@@ -219,7 +227,7 @@ class EditAssistantsView(PrivateView):
                 )
                 if edited:
                     for plugin in p.PluginImplementations(p.IAssistant):
-                        plugin.after_edit(
+                        plugin.after_editing_assistant(
                             self.request,
                             user_id,
                             project_id,
@@ -273,19 +281,23 @@ class DeleteAssistant(PrivateView):
                 "assistants", userid=user_id, projcode=project_code
             )
             for plugin in p.PluginImplementations(p.IAssistant):
-                (continue_delete, error_message,) = plugin.before_delete(
-                    self.request, user_id, project_id, assistant_id
-                )
-                if not continue_delete:
-                    self.add_error(error_message)
-                break  # Only one plugging will be called to extend before_delete
+                if continue_delete:
+                    (
+                        continue_delete,
+                        error_message,
+                    ) = plugin.before_deleting_assistant(
+                        self.request, user_id, project_id, assistant_id
+                    )
+                    if not continue_delete:
+                        self.add_error(error_message)
+
             if continue_delete:
                 removed, message = delete_assistant(
                     self.request, project_id, assistant_id
                 )
                 if removed:
                     for plugin in p.PluginImplementations(p.IAssistant):
-                        plugin.after_delete(
+                        plugin.after_deleting_assistant(
                             self.request, user_id, project_id, assistant_id
                         )
                     self.request.session.flash(
@@ -335,19 +347,19 @@ class ChangeAssistantPassword(PrivateView):
                 if assistant_data["coll_password"] == assistant_data["coll_password2"]:
                     continue_change = True
                     for plugin in p.PluginImplementations(p.IAssistant):
-                        (
-                            continue_change,
-                            error_message,
-                        ) = plugin.before_password_change(
-                            self.request,
-                            user_id,
-                            project_id,
-                            assistant_id,
-                            assistant_data["coll_password"],
-                        )
-                        if not continue_change:
-                            self.add_error(error_message)
-                        break  # Only one plugging will be called to extend before_password_change
+                        if continue_change:
+                            (
+                                continue_change,
+                                error_message,
+                            ) = plugin.before_assistant_password_change(
+                                self.request,
+                                user_id,
+                                project_id,
+                                assistant_id,
+                                assistant_data["coll_password"],
+                            )
+                            if not continue_change:
+                                self.add_error(error_message)
                     if continue_change:
                         changed, message = change_assistant_password(
                             self.request,
@@ -357,7 +369,7 @@ class ChangeAssistantPassword(PrivateView):
                         )
                         if changed:
                             for plugin in p.PluginImplementations(p.IAssistant):
-                                plugin.after_password_change(
+                                plugin.after_assistant_password_change(
                                     self.request,
                                     user_id,
                                     project_id,

@@ -614,15 +614,15 @@ class RegisterView(PublicView):
                                 # Load connected plugins and check if they modify the registration of an user
                                 continue_registration = True
                                 for plugin in p.PluginImplementations(p.IRegistration):
-                                    (
-                                        data,
-                                        continue_with_registration,
-                                        error_message,
-                                    ) = plugin.before_register(self.request, data)
-                                    if not continue_with_registration:
-                                        self.append_to_errors(error_message)
-                                        continue_registration = False
-                                    break  # Only one plugging will be called to extend before_register
+                                    if continue_registration:
+                                        (
+                                            data,
+                                            continue_with_registration,
+                                            error_message,
+                                        ) = plugin.before_register(self.request, data)
+                                        if not continue_with_registration:
+                                            self.append_to_errors(error_message)
+                                            continue_registration = False
                                 if continue_registration:
                                     added, error_message = register_user(
                                         self.request, data

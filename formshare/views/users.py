@@ -341,13 +341,13 @@ class AddUserView(PrivateView):
                                             user_index = get_user_index_manager(
                                                 self.request
                                             )
-                                            user_index_data = user_details
-                                            user_index_data.pop("user_apikey", None)
-                                            user_index_data.pop("user_apisecret", None)
-                                            user_index_data.pop("user_password", None)
-                                            user_index_data.pop("user_active", None)
-                                            user_index_data.pop("user_cdate", None)
-                                            user_index_data.pop("csrf_token", None)
+                                            user_index_data = {
+                                                "user_id": user_details["user_id"],
+                                                "user_email": user_details[
+                                                    "user_email"
+                                                ],
+                                                "user_name": user_details["user_name"],
+                                            }
                                             user_index.add_user(
                                                 user_details["user_id"], user_index_data
                                             )

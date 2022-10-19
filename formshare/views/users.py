@@ -159,7 +159,7 @@ class EditUserView(PrivateView):
 
                                 user_index = get_user_index_manager(self.request)
                                 user_index_data = {
-                                    "user_id": user_details["user_id"],
+                                    "user_id": user_to_modify,
                                     "user_email": user_details["user_email"],
                                     "user_name": user_details["user_name"],
                                 }

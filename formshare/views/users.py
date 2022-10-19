@@ -158,13 +158,11 @@ class EditUserView(PrivateView):
                                     )
 
                                 user_index = get_user_index_manager(self.request)
-                                user_index_data = user_details
-                                user_index_data.pop("user_apikey", None)
-                                user_index_data.pop("user_apisecret", None)
-                                user_index_data.pop("user_active", None)
-                                user_index_data.pop("csrf_token", None)
-                                user_index_data.pop("user_super", None)
-                                user_index_data.pop("modify", None)
+                                user_index_data = {
+                                    "user_id": user_details["user_id"],
+                                    "user_email": user_details["user_email"],
+                                    "user_name": user_details["user_name"],
+                                }
 
                                 user_index.update_user(user_to_modify, user_index_data)
                                 self.request.session.flash(

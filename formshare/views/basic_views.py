@@ -653,13 +653,11 @@ class RegisterView(PublicView):
                                         user_index = get_user_index_manager(
                                             self.request
                                         )
-                                        user_index_data = data
-                                        user_index_data.pop("user_apikey", None)
-                                        user_index_data.pop("user_apisecret", None)
-                                        user_index_data.pop("user_password", None)
-                                        user_index_data.pop("user_active", None)
-                                        user_index_data.pop("user_cdate", None)
-                                        user_index_data.pop("csrf_token", None)
+                                        user_index_data = {
+                                            "user_id": data["user_id"],
+                                            "user_email": data["user_email"],
+                                            "user_name": data["user_name"],
+                                        }
                                         user_index.add_user(
                                             data["user_id"], user_index_data
                                         )

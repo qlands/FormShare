@@ -283,9 +283,12 @@ class UserIndexManager(object):
     def query_user(self, q, query_from, query_size):
         query = q.replace("*", "")
         if query.find("@") == -1:
-            query_dict = {
-                "query": {"wildcard": {"all_data": {"value": "*" + query + "*"}}}
-            }
+            if query.find(" ") == -1:
+                query_dict = {
+                    "query": {"wildcard": {"all_data": {"value": "*" + query + "*"}}}
+                }
+            else:
+                query_dict = {"query": {"match_phrase": {"all_data": query}}}
         else:
             query_dict = {
                 "query": {"wildcard": {"user_email2": {"value": "*" + query + "*"}}}

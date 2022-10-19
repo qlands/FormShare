@@ -30,6 +30,8 @@ __all__ = [
     "get_user_id_with_email",
     "get_users",
     "get_user_timezone",
+    "is_user_active",
+    "get_query_user",
 ]
 
 log = logging.getLogger("formshare")
@@ -164,6 +166,21 @@ def user_exists(request, user, just_active=True):
     if res is None:
         return False
     return True
+
+
+def is_user_active(request, user_id):
+    res = request.dbsession.query(User).filter(User.user_id == user_id).first()
+    if res is not None:
+        if res.user_active == 1:
+            return True
+    return False
+
+
+def get_query_user(request, user_id):
+    res = request.dbsession.query(User).filter(User.user_id == user_id).first()
+    if res is not None:
+        return res.user_query_user
+    return None
 
 
 def get_users(request):

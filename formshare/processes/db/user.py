@@ -32,6 +32,9 @@ __all__ = [
     "get_user_timezone",
     "is_user_active",
     "get_query_user",
+    "get_user_databases",
+    "set_query_user",
+    "get_query_password",
 ]
 
 log = logging.getLogger("formshare")
@@ -180,6 +183,78 @@ def get_query_user(request, user_id):
     res = request.dbsession.query(User).filter(User.user_id == user_id).first()
     if res is not None:
         return res.user_query_user
+    return None
+
+
+def get_query_password(request, user_id):
+    res = (
+        request.dbsession.query(User)
+        .filter(User.user_id == user_id)
+        .filter(User.user_query_user.isnot(None))
+        .first()
+    )
+    if res is not None:
+        return res.user_query_password
+    return None
+
+
+def set_query_user(request, user_id, query_user, query_encrypted_password):
+    try:
+        request.dbsession.query(User).filter(User.user_id == user_id).update(
+            {
+                "user_query_user": query_user,
+                "user_query_password": query_encrypted_password,
+            }
+        )
+        request.dbsession.flush()
+        return True, ""
+    except Exception as e:
+        request.dbsession.rollback()
+        log.error(
+            "Error {} when setting query user details for user {}".format(
+                str(e), user_id
+            )
+        )
+        return False, str(e)
+
+
+def get_user_databases(request, user_id):
+    res = (
+        request.dbsession.query(
+            Project.project_id,
+            Project.project_code,
+            Project.project_name,
+            Odkform.form_schema,
+            Odkform.form_id,
+            Odkform.form_name,
+            Userproject.access_type,
+        )
+        .distinct(Odkform.form_schema)
+        .filter(Odkform.project_id == Userproject.project_id)
+        .filter(Odkform.project_id == Project.project_id)
+        .filter(Userproject.project_accepted == 1)
+        .filter(Userproject.user_id == user_id)
+        .filter(Odkform.form_schema.isnot(None))
+        .order_by(Project.project_name)
+        .order_by(Odkform.form_name)
+        .all()
+    )
+    if res is not None:
+        databases = []
+        for a_database in res:
+            databases.append(
+                {
+                    "project_id": a_database.project_id,
+                    "project_code": a_database.project_code,
+                    "project_name": a_database.project_name,
+                    "form_id": a_database.form_id,
+                    "form_name": a_database.form_name,
+                    "form_schema": a_database.form_schema,
+                    "access_type": a_database.access_type,
+                }
+            )
+        if databases:
+            return databases
     return None
 
 

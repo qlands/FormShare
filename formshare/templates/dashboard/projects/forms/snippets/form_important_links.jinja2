@@ -9,13 +9,13 @@
         {% block form_important_links_content %}
             <div class="row">
                 <div class="col-lg-2">
-                    {% if projectDetails.access_type < 4 %}
+                    {% if projectDetails.access_type <= 4 %}
                         <a href="{{ request.route_url('editDictTables', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}" title="{{ numsensitive }} {{ request.h.pluralize(_('field'),numsensitive,request.locale_name) }} {{ _('marked as sensitive among ') }}{{ numtables }} {{ request.h.pluralize(_('table'),numtables,request.locale_name) }}">
                             <div class="widget navy-bg p-lg text-center" style="padding: 20px">
                                 <div class="m-b-n-sm">
-                                    <i class="fas fa-eye-slash fa-2x"></i>
+                                    <i class="fas fa-book fa-2x"></i>
                                     <h4 class="font-bold no-margins">
-                                        {{ _('Anonymize fields') }}
+                                        {{ _('Dictionary') }}
                                     </h4>
                                 </div>
                             </div>

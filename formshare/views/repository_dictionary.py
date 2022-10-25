@@ -35,13 +35,15 @@ class EditDictionaryTables(PrivateView):
         project_id = get_project_id_from_name(self.request, user_id, project_code)
 
         if project_id is not None:
-            if (
-                get_project_access_type(
-                    self.request, project_id, user_id, self.user.login
-                )
-                >= 4
-            ):
-                raise HTTPNotFound
+            access_type = get_project_access_type(
+                self.request, project_id, user_id, self.user.login
+            )
+            if self.request.method == "GET":
+                if access_type > 4:
+                    raise HTTPNotFound
+            else:
+                if access_type >= 4:
+                    raise HTTPNotFound
             project_details = get_project_details(self.request, project_id)
         else:
             raise HTTPNotFound
@@ -89,6 +91,7 @@ class EditDictionaryTables(PrivateView):
                 "formDetails": form_data,
                 "userid": user_id,
                 "tables": tables,
+                "access_type": access_type,
             }
         else:
             raise HTTPNotFound
@@ -106,15 +109,16 @@ class EditDictionaryFields(PrivateView):
         form_id = self.request.matchdict["formid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         table_id = self.request.matchdict["tableid"]
-
         if project_id is not None:
-            if (
-                get_project_access_type(
-                    self.request, project_id, user_id, self.user.login
-                )
-                >= 4
-            ):
-                raise HTTPNotFound
+            access_type = get_project_access_type(
+                self.request, project_id, user_id, self.user.login
+            )
+            if self.request.method == "GET":
+                if access_type > 4:
+                    raise HTTPNotFound
+            else:
+                if access_type >= 4:
+                    raise HTTPNotFound
             project_details = get_project_details(self.request, project_id)
         else:
             raise HTTPNotFound
@@ -198,6 +202,7 @@ class EditDictionaryFields(PrivateView):
                 "fields": fields,
                 "table_desc": table_desc,
                 "table_name": table_id,
+                "access_type": access_type,
             }
         else:
             raise HTTPNotFound

@@ -41,6 +41,7 @@ __all__ = [
     "IPartnerAuthentication",
     "IExport",
     "IAssistantAuthentication",
+    "ICollaborator",
 ]
 
 
@@ -1642,6 +1643,60 @@ class IExport(Interface):  # pragma: no cover
         :return: Must return a HTTP 302 redirect (A Pyramid HTTPFound)
         """
         raise NotImplementedError("do_export must be implemented in subclasses")
+
+
+class ICollaborator(Interface):  # pragma: no cover
+    """
+    Allows to hook into the processes that adds and remove collaborators
+    """
+
+    def before_adding_collaborator(self, request, project_id, collaborator_id):
+        """
+        Called by FormShare so plugins can perform actions before adding a collaborator
+        :param request: `pyramid.request`` object
+        :param project_id: Project ID
+        :param collaborator_id: Collaborator details
+        :return: True,"" if adding the collaborator should continue otherwise, False,"Message why"
+        """
+        raise NotImplementedError(
+            "before_adding_collaborator must be implemented in subclasses"
+        )
+
+    def after_accepting_collaboration(self, request, project_id, collaborator_id):
+        """
+        Called by FormShare so plugins can perform actions after the collaborator accepts the collaboration
+        :param request: `pyramid.request`` object
+        :param project_id: Project ID
+        :param collaborator_id: Collaborator ID
+        :return: None
+        """
+        raise NotImplementedError(
+            "after_accepting_collaboration must be implemented in subclasses"
+        )
+
+    def before_removing_collaborator(self, request, project_id, collaborator_id):
+        """
+        Called by FormShare so plugins can perform actions before removing a collaborator
+        :param request: `pyramid.request`` object
+        :param project_id: Project ID
+        :param collaborator_id: Collaborator ID
+        :return: True,"" if removing the collaborator should continue otherwise, False,"Message why"
+        """
+        raise NotImplementedError(
+            "before_removing_collaborator must be implemented in subclasses"
+        )
+
+    def after_removing_collaborator(self, request, project_id, collaborator_id):
+        """
+        Called by FormShare so plugins can perform actions after removing a collaborator
+        :param request: `pyramid.request`` object
+        :param project_id: Project ID
+        :param collaborator_id: Collaborator ID
+        :return: None
+        """
+        raise NotImplementedError(
+            "after_removing_collaborator must be implemented in subclasses"
+        )
 
 
 class IPluginObserver(Interface):  # pragma: no cover

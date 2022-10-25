@@ -1,5 +1,5 @@
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
-
+import formshare.plugins as p
 from formshare.processes.db import (
     get_project_collaborators,
     get_project_id_from_name,
@@ -55,48 +55,73 @@ class CollaboratorsListView(PrivateView):
                         self.request, collaborator_details["collaborator"]
                     )
                     if user_details:
-                        added, message = add_collaborator_to_project(
-                            self.request,
-                            project_id,
-                            collaborator_details["collaborator"],
-                        )
-                        if added:
-                            auto_accept_collaboration = (
-                                self.request.registry.settings.get(
-                                    "auth.auto_accept_collaboration", "false"
-                                )
-                            )
-                            if auto_accept_collaboration == "true":
-                                self.request.session.flash(
-                                    self._("The collaborator was added to this project")
-                                )
-                            else:  # pragma: no cover
-                                project_details = get_project_details(
-                                    self.request, project_id
-                                )
-                                send_collaboration_email(
+                        continue_adding = True
+                        for plugin in p.PluginImplementations(p.ICollaborator):
+                            if continue_adding:
+                                (
+                                    continue_adding,
+                                    message,
+                                ) = plugin.before_adding_collaborator(
                                     self.request,
-                                    user_details["user_email"],
-                                    self.user.email,
-                                    self.user.name,
-                                    project_details["project_name"],
-                                    user_id,
-                                    project_code,
+                                    project_id,
+                                    collaborator_details["collaborator"],
                                 )
-                                self.request.session.flash(
-                                    self._(
-                                        "The collaborator was added to this project. "
-                                        "However, an email has been sent to him/her/they to accept the collaboration"
+                        if continue_adding:
+                            added, message = add_collaborator_to_project(
+                                self.request,
+                                project_id,
+                                collaborator_details["collaborator"],
+                            )
+                            if added:
+                                auto_accept_collaboration = (
+                                    self.request.registry.settings.get(
+                                        "auth.auto_accept_collaboration", "false"
                                     )
                                 )
-                            self.returnRawViewResult = True
-                            return HTTPFound(
-                                self.request.route_url(
-                                    "collaborators",
-                                    userid=user_id,
-                                    projcode=project_code,
+                                if auto_accept_collaboration == "true":
+                                    for plugin in p.PluginImplementations(
+                                        p.ICollaborator
+                                    ):
+                                        plugin.after_accepting_collaboration(
+                                            self.request,
+                                            project_id,
+                                            collaborator_details["collaborator"],
+                                        )
+                                    self.request.session.flash(
+                                        self._(
+                                            "The collaborator was added to this project"
+                                        )
+                                    )
+                                else:  # pragma: no cover
+                                    project_details = get_project_details(
+                                        self.request, project_id
+                                    )
+                                    send_collaboration_email(
+                                        self.request,
+                                        user_details["user_email"],
+                                        self.user.email,
+                                        self.user.name,
+                                        project_details["project_name"],
+                                        user_id,
+                                        project_code,
+                                    )
+                                    self.request.session.flash(
+                                        self._(
+                                            "The collaborator was added to this project. "
+                                            "However, an email has been sent to him/her/they "
+                                            "to accept the collaboration"
+                                        )
+                                    )
+                                self.returnRawViewResult = True
+                                return HTTPFound(
+                                    self.request.route_url(
+                                        "collaborators",
+                                        userid=user_id,
+                                        projcode=project_code,
+                                    )
                                 )
-                            )
+                            else:
+                                self.append_to_errors(message)
                         else:
                             self.append_to_errors(message)
                     else:
@@ -158,23 +183,39 @@ class RemoveCollaborator(PrivateView):
         if self.request.method == "POST":
             self.returnRawViewResult = True
             collaborator_id = self.request.matchdict["collid"]
-            removed, message = remove_collaborator_from_project(
-                self.request, project_id, collaborator_id
-            )
+            continue_remove = True
             next_page = self.request.route_url(
                 "collaborators", userid=user_id, projcode=project_code
             )
-            if removed:
-                self.request.session.flash(
-                    self._("The collaborator was removed successfully")
+            message = ""
+            for plugin in p.PluginImplementations(p.ICollaborator):
+                if continue_remove:
+                    continue_remove, message = plugin.before_removing_collaborator(
+                        self.request, project_id, collaborator_id
+                    )
+            if continue_remove:
+                removed, message = remove_collaborator_from_project(
+                    self.request, project_id, collaborator_id
                 )
-                return HTTPFound(next_page)
+                if removed:
+                    for plugin in p.PluginImplementations(p.ICollaborator):
+                        plugin.after_removing_collaborator(
+                            self.request, project_id, collaborator_id
+                        )
+                    self.request.session.flash(
+                        self._("The collaborator was removed successfully")
+                    )
+                    return HTTPFound(next_page)
+                else:
+                    self.request.session.flash(
+                        self._("Unable to remove the collaborator: ") + message
+                    )
+                    return HTTPFound(next_page, headers={"FS_error": "true"})
             else:
                 self.request.session.flash(
                     self._("Unable to remove the collaborator: ") + message
                 )
                 return HTTPFound(next_page, headers={"FS_error": "true"})
-
         else:
             raise HTTPNotFound
 
@@ -202,6 +243,12 @@ class AcceptCollaboration(PrivateView):  # pragma: no cover
                     self.request, self.user.login, project_id
                 )
                 if accepted:
+                    for plugin in p.PluginImplementations(p.ICollaborator):
+                        plugin.after_accepting_collaboration(
+                            self.request,
+                            project_id,
+                            user_id,
+                        )
                     self.request.session.flash(self._("You accepted the collaboration"))
                 else:
                     self.request.session.flash(

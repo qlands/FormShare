@@ -200,7 +200,11 @@ class AddProjectView(ProjectsView):
                 if re.match(r"^[A-Za-z0-9_]+$", project_details["project_code"]):
                     next_page = self.request.params.get(
                         "next"
-                    ) or self.request.route_url("dashboard", userid=self.user.login)
+                    ) or self.request.route_url(
+                        "project_details",
+                        userid=self.user.login,
+                        projcode=project_details["project_code"],
+                    )
 
                     continue_creation = True
                     for plugin in p.PluginImplementations(p.IProject):

@@ -42,6 +42,7 @@ from formshare.processes.db import (
     get_extended_project_details,
     get_user_projects,
     get_forms_number,
+    get_all_project_forms,
 )
 from formshare.processes.elasticsearch.repository_index import (
     get_dataset_stats_for_project,
@@ -207,20 +208,15 @@ class AddProjectView(ProjectsView):
                     )
 
                     continue_creation = True
+                    message = ""
                     for plugin in p.PluginImplementations(p.IProject):
                         if continue_creation:
                             (
-                                data,
                                 continue_creation,
-                                error_message,
+                                message,
                             ) = plugin.before_creating_project(
                                 self.request, self.user.login, project_details
                             )
-                            if not continue_creation:
-                                self.append_to_errors(error_message)
-                            else:
-                                project_details = data
-
                     if continue_creation:
                         if project_details["project_hexcolor"] == "":
                             project_details["project_hexcolor"] = ColorHash(
@@ -293,6 +289,8 @@ class AddProjectView(ProjectsView):
                             return HTTPFound(location=next_page)
                         else:
                             self.append_to_errors(message)
+                    else:
+                        self.append_to_errors(message)
                 else:
                     self.append_to_errors(
                         self._(
@@ -365,21 +363,37 @@ class EditProjectView(ProjectsView):
 
             if project_details["project_name"] != "":
                 next_page = self.request.params.get("next") or self.request.url
-                modified, message = modify_project(
-                    self.request, project_id, project_details
-                )
-                if modified:
-                    # Store the notifications
-                    feed_manager = get_manager(self.request)
-                    # Notify tha the user edited the project
-                    actor = Actor(self.user.login, "person")
-                    feed_object = Object(project_id, "project")
-                    activity = Activity("edit", actor, feed_object)
-                    feed_manager.add_activity_feed(activity)
 
-                    self.request.session.flash(self._("The project has been modified"))
-                    self.returnRawViewResult = True
-                    return HTTPFound(location=next_page)
+                continue_modify = True
+                message = ""
+                for plugin in p.PluginImplementations(p.IProject):
+                    if continue_modify:
+                        continue_modify, message = plugin.before_editing_project(
+                            self.request, user_id, project_id, project_details
+                        )
+                if continue_modify:
+                    modified, message = modify_project(
+                        self.request, project_id, project_details
+                    )
+                    if modified:
+                        # Store the notifications
+                        feed_manager = get_manager(self.request)
+                        # Notify tha the user edited the project
+                        actor = Actor(self.user.login, "person")
+                        feed_object = Object(project_id, "project")
+                        activity = Activity("edit", actor, feed_object)
+                        feed_manager.add_activity_feed(activity)
+                        for plugin in p.PluginImplementations(p.IProject):
+                            plugin.after_editing_project(
+                                self.request, user_id, project_id, project_details
+                            )
+                        self.request.session.flash(
+                            self._("The project has been modified")
+                        )
+                        self.returnRawViewResult = True
+                        return HTTPFound(location=next_page)
+                    else:
+                        self.append_to_errors(message)
                 else:
                     self.append_to_errors(message)
             else:
@@ -457,27 +471,44 @@ class DeleteProjectView(ProjectsView):
             next_page = self.request.params.get("next") or self.request.route_url(
                 "projects", userid=self.user.login
             )
-
-            self.returnRawViewResult = True
-            deleted, message = delete_project(self.request, self.user.login, project_id)
-            if deleted:
-                # Delete the bucket
-                delete_bucket(self.request, project_id)
-                # Store the notifications
-                feed_manager = get_manager(self.request)
-                # Notify tha the user deleted the project
-                actor = Actor(self.user.login, "person")
-                feed_object = Object(project_id, "project")
-                activity = Activity("delete", actor, feed_object)
-                feed_manager.add_activity_feed(activity)
-                # Deletes the project from the dataset index
-                delete_dataset_index_by_project(
-                    self.request.registry.settings, project_id
+            continue_delete = True
+            message = ""
+            for plugin in p.PluginImplementations(p.IProject):
+                if continue_delete:
+                    continue_delete, message = plugin.before_deleting_project(
+                        self.request, user_id, project_id
+                    )
+            if continue_delete:
+                project_forms = get_all_project_forms(self.request, project_id)
+                self.returnRawViewResult = True
+                deleted, message = delete_project(
+                    self.request, self.user.login, project_id
                 )
-                self.request.session.flash(
-                    self._("The project was deleted successfully")
-                )
-                return HTTPFound(location=next_page)
+                if deleted:
+                    # Delete the bucket
+                    delete_bucket(self.request, project_id)
+                    # Store the notifications
+                    feed_manager = get_manager(self.request)
+                    # Notify tha the user deleted the project
+                    actor = Actor(self.user.login, "person")
+                    feed_object = Object(project_id, "project")
+                    activity = Activity("delete", actor, feed_object)
+                    feed_manager.add_activity_feed(activity)
+                    # Deletes the project from the dataset index
+                    delete_dataset_index_by_project(
+                        self.request.registry.settings, project_id
+                    )
+                    for plugin in p.PluginImplementations(p.IProject):
+                        plugin.after_deleting_project(
+                            self.request, user_id, project_id, project_forms
+                        )
+                    self.request.session.flash(
+                        self._("The project was deleted successfully")
+                    )
+                    return HTTPFound(location=next_page)
+                else:
+                    self.add_error(self._("Unable to delete the project: ") + message)
+                    return HTTPFound(location=next_page, headers={"FS_error": "true"})
             else:
                 self.add_error(self._("Unable to delete the project: ") + message)
                 return HTTPFound(location=next_page, headers={"FS_error": "true"})

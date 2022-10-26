@@ -267,10 +267,11 @@ class IProject(Interface):  # pragma: no cover
         :param request: ``pyramid.request`` object
         :param user: User owner of the project
         :param project_data: project data
-        :return: Return a modified version of project_data, true or false if the project should be added. If False then
-        a message should state why. Example: return project_data, False, "My message"
+        :return: Return True,"" of the creation should continue or False, "Message why" if it should not
         """
-        raise NotImplementedError("before_create must be implemented in subclasses")
+        raise NotImplementedError(
+            "before_creating_project must be implemented in subclasses"
+        )
 
     def after_creating_project(self, request, user, project_data):
         """
@@ -280,7 +281,59 @@ class IProject(Interface):  # pragma: no cover
         :param project_data: project data
         :return: None
         """
-        raise NotImplementedError("after_create must be implemented in subclasses")
+        raise NotImplementedError(
+            "after_creating_project must be implemented in subclasses"
+        )
+
+    def before_editing_project(self, request, user, project, project_details):
+        """
+        Called by FormShare so plugins can perform actions before editing a project
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project: Project ID
+        :param project_details: The project details
+        :return: True,"" if the update should continue or False, "Message" if it should not
+        """
+        raise NotImplementedError(
+            "before_editing_project must be implemented in subclasses"
+        )
+
+    def after_editing_project(self, request, user, project_data):
+        """
+        Called by FormShare so plugins can perform actions after editing a project
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project_data: project data
+        :return: None
+        """
+        raise NotImplementedError(
+            "after_editing_project must be implemented in subclasses"
+        )
+
+    def before_deleting_project(self, request, user, project):
+        """
+        Called by FormShare so plugins can perform actions before deleting a project
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project: Project ID
+        :return: True,"" if the update should continue or False, "Message" if it should not
+        """
+        raise NotImplementedError(
+            "before_deleting_project must be implemented in subclasses"
+        )
+
+    def after_deleting_project(self, request, user, project, project_forms):
+        """
+        Called by FormShare so plugins can perform actions before deleting a project
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project: Project ID
+        :param project_forms: The forms that the project had
+        :return: None
+        """
+        raise NotImplementedError(
+            "before_deleting_project must be implemented in subclasses"
+        )
 
 
 class IForm(Interface):  # pragma: no cover

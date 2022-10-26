@@ -17,6 +17,7 @@ __all__ = [
     "IProduct",
     "IImportExternalData",
     "IRepository",
+    "IRepositoryProcess",
     "IProject",
     "IForm",
     "ITranslation",
@@ -382,7 +383,9 @@ class IForm(Interface):  # pragma: no cover
         :return: True, "", or False, Message
         """
 
-    def after_deleting_form(self, request, form_type, user_id, project_id, form_id):
+    def after_deleting_form(
+        self, request, form_type, user_id, project_id, form_id, form_data
+    ):
         """
         Called by FormShare so plugins can perform actions after FormShare deletes a form from the database
         :param request: ``pyramid.request`` object
@@ -390,6 +393,7 @@ class IForm(Interface):  # pragma: no cover
         :param user_id: User ID
         :param project_id: Project id
         :param form_id: Form ID
+        :param form_data: The data of the form that was deleted
         :return: None
         """
 
@@ -802,6 +806,43 @@ class IRepository(Interface):  # pragma: no cover
         """
         raise NotImplementedError(
             "custom_repository_process must be implemented in subclasses"
+        )
+
+
+class IRepositoryProcess(Interface):  # pragma: no cover
+    """
+    IMPORTANT: This is a FormShare Celery plugin.
+    This interface allow to hook up plugins to the Celery process that generates repositories
+    NOTE: Plugin code is executed by Celery before the task finishes
+    """
+
+    def after_creating_repository(
+        self,
+        settings,
+        user,
+        project,
+        form,
+        cnf_file,
+        create_file,
+        insert_file,
+        schema,
+        log,
+    ):
+        """
+        Called after Celery creates the repository so plugins can perform extra actions
+        :param settings: Settings from FormShare
+        :param user: User ID
+        :param project: Project ID
+        :param form: Form ID
+        :param cnf_file: MySQL CNF file
+        :param create_file: Repository create SQL file
+        :param insert_file: Repository insert SQL file
+        :param schema: Schema that was created
+        :param log: Celery logger
+        :return: None
+        """
+        raise NotImplementedError(
+            "before_creating_repository must be implemented in subclasses"
         )
 
 

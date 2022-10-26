@@ -5,7 +5,7 @@ import shutil
 import traceback
 import uuid
 from subprocess import Popen, PIPE, check_call, CalledProcessError
-
+import formshare.plugins as p
 import transaction
 from celery.utils.log import get_task_logger
 from lxml import etree
@@ -408,6 +408,19 @@ def internal_create_mysql_repository(
             task_id,
             _,
         )
+        for plugin in p.PluginImplementations(p.IRepositoryProcess):  # pragma: no cover
+            plugin.after_creating_repository(
+                settings,
+                user,
+                project_id,
+                form,
+                cnf_file,
+                create_file,
+                insert_file,
+                schema,
+                log,
+            )
+
     except Exception as e:
         email_from = settings.get("mail.from", None)
         email_to = settings.get("mail.error", None)

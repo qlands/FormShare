@@ -1423,10 +1423,10 @@ class DeleteForm(PrivateView):
                 continue_delete = True
                 message = ""
                 for a_plugin in plugins.PluginImplementations(plugins.IForm):
-                    continue_delete, message = a_plugin.before_deleting_form(
-                        self.request, "ODK", user_id, project_id, form_id
-                    )
-                    break  # Only one plugin is executed
+                    if continue_delete:
+                        continue_delete, message = a_plugin.before_deleting_form(
+                            self.request, "ODK", user_id, project_id, form_id
+                        )
                 if continue_delete:
                     deleted, forms_deleted, message = delete_form(
                         self.request, project_id, form_id
@@ -1434,7 +1434,12 @@ class DeleteForm(PrivateView):
                     if deleted:
                         for a_plugin in plugins.PluginImplementations(plugins.IForm):
                             a_plugin.after_deleting_form(
-                                self.request, "ODK", user_id, project_id, form_id
+                                self.request,
+                                "ODK",
+                                user_id,
+                                project_id,
+                                form_id,
+                                form_data,
                             )
                         if (
                             form_data["form_case"] == 1

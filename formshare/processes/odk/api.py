@@ -1039,24 +1039,22 @@ def upload_odk_form(
                     if error == 0:
                         continue_creation = True
                         for a_plugin in plugins.PluginImplementations(plugins.IForm):
-                            (
-                                continue_creation,
-                                error_message,
-                            ) = a_plugin.after_odk_form_checks(
-                                request,
-                                user_id,
-                                project_id,
-                                form_id,
-                                form_data,
-                                form_directory,
-                                survey_file,
-                                create_file,
-                                insert_file,
-                                itemsets_csv,
-                            )
-                            if not continue_creation:
-                                return False, error_message
-                            break  # Only one plugging will be called to extend before_create
+                            if continue_creation:
+                                (
+                                    continue_creation,
+                                    message,
+                                ) = a_plugin.after_odk_form_checks(
+                                    request,
+                                    user_id,
+                                    project_id,
+                                    form_id,
+                                    form_data,
+                                    form_directory,
+                                    survey_file,
+                                    create_file,
+                                    insert_file,
+                                    itemsets_csv,
+                                )
                         if continue_creation:
                             paths = ["forms", form_directory, "media"]
                             if not os.path.exists(os.path.join(odk_dir, *paths)):
@@ -1163,19 +1161,19 @@ def upload_odk_form(
                             for a_plugin in plugins.PluginImplementations(
                                 plugins.IForm
                             ):
-                                (
-                                    continue_adding,
-                                    message,
-                                    form_data,
-                                ) = a_plugin.before_adding_form(
-                                    request,
-                                    "ODK",
-                                    user_id,
-                                    project_id,
-                                    form_id,
-                                    form_data,
-                                )
-                                break  # Only one plugin is executed
+                                if continue_adding:
+                                    (
+                                        continue_adding,
+                                        message,
+                                        form_data,
+                                    ) = a_plugin.before_adding_form(
+                                        request,
+                                        "ODK",
+                                        user_id,
+                                        project_id,
+                                        form_id,
+                                        form_data,
+                                    )
                             if continue_adding:
                                 added, message = add_new_form(request, form_data)
                                 if not added:
@@ -1487,24 +1485,22 @@ def update_odk_form(
                             for a_plugin in plugins.PluginImplementations(
                                 plugins.IForm
                             ):
-                                (
-                                    continue_creation,
-                                    error_message,
-                                ) = a_plugin.after_odk_form_checks(
-                                    request,
-                                    user_id,
-                                    project_id,
-                                    form_id,
-                                    form_data,
-                                    form_directory,
-                                    survey_file,
-                                    create_file,
-                                    insert_file,
-                                    itemsets_csv,
-                                )
-                                if not continue_creation:
-                                    return False, error_message
-                                break  # Only one plugging will be called to extend before_create
+                                if continue_creation:
+                                    (
+                                        continue_creation,
+                                        message,
+                                    ) = a_plugin.after_odk_form_checks(
+                                        request,
+                                        user_id,
+                                        project_id,
+                                        form_id,
+                                        form_data,
+                                        form_directory,
+                                        survey_file,
+                                        create_file,
+                                        insert_file,
+                                        itemsets_csv,
+                                    )
                             if continue_creation:
                                 paths = ["forms", form_directory, "media"]
                                 if not os.path.exists(os.path.join(odk_dir, *paths)):
@@ -1618,20 +1614,19 @@ def update_odk_form(
                                 for a_plugin in plugins.PluginImplementations(
                                     plugins.IForm
                                 ):
-                                    (
-                                        continue_updating,
-                                        message,
-                                        form_data,
-                                    ) = a_plugin.before_updating_form(
-                                        request,
-                                        "ODK",
-                                        user_id,
-                                        project_id,
-                                        form_id,
-                                        form_data,
-                                    )
-                                    break  # Only one plugin is executed
-
+                                    if continue_updating:
+                                        (
+                                            continue_updating,
+                                            message,
+                                            form_data,
+                                        ) = a_plugin.before_updating_form(
+                                            request,
+                                            "ODK",
+                                            user_id,
+                                            project_id,
+                                            form_id,
+                                            form_data,
+                                        )
                                 if continue_updating:
                                     updated, message = update_form(
                                         request, project_id, for_form_id, form_data

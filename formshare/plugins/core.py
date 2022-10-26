@@ -26,15 +26,23 @@ __all__ = [
     "unload_all",
     "get_plugin",
     "plugin_loaded",
+    "load_all_celery",
 ]
 
 # Entry point group.
 PLUGINS_ENTRY_POINT_GROUP = "formshare.plugins"
 
+# Entry point group.
+CELERY_PLUGINS_ENTRY_POINT_GROUP = "formshare.celery.plugins"
+
 # Entry point for test plugins.
 TEST_PLUGINS_ENTRY_POINT_GROUP = "formshare.test_plugins"
 
-GROUPS = [PLUGINS_ENTRY_POINT_GROUP, TEST_PLUGINS_ENTRY_POINT_GROUP]
+GROUPS = [
+    PLUGINS_ENTRY_POINT_GROUP,
+    TEST_PLUGINS_ENTRY_POINT_GROUP,
+    CELERY_PLUGINS_ENTRY_POINT_GROUP,
+]
 # These lists are used to ensure that the correct extensions are enabled.
 _PLUGINS = []
 _PLUGINS_CLASS = []
@@ -89,6 +97,17 @@ def load_all(settings):
 
     plugins = settings.get(PLUGINS_ENTRY_POINT_GROUP, "").split()
 
+    load(*plugins)
+
+
+def load_all_celery(plugin_list):
+    """
+    Load all celery plugins listed in plugin_list. This is called by celery_app.py
+    :param plugin_list: List of celery plugins separated by space
+    """
+    # Clear any loaded plugins
+    unload_all()
+    plugins = plugin_list.split()
     load(*plugins)
 
 

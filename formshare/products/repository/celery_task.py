@@ -408,19 +408,6 @@ def internal_create_mysql_repository(
             task_id,
             _,
         )
-        for plugin in p.PluginImplementations(p.IRepositoryProcess):  # pragma: no cover
-            plugin.after_creating_repository(
-                settings,
-                user,
-                project_id,
-                form,
-                cnf_file,
-                create_file,
-                insert_file,
-                schema,
-                log,
-            )
-
     except Exception as e:
         email_from = settings.get("mail.from", None)
         email_to = settings.get("mail.error", None)
@@ -436,6 +423,19 @@ def internal_create_mysql_repository(
             locale,
         )
         raise BuildDataBaseError(str(e))
+
+    for plugin in p.PluginImplementations(p.IRepositoryProcess):  # pragma: no cover
+        plugin.after_creating_repository(
+            settings,
+            user,
+            project_id,
+            form,
+            cnf_file,
+            create_file,
+            insert_file,
+            schema,
+            log,
+        )
 
     engine = get_engine(settings)
     session_factory = get_session_factory(engine)

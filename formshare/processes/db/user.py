@@ -264,7 +264,7 @@ def get_users(request):
     return res
 
 
-def get_user_details(request, user, just_active=True):
+def get_user_details(request, user, just_active=True, get_stats=True):
     if just_active:
         res = (
             request.dbsession.query(User)
@@ -276,7 +276,8 @@ def get_user_details(request, user, just_active=True):
         res = request.dbsession.query(User).filter(User.user_id == user).first()
     if res is not None:
         result = map_from_schema(res)
-        result["user_stats"] = get_user_stats(request, user)
+        if get_stats:
+            result["user_stats"] = get_user_stats(request, user)
         return result
     return {}
 

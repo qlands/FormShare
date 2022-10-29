@@ -1768,24 +1768,30 @@ class ICollaborator(Interface):  # pragma: no cover
             "after_accepting_collaboration must be implemented in subclasses"
         )
 
-    def before_removing_collaborator(self, request, project_id, collaborator_id):
+    def before_removing_collaborator(
+        self, request, project_id, collaborator_id, collaboration_details
+    ):
         """
         Called by FormShare so plugins can perform actions before removing a collaborator
         :param request: `pyramid.request`` object
         :param project_id: Project ID
         :param collaborator_id: Collaborator ID
+        :param collaboration_details: Collaboration details
         :return: True,"" if removing the collaborator should continue otherwise, False,"Message why"
         """
         raise NotImplementedError(
             "before_removing_collaborator must be implemented in subclasses"
         )
 
-    def after_removing_collaborator(self, request, project_id, collaborator_id):
+    def after_removing_collaborator(
+        self, request, project_id, collaborator_id, collaboration_details
+    ):
         """
         Called by FormShare so plugins can perform actions after removing a collaborator
         :param request: `pyramid.request`` object
         :param project_id: Project ID
         :param collaborator_id: Collaborator ID
+        :param collaboration_details: Collaboration details
         :return: None
         """
         raise NotImplementedError(

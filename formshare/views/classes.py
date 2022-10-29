@@ -370,6 +370,10 @@ class PrivateView(object):
             self.system_timezone_name = "UTC"
 
     def append_to_errors(self, error):
+        """
+        This function returns an error to the screen when redirects DO NOT happen.
+        The error will appear to the user as a div or in a modal
+        """
         self.request.response.headers["FS_error"] = "true"
         self.errors.append(error)
 
@@ -550,7 +554,12 @@ class PrivateView(object):
         self.classResult["userDetails"] = get_user_details(self.request, self.userID)
 
     def add_error(self, message):
-        self.request.session.flash("{}|error".format(message), queue="error")
+        """
+        This function returns an error to the screen when redirects happen.
+        The error will appear to the user as a sweet alert
+        """
+        self.request.response.headers["FS_error"] = "true"
+        self.request.session.flash("{}|error".format(message))
 
     def get_project_access_level(self):
         """

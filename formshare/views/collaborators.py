@@ -13,6 +13,7 @@ from formshare.processes.db import (
     decline_collaboration,
     get_user_details,
     get_project_access_type,
+    get_collaboration_details,
 )
 from formshare.processes.email.send_email import send_collaboration_email
 from formshare.views.classes import PrivateView
@@ -188,10 +189,13 @@ class RemoveCollaborator(PrivateView):
                 "collaborators", userid=user_id, projcode=project_code
             )
             message = ""
+            collaboration_details = get_collaboration_details(
+                self.request, collaborator_id, project_id
+            )
             for plugin in p.PluginImplementations(p.ICollaborator):
                 if continue_remove:
                     continue_remove, message = plugin.before_removing_collaborator(
-                        self.request, project_id, collaborator_id
+                        self.request, project_id, collaborator_id, collaboration_details
                     )
             if continue_remove:
                 removed, message = remove_collaborator_from_project(
@@ -200,7 +204,10 @@ class RemoveCollaborator(PrivateView):
                 if removed:
                     for plugin in p.PluginImplementations(p.ICollaborator):
                         plugin.after_removing_collaborator(
-                            self.request, project_id, collaborator_id
+                            self.request,
+                            project_id,
+                            collaborator_id,
+                            collaboration_details,
                         )
                     self.request.session.flash(
                         self._("The collaborator was removed successfully")

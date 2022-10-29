@@ -12,6 +12,7 @@ __all__ = [
     "add_collaborator_to_project",
     "accept_collaboration",
     "decline_collaboration",
+    "get_collaboration_details",
 ]
 
 log = logging.getLogger("formshare")
@@ -199,3 +200,15 @@ def decline_collaboration(request, user, project):  # pragma: no cover
             )
         )
         return False, str(e)
+
+
+def get_collaboration_details(request, user_id, project_id):
+    res = (
+        request.dbsession.query(Userproject)
+        .filter(Userproject.user_id == user_id)
+        .filter(Userproject.project_id == project_id)
+        .first()
+    )
+    if res is not None:
+        return map_from_schema(res)
+    return {}

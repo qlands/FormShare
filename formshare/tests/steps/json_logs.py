@@ -1,5 +1,6 @@
 import json
 import os
+import time
 
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
@@ -177,6 +178,11 @@ def t_e_s_t_json_logs(test_object):
     assert "FS_error" in res.headers
 
     # Compare the against a submission
+    time.sleep(20)
+    print("***************222")
+    print(survey_id)
+    print(duplicated_id)
+    print("***************222")
     res = test_object.testapp.post(
         "/user/{}/project/{}/assistantaccess/form/{}/{}/compare".format(
             test_object.randonLogin,

@@ -118,8 +118,8 @@ RUN sudo pip install setuptools==57.5.0
 # -------------------------------
 
 RUN npm install -g diff2html
-RUN npm install -g diff2html-cli
-RUN npm install -g json2csv
+RUN npm install -g diff2html-cli@5.2.1
+RUN npm install -g json2csv@5.0.7
 
 COPY ./docker_files/timezone/mysql_tzinfo_to_sql /usr/bin
 COPY ./docker_files/mosquitto/mosquitto.conf /etc/mosquitto/conf.d/

@@ -919,7 +919,7 @@ def t_e_s_t_unauthorized_access(test_object):
     )
     assert "FS_error" not in res.headers
 
-    # ---------------Section to test editor unauthorized access ---------------
+    # ---------------Section to test member unauthorized access ---------------
 
     test_object.testapp.get(
         "/user/{}/project/{}/form/{}/dictionary/table/{}/fields".format(
@@ -928,6 +928,21 @@ def t_e_s_t_unauthorized_access(test_object):
             test_object.formID,
             "maintable",
         ),
+        status=200,
+    )
+
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/dictionary/table/{}/fields".format(
+            test_object.randonLogin,
+            test_object.project,
+            test_object.formID,
+            "maintable",
+        ),
+        {
+            "post_type": "change_desc",
+            "field_name": "i_d",
+            "field_desc": "ID of the farmer",
+        },
         status=404,
     )
 
@@ -935,6 +950,17 @@ def t_e_s_t_unauthorized_access(test_object):
         "/user/{}/project/{}/form/{}/dictionary/tables".format(
             test_object.randonLogin, test_object.project, test_object.formID
         ),
+        status=200,
+    )
+
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/dictionary/tables".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        {
+            "table_name": "maintable",
+            "table_desc": "New description of maintable",
+        },
         status=404,
     )
 

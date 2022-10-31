@@ -385,7 +385,7 @@ class EditProjectView(ProjectsView):
                         feed_manager.add_activity_feed(activity)
                         for plugin in p.PluginImplementations(p.IProject):
                             plugin.after_editing_project(
-                                self.request, user_id, project_id, project_details
+                                self.request, user_id, project_details
                             )
                         self.request.session.flash(
                             self._("The project has been modified")

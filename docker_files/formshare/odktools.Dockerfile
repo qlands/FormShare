@@ -14,10 +14,10 @@ RUN apt-get update
 RUN apt-get install mysql-shell
 
 RUN apt install -y libc6-x32 libc6-i386
-RUN wget https://download.oracle.com/java/18/latest/jdk-18_linux-x64_bin.deb
+RUN wget https://download.oracle.com/java/17/latest/jdk-17_linux-x64_bin.deb
 RUN apt-get install -y libasound2
-RUN DEBIAN_FRONTEND=noninteractive dpkg -i jdk-18_linux-x64_bin.deb
-RUN update-alternatives --install /usr/bin/java java /usr/lib/jvm/jdk-18/bin/java 1
+RUN DEBIAN_FRONTEND=noninteractive dpkg -i jdk-17_linux-x64_bin.deb
+RUN update-alternatives --install /usr/bin/java java /usr/lib/jvm/jdk-17/bin/java 1
 
 RUN npm install -g diff2html
 RUN npm install -g diff2html-cli

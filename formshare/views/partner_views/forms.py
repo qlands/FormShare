@@ -69,18 +69,17 @@ class ChangeMyPartnerPassword(PartnerView):
                         self.request, self.partnerEmail, partner_data["old_password"]
                     ):
                         continue_change = True
+                        error_message = ""
                         for plugin in p.PluginImplementations(p.IPartner):
-                            (
-                                continue_change,
-                                error_message,
-                            ) = plugin.before_password_change(
-                                self.request,
-                                self.partnerID,
-                                partner_data["partner_password"],
-                            )
-                            if not continue_change:
-                                self.add_error(error_message)
-                            break  # Only one plugging will be called to extend before_password_change
+                            if continue_change:
+                                (
+                                    continue_change,
+                                    error_message,
+                                ) = plugin.before_partner_password_change(
+                                    self.request,
+                                    self.partnerID,
+                                    partner_data["partner_password"],
+                                )
                         if continue_change:
                             encoded_password = encode_data(
                                 self.request, partner_data["partner_password"]
@@ -92,7 +91,7 @@ class ChangeMyPartnerPassword(PartnerView):
                             )
                             if changed:
                                 for plugin in p.PluginImplementations(p.IPartner):
-                                    plugin.after_password_change(
+                                    plugin.after_partner_password_change(
                                         self.request,
                                         self.partnerID,
                                         partner_data["partner_password"],
@@ -107,6 +106,7 @@ class ChangeMyPartnerPassword(PartnerView):
                                     next_page, headers={"FS_error": "true"}
                                 )
                         else:
+                            self.add_error(error_message)
                             return HTTPFound(next_page, headers={"FS_error": "true"})
                     else:
                         self.add_error(self._("The old password is not correct"))

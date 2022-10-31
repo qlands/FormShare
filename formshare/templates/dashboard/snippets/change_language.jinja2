@@ -18,7 +18,11 @@
             nDays=1;
 
         expire.setTime(today.getTime() + 3600000*24*nDays);
-        document.cookie = cookieName+"="+escape(cookieValue) + ";expires="+expire.toGMTString() + ";path=/";
+        {% if request.registry.settings.get("cookie.domain", "") == "" %}
+            document.cookie = cookieName+"="+escape(cookieValue) + ";expires="+expire.toGMTString() + ";path=/";
+        {% else %}
+            document.cookie = cookieName+"="+escape(cookieValue) + ";expires="+expire.toGMTString() + "domain=.{{ request.registry.settings.get("cookie.domain", "") }};path=/";
+        {% endif %}
     }
 
     function readCookie(name) {

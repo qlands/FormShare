@@ -1038,11 +1038,12 @@ def upload_odk_form(
 
                     if error == 0:
                         continue_creation = True
+                        plugin_message = ""
                         for a_plugin in plugins.PluginImplementations(plugins.IForm):
                             if continue_creation:
                                 (
                                     continue_creation,
-                                    message,
+                                    plugin_message,
                                 ) = a_plugin.after_odk_form_checks(
                                     request,
                                     user_id,
@@ -1247,7 +1248,7 @@ def upload_odk_form(
                             paths = ["forms", form_directory]
                             dir_to_delete = os.path.join(odk_dir, *paths)
                             shutil.rmtree(dir_to_delete)
-                            return False, message
+                            return False, plugin_message
                     else:
                         return False, message
                 else:

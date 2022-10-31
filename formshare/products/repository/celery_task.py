@@ -424,17 +424,30 @@ def internal_create_mysql_repository(
         )
         raise BuildDataBaseError(str(e))
 
-    for plugin in p.PluginImplementations(p.IRepositoryProcess):  # pragma: no cover
-        plugin.after_creating_repository(
+    try:
+        for plugin in p.PluginImplementations(p.IRepositoryProcess):  # pragma: no cover
+            plugin.after_creating_repository(
+                settings,
+                user,
+                project_id,
+                form,
+                cnf_file,
+                create_file,
+                insert_file,
+                schema,
+                log,
+            )
+    except Exception as e:
+        log.error("Repository Plugin Error: {}".format(str(e)))
+        email_from = settings.get("mail.from", None)
+        email_to = settings.get("mail.error", None)
+        send_async_email(
             settings,
-            user,
-            project_id,
-            form,
-            cnf_file,
-            create_file,
-            insert_file,
-            schema,
-            log,
+            email_from,
+            email_to,
+            "Repository Plugin Error: {}".format(str(e)),
+            None,
+            locale,
         )
 
     engine = get_engine(settings)

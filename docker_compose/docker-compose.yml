@@ -1,9 +1,9 @@
 version: '3'
 services:
-  fsmysql_20220811:
+  fsmysql_20221101:
     image: mysql:8.0.23
     command: --default-authentication-plugin=mysql_native_password
-    container_name: fs_mysql_20220811
+    container_name: fs_mysql_20221101
     cap_add:
       - SYS_NICE
     environment:
@@ -14,15 +14,15 @@ services:
       fsnet:
         ipv4_address: 172.28.1.5
 
-  fses20220811n01:
+  fses20221101n01:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.14.2
-    container_name: fses20220811n01
+    container_name: fses20221101n01
     environment:
       - network.host=172.28.1.1
-      - node.name=fses20220811n01
+      - node.name=fses20221101n01
       - cluster.name=fs-es-cluster
-      - discovery.seed_hosts=fses20220811n02
-      - cluster.initial_master_nodes=fses20220811n01,fses20220811n02
+      - discovery.seed_hosts=fses20221101n02
+      - cluster.initial_master_nodes=fses20221101n01,fses20221101n02
       - bootstrap.memory_lock=true
       - xpack.security.enabled=false
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
@@ -36,15 +36,15 @@ services:
       fsnet:
         ipv4_address: 172.28.1.1
 
-  fses20220811n02:
+  fses20221101n02:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.14.2
-    container_name: fses20220811n02
+    container_name: fses20221101n02
     environment:
       - network.host=172.28.1.2
-      - node.name=fses20220811n02
+      - node.name=fses20221101n02
       - cluster.name=fs-es-cluster
-      - discovery.seed_hosts=fses20220811n01
-      - cluster.initial_master_nodes=fses20220811n01,fses20220811n02
+      - discovery.seed_hosts=fses20221101n01
+      - cluster.initial_master_nodes=fses20221101n01,fses20221101n02
       - bootstrap.memory_lock=true
       - xpack.security.enabled=false
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
@@ -58,9 +58,9 @@ services:
       fsnet:
         ipv4_address: 172.28.1.2
 
-  formshare_20220811:
-    image: qlands/formshare2:20220811
-    container_name: formshare_20220811
+  formshare_20221101:
+    image: qlands/formshare2:20221101
+    container_name: formshare_20221101
     environment:
       MYSQL_HOST_NAME: 172.28.1.5
       MYSQL_USER_NAME: root

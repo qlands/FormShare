@@ -86,11 +86,11 @@ ScreenShot
 
 Releases
 ------------
-The current stable release is 2.18.0 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.18.0) 
+The current stable release is 2.20.0 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.20.0) 
 
-The database signature for stable 2.18.0 is 0e3e192833a9
+The database signature for stable 2.20.0 is 917dcf0a81c0
 
-The Docker image for stable 2.18.0 is 20220811
+The Docker image for stable 2.20.0 is 20221101
 
 Installation
 ------------
@@ -110,9 +110,9 @@ sudo apt-get install -y docker-compose
 
 # Get the Docker Compose file
 cd /opt
-sudo mkdir formshare_docker_compose_20220811
-cd formshare_docker_compose_20220811
-sudo wget https://raw.githubusercontent.com/qlands/FormShare/stable-2.18.0/docker_compose/docker-compose.yml
+sudo mkdir formshare_docker_compose_20221101
+cd formshare_docker_compose_20221101
+sudo wget https://raw.githubusercontent.com/qlands/FormShare/stable-2.20.0/docker_compose/docker-compose.yml
 
 # Make the directory structure for FormShare
 sudo mkdir /opt/formshare
@@ -137,11 +137,11 @@ sudo sysctl -w vm.max_map_count=262144
 echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.d/60-vm-max_map_count.conf
 
 # Download all the required Docker Images
-cd /opt/formshare_docker_compose_20220811
+cd /opt/formshare_docker_compose_20221101
 sudo docker-compose pull
 
 # Edit the docker-compose.yml file to set the MySQL root and FormShare admin passwords
-sudo nano /opt/formshare_docker_compose_20220811/docker-compose.yml
+sudo nano /opt/formshare_docker_compose_20221101/docker-compose.yml
 # Press Alt+Shit+3 to show the line numbers in Nano
 
 Edit line 10: Change the root password from "my_secure_password" to your password
@@ -189,7 +189,7 @@ sudo service apache2 start
 # Subsequent start will take about 2 minutes. You can check the status with "sudo docker stats". 
 # FormShare will be ready for usage when the container reaches more than 500 kB of MEM USAGE
 # This is the only two commands you need to start FormShare after a server restart
-cd /opt/formshare_docker_compose_20220811
+cd /opt/formshare_docker_compose_20221101
 sudo docker-compose up -d
 
 # Browse to FormShare

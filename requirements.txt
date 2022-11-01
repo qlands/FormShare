@@ -87,7 +87,7 @@ pluggy==1.0.0
 portend==3.1.0
 poyo==0.5.0
 prompt-toolkit==3.0.31
-protobuf==3.20.1
+protobuf==3.20.2
 py==1.11.0
 pycparser==2.21
 pycrypto==2.6.1

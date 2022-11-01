@@ -38,7 +38,7 @@ msgstr "O membro já faz parte desse grupo"
 msgid "Cannot remove the member"
 msgstr "Não é possível remover o membro"
 
-#: formshare/processes/db/collaborator.py:144
+#: formshare/processes/db/collaborator.py:145
 msgid "The collaborator is already part of this project"
 msgstr "Os colaboradores já fazem parte deste projeto"
 
@@ -94,11 +94,11 @@ msgstr "Um projeto com o nome '{}' já existe em sua conta"
 msgid "If you have forms with submissions, first you need to delete such forms"
 msgstr "Caso você tenha formulários com submissões, primeiro você precisa excluir tais formulários"
 
-#: formshare/processes/db/user.py:142
+#: formshare/processes/db/user.py:147
 msgid "Username is already taken"
 msgstr "Nome de usuário já utilizado"
 
-#: formshare/processes/db/user.py:151
+#: formshare/processes/db/user.py:156
 msgid "Email is invalid"
 msgstr "E-mail invalido"
 
@@ -249,19 +249,19 @@ msgstr "Você pode ignorar esta restrição criando grupos de itens dentro das r
 msgid "Please edit your ODK XLSX/XLS file, group several items inside repeats with repeat_count = 1 and try to upload the form again."
 msgstr "Favor editar seu arquivo XLSX/XLS do ODK, agrupar diversos itens dentro das repetições com repeat_count = 1 e tente carregar o formulário novamente."
 
-#: formshare/processes/odk/api.py:879 formshare/processes/odk/api.py:1317
+#: formshare/processes/odk/api.py:879 formshare/processes/odk/api.py:1316
 msgid "No file was attached"
 msgstr "Nenhum arquivo foi anexado"
 
-#: formshare/processes/odk/api.py:901 formshare/processes/odk/api.py:1340
+#: formshare/processes/odk/api.py:901 formshare/processes/odk/api.py:1339
 msgid "Invalid file type"
 msgstr "Tipo inválido de arquivo"
 
-#: formshare/processes/odk/api.py:970 formshare/processes/odk/api.py:1411
+#: formshare/processes/odk/api.py:970 formshare/processes/odk/api.py:1410
 msgid "The variable {} used to identify the cases is invalid. Only text, calculates or integers are allowed."
 msgstr "A variável {} usada para identificar os casos não é válida. Somente texto, cálculo ou números inteiros são permitidos."
 
-#: formshare/processes/odk/api.py:991 formshare/processes/odk/api.py:1432
+#: formshare/processes/odk/api.py:991 formshare/processes/odk/api.py:1431
 msgid "The variable {} used to label cases was not found or is invalid. Only text, calculates or integers are allowed."
 msgstr "A variável {} usada para rotular os casos não foi encontrada ou não é válida. Somente texto, cálculo ou inteiros são permitidos."
 
@@ -278,42 +278,42 @@ msgstr "A variável {} usada para localizar e selecionar casos não foi encontra
 #. | is " "invalid. The variable must be select_one_from_file using a CSV file
 #. or
 #. | a " "barcode."
-#: formshare/processes/odk/api.py:1034 formshare/processes/odk/api.py:1476
+#: formshare/processes/odk/api.py:1034 formshare/processes/odk/api.py:1475
 msgid "The variable {} used to record a date or date and time was not found or is invalid. The variable must be date or datetime."
 msgstr "A variável {} usada para registrar a data não foi encontrada ou é inválida. A variável deve ser \"data\" ou \"data e hora\"."
 
-#: formshare/processes/odk/api.py:1256
+#: formshare/processes/odk/api.py:1255
 msgid "The form already exists in this project"
 msgstr "Formulário já existente neste projeto"
 
-#: formshare/processes/odk/api.py:1260 formshare/processes/odk/api.py:1748
+#: formshare/processes/odk/api.py:1259 formshare/processes/odk/api.py:1744
 msgid "The form ID has especial characters. FormShare only allows letters, numbers and underscores(_)"
 msgstr "O ID do formulário possui caracteres especiais. O FormShare permite apenas letras, números e underline (_)"
 
-#: formshare/processes/odk/api.py:1267
+#: formshare/processes/odk/api.py:1266
 msgid "Cannot find XForm ID. Please include this ODK form in an issue on  "
 msgstr "Não foi possível localizar ID do XForm. Inclua este formulário ODK como problema em "
 
 #. | msgid "" "The variable {} used to search and select cases was not found or
 #. | is " "invalid. The variable must be select_one_from_file using a CSV
 #. file."
-#: formshare/processes/odk/api.py:1460
+#: formshare/processes/odk/api.py:1459
 msgid "The variable {} used to search and select cases was not found or is invalid. The variable must be select_one_from_file using a CSV file or a barcode."
 msgstr "A variável {} usada para localizar e selecionar casos não foi encontrada ou é inválida. A variável deve ser select_one_from_file usando um arquivo CSV ou uma variável de código de barras."
 
-#: formshare/processes/odk/api.py:1736
+#: formshare/processes/odk/api.py:1732
 msgid "The form does not exist in this project"
 msgstr "Formulário inexistente neste projeto"
 
-#: formshare/processes/odk/api.py:1740
+#: formshare/processes/odk/api.py:1736
 msgid "The \"form_id\" of the current form does not match the \"form_id\" of the one you uploaded. You cannot update a form with another form."
 msgstr "O \"form_id\" do formulário atual não corresponde ao \"form_id\" do formulário que você carregou. Você não pode atualizar um formulário com outro formulário."
 
-#: formshare/processes/odk/api.py:1755
+#: formshare/processes/odk/api.py:1751
 msgid "Cannot find XForm ID. Please post the form as an issue on "
 msgstr "Não é possível localizar o ID XForm. Favor publicar o formulário como problema em "
 
-#: formshare/processes/odk/api.py:2482
+#: formshare/processes/odk/api.py:2478
 msgid "The language \"{}\" is missing in this version of the form and cannot be merged.\n"
 "\n"
 "Use the \"Fix language\" button to set the languages in this version of the ODK Form."
@@ -321,7 +321,7 @@ msgstr "O idioma \"{}\" não está presente nesta versão do formulário e não 
 "\n"
 "Use o botão \"Idioma correto\" para configurar os idiomas nesta versão doo formulário ODK."
 
-#: formshare/processes/odk/api.py:2488
+#: formshare/processes/odk/api.py:2484
 msgid "The language called \"default\" appears when you have a \"label\" without indicating a language. For example if you had a column called \"label\" and another called \"label:English (es)\" then \"default\" refers to the language of \"label\" which was not indicated in the previous version of this ODK Form.\n"
 "\n"
 "In this new version you added the language to the \"label\" therefore \"default\" does not exists"
@@ -329,7 +329,7 @@ msgstr "O idioma chamado \"default\" aparece quando você tem um \"rótulo\" sem
 "\n"
 "Nesta nova versão, adicionou-se o idioma ao \"label\", portanto\"default\" não existe"
 
-#: formshare/processes/odk/api.py:2504
+#: formshare/processes/odk/api.py:2500
 msgid "This version of the form is in multiple languages but the previous one was not and therefore and cannot be merged.\n"
 "\n"
 "Use the \"Fix language\" button to set the languages in this version of the ODK Form."
@@ -337,7 +337,7 @@ msgstr "Esta versão do formulário está em vários idiomas, mas o anteriornão
 "\n"
 "Use o botão \"Idioma correto\" para configurar os idiomas nesta versão doFormulário ODK."
 
-#: formshare/processes/odk/api.py:3634
+#: formshare/processes/odk/api.py:3632
 msgid "Generating Diff HTML file error. Diff file for such commit does not exist"
 msgstr "Erro gerador de erro Difere o ficheiro de erro HTML. O ficheiro dif não existe"
 
@@ -2779,16 +2779,16 @@ msgstr "Editar descrição de tabela"
 msgid "Protection type"
 msgstr "Tipo de proteção"
 
-#: formshare/templates/dashboard/projects/forms/dictionary/snippets/field_item.jinja2:12
-#: formshare/templates/dashboard/projects/forms/dictionary/snippets/table_item.jinja2:11
+#: formshare/templates/dashboard/projects/forms/dictionary/snippets/field_item.jinja2:13
+#: formshare/templates/dashboard/projects/forms/dictionary/snippets/table_item.jinja2:12
 msgid "Edit description"
 msgstr "Editar descrição"
 
-#: formshare/templates/dashboard/projects/forms/dictionary/snippets/field_item.jinja2:14
+#: formshare/templates/dashboard/projects/forms/dictionary/snippets/field_item.jinja2:15
 msgid "Set as not sensitive"
 msgstr "Definir como não-sensível"
 
-#: formshare/templates/dashboard/projects/forms/dictionary/snippets/field_item.jinja2:16
+#: formshare/templates/dashboard/projects/forms/dictionary/snippets/field_item.jinja2:17
 #: formshare/templates/dashboard/projects/forms/dictionary/snippets/set_field_as_sensitive.jinja2:28
 msgid "Set as sensitive"
 msgstr "Definir como sensível"
@@ -2811,7 +2811,7 @@ msgstr "campo"
 msgid "sensitive"
 msgstr "sensível"
 
-#: formshare/templates/dashboard/projects/forms/dictionary/snippets/table_item.jinja2:12
+#: formshare/templates/dashboard/projects/forms/dictionary/snippets/table_item.jinja2:16
 msgid "View / Edit fields"
 msgstr "Visualizar / Editar campos"
 
@@ -3672,11 +3672,6 @@ msgstr "mascado como sensível entre "
 #: formshare/templates/dashboard/projects/forms/snippets/repository_tab.jinja2:26
 msgid "table"
 msgstr "tabela"
-
-#: formshare/templates/dashboard/projects/forms/snippets/form_important_links.jinja2:18
-#: formshare/templates/dashboard/projects/forms/snippets/repository_tab.jinja2:26
-msgid "Anonymize fields"
-msgstr "Tornar campos anônimos"
 
 #: formshare/templates/dashboard/projects/forms/snippets/form_important_links.jinja2:27
 msgid "Clean data using the browser"
@@ -5654,7 +5649,7 @@ msgstr "O grupo foi excluído com sucesso"
 msgid "Unable to delete the group: "
 msgstr "Não foi possível excluir o grupo: "
 
-#: formshare/views/assistant_groups.py:264 formshare/views/form.py:1954
+#: formshare/views/assistant_groups.py:264 formshare/views/form.py:1959
 msgid "The assistant was added successfully"
 msgstr "O assistente foi adicionado com sucesso"
 
@@ -5662,49 +5657,49 @@ msgstr "O assistente foi adicionado com sucesso"
 msgid "You need to specify an assistant"
 msgstr "Você precisa especificar um assistente"
 
-#: formshare/views/assistants.py:129
+#: formshare/views/assistants.py:132
 msgid "The assistant was added to this project"
 msgstr "O assistente foi adicionado a este projeto"
 
-#: formshare/views/assistant_views/forms.py:147 formshare/views/assistants.py:139
-#: formshare/views/assistants.py:403 formshare/views/basic_views.py:298
-#: formshare/views/basic_views.py:739 formshare/views/partner_views/forms.py:120
-#: formshare/views/partners.py:275 formshare/views/partners.py:468
-#: formshare/views/users.py:213 formshare/views/users.py:380
+#: formshare/views/assistant_views/forms.py:148 formshare/views/assistants.py:142
+#: formshare/views/assistants.py:415 formshare/views/basic_views.py:298
+#: formshare/views/basic_views.py:738 formshare/views/partner_views/forms.py:120
+#: formshare/views/partners.py:277 formshare/views/partners.py:474
+#: formshare/views/users.py:216 formshare/views/users.py:371
 msgid "The password cannot be empty"
 msgstr "A senha não pode estar vazia"
 
-#: formshare/views/assistant_views/forms.py:143 formshare/views/assistants.py:143
-#: formshare/views/assistants.py:394 formshare/views/basic_views.py:719
-#: formshare/views/partner_views/forms.py:116 formshare/views/partners.py:270
-#: formshare/views/partners.py:465 formshare/views/users.py:210
-#: formshare/views/users.py:375
+#: formshare/views/assistant_views/forms.py:144 formshare/views/assistants.py:146
+#: formshare/views/assistants.py:406 formshare/views/basic_views.py:718
+#: formshare/views/partner_views/forms.py:116 formshare/views/partners.py:272
+#: formshare/views/partners.py:471 formshare/views/users.py:213
+#: formshare/views/users.py:366
 msgid "The password and its confirmation are not the same"
 msgstr "A senha e sua confirmação não são iguais"
 
-#: formshare/views/assistants.py:147 formshare/views/basic_views.py:730
-#: formshare/views/users.py:385
+#: formshare/views/assistants.py:150 formshare/views/basic_views.py:729
+#: formshare/views/users.py:376
 msgid "The user id has invalid characters. Only underscore and dot are allowed"
 msgstr "O ID de usuário tem caracteres inválidos. Apenas underline e ponto são permitidos"
 
-#: formshare/views/assistants.py:153
+#: formshare/views/assistants.py:156
 msgid "You need to specify a user id"
 msgstr "Você precisa especificar um id de usuário"
 
-#: formshare/views/assistants.py:230
+#: formshare/views/assistants.py:238
 msgid "The assistant was edited successfully"
 msgstr "O assistente foi editado com sucesso"
 
-#: formshare/views/assistants.py:292
+#: formshare/views/assistants.py:304
 msgid "The assistant was deleted successfully"
 msgstr "O assistente foi excluído com sucesso"
 
-#: formshare/views/assistants.py:368
+#: formshare/views/assistants.py:380
 msgid "The password was changed successfully"
 msgstr "A senha foi alterada com sucesso"
 
-#: formshare/views/assistant_views/forms.py:131 formshare/views/assistants.py:377
-#: formshare/views/partner_views/forms.py:104
+#: formshare/views/assistant_views/forms.py:132 formshare/views/assistants.py:389
+#: formshare/views/partner_views/forms.py:103
 msgid "Unable to change the password: "
 msgstr "Não foi possível alterar a senha: "
 
@@ -5724,7 +5719,7 @@ msgstr "Chave inválida"
 msgid "User does not exist"
 msgstr "O utilizador não existe"
 
-#: formshare/views/basic_views.py:350 formshare/views/basic_views.py:742
+#: formshare/views/basic_views.py:350 formshare/views/basic_views.py:741
 msgid "Invalid email"
 msgstr "E-mail inválido"
 
@@ -5740,76 +5735,76 @@ msgstr "A conta do sócio não existe ou a senha é inválida"
 msgid "The partner account does not exists or the password is invalid"
 msgstr "A conta do sócio não existe ou a senha é inválida"
 
-#: formshare/views/basic_views.py:708
+#: formshare/views/basic_views.py:707
 msgid "The password must be less than 50 characters"
 msgstr "A senha deve ter menos de 50 caracteres"
 
-#: formshare/views/classes.py:712
+#: formshare/views/classes.py:721
 msgid "You need to provide a password"
 msgstr "Deve fornecer uma palavra-passe"
 
-#: formshare/views/classes.py:999 formshare/views/classes.py:1329
+#: formshare/views/classes.py:1008 formshare/views/classes.py:1338
 msgid "This API key does not exist or is inactive"
 msgstr "A chave API não existe ou está inativa"
 
-#: formshare/views/classes.py:1013 formshare/views/classes.py:1345
+#: formshare/views/classes.py:1022 formshare/views/classes.py:1354
 msgid "You need to specify an API key"
 msgstr "Você precisa especificar uma chave API"
 
-#: formshare/views/classes.py:1041 formshare/views/classes.py:1280
-#: formshare/views/classes.py:1373
+#: formshare/views/classes.py:1050 formshare/views/classes.py:1289
+#: formshare/views/classes.py:1382
 msgid "The following keys were not present in the submitted JSON"
 msgstr "As seguintes chaves não estavam presentes no JSON submetido"
 
-#: formshare/views/classes.py:1238
+#: formshare/views/classes.py:1247
 msgid "You need to specify a rowuuid"
 msgstr "Você deve especificar um rowuuid"
 
-#: formshare/views/classes.py:1250
+#: formshare/views/classes.py:1259
 msgid "You need to specify an assistant API key (apikey)"
 msgstr "Você precisa indicar uma chave de API de um assistente"
 
-#: formshare/views/collaborators.py:71
+#: formshare/views/collaborators.py:92
 msgid "The collaborator was added to this project"
 msgstr "Os colaboradores foram adicionados a este projeto"
 
-#: formshare/views/collaborators.py:87
+#: formshare/views/collaborators.py:110
 msgid "The collaborator was added to this project. However, an email has been sent to him/her/they to accept the collaboration"
 msgstr "O colaborador foi adicionado a este projeto. Porém, um e-mail foi enviado a ele/ela para aceitar a colaboração"
 
-#: formshare/views/collaborators.py:104
+#: formshare/views/collaborators.py:130
 msgid "This collaborator does not exist or is inactive"
 msgstr "Este colaborador não existe ou está inativo"
 
-#: formshare/views/collaborators.py:107
+#: formshare/views/collaborators.py:133
 msgid "You need to specify a collaborator"
 msgstr "Você precisa especificar um colaborador"
 
-#: formshare/views/collaborators.py:116
+#: formshare/views/collaborators.py:142
 msgid "The role was changed"
 msgstr "A função foi alterada"
 
-#: formshare/views/collaborators.py:169
+#: formshare/views/collaborators.py:213
 msgid "The collaborator was removed successfully"
 msgstr "O colaborador foi removido com sucesso"
 
-#: formshare/views/collaborators.py:174
+#: formshare/views/collaborators.py:218 formshare/views/collaborators.py:223
 msgid "Unable to remove the collaborator: "
 msgstr "Não foi possível remover o colaborador: "
 
-#: formshare/views/collaborators.py:205
+#: formshare/views/collaborators.py:259
 msgid "You accepted the collaboration"
 msgstr "Você aceitou a colaboração"
 
-#: formshare/views/collaborators.py:208
+#: formshare/views/collaborators.py:262
 msgid "Unable to accept the collaboration: "
 msgstr "Não foi possível aceitar a colaboração: "
 
-#: formshare/views/collaborators.py:215
+#: formshare/views/collaborators.py:269
 msgid "You declined the collaboration"
 msgstr "Você recusou a colaboração"
 
-#: formshare/views/collaborators.py:218
+#: formshare/views/collaborators.py:272
 msgid "Unable to decline the collaboration: "
 msgstr "Nao foi possível recusar a colaboração: "
 
@@ -5944,161 +5939,161 @@ msgstr "O formulário ODK foi atualizado com sucesso"
 msgid "The form was edited successfully"
 msgstr "O formulário foi editado com sucesso"
 
-#: formshare/views/form.py:1493
+#: formshare/views/form.py:1498
 msgid "The form was deleted successfully"
 msgstr "O formulário foi excluído com sucesso"
 
-#: formshare/views/form.py:1549
+#: formshare/views/form.py:1554
 msgid "The form was activated successfully"
 msgstr "O formulário foi ativado com sucesso"
 
-#: formshare/views/form.py:1599
+#: formshare/views/form.py:1604
 msgid "The form was deactivated successfully"
 msgstr "O formulário foi desativado com sucesso"
 
-#: formshare/views/form.py:1710 formshare/views/projects.py:544
+#: formshare/views/form.py:1715 formshare/views/projects.py:583
 msgid "No files were attached"
 msgstr "Nenhum arquivo foi anexado"
 
-#: formshare/views/form.py:1714 formshare/views/form.py:1721
-#: formshare/views/projects.py:548 formshare/views/projects.py:555
+#: formshare/views/form.py:1719 formshare/views/form.py:1726
+#: formshare/views/projects.py:587 formshare/views/projects.py:594
 msgid "Error {} encountered. A log entry has been produced"
 msgstr "Erro {} encontrado. Uma entrada de registro foi produzida"
 
-#: formshare/views/form.py:1727 formshare/views/projects.py:562
+#: formshare/views/form.py:1732 formshare/views/projects.py:601
 msgid "The file was uploaded successfully"
 msgstr "O arquivo foi carregado com sucesso"
 
-#: formshare/views/form.py:1731 formshare/views/projects.py:566
+#: formshare/views/form.py:1736 formshare/views/projects.py:605
 msgid "The files were uploaded successfully"
 msgstr "Os arquivos foram carregados com sucesso"
 
-#: formshare/views/form.py:1786
+#: formshare/views/form.py:1791
 msgid "You cannot remove this file because it is required by the repository"
 msgstr "Você não pode remover este arquivo porque ele é exigido pelo repositório"
 
-#: formshare/views/form.py:1810
+#: formshare/views/form.py:1815
 msgid "The files was removed successfully"
 msgstr "Os arquivos foram removidos com sucesso"
 
-#: formshare/views/form.py:2089
+#: formshare/views/form.py:2098
 msgid "The information was changed successfully"
 msgstr "A informação foi alterada com sucesso"
 
-#: formshare/views/form.py:2182
+#: formshare/views/form.py:2194
 msgid "The assistant was removed successfully"
 msgstr "O assistente foi removido com sucesso"
 
-#: formshare/views/form.py:2264
+#: formshare/views/form.py:2276
 msgid "The group was added successfully"
 msgstr "O grupo foi adicionado com sucesso"
 
-#: formshare/views/form.py:2352
+#: formshare/views/form.py:2364
 msgid "The role was changed successfully"
 msgstr "A função foi alterada com sucesso"
 
-#: formshare/views/form.py:2407
+#: formshare/views/form.py:2419
 msgid "The group was removed successfully"
 msgstr "O grupo foi removido com sucesso"
 
-#: formshare/views/form.py:3216
+#: formshare/views/form.py:3228
 msgid "The process was stopped successfully"
 msgstr "O processo foi interrompido com sucesso"
 
-#: formshare/views/form.py:3222
+#: formshare/views/form.py:3234
 msgid "FormShare was not able to stop the process"
 msgstr "O FormShare não conseguiu interromper o processo"
 
-#: formshare/views/form.py:3554
+#: formshare/views/form.py:3566
 msgid "Such alias already exist"
 msgstr "O alias já existe"
 
-#: formshare/views/form.py:3558
+#: formshare/views/form.py:3570
 msgid "Such field does not exist"
 msgstr "O campo não existe"
 
-#: formshare/views/form.py:3562
+#: formshare/views/form.py:3574
 msgid "The alias cannot be a number"
 msgstr "O alias não pode ser um número"
 
-#: formshare/views/form.py:3565
+#: formshare/views/form.py:3577
 msgid "The alias is invalid"
 msgstr "O alias é inválido"
 
-#: formshare/views/form.py:3568
+#: formshare/views/form.py:3580
 msgid "The alias has invalid characters. Only underscore (_) is allowed"
 msgstr "O alias tem caracteres inválidos. Apenas underline (_) é permitido"
 
-#: formshare/views/form.py:3654 formshare/views/form.py:3666
-#: formshare/views/form.py:3776 formshare/views/form.py:3786
-#: formshare/views/projects.py:763 formshare/views/projects.py:772
-#: formshare/views/projects.py:851 formshare/views/projects.py:858
+#: formshare/views/form.py:3666 formshare/views/form.py:3678
+#: formshare/views/form.py:3788 formshare/views/form.py:3798
+#: formshare/views/projects.py:802 formshare/views/projects.py:811
+#: formshare/views/projects.py:890 formshare/views/projects.py:897
 msgid "Invalid dates"
 msgstr "Datas inválidas"
 
-#: formshare/views/form.py:3686
+#: formshare/views/form.py:3698
 msgid "The partner was added successfully to this form"
 msgstr "O sócio foi adicionado com sucesso a este formulário"
 
-#: formshare/views/form.py:3960 formshare/views/repository.py:112
+#: formshare/views/form.py:3972 formshare/views/repository.py:112
 msgid "You need to indicate the primary language"
 msgstr "Você precisa indicar o idioma primário"
 
-#: formshare/views/form.py:4009 formshare/views/repository.py:163
+#: formshare/views/form.py:4021 formshare/views/repository.py:163
 msgid "Each language needs to have an unique ISO 639-1 code"
 msgstr "Cada idioma deve ter um código ISO 639-1 exclusivo"
 
-#: formshare/views/form.py:4016 formshare/views/repository.py:170
+#: formshare/views/form.py:4028 formshare/views/repository.py:170
 msgid "You need to indicate a ISO 639-1 code for each language"
 msgstr "Você precisa indicar um código ISO 639-1 para cada idioma"
 
-#: formshare/views/partners.py:171 formshare/views/partners.py:317
+#: formshare/views/partners.py:171 formshare/views/partners.py:319
 msgid "The organization cannot be empty"
 msgstr "Organização não pode estar vazia"
 
-#: formshare/views/partners.py:179 formshare/views/partners.py:323
-#: formshare/views/profile.py:85 formshare/views/projects.py:378
+#: formshare/views/partners.py:179 formshare/views/partners.py:325
+#: formshare/views/profile.py:85 formshare/views/projects.py:400
 msgid "The name cannot be empty"
 msgstr "O nome não pode estar vazio"
 
-#: formshare/views/partners.py:187 formshare/views/partners.py:330
+#: formshare/views/partners.py:187 formshare/views/partners.py:332
 msgid "The partner telephone contact cannot be empty"
 msgstr "O número de telefone de contato do sócio não pode estar vazio"
 
-#: formshare/views/partners.py:264
+#: formshare/views/partners.py:266
 msgid "The partner was added successfully"
 msgstr "O sócio foi adicionado com sucesso"
 
-#: formshare/views/partners.py:278
+#: formshare/views/partners.py:280
 msgid "This partner email address already exist"
 msgstr "Email do sócio já existe"
 
-#: formshare/views/partners.py:281
+#: formshare/views/partners.py:283
 msgid "The email you provided is invalid"
 msgstr "O e-mail que você indicou não é válido"
 
-#: formshare/views/partners.py:339 formshare/views/users.py:85
-#: formshare/views/users.py:256
+#: formshare/views/partners.py:341 formshare/views/users.py:85
+#: formshare/views/users.py:259
 msgid "This email address is not valid"
 msgstr "Este endereço de e-mail não é válido"
 
-#: formshare/views/partners.py:345
+#: formshare/views/partners.py:347
 msgid "This email address already belongs to another partner"
 msgstr "Este e-mail já pertence a outro sócio"
 
-#: formshare/views/partners.py:399
+#: formshare/views/partners.py:405
 msgid "The partner has been updated"
 msgstr "O sócio foi modificado"
 
-#: formshare/views/partners.py:451 formshare/views/users.py:196
+#: formshare/views/partners.py:457 formshare/views/users.py:199
 msgid "The password for {} was modified"
 msgstr "A senha para {} foi modificada"
 
-#: formshare/views/partners.py:502
+#: formshare/views/partners.py:508
 msgid "This partner was created by {0} ({1}). Only {0} or and administrator can delete it"
 msgstr "Este sócio foi criado por {0} ({1}). Apenas {0} ou um administrador podedelete isso"
 
-#: formshare/views/partners.py:546
+#: formshare/views/partners.py:552
 msgid "The partner has been deleted"
 msgstr "O sócio foi removido"
 
@@ -6130,55 +6125,55 @@ msgstr "Você precisa especificar uma nova senha"
 msgid "You need to specify the old password"
 msgstr "Você precisa especificar a senha antiga"
 
-#: formshare/views/projects.py:282
+#: formshare/views/projects.py:286
 msgid "The project has been created"
 msgstr "O projeto foi criado"
 
-#: formshare/views/projects.py:290
+#: formshare/views/projects.py:296
 msgid "The project code has invalid characters. Only underscore (_) is allowed"
 msgstr "O código do projeto tem caracteres inválidos. Apenas underline (_) é permitido"
 
-#: formshare/views/projects.py:295
+#: formshare/views/projects.py:301
 msgid "The project code cannot be empty"
 msgstr "O código do projeto não pode estar vazio"
 
-#: formshare/views/projects.py:372
+#: formshare/views/projects.py:391
 msgid "The project has been modified"
 msgstr "O projeto foi modificado"
 
-#: formshare/views/projects.py:417
+#: formshare/views/projects.py:439
 msgid "The active project has changed"
 msgstr "O projeto ativo foi alterado"
 
-#: formshare/views/projects.py:420
+#: formshare/views/projects.py:442
 msgid "Error activating project: "
 msgstr "Erro ao ativar o projeto: "
 
-#: formshare/views/projects.py:470
+#: formshare/views/projects.py:506
 msgid "The project was deleted successfully"
 msgstr "O projeto foi excluído com sucesso"
 
-#: formshare/views/projects.py:474
+#: formshare/views/projects.py:510 formshare/views/projects.py:513
 msgid "Unable to delete the project: "
 msgstr "Não foi possível excluir o projeto: "
 
-#: formshare/views/projects.py:614
+#: formshare/views/projects.py:653
 msgid "The files were removed successfully"
 msgstr "Os arquivos foram removidos com sucesso"
 
-#: formshare/views/projects.py:791
+#: formshare/views/projects.py:830
 msgid "The partner was successfully linked to this project"
 msgstr "O sócio foi associado a este projeto com sucesso"
 
-#: formshare/views/projects.py:801
+#: formshare/views/projects.py:840
 msgid "You need to indicate a partner"
 msgstr "Você deve indicar um sócio"
 
-#: formshare/views/form.py:3800 formshare/views/projects.py:874
+#: formshare/views/form.py:3812 formshare/views/projects.py:913
 msgid "The partner was successfully updated"
 msgstr "O sócio foi modificado com sucesso"
 
-#: formshare/views/projects.py:921
+#: formshare/views/projects.py:960
 msgid "The partner was successfully removed from this project"
 msgstr "O sócio foi removido com sucesso deste projeto"
 
@@ -6238,19 +6233,19 @@ msgstr "Esta chave de API não tem permissão para limpar os dados associados ao
 msgid "Update completed"
 msgstr "Atualização concluída"
 
-#: formshare/views/users.py:91 formshare/views/users.py:265
+#: formshare/views/users.py:91 formshare/views/users.py:268
 msgid "This email address already belongs to another account"
 msgstr "Este endereço de e-mail já pertence a outra conta"
 
-#: formshare/views/users.py:166
+#: formshare/views/users.py:169
 msgid "The user has been updated"
 msgstr "O usuário foi atualizado"
 
-#: formshare/views/users.py:367
+#: formshare/views/users.py:358
 msgid "The user was added successfully"
 msgstr "O usuário foi adicionado com sucesso"
 
-#: formshare/views/users.py:382
+#: formshare/views/users.py:373
 msgid "This user already exists"
 msgstr "Este usuário já existe"
 
@@ -6283,17 +6278,17 @@ msgstr "Uma tal chave API não existe."
 msgid "You need to indicate an API key (X-API-Key) and an API Secret (X-API-Secret)."
 msgstr "É necessário especificar uma chave API (X-API-Key) e um segredo API (X-API-Secret)."
 
-#: formshare/views/assistant_views/forms.py:139
+#: formshare/views/assistant_views/forms.py:140
 #: formshare/views/partner_views/forms.py:112
 msgid "The old password is not correct"
 msgstr "A senha antiga não está correta"
 
-#: formshare/views/assistant_views/forms.py:177
+#: formshare/views/assistant_views/forms.py:178
 #: formshare/views/partner_views/forms.py:144
 msgid "Unable to change the key: "
 msgstr "Não foi possível alterar a chave: "
 
-#: formshare/views/assistant_views/forms.py:206
+#: formshare/views/assistant_views/forms.py:207
 #: formshare/views/partner_views/forms.py:168
 msgid "Unable to change the time zone: "
 msgstr "O fuso horário não pôde ser modificado: "
@@ -6331,7 +6326,7 @@ msgstr "Você precisa fornecer uma explicação quando desconsiderar um erro"
 msgid "You need to provide an explanation when canceling a disregard"
 msgstr "Você precisa fornecer uma explicação ao cancelar uma desconsideração"
 
-#: formshare/views/form.py:3857
+#: formshare/views/form.py:3869
 msgid "The partner was successfully removed from this form"
 msgstr "O parceiro foi removido com sucesso deste formulário."
 
@@ -6542,4 +6537,9 @@ msgstr "Terá de criar em breve um repositório para continuar a receber casos. 
 #: formshare/templates/dashboard/projects/snippets/project_item.jinja2:18
 msgid "This is your active project"
 msgstr "Este é o seu projecto activo"
+
+#: formshare/templates/dashboard/projects/forms/snippets/form_important_links.jinja2:18
+#: formshare/templates/dashboard/projects/forms/snippets/repository_tab.jinja2:26
+msgid "Dictionary"
+msgstr "Dicionário"
 

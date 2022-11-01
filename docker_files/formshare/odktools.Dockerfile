@@ -20,8 +20,8 @@ RUN DEBIAN_FRONTEND=noninteractive dpkg -i jdk-17_linux-x64_bin.deb
 RUN update-alternatives --install /usr/bin/java java /usr/lib/jvm/jdk-17/bin/java 1
 
 RUN npm install -g diff2html
-RUN npm install -g diff2html-cli
-RUN npm install -g json2csv
+RUN npm install -g diff2html-cli@5.2.1
+RUN npm install -g json2csv@5.0.7
 
 COPY ./docker_files/timezone/mysql_tzinfo_to_sql /usr/bin
 

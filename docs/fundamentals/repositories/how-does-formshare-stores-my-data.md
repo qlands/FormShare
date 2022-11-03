@@ -42,21 +42,29 @@ For each ODK form that you upload into FormShare, the system creates a database 
 
 Let’s explore the below ODK Form:
 
-<figure><img src="../../.gitbook/assets/formshare_storage_01.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/formshare_storage_01 (2).png" alt=""><figcaption></figcaption></figure>
 
-This ODK Form will generate the following repository:
+The ODK has single and multiple selects and two repeats (one nested inside another). If you upload the form, FormShare will ask you to indicate which variable will be used to control duplicate data. In this example such variable is "producer\_id" and therefore it will be the <mark style="color:purple;">**Primary key**</mark> of the repository.
+
+FormShare will generate the following repository from the above ODK form:
+
+{% hint style="info" %}
+The numbers between the image above and the image below match to indicate how FormShare created the repository based on the structure of the ODK form.
+{% endhint %}
 
 <figure><img src="../../.gitbook/assets/formshare_storage_02.png" alt=""><figcaption></figcaption></figure>
 
-1\. **Variables outside repeats:** They are stored in a data table called “maintable”. This is the primary table of the repository.
+## A repository in detail
 
+{% hint style="info" %}
+Each number of the above images is explained in detail.
+{% endhint %}
 
+<mark style="color:red;">**1.**</mark> **Variables outside repeats:** They are stored in a data table called “maintable”. This is the primary table of the repository.
 
-2\. **Primary key:** To control duplicate submissions the repository needs a <mark style="color:purple;">**primary key**</mark>. When uploading a form you need to select a variable that its data will not duplicate across the whole sample that you expect to have. For example, <mark style="color:purple;">**producer\_id**</mark>.
+<mark style="color:red;">**2.**</mark> **Primary key:** To control duplicate submissions the repository needs a <mark style="color:purple;">**primary key**</mark>. When uploading a form you need to select a variable that its data will not duplicate across the whole sample that you expect to have. For example, <mark style="color:purple;">**producer\_id**</mark>.
 
-
-
-3\. Single selects: Single selects whether their options come from external files or not creates a lookup table. The lookup table will be called “lkp\_<mark style="color:blue;">**\[listname]**</mark>”. For example, if you have “select\_one province” FormShare will create the lookup table called “lkp\_<mark style="color:blue;">**province**</mark>”.
+<mark style="color:red;">**3.**</mark> **Single selects:** Single selects whether their options come from external files or not creates a lookup table. The lookup table will be called “lkp\_<mark style="color:blue;">**\[listname]**</mark>”. For example, if you have “select\_one province” FormShare will create the lookup table called “lkp\_<mark style="color:blue;">**province**</mark>”.
 
 Each lookup table has two columns: “<mark style="color:blue;">**\[listname]**</mark>\_cod” storing option names/codes and “<mark style="color:blue;">**\[listname]**</mark>\_des” storing option labels/descriptions. For example, the lookup table “lkp\_province” will have the following columns: “<mark style="color:blue;">**province**</mark>\_cod” and “<mark style="color:blue;">**province**</mark>\_des”.
 
@@ -64,9 +72,13 @@ The lookup table will store all the options and will be linked to the data table
 
 The data tables storing the submission data will save the option name/code while the label/description of the option will always reside in the lookup table. The <mark style="color:purple;">**primary key**</mark> of all lookup tables is the “<mark style="color:blue;">**\[listname]**</mark>\_cod” column. For example, the <mark style="color:purple;">**primary key**</mark> of “lkp\_provice” is “<mark style="color:purple;">**province\_cod**</mark>”.
 
+The below image explains how single selects are stored and linked:
+
 <figure><img src="../../.gitbook/assets/formshare_storage_03.png" alt=""><figcaption></figcaption></figure>
 
-4\. **Select multiple:** ODK Collect stores “select multiple” variables in one field with selected options separated by space. FormShare stores it as independent rows in a separate table linked to the data table using such multi-select and to the associated lookup table. For example:
+<mark style="color:red;">**4.**</mark> **Select multiple:** ODK Collect stores “select multiple” variables in one field with selected options separated by space. FormShare stores it as independent rows in a separate table linked to the data table using such multi-select and to the associated lookup table.
+
+The image below explain how select multiples are stored and linked:
 
 <figure><img src="../../.gitbook/assets/formshare_storage_04.png" alt=""><figcaption></figcaption></figure>
 
@@ -74,29 +86,27 @@ Each multi-select table is named in the following way: “<mark style="color:blu
 
 The <mark style="color:purple;">**primary key**</mark> of a multi-select table will be the combination of its parent’s <mark style="color:purple;">**primary key**</mark> plus and the multi-select variable. For example, the <mark style="color:purple;">**primary key**</mark> of “maintable\_msel\_income\_sources” is “<mark style="color:purple;">**producer\_id**</mark>” + “<mark style="color:purple;">**income\_sources**</mark>”.
 
-
-
-5\. **Repeats:** Repeats create data tables. The name of the data table is the same as the repeat. For example, the repeat “rpt\_members” will create the table “rpt\_members”.
+<mark style="color:red;">**5.**</mark> **Repeats:** Repeats create data tables. The name of the data table is the same as the repeat. For example, the repeat “rpt\_members” will create the table “rpt\_members”.
 
 Repeats at the same level of variables outside a repeat will become “child data tables” of “maintable”. For example, “rpt\_members” is a child table of “maintable”.
 
 The <mark style="color:purple;">**primary key**</mark> of a repeat data table will be the combination of its parent’s <mark style="color:purple;">**primary key**</mark> plus a sequence column called “<mark style="color:blue;">**\[repeat\_name]**</mark>\_rowid”. For example, the <mark style="color:purple;">**primary key**</mark> of “rpt\_members” is “<mark style="color:purple;">**producer\_id**</mark>” + “<mark style="color:purple;">**rpt\_members\_rowid**</mark>”. The sequence will start in 1 and increment for every row.
 
+The image below explain repeats are stored and linked:
+
 <figure><img src="../../.gitbook/assets/formshare_storage_05.png" alt=""><figcaption></figcaption></figure>
 
-6\. **Variables inside repeats**: Because repeats create data tables, all the variables contained by the repeat will be part of that data table.
+<mark style="color:red;">**6.**</mark> **Variables inside repeats**: Because repeats create data tables, all the variables contained by the repeat will be part of that data table.
 
-
-
-7\. **Nested repeats:** Repeats inside another repeat will become “child data tables” of its parent repeat. For example, “rpt\_media” is a child table of “rpt\_members”.
+<mark style="color:red;">**7.**</mark> **Nested repeats:** Repeats inside another repeat will become “child data tables” of its parent repeat. For example, “rpt\_media” is a child table of “rpt\_members”.
 
 The <mark style="color:purple;">**primary key**</mark> of a nested repeat data table will be the combination of its parent’s <mark style="color:purple;">**primary key**</mark> plus a sequence column called “<mark style="color:blue;">**\[repeat\_name]**</mark>\_rowid”. For example, the <mark style="color:purple;">**primary key**</mark> of “rpt\_members” is “<mark style="color:purple;">**producer\_id**</mark>” + “<mark style="color:purple;">**rpt\_members\_rowid**</mark>” therefore the <mark style="color:purple;">**primary key**</mark> of “rpt\_media” is “<mark style="color:purple;">**producer\_id**</mark>” + “<mark style="color:purple;">**rpt\_members\_rowid**</mark>” + “<mark style="color:purple;">**rpt\_media\_rowid**</mark>” The sequence will start in 1 and increment for every row.
 
+The image below explains how nested repeats are stored and linked:
+
 <figure><img src="../../.gitbook/assets/formshare_storage_07.png" alt=""><figcaption></figcaption></figure>
 
-8\. **Geopoint outside a repeat:** If you record the GPS position as part of your data, place the “geopoint” variable outside any repeat. FormShare will detect it and use it to display your submissions on a map and to generate products like KLM.
+<mark style="color:red;">**8.**</mark> **Geopoint outside a repeat:** If you record the GPS position as part of your data, place the “geopoint” variable outside any repeat. FormShare will detect it and use it to display your submissions on a map and to generate products like KLM.
 
-
-
-9\. **Unique row ID (rowuuid):** This is perhaps the most important feature in a FormShare repository. Each row of data in any table (data, lookup, or multi-select) in any repository has a unique row ID. This unique ID allows FormShare to identify a row in the system and to determine the associated form, repository, and table. The unique Row ID is commonly used in API data cleaning to update data in the repository.
+<mark style="color:red;">**9.**</mark> **Unique row ID (rowuuid):** This is perhaps the most important feature in a FormShare repository. Each row of data in any table (data, lookup, or multi-select) in any repository has a unique row ID. This unique ID allows FormShare to identify a row in the system and to determine the associated form, repository, and table. The unique Row ID is commonly used in API data cleaning to update data in the repository.
 

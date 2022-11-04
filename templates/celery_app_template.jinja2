@@ -36,20 +36,28 @@ def get_ini_value(key, default=None):
 
 def get_tasks():
     tasks = []
-    plugins = get_ini_value(PLUGINS_ENTRY_POINT_GROUP, "").split()
-    if os.environ.get("FORMSHARE_PYTEST_RUNNING", "false") == "false":
-        celery_plugins = get_ini_value(CELERY_PLUGINS_ENTRY_POINT_GROUP, "")
-    else:
-        celery_plugins = get_ini_value(CELERY_TESTING_PLUGINS_ENTRY_POINT_GROUP, "")
-    if celery_plugins != "":
-        print("Loading the following plugins in reverse order: {}".format(celery_plugins))
-    p.load_all_celery(celery_plugins)
-    for plugin in plugins:
-        if isinstance(plugin, str):
-            iterator = iter_entry_points(group=TASKS_ENTRY_POINT_GROUP, name=plugin)
-            entry_point = next(iterator, None)
-            if entry_point:
-                tasks.append(entry_point.module_name)
+    if os.environ.get("FORMSHARE_RUN_FROM_CELERY", "false") == "true":
+        if os.environ.get("FORMSHARE_PYTEST_RUNNING", "false") == "false":
+            celery_plugins = get_ini_value(CELERY_PLUGINS_ENTRY_POINT_GROUP, "")
+            plugins = get_ini_value(PLUGINS_ENTRY_POINT_GROUP, "").split()
+        else:
+            celery_plugins = get_ini_value(CELERY_TESTING_PLUGINS_ENTRY_POINT_GROUP, "")
+            plugins = []
+        if celery_plugins:
+            plugin_list = celery_plugins.split()
+            plugin_list.reverse()
+            print("Celery will execute plugins in this order: {}".format(",".join(plugin_list)))
+        p.load_all_celery(celery_plugins)
+        if plugins:
+            plugin_list = plugins
+            plugin_list.reverse()
+            print("Looking for tasks in the following plugins: {}".format(",".join(plugin_list)))
+        for plugin in plugins:
+            if isinstance(plugin, str):
+                iterator = iter_entry_points(group=TASKS_ENTRY_POINT_GROUP, name=plugin)
+                entry_point = next(iterator, None)
+                if entry_point:
+                    tasks.append(entry_point.module_name)
     return tasks
 
 

@@ -553,13 +553,16 @@ class PrivateView(object):
     def reload_user_details(self):
         self.classResult["userDetails"] = get_user_details(self.request, self.userID)
 
-    def add_error(self, message):
+    def add_error(self, message, with_queue=True):
         """
         This function returns an error to the screen when redirects happen.
         The error will appear to the user as a sweet alert
         """
         self.request.response.headers["FS_error"] = "true"
-        self.request.session.flash("{}|error".format(message))
+        if with_queue:
+            self.request.session.flash("{}|error".format(message), queue="error")
+        else:
+            self.request.session.flash("{}|error".format(message))
 
     def get_project_access_level(self):
         """

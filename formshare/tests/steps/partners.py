@@ -1388,6 +1388,7 @@ def t_e_s_t_partners(test_object):
         status=404,
     )
 
+    time.sleep(30)
     # Get the history of a partner
     res = test_object.testapp.get(
         "/user/{}/manage_partner/{}/activity".format(

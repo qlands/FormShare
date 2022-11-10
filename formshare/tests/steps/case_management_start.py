@@ -112,7 +112,10 @@ def t_e_s_t_case_management_start(test_object):
         "/user/{}/project/{}/assistantaccess/changemykey".format(
             test_object.randonLogin, "case001"
         ),
-        {"coll_apikey": test_object.caseassistantLoginKey},
+        {
+            "coll_apikey": test_object.caseassistantLoginKey,
+            "coll_apisecret": test_object.caseassistantLoginKey,
+        },
         status=302,
     )
     assert "FS_error" not in res.headers

@@ -174,23 +174,12 @@ def t_e_s_t_assistant_access(test_object):
     )
     assert "FS_error" in res.headers
 
-    # Change the assistant key return error. No API secret
-    res = test_object.testapp.post(
-        "/user/{}/project/{}/assistantaccess/changemykey".format(
-            test_object.randonLogin, test_object.project
-        ),
-        {"coll_apikey": test_object.assistantLoginKey},
-        status=302,
-    )
-    assert "FS_error" in res.headers
-
     # Change the assistant key.
     res = test_object.testapp.post(
         "/user/{}/project/{}/assistantaccess/changemykey".format(
             test_object.randonLogin, test_object.project
         ),
-        {"coll_apikey": test_object.assistantLoginKey},
-        {"coll_apisecret": key_secret},
+        {"coll_apikey": test_object.assistantLoginKey, "coll_apisecret": key_secret},
         status=302,
     )
     assert "FS_error" not in res.headers
@@ -198,7 +187,7 @@ def t_e_s_t_assistant_access(test_object):
     test_object.testapp.post(
         "/api/1/security/login",
         {
-            "X-API-Key": test_object.randonLoginKey,
+            "X-API-Key": test_object.assistantLoginKey,
             "X-API-Secret": key_secret,
         },
         status=200,

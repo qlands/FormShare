@@ -38,12 +38,12 @@ def t_e_s_t_profile(test_object):
 
     # Generate a API Token fails. Get was used
     test_object.testapp.get(
-        "/api/1/get_token".format(test_object.randonLogin), status=400
+        "/api/1/security/login".format(test_object.randonLogin), status=400
     )
 
     # Generate API token fails. No key or secret
     test_object.testapp.post(
-        "/api/1/get_token",
+        "/api/1/security/login",
         {
             "some": "1",
         },
@@ -52,7 +52,7 @@ def t_e_s_t_profile(test_object):
 
     # Generate API token fails. API key does not exist
     test_object.testapp.post(
-        "/api/1/get_token",
+        "/api/1/security/login",
         {
             "X-API-Key": "some",
             "X-API-Secret": "some",
@@ -61,7 +61,7 @@ def t_e_s_t_profile(test_object):
     )
 
     test_object.testapp.post(
-        "/api/1/get_token",
+        "/api/1/security/login",
         {
             "X-API-Key": test_object.randonLoginKey,
             "X-API-Secret": test_object.randonLoginSecret,

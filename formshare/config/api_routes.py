@@ -43,7 +43,7 @@ def load_api_version_1_routes(config):
     routes.append(
         add_route(
             "api1_request_token",
-            "/api/1/get_token",
+            "/api/1/security/login",
             TokenView,
             None,
         )

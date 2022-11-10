@@ -327,7 +327,13 @@ def add_assistant(request, user, project, assistant_data):
 
 
 def modify_assistant(request, project, assistant, assistant_data):
-
+    if (
+        "coll_apikey" in assistant_data.keys()
+        and "coll_apisecret" in assistant_data.keys()
+    ):
+        assistant_data["coll_apitoken"] = (
+            "invalid_" + secrets.token_hex(16) + "_invalid"
+        )
     _ = request.translate
     mapped_data = map_to_schema(Collaborator, assistant_data)
     try:

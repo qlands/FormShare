@@ -164,13 +164,25 @@ class ChangeMyAPIKey(AssistantView):
             )
             self.returnRawViewResult = True
             assistant_data = self.get_post_dict()
-
+            if (
+                "coll_apikey" in assistant_data.keys()
+                and "coll_apisecret" in assistant_data.keys()
+            ):
+                key_data = {
+                    "coll_apikey": assistant_data["coll_apikey"],
+                    "coll_apisecret": assistant_data["coll_apisecret"],
+                }
+            else:
+                self.add_error(
+                    self._("Unable to change the key. No API key and secret")
+                )
+                return HTTPFound(next_page, headers={"FS_error": "true"})
             project_of_assistant = get_project_from_assistant(
                 self.request, self.userID, self.projectID, self.assistantID
             )
 
             modified, message = modify_assistant(
-                self.request, project_of_assistant, self.assistantID, assistant_data
+                self.request, project_of_assistant, self.assistantID, key_data
             )
             if modified:
                 return HTTPFound(next_page)

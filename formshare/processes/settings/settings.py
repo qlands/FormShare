@@ -1,9 +1,8 @@
 import json
 import logging
 
-from sqlalchemy.exc import IntegrityError
-
 from formshare.models import Settings
+from sqlalchemy.exc import IntegrityError
 
 log = logging.getLogger("formshare")
 

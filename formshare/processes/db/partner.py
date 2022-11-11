@@ -1,8 +1,5 @@
 import logging
 
-from sqlalchemy import func
-from sqlalchemy.exc import IntegrityError
-
 from formshare.models import (
     map_to_schema,
     Partner,
@@ -21,6 +18,8 @@ from formshare.processes.db.form import (
     get_number_of_submissions_in_database,
     get_last_clean_info,
 )
+from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 
 __all__ = [
     "partner_exists",

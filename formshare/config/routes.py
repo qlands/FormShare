@@ -132,7 +132,6 @@ from formshare.views.partner_views.forms import (
     PartnerGetSubMissionInfo,
     GetPartnerMediaFile,
     PartnerDownloadPrivateProduct,
-    PartnerDownloadPrivateProductByAPI,
     ChangeMyPartnerPassword,
     PartnerChangeMyAPIKey,
     PartnerChangeMyTimeZone,
@@ -147,7 +146,6 @@ from formshare.views.partners import (
 from formshare.views.products import (
     DownloadPrivateProduct,
     DownloadPublicProduct,
-    DownloadPrivateProductByAPI,
     PublishProduct,
     UnPublishProduct,
     DeleteProduct,
@@ -759,15 +757,6 @@ def load_routes(config, settings):
             "/user/{userid}/project/{projcode}/form/{formid}/public_download/{productid}/output/{outputid}",
             DownloadPublicProduct,
             None,
-        )
-    )
-
-    routes.append(
-        add_route(
-            "api_download_private_product",
-            "/user/{userid}/project/{projcode}/form/{formid}/api_download/{productid}/output/{outputid}",
-            DownloadPrivateProductByAPI,
-            "json",
         )
     )
 
@@ -1579,16 +1568,6 @@ def load_routes(config, settings):
                 "private_download/{productid}/output/{outputid}",
                 PartnerDownloadPrivateProduct,
                 None,
-            )
-        )
-
-        routes.append(
-            add_route(
-                "partner_api_download_private_product",
-                "/partneraccess/user/{userid}/project/{projcode}/form/{formid}/api_download"
-                "/{productid}/output/{outputid}",
-                PartnerDownloadPrivateProductByAPI,
-                "json",
             )
         )
 

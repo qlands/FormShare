@@ -1,5 +1,3 @@
-from pyramid.response import Response
-
 from formshare.processes.db import (
     get_project_id_from_name,
     is_assistant_active,
@@ -16,6 +14,7 @@ from formshare.processes.odk.api import (
     store_json_submission,
 )
 from formshare.views.classes import ODKView
+from pyramid.response import Response
 
 
 class ODKFormList(ODKView):

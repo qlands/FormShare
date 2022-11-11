@@ -2,8 +2,6 @@ import argparse
 import sys
 
 import transaction
-from pyramid.paster import get_appsettings, setup_logging
-
 from formshare.models import User
 from formshare.models import get_engine, get_session_factory, get_tm_session
 from formshare.models.meta import Base
@@ -11,6 +9,7 @@ from formshare.processes.elasticsearch.user_index import (
     configure_user_index_manager,
     UserExistError,
 )
+from pyramid.paster import get_appsettings, setup_logging
 
 
 def main():

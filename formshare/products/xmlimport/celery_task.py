@@ -4,11 +4,10 @@ import os
 
 import requests
 from celery.utils.log import get_task_logger
-from requests.auth import HTTPDigestAuth
-
 from formshare.config.celery_app import celeryApp
 from formshare.config.celery_class import CeleryTask
 from formshare.processes.sse.messaging import send_task_status_to_form
+from requests.auth import HTTPDigestAuth
 
 log = get_task_logger(__name__)
 

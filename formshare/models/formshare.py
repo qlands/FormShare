@@ -2,6 +2,7 @@
 import json
 
 import sqlalchemy.types as types
+from formshare.models.meta import Base
 from sqlalchemy import (
     Column,
     DateTime,
@@ -17,8 +18,6 @@ from sqlalchemy import (
 from sqlalchemy.dialects.mysql import MEDIUMTEXT
 from sqlalchemy.ext import mutable
 from sqlalchemy.orm import relationship
-
-from formshare.models.meta import Base
 
 metadata = Base.metadata
 

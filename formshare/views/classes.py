@@ -19,11 +19,6 @@ from ast import literal_eval
 
 from babel import Locale
 from formencode.variabledecode import variable_decode
-from pyramid.httpexceptions import HTTPFound
-from pyramid.httpexceptions import HTTPNotFound, exception_response
-from pyramid.response import Response
-from pyramid.session import check_csrf_token
-
 from formshare import plugins as p
 from formshare.config.auth import get_user_data, get_assistant_data, get_partner_data
 from formshare.processes.db import (
@@ -32,9 +27,7 @@ from formshare.processes.db import (
     get_user_details,
     get_active_project,
     get_project_from_assistant,
-    get_user_by_api_key,
     get_user_timezone,
-    get_partner_by_api_key,
     get_timezone_offset,
     get_timezone_name,
     get_assistant_timezone,
@@ -47,6 +40,10 @@ from formshare.processes.db import (
     update_last_login,
     get_project_access_type,
 )
+from pyramid.httpexceptions import HTTPFound
+from pyramid.httpexceptions import HTTPNotFound, exception_response
+from pyramid.response import Response
+from pyramid.session import check_csrf_token
 
 log = logging.getLogger("formshare")
 
@@ -328,6 +325,7 @@ class PrivateView(object):
         self.checkCrossPost = True
         self.queryProjects = True
         self.activeProject = {}
+        self.authorization_token = None
         locale = Locale(request.locale_name)
         if locale.character_order == "left-to-right":
             self.classResult["rtl"] = False
@@ -442,11 +440,16 @@ class PrivateView(object):
             raise HTTPNotFound()
         self.classResult["userDetails"] = get_user_details(self.request, self.userID)
 
+        if self.request.headers.get("Authorization", "").find("Bearer") >= 0:
+            parts = self.request.headers.get("Authorization", "").split(" ")
+            if len(parts) > 1:
+                authorization_token = parts[1]
+
         i_user_authorization = p.PluginImplementations(p.IUserAuthorization)
         continue_authorization = True
         for plugin in i_user_authorization:
             continue_authorization = plugin.before_check_authorization(self.request)
-            break  # Only only plugin will be called for before_check_authorization
+            break  # Only plugin will be called for before_check_authorization
         if continue_authorization:
             self.check_authorization()
         else:  # pragma: no cover
@@ -454,7 +457,7 @@ class PrivateView(object):
             user_authorized = ""
             for plugin in i_user_authorization:
                 authorized, user_authorized = plugin.custom_authorization(self.request)
-                break  # Only only plugin will be called for custom_authorization
+                break  # Only one plugin will be called for custom_authorization
             if authorized:
                 self.user = get_user_data(user_authorized, self.request)
                 if self.user is None:
@@ -980,226 +983,6 @@ class PartnerView(object):
         self.request.session.flash(message, queue="error")
 
 
-class APIView(object):
-    def __init__(self, request):
-        self.request = request
-        self.user = None
-        self.api_key = ""
-        self.using_assistant = False
-        self.assistant_id = ""
-        self._ = self.request.translate
-        self.error = False
-
-    def __call__(self):
-        if self.request.method == "GET":
-            self.api_key = self.request.params.get("apikey", None)
-        else:
-            self.api_key = self.request.POST.get("apikey", None)
-        if self.api_key is not None:
-            self.user = get_user_by_api_key(self.request, self.api_key)
-            if self.user is None:
-                assistant_data = get_assistant_by_api_key(self.request, self.api_key)
-                if assistant_data:
-                    self.using_assistant = True
-                    self.assistant_id = assistant_data["coll_id"]
-                else:
-                    response = Response(
-                        content_type="application/json",
-                        status=401,
-                        body=json.dumps(
-                            {
-                                "error": self._(
-                                    "This API key does not exist or is inactive"
-                                ),
-                                "error_type": "authentication",
-                            }
-                        ).encode(),
-                    )
-                    return response
-        else:
-            response = Response(
-                content_type="application/json",
-                status=401,
-                body=json.dumps(
-                    {
-                        "error": self._("You need to specify an API key"),
-                        "error_type": "api_key_missing",
-                    }
-                ).encode(),
-            )
-            return response
-
-        res = self.process_view()
-        if not self.error:
-            return res
-        else:
-            response = Response(
-                content_type="application/json",
-                status=400,
-                body=json.dumps(res).encode(),
-            )
-            return response
-
-    def process_view(self):
-        return {"key": self.api_key}
-
-    def check_keys(self, key_list):
-        not_found_keys = []
-        for a_key in key_list:
-            if a_key not in self.request.POST.keys():
-                not_found_keys.append(a_key)
-        if not_found_keys:
-            json_result = {
-                "error": self._(
-                    "The following keys were not present in the submitted JSON"
-                ),
-                "keys": [],
-                "error_type": "missing_key",
-            }
-            for a_key in not_found_keys:
-                json_result["keys"].append(a_key)
-
-            response = exception_response(
-                400,
-                content_type="application/json",
-                body=json.dumps(json_result).encode(),
-            )
-            raise response
-
-    def return_error(self, error_type, error_message):
-        response = exception_response(
-            400,
-            content_type="application/json",
-            body=json.dumps(
-                {"error": error_message, "error_type": error_type}
-            ).encode(),
-        )
-        raise response
-
-
-# class AssistantAPIView(object):
-#     def __init__(self, request):
-#         self.request = request
-#         self.assistant = None
-#         self.api_key = ""
-#         self.project_id = None
-#         self._ = self.request.translate
-#         self.error = False
-#         self.json = {}
-#
-#     def __call__(self):
-#         if self.request.method == "GET":
-#             self.api_key = self.request.params.get("apikey", None)
-#         else:
-#             self.api_key = self.request.POST.get("apikey", None)
-#             if self.api_key is not None:
-#                 self.json = self.request.POST
-#             else:
-#                 try:
-#                     json_body = json.loads(self.request.body)
-#                     self.api_key = json_body.get("apikey", None)
-#                     if self.api_key is not None:
-#                         self.json = json_body
-#                 except Exception as e:
-#                     log.error("Unable to parse API POST body. Error {}".format(str(e)))
-#                     self.api_key = None
-#         if self.api_key is not None:
-#             user_id = self.request.matchdict["userid"]
-#             project_code = self.request.matchdict["projcode"]
-#             self.project_id = get_project_id_from_name(
-#                 self.request, user_id, project_code
-#             )
-#             if self.project_id is not None:
-#                 self.assistant = get_assistant_by_api_key(
-#                     self.request, self.project_id, self.api_key
-#                 )
-#                 if not self.assistant:
-#                     response = Response(
-#                         content_type="application/json",
-#                         status=401,
-#                         body=json.dumps(
-#                             {
-#                                 "error": self._(
-#                                     "This API key does not exist or is inactive"
-#                                 ),
-#                                 "error_type": "authentication",
-#                             }
-#                         ).encode(),
-#                     )
-#                     return response
-#             else:
-#                 response = Response(
-#                     content_type="application/json",
-#                     status=400,
-#                     body=json.dumps(
-#                         {
-#                             "error": self._("The project cannot be found"),
-#                             "error_type": "project_not_found",
-#                         }
-#                     ).encode(),
-#                 )
-#                 return response
-#         else:
-#             response = Response(
-#                 content_type="application/json",
-#                 status=401,
-#                 body=json.dumps(
-#                     {
-#                         "error": self._("You need to specify an API key"),
-#                         "error_type": "api_key_missing",
-#                     }
-#                 ).encode(),
-#             )
-#             return response
-#
-#         res = self.process_view()
-#         if not self.error:
-#             return res
-#         else:
-#             response = Response(
-#                 content_type="application/json",
-#                 status=400,
-#                 body=json.dumps(res).encode(),
-#             )
-#             return response
-#
-#     def process_view(self):
-#         return {"key": self.api_key}
-#
-#     def check_keys(self, key_list):
-#         not_found_keys = []
-#         for a_key in key_list:
-#             if a_key not in self.request.POST.keys():
-#                 not_found_keys.append(a_key)
-#         if not_found_keys:
-#             json_result = {
-#                 "error": self._(
-#                     "The following keys were not present in the submitted JSON"
-#                 ),
-#                 "keys": [],
-#                 "error_type": "missing_key",
-#             }
-#             for a_key in not_found_keys:
-#                 json_result["keys"].append(a_key)
-#
-#             response = exception_response(
-#                 400,
-#                 content_type="application/json",
-#                 body=json.dumps(json_result).encode(),
-#             )
-#             raise response
-#
-#     def return_error(self, error_type, error_message):
-#         response = exception_response(
-#             400,
-#             content_type="application/json",
-#             body=json.dumps(
-#                 {"error": error_message, "error_type": error_type}
-#             ).encode(),
-#         )
-#         raise response
-
-
 class UpdateAPIView(object):
     def __init__(self, request):
         self.request = request
@@ -1308,99 +1091,6 @@ class UpdateAPIView(object):
     def return_error(self, error_type, error_message):
         response = exception_response(
             self.error_code,
-            content_type="application/json",
-            body=json.dumps(
-                {"error": error_message, "error_type": error_type}
-            ).encode(),
-        )
-        raise response
-
-
-class PartnerAPIView(object):
-    def __init__(self, request):
-        self.request = request
-        self.partner = None
-        self.api_key = ""
-        self.partnerID = None
-        self._ = self.request.translate
-        self.error = False
-
-    def __call__(self):
-        if self.request.method == "GET":
-            self.api_key = self.request.params.get("apikey", None)
-        else:
-            self.api_key = self.request.POST.get("apikey", None)
-        if self.api_key is not None:
-            self.partner = get_partner_by_api_key(self.request, self.api_key)
-            if self.partner is None:
-                response = Response(
-                    content_type="application/json",
-                    status=401,
-                    body=json.dumps(
-                        {
-                            "error": self._(
-                                "This API key does not exist or is inactive"
-                            ),
-                            "error_type": "authentication",
-                        }
-                    ).encode(),
-                )
-                return response
-            else:
-                self.partnerID = self.partner["partner_id"]
-        else:
-            response = Response(
-                content_type="application/json",
-                status=401,
-                body=json.dumps(
-                    {
-                        "error": self._("You need to specify an API key"),
-                        "error_type": "api_key_missing",
-                    }
-                ).encode(),
-            )
-            return response
-
-        res = self.process_view()
-        if not self.error:
-            return res
-        else:
-            response = Response(
-                content_type="application/json",
-                status=400,
-                body=json.dumps(res).encode(),
-            )
-            return response
-
-    def process_view(self):
-        return {"key": self.api_key}
-
-    def check_keys(self, key_list):
-        not_found_keys = []
-        for a_key in key_list:
-            if a_key not in self.request.POST.keys():
-                not_found_keys.append(a_key)
-        if not_found_keys:
-            json_result = {
-                "error": self._(
-                    "The following keys were not present in the submitted JSON"
-                ),
-                "keys": [],
-                "error_type": "missing_key",
-            }
-            for a_key in not_found_keys:
-                json_result["keys"].append(a_key)
-
-            response = exception_response(
-                400,
-                content_type="application/json",
-                body=json.dumps(json_result).encode(),
-            )
-            raise response
-
-    def return_error(self, error_type, error_message):
-        response = exception_response(
-            400,
             content_type="application/json",
             body=json.dumps(
                 {"error": error_message, "error_type": error_type}

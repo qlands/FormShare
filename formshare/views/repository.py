@@ -2,9 +2,6 @@ import json
 import logging
 import os
 
-from lxml import etree
-from pyramid.httpexceptions import HTTPNotFound, HTTPFound
-
 from formshare.processes.db import (
     get_project_id_from_name,
     get_project_access_type,
@@ -16,6 +13,8 @@ from formshare.processes.email.send_email import send_error_to_technical_team
 from formshare.processes.odk.api import create_repository, get_odk_path
 from formshare.processes.odk.processes import get_form_data
 from formshare.views.classes import PrivateView
+from lxml import etree
+from pyramid.httpexceptions import HTTPNotFound, HTTPFound
 
 log = logging.getLogger("formshare")
 

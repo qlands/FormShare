@@ -9,10 +9,9 @@ import random
 
 from alembic import op
 from emoji.unicode_codes import get_emoji_unicode_dict
-from sqlalchemy.orm.session import Session
-
 from formshare.models.formshare import Project
 from formshare.processes.color_hash import ColorHash
+from sqlalchemy.orm.session import Session
 
 # revision identifiers, used by Alembic.
 revision = "d0b3a36c4f7a"

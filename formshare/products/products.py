@@ -1,9 +1,8 @@
 import logging
 import os
 
-from celery.contrib.abortable import AbortableAsyncResult
-
 import formshare.plugins as p
+from celery.contrib.abortable import AbortableAsyncResult
 from formshare.config.celery_app import celeryApp
 from formshare.processes.db import (
     add_product_instance,

@@ -1,11 +1,10 @@
 import logging
 import os
 
-from lxml import etree
-from sqlalchemy.exc import IntegrityError
-
 from formshare.models import DictTable, DictField, map_from_schema
 from formshare.processes.db.form import get_form_xml_create_file
+from lxml import etree
+from sqlalchemy.exc import IntegrityError
 
 __all__ = [
     "update_dictionary_tables",

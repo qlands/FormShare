@@ -5,12 +5,11 @@ from email.utils import formatdate
 
 from celery.contrib.abortable import AbortableTask
 from celery.worker.request import Request
+from formshare.config.celery_app import get_ini_value
+from formshare.processes.sse.messaging import send_task_status_to_form
 from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.pool import NullPool
-
-from formshare.config.celery_app import get_ini_value
-from formshare.processes.sse.messaging import send_task_status_to_form
 
 log = logging.getLogger("formshare")
 

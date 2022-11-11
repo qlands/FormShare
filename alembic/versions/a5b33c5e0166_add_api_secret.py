@@ -9,9 +9,8 @@ import secrets
 
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy.orm.session import Session
-
 from formshare.models.formshare import User, Collaborator
+from sqlalchemy.orm.session import Session
 
 # revision identifiers, used by Alembic.
 revision = "a5b33c5e0166"

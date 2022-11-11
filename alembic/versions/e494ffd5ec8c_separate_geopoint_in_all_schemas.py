@@ -6,9 +6,8 @@ Create Date: 2020-04-21 11:38:25.184496
 
 """
 from alembic import op
-from sqlalchemy.orm.session import Session
-
 from formshare.models.formshare import Odkform
+from sqlalchemy.orm.session import Session
 
 # revision identifiers, used by Alembic.
 revision = "e494ffd5ec8c"

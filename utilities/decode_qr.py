@@ -1,6 +1,6 @@
 import base64
-import zlib
 import json
+import zlib
 
 """
 This small script decodes a ODK Collect QR

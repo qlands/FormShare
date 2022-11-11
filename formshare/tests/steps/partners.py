@@ -1334,44 +1334,6 @@ def t_e_s_t_partners(test_object):
         status=200,
     )
 
-    # Get the partner using API goes to 401. No key
-    test_object.testapp.get(
-        "/partneraccess/user/{}/project/{}/form/{}/api_download/{}/output/{}".format(
-            test_object.randonLogin,
-            test_object.project,
-            test_object.formID,
-            "xlsx_public_export",
-            "latest",
-        ),
-        status=401,
-    )
-
-    # Get the partner using API goes to 401. Wrong key
-    test_object.testapp.get(
-        "/partneraccess/user/{}/project/{}/form/{}/api_download/{}/output/{}?apikey={}".format(
-            test_object.randonLogin,
-            test_object.project,
-            test_object.formID,
-            "xlsx_public_export",
-            "latest",
-            "wrongAPIKey",
-        ),
-        status=401,
-    )
-
-    partner_api_key = get_partner_api_key(test_object.server_config, partner_id)
-    test_object.testapp.get(
-        "/partneraccess/user/{}/project/{}/form/{}/api_download/{}/output/{}?apikey={}".format(
-            test_object.randonLogin,
-            test_object.project,
-            test_object.formID,
-            "xlsx_public_export",
-            "latest",
-            partner_api_key,
-        ),
-        status=200,
-    )
-
     # Partner history goes to 404
     test_object.testapp.get(
         "/user/{}/manage_partner/{}/activity".format(

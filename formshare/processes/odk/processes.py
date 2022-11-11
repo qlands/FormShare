@@ -3,9 +3,6 @@ import logging
 import re
 import uuid
 
-from lxml import etree
-from sqlalchemy.event import listen
-
 from formshare.models import (
     Collaborator,
     Submission,
@@ -19,6 +16,8 @@ from formshare.models import (
 from formshare.models import Odkform as Form
 from formshare.processes.db.assistant import get_project_from_assistant
 from formshare.processes.db.project import project_has_crowdsourcing
+from lxml import etree
+from sqlalchemy.event import listen
 
 log = logging.getLogger("formshare")
 

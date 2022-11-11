@@ -8,9 +8,6 @@ from hashlib import md5
 from subprocess import Popen, PIPE
 
 from celery.utils.log import get_task_logger
-from sqlalchemy import create_engine
-from sqlalchemy.pool import NullPool
-
 from formshare.config.celery_app import celeryApp
 from formshare.config.celery_class import CeleryTask
 from formshare.processes.elasticsearch.record_index import (
@@ -20,6 +17,8 @@ from formshare.processes.elasticsearch.repository_index import (
     add_dataset,
 )
 from formshare.processes.sse.messaging import send_task_status_to_form
+from sqlalchemy import create_engine
+from sqlalchemy.pool import NullPool
 
 log = get_task_logger(__name__)
 

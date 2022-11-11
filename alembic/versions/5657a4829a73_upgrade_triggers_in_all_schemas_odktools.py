@@ -11,11 +11,10 @@ from subprocess import Popen, PIPE
 
 from alembic import context
 from alembic import op
+from formshare.models.formshare import Odkform
 from lxml import etree
 from pyramid.paster import get_appsettings, setup_logging
 from sqlalchemy.orm.session import Session
-
-from formshare.models.formshare import Odkform
 
 # revision identifiers, used by Alembic.
 revision = "5657a4829a73"

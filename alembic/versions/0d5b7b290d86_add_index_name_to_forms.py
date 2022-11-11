@@ -11,11 +11,10 @@ import requests
 import sqlalchemy as sa
 from alembic import context
 from alembic import op
-from pyramid.paster import get_appsettings, setup_logging
-from sqlalchemy.orm.session import Session
-
 from formshare.models.formshare import Odkform, Project, Userproject
 from formshare.processes.elasticsearch.repository_index import create_connection
+from pyramid.paster import get_appsettings, setup_logging
+from sqlalchemy.orm.session import Session
 
 # revision identifiers, used by Alembic.
 revision = "0d5b7b290d86"

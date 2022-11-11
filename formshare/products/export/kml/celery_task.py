@@ -5,15 +5,14 @@ import uuid
 from subprocess import Popen, PIPE, check_call, CalledProcessError
 
 from celery.utils.log import get_task_logger
-from jinja2 import Environment, FileSystemLoader
-from lxml import etree
-from sqlalchemy import create_engine
-from sqlalchemy.pool import NullPool
-
 from formshare.config.celery_app import celeryApp
 from formshare.config.celery_class import CeleryTask
 from formshare.processes.email.send_async_email import send_async_email
 from formshare.processes.sse.messaging import send_task_status_to_form
+from jinja2 import Environment, FileSystemLoader
+from lxml import etree
+from sqlalchemy import create_engine
+from sqlalchemy.pool import NullPool
 
 log = get_task_logger(__name__)
 

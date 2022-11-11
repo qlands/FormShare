@@ -8,13 +8,9 @@ import uuid
 import zlib
 from datetime import datetime
 
+import formshare.plugins as p
 import qrcode
 from elasticfeeds.activity import Actor, Object, Activity
-from pyramid.httpexceptions import HTTPFound, HTTPNotFound
-from pyramid.response import FileResponse
-from pyramid.response import Response
-
-import formshare.plugins as p
 from formshare.config.elasticfeeds import get_manager
 from formshare.processes.color_hash import ColorHash
 from formshare.processes.db import (
@@ -58,6 +54,9 @@ from formshare.processes.storage import (
 )
 from formshare.processes.submission.api import get_gps_points_from_project
 from formshare.views.classes import ProjectsView
+from pyramid.httpexceptions import HTTPFound, HTTPNotFound
+from pyramid.response import FileResponse
+from pyramid.response import Response
 
 log = logging.getLogger("formshare")
 

@@ -8,8 +8,6 @@ import os
 import shutil
 import uuid
 
-from sqlalchemy.exc import IntegrityError
-
 from formshare.models import (
     map_from_schema,
     Odkform,
@@ -37,6 +35,7 @@ from formshare.processes.db.assistant import (
 from formshare.processes.elasticsearch.repository_index import (
     get_dataset_stats_for_form,
 )
+from sqlalchemy.exc import IntegrityError
 
 __all__ = [
     "get_form_details",

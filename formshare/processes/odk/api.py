@@ -14,16 +14,8 @@ from hashlib import md5
 from subprocess import Popen, PIPE
 from uuid import uuid4
 
-from bs4 import BeautifulSoup
-from lxml import etree
-from pyramid.httpexceptions import HTTPNotFound
-from pyramid.response import FileResponse
-from pyramid.response import Response
-from pyxform import xls2xform
-from pyxform.errors import PyXFormError
-from pyxform.xls2json import parse_file_to_json
-
 import formshare.plugins as plugins
+from bs4 import BeautifulSoup
 from formshare.processes.color_hash import ColorHash
 from formshare.processes.db import (
     assistant_has_form,
@@ -80,6 +72,13 @@ from formshare.processes.storage import (
 from formshare.products.fs1import.fs1import import formshare_one_import_json
 from formshare.products.repository import create_database_repository
 from formshare.products.xmlimport.xmlimport import xml_import
+from lxml import etree
+from pyramid.httpexceptions import HTTPNotFound
+from pyramid.response import FileResponse
+from pyramid.response import Response
+from pyxform import xls2xform
+from pyxform.errors import PyXFormError
+from pyxform.xls2json import parse_file_to_json
 
 log = logging.getLogger("formshare")
 

@@ -59,10 +59,10 @@
                                 {% block product_item_ready_private_tools %}
                                     {% if loop_index == 1 %}
                                         <a href="{{ request.route_url('partner_download_private_product', userid=userid, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid='latest') }}"  class="btn btn-xs btn-white"><i class="fas fa-download"></i> {{ _('Download') }} </a>
-                                        <a href="{{ request.route_url('partner_api_download_private_product', userid=userid, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid='latest', _query={'apikey': activePartner.api_key}) }}"  class="btn btn-xs btn-white"><i class="fas fa-code"></i> {{ _('API Download') }} </a>
+{#                                        <a href="{{ request.route_url('partner_api_download_private_product', userid=userid, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid='latest', _query={'apikey': activePartner.api_key}) }}"  class="btn btn-xs btn-white"><i class="fas fa-code"></i> {{ _('API Download') }} </a>#}
                                     {% else %}
                                         <a href="{{ request.route_url('partner_download_private_product', userid=userid, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid=output.output_id) }}"  class="btn btn-xs btn-white"><i class="fas fa-download"></i> {{ _('Download') }} </a>
-                                        <a href="{{ request.route_url('partner_api_download_private_product', userid=userid, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid=output.output_id, _query={'apikey': activePartner.api_key}) }}"  class="btn btn-xs btn-white"><i class="fas fa-code"></i> {{ _('API Download') }} </a>
+{#                                        <a href="{{ request.route_url('partner_api_download_private_product', userid=userid, projcode=projectDetails.project_code, formid=formDetails.form_id, productid=output.product_id, outputid=output.output_id, _query={'apikey': activePartner.api_key}) }}"  class="btn btn-xs btn-white"><i class="fas fa-code"></i> {{ _('API Download') }} </a>#}
                                     {% endif %}
 
                                 {% endblock product_item_ready_private_tools %}

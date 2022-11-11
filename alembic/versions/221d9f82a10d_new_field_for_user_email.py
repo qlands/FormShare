@@ -9,9 +9,8 @@ import time
 
 import requests
 from alembic import context
-from pyramid.paster import get_appsettings, setup_logging
-
 from formshare.processes.elasticsearch.user_index import configure_user_index_manager
+from pyramid.paster import get_appsettings, setup_logging
 
 # revision identifiers, used by Alembic.
 revision = "221d9f82a10d"

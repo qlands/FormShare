@@ -353,69 +353,6 @@ def t_e_s_t_repository_downloads(test_object):
             status=200,
         )
 
-        # API download goes to 401. No API key
-        test_object.testapp.get(
-            "/user/{}/project/{}/form/{}/api_download/{}/output/{}".format(
-                test_object.randonLogin,
-                test_object.project,
-                test_object.formID,
-                "csv_private_export",
-                task_id[-12:],
-            ),
-            status=401,
-        )
-
-        # API download goes to 401. Wrong API key
-        test_object.testapp.get(
-            "/user/{}/project/{}/form/{}/api_download/{}/output/{}?apikey={}".format(
-                test_object.randonLogin,
-                test_object.project,
-                test_object.formID,
-                "csv_private_export",
-                task_id[-12:],
-                "wrongAPIKey",
-            ),
-            status=401,
-        )
-
-        # Download project not exist
-        test_object.testapp.get(
-            "/user/{}/project/{}/form/{}/api_download/{}/output/{}?apikey={}".format(
-                test_object.randonLogin,
-                "not_exist",
-                test_object.formID,
-                "csv_private_export",
-                task_id[-12:],
-                test_object.randonLoginKey,
-            ),
-            status=404,
-        )
-
-        # Download output not exist
-        test_object.testapp.get(
-            "/user/{}/project/{}/form/{}/api_download/{}/output/{}?apikey={}".format(
-                test_object.randonLogin,
-                test_object.project,
-                test_object.formID,
-                "csv_private_export",
-                "not_exist",
-                test_object.randonLoginKey,
-            ),
-            status=404,
-        )
-
-        test_object.testapp.get(
-            "/user/{}/project/{}/form/{}/api_download/{}/output/{}?apikey={}".format(
-                test_object.randonLogin,
-                test_object.project,
-                test_object.formID,
-                "csv_private_export",
-                task_id[-12:],
-                test_object.randonLoginKey,
-            ),
-            status=200,
-        )
-
     def mimic_celery_xlsx_process(
         protect, resolve, include_multiselect, include_lookup
     ):

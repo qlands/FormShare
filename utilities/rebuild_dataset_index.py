@@ -6,8 +6,6 @@ import sys
 from pathlib import Path
 
 import transaction
-from pyramid.paster import get_appsettings, setup_logging
-
 from formshare.models import Odkform
 from formshare.models import get_engine, get_session_factory, get_tm_session
 from formshare.models.meta import Base
@@ -16,6 +14,7 @@ from formshare.processes.elasticsearch.repository_index import (
     create_dataset_index,
     add_dataset,
 )
+from pyramid.paster import get_appsettings, setup_logging
 
 
 class Request(object):

@@ -4,10 +4,6 @@ import os
 import uuid
 
 import paginate
-from pyramid.httpexceptions import HTTPNotFound, HTTPFound
-from pyramid.response import FileResponse
-from webhelpers2.html import literal
-
 from formshare.processes.db import (
     get_form_data,
     get_project_from_assistant,
@@ -39,6 +35,9 @@ from formshare.processes.odk.processes import (
 )
 from formshare.processes.submission.api import get_submission_media_files
 from formshare.views.classes import AssistantView
+from pyramid.httpexceptions import HTTPNotFound, HTTPFound
+from pyramid.response import FileResponse
+from webhelpers2.html import literal
 
 log = logging.getLogger("formshare")
 

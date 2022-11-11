@@ -1,21 +1,18 @@
 import os
 
-from pyramid.httpexceptions import HTTPNotFound, HTTPFound
-from pyramid.response import FileResponse
-
 import formshare.plugins as p
 from formshare.processes.db import (
     get_project_id_from_name,
     get_product_output,
     update_download_counter,
-    get_user_projects,
     output_exists,
     set_output_public_state,
     delete_product,
     get_project_access_type,
 )
-from formshare.processes.odk.processes import get_assistant_permissions_on_a_form
-from formshare.views.classes import PrivateView, PublicView, APIView
+from formshare.views.classes import PrivateView, PublicView
+from pyramid.httpexceptions import HTTPNotFound, HTTPFound
+from pyramid.response import FileResponse
 
 
 class DownloadPrivateProduct(PrivateView):
@@ -101,74 +98,6 @@ class DownloadPublicProduct(PublicView):
             # Load connected plugins and check if they modify the download process
             for plugin in p.PluginImplementations(p.IProduct):
                 continue_download = plugin.before_download_public_product(
-                    self.request,
-                    project_id,
-                    form_id,
-                    product_id,
-                    output_id,
-                    output_file,
-                    mime_type,
-                )
-                break  # Only one plugging will be called to extend before_download_product
-            if continue_download:
-                filename, file_extension = os.path.splitext(output_file)
-                if file_extension == "":
-                    file_extension = "unknown"
-                response = FileResponse(
-                    output_file, request=self.request, content_type=mime_type
-                )
-                response.content_disposition = (
-                    'attachment; filename="' + form_id + file_extension + '"'
-                )
-                update_download_counter(
-                    self.request, project_id, form_id, product_id, output_id
-                )
-                return response
-            else:
-                raise HTTPNotFound
-        else:
-            raise HTTPNotFound
-
-
-class DownloadPrivateProductByAPI(APIView):
-    def __init__(self, request):
-        APIView.__init__(self, request)
-
-    def process_view(self):
-        user_id = self.request.matchdict["userid"]
-        project_code = self.request.matchdict["projcode"]
-        form_id = self.request.matchdict["formid"]
-        product_id = self.request.matchdict["productid"]
-        output_id = self.request.matchdict["outputid"]
-        project_id = get_project_id_from_name(self.request, user_id, project_code)
-        if project_id is None:
-            raise HTTPNotFound
-        if not self.using_assistant:
-            api_projects = get_user_projects(
-                self.request, user_id, self.user["user_id"]
-            )
-        else:
-            permissions = get_assistant_permissions_on_a_form(
-                self.request, user_id, project_id, self.assistant_id, form_id
-            )
-            if permissions["enum_canclean"] == 0:
-                raise HTTPNotFound
-            api_projects = get_user_projects(self.request, user_id, user_id)
-        project_found = False
-        for project in api_projects:
-            if project["project_id"] == project_id:
-                project_found = True
-        if not project_found:
-            raise HTTPNotFound
-
-        output_id, output_file, mime_type = get_product_output(
-            self.request, project_id, form_id, product_id, output_id, False
-        )
-        if output_id is not None:
-            continue_download = True
-            # Load connected plugins and check if they modify the download process
-            for plugin in p.PluginImplementations(p.IProduct):
-                continue_download = plugin.before_download_product_by_api(
                     self.request,
                     project_id,
                     form_id,

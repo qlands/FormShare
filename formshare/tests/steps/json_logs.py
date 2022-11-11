@@ -1,6 +1,5 @@
 import json
 import os
-import time
 
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool

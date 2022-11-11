@@ -1,11 +1,10 @@
 import os
 import sys
 
+import formshare.plugins as p
 from babel.support import Translations
 from pyramid.i18n import get_localizer
 from pyramid.threadlocal import get_current_request
-
-import formshare.plugins as p
 
 
 def add_renderer_globals(event):

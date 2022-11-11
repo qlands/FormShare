@@ -1,9 +1,8 @@
 import datetime
 import logging
 
-from sqlalchemy.exc import IntegrityError
-
 from formshare.models import Userproject, User, map_from_schema
+from sqlalchemy.exc import IntegrityError
 
 __all__ = [
     "get_project_collaborators",

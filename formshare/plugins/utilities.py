@@ -6,8 +6,6 @@ to manipulate the host behaviour without the trouble if dealing with it
 import inspect
 import os
 
-from pyramid.httpexceptions import HTTPNotFound
-
 from formshare.processes.db import (
     get_project_id_from_name,
     get_project_details,
@@ -24,11 +22,11 @@ from formshare.processes.settings.settings import (
 from formshare.views.classes import (
     PublicView,
     PrivateView,
-    APIView,
     ProjectsView,
     AssistantView,
     PartnerView,
 )
+from pyramid.httpexceptions import HTTPNotFound
 
 __all__ = [
     "add_templates_directory",
@@ -44,7 +42,6 @@ __all__ = [
     "add_field_to_form_schema",
     "FormSharePublicView",
     "FormSharePrivateView",
-    "FormShareAPIView",
     "FormShareProjectsView",
     "FormShareAssistantView",
     "FormShareSettings",
@@ -185,17 +182,6 @@ class FormSharePrivateView(
     """
     A view class for plugins which require a private (login required) view.
     """
-
-
-class FormShareAPIView(
-    APIView
-):  # pragma: no cover - Tested by loading testing plugins but not Covered
-    """
-    A view class for plugins which require an API view.
-    """
-
-    def process_view(self):
-        raise NotImplementedError("process_view must be implemented in subclasses")
 
 
 class FormShareProjectsView(

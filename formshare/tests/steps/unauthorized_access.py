@@ -742,18 +742,6 @@ def t_e_s_t_unauthorized_access(test_object):
         status=404,
     )
 
-    test_object.testapp.get(
-        "/user/{}/project/{}/form/{}/api_download/{}/output/{}?apikey={}".format(
-            test_object.randonLogin,
-            test_object.project,
-            test_object.formID,
-            "csv_private_export",
-            "na",
-            collaborator_1_key,
-        ),
-        status=404,
-    )
-
     # Publish product without access
     test_object.testapp.post(
         "/user/{}/project/{}/form/{}/products/{}/output/{}/publish".format(

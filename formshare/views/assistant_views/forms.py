@@ -4,11 +4,8 @@ import os
 import uuid
 import zlib
 
-import qrcode
-from pyramid.httpexceptions import HTTPFound, HTTPNotFound
-from pyramid.response import FileResponse
-
 import formshare.plugins as p
+import qrcode
 from formshare.config.auth import check_assistant_login
 from formshare.processes.db import (
     get_assistant_forms_for_cleaning,
@@ -21,6 +18,8 @@ from formshare.processes.db import (
     modify_assistant,
 )
 from formshare.views.classes import AssistantView
+from pyramid.httpexceptions import HTTPFound, HTTPNotFound
+from pyramid.response import FileResponse
 
 
 class AssistantForms(AssistantView):

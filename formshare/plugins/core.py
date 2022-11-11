@@ -6,13 +6,12 @@ This code is based on CKAN
 :license: AGPL V3, see LICENSE for more details.
 """
 
+from formshare.plugins.interfaces import IPluginObserver
 from pkg_resources import iter_entry_points
 from pyutilib.component.core import ExtensionPoint as PluginImplementations
 from pyutilib.component.core import Plugin as _pca_Plugin
 from pyutilib.component.core import SingletonPlugin as _pca_SingletonPlugin
 from pyutilib.component.core import implements
-
-from formshare.plugins.interfaces import IPluginObserver
 
 __all__ = [
     "PluginImplementations",

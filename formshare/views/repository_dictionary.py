@@ -1,8 +1,5 @@
 import json
 
-from pyramid.httpexceptions import HTTPNotFound
-from pyramid.response import Response
-
 from formshare.processes.db import (
     get_form_data,
     get_project_id_from_name,
@@ -20,6 +17,8 @@ from formshare.processes.submission.api import (
     update_field_sensitive,
 )
 from formshare.views.classes import PrivateView
+from pyramid.httpexceptions import HTTPNotFound
+from pyramid.response import Response
 
 
 class EditDictionaryTables(PrivateView):

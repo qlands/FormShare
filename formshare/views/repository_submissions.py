@@ -1,7 +1,5 @@
 import json
 
-from pyramid.httpexceptions import HTTPNotFound, HTTPFound
-
 from formshare.config.auth import get_user_data
 from formshare.processes.db import (
     get_form_data,
@@ -26,6 +24,7 @@ from formshare.processes.submission.api import (
     update_record_with_id,
 )
 from formshare.views.classes import PrivateView, UpdateAPIView
+from pyramid.httpexceptions import HTTPNotFound, HTTPFound
 
 
 class ManageSubmissions(PrivateView):

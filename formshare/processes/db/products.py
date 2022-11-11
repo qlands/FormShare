@@ -2,10 +2,9 @@ import datetime
 import logging
 import os
 
-from sqlalchemy import func
-
 from formshare.models import Product, FinishedTask, map_from_schema
 from formshare.processes.db.celery import get_task_status
+from sqlalchemy import func
 
 __all__ = [
     "add_product_instance",

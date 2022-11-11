@@ -4,8 +4,6 @@ import os
 import sys
 
 import transaction
-from pyramid.paster import get_appsettings, setup_logging
-
 from formshare.models import Odkform
 from formshare.models import get_engine, get_session_factory, get_tm_session
 from formshare.models.meta import Base
@@ -13,6 +11,7 @@ from formshare.processes.elasticsearch.record_index import (
     create_record_index,
     add_record,
 )
+from pyramid.paster import get_appsettings, setup_logging
 
 
 def main():

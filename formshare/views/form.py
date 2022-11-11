@@ -9,13 +9,9 @@ import shutil
 import uuid
 from hashlib import md5
 
-import pandas as pd
-from lxml import etree
-from pyramid.httpexceptions import HTTPFound, HTTPNotFound
-from pyramid.response import FileResponse
-
 import formshare.plugins as p
 import formshare.plugins as plugins
+import pandas as pd
 from formshare.processes.db import (
     get_project_id_from_name,
     get_form_details,
@@ -126,6 +122,9 @@ from formshare.products.export.zip_json import (
     generate_public_zip_json_file,
 )
 from formshare.views.classes import PrivateView
+from lxml import etree
+from pyramid.httpexceptions import HTTPFound, HTTPNotFound
+from pyramid.response import FileResponse
 
 log = logging.getLogger("formshare")
 

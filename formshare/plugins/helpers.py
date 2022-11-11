@@ -9,15 +9,14 @@ import datetime
 import logging
 
 import arrow
+import formshare.plugins as p
 import timeago
 import validators
 from dateutil.parser import parse
+from formshare.models import TimeZone
 from pattern.en import pluralize as pluralize_en
 from pattern.es import pluralize as pluralize_es
 from pytz import timezone
-
-import formshare.plugins as p
-from formshare.models import TimeZone
 
 log = logging.getLogger("formshare")
 

@@ -1,8 +1,6 @@
 import json
 import logging
 
-from pyramid.httpexceptions import HTTPNotFound, HTTPFound
-
 from formshare.processes.db import get_form_data, is_form_blocked
 from formshare.processes.odk.processes import get_assistant_permissions_on_a_form
 from formshare.processes.submission.api import (
@@ -12,6 +10,7 @@ from formshare.processes.submission.api import (
     update_data,
 )
 from formshare.views.classes import AssistantView
+from pyramid.httpexceptions import HTTPNotFound, HTTPFound
 
 log = logging.getLogger("formshare")
 

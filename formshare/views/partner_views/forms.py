@@ -3,11 +3,8 @@ import logging
 import mimetypes
 import os
 
-from elasticfeeds.activity import Actor, Object, Activity
-from pyramid.httpexceptions import HTTPNotFound, HTTPFound
-from pyramid.response import FileResponse
-
 import formshare.plugins as p
+from elasticfeeds.activity import Actor, Object, Activity
 from formshare.config.auth import check_partner_login
 from formshare.config.elasticfeeds import get_manager
 from formshare.config.encdecdata import encode_data
@@ -37,7 +34,9 @@ from formshare.processes.submission.api import (
     get_submission_media_file,
 )
 from formshare.products.products import get_form_products
-from formshare.views.classes import PartnerView, PartnerAPIView
+from formshare.views.classes import PartnerView
+from pyramid.httpexceptions import HTTPNotFound, HTTPFound
+from pyramid.response import FileResponse
 
 
 class PartnerForms(PartnerView):
@@ -519,112 +518,6 @@ class PartnerDownloadPrivateProduct(PartnerView):
             if continue_download:
                 feed_manager = get_manager(self.request)
                 actor = Actor(self.partner.id, "partner")
-                feed_object = Object(
-                    "{}|{}|{}|{}|{}".format(
-                        user_id, project_id, form_id, product_id, output_id
-                    ),
-                    "output",
-                )
-                activity = Activity(
-                    "download",
-                    actor,
-                    feed_object,
-                    extra={"remote_address": self.request.remote_addr},
-                )
-                try:
-                    feed_manager.add_activity_feed(activity)
-                except Exception as e:
-                    logging.error(
-                        "Error: {} while registering "
-                        "activity for partner {} to form {}".format(
-                            str(e), self.partner.email, project_id + "|" + form_id
-                        )
-                    )
-
-                filename, file_extension = os.path.splitext(output_file)
-                if file_extension == "":
-                    file_extension = "unknown"
-                response = FileResponse(
-                    output_file, request=self.request, content_type=mime_type
-                )
-                response.content_disposition = (
-                    'attachment; filename="' + form_id + file_extension + '"'
-                )
-                update_download_counter(
-                    self.request, project_id, form_id, product_id, output_id
-                )
-                return response
-            else:
-                raise HTTPNotFound
-        else:
-            raise HTTPNotFound
-
-
-class PartnerDownloadPrivateProductByAPI(PartnerAPIView):
-    def __init__(self, request):
-        PartnerAPIView.__init__(self, request)
-
-    def process_view(self):
-        user_id = self.request.matchdict["userid"]
-        project_code = self.request.matchdict["projcode"]
-        form_id = self.request.matchdict["formid"]
-        product_id = self.request.matchdict["productid"]
-        output_id = self.request.matchdict["outputid"]
-        project_id = get_project_id_from_name(self.request, user_id, project_code)
-        if project_id is None:
-            raise HTTPNotFound
-
-        partner_project = partner_has_project(self.request, self.partnerID, project_id)
-        partner_form = partner_has_form(
-            self.request, self.partnerID, project_id, form_id
-        )
-
-        if partner_project is None and partner_form is None:
-            raise HTTPNotFound
-        if partner_project is not None:
-            if partner_project["time_bound"] == 1:
-                if not (
-                    partner_project["access_from"]
-                    <= datetime.date.today()
-                    <= partner_project["access_to"]
-                ):
-                    raise HTTPNotFound
-
-        if partner_form is not None:
-            if partner_form["time_bound"] == 1:
-                if not (
-                    partner_form["access_from"]
-                    <= datetime.date.today()
-                    <= partner_form["access_to"]
-                ):
-                    raise HTTPNotFound
-
-        form_data = get_form_data(self.request, project_id, form_id)
-        if form_data is None:
-            raise HTTPNotFound
-
-        output_id, output_file, mime_type = get_product_output(
-            self.request, project_id, form_id, product_id, output_id, False
-        )
-        if output_id is not None:
-            continue_download = True
-            # Load connected plugins and check if they modify the download process
-            for plugin in p.PluginImplementations(p.IProduct):
-                continue_download = plugin.before_partner_download_product_by_api(
-                    self.request,
-                    self.partnerID,
-                    project_id,
-                    form_id,
-                    product_id,
-                    output_id,
-                    output_file,
-                    mime_type,
-                )
-                break  # Only one plugging will be called to extend before_download_product
-            if continue_download:
-
-                feed_manager = get_manager(self.request)
-                actor = Actor(self.partnerID, "partner")
                 feed_object = Object(
                     "{}|{}|{}|{}|{}".format(
                         user_id, project_id, form_id, product_id, output_id

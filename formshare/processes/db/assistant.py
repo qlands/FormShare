@@ -3,9 +3,6 @@ import logging
 import secrets
 from uuid import uuid4
 
-from sqlalchemy import func
-from sqlalchemy.exc import IntegrityError
-
 from formshare.config.encdecdata import decode_data
 from formshare.config.encdecdata import encode_data
 from formshare.models import (
@@ -19,6 +16,8 @@ from formshare.models import (
     Collingroup,
     TimeZone,
 )
+from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
 
 __all__ = [
     "get_project_assistants",

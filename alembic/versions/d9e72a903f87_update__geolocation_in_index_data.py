@@ -9,14 +9,13 @@ import time
 
 from alembic import context
 from alembic import op
-from pyramid.paster import get_appsettings, setup_logging
-from sqlalchemy.orm.session import Session
-
 from formshare.models.formshare import Odkform
 from formshare.processes.elasticsearch.repository_index import (
     create_connection,
     get_all_datasets_with_gps,
 )
+from pyramid.paster import get_appsettings, setup_logging
+from sqlalchemy.orm.session import Session
 
 # revision identifiers, used by Alembic.
 revision = "d9e72a903f87"

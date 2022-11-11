@@ -2,11 +2,6 @@ import datetime
 import logging
 import secrets
 
-from sqlalchemy import create_engine
-from sqlalchemy import func
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.pool import NullPool
-
 from formshare.models import (
     map_to_schema,
     User,
@@ -16,6 +11,10 @@ from formshare.models import (
     Project,
     TimeZone,
 )
+from sqlalchemy import create_engine
+from sqlalchemy import func
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.pool import NullPool
 
 __all__ = [
     "register_user",

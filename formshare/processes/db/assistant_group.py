@@ -2,8 +2,6 @@ import datetime
 import logging
 import uuid
 
-from sqlalchemy.exc import IntegrityError
-
 from formshare.models import (
     Collgroup,
     Collingroup,
@@ -11,6 +9,7 @@ from formshare.models import (
     map_from_schema,
     map_to_schema,
 )
+from sqlalchemy.exc import IntegrityError
 
 __all__ = [
     "get_project_groups",

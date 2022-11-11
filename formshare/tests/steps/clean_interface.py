@@ -347,19 +347,6 @@ def t_e_s_t_clean_interface(test_object):
         status=401,
     )
 
-    # Check that the assistant can download a product using API
-    test_object.testapp.get(
-        "/user/{}/project/{}/form/{}/api_download/{}/output/{}?apikey={}".format(
-            test_object.randonLogin,
-            test_object.project,
-            test_object.formID,
-            "csv_private_export",
-            test_object.product_id[-12:],
-            test_object.assistantLoginKey,
-        ),
-        status=404,
-    )
-
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
             test_object.randonLogin,
@@ -381,18 +368,5 @@ def t_e_s_t_clean_interface(test_object):
             "rowuuid": row_uuid,
             "landcultivated": 14,
         },
-        status=200,
-    )
-
-    # Check that the assistant can download a product using API
-    test_object.testapp.get(
-        "/user/{}/project/{}/form/{}/api_download/{}/output/{}?apikey={}".format(
-            test_object.randonLogin,
-            test_object.project,
-            test_object.formID,
-            "csv_private_export",
-            test_object.product_id[-12:],
-            test_object.assistantLoginKey,
-        ),
         status=200,
     )

@@ -2,8 +2,6 @@ import datetime
 
 import validators
 from dateutil.relativedelta import relativedelta
-from sqlalchemy import func
-
 from formshare.config.encdecdata import decode_data
 from formshare.models import Collaborator as collaboratorModel
 from formshare.models import Partner as partnerModel
@@ -11,6 +9,7 @@ from formshare.models import User as userModel
 from formshare.models import map_from_schema
 from formshare.plugins.core import PluginImplementations
 from formshare.plugins.interfaces import IUserAuthentication
+from sqlalchemy import func
 
 
 class User(object):

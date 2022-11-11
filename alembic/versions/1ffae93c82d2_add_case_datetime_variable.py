@@ -7,9 +7,8 @@ Create Date: 2021-11-27 07:23:54.698672
 """
 import sqlalchemy as sa
 from alembic import op
-from sqlalchemy.orm.session import Session
-
 from formshare.models.formshare import Odkform, DictField
+from sqlalchemy.orm.session import Session
 
 # revision identifiers, used by Alembic.
 revision = "1ffae93c82d2"

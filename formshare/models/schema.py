@@ -1,9 +1,8 @@
 import json
 
+from formshare.models.meta import metadata
 from future.utils import iteritems
 from sqlalchemy import inspect
-
-from formshare.models.meta import metadata
 
 __all__ = [
     "initialize_schema",

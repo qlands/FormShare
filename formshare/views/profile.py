@@ -1,7 +1,5 @@
 import logging
 
-from pyramid.httpexceptions import HTTPNotFound, HTTPFound
-
 from formshare.config.auth import get_user_data
 from formshare.config.encdecdata import encode_data
 from formshare.processes.db import update_profile, get_timezones, get_user_projects
@@ -11,6 +9,7 @@ from formshare.processes.elasticsearch.user_index import (
     UserNotExistError,
 )
 from formshare.views.classes import ProfileView
+from pyramid.httpexceptions import HTTPNotFound, HTTPFound
 
 log = logging.getLogger("formshare")
 

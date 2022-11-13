@@ -84,7 +84,6 @@ def t_e_s_t_audit(test_object):
         "/user/{}/profile/edit".format(test_object.randonLogin),
         {
             "editprofile": "",
-            "api_changed": "0",
             "user_name": "FormShare",
             "user_about": "FormShare testing account",
             "user_timezone": "Pacific/Fiji",
@@ -117,7 +116,6 @@ def t_e_s_t_audit(test_object):
         "/user/{}/profile/edit".format(test_object.randonLogin),
         {
             "editprofile": "",
-            "api_changed": "0",
             "user_name": "FormShare",
             "user_about": "FormShare testing account",
             "user_timezone": "UTC",

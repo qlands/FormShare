@@ -43,31 +43,6 @@
                                     </div>
                                 </div>
                                 <div class="hr-line-dashed"></div>
-                                <input id="api_changed" type="hidden" value="0">
-                                <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('API Key') }}</label>
-                                    <div class="col-sm-10">
-                                        <div class="input-group col-sm-12" style="padding-left: 0px; padding-right: 0px">
-                                            <input type="text" readonly class="form-control" id="user_apikey" name="user_apikey" value="{{ userDetails.user_apikey }}">
-                                            <span class="input-group-append">
-                                            <button type="button" id="genkey" class="btn btn-default" title="{{ _('Generate new key') }}"><i class="fas fa-sync-alt"></i></button>
-                                            </span>
-                                        </div>
-                                        <span class="form-text m-b-none text-danger">{{ _("Never share your API key") }}</span>
-                                    </div>
-                                </div>
-                                <div class="hr-line-dashed"></div>
-                                <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('API Secret') }}</label>
-                                    <div class="col-sm-10">
-                                        <div class="input-group col-sm-12" style="padding-left: 0px; padding-right: 0px">
-                                            <input type="text" readonly class="form-control" id="user_apisecret" name="user_apisecret" value="{{ userDetails.user_apisecret }}">
-                                            <span class="input-group-append">
-                                                <button type="button" id="gensecret" class="btn btn-default" title="{{ _('Generate new secret') }}"><i class="fas fa-sync-alt"></i></button>
-                                            </span>
-                                        </div>
-                                        <span class="form-text m-b-none text-danger">{{ _("Never share your API secret") }}</span>
-                                    </div>
-                                </div>
-                                <div class="hr-line-dashed"></div>
                                 {% if request.h.get_setting(request,'use_timezones','False') == 'True' %}
                                     <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Time zone') }}</label>
                                         <div class="col-sm-10">
@@ -95,6 +70,48 @@
                         {% endblock profile_edit_form %}
                     </div>
                 </div>
+                <div class="ibox">
+                        <div class="ibox-content">
+                            {% block change_api_form %}
+                                <form class="m-t require_busy" role="form" method="post" action="{{ request.url }}">
+                                    {{ form.secure_form(request) }}
+
+                                        <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('API Key') }}</label>
+                                            <div class="col-sm-10">
+                                                <div class="input-group col-sm-12" style="padding-left: 0px; padding-right: 0px">
+                                                        <input type="text" readonly class="form-control" id="user_apikey" name="user_apikey" value="{{ userDetails.user_apikey }}" required>
+                                                    <span class="input-group-append">
+                                            <button type="button" id="genkey" class="btn btn-default" title="{{ _('Generate new key') }}"><i class="fas fa-sync-alt"></i></button>
+                                            </span>
+                                                </div>
+                                                <span class="form-text m-b-none text-danger">{{ _("Never share your API key. If you change your API key, you need to change your API secret.") }}</span>
+                                            </div>
+                                        </div>
+                                        <div class="hr-line-dashed"></div>
+                                        <div class="form-group row"><label  class="col-sm-2 col-form-label">{{ _('API secret') }}</label>
+                                            <div class="col-sm-10">
+                                                <div class="input-group col-sm-12" style="padding-left: 0px; padding-right: 0px">
+                                                    <input type="text" readonly class="form-control" id="user_apisecret" name="user_apisecret" value="" required>
+                                                    <span class="input-group-append">
+                                                <button type="button" id="gensecret" class="btn btn-default" title="{{ _('Generate new secret') }}"><i class="fas fa-sync-alt"></i></button>
+                                            </span>
+                                                </div>
+                                                <span  class="form-text m-b-none text-danger">{{ _("You can generate the API secret at any time. However, it will be readable only onetime after you generate it. Save it somewhere safe after you generate it.") }}</span>
+                                            </div>
+                                        </div>
+
+                                    <div class="hr-line-dashed"></div>
+                                    <div class="form-group row">
+                                        {% block profile_apikey_actions %}
+                                            <div class="col-sm-4 col-sm-offset-2">
+                                                <button class="btn btn-primary btn-sm" name="changeapikey" type="submit">{{ _('Change key or secret') }}</button>
+                                            </div>
+                                        {% endblock profile_apikey_actions %}
+                                    </div>
+                                </form>
+                            {% endblock change_api_form %}
+                        </div>
+                    </div>
                 {% if request.registry.settings['auth.allow_user_change_password'] == 'true' %}
                     <div class="ibox">
                         <div class="ibox-content">
@@ -157,12 +174,10 @@
 
             $('#genkey').click(function () {
                 $('#user_apikey').val(uuidv4());
-                $('#api_changed').val(1);
             });
 
             $('#gensecret').click(function () {
                 $('#user_apisecret').val(genRanHex(32));
-                $('#api_changed').val(1);
             });
 
         });

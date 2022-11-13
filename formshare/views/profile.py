@@ -3,7 +3,7 @@ import logging
 from formshare.config.auth import get_user_data
 from formshare.config.encdecdata import encode_data
 from formshare.processes.db import update_profile, get_timezones, get_user_projects
-from formshare.processes.db.user import update_password
+from formshare.processes.db.user import update_password, update_api_key
 from formshare.processes.elasticsearch.user_index import (
     get_user_index_manager,
     UserNotExistError,
@@ -128,4 +128,24 @@ class EditProfileView(ProfileView):
                         )
                 else:
                     raise HTTPNotFound()
+            if "changeapikey" in data.keys():
+                api_key = data.get("user_apikey", "").strip()
+                api_secret = data.get("user_apisecret", "").strip()
+                if api_secret != "" and api_key != "":
+                    api_secret = encode_data(self.request, api_secret)
+                    updated, message = update_api_key(
+                        self.request, user_id, api_key, api_secret
+                    )
+                    if updated:
+                        self.request.session.flash(
+                            self._("The key and secret has been updated")
+                        )
+                        self.returnRawViewResult = True
+                        return HTTPFound(location=self.request.url)
+                    else:
+                        self.append_to_errors(message)
+                else:
+                    self.append_to_errors(
+                        self._("You need to specify the an API key and secret")
+                    )
         return {"timezones": get_timezones(self.request)}

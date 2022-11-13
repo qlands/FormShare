@@ -6,6 +6,7 @@ from dateutil.relativedelta import relativedelta
 from formshare.models import User, Collaborator
 from formshare.processes.email.send_email import send_token_email
 from pyramid.response import Response
+from formshare.config.encdecdata import decode_data
 
 
 class TokenView(object):
@@ -41,73 +42,81 @@ class TokenView(object):
                 res = (
                     self.request.dbsession.query(User)
                     .filter(User.user_apikey == api_key)
-                    .filter(User.user_apisecret == api_secret)
                     .filter(User.user_active == 1)
                     .first()
                 )
                 if res is not None:
-                    token = secrets.token_hex(16)
-                    token_expires_on = datetime.now() + relativedelta(hours=+24)
-                    self.request.dbsession.query(User).filter(
-                        User.user_apikey == api_key
-                    ).update(
-                        {
-                            "user_apitoken": token,
-                            "user_apitoken_expires_on": token_expires_on,
-                        }
+                    current_secret = decode_data(
+                        self.request, res.user_apisecret.encode()
                     )
-                    send_token_email(self.request, res.user_email, token_expires_on)
-                    response = Response(
-                        content_type="application/json",
-                        status=200,
-                        body=json.dumps(
+                    if current_secret.decode() == api_secret:
+                        token = secrets.token_hex(16)
+                        token_expires_on = datetime.now() + relativedelta(hours=+24)
+                        self.request.dbsession.query(User).filter(
+                            User.user_apikey == api_key
+                        ).update(
                             {
-                                "status": "200",
-                                "result": {
-                                    "token": token,
-                                    "expires_on": token_expires_on,
+                                "user_apitoken": token,
+                                "user_apitoken_expires_on": token_expires_on,
+                            }
+                        )
+                        send_token_email(self.request, res.user_email, token_expires_on)
+                        response = Response(
+                            content_type="application/json",
+                            status=200,
+                            body=json.dumps(
+                                {
+                                    "status": "200",
+                                    "result": {
+                                        "token": token,
+                                        "expires_on": token_expires_on,
+                                    },
                                 },
-                            },
-                            indent=4,
-                            default=str,
-                        ).encode(),
-                    )
-                    return response
+                                indent=4,
+                                default=str,
+                            ).encode(),
+                        )
+                        return response
+
+                # Check the API key of the assistant
                 res = (
                     self.request.dbsession.query(Collaborator)
                     .filter(Collaborator.coll_apikey == api_key)
-                    .filter(Collaborator.coll_apisecret == api_secret)
                     .filter(Collaborator.coll_active == 1)
                     .first()
                 )
                 if res is not None:
-                    token = secrets.token_hex(16)
-                    token_expires_on = datetime.now() + relativedelta(hours=+24)
-                    self.request.dbsession.query(Collaborator).filter(
-                        Collaborator.coll_apikey == api_key
-                    ).filter(Collaborator.coll_active == 1).update(
-                        {
-                            "coll_apitoken": token,
-                            "coll_apitoken_expires_on": token_expires_on,
-                        }
+                    current_secret = decode_data(
+                        self.request, res.coll_apisecret.encode()
                     )
-                    send_token_email(self.request, res.coll_email, token_expires_on)
-                    response = Response(
-                        content_type="application/json",
-                        status=200,
-                        body=json.dumps(
+                    if current_secret.decode() == api_secret:
+                        token = secrets.token_hex(16)
+                        token_expires_on = datetime.now() + relativedelta(hours=+24)
+                        self.request.dbsession.query(Collaborator).filter(
+                            Collaborator.coll_apikey == api_key
+                        ).filter(Collaborator.coll_active == 1).update(
                             {
-                                "status": "200",
-                                "result": {
-                                    "token": token,
-                                    "expires_on": token_expires_on,
+                                "coll_apitoken": token,
+                                "coll_apitoken_expires_on": token_expires_on,
+                            }
+                        )
+                        send_token_email(self.request, res.coll_email, token_expires_on)
+                        response = Response(
+                            content_type="application/json",
+                            status=200,
+                            body=json.dumps(
+                                {
+                                    "status": "200",
+                                    "result": {
+                                        "token": token,
+                                        "expires_on": token_expires_on,
+                                    },
                                 },
-                            },
-                            indent=4,
-                            default=str,
-                        ).encode(),
-                    )
-                    return response
+                                indent=4,
+                                default=str,
+                            ).encode(),
+                        )
+                        return response
 
                 response = Response(
                     content_type="application/json",

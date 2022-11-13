@@ -305,7 +305,7 @@ def add_assistant(request, user, project, assistant_data):
     mapped_data["coll_active"] = 1
     mapped_data["project_id"] = project
     mapped_data["coll_apikey"] = str(uuid4())
-    mapped_data["coll_apisecret"] = secrets.token_hex(16)
+    mapped_data["coll_apisecret"] = encode_data(request, secrets.token_hex(16))
     mapped_data["coll_password"] = encode_data(request, mapped_data["coll_password"])
     new_assistant = Collaborator(**mapped_data)
     try:

@@ -7,6 +7,7 @@ import zlib
 import formshare.plugins as p
 import qrcode
 from formshare.config.auth import check_assistant_login
+from formshare.config.encdecdata import encode_data
 from formshare.processes.db import (
     get_assistant_forms_for_cleaning,
     get_project_forms,
@@ -169,7 +170,9 @@ class ChangeMyAPIKey(AssistantView):
             ):
                 key_data = {
                     "coll_apikey": assistant_data["coll_apikey"],
-                    "coll_apisecret": assistant_data["coll_apisecret"],
+                    "coll_apisecret": encode_data(
+                        self.request, assistant_data["coll_apisecret"]
+                    ),
                 }
             else:
                 self.add_error(

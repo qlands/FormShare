@@ -606,6 +606,9 @@ class RegisterView(PublicView):
                                     data["user_apikey"] = str(uuid.uuid4())
                                 if "user_apisecret" not in data.keys():
                                     data["user_apisecret"] = secrets.token_hex(16)
+                                data["user_apisecret"] = encode_data(
+                                    self.request, data["user_apisecret"]
+                                )
                                 data["user_password"] = encode_data(
                                     self.request, data["user_password"]
                                 )

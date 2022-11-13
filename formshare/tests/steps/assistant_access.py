@@ -193,6 +193,15 @@ def t_e_s_t_assistant_access(test_object):
         status=200,
     )
 
+    test_object.testapp.post(
+        "/api/1/security/login",
+        {
+            "X-API-Key": test_object.assistantLoginKey,
+            "X-API-Secret": "some_pass",
+        },
+        status=401,
+    )
+
     # Change the assistant timezone with get fails
     test_object.testapp.get(
         "/user/{}/project/{}/assistantaccess/changemytimezone".format(

@@ -34,6 +34,7 @@ __all__ = [
     "get_user_databases",
     "set_query_user",
     "get_query_password",
+    "update_api_key",
 ]
 
 log = logging.getLogger("formshare")
@@ -321,12 +322,6 @@ def get_user_id_with_email(request, email):
 
 
 def update_profile(request, user, profile_data):
-    if "api_changed" in profile_data.keys():
-        if profile_data["api_changed"] == "1":
-            profile_data["user_apitoken"] = (
-                "invalid_" + secrets.token_hex(16) + "_invalid"
-            )
-        profile_data.pop("api_changed", None)
     mapped_data = map_to_schema(User, profile_data)
     try:
         request.dbsession.query(User).filter(User.user_id == user).update(mapped_data)
@@ -368,16 +363,18 @@ def update_last_login(request, user):
         return False, str(e)
 
 
-def get_user_by_api_key(request, api_key):
+def get_user_by_api_key(request, api_key, api_secret, with_stats=True):
     res = (
         request.dbsession.query(User)
         .filter(User.user_apikey == api_key)
+        .filter(User.user_apisecret == api_secret)
         .filter(User.user_active == 1)
         .first()
     )
     if res is not None:
         result = map_from_schema(res)
-        result["user_stats"] = get_user_stats(request, result["user_id"])
+        if with_stats:
+            result["user_stats"] = get_user_stats(request, result["user_id"])
         return result
     return None
 
@@ -391,5 +388,22 @@ def update_password(request, user, password):
         return True, ""
     except Exception as e:
         request.dbsession.rollback()
+        log.error("Error {} when changing password for user {}".format(str(e), user))
+        return False, str(e)
+
+
+def update_api_key(request, user, api_key, api_secret):
+    try:
+        request.dbsession.query(User).filter(User.user_id == user).update(
+            {
+                "user_apikey": api_key,
+                "user_apisecret": api_secret,
+                "user_apitoken": "invalid_" + secrets.token_hex(16) + "_invalid",
+            }
+        )
+        request.dbsession.flush()
+        return True, ""
+    except Exception as e:
+        # request.dbsession.rollback()
         log.error("Error {} when changing password for user {}".format(str(e), user))
         return False, str(e)

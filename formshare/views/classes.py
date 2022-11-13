@@ -555,6 +555,7 @@ class PrivateView(object):
 
     def reload_user_details(self):
         self.classResult["userDetails"] = get_user_details(self.request, self.userID)
+        self.classResult["userDetails"]["user_apisecret"] = ""
 
     def add_error(self, message, with_queue=True):
         """

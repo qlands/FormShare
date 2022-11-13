@@ -69,7 +69,6 @@ class Assistant(object):
         self.projectID = project
         self.fullName = assistant_data["coll_name"]
         self.APIKey = assistant_data["coll_apikey"]
-        self.APISecret = assistant_data["coll_apisecret"]
         self.timezone = assistant_data["coll_timezone"]
 
     def check_password(self, password, request):

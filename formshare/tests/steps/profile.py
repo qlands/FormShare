@@ -27,7 +27,6 @@ def t_e_s_t_profile(test_object):
     res = test_object.testapp.post(
         "/user/{}/profile/edit".format(test_object.randonLogin),
         {
-            "api_changed": "0",
             "editprofile": "",
             "user_name": "FormShare",
             "user_about": "FormShare testing account",
@@ -69,18 +68,37 @@ def t_e_s_t_profile(test_object):
         status=200,
     )
 
+    test_object.testapp.post(
+        "/api/1/security/login",
+        {
+            "X-API-Key": test_object.randonLoginKey,
+            "X-API-Secret": "some_pass",
+        },
+        status=401,
+    )
+
     test_object.randonLoginKey = str(uuid.uuid4())
     test_object.randonLoginSecret = secrets.token_hex(16)
+
+    # Edit profile passes. Changing API key and secret return error. Empty values
+    res = test_object.testapp.post(
+        "/user/{}/profile/edit".format(test_object.randonLogin),
+        {
+            "user_apikey": "",
+            "user_apisecret": "",
+            "changeapikey": "",
+        },
+        status=200,
+    )
+    assert "FS_error" in res.headers
+
     # Edit profile passes. Changing API key and secret
     res = test_object.testapp.post(
         "/user/{}/profile/edit".format(test_object.randonLogin),
         {
-            "api_changed": "1",
             "user_apikey": test_object.randonLoginKey,
             "user_apisecret": test_object.randonLoginSecret,
-            "editprofile": "",
-            "user_name": "FormShare",
-            "user_about": "FormShare testing account",
+            "changeapikey": "",
         },
         status=302,
     )

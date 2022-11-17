@@ -60,7 +60,7 @@ class TokenView(object):
                                 "user_apitoken_expires_on": token_expires_on,
                             }
                         )
-                        send_token_email(self.request, res.user_email, token_expires_on)
+                        # send_token_email(self.request, res.user_email, token_expires_on)
                         response = Response(
                             content_type="application/json",
                             status=200,
@@ -100,7 +100,7 @@ class TokenView(object):
                                 "coll_apitoken_expires_on": token_expires_on,
                             }
                         )
-                        send_token_email(self.request, res.coll_email, token_expires_on)
+                        # send_token_email(self.request, res.coll_email, token_expires_on)
                         response = Response(
                             content_type="application/json",
                             status=200,

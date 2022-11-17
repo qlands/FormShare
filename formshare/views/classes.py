@@ -333,7 +333,8 @@ keys_to_remove = [
     "form_insertxmlfile",
     "form_index",
     "form_reptask",
-    "json_file" "",
+    "json_file",
+    "allPages",
 ]
 
 

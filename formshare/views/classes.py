@@ -35,7 +35,7 @@ from formshare.processes.db import (
     get_partner_timezone,
     get_timezones,
     timezone_exists,
-    get_assistant_by_api_key,
+    get_assistant_with_token,
     project_has_crowdsourcing,
     update_last_login,
     get_project_access_type,
@@ -311,15 +311,45 @@ class PublicView(object):
         self.errors.append(error)
 
 
-def remove_keys(obj, rubbish):
+keys_to_remove = [
+    "user_password",
+    "user_apisecret",
+    "user_query_password",
+    "user_apikey",
+    "user_apitoken",
+    "user_apitoken_expires_on",
+    "user_query_user",
+    "user_query_password",
+    "user_password_reset_key",
+    "user_password_reset_token",
+    "user_password_reset_expires_on",
+    "timezones",
+    "user_super",
+    "user_active",
+    "form_xlsfile",
+    "form_xmlfile",
+    "form_jsonfile",
+    "form_createxmlfile",
+    "form_insertxmlfile",
+    "form_index",
+    "form_reptask",
+    "json_file" "",
+]
+
+
+def remove_keys(obj, insecure_keys):
     if isinstance(obj, dict):
         obj = {
-            key: remove_keys(value, rubbish)
+            key: remove_keys(value, insecure_keys)
             for key, value in obj.items()
-            if key not in rubbish
+            if key not in insecure_keys
         }
     elif isinstance(obj, list):
-        obj = [remove_keys(item, rubbish) for item in obj if item not in rubbish]
+        obj = [
+            remove_keys(item, insecure_keys)
+            for item in obj
+            if item not in insecure_keys
+        ]
     return obj
 
 
@@ -424,27 +454,11 @@ class PrivateView(object):
                             raise HTTPNotFound()
 
     def clean_api_result(self, result):
-        keys_to_remove = [
-            "user_password",
-            "user_apisecret",
-            "user_query_password",
-            "user_apikey",
-            "user_apitoken",
-            "user_apitoken_expires_on",
-            "user_query_user",
-            "user_query_password",
-            "user_password_reset_key",
-            "user_password_reset_token",
-            "user_password_reset_expires_on",
-            "timezones",
-            "user_super",
-            "user_active",
-        ]
+        user_keys = keys_to_remove
         for plugin in p.PluginImplementations(p.IAPISecurity):
             plugin_keys = plugin.secure_json_result(self.request)
-            keys_to_remove = keys_to_remove + plugin_keys
-
-        return remove_keys(result, keys_to_remove)
+            user_keys = plugin_keys + plugin_keys
+        return remove_keys(result, user_keys)
 
     def check_authorization(self):
         policy = self.get_policy("main")
@@ -750,6 +764,8 @@ class AssistantView(object):
         self.project_has_crowdsourcing = False
         self.userID = ""
         self.projectCode = ""
+        self.error_occurred = False
+        self.api = False
         self.assistant = None
         self._ = self.request.translate
         self.errors = []
@@ -806,6 +822,7 @@ class AssistantView(object):
         return None
 
     def append_to_errors(self, error):
+        self.error_occurred = True
         self.request.response.headers["FS_error"] = "true"
         self.errors.append(error)
 
@@ -817,6 +834,13 @@ class AssistantView(object):
             body=json.dumps(json_data, indent=4, default=str).encode(),
         )
         return response
+
+    def clean_api_result(self, result):
+        user_keys = keys_to_remove
+        for plugin in p.PluginImplementations(p.IAPISecurity):
+            plugin_keys = plugin.secure_json_result(self.request)
+            user_keys = plugin_keys + plugin_keys
+        return remove_keys(result, user_keys)
 
     def __call__(self):
         error = self.request.session.pop_flash(queue="error")
@@ -834,69 +858,101 @@ class AssistantView(object):
         if self.projectID is None:
             raise HTTPNotFound()
 
-        api_key = self.request.headers.get("api_key", None)
-        if api_key is not None:
-            api_password = self.request.headers.get("api_password", None)
-            if api_password is None:
-                return self.get_json_response(
-                    {"error": self._("You need to provide a password")}, 401
+        if self.request.headers.get("Authorization", "").find("Bearer") >= 0:
+            parts = self.request.headers.get("Authorization", "").split(" ")
+            if len(parts) > 1:
+                authorization_token = parts[1]
+                token_assistant = get_assistant_with_token(
+                    self.request, authorization_token
                 )
-            api_assistant = get_assistant_by_api_key(self.request, api_key)
-
-        policy = self.get_policy("assistant")
-        login_data = policy.authenticated_userid(self.request)
-        if self.request.method != "POST":
-            next_page = self.request.route_url(
-                "assistant_login",
-                userid=self.userID,
-                projcode=self.projectCode,
-                _query={"next": self.request.url},
-            )
-        else:
-            next_page = self.request.route_url(
-                "assistant_login",
-                userid=self.userID,
-                projcode=self.projectCode,
-            )
-        if login_data is not None:
-            login_data = literal_eval(login_data)
-            if login_data["group"] == "collaborators":
-                self.project_assistant = get_project_from_assistant(
-                    self.request, self.userID, self.projectID, login_data["login"]
+                if token_assistant is not None:
+                    self.project_assistant = get_project_from_assistant(
+                        self.request, self.userID, self.projectID, token_assistant
+                    )
+                    self.assistant = get_assistant_data(
+                        self.project_assistant, token_assistant, self.request
+                    )
+                    if self.assistant is None:
+                        response = Response(
+                            content_type="application/json",
+                            status=401,
+                            body=json.dumps(
+                                {
+                                    "status": "401",
+                                    "error": self._("Such API key does not exist."),
+                                }
+                            ).encode(),
+                        )
+                        return response
+                    else:
+                        self.api = True
+                else:
+                    self.returnRawViewResult = True
+                    response = Response(
+                        content_type="application/json",
+                        status=401,
+                        body=json.dumps(
+                            {
+                                "status": "401",
+                                "error": self._("Such API key does not exist."),
+                            }
+                        ).encode(),
+                    )
+                    return response
+        if not self.api:
+            policy = self.get_policy("assistant")
+            login_data = policy.authenticated_userid(self.request)
+            if self.request.method != "POST":
+                next_page = self.request.route_url(
+                    "assistant_login",
+                    userid=self.userID,
+                    projcode=self.projectCode,
+                    _query={"next": self.request.url},
                 )
-                self.assistant = get_assistant_data(
-                    self.project_assistant, login_data["login"], self.request
+            else:
+                next_page = self.request.route_url(
+                    "assistant_login",
+                    userid=self.userID,
+                    projcode=self.projectCode,
                 )
-                if self.assistant is None:
+            if login_data is not None:
+                login_data = literal_eval(login_data)
+                if login_data["group"] == "collaborators":
+                    self.project_assistant = get_project_from_assistant(
+                        self.request, self.userID, self.projectID, login_data["login"]
+                    )
+                    self.assistant = get_assistant_data(
+                        self.project_assistant, login_data["login"], self.request
+                    )
+                    if self.assistant is None:
+                        return HTTPFound(next_page)
+                else:
                     return HTTPFound(next_page)
             else:
                 return HTTPFound(next_page)
-        else:
-            return HTTPFound(next_page)
 
-        if self.request.method == "POST":
-            if (
-                self.request.registry.settings.get("perform_post_checks", "true")
-                == "true"
-            ):  # pragma: no cover
-                safe = check_csrf_token(self.request, raises=False)
-                if not safe:
-                    self.request.session.pop_flash()
-                    log.error("SECURITY-CSRF error at {} ".format(self.request.url))
-                    raise HTTPFound(self.request.route_url("refresh"))
-                else:
-                    if self.checkCrossPost:
-                        if self.request.referer != self.request.url:
-                            self.request.session.pop_flash()
-                            log.error(
-                                "SECURITY-CrossPost error. Posting at {} from {} ".format(
-                                    self.request.url, self.request.referer
+            if self.request.method == "POST":
+                if (
+                    self.request.registry.settings.get("perform_post_checks", "true")
+                    == "true"
+                ):  # pragma: no cover
+                    safe = check_csrf_token(self.request, raises=False)
+                    if not safe:
+                        self.request.session.pop_flash()
+                        log.error("SECURITY-CSRF error at {} ".format(self.request.url))
+                        raise HTTPFound(self.request.route_url("refresh"))
+                    else:
+                        if self.checkCrossPost:
+                            if self.request.referer != self.request.url:
+                                self.request.session.pop_flash()
+                                log.error(
+                                    "SECURITY-CrossPost error. Posting at {} from {} ".format(
+                                        self.request.url, self.request.referer
+                                    )
                                 )
-                            )
-                            raise HTTPNotFound()
-
+                                raise HTTPNotFound()
+            self.resultDict["activeAssistant"] = self.assistant
         self.assistantID = self.assistant.login
-        self.resultDict["activeAssistant"] = self.assistant
         self.resultDict["assistant_id"] = self.assistantID
         self.resultDict["userid"] = self.userID
         self.resultDict["projcode"] = self.projectCode
@@ -928,9 +984,61 @@ class AssistantView(object):
                     self.resultDict = plugin.after_processing_assistant_view(
                         self.request.matched_route.name, self.request, self.resultDict
                     )
-            return self.resultDict
+            if not self.api:
+                return self.resultDict
+            else:
+                data_result = {
+                    "error": self.error_occurred,
+                    "errors": self.errors,
+                    "message": "",
+                    "result": self.clean_api_result(self.resultDict),
+                }
+                status_code = 200
+                if self.error_occurred:
+                    status_code = 400
+                    data_result["result"] = {}
+                response = Response(
+                    content_type="application/json",
+                    status=status_code,
+                    body=json.dumps(
+                        data_result,
+                        indent=4,
+                        default=str,
+                        ensure_ascii=False,
+                    ).encode(),
+                )
+                return response
         else:
-            return process_dict
+            if not self.api:
+                return process_dict
+            else:
+                if self.error_occurred:
+                    data_result = {
+                        "error": self.error_occurred,
+                        "errors": self.errors,
+                        "message": "",
+                        "result": {},
+                    }
+                    status_code = 400
+                else:
+                    data_result = {
+                        "error": self.error_occurred,
+                        "errors": [],
+                        "message": self.request.session.pop_flash(),
+                        "result": {},
+                    }
+                    status_code = 200
+                response = Response(
+                    content_type="application/json",
+                    status=status_code,
+                    body=json.dumps(
+                        self.clean_api_result(data_result),
+                        indent=4,
+                        default=str,
+                        ensure_ascii=False,
+                    ).encode(),
+                )
+                return response
 
     def process_view(self):
         return {"activeAssistant": self.assistant}
@@ -940,7 +1048,11 @@ class AssistantView(object):
         return dct
 
     def add_error(self, message):
-        self.request.session.flash(message, queue="error")
+        self.error_occurred = True
+        if not self.api:
+            self.request.session.flash(message, queue="error")
+        else:
+            self.errors.append(message)
 
 
 class PartnerView(object):

@@ -43,6 +43,7 @@ __all__ = [
     "IExport",
     "IAssistantAuthentication",
     "ICollaborator",
+    "IAPISecurity",
 ]
 
 
@@ -1796,6 +1797,23 @@ class ICollaborator(Interface):  # pragma: no cover
         """
         raise NotImplementedError(
             "after_removing_collaborator must be implemented in subclasses"
+        )
+
+
+class IAPISecurity(Interface):  # pragma: no cover
+    """
+    Plugin into the creation of routes.
+
+    """
+
+    def secure_json_result(self, request):
+        """
+        Called FormShare before securing the result of an API by removing insecure keys
+        :param request: ``pyramid.request`` object
+        :return Returns array [] of keys that must be removed from the API JSON result
+        """
+        raise NotImplementedError(
+            "secure_json_result must be implemented in subclasses"
         )
 
 

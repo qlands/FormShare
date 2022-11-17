@@ -39,6 +39,7 @@ from formshare.processes.db import (
     project_has_crowdsourcing,
     update_last_login,
     get_project_access_type,
+    get_user_with_token,
 )
 from pyramid.httpexceptions import HTTPFound
 from pyramid.httpexceptions import HTTPNotFound, exception_response
@@ -310,12 +311,25 @@ class PublicView(object):
         self.errors.append(error)
 
 
+def remove_keys(obj, rubbish):
+    if isinstance(obj, dict):
+        obj = {
+            key: remove_keys(value, rubbish)
+            for key, value in obj.items()
+            if key not in rubbish
+        }
+    elif isinstance(obj, list):
+        obj = [remove_keys(item, rubbish) for item in obj if item not in rubbish]
+    return obj
+
+
 class PrivateView(object):
     def __init__(self, request):
         self.request = request
         self.user = None
         self._ = self.request.translate
         self.errors = []
+        self.error_occurred = False
         self.userID = ""
         self.classResult = {"activeUser": None, "userProjects": [], "activeProject": {}}
         self.viewResult = {}
@@ -325,7 +339,7 @@ class PrivateView(object):
         self.checkCrossPost = True
         self.queryProjects = True
         self.activeProject = {}
-        self.authorization_token = None
+        self.api = False
         locale = Locale(request.locale_name)
         if locale.character_order == "left-to-right":
             self.classResult["rtl"] = False
@@ -372,6 +386,7 @@ class PrivateView(object):
         This function returns an error to the screen when redirects DO NOT happen.
         The error will appear to the user as a div or in a modal
         """
+        self.error_occurred = True
         self.request.response.headers["FS_error"] = "true"
         self.errors.append(error)
 
@@ -407,6 +422,29 @@ class PrivateView(object):
                                 )
                             )
                             raise HTTPNotFound()
+
+    def clean_api_result(self, result):
+        keys_to_remove = [
+            "user_password",
+            "user_apisecret",
+            "user_query_password",
+            "user_apikey",
+            "user_apitoken",
+            "user_apitoken_expires_on",
+            "user_query_user",
+            "user_query_password",
+            "user_password_reset_key",
+            "user_password_reset_token",
+            "user_password_reset_expires_on",
+            "timezones",
+            "user_super",
+            "user_active",
+        ]
+        for plugin in p.PluginImplementations(p.IAPISecurity):
+            plugin_keys = plugin.secure_json_result(self.request)
+            keys_to_remove = keys_to_remove + plugin_keys
+
+        return remove_keys(result, keys_to_remove)
 
     def check_authorization(self):
         policy = self.get_policy("main")
@@ -444,37 +482,70 @@ class PrivateView(object):
             parts = self.request.headers.get("Authorization", "").split(" ")
             if len(parts) > 1:
                 authorization_token = parts[1]
-
-        i_user_authorization = p.PluginImplementations(p.IUserAuthorization)
-        continue_authorization = True
-        for plugin in i_user_authorization:
-            continue_authorization = plugin.before_check_authorization(self.request)
-            break  # Only plugin will be called for before_check_authorization
-        if continue_authorization:
-            self.check_authorization()
-        else:  # pragma: no cover
-            authorized = False
-            user_authorized = ""
+                token_user = get_user_with_token(self.request, authorization_token)
+                if token_user is not None:
+                    self.user = get_user_data(token_user, self.request)
+                    if self.user is None:
+                        self.returnRawViewResult = True
+                        response = Response(
+                            content_type="application/json",
+                            status=401,
+                            body=json.dumps(
+                                {
+                                    "status": "401",
+                                    "error": self._("Such API key does not exist."),
+                                }
+                            ).encode(),
+                        )
+                        return response
+                    else:
+                        self.api = True
+                else:
+                    self.returnRawViewResult = True
+                    response = Response(
+                        content_type="application/json",
+                        status=401,
+                        body=json.dumps(
+                            {
+                                "status": "401",
+                                "error": self._("Such API key does not exist."),
+                            }
+                        ).encode(),
+                    )
+                    return response
+        if not self.api:
+            i_user_authorization = p.PluginImplementations(p.IUserAuthorization)
+            continue_authorization = True
             for plugin in i_user_authorization:
-                authorized, user_authorized = plugin.custom_authorization(self.request)
-                break  # Only one plugin will be called for custom_authorization
-            if authorized:
-                self.user = get_user_data(user_authorized, self.request)
-                if self.user is None:
+                continue_authorization = plugin.before_check_authorization(self.request)
+                break  # Only plugin will be called for before_check_authorization
+            if continue_authorization:
+                self.check_authorization()
+            else:  # pragma: no cover
+                authorized = False
+                user_authorized = ""
+                for plugin in i_user_authorization:
+                    authorized, user_authorized = plugin.custom_authorization(
+                        self.request
+                    )
+                    break  # Only one plugin will be called for custom_authorization
+                if authorized:
+                    self.user = get_user_data(user_authorized, self.request)
+                    if self.user is None:
+                        raise HTTPFound(
+                            location=self.request.route_url(
+                                "login", _query={"next": self.request.url}
+                            )
+                        )
+                    self.check_post_put_delete()
+                else:
                     raise HTTPFound(
                         location=self.request.route_url(
                             "login", _query={"next": self.request.url}
                         )
                     )
-                self.check_post_put_delete()
-            else:
-                raise HTTPFound(
-                    location=self.request.route_url(
-                        "login", _query={"next": self.request.url}
-                    )
-                )
 
-        self.classResult["activeUser"] = self.user
+            self.classResult["activeUser"] = self.user
 
         if self.user is not None:
             self.activeProject = get_active_project(self.request, self.user.login)
@@ -536,9 +607,61 @@ class PrivateView(object):
                 )
         if not self.returnRawViewResult:
             self.classResult.update(self.viewResult)
-            return self.classResult
+            if not self.api:
+                return self.classResult
+            else:
+                data_result = {
+                    "error": self.error_occurred,
+                    "errors": self.errors,
+                    "message": "",
+                    "result": self.clean_api_result(self.classResult),
+                }
+                status_code = 200
+                if self.error_occurred:
+                    status_code = 400
+                    data_result["result"] = {}
+                response = Response(
+                    content_type="application/json",
+                    status=status_code,
+                    body=json.dumps(
+                        data_result,
+                        indent=4,
+                        default=str,
+                        ensure_ascii=False,
+                    ).encode(),
+                )
+                return response
         else:
-            return self.viewResult
+            if not self.api:
+                return self.viewResult
+            else:
+                if self.error_occurred:
+                    data_result = {
+                        "error": self.error_occurred,
+                        "errors": self.errors,
+                        "message": "",
+                        "result": {},
+                    }
+                    status_code = 400
+                else:
+                    data_result = {
+                        "error": self.error_occurred,
+                        "errors": [],
+                        "message": self.request.session.pop_flash(),
+                        "result": {},
+                    }
+                    status_code = 200
+                response = Response(
+                    content_type="application/json",
+                    status=status_code,
+                    body=json.dumps(
+                        self.clean_api_result(data_result),
+                        indent=4,
+                        default=str,
+                        ensure_ascii=False,
+                    ).encode(),
+                )
+                return response
 
     def process_view(self):
         return {"activeUser": self.user}
@@ -547,11 +670,14 @@ class PrivateView(object):
         self.classResult["activeMenu"] = menu_name
 
     def get_post_dict(self):
-        dct = variable_decode(self.request.POST)
-        for key, value in dct.items():
-            if isinstance(value, str):
-                dct[key] = value.strip()
-        return dct
+        if not self.api:
+            dct = variable_decode(self.request.POST)
+            for key, value in dct.items():
+                if isinstance(value, str):
+                    dct[key] = value.strip()
+            return dct
+        else:
+            return self.request.json_body
 
     def reload_user_details(self):
         self.classResult["userDetails"] = get_user_details(self.request, self.userID)
@@ -562,11 +688,15 @@ class PrivateView(object):
         This function returns an error to the screen when redirects happen.
         The error will appear to the user as a sweet alert
         """
-        self.request.response.headers["FS_error"] = "true"
-        if with_queue:
-            self.request.session.flash("{}|error".format(message), queue="error")
+        self.error_occurred = True
+        if not self.api:
+            self.request.response.headers["FS_error"] = "true"
+            if with_queue:
+                self.request.session.flash("{}|error".format(message), queue="error")
+            else:
+                self.request.session.flash("{}|error".format(message))
         else:
-            self.request.session.flash("{}|error".format(message))
+            self.errors.append(message)
 
     def get_project_access_level(self):
         """
@@ -575,7 +705,7 @@ class PrivateView(object):
              2: Administrator (Can edit the project and its forms + add other collaborators)
              3: Editor (Can edit the project and its forms)
              4: Member (Can access the project and its forms)
-             5: No access (Either the project does not exits or the user has no access to it)
+             5: No access (Either the project does not exist or the user has no access to it)
         """
         user_id = self.request.matchdict.get("userid", None)
         project_code = self.request.matchdict.get("projcode", None)
@@ -598,35 +728,19 @@ class DashboardView(PrivateView):
     def __call__(self):
         self.set_active_menu("dashboard")
         self.showWelcome = True
-        # We need to set here relevant information for the dashboard
-        PrivateView.__call__(self)
-        if not self.returnRawViewResult:
-            self.classResult.update(self.viewResult)
-            return self.classResult
-        else:
-            return self.viewResult
+        return PrivateView.__call__(self)
 
 
 class ProfileView(PrivateView):
     def __call__(self):
         self.set_active_menu("profile")
-        PrivateView.__call__(self)
-        if not self.returnRawViewResult:
-            self.classResult.update(self.viewResult)
-            return self.classResult
-        else:
-            return self.viewResult
+        return PrivateView.__call__(self)
 
 
 class ProjectsView(PrivateView):
     def __call__(self):
         self.set_active_menu("projects")
-        PrivateView.__call__(self)
-        if not self.returnRawViewResult:
-            self.classResult.update(self.viewResult)
-            return self.classResult
-        else:
-            return self.viewResult
+        return PrivateView.__call__(self)
 
 
 class AssistantView(object):

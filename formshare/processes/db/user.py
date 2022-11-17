@@ -35,6 +35,7 @@ __all__ = [
     "set_query_user",
     "get_query_password",
     "update_api_key",
+    "get_user_with_token",
 ]
 
 log = logging.getLogger("formshare")
@@ -407,3 +408,15 @@ def update_api_key(request, user, api_key, api_secret):
         # request.dbsession.rollback()
         log.error("Error {} when changing password for user {}".format(str(e), user))
         return False, str(e)
+
+
+def get_user_with_token(request, token):
+    res = (
+        request.dbsession.query(User)
+        .filter(User.user_apitoken == token)
+        .filter(User.user_apitoken_expires_on >= datetime.datetime.now())
+        .first()
+    )
+    if res is not None:
+        return res.user_id
+    return None

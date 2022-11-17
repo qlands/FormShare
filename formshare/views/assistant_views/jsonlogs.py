@@ -111,6 +111,9 @@ class JSONList(AssistantView):
                 start = page.first_item - 1
             else:
                 start = 0
+            if self.api:
+                start = int(self.request.params.get("start", "0"))
+                page_size = int(self.request.params.get("page_size", "10000"))
             if permissions["enum_canclean"] == 1:
                 errors = get_errors_by_assistant(
                     self.request,
@@ -135,6 +138,7 @@ class JSONList(AssistantView):
                 )
             return {
                 "errors": errors,
+                "num_errors": number_of_errors,
                 "canclean": permissions["enum_canclean"],
                 "formid": form_id,
                 "formData": form_data,

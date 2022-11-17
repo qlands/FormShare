@@ -335,6 +335,9 @@ keys_to_remove = [
     "form_reptask",
     "json_file",
     "allPages",
+    "form_mergetask",
+    "rtl",
+    "form_directory",
 ]
 
 

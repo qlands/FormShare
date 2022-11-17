@@ -34,6 +34,7 @@ __all__ = [
     "get_assistant_by_api_key",
     "get_assistant_timezone",
     "get_one_assistant",
+    "get_assistant_with_token",
 ]
 
 log = logging.getLogger("formshare")
@@ -497,3 +498,15 @@ def get_assistant_password(request, user, project, assistant, decrypt=True):
         return decrypted
     else:
         return enum.coll_password
+
+
+def get_assistant_with_token(request, token):
+    res = (
+        request.dbsession.query(Collaborator)
+        .filter(Collaborator.coll_apitoken == token)
+        .filter(Collaborator.coll_apitoken_expires_on >= datetime.datetime.now())
+        .first()
+    )
+    if res is not None:
+        return res.coll_id
+    return None

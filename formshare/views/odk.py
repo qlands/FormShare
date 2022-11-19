@@ -24,21 +24,30 @@ class ODKFormList(ODKView):
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         if project_id is not None:
             if not project_has_crowdsourcing(self.request, project_id):
-                if is_assistant_active(self.request, user_id, project_id, self.user):
-                    if self.authorize(
-                        get_assistant_password(
-                            self.request, user_id, project_id, self.user
-                        )
+                if not self.api:
+                    if is_assistant_active(
+                        self.request, user_id, project_id, self.user
                     ):
-                        return self.create_xmll_response(
-                            get_form_list(
-                                self.request, user_id, project_code, self.user
+                        if self.authorize(
+                            get_assistant_password(
+                                self.request, user_id, project_id, self.user
                             )
-                        )
+                        ):
+                            return self.create_xmll_response(
+                                get_form_list(
+                                    self.request, user_id, project_code, self.user
+                                )
+                            )
+                        else:
+                            return self.ask_for_credentials()
                     else:
                         return self.ask_for_credentials()
                 else:
-                    return self.ask_for_credentials()
+                    return self.create_xmll_response(
+                        get_form_list(
+                            self.request, user_id, project_code, self.user, True
+                        )
+                    )
             else:
                 return self.create_xmll_response(
                     get_form_list(self.request, user_id, project_code, self.user)
@@ -231,22 +240,27 @@ class ODKXMLForm(ODKView):
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         if project_id is not None:
             if not project_has_crowdsourcing(self.request, project_id):
-                if is_assistant_active(self.request, user_id, project_id, self.user):
-                    if assistant_has_form(
-                        self.request, user_id, project_id, form_id, self.user
+                if not self.api:
+                    if is_assistant_active(
+                        self.request, user_id, project_id, self.user
                     ):
-                        if self.authorize(
-                            get_assistant_password(
-                                self.request, user_id, project_id, self.user
-                            )
+                        if assistant_has_form(
+                            self.request, user_id, project_id, form_id, self.user
                         ):
-                            return get_xml_form(self.request, project_id, form_id)
+                            if self.authorize(
+                                get_assistant_password(
+                                    self.request, user_id, project_id, self.user
+                                )
+                            ):
+                                return get_xml_form(self.request, project_id, form_id)
+                            else:
+                                return self.ask_for_credentials()
                         else:
                             return self.ask_for_credentials()
                     else:
                         return self.ask_for_credentials()
                 else:
-                    return self.ask_for_credentials()
+                    return get_xml_form(self.request, project_id, form_id)
             else:
                 return get_xml_form(self.request, project_id, form_id)
         else:
@@ -262,30 +276,39 @@ class ODKManifest(ODKView):
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         if project_id is not None:
             if not project_has_crowdsourcing(self.request, project_id):
-                if is_assistant_active(self.request, user_id, project_id, self.user):
-                    if assistant_has_form(
-                        self.request, user_id, project_id, form_id, self.user
+                if not self.api:
+                    if is_assistant_active(
+                        self.request, user_id, project_id, self.user
                     ):
-                        if self.authorize(
-                            get_assistant_password(
-                                self.request, user_id, project_id, self.user
-                            )
+                        if assistant_has_form(
+                            self.request, user_id, project_id, form_id, self.user
                         ):
-                            return self.create_xmll_response(
-                                get_manifest(
-                                    self.request,
-                                    user_id,
-                                    project_code,
-                                    project_id,
-                                    form_id,
+                            if self.authorize(
+                                get_assistant_password(
+                                    self.request, user_id, project_id, self.user
                                 )
-                            )
+                            ):
+                                return self.create_xmll_response(
+                                    get_manifest(
+                                        self.request,
+                                        user_id,
+                                        project_code,
+                                        project_id,
+                                        form_id,
+                                    )
+                                )
+                            else:
+                                return self.ask_for_credentials()
                         else:
                             return self.ask_for_credentials()
                     else:
                         return self.ask_for_credentials()
                 else:
-                    return self.ask_for_credentials()
+                    return self.create_xmll_response(
+                        get_manifest(
+                            self.request, user_id, project_code, project_id, form_id
+                        )
+                    )
             else:
                 return self.create_xmll_response(
                     get_manifest(
@@ -306,24 +329,29 @@ class ODKMediaFile(ODKView):
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         if project_id is not None:
             if not project_has_crowdsourcing(self.request, project_id):
-                if is_assistant_active(self.request, user_id, project_id, self.user):
-                    if assistant_has_form(
-                        self.request, user_id, project_id, form_id, self.user
+                if not self.api:
+                    if is_assistant_active(
+                        self.request, user_id, project_id, self.user
                     ):
-                        if self.authorize(
-                            get_assistant_password(
-                                self.request, user_id, project_id, self.user
-                            )
+                        if assistant_has_form(
+                            self.request, user_id, project_id, form_id, self.user
                         ):
-                            return get_media_file(
-                                self.request, project_id, form_id, file_id
-                            )
+                            if self.authorize(
+                                get_assistant_password(
+                                    self.request, user_id, project_id, self.user
+                                )
+                            ):
+                                return get_media_file(
+                                    self.request, project_id, form_id, file_id
+                                )
+                            else:
+                                return self.ask_for_credentials()
                         else:
                             return self.ask_for_credentials()
                     else:
                         return self.ask_for_credentials()
                 else:
-                    return self.ask_for_credentials()
+                    return get_media_file(self.request, project_id, form_id, file_id)
             else:
                 return get_media_file(self.request, project_id, form_id, file_id)
         else:

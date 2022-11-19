@@ -58,6 +58,7 @@ class ODKView(object):
         self.realm = request.registry.settings["auth.realm"]
         self.authHeader = {}
         self.user = ""
+        self.api = False
 
     def get_auth_dict(self):  # pragma: no cover
         authheader = self.request.headers["Authorization"].replace(", ", ",")
@@ -170,6 +171,23 @@ class ODKView(object):
                     self.user = self.authHeader["Digest username"]
                     return self.process_view()
                 else:
+                    if self.request.headers["Authorization"].find("Bearer") >= 0:
+                        parts = self.request.headers.get("Authorization", "").split(" ")
+                        if len(parts) > 1:
+                            authorization_token = parts[1]
+                            token_user = get_user_with_token(
+                                self.request, authorization_token
+                            )
+                            if token_user is not None:
+                                if (
+                                    get_project_access_type(
+                                        self.request, project_id, user_id, token_user
+                                    )
+                                    != 5
+                                ):
+                                    self.api = True
+                                    self.user = token_user
+                                    return self.process_view()
                     headers = [
                         (
                             "WWW-Authenticate",

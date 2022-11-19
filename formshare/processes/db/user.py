@@ -414,6 +414,7 @@ def get_user_with_token(request, token):
     res = (
         request.dbsession.query(User)
         .filter(User.user_apitoken == token)
+        .filter(User.user_active == 1)
         .filter(User.user_apitoken_expires_on >= datetime.datetime.now())
         .first()
     )

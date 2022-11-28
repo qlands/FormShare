@@ -45,7 +45,7 @@ def t_e_s_t_clean_interface_unauthorized(test_object):
         "/user/{}/project/{}/assistantaccess/form/{}/clean".format(
             test_object.randonLogin, test_object.project, test_object.formID
         ),
-        status=404,
+        status=403,
     )
 
     # Loads the data for the grid
@@ -65,7 +65,7 @@ def t_e_s_t_clean_interface_unauthorized(test_object):
             "sidx": "",
             "sord": "asc",
         },
-        status=404,
+        status=403,
     )
 
     form_details = get_form_details(
@@ -89,7 +89,7 @@ def t_e_s_t_clean_interface_unauthorized(test_object):
             "maintable",
         ),
         {"landcultivated": "13.000", "oper": "edit", "id": row_uuid},
-        status=404,
+        status=403,
     )
 
     res = test_object.testapp.post(

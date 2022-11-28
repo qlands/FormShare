@@ -102,7 +102,7 @@ def t_e_s_t_json_logs(test_object):
             duplicated_id,
             "None",
         ),
-        status=404,
+        status=403,
     )
 
     # Change the assistant to both
@@ -236,7 +236,7 @@ def t_e_s_t_json_logs(test_object):
             duplicated_id,
         ),
         {"notes": "Some notes about the disregard"},
-        status=404,
+        status=403,
     )
 
     # Change the assistant to both
@@ -345,7 +345,7 @@ def t_e_s_t_json_logs(test_object):
             duplicated_id,
         ),
         {"notes": "Some notes about the disregard"},
-        status=404,
+        status=403,
     )
 
     # Change the assistant to submit only
@@ -461,7 +461,7 @@ def t_e_s_t_json_logs(test_object):
             test_object.formID,
             duplicated_id,
         ),
-        status=404,
+        status=403,
     )
 
     # Change the assistant to clean and submit
@@ -568,7 +568,7 @@ def t_e_s_t_json_logs(test_object):
             test_object.formID,
             duplicated_id,
         ),
-        status=404,
+        status=403,
     )
 
     # Change the assistant to submit only
@@ -748,7 +748,7 @@ def t_e_s_t_json_logs(test_object):
             duplicated_id,
             "23a243c95547",
         ),
-        status=404,
+        status=403,
     )
 
     # Cancel goes to 404
@@ -760,7 +760,7 @@ def t_e_s_t_json_logs(test_object):
             duplicated_id,
             "23a243c95547",
         ),
-        status=404,
+        status=403,
     )
 
     # Change the assistant to submit only
@@ -911,7 +911,7 @@ def t_e_s_t_json_logs(test_object):
             duplicated_id,
         ),
         {"notes": "Some notes about the checkin"},
-        status=404,
+        status=403,
         upload_files=[("json", submission_file)],
     )
 
@@ -995,7 +995,7 @@ def t_e_s_t_json_logs(test_object):
             duplicated_id,
             "23a243c95548",
         ),
-        status=404,
+        status=403,
     )
 
     # Change the assistant to both
@@ -1166,7 +1166,7 @@ def t_e_s_t_json_logs(test_object):
             duplicated_id,
             survey_id,
         ),
-        status=404,
+        status=403,
     )
 
     # Change the assistant to both
@@ -1241,7 +1241,7 @@ def t_e_s_t_json_logs(test_object):
             duplicated_id,
         ),
         {"submissionid": survey_id},
-        status=404,
+        status=403,
     )
 
     # Checkout the submission fails. The assistant cannot clean anymore
@@ -1252,7 +1252,7 @@ def t_e_s_t_json_logs(test_object):
             test_object.formID,
             duplicated_id,
         ),
-        status=404,
+        status=403,
     )
 
     # Edit an assistant to clean submit and clean

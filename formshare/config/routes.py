@@ -48,6 +48,7 @@ from formshare.views.assistants import (
 )
 from formshare.views.basic_views import (
     NotFoundView,
+    ForbiddenView,
     HomeView,
     HealthView,
     log_out_view,
@@ -1629,6 +1630,7 @@ def load_routes(config, settings):
 
     # Add the not found route
     config.add_notfound_view(NotFoundView, renderer="generic/404.jinja2")
+    config.add_forbidden_view(ForbiddenView, renderer="generic/403.jinja2")
 
     if (
         log.level == logging.WARN

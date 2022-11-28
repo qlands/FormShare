@@ -287,7 +287,7 @@ def t_e_s_t_json_logs_2(test_object):
         "/user/{}/project/{}/assistantaccess/form/{}/errors".format(
             test_object.randonLogin, test_object.project, test_object.formID
         ),
-        status=404,
+        status=403,
     )
 
     # Load compare submission

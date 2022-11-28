@@ -70,6 +70,12 @@ class NotFoundView(ExceptionView):
         return {}
 
 
+class ForbiddenView(ExceptionView):
+    def process_view(self):
+        self.request.response.status = 403
+        return {}
+
+
 class Gravatar(PublicView):
     def process_view(self):
         self.returnRawViewResult = True

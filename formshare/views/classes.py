@@ -687,6 +687,8 @@ class PrivateView(object):
                         "result": {},
                     }
                     status_code = 200
+                if not self.error_occurred and self.viewResult.__class__.__name__ != "HTTPFound":
+                    return self.viewResult
                 response = Response(
                     content_type="application/json",
                     status=status_code,
@@ -1066,8 +1068,11 @@ class AssistantView(object):
         return {"activeAssistant": self.assistant}
 
     def get_post_dict(self):
-        dct = variable_decode(self.request.POST)
-        return dct
+        if not self.api:
+            dct = variable_decode(self.request.POST)
+            return dct
+        else:
+            return self.request.json_body
 
     def add_error(self, message):
         self.error_occurred = True

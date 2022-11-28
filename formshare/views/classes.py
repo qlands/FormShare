@@ -687,7 +687,10 @@ class PrivateView(object):
                         "result": {},
                     }
                     status_code = 200
-                if not self.error_occurred and self.viewResult.__class__.__name__ != "HTTPFound":
+                if (
+                    not self.error_occurred
+                    and self.viewResult.__class__.__name__ != "HTTPFound"
+                ):
                     return self.viewResult
                 response = Response(
                     content_type="application/json",

@@ -10,7 +10,7 @@ from formshare.processes.submission.api import (
     update_data,
 )
 from formshare.views.classes import AssistantView
-from pyramid.httpexceptions import HTTPNotFound, HTTPFound
+from pyramid.httpexceptions import HTTPNotFound, HTTPFound, HTTPForbidden
 
 log = logging.getLogger("formshare")
 
@@ -152,7 +152,7 @@ class CleanInterface(AssistantView):
                 "formData": form_data,
             }
         else:
-            raise HTTPNotFound()
+            raise HTTPForbidden()
 
 
 class DataRequest(AssistantView):
@@ -209,7 +209,7 @@ class DataRequest(AssistantView):
             else:
                 raise HTTPNotFound()
         else:
-            raise HTTPNotFound()
+            raise HTTPForbidden()
 
 
 class PerformAction(AssistantView):
@@ -257,4 +257,4 @@ class PerformAction(AssistantView):
             self.request.response.headers["FS_error"] = "true"
             return {}
         else:
-            raise HTTPNotFound()
+            raise HTTPForbidden()

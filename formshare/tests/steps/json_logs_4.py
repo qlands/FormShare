@@ -235,7 +235,7 @@ def t_e_s_t_json_logs_4(test_object):
         "/user/{}/project/{}/assistantaccess/form/{}/{}/push".format(
             test_object.randonLogin, json4_project, json4_form, duplicated_ids[0]
         ),
-        status=404,
+        status=403,
     )
 
     # Change the assistant to both

@@ -35,7 +35,7 @@ from formshare.processes.odk.processes import (
 )
 from formshare.processes.submission.api import get_submission_media_files
 from formshare.views.classes import AssistantView
-from pyramid.httpexceptions import HTTPNotFound, HTTPFound
+from pyramid.httpexceptions import HTTPNotFound, HTTPFound, HTTPForbidden
 from pyramid.response import FileResponse
 from webhelpers2.html import literal
 
@@ -147,7 +147,7 @@ class JSONList(AssistantView):
                 "project_has_crowdsourcing": self.project_has_crowdsourcing,
             }
         else:
-            raise HTTPNotFound()
+            raise HTTPForbidden()
 
 
 class JSONCompare(AssistantView):
@@ -224,7 +224,7 @@ class JSONCompare(AssistantView):
             else:
                 raise HTTPNotFound()
         else:
-            raise HTTPNotFound()
+            raise HTTPForbidden()
 
 
 class JSONCheckout(AssistantView):
@@ -272,7 +272,7 @@ class JSONCheckout(AssistantView):
             else:
                 raise HTTPNotFound()
         else:
-            raise HTTPNotFound()
+            raise HTTPForbidden()
 
 
 class JSONCancelCheckout(AssistantView):
@@ -321,7 +321,7 @@ class JSONCancelCheckout(AssistantView):
             else:
                 raise HTTPNotFound()
         else:
-            raise HTTPNotFound()
+            raise HTTPForbidden()
 
 
 class JSONGetSubmission(AssistantView):
@@ -346,7 +346,7 @@ class JSONGetSubmission(AssistantView):
             else:
                 raise HTTPNotFound()
         else:
-            raise HTTPNotFound()
+            raise HTTPForbidden()
 
 
 class JSONCheckin(AssistantView):
@@ -441,7 +441,7 @@ class JSONCheckin(AssistantView):
             else:
                 raise HTTPNotFound()
         else:
-            raise HTTPNotFound()
+            raise HTTPForbidden()
 
 
 class JSONViewRevision(AssistantView):
@@ -485,7 +485,7 @@ class JSONViewRevision(AssistantView):
             else:
                 raise HTTPNotFound()
         else:
-            raise HTTPNotFound()
+            raise HTTPForbidden()
 
 
 class JSONCancelRevision(AssistantView):
@@ -548,7 +548,7 @@ class JSONCancelRevision(AssistantView):
             else:
                 raise HTTPNotFound()
         else:
-            raise HTTPNotFound()
+            raise HTTPForbidden()
 
 
 class JSONPushRevision(AssistantView):
@@ -623,7 +623,7 @@ class JSONPushRevision(AssistantView):
             else:
                 raise HTTPNotFound()
         else:
-            raise HTTPNotFound()
+            raise HTTPForbidden()
 
 
 class JSONPushSubmission(AssistantView):
@@ -685,7 +685,7 @@ class JSONPushSubmission(AssistantView):
             else:
                 raise HTTPNotFound()
         else:
-            raise HTTPNotFound()
+            raise HTTPForbidden()
 
 
 class JSONDisregard(AssistantView):
@@ -752,7 +752,7 @@ class JSONDisregard(AssistantView):
             else:
                 raise HTTPNotFound()
         else:
-            raise HTTPNotFound()
+            raise HTTPForbidden()
 
 
 class JSONCancelDisregard(AssistantView):
@@ -821,7 +821,7 @@ class JSONCancelDisregard(AssistantView):
             else:
                 raise HTTPNotFound()
         else:
-            raise HTTPNotFound()
+            raise HTTPForbidden()
 
 
 class JSONCompareSubmissions(AssistantView):
@@ -870,7 +870,7 @@ class JSONCompareSubmissions(AssistantView):
                 "formData": form_data,
             }
         else:
-            raise HTTPNotFound()
+            raise HTTPForbidden()
 
 
 class JSONGetSubmissionsMedia(AssistantView):
@@ -918,6 +918,5 @@ class JSONGetSubmissionsMedia(AssistantView):
                     formid=form_id,
                 )
                 return HTTPFound(location=next_page, headers={"FS_error": "true"})
-
         else:
-            raise HTTPNotFound()
+            raise HTTPForbidden()

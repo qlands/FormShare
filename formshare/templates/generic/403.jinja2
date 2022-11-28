@@ -1,0 +1,23 @@
+{% extends 'base.jinja2' %}
+
+{% block titlesection %}{{ _('Not authorized') }}{% endblock titlesection %}
+
+{% block css %}
+    {% cssresource request,'formshare','style' %}
+{% endblock css %}
+
+{% block bodyclass %}gray-bg{% endblock bodyclass %}
+
+{% block body %}
+    {% block error_message %}
+        <div class="middle-box text-center animated fadeInDown">
+            <h1><i class="fa fa-lock"></i></h1>
+            <h3 class="font-bold">{{ _('Not authorized') }}</h3>
+
+            <div class="error-desc">
+                {{ _("Your assistant account does not have sufficient permissions to view this page.") }}
+            </div>
+        </div>
+    {% endblock error_message %}
+    {% jsresource request,'formshare','bootstrap' %}
+{% endblock body %}

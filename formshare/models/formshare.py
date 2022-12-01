@@ -759,6 +759,8 @@ class DictField(Base):
     field_rname = Column(Unicode(64))
     field_selecttype = Column(INTEGER, server_default=text("'0'"))
     field_externalfilename = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    field_codecolumn = Column(Unicode(120))
+    field_desccolumn = Column(Unicode(120))
     field_size = Column(INTEGER, server_default=text("'0'"))
     field_decsize = Column(INTEGER, server_default=text("'0'"))
     field_sensitive = Column(INTEGER, server_default=text("'0'"))

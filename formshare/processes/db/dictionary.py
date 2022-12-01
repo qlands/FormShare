@@ -1,6 +1,9 @@
 import logging
 import os
-
+import uuid
+from sqlalchemy import create_engine
+from sqlalchemy.pool import NullPool
+from sqlalchemy.orm.session import Session
 from formshare.models import DictTable, DictField, map_from_schema
 from formshare.processes.db.form import get_form_xml_create_file
 from lxml import etree
@@ -14,9 +17,166 @@ __all__ = [
     "update_dictionary_table_desc",
     "update_dictionary_field_desc",
     "update_dictionary_field_sensitive",
+    "is_csv_a_lookup",
+    "get_name_and_label_from_file",
+    "update_lookup_from_csv",
 ]
 
 log = logging.getLogger("formshare")
+
+
+def update_lookup_from_csv(
+    request, user_id, project_id, form_id, form_schema, file_name, dataframe
+):
+    uid = str(uuid.uuid4())
+    uid = "TMP_" + uid.replace("-", "_")
+    field_type, field_size = get_type_and_size_from_file(
+        request, project_id, form_id, file_name
+    )
+    if field_type == "varchar":
+        sql = "CREATE TABLE {}.{} (var_code {}({}) PRIMARY KEY, var_label text)".format(
+            form_schema, uid, field_type, field_size
+        )
+    else:
+        sql = "CREATE TABLE {}.{} (var_code {} PRIMARY KEY, var_label text)".format(
+            form_schema, uid, field_type
+        )
+
+    sql_url = request.registry.settings.get("sqlalchemy.url")
+    engine = create_engine(sql_url, poolclass=NullPool)
+
+    try:
+        session = Session(bind=engine)
+        session.execute(sql)
+        name, label = get_name_and_label_from_file(
+            request, project_id, form_id, file_name
+        )
+        for ind in dataframe.index:
+            sql = "INSERT INTO {}.{} (var_code, var_label) VALUES ('{}', '{}')".format(
+                form_schema, uid, dataframe[name][ind], dataframe[label][ind]
+            )
+            session.execute(sql)
+
+        rel_table, rel_field = get_references_from_file(
+            request, project_id, form_id, file_name
+        )
+        rel_field_desc = rel_field.replace("_cod", "_des")
+
+        # Update the descriptions
+        session.execute("SET @odktools_current_user = '" + user_id + "'")
+        sql = "UPDATE {}.{} TA, {}.{} TB SET TA.{} = TB.var_label WHERE TA.{} = TB.var_code".format(
+            form_schema, rel_table, form_schema, uid, rel_field_desc, rel_field
+        )
+        session.execute(sql)
+        # Delete items that do not exist
+        sql = "DELETE IGNORE FROM {}.{} WHERE {} NOT IN (SELECT var_code FROM {}.{})".format(
+            form_schema, rel_table, rel_field, form_schema, uid
+        )
+        session.execute(sql)
+
+        # Insert new items
+        sql = "INSERT IGNORE INTO {}.{} ({},{}) SELECT var_code, var_label FROM {}.{}".format(
+            form_schema, rel_table, rel_field, rel_field_desc, form_schema, uid
+        )
+        session.execute(sql)
+
+        sql = "DROP TABLE {}.{}".format(form_schema, uid)
+        session.execute(sql)
+
+        session.commit()
+        engine.dispose()
+
+        return True, ""
+    except Exception as e:
+        engine.dispose()
+        log.error("Unable to upload lookup connected to CSV. Error: {}".format(str(e)))
+        return False, str(e)
+
+
+def is_csv_a_lookup(request, project_id, form_id, file_name):
+    """
+    Returns whether a CSV files is linked to a lookup table
+    :param request: Pyramid request object
+    :param project_id: Project ID
+    :param form_id: Form ID
+    :param file_name: CSV file
+    """
+    res = (
+        request.dbsession.query(DictField.field_rlookup)
+        .filter(DictField.project_id == project_id)
+        .filter(DictField.form_id == form_id)
+        .filter(DictField.field_externalfilename == file_name)
+        .filter(DictField.field_rlookup == 1)
+        .first()
+    )
+    if res is not None:
+        return True
+    else:
+        return False
+
+
+def get_references_from_file(request, project_id, form_id, file_name):
+    """
+    Return the size of the code column of a CSV file used by a form
+    :param request: Pyramid request object
+    :param project_id: Project ID
+    :param form_id: Form ID
+    :param file_name: CSV file
+    """
+    res = (
+        request.dbsession.query(DictField.field_rtable, DictField.field_rfield)
+        .filter(DictField.project_id == project_id)
+        .filter(DictField.form_id == form_id)
+        .filter(DictField.field_externalfilename == file_name)
+        .filter(DictField.field_rlookup == 1)
+        .first()
+    )
+    if res is not None:
+        return res.field_rtable, res.field_rfield
+    return None, None
+
+
+def get_type_and_size_from_file(request, project_id, form_id, file_name):
+    """
+    Return the size of the code column of a CSV file used by a form
+    :param request: Pyramid request object
+    :param project_id: Project ID
+    :param form_id: Form ID
+    :param file_name: CSV file
+    """
+    res = (
+        request.dbsession.query(DictField.field_type, DictField.field_size)
+        .filter(DictField.project_id == project_id)
+        .filter(DictField.form_id == form_id)
+        .filter(DictField.field_externalfilename == file_name)
+        .filter(DictField.field_rlookup == 1)
+        .first()
+    )
+    if res is not None:
+        return res.field_type, res.field_size
+    return "varchar", 128
+
+
+def get_name_and_label_from_file(request, project_id, form_id, file_name):
+    """
+    Return the name and label column of a CSV file used by a form
+    :param request: Pyramid request object
+    :param project_id: Project ID
+    :param form_id: Form ID
+    :param file_name: CSV file
+    """
+    res = (
+        request.dbsession.query(DictField.field_codecolumn, DictField.field_desccolumn)
+        .filter(DictField.project_id == project_id)
+        .filter(DictField.form_id == form_id)
+        .filter(DictField.field_externalfilename == file_name)
+        .filter(DictField.field_rlookup == 1)
+        .first()
+    )
+    if res is not None:
+        if res.field_codecolumn != "" and res.field_desccolumn != "":
+            return res.field_codecolumn, res.field_desccolumn
+    return "name", "label"
 
 
 def update_dictionary_field_sensitive(
@@ -244,6 +404,8 @@ def update_dictionary_tables(request, project, form):  # pragma: no cover
             "field_rname": a_field.get("rname"),
             "field_selecttype": a_field.get("selecttype"),
             "field_externalfilename": a_field.get("externalfilename"),
+            "field_codecolumn": a_field.get("codeColumn"),
+            "field_desccolumn": a_field.get("descColumn"),
             "field_size": a_field.get("size", 0),
             "field_decsize": a_field.get("decsize", 0),
             "field_sensitive": field_sensitive,

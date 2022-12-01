@@ -69,6 +69,9 @@ from formshare.processes.db import (
     get_number_of_case_creators_with_repository,
     get_case_form,
     get_forms_number,
+    is_csv_a_lookup,
+    get_name_and_label_from_file,
+    update_lookup_from_csv,
 )
 from formshare.processes.elasticsearch.record_index import delete_form_records
 from formshare.processes.elasticsearch.repository_index import (
@@ -89,7 +92,12 @@ from formshare.processes.odk.api import (
     store_file_in_directory,
 )
 from formshare.processes.odk.processes import get_form_primary_key, get_form_case_params
-from formshare.processes.storage import store_file, delete_stream, delete_bucket
+from formshare.processes.storage import (
+    store_file,
+    delete_stream,
+    delete_bucket,
+    get_temporary_file,
+)
 from formshare.processes.submission.api import (
     get_submission_media_files,
     json_to_csv,
@@ -1663,6 +1671,43 @@ class AddFileToForm(PrivateView):
                     if slash_index >= 0:
                         file_name = file_name[slash_index + 1 :]
                     md5sum = md5(file.file.read()).hexdigest()
+                    csv_is_lookup = False
+                    csv_data = None
+                    if file_name.upper().find(".CSV") > 0:
+                        tmp_file = get_temporary_file(self.request, "csv")
+                        file.file.seek(0)
+                        with open(tmp_file, "wb") as output_file:
+                            shutil.copyfileobj(file.file, output_file)
+                        try:
+                            csv_data = pd.read_csv(tmp_file)
+                            if current_form_data["form_schema"] is not None:
+                                if is_csv_a_lookup(
+                                    self.request, project_id, form_id, file_name
+                                ):
+                                    name, label = get_name_and_label_from_file(
+                                        self.request, project_id, form_id, file_name
+                                    )
+                                    if (
+                                        name not in csv_data.columns
+                                        or label not in csv_data.columns
+                                    ):
+                                        message = "The CSV file does not have the columns '{}' or '{}'".format(
+                                            name, label
+                                        )
+                                        error = True
+                                        break
+                                    csv_is_lookup = True
+                        except Exception as e:
+                            log.error(
+                                "Unable to read {}. Error {}".format(file_name, str(e))
+                            )
+                            message = (
+                                "Unable to read {}. The CSV may have errors".format(
+                                    file_name
+                                )
+                            )
+                            error = True
+                            break
                     added, message = add_file_to_form(
                         self.request, project_id, form_id, file_name, overwrite, md5sum
                     )
@@ -1698,7 +1743,17 @@ class AddFileToForm(PrivateView):
                                 update_form(
                                     self.request, project_id, form_id, form_update_data
                                 )
-
+                            if file_name in required_files and csv_is_lookup:
+                                result, message = update_lookup_from_csv(
+                                    self.request,
+                                    user_id,
+                                    project_id,
+                                    form_id,
+                                    current_form_data["form_schema"],
+                                    file_name,
+                                    csv_data,
+                                )
+                                error = not result
                     else:
                         error = True
                         break

@@ -1,7 +1,7 @@
 import logging
 import mimetypes
 import os
-
+import uuid
 from ofs.base import BucketExists
 from ofs.local import PTOFS
 from pairtree import FileNotFoundException
@@ -13,11 +13,28 @@ __all__ = [
     "response_stream",
     "delete_stream",
     "delete_bucket",
+    "get_temporary_directory",
+    "get_temporary_file",
 ]
 
 _BLOCK_SIZE = 4096 * 64  # 256K
 
 log = logging.getLogger("formshare")
+
+
+def get_temporary_directory(request):
+    repository_path = request.registry.settings["repository.path"]
+    return os.path.join(repository_path, *["tmp", str(uuid.uuid4())])
+
+
+def get_temporary_file(request, extension):
+    tmp_id = str(uuid.uuid4())
+    repository_path = request.registry.settings["repository.path"]
+    dir_path = os.path.join(repository_path, *["tmp", tmp_id])
+    os.makedirs(dir_path)
+    return os.path.join(
+        repository_path, *["tmp", tmp_id, tmp_id + "." + extension.lower()]
+    )
 
 
 def get_storage_object(request):

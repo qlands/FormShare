@@ -427,6 +427,8 @@ def update_dictionary_tables(db_session, schema, xml_create_file):
             "field_rname": a_field.get("rname"),
             "field_selecttype": a_field.get("selecttype"),
             "field_externalfilename": a_field.get("externalfilename"),
+            "field_codecolumn": a_field.get("codeColumn"),
+            "field_desccolumn": a_field.get("descColumn"),
             "field_size": a_field.get("size", 0),
             "field_decsize": a_field.get("decsize", 0),
             "field_sensitive": field_sensitive,

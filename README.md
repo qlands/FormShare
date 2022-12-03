@@ -47,7 +47,7 @@ FormShare **is for organizations** to install it in their server or cloud servic
 - Projects to organize users, permissions, and forms
 - Separate access for data collectors and data cleaners. This is useful when dealing with hundreds of data collectors that do not need a FormShare user access 
 - Separate access for partners: Partners are trusted individuals outside your organization that require access to products and other resources in FormShare to collaborate with you. For example, a professor at a university (a partner in your project) requiring a KML export to match GPS points with weather data. 
-- User collaborations at project level, e. g., you can allow a colleague to maintain certain aspects of your project.
+- User collaborations at project level, e.g., you can allow a colleague to maintain certain aspects of your project.
 - Form and submission management
   - With easy setup of ODK Collect Projects using QR images
   - With support for form version updates
@@ -56,19 +56,19 @@ FormShare **is for organizations** to install it in their server or cloud servic
   - With form and submission multimedia or data attachments
   - With a table preview of submission data (even with thousand or millions of records) allowing in-table edits and recording any changes made to the data
 - OData live data feed for analysis with tools like Excel and Power BI. **With all CRUD operation supported (e. g., update)**. You can even use [Excel](https://github.com/qlands/MrBot-OData-Add-In) to clean data.
-- Extensibility system, e. g., You can write extensions to connect FormShare with Microsoft 365 authentication system
+- Extensibility system, e.g., You can write extensions to connect FormShare with Microsoft 365 authentication system
 - Documentation for running on AWS using Docker
 - Data cleaning API integration with R, STATA, or SPSS
 - Real-time map visualization of geo-referenced submissions at project and form level
 - Fill out forms using the web browser through [Enketo](https://github.com/qlands/formshare_enketo_plugin)
 - Download form attachments
-- Filtering submissions by submission metadata (e. g., date and time received on server)
+- Filtering submissions by submission metadata (e.g., date and time received on server)
 - Parse submissions into database tables. FormShare will create a MySQL data repository to store your data
-  - The repository is controlled with a primary key e. g., Farmed ID
+  - The repository is controlled with a primary key e.g., Farmed ID
   - Duplicated submissions go to a cleaning pipe-line system that makes it easier to compare submissions and decide what to do with the duplicates
 - Private and publishable data downloads in Excel and CSV formats
   - Mark data fields as sensitive to exclude them from publishable products
-  - Version control on products, e. g., FormShare will let you know if a data export does not have the latest submissions or changes in the database
+  - Version control on products, e.g., FormShare will let you know if a data export does not have the latest submissions or changes in the database
   - Make publishable products publicly available knowing that sensitive fields are excluded automatically 
 - Download geo-referenced information in KML format
 
@@ -86,11 +86,11 @@ ScreenShot
 
 Releases
 ------------
-The current stable release is 2.20.0 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.20.0) 
+The current stable release is 2.21.0 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.21.0) 
 
-The database signature for stable 2.20.0 is 917dcf0a81c0
+The database signature for stable 2.21.0 is e2d6d5aa3700
 
-The Docker image for stable 2.20.0 is 20221101
+The Docker image for stable 2.21.0 is 20221203
 
 Installation
 ------------
@@ -110,9 +110,9 @@ sudo apt-get install -y docker-compose
 
 # Get the Docker Compose file
 cd /opt
-sudo mkdir formshare_docker_compose_20221101
-cd formshare_docker_compose_20221101
-sudo wget https://raw.githubusercontent.com/qlands/FormShare/stable-2.20.0/docker_compose/docker-compose.yml
+sudo mkdir formshare_docker_compose_20221203
+cd formshare_docker_compose_20221203
+sudo wget https://raw.githubusercontent.com/qlands/FormShare/stable-2.21.0/docker_compose/docker-compose.yml
 
 # Make the directory structure for FormShare
 sudo mkdir /opt/formshare
@@ -137,11 +137,11 @@ sudo sysctl -w vm.max_map_count=262144
 echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.d/60-vm-max_map_count.conf
 
 # Download all the required Docker Images
-cd /opt/formshare_docker_compose_20221101
+cd /opt/formshare_docker_compose_20221203
 sudo docker-compose pull
 
 # Edit the docker-compose.yml file to set the MySQL root and FormShare admin passwords
-sudo nano /opt/formshare_docker_compose_20221101/docker-compose.yml
+sudo nano /opt/formshare_docker_compose_20221203/docker-compose.yml
 # Press Alt+Shit+3 to show the line numbers in Nano
 
 Edit line 10: Change the root password from "my_secure_password" to your password
@@ -189,7 +189,7 @@ sudo service apache2 start
 # Subsequent start will take about 2 minutes. You can check the status with "sudo docker stats". 
 # FormShare will be ready for usage when the container reaches more than 500 kB of MEM USAGE
 # This is the only two commands you need to start FormShare after a server restart
-cd /opt/formshare_docker_compose_20221101
+cd /opt/formshare_docker_compose_20221203
 sudo docker-compose up -d
 
 # Browse to FormShare

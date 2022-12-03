@@ -49,3 +49,42 @@ def t_e_s_t_form_merge_start(test_object):
     assert "FS_error" not in res.headers
 
     time.sleep(60)  # Wait for celery to generate the repository
+
+    # Upload cantones again will display error. File is corrupted
+    paths = ["resources", "forms", "merge", "A", "bad_file", "cantones.csv"]
+    resource_file = os.path.join(test_object.path, *paths)
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/upload".format(
+            test_object.randonLogin, test_object.project, "tormenta20201105"
+        ),
+        {"overwrite": ""},
+        status=302,
+        upload_files=[("filetoupload", resource_file)],
+    )
+    assert "FS_error" in res.headers
+
+    # Upload cantones again will display error. File does not have the required columns
+    paths = ["resources", "forms", "merge", "A", "bad_file_2", "cantones.csv"]
+    resource_file = os.path.join(test_object.path, *paths)
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/upload".format(
+            test_object.randonLogin, test_object.project, "tormenta20201105"
+        ),
+        {"overwrite": ""},
+        status=302,
+        upload_files=[("filetoupload", resource_file)],
+    )
+    assert "FS_error" in res.headers
+
+    # Upload cantones again will display error. Will update the lookup of cantones
+    paths = ["resources", "forms", "merge", "A", "updates", "cantones.csv"]
+    resource_file = os.path.join(test_object.path, *paths)
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/upload".format(
+            test_object.randonLogin, test_object.project, "tormenta20201105"
+        ),
+        {"overwrite": ""},
+        status=302,
+        upload_files=[("filetoupload", resource_file)],
+    )
+    assert "FS_error" not in res.headers

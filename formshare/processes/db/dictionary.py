@@ -131,9 +131,7 @@ def get_references_from_file(request, project_id, form_id, file_name):
         .filter(DictField.field_rlookup == 1)
         .first()
     )
-    if res is not None:
-        return res.field_rtable, res.field_rfield
-    return None, None
+    return res.field_rtable, res.field_rfield
 
 
 def get_type_and_size_from_file(request, project_id, form_id, file_name):
@@ -152,9 +150,7 @@ def get_type_and_size_from_file(request, project_id, form_id, file_name):
         .filter(DictField.field_rlookup == 1)
         .first()
     )
-    if res is not None:
-        return res.field_type, res.field_size
-    return "varchar", 128
+    return res.field_type, res.field_size
 
 
 def get_name_and_label_from_file(request, project_id, form_id, file_name):
@@ -173,10 +169,7 @@ def get_name_and_label_from_file(request, project_id, form_id, file_name):
         .filter(DictField.field_rlookup == 1)
         .first()
     )
-    if res is not None:
-        if res.field_codecolumn != "" and res.field_desccolumn != "":
-            return res.field_codecolumn, res.field_desccolumn
-    return "name", "label"
+    return res.field_codecolumn, res.field_desccolumn
 
 
 def update_dictionary_field_sensitive(
@@ -411,6 +404,11 @@ def update_dictionary_tables(request, project, form):  # pragma: no cover
             "field_sensitive": field_sensitive,
             "field_protection": a_field.get("protection"),
         }
+        if a_field.get("selecttype") == "2":
+            if new_field_dict["field_externalfilename"].upper().find(".CSV") == -1:
+                new_field_dict["field_externalfilename"] = (
+                    new_field_dict["field_externalfilename"] + ".csv"
+                )
         return new_field_dict
 
     def store_tables(element, lookup):

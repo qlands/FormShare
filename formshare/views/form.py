@@ -1679,6 +1679,7 @@ class AddFileToForm(PrivateView):
                         with open(tmp_file, "wb") as output_file:
                             shutil.copyfileobj(file.file, output_file)
                         try:
+                            pd.read_csv(tmp_file, header=None)  # Read first without headers to check structure
                             csv_data = pd.read_csv(tmp_file)
                             if current_form_data["form_schema"] is not None:
                                 if is_csv_a_lookup(

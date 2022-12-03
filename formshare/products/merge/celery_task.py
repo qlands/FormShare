@@ -434,6 +434,11 @@ def update_dictionary_tables(db_session, schema, xml_create_file):
             "field_sensitive": field_sensitive,
             "field_protection": a_field.get("protection"),
         }
+        if a_field.get("selecttype") == "2":
+            if new_field_dict["field_externalfilename"].upper().find(".CSV") == -1:
+                new_field_dict["field_externalfilename"] = (
+                    new_field_dict["field_externalfilename"] + ".csv"
+                )
         return new_field_dict
 
     def store_tables(element, project, form, lookup):

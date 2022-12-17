@@ -86,6 +86,7 @@ __all__ = [
     "get_last_submission_date_from_schema",
     "get_form_directories_for_schema",
     "get_forms_for_schema",
+    "get_project_for_schema",
     "get_last_fixed_date",
     "get_maintable_information",
     "get_case_lookup_fields",
@@ -490,6 +491,14 @@ def get_forms_for_schema(request, schema):
     for a_form in forms:
         res.append(a_form.form_id)
     return res
+
+
+def get_project_for_schema(request, schema):
+    return (
+        request.dbsession.query(Odkform.project_id)
+        .filter(Odkform.form_schema == schema)
+        .first()[0]
+    )
 
 
 def _get_path_size(start_path="."):

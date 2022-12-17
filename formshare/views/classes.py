@@ -358,6 +358,21 @@ keys_to_remove = [
     "form_directory",
 ]
 
+keys_to_strip = [
+    "activeUser",
+    "userProjects",
+    "activeProject",
+    "activeMenu",
+    "selected_timezone",
+    "system_timezone",
+    "system_timezone_offset",
+    "system_timezone_name",
+    "userDetails",
+    "errors",
+    "showWelcome",
+    "user_timezone",
+]
+
 
 def remove_keys(obj, insecure_keys):
     if isinstance(obj, dict):
@@ -390,6 +405,7 @@ class PrivateView(object):
         self.showWelcome = False
         self.checkCrossPost = True
         self.queryProjects = True
+        self.stripApiResult = False
         self.activeProject = {}
         self.api = False
         locale = Locale(request.locale_name)
@@ -477,6 +493,8 @@ class PrivateView(object):
 
     def clean_api_result(self, result):
         user_keys = keys_to_remove
+        if self.stripApiResult:
+            user_keys = user_keys + keys_to_strip
         for plugin in p.PluginImplementations(p.IAPISecurity):
             plugin_keys = plugin.secure_json_result(self.request)
             user_keys = plugin_keys + plugin_keys

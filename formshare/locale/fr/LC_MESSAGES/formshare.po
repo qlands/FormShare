@@ -3,17 +3,16 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  FormShare\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-12-03 09:38-0500\n"
+"POT-Creation-Date: 2022-12-17 06:28-0500\n"
 "PO-Revision-Date: 2022-12-03 09:58-0500\n"
 "Last-Translator: Carlos Quiros <cquiros@qlands.com>\n"
 "Language: fr\n"
 "Language-Team: English <kde-i18n-doc@kde.org>\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.10.3\n"
-"X-Generator: Lokalize 21.12.3\n"
 
 #: formshare/config/auth.py:52 formshare/views/basic_views.py:226
 #: formshare/views/basic_views.py:432
@@ -57,16 +56,16 @@ msgstr "Impossible de retirer le membre"
 msgid "The collaborator is already part of this project"
 msgstr "Le collaborateur fait déjà partie de ce projet"
 
-#: formshare/processes/db/form.py:1342 formshare/processes/db/form.py:1396
-#: formshare/processes/db/form.py:1427 formshare/processes/db/form.py:1504
-#: formshare/processes/db/form.py:1533 formshare/processes/db/form.py:1595
-#: formshare/processes/db/form.py:1645 formshare/processes/db/form.py:1677
-#: formshare/processes/db/form.py:1717 formshare/processes/db/form.py:1762
-#: formshare/processes/db/form.py:1792
+#: formshare/processes/db/form.py:1351 formshare/processes/db/form.py:1405
+#: formshare/processes/db/form.py:1436 formshare/processes/db/form.py:1513
+#: formshare/processes/db/form.py:1542 formshare/processes/db/form.py:1604
+#: formshare/processes/db/form.py:1654 formshare/processes/db/form.py:1686
+#: formshare/processes/db/form.py:1726 formshare/processes/db/form.py:1771
+#: formshare/processes/db/form.py:1801
 msgid "This form is blocked and cannot be changed at the moment."
 msgstr "Ce formulaire est bloqué et ne peut pas être changé pour le moment."
 
-#: formshare/processes/db/form.py:1483 formshare/processes/db/project.py:1267
+#: formshare/processes/db/form.py:1492 formshare/processes/db/project.py:1267
 msgid "The file {} already exist"
 msgstr "Le fichier {} existe déjà"
 
@@ -491,8 +490,7 @@ msgstr ""
 "dans cette version duFormulaire ODK."
 
 #: formshare/processes/odk/api.py:3636
-msgid ""
-"Generating Diff HTML file error. Diff file for such commit does not exist"
+msgid "Generating Diff HTML file error. Diff file for such commit does not exist"
 msgstr ""
 "Erreur de génération du fichier d'erreur Diff HTML. Le fichier diff "
 "n'existe pas"
@@ -674,8 +672,7 @@ msgstr "Création de fichier KML"
 
 #: formshare/products/export/kml/celery_task.py:210
 msgid "There was an error while dropping the temporary table"
-msgstr ""
-"Une erreur s'est produite lors de la suppression de la table temporaire"
+msgstr "Une erreur s'est produite lors de la suppression de la table temporaire"
 
 #: formshare/products/export/kml/celery_task.py:215
 msgid "The ODK form does not contain any submissions with GPS coordinates"
@@ -748,8 +745,7 @@ msgstr "Application des modifications de structure au schéma..."
 
 #: formshare/products/merge/celery_task.py:170
 msgid "Applying lookup value changes in the schema..."
-msgstr ""
-"Application des modifications aux valeurs de recherche dans le schéma..."
+msgstr "Application des modifications aux valeurs de recherche dans le schéma..."
 
 #: formshare/products/merge/celery_task.py:202
 msgid "Dropping old triggers"
@@ -1042,9 +1038,9 @@ msgid ""
 " only onetime after you generate it. Save it somewhere safe after you "
 "generate it."
 msgstr ""
-"Vous pouvez générer le mot de passe de l'API à tout moment. Toutefois, il ne"
-" sera visible qu'une seule fois après sa création. Conservez-la dans un"
-" endroit sûr après l'avoir générée."
+"Vous pouvez générer le mot de passe de l'API à tout moment. Toutefois, il"
+" ne sera visible qu'une seule fois après sa création. Conservez-la dans "
+"un endroit sûr après l'avoir générée."
 
 #: formshare/templates/assistant/page.jinja2:229
 #: formshare/templates/assistant/page.jinja2:248
@@ -1667,8 +1663,7 @@ msgstr "Annuler la vérification"
 
 #: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:122
 msgid "Are you sure that you want to cancel the check-out of this submission?"
-msgstr ""
-"Etes-vous sûr que vous voulez annuler la vérification de cette demande?"
+msgstr "Etes-vous sûr que vous voulez annuler la vérification de cette demande?"
 
 #: formshare/templates/assistant/jsonlogs/snippets/error_item.jinja2:128
 msgid "Push revision into the repository"
@@ -1946,8 +1941,7 @@ msgstr "pour en savoir plus"
 
 #: formshare/templates/dashboard/index.jinja2:193
 #: formshare/templates/dashboard/projects/project_details.jinja2:95
-msgid ""
-"Follow-up forms attach information to a case at different points in time."
+msgid "Follow-up forms attach information to a case at different points in time."
 msgstr ""
 "Les formulaires de suivi joignent des informations à un dossier à "
 "différents moments"
@@ -1955,8 +1949,7 @@ msgstr ""
 #: formshare/templates/dashboard/index.jinja2:200
 #: formshare/templates/dashboard/projects/project_details.jinja2:102
 msgid "Deactivate forms change the status of a case to inactive."
-msgstr ""
-"Les formulaires de désactivation modifient le statut d'un cas en inactif."
+msgstr "Les formulaires de désactivation modifient le statut d'un cas en inactif."
 
 #: formshare/templates/dashboard/index.jinja2:200
 #: formshare/templates/dashboard/projects/project_details.jinja2:102
@@ -2307,11 +2300,11 @@ msgid ""
 "Never share your API key. If you change your API key, you need to change "
 "your API secret."
 msgstr ""
-"Ne partagez jamais votre clé API. Si vous changez votre clé API, vous devez"
-" changer le mot de passe API."
+"Ne partagez jamais votre clé API. Si vous changez votre clé API, vous "
+"devez changer le mot de passe API."
 
+# | msgid "Case creator"
 #: formshare/templates/dashboard/profile/profile_edit.jinja2:91
-#| msgid "Case creator"
 msgid "API secret"
 msgstr "Mot de passe API"
 
@@ -2876,8 +2869,7 @@ msgstr "Vous n’avez pas un seul champ marqué comme sensible!"
 msgid ""
 "IF YOU CONTINUE YOU MIGHT BE AT RISK OF MAKING SENSITIVE DATA PUBLICLY "
 "AVAILABLE!"
-msgstr ""
-"SI VOUS CONTINUEZ, VOUS RISQUEZ DE RENDRE PUBLIQUES DES DONNÉES SENSIBLES!"
+msgstr "SI VOUS CONTINUEZ, VOUS RISQUEZ DE RENDRE PUBLIQUES DES DONNÉES SENSIBLES!"
 
 #: formshare/templates/dashboard/projects/forms/form_details.jinja2:405
 msgid "Yes, publish it"
@@ -2935,8 +2927,7 @@ msgstr ""
 "le fichier CSV ci-dessous."
 
 #: formshare/templates/dashboard/projects/forms/case/case_fields.jinja2:43
-msgid ""
-"to download an example of this file so you can use it in follow-up forms."
+msgid "to download an example of this file so you can use it in follow-up forms."
 msgstr ""
 "pour télécharger un exemple de ce fichier afin que vous puissiez "
 "l'utiliser dans vos formulaires de suivi."
@@ -3310,8 +3301,7 @@ msgstr ""
 #: formshare/templates/dashboard/projects/forms/export/xlsx.jinja2:50
 #: formshare/templates/dashboard/projects/forms/export/zip_csv.jinja2:50
 #: formshare/templates/dashboard/projects/forms/export/zip_json.jinja2:50
-msgid ""
-"for more information about how FormShare stores \"select_one\" variables."
+msgid "for more information about how FormShare stores \"select_one\" variables."
 msgstr ""
 "pour plus d'informations sur la façon dont FormShare stocke les variables"
 " \"select_one\"."
@@ -3610,8 +3600,7 @@ msgstr "L’ensemble de données doit avoir la structure suivante :"
 #: formshare/templates/dashboard/projects/forms/snippets/api_examples.jinja2:108
 #: formshare/templates/dashboard/projects/forms/snippets/api_examples.jinja2:174
 msgid "Each data row in FormShare has an unique row id (rowuuid)"
-msgstr ""
-"Chaque ligne de données de FormShare a une id de ligne unique (rowuuid)"
+msgstr "Chaque ligne de données de FormShare a une id de ligne unique (rowuuid)"
 
 #: formshare/templates/dashboard/projects/forms/snippets/api_examples.jinja2:45
 #: formshare/templates/dashboard/projects/forms/snippets/api_examples.jinja2:109
@@ -3709,8 +3698,7 @@ msgid "The list needs to have the following structure"
 msgstr "La liste doit avoir la structure suivante"
 
 #: formshare/templates/dashboard/projects/forms/snippets/api_examples.jinja2:120
-msgid ""
-"Python program: Read the list of changes and push the update to FormShare"
+msgid "Python program: Read the list of changes and push the update to FormShare"
 msgstr ""
 "Programme Python: Lire la liste des changements et pousser la mise à jour"
 " vers FormShare"
@@ -4191,8 +4179,7 @@ msgstr "le fusionner dans le référentiel de "
 
 #: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:168
 msgid "However you will not be able merge it into the repository of"
-msgstr ""
-"Cependant, ce formulaire ne peut pas être fusionné dans le référentiel de"
+msgstr "Cependant, ce formulaire ne peut pas être fusionné dans le référentiel de"
 
 #: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:168
 msgid "Click here to see the problems"
@@ -4932,8 +4919,7 @@ msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:63
 msgid "You need to indicate the variable to search and select cases"
-msgstr ""
-"Vous devez indiquer la variable pour rechercher et sélectionner les cas"
+msgstr "Vous devez indiquer la variable pour rechercher et sélectionner les cas"
 
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:64
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:91
@@ -5102,8 +5088,7 @@ msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:90
 msgid "You need to indicate the case selector variable"
-msgstr ""
-"Vous devez indiquer la variable pour rechercher et sélectionner les cas"
+msgstr "Vous devez indiquer la variable pour rechercher et sélectionner les cas"
 
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:95
 msgid ""
@@ -5465,8 +5450,7 @@ msgid "The following tables have a name with more than 64 characters:"
 msgstr "Les tables suivantes ont un nom de plus de 64 caractères :"
 
 #: formshare/templates/dashboard/projects/repository/create_repository.jinja2:177
-msgid ""
-"Please shorten the names of the tables and/or the selects and try again."
+msgid "Please shorten the names of the tables and/or the selects and try again."
 msgstr ""
 "Raccourcissez les noms des tables et/ou des listes de sélection et "
 "réessayez."
@@ -5547,8 +5531,7 @@ msgid "FormShare will perform more checks on"
 msgstr "FormShare effectuera plus de contrôles sur"
 
 #: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:41
-msgid ""
-"and report whether or not is possible to merge it into the repository of"
+msgid "and report whether or not is possible to merge it into the repository of"
 msgstr ""
 "et déclarera s’il est possible ou non de le fusionner dans le référentiel"
 " de"
@@ -5711,8 +5694,7 @@ msgstr ""
 
 #: formshare/templates/dashboard/projects/repository/snippets/pkey_form.jinja2:16
 msgid "Which variable will be used to control duplicate submissions?"
-msgstr ""
-"Quelle variable sera utilisée pour contrôler les soumissions en double?"
+msgstr "Quelle variable sera utilisée pour contrôler les soumissions en double?"
 
 #: formshare/templates/dashboard/projects/repository/snippets/pkey_form.jinja2:18
 msgid ""
@@ -5744,8 +5726,7 @@ msgstr "Ajouter un nouveau formulaire"
 
 #: formshare/templates/dashboard/projects/snippets/no_forms.jinja2:16
 msgid "Create the case lookup table before adding new forms"
-msgstr ""
-"Créez la table de recherche de cas avant d'ajouter de nouveaux formulaires"
+msgstr "Créez la table de recherche de cas avant d'ajouter de nouveaux formulaires"
 
 #: formshare/templates/dashboard/projects/snippets/no_forms.jinja2:16
 #: formshare/templates/dashboard/projects/snippets/no_forms.jinja2:22
@@ -5785,8 +5766,7 @@ msgstr "Cliquez / Appuyez et maintenez pour supprimer les assistants"
 
 #: formshare/templates/dashboard/projects/snippets/project_details.jinja2:87
 msgid "This project has no assistants. Use the + button to add one"
-msgstr ""
-"Ce projet n’a pas d’assistants. Utilisez le bouton + pour en ajouter un"
+msgstr "Ce projet n’a pas d’assistants. Utilisez le bouton + pour en ajouter un"
 
 #: formshare/templates/dashboard/projects/snippets/project_details.jinja2:98
 msgid "And"
@@ -5939,8 +5919,7 @@ msgstr "Lecture seule car le projet comporte des formulaires"
 
 #: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:25
 msgid "Create a repository to continue receiving submissions. The limit is"
-msgstr ""
-"Créez un dépôt pour continuer à recevoir des soumissions. La limite est"
+msgstr "Créez un dépôt pour continuer à recevoir des soumissions. La limite est"
 
 #: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:25
 #: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:27
@@ -6227,8 +6206,7 @@ msgstr "vous ont demandé de collaborer avec le projet"
 
 #: formshare/templates/email/collaborate_email.jinja2:9
 msgid "Go to the following URL to accept or decline the collaboration:"
-msgstr ""
-"Rendez-vous à l’URL suivante pour accepter ou refuser la collaboration :"
+msgstr "Rendez-vous à l’URL suivante pour accepter ou refuser la collaboration :"
 
 #: formshare/templates/email/collaborate_email.jinja2:12
 msgid "Please reply to"
@@ -6310,8 +6288,8 @@ msgid ""
 "Your assistant account does not have sufficient permissions to view this "
 "page."
 msgstr ""
-"Votre compte de participant ne dispose pas des autorisations suffisantes pour"
-" afficher cette page."
+"Votre compte de participant ne dispose pas des autorisations suffisantes "
+"pour afficher cette page."
 
 #: formshare/templates/generic/404.jinja2:3
 #: formshare/templates/generic/404.jinja2:15
@@ -6534,8 +6512,7 @@ msgstr "Prise en charge mobile complète"
 
 #: formshare/templates/landing/snippets/features2.jinja2:18
 msgid "FormShare supports data collection technologies like"
-msgstr ""
-"FormShare prend en charge des technologies de collecte de données comme"
+msgstr "FormShare prend en charge des technologies de collecte de données comme"
 
 #: formshare/templates/landing/snippets/features2.jinja2:27
 msgid "Decentralize data access"
@@ -6589,8 +6566,7 @@ msgstr "Bienvenue sur"
 
 #: formshare/templates/landing/snippets/slider.jinja2:15
 msgid "The data management platform for mobile data collection"
-msgstr ""
-"La plate-forme de gestion des données pour la collecte de données mobiles"
+msgstr "La plate-forme de gestion des données pour la collecte de données mobiles"
 
 #: formshare/templates/landing/snippets/slider.jinja2:31
 msgid "Built with"
@@ -6768,21 +6744,21 @@ msgstr "Le compte partenaire n'existe pas ou le mot de passe n'est pas valide"
 msgid "The password must be less than 50 characters"
 msgstr "Le mot de passe doit être inférieur à 50 caractères"
 
-#: formshare/views/api/version_1/tokens.py:127 formshare/views/classes.py:532
-#: formshare/views/classes.py:547 formshare/views/classes.py:909
-#: formshare/views/classes.py:924
+#: formshare/views/api/version_1/tokens.py:127 formshare/views/classes.py:550
+#: formshare/views/classes.py:565 formshare/views/classes.py:927
+#: formshare/views/classes.py:942
 msgid "Such API key does not exist."
 msgstr "Une telle clé API n'existe pas."
 
-#: formshare/views/classes.py:1290
+#: formshare/views/classes.py:1308
 msgid "You need to specify a rowuuid"
 msgstr "Vous devez spécifier un rowuuid"
 
-#: formshare/views/classes.py:1302
+#: formshare/views/classes.py:1320
 msgid "You need to specify an assistant API key (apikey)"
 msgstr "Vous devez indiquer une clé API depuis un assistant"
 
-#: formshare/views/classes.py:1332
+#: formshare/views/classes.py:1350
 msgid "The following keys were not present in the submitted JSON"
 msgstr "Les clés suivantes n’étaient pas présentes dans le JSON soumis"
 
@@ -6928,8 +6904,7 @@ msgstr ""
 
 #: formshare/views/form.py:551
 msgid "The following CSV resource files have invalid characters:"
-msgstr ""
-"Les fichiers de ressources CSV suivants ont des caractères incorrects :"
+msgstr "Les fichiers de ressources CSV suivants ont des caractères incorrects :"
 
 #: formshare/views/form.py:558
 msgid "There was an error while processing some of the CSV resource files:"
@@ -6989,8 +6964,7 @@ msgstr "Vous devez indiquer le type de formulaire de cas"
 
 #: formshare/views/form.py:1031 formshare/views/form.py:1242
 msgid "You need to indicate a variable for searching and selecting cases"
-msgstr ""
-"Vous devez indiquer la variable pour rechercher et sélectionner les cas"
+msgstr "Vous devez indiquer la variable pour rechercher et sélectionner les cas"
 
 #: formshare/views/form.py:1048 formshare/views/form.py:1256
 msgid ""
@@ -7236,13 +7210,13 @@ msgstr "Vous devez spécifier un nouveau mot de passe"
 msgid "You need to specify the old password"
 msgstr "Vous devez spécifier l’ancien mot de passe"
 
+# | msgid "The user has been updated"
 #: formshare/views/profile.py:141
-#| msgid "The user has been updated"
 msgid "The key and secret has been updated"
 msgstr "La clé et le mot de passe ont été mis à jour"
 
+# | msgid "You need to specify an assistant"
 #: formshare/views/profile.py:149
-#| msgid "You need to specify an assistant"
 msgid "You need to specify the an API key and secret"
 msgstr "Il est nécessaire de spécifier la clé et le mot de passe de l'API."
 
@@ -7401,8 +7375,8 @@ msgstr ""
 msgid "The old password is not correct"
 msgstr "L’ancien mot de passe n’est pas correct"
 
+# | msgid "Unable to change the key: "
 #: formshare/views/assistant_views/forms.py:179
-#| msgid "Unable to change the key: "
 msgid "Unable to change the key. No API key and secret"
 msgstr "Impossible de changer la clé. Pas de clé et de mot de passe API"
 

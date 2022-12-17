@@ -173,7 +173,7 @@ tests_require = ["WebTest >= 1.3.1", "pytest", "pytest-cov"]  # py3 compat
 
 setup(
     name="formshare",
-    version="2.21.0",
+    version="2.22.0",
     description="FormShare",
     long_description=README + "\n\n" + CHANGES,
     classifiers=[

@@ -283,15 +283,15 @@ def get_dictionary_tables(request, project, form, table_type):
     :param table_type: Type of table to return: None=All, 1= Data tables, 2= Lookup tables
     :return: Array of dict elements or empty array
     """
-    # if table_type is None:
-    #     res = (
-    #         request.dbsession.query(DictTable)
-    #         .filter(DictTable.project_id == project)
-    #         .filter(DictTable.form_id == form)
-    #         .order_by(DictTable.table_index)
-    #         .all()
-    #     )
-    #     return map_from_schema(res)
+    if table_type is None:
+        res = (
+            request.dbsession.query(DictTable)
+            .filter(DictTable.project_id == project)
+            .filter(DictTable.form_id == form)
+            .order_by(DictTable.table_index)
+            .all()
+        )
+        return map_from_schema(res)
     if table_type == 1:
         res = (
             request.dbsession.query(DictTable)

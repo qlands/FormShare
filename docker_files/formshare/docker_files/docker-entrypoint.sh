@@ -1,6 +1,7 @@
 #!/bin/bash
 
-/etc/init.d/mongodb start
+rm /var/run/mongod.pid
+mongod --fork --pidfilepath /var/run/mongod.pid --logpath /var/log/mongodb/mongod.log --config /etc/mongod.conf
 rm /var/run/redis/redis-server.pid
 /etc/init.d/redis-server start
 

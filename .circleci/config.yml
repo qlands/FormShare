@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  py-3.8: &build-template
+  py-3.10: &build-template
     docker:
       - image: qlands/odktools_circleci:20221202
       - image: docker.elastic.co/elasticsearch/elasticsearch:7.14.0
@@ -35,7 +35,7 @@ jobs:
           name: Run servers
           command: |
             sudo /etc/init.d/redis-server start
-            sudo service mongodb start
+            sudo mongod --fork --pidfilepath /var/run/mongod.pid --logpath /var/log/mongodb/mongod.log --config /etc/mongod.conf
             sudo service mosquitto start
             tail -f /dev/null
           background: true
@@ -100,4 +100,4 @@ workflows:
   version: 2
   build:
     jobs:
-      - py-3.8
+      - py-3.10

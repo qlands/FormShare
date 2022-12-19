@@ -21,7 +21,7 @@ def initialize(path_to_templates):
     jinjaEnv.add_extension(ExtendThis)
 
 
-def _get_extensions() -> list[Any]:
+def get_extensions() -> list[Any]:
     return [
         "jinja2.ext.do",
         "jinja2.ext.loopcontrols",

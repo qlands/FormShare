@@ -1,8 +1,8 @@
 # Installation steps to build FormShare from source for production or development
 
-**Tested with Ubuntu 22.04**
+**Tested with Ubuntu 22.04 (Python 3.10.X)**
 
-**This WILL NOT work on Ubuntu 20.04**
+**Versions >= 2.23.0 (20221219) WILL NOT work on Ubuntu 20.04 (Python 3.8.X)**
 
 **Minimum memory requirements**
 - For production running on Ubuntu Server 22.04 8GB

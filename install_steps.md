@@ -1,12 +1,12 @@
 # Installation steps to build FormShare from source for production or development
 
-**Tested with Ubuntu 20.04**
+**Tested with Ubuntu 22.04**
 
-**This WILL NOT work on Ubuntu 22.04**
+**This WILL NOT work on Ubuntu 20.04**
 
 **Minimum memory requirements**
-- For production running on Ubuntu Server 20.4: 8GB
-- For development running on Ubuntu Desktop 20.4: 16GB
+- For production running on Ubuntu Server 22.04 8GB
+- For development running on Ubuntu Desktop 22.04: 16GB
 
 ## Important notes that many forget!
 - **Follow the instructions line by line! Do not skip lines!**
@@ -37,7 +37,16 @@ ifconfig
 sudo apt-get install -y software-properties-common
 sudo add-apt-repository universe
 sudo add-apt-repository multiverse
-sudo apt-add-repository -y ppa:mosquitto-dev/mosquitto-ppa
+sudo apt-get install -y wget
+
+sudo add-apt-repository ppa:mosquitto-dev/mosquitto-ppa -y
+
+sudo wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc |  gpg --dearmor | sudo tee /usr/share/keyrings/mongodb.gpg > /dev/null
+sudo echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
+
+sudo wget https://dev.mysql.com/get/mysql-apt-config_0.8.24-1_all.deb
+sudo dpkg -i ./mysql-apt-config_0.8.24-1_all.deb
+
 sudo apt-get update
 ```
 
@@ -95,7 +104,7 @@ Result:
 ### Install system dependencies
 
 ```sh
-sudo apt-get install -y mysql-server build-essential qt5-default qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake mongodb jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client-8.0 sqlite3 libqt5sql5-sqlite git wget python3-venv tidy golang-go mosquitto nano
+sudo apt-get install -y mysql-server build-essential qtbase5-dev qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client-8.0 sqlite3 libqt5sql5-sqlite git wget python3-venv tidy golang-go mosquitto curl nano mongodb-org mysql-shell openjdk-17-jre-headless
 ```
 
 ### Update MySQL root password
@@ -259,7 +268,7 @@ sudo chown -R $whoami formshare_env
 
 ```sh
 cd /opt
-sudo git clone https://github.com/qlands/FormShare.git -b stable-2.22.0 formshare
+sudo git clone https://github.com/qlands/FormShare.git -b stable-2.23.0 formshare
 sudo chown -R $whoami formshare
 ```
 
@@ -292,7 +301,7 @@ sudo ldconfig
 # --end
 
 sudo service redis-server start
-sudo service mongodb start
+sudo mongod --fork --pidfilepath /var/run/mongod.pid --logpath /var/log/mongodb/mongod.log --config /etc/mongod.conf
 
 mysql -h [MYSQL_HOST_NAME] -u [MYSQL_USER_NAME] --password=[MYSQL_USER_PASSWORD] --execute='CREATE SCHEMA IF NOT EXISTS formshare'
 

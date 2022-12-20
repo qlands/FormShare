@@ -1,7 +1,7 @@
 import logging
 import os
 import re
-from typing import Any
+
 import formshare.resources as r
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
@@ -19,16 +19,6 @@ def initialize(path_to_templates):
     jinjaEnv.add_extension(JSResourceExtension)
     jinjaEnv.add_extension(CSSResourceExtension)
     jinjaEnv.add_extension(ExtendThis)
-
-
-def get_extensions() -> list[Any]:
-    return [
-        "jinja2.ext.do",
-        "jinja2.ext.loopcontrols",
-        JSResourceExtension,
-        CSSResourceExtension,
-        ExtendThis,
-    ]
 
 
 def render_resource(

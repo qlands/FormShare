@@ -1,12 +1,11 @@
 # Installation steps to build FormShare from source for production or development
 
 **Tested with Ubuntu 22.04 (Python 3.10.X)**
-
-**Versions >= 2.23.0 (20221219) WILL NOT work on Ubuntu 20.04 (Python 3.8.X)**
+**Tested with Ubuntu 20.04 (Python 3.8.X)**
 
 **Minimum memory requirements**
-- For production running on Ubuntu Server 22.04 8GB
-- For development running on Ubuntu Desktop 22.04: 16GB
+- For production running on Ubuntu Server: 8GB
+- For development running on Ubuntu Desktop: 16GB
 
 ## Important notes that many forget!
 - **Follow the instructions line by line! Do not skip lines!**
@@ -41,6 +40,7 @@ sudo apt-get install -y wget
 
 sudo add-apt-repository ppa:mosquitto-dev/mosquitto-ppa -y
 
+# The following two lines apply if you are using Ubuntu 22.04
 sudo wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc |  gpg --dearmor | sudo tee /usr/share/keyrings/mongodb.gpg > /dev/null
 sudo echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
 
@@ -104,7 +104,10 @@ Result:
 ### Install system dependencies
 
 ```sh
-sudo apt-get install -y mysql-server build-essential qtbase5-dev qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client-8.0 sqlite3 libqt5sql5-sqlite git wget python3-venv tidy golang-go mosquitto curl nano mongodb-org mysql-shell openjdk-17-jre-headless
+# if Ubuntu 22.04
+sudo apt-get install -y mysql-server build-essential qtbase5-dev qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client-8.0 sqlite3 libqt5sql5-sqlite git wget python3-venv tidy golang-go mosquitto curl nano mongodb-org mysql-shell openjdk-17-jre-headless mysql-shell
+# if Ubuntu 20.04
+sudo sudo apt-get install -y mysql-server build-essential qt5-default qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake mongodb jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client-8.0 sqlite3 libqt5sql5-sqlite git wget python3-venv tidy golang-go mosquitto nano mysql-shell
 ```
 
 ### Update MySQL root password
@@ -120,27 +123,13 @@ ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password by '[my_secu
 flush privileges;
 ```
 
-### Add MySQL Shell repository
-
-```sh
-sudo wget https://dev.mysql.com/get/mysql-apt-config_0.8.22-1_all.deb
-sudo dpkg -i ./mysql-apt-config_0.8.22-1_all.deb
-```
-
-### Install MySQL Shell
-
-```sh
-sudo apt-get update
-sudo apt-get install mysql-shell
-```
-
-### Upgrade Java SDK
+### Upgrade Java SDK (Only for Ubuntu 20.04)
 
 ```sh
 sudo apt install -y libc6-x32 libc6-i386
-sudo wget https://download.oracle.com/java/18/latest/jdk-18_linux-x64_bin.deb
-sudo dpkg -i jdk-18_linux-x64_bin.deb
-sudo update-alternatives --install /usr/bin/java java /usr/lib/jvm/jdk-18/bin/java 1
+sudo wget https://download.oracle.com/java/17/latest/jdk-17_linux-x64_bin.deb
+sudo dpkg -i jdk-17_linux-x64_bin.deb
+sudo update-alternatives --install /usr/bin/java java /usr/lib/jvm/jdk-17/bin/java 1
 ```
 
 ### Install third-party tools

@@ -3,16 +3,17 @@ msgid ""
 msgstr ""
 "Project-Id-Version:  FormShare\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-12-17 06:28-0500\n"
-"PO-Revision-Date: 2022-12-03 10:49-0500\n"
+"POT-Creation-Date: 2022-12-19 12:46-0500\n"
+"PO-Revision-Date: 2022-12-19 12:48-0500\n"
 "Last-Translator: Carlos Quiros <cquiros@qlands.com>\n"
 "Language: es\n"
 "Language-Team: English <kde-i18n-doc@kde.org>\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.10.3\n"
+"X-Generator: Lokalize 21.12.3\n"
 
 #: formshare/config/auth.py:52 formshare/views/basic_views.py:226
 #: formshare/views/basic_views.py:432
@@ -268,7 +269,8 @@ msgstr ""
 
 #: formshare/processes/odk/api.py:777
 msgid "The following tables have more than 60 selects: "
-msgstr "Las siguientes tablas tienen más de 60 opciones de selección (selects):"
+msgstr ""
+"Las siguientes tablas tienen más de 60 opciones de selección (selects):"
 
 #: formshare/processes/odk/api.py:785
 msgid " with "
@@ -483,12 +485,15 @@ msgstr ""
 "versión delformulario ODK."
 
 #: formshare/processes/odk/api.py:3636
-msgid "Generating Diff HTML file error. Diff file for such commit does not exist"
-msgstr "Error al generar el archivo Diff HTML de error. El archivo diff no existe"
+msgid ""
+"Generating Diff HTML file error. Diff file for such commit does not exist"
+msgstr ""
+"Error al generar el archivo Diff HTML de error. El archivo diff no existe"
 
 #: formshare/processes/settings/settings.py:27
 msgid "Error storing setting for key {}. The key already exits."
-msgstr "Error al almacenar la configuración para la llave {}. La llave ya existe"
+msgstr ""
+"Error al almacenar la configuración para la llave {}. La llave ya existe"
 
 #: formshare/processes/submission/api.py:270
 msgid "There are no media files to download"
@@ -797,7 +802,8 @@ msgstr ""
 msgid ""
 "-The directory {} does not have any submission files or it does not have "
 "an xml data file"
-msgstr "-El directorio {} no posee ningún envío o no posee un archivo de datos XML"
+msgstr ""
+"-El directorio {} no posee ningún envío o no posee un archivo de datos XML"
 
 #: formshare/products/xmlimport/celery_task.py:122
 msgid "Writing report"
@@ -1928,7 +1934,8 @@ msgstr "para leer más"
 
 #: formshare/templates/dashboard/index.jinja2:193
 #: formshare/templates/dashboard/projects/project_details.jinja2:95
-msgid "Follow-up forms attach information to a case at different points in time."
+msgid ""
+"Follow-up forms attach information to a case at different points in time."
 msgstr ""
 "Los formularios de seguimiento adjuntan información a un caso en "
 "diferentes momentos en el tiempo"
@@ -1936,7 +1943,8 @@ msgstr ""
 #: formshare/templates/dashboard/index.jinja2:200
 #: formshare/templates/dashboard/projects/project_details.jinja2:102
 msgid "Deactivate forms change the status of a case to inactive."
-msgstr "Los formularios de desactivación cambian el estado de un caso a inactivo."
+msgstr ""
+"Los formularios de desactivación cambian el estado de un caso a inactivo."
 
 #: formshare/templates/dashboard/index.jinja2:200
 #: formshare/templates/dashboard/projects/project_details.jinja2:102
@@ -2125,7 +2133,8 @@ msgstr "Buscar un socio"
 
 #: formshare/templates/dashboard/partners/partner_list.jinja2:55
 msgid "You can search by full name, email address or organization"
-msgstr "Usted puede buscar por nombre completo, correo electrónico u organización"
+msgstr ""
+"Usted puede buscar por nombre completo, correo electrónico u organización"
 
 #: formshare/templates/dashboard/partners/partner_list.jinja2:64
 msgid "View activity"
@@ -2911,7 +2920,8 @@ msgstr ""
 " incluye en el archivo CSV."
 
 #: formshare/templates/dashboard/projects/forms/case/case_fields.jinja2:43
-msgid "to download an example of this file so you can use it in follow-up forms."
+msgid ""
+"to download an example of this file so you can use it in follow-up forms."
 msgstr ""
 "para descargar un ejemplo de este archivo para que pueda utilizarlo en "
 "sus formularios de seguimiento."
@@ -3031,7 +3041,8 @@ msgstr ""
 
 #: formshare/templates/dashboard/projects/forms/dictionary/edit_tables.jinja2:68
 msgid "Lookup tables: Contain the description of categorical variables."
-msgstr "Tablas de búsqueda: Contienen la descripción de las variables categóricas"
+msgstr ""
+"Tablas de búsqueda: Contienen la descripción de las variables categóricas"
 
 #: formshare/templates/dashboard/projects/forms/dictionary/edit_tables.jinja2:79
 msgid "Filter by table type"
@@ -3283,7 +3294,8 @@ msgstr ""
 #: formshare/templates/dashboard/projects/forms/export/xlsx.jinja2:50
 #: formshare/templates/dashboard/projects/forms/export/zip_csv.jinja2:50
 #: formshare/templates/dashboard/projects/forms/export/zip_json.jinja2:50
-msgid "for more information about how FormShare stores \"select_one\" variables."
+msgid ""
+"for more information about how FormShare stores \"select_one\" variables."
 msgstr ""
 "para más información sobre cómo FormShare almacena las variables "
 "\"select_one\"."
@@ -3625,7 +3637,8 @@ msgstr "Pase por cada actualización en la lista y envíelos a FormShare"
 #: formshare/templates/dashboard/projects/forms/snippets/api_examples.jinja2:67
 #: formshare/templates/dashboard/projects/forms/snippets/api_examples.jinja2:139
 msgid "Create a Python Dict structure. In this example this will look like"
-msgstr "Cree una estructura Dict en Python. En este ejemplo el resultado va a ser"
+msgstr ""
+"Cree una estructura Dict en Python. En este ejemplo el resultado va a ser"
 
 #: formshare/templates/dashboard/projects/forms/snippets/api_examples.jinja2:68
 msgid "This will tell FormShare to look for"
@@ -3670,7 +3683,8 @@ msgid "The list needs to have the following structure"
 msgstr "La lista debe tener la siguiente estructura"
 
 #: formshare/templates/dashboard/projects/forms/snippets/api_examples.jinja2:120
-msgid "Python program: Read the list of changes and push the update to FormShare"
+msgid ""
+"Python program: Read the list of changes and push the update to FormShare"
 msgstr ""
 "Programa en Python. Lea la lista de cambios y envié las actualizaciones a"
 " FormShare"
@@ -4147,7 +4161,8 @@ msgstr "fusionarlo con el repositorio de"
 
 #: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:168
 msgid "However you will not be able merge it into the repository of"
-msgstr "Sin embargo, este formulario no se puede fusionar con el repositorio de"
+msgstr ""
+"Sin embargo, este formulario no se puede fusionar con el repositorio de"
 
 #: formshare/templates/dashboard/projects/forms/snippets/form_details.jinja2:168
 msgid "Click here to see the problems"
@@ -4751,7 +4766,8 @@ msgstr "Subir nueva versión"
 
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:13
 msgid "Warning: Uploading a new version will remove any test data"
-msgstr "Advertencia: Al subir una nueva versión usted borrará los datos de prueba"
+msgstr ""
+"Advertencia: Al subir una nueva versión usted borrará los datos de prueba"
 
 #: formshare/templates/dashboard/projects/forms/snippets/update_form.jinja2:23
 #: formshare/templates/dashboard/projects/forms/snippets/upload_form.jinja2:38
@@ -5378,7 +5394,8 @@ msgstr ""
 
 #: formshare/templates/dashboard/projects/repository/create_repository.jinja2:151
 msgid "Your ODK form has duplicated list names in the choices sheet"
-msgstr "Su formulario ODK tiene nombres de lista duplicados en la hoja de opciones"
+msgstr ""
+"Su formulario ODK tiene nombres de lista duplicados en la hoja de opciones"
 
 #: formshare/templates/dashboard/projects/repository/create_repository.jinja2:152
 msgid ""
@@ -5405,7 +5422,8 @@ msgid "The following tables have a name with more than 64 characters:"
 msgstr "Las siguientes tablas tienen un nombre con más de 64 caracteres:"
 
 #: formshare/templates/dashboard/projects/repository/create_repository.jinja2:177
-msgid "Please shorten the names of the tables and/or the selects and try again."
+msgid ""
+"Please shorten the names of the tables and/or the selects and try again."
 msgstr ""
 "Por favor, acorte los nombres de las tablas y/o los selects y vuelva a "
 "intentarlo."
@@ -5483,7 +5501,8 @@ msgid "FormShare will perform more checks on"
 msgstr "FormShare realizará más comprobaciones en"
 
 #: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:41
-msgid "and report whether or not is possible to merge it into the repository of"
+msgid ""
+"and report whether or not is possible to merge it into the repository of"
 msgstr "e informará si es posible o no fusionarlo en el repositorio de"
 
 #: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:41
@@ -5516,7 +5535,8 @@ msgstr "Cambia una variable de texto a un número entero."
 msgid ""
 "Change a variable from select one into select multiple and the other way "
 "around."
-msgstr "Cambiar una variable de selección única a selección múltiple y al revés."
+msgstr ""
+"Cambiar una variable de selección única a selección múltiple y al revés."
 
 #: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:47
 msgid ""
@@ -5592,7 +5612,8 @@ msgstr "al intentarlo de nuevo"
 
 #: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:83
 msgid "Discard all testing data (Option is \"No\" by default)"
-msgstr "Descartar todos los datos de las pruebas (la opción es \"No\" por defecto)"
+msgstr ""
+"Descartar todos los datos de las pruebas (la opción es \"No\" por defecto)"
 
 #: formshare/templates/dashboard/projects/repository/merge_new_version.jinja2:85
 msgid ""
@@ -5863,7 +5884,10 @@ msgid "Read-only because the project has forms"
 msgstr "Sólo lectura porque el proyecto tiene formularios"
 
 #: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:25
-msgid "Create a repository to continue receiving submissions. The limit is"
+#| msgid "Create a repository to continue receiving submissions. The limit is"
+msgid ""
+"Create a repository to continue receiving submissions. \n"
+"The limit is"
 msgstr "Cree un repositorio para seguir recibiendo envíos. El límite es"
 
 #: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:25
@@ -5872,13 +5896,19 @@ msgid "Blocked"
 msgstr "Bloqueado"
 
 #: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:27
-msgid "Create a repository to continue receiving cases. The limit is"
+#| msgid "Create a repository to continue receiving cases. The limit is"
+msgid ""
+"Create a repository to continue receiving cases. \n"
+"The limit is"
 msgstr "Cree un repositorio para seguir recibiendo casos. El límite es"
 
 #: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:34
+#| msgid "" "You will need to create a repository soon to continue receiving "
+#| "submissions. The limit is"
 msgid ""
 "You will need to create a repository soon to continue receiving "
-"submissions. The limit is"
+"submissions. \n"
+"The limit is"
 msgstr ""
 "Usted tendrá que crear pronto un repositorio para seguir recibiendo "
 "envíos. El límite es"
@@ -5889,8 +5919,10 @@ msgid "Near maximum"
 msgstr "Cerca del límite"
 
 #: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:36
+#| msgid "" "You will need to create a repository soon to continue receiving
+#| cases. " "The limit is"
 msgid ""
-"You will need to create a repository soon to continue receiving cases. "
+"You will need to create a repository soon to continue receiving cases. \n"
 "The limit is"
 msgstr ""
 "Usted tendrá que crear pronto un repositorio para seguir recibiendo "
@@ -6213,9 +6245,12 @@ msgid "The token will expire on "
 msgstr "El token expirará el "
 
 #: formshare/templates/email/token_email.jinja2:11
+#| msgid "" "If you did not generate a token then your account has been
+#| compromised. " "Login into FormShare and change your API credentials
+#| immediately!"
 msgid ""
-"If you did not generate a token then your account has been compromised. "
-"Login into FormShare and change your API credentials immediately!"
+"If you did not generate a token then your account has been compromised.\n"
+"        Login into FormShare and change your API credentials immediately!"
 msgstr ""
 "Si no has generado un token, tu cuenta ha sido comprometida. Inicie "
 "sesión en FormShare y cambie sus credenciales de API inmediatamente."
@@ -6229,7 +6264,8 @@ msgstr "Usted no está autorizado"
 msgid ""
 "Your assistant account does not have sufficient permissions to view this "
 "page."
-msgstr "Su cuenta de asistente no tiene suficientes permisos para ver esta página."
+msgstr ""
+"Su cuenta de asistente no tiene suficientes permisos para ver esta página."
 
 #: formshare/templates/generic/404.jinja2:3
 #: formshare/templates/generic/404.jinja2:15
@@ -7032,7 +7068,8 @@ msgstr "El alias no es válido"
 
 #: formshare/views/form.py:3637
 msgid "The alias has invalid characters. Only underscore (_) is allowed"
-msgstr "El alias tiene caracteres no válidos. Sólo se permite el guión bajo (_)"
+msgstr ""
+"El alias tiene caracteres no válidos. Sólo se permite el guión bajo (_)"
 
 #: formshare/views/form.py:3723 formshare/views/form.py:3735
 #: formshare/views/form.py:3845 formshare/views/form.py:3855

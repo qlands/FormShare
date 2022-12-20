@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2022-12-17 06:28-0500\n"
+"POT-Creation-Date: 2022-12-19 12:46-0500\n"
 "PO-Revision-Date: 2017-11-15 22:40-0600\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -5483,7 +5483,9 @@ msgid "Read-only because the project has forms"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:25
-msgid "Create a repository to continue receiving submissions. The limit is"
+msgid ""
+"Create a repository to continue receiving submissions. \n"
+"The limit is"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:25
@@ -5492,13 +5494,16 @@ msgid "Blocked"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:27
-msgid "Create a repository to continue receiving cases. The limit is"
+msgid ""
+"Create a repository to continue receiving cases. \n"
+"The limit is"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:34
 msgid ""
 "You will need to create a repository soon to continue receiving "
-"submissions. The limit is"
+"submissions. \n"
+"The limit is"
 msgstr ""
 
 #: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:34
@@ -5508,7 +5513,7 @@ msgstr ""
 
 #: formshare/templates/dashboard/projects/snippets/project_form_odk_item.jinja2:36
 msgid ""
-"You will need to create a repository soon to continue receiving cases. "
+"You will need to create a repository soon to continue receiving cases. \n"
 "The limit is"
 msgstr ""
 
@@ -5819,8 +5824,8 @@ msgstr ""
 
 #: formshare/templates/email/token_email.jinja2:11
 msgid ""
-"If you did not generate a token then your account has been compromised. "
-"Login into FormShare and change your API credentials immediately!"
+"If you did not generate a token then your account has been compromised.\n"
+"        Login into FormShare and change your API credentials immediately!"
 msgstr ""
 
 #: formshare/templates/generic/403.jinja2:3
@@ -8488,5 +8493,30 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "The file was uploaded"
+#~ msgstr ""
+
+#~ msgid "Create a repository to continue receiving submissions. The limit is"
+#~ msgstr ""
+
+#~ msgid "Create a repository to continue receiving cases. The limit is"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "You will need to create a "
+#~ "repository soon to continue receiving "
+#~ "submissions. The limit is"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "You will need to create a "
+#~ "repository soon to continue receiving "
+#~ "cases. The limit is"
+#~ msgstr ""
+
+#~ msgid ""
+#~ "If you did not generate a token"
+#~ " then your account has been "
+#~ "compromised. Login into FormShare and "
+#~ "change your API credentials immediately!"
 #~ msgstr ""
 

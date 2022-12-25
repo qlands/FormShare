@@ -17,9 +17,10 @@ __all__ = [
     "update_dictionary_table_desc",
     "update_dictionary_field_desc",
     "update_dictionary_field_sensitive",
-    "is_csv_a_lookup",
+    "is_file_a_lookup",
     "get_name_and_label_from_file",
     "update_lookup_from_csv",
+    "get_references_from_file",
 ]
 
 log = logging.getLogger("formshare")
@@ -44,10 +45,11 @@ def update_lookup_from_csv(
 
     sql_url = request.registry.settings.get("sqlalchemy.url")
     engine = create_engine(sql_url, poolclass=NullPool)
-
+    session = Session(bind=engine)
+    temp_table_created = False
     try:
-        session = Session(bind=engine)
         session.execute(sql)
+        temp_table_created = True
         name, label = get_name_and_label_from_file(
             request, project_id, form_id, file_name
         )
@@ -88,12 +90,16 @@ def update_lookup_from_csv(
 
         return True, ""
     except Exception as e:
+        if temp_table_created:
+            sql = "DROP TABLE {}.{}".format(form_schema, uid)
+            session.execute(sql)
+        session.commit()
         engine.dispose()
         log.error("Unable to upload lookup connected to CSV. Error: {}".format(str(e)))
         return False, str(e)
 
 
-def is_csv_a_lookup(request, project_id, form_id, file_name):
+def is_file_a_lookup(request, project_id, form_id, file_name):
     """
     Returns whether a CSV files is linked to a lookup table
     :param request: Pyramid request object

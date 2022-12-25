@@ -69,7 +69,7 @@ from formshare.processes.db import (
     get_number_of_case_creators_with_repository,
     get_case_form,
     get_forms_number,
-    is_csv_a_lookup,
+    is_file_a_lookup,
     get_name_and_label_from_file,
     update_lookup_from_csv,
 )
@@ -133,6 +133,7 @@ from formshare.views.classes import PrivateView
 from lxml import etree
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from pyramid.response import FileResponse
+from formshare.processes.odk.geojson import check_geojson, update_lookup_from_geo_json
 
 log = logging.getLogger("formshare")
 
@@ -472,6 +473,68 @@ class FormDetails(PrivateView):
                 errors.append(txt_message)
             if created == 15:
                 txt_message = "The following files have an invalid structure: \n"
+                root = etree.fromstring(message)
+                files_with_problems = root.findall(".//file")
+                if files_with_problems:
+                    for a_file in files_with_problems:
+                        txt_message = txt_message + "\t" + a_file.get("name", "") + "\n"
+                errors.append(txt_message)
+            if created == 26:
+                txt_message = "The following GeoJSON file cannot be opened: \n"
+                root = etree.fromstring(message)
+                files_with_problems = root.findall(".//file")
+                if files_with_problems:
+                    for a_file in files_with_problems:
+                        txt_message = txt_message + "\t" + a_file.get("name", "") + "\n"
+                errors.append(txt_message)
+            if created == 27:
+                txt_message = (
+                    "The following GeoJSON file is not a FeatureCollection: \n"
+                )
+                root = etree.fromstring(message)
+                files_with_problems = root.findall(".//file")
+                if files_with_problems:
+                    for a_file in files_with_problems:
+                        txt_message = txt_message + "\t" + a_file.get("name", "") + "\n"
+                errors.append(txt_message)
+            if created == 28:
+                txt_message = "The following GeoJSON file does not have features: \n"
+                root = etree.fromstring(message)
+                files_with_problems = root.findall(".//file")
+                if files_with_problems:
+                    for a_file in files_with_problems:
+                        txt_message = txt_message + "\t" + a_file.get("name", "") + "\n"
+                errors.append(txt_message)
+            if created == 29:
+                txt_message = "The following GeoJSON file does not have properties: \n"
+                root = etree.fromstring(message)
+                files_with_problems = root.findall(".//file")
+                if files_with_problems:
+                    for a_file in files_with_problems:
+                        txt_message = txt_message + "\t" + a_file.get("name", "") + "\n"
+                errors.append(txt_message)
+            if created == 30:
+                txt_message = "The following GeoJSON file does not have the id or title columns: \n"
+                root = etree.fromstring(message)
+                files_with_problems = root.findall(".//file")
+                if files_with_problems:
+                    for a_file in files_with_problems:
+                        txt_message = txt_message + "\t" + a_file.get("name", "") + "\n"
+                errors.append(txt_message)
+            if created == 31:
+                txt_message = (
+                    "The following GeoJSON file has features without geometry: \n"
+                )
+                root = etree.fromstring(message)
+                files_with_problems = root.findall(".//file")
+                if files_with_problems:
+                    for a_file in files_with_problems:
+                        txt_message = txt_message + "\t" + a_file.get("name", "") + "\n"
+                errors.append(txt_message)
+            if created == 32:
+                txt_message = (
+                    "The following GeoJSON file has features that are not point: \n"
+                )
                 root = etree.fromstring(message)
                 files_with_problems = root.findall(".//file")
                 if files_with_problems:
@@ -1672,6 +1735,7 @@ class AddFileToForm(PrivateView):
                         file_name = file_name[slash_index + 1 :]
                     md5sum = md5(file.file.read()).hexdigest()
                     csv_is_lookup = False
+                    geo_json_is_lookup = False
                     csv_data = None
                     if file_name.upper().find(".CSV") > 0:
                         tmp_file = get_temporary_file(self.request, "csv")
@@ -1684,7 +1748,7 @@ class AddFileToForm(PrivateView):
                             )  # Read first without headers to check structure
                             csv_data = pd.read_csv(tmp_file)
                             if current_form_data["form_schema"] is not None:
-                                if is_csv_a_lookup(
+                                if is_file_a_lookup(
                                     self.request, project_id, form_id, file_name
                                 ):
                                     name, label = get_name_and_label_from_file(
@@ -1711,6 +1775,45 @@ class AddFileToForm(PrivateView):
                             )
                             error = True
                             break
+                    if file_name.upper().find(".GEOJSON") > 0:
+                        tmp_file = get_temporary_file(self.request, "json")
+                        file.file.seek(0)
+                        with open(tmp_file, "wb") as output_file:
+                            shutil.copyfileobj(file.file, output_file)
+                        try:
+                            if current_form_data["form_schema"] is not None:
+                                if is_file_a_lookup(
+                                    self.request, project_id, form_id, file_name
+                                ):
+                                    name, label = get_name_and_label_from_file(
+                                        self.request, project_id, form_id, file_name
+                                    )
+                                    file_ok, error_message = check_geojson(
+                                        self.request, tmp_file, name, label
+                                    )
+                                    if not file_ok:
+                                        log.error(
+                                            "Unable to read {}. Error {}".format(
+                                                file_name, error_message
+                                            )
+                                        )
+                                        message = error_message
+                                        error = True
+                                        break
+                                    geo_json_is_lookup = True
+
+                        except Exception as e:
+                            log.error(
+                                "Unable to read {}. Error {}".format(file_name, str(e))
+                            )
+                            message = (
+                                "Unable to read {}. The GeoJSON may have errors".format(
+                                    file_name
+                                )
+                            )
+                            error = True
+                            break
+
                     added, message = add_file_to_form(
                         self.request, project_id, form_id, file_name, overwrite, md5sum
                     )
@@ -1755,6 +1858,17 @@ class AddFileToForm(PrivateView):
                                     current_form_data["form_schema"],
                                     file_name,
                                     csv_data,
+                                )
+                                error = not result
+                            if file_name in required_files and geo_json_is_lookup:
+                                result, message = update_lookup_from_geo_json(
+                                    self.request,
+                                    user_id,
+                                    project_id,
+                                    form_id,
+                                    current_form_data["form_schema"],
+                                    file_name,
+                                    tmp_file,
                                 )
                                 error = not result
                     else:

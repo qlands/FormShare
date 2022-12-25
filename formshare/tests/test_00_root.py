@@ -76,6 +76,7 @@ from .steps.unauthorized_access import t_e_s_t_unauthorized_access
 from .steps.update_aes_key import t_e_s_t_update_aes_key
 from .steps.update_form_missing_files import t_e_s_t_update_form_missing_files
 from .steps.utility_functions import t_e_s_t_utility_functions
+from .steps.geoJSON import t_e_s_t_geo_json
 
 """
 This testing module test all routes. It launch start the server and test all the routes and processes
@@ -172,6 +173,8 @@ class FunctionalTests(unittest.TestCase):
         t_e_s_t_forms(self.test_object)
         print("Testing ODK")
         t_e_s_t_odk(self.test_object)
+        print("Testing GeoJSON")
+        t_e_s_t_geo_json(self.test_object)
         print("Testing Multilanguage ODK")
         t_e_s_t_multilanguage_odk(self.test_object)
         print("Testing Support for ZIP files")

@@ -136,8 +136,8 @@ sudo update-alternatives --install /usr/bin/java java /usr/lib/jvm/jdk-17/bin/ja
 
 ```sh
 sudo npm install -g diff2html
-sudo npm install -g diff2html-cli
-sudo npm install -g json2csv
+sudo npm install -g diff2html-cli@5.2.1
+sudo npm install -g json2csv@5.0.7
 
 sudo wget https://github.com/BurntSushi/xsv/releases/download/0.13.0/xsv-0.13.0-x86_64-unknown-linux-musl.tar.gz
 sudo tar xvfz xsv-0.13.0-x86_64-unknown-linux-musl.tar.gz

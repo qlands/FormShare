@@ -318,6 +318,105 @@ class GenerateRepository(PrivateView):
                                             + "\n"
                                         )
                                 self.append_to_errors(txt_message)
+                            if result_code == 26:  # pragma: no cover
+                                txt_message = (
+                                    "The following GeoJSON file cannot be opened: \n"
+                                )
+                                root = etree.fromstring(message)
+                                files_with_problems = root.findall(".//file")
+                                if files_with_problems:
+                                    for a_file in files_with_problems:
+                                        txt_message = (
+                                            txt_message
+                                            + "\t"
+                                            + a_file.get("name", "")
+                                            + "\n"
+                                        )
+                                self.append_to_errors(txt_message)
+
+                            if result_code == 27:  # pragma: no cover
+                                txt_message = "The following GeoJSON file is not a FeatureCollection: \n"
+                                root = etree.fromstring(message)
+                                files_with_problems = root.findall(".//file")
+                                if files_with_problems:
+                                    for a_file in files_with_problems:
+                                        txt_message = (
+                                            txt_message
+                                            + "\t"
+                                            + a_file.get("name", "")
+                                            + "\n"
+                                        )
+                                self.append_to_errors(txt_message)
+
+                            if result_code == 28:  # pragma: no cover
+                                txt_message = "The following GeoJSON file does not have features: \n"
+                                root = etree.fromstring(message)
+                                files_with_problems = root.findall(".//file")
+                                if files_with_problems:
+                                    for a_file in files_with_problems:
+                                        txt_message = (
+                                            txt_message
+                                            + "\t"
+                                            + a_file.get("name", "")
+                                            + "\n"
+                                        )
+                                self.append_to_errors(txt_message)
+
+                            if result_code == 29:  # pragma: no cover
+                                txt_message = "The following GeoJSON file does not have properties: \n"
+                                root = etree.fromstring(message)
+                                files_with_problems = root.findall(".//file")
+                                if files_with_problems:
+                                    for a_file in files_with_problems:
+                                        txt_message = (
+                                            txt_message
+                                            + "\t"
+                                            + a_file.get("name", "")
+                                            + "\n"
+                                        )
+                                self.append_to_errors(txt_message)
+
+                            if result_code == 30:  # pragma: no cover
+                                txt_message = "The following GeoJSON file does not have the id or title columns: \n"
+                                root = etree.fromstring(message)
+                                files_with_problems = root.findall(".//file")
+                                if files_with_problems:
+                                    for a_file in files_with_problems:
+                                        txt_message = (
+                                            txt_message
+                                            + "\t"
+                                            + a_file.get("name", "")
+                                            + "\n"
+                                        )
+                                self.append_to_errors(txt_message)
+
+                            if result_code == 31:  # pragma: no cover
+                                txt_message = "The following GeoJSON file has features without geometry: \n"
+                                root = etree.fromstring(message)
+                                files_with_problems = root.findall(".//file")
+                                if files_with_problems:
+                                    for a_file in files_with_problems:
+                                        txt_message = (
+                                            txt_message
+                                            + "\t"
+                                            + a_file.get("name", "")
+                                            + "\n"
+                                        )
+                                self.append_to_errors(txt_message)
+
+                            if result_code == 32:  # pragma: no cover
+                                txt_message = "The following GeoJSON file has features that are not point: \n"
+                                root = etree.fromstring(message)
+                                files_with_problems = root.findall(".//file")
+                                if files_with_problems:
+                                    for a_file in files_with_problems:
+                                        txt_message = (
+                                            txt_message
+                                            + "\t"
+                                            + a_file.get("name", "")
+                                            + "\n"
+                                        )
+                                self.append_to_errors(txt_message)
 
                             if result_code == 9:  # pragma: no cover
                                 # Duplicated options

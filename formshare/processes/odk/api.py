@@ -756,7 +756,64 @@ def check_jxform_file(
                     "Like label:English (en)"
                 ),
             )
-
+        if p.returncode == 26:
+            message = "The following GeoJSON file cannot be opened: \n"
+            root = etree.fromstring(stdout)
+            files_with_problems = root.findall(".//file")
+            if files_with_problems:
+                for a_file in files_with_problems:
+                    message = message + "\t" + a_file.get("name", "") + "\n"
+            return 26, message
+        if p.returncode == 27:
+            message = "The following GeoJSON file is not a FeatureCollection: \n"
+            root = etree.fromstring(stdout)
+            files_with_problems = root.findall(".//file")
+            if files_with_problems:
+                for a_file in files_with_problems:
+                    message = message + "\t" + a_file.get("name", "") + "\n"
+            return 27, message
+        if p.returncode == 28:
+            message = "The following GeoJSON file does not have features: \n"
+            root = etree.fromstring(stdout)
+            files_with_problems = root.findall(".//file")
+            if files_with_problems:
+                for a_file in files_with_problems:
+                    message = message + "\t" + a_file.get("name", "") + "\n"
+            return 28, message
+        if p.returncode == 29:
+            message = "The following GeoJSON file does not have properties: \n"
+            root = etree.fromstring(stdout)
+            files_with_problems = root.findall(".//file")
+            if files_with_problems:
+                for a_file in files_with_problems:
+                    message = message + "\t" + a_file.get("name", "") + "\n"
+            return 29, message
+        if p.returncode == 30:
+            message = (
+                "The following GeoJSON file does not have the id or title columns: \n"
+            )
+            root = etree.fromstring(stdout)
+            files_with_problems = root.findall(".//file")
+            if files_with_problems:
+                for a_file in files_with_problems:
+                    message = message + "\t" + a_file.get("name", "") + "\n"
+            return 30, message
+        if p.returncode == 31:
+            message = "The following GeoJSON file has features without geometry: \n"
+            root = etree.fromstring(stdout)
+            files_with_problems = root.findall(".//file")
+            if files_with_problems:
+                for a_file in files_with_problems:
+                    message = message + "\t" + a_file.get("name", "") + "\n"
+            return 31, message
+        if p.returncode == 32:
+            message = "The following GeoJSON file has features that are not point: \n"
+            root = etree.fromstring(stdout)
+            files_with_problems = root.findall(".//file")
+            if files_with_problems:
+                for a_file in files_with_problems:
+                    message = message + "\t" + a_file.get("name", "") + "\n"
+            return 32, message
         if p.returncode == 2:
             log.error(
                 ". Error: "

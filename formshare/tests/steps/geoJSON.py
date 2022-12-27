@@ -254,3 +254,143 @@ def t_e_s_t_geo_json(test_object):
         status=200,
     )
     test_object.root.assertNotIn(b"This form cannot create a repository", res.body)
+
+    # Generate the repository using celery
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/repository/create".format(
+            test_object.randonLogin, test_object.project, "example_geojson"
+        ),
+        {"form_pkey": "id", "start_stage1": ""},
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+
+    print("Generating repository for GeoJSON form")
+    time.sleep(60)  # Wait for Celery to finish
+    print("Repository for GeoJSON form is ready")
+
+    # Get the details of a form. The form now should have a repository
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}".format(
+            test_object.randonLogin, test_object.project, "example_geojson"
+        ),
+        status=200,
+    )
+    test_object.root.assertTrue(b"With repository" in res.body)
+
+    # Uploads a bad GeoJSON file
+    paths = ["resources", "forms", "GeoJSON", "jsons", "bad_file", "museums.geojson"]
+    resource_file = os.path.join(test_object.path, *paths)
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/upload".format(
+            test_object.randonLogin, test_object.project, "example_geojson"
+        ),
+        status=302,
+        upload_files=[("filetoupload", resource_file)],
+    )
+    assert "FS_error" in res.headers
+
+    # Uploads a GeoJSON file with no features
+    paths = ["resources", "forms", "GeoJSON", "jsons", "no_features", "museums.geojson"]
+    resource_file = os.path.join(test_object.path, *paths)
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/upload".format(
+            test_object.randonLogin, test_object.project, "example_geojson"
+        ),
+        {"overwrite": ""},
+        status=302,
+        upload_files=[("filetoupload", resource_file)],
+    )
+    assert "FS_error" in res.headers
+
+    # Uploads a GeoJSON file with no Feature collection
+    paths = [
+        "resources",
+        "forms",
+        "GeoJSON",
+        "jsons",
+        "no_features_collection",
+        "museums.geojson",
+    ]
+    resource_file = os.path.join(test_object.path, *paths)
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/upload".format(
+            test_object.randonLogin, test_object.project, "example_geojson"
+        ),
+        {"overwrite": ""},
+        status=302,
+        upload_files=[("filetoupload", resource_file)],
+    )
+    assert "FS_error" in res.headers
+
+    # Uploads a GeoJSON file with no geometry
+    paths = ["resources", "forms", "GeoJSON", "jsons", "no_geometry", "museums.geojson"]
+    resource_file = os.path.join(test_object.path, *paths)
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/upload".format(
+            test_object.randonLogin, test_object.project, "example_geojson"
+        ),
+        {"overwrite": ""},
+        status=302,
+        upload_files=[("filetoupload", resource_file)],
+    )
+    assert "FS_error" in res.headers
+
+    # Uploads a GeoJSON file with no id
+    paths = ["resources", "forms", "GeoJSON", "jsons", "no_id", "museums.geojson"]
+    resource_file = os.path.join(test_object.path, *paths)
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/upload".format(
+            test_object.randonLogin, test_object.project, "example_geojson"
+        ),
+        {"overwrite": ""},
+        status=302,
+        upload_files=[("filetoupload", resource_file)],
+    )
+    assert "FS_error" in res.headers
+
+    # Uploads a GeoJSON file with features that are no point
+    paths = ["resources", "forms", "GeoJSON", "jsons", "no_point", "museums.geojson"]
+    resource_file = os.path.join(test_object.path, *paths)
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/upload".format(
+            test_object.randonLogin, test_object.project, "example_geojson"
+        ),
+        {"overwrite": ""},
+        status=302,
+        upload_files=[("filetoupload", resource_file)],
+    )
+    assert "FS_error" in res.headers
+
+    # Uploads a GeoJSON file with features that have no properties
+    paths = [
+        "resources",
+        "forms",
+        "GeoJSON",
+        "jsons",
+        "no_properties",
+        "museums.geojson",
+    ]
+    resource_file = os.path.join(test_object.path, *paths)
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/upload".format(
+            test_object.randonLogin, test_object.project, "example_geojson"
+        ),
+        {"overwrite": ""},
+        status=302,
+        upload_files=[("filetoupload", resource_file)],
+    )
+    assert "FS_error" in res.headers
+
+    # Uploads a GeoJSON file that is OK
+    paths = ["resources", "forms", "GeoJSON", "museums.geojson"]
+    resource_file = os.path.join(test_object.path, *paths)
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/upload".format(
+            test_object.randonLogin, test_object.project, "example_geojson"
+        ),
+        {"overwrite": ""},
+        status=302,
+        upload_files=[("filetoupload", resource_file)],
+    )
+    assert "FS_error" not in res.headers

@@ -849,6 +849,7 @@ def field_is_editable(field_name):
         "_latitude",
         "instanceid",
         "rowuuid",
+        "rowindex",
     ]
     if field_name in read_only_fields:
         return "false"
@@ -924,7 +925,7 @@ def get_fields_from_table(
             if field.get("field_key", 0) == 1:
                 editable = "false"
             else:
-                editable = field_is_editable(field.get("name"))
+                editable = field_is_editable(field.get("field_name"))
             data = {
                 "name": field.get("field_name"),
                 "desc": desc,
@@ -1522,6 +1523,7 @@ def update_record_with_id(request, user, schema, table, rowuuid, data):
         if a_field[3] == "PRI":
             key_array.append(a_field[0])
     data.pop("rowuuid", None)
+    data.pop("rowindex", None)
     data.pop("apikey", None)
     for a_key in key_array:
         data.pop(a_key, None)

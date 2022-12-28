@@ -116,6 +116,7 @@ __all__ = [
 _GPS_types = [
     "add location prompt",
     "geopoint",
+    "start-geopoint",
     "gps",
     "location",
     "q geopoint",

@@ -8,7 +8,7 @@ from formshare.models import Partner as partnerModel
 from formshare.models import User as userModel
 from formshare.models import map_from_schema
 from formshare.plugins.core import PluginImplementations
-from formshare.plugins.interfaces import IUserAuthentication
+from formshare.plugins.interfaces import IUserAuthentication, IUserPassword
 from sqlalchemy import func
 
 
@@ -223,6 +223,8 @@ def check_login(user, password, request):
     if result is None:
         return False
     else:
+        for plugin in PluginImplementations(IUserPassword):  # pragma: no cover
+            return plugin.validate_user_password(request, user, password)
         cpass = decode_data(request, result.user_password.encode())
         if cpass == bytearray(password.encode()):
             return True

@@ -615,9 +615,21 @@ class RegisterView(PublicView):
                                 data["user_apisecret"] = encode_data(
                                     self.request, data["user_apisecret"]
                                 )
-                                data["user_password"] = encode_data(
-                                    self.request, data["user_password"]
-                                )
+                                plugin_password = False
+                                for plugin in p.PluginImplementations(
+                                    p.IUserPassword
+                                ):  # pragma: no cover
+                                    data[
+                                        "user_password"
+                                    ] = plugin.encrypt_user_password(
+                                        self.request, data["user_password"]
+                                    )
+                                    plugin_password = True
+                                    break  # Only one plugin will encrypt the password
+                                if not plugin_password:
+                                    data["user_password"] = encode_data(
+                                        self.request, data["user_password"]
+                                    )
                                 data["user_active"] = 1
                                 # Load connected plugins and check if they modify the registration of an user
                                 continue_registration = True

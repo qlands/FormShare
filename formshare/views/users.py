@@ -180,9 +180,20 @@ class EditUserView(PrivateView):
                 action = "changepass"
                 if user_details["user_password"] != "":
                     if user_details["user_password"] == user_details["user_password2"]:
-                        encoded_password = encode_data(
-                            self.request, user_details["user_password"]
-                        )
+                        plugin_password = False
+                        encoded_password = ""
+                        for plugin in p.PluginImplementations(
+                            p.IUserPassword
+                        ):  # pragma: no cover
+                            encoded_password = plugin.encrypt_user_password(
+                                self.request, user_details["user_password"]
+                            )
+                            plugin_password = True
+                            break  # Only one plugin will encrypt the password
+                        if not plugin_password:
+                            encoded_password = encode_data(
+                                self.request, user_details["user_password"]
+                            )
                         updated, message = update_password(
                             self.request, user_to_modify, encoded_password
                         )
@@ -248,9 +259,20 @@ class AddUserView(PrivateView):
                             user_details["user_password"]
                             == user_details["user_password2"]
                         ):
-                            encoded_password = encode_data(
-                                self.request, user_details["user_password"]
-                            )
+                            plugin_password = False
+                            encoded_password = ""
+                            for plugin in p.PluginImplementations(
+                                p.IUserPassword
+                            ):  # pragma: no cover
+                                encoded_password = plugin.encrypt_user_password(
+                                    self.request, user_details["user_password"]
+                                )
+                                plugin_password = True
+                                break  # Only one plugin will encrypt the password
+                            if not plugin_password:
+                                encoded_password = encode_data(
+                                    self.request, user_details["user_password"]
+                                )
 
                             email_valid = validators.email(user_details["user_email"])
                             if not email_valid:

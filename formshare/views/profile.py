@@ -1,5 +1,5 @@
 import logging
-
+import formshare.plugins as p
 from formshare.config.auth import get_user_data
 from formshare.config.encdecdata import encode_data
 from formshare.processes.db import update_profile, get_timezones, get_user_projects
@@ -95,9 +95,20 @@ class EditProfileView(ProfileView):
                                     data["old_pass"], self.request
                                 )
                                 if pass_ok:
-                                    encoded_password = encode_data(
-                                        self.request, data["new_pass"]
-                                    )
+                                    plugin_password = False
+                                    encoded_password = ""
+                                    for plugin in p.PluginImplementations(
+                                        p.IUserPassword
+                                    ):  # pragma: no cover
+                                        encoded_password = plugin.encrypt_user_password(
+                                            self.request, data["new_pass"]
+                                        )
+                                        plugin_password = True
+                                        break  # Only one plugin will encrypt the password
+                                    if not plugin_password:
+                                        encoded_password = encode_data(
+                                            self.request, data["new_pass"]
+                                        )
                                     updated, message = update_password(
                                         self.request, user_id, encoded_password
                                     )

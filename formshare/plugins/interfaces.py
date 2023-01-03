@@ -44,6 +44,7 @@ __all__ = [
     "IAssistantAuthentication",
     "ICollaborator",
     "IAPISecurity",
+    "IUserPassword",
 ]
 
 
@@ -1802,7 +1803,7 @@ class ICollaborator(Interface):  # pragma: no cover
 
 class IAPISecurity(Interface):  # pragma: no cover
     """
-    Plugin into the creation of routes.
+    Plugin into the security of the API to remove any insecure keys from the result.
 
     """
 
@@ -1815,6 +1816,32 @@ class IAPISecurity(Interface):  # pragma: no cover
         raise NotImplementedError(
             "secure_json_result must be implemented in subclasses"
         )
+
+
+class IUserPassword(Interface):  # pragma: no cover
+    """
+    Plugin into the encryption and validation of the user's password.
+    """
+
+    def encrypt_user_password(self, request, clear_text_password):
+        """
+        Called by FormShare so plugins can overwrite the encryption of the user's password
+        :param request: ``pyramid.request`` object
+        :param clear_text_password: The password in clear text (unencrypted)
+        :return Encrypted password
+        """
+        raise NotImplementedError(
+            "encrypt_user_password must be implemented in subclasses"
+        )
+
+    def validate_user_password(self, request, user_id, clear_text_password):
+        """
+        Called by FormShare so plugins can overwrite the validation of the user's password
+        :param request: ``pyramid.request`` object
+        :param user_id: User requesting the validation of the password
+        :param clear_text_password: The password in clear text (unencrypted)
+        : returns True or False if the validation is correct
+        """
 
 
 class IPluginObserver(Interface):  # pragma: no cover

@@ -25,59 +25,88 @@ FormShare **is for organizations** to install it in their server or cloud servic
 
 ## Features
 
-**Current features**
+### Case management (Longitudinal data collection) (Version >= 2.8.0)
 
-- Case management (Longitudinal data collection) (Version >= 2.8.0)
-  - Using the Official ODK Collect App
-  - Intelligent work flow using Official ODK standards: 
-    - Case creator forms will create cases.
-    - Follow-up forms will attach information to each case.
-    - Deactivate forms will deactivate cases. For example, a household that decides to exit a longitudinal study will not appear in follow-up forms after deactivation.
-    - Activate forms will activate cases again.  For example, a household that decides to re-enter a longitudinal study will appear again in follow-up forms after activation.
-    - Move information from case creator forms into follow-up, deactivation and activation forms. For example, the sex of a participant (e. g., female) could be used in follow-up case forms to ask specific questions according to sex (e. g., if female, do they have access to reproductive health services since our last visit?)
-- Support multiple time zones:
-  - FormShare's: This is the time zone of the Linux server running FormShare.
-  - User: This is the time zone of a user logged into FormShare.
-  - Project: Each project can have a different time zone. This should be the time zone where submissions happen.
-  - Assistant: This is the time zone of an assistant logged into FormShare.
-  - Partner: This is the time zone of a partner logged into FormShare.
+- Using the Official ODK Collect App.
+- Intelligent workflow using Official ODK standards: 
+  - Case creator forms will create cases.
+  - Follow-up forms will attach information to each case.
+  - Deactivate forms will deactivate cases. For example, a household that decides to exit a longitudinal study will not appear in follow-up forms after deactivation.
+  - Activate forms will activate cases again.  For example, a household that decides to re-enter a longitudinal study will appear again in follow-up forms after activation.
+  - Move information from case creator forms into follow-up, deactivation, and activation forms. For example, the sex of a participant (e. g., female) could be used in follow-up case forms to ask specific questions according to sex (e. g., if female, do they have access to reproductive health services since our last visit?)
 
-- User accounts and management
-- Group-based user permissions
-- Projects to organize users, permissions, and forms
-- Separate access for data collectors and data cleaners. This is useful when dealing with hundreds of data collectors that do not need a FormShare user access 
-- Separate access for partners: Partners are trusted individuals outside your organization that require access to products and other resources in FormShare to collaborate with you. For example, a professor at a university (a partner in your project) requiring a KML export to match GPS points with weather data. 
-- User collaborations at project level, e.g., you can allow a colleague to maintain certain aspects of your project.
-- Form and submission management
-  - With easy setup of ODK Collect Projects using QR images
-  - With support for form version updates
-  - With testing and production stages
-  - Showing structural changes between incremental versions.
-  - With form and submission multimedia or data attachments
-  - With a table preview of submission data (even with thousand or millions of records) allowing in-table edits and recording any changes made to the data
-- OData live data feed for analysis with tools like Excel and Power BI. **With all CRUD operation supported (e. g., update)**. You can even use [Excel](https://github.com/qlands/MrBot-OData-Add-In) to clean data.
-- Extensibility system, e.g., You can write extensions to connect FormShare with Microsoft 365 authentication system
-- Documentation for running on AWS using Docker
-- Data cleaning API integration with R, STATA, or SPSS
-- Real-time map visualization of geo-referenced submissions at project and form level
-- Fill out forms using the web browser through [Enketo](https://github.com/qlands/formshare_enketo_plugin)
-- Download form attachments
-- Filtering submissions by submission metadata (e.g., date and time received on server)
-- Parse submissions into database tables. FormShare will create a MySQL data repository to store your data
-  - The repository is controlled with a primary key e.g., Farmed ID
-  - Duplicated submissions go to a cleaning pipe-line system that makes it easier to compare submissions and decide what to do with the duplicates
-- Private and publishable data downloads in Excel and CSV formats
-  - Mark data fields as sensitive to exclude them from publishable products
-  - Version control on products, e.g., FormShare will let you know if a data export does not have the latest submissions or changes in the database
-  - Make publishable products publicly available knowing that sensitive fields are excluded automatically 
-- Download geo-referenced information in KML format
+### Support for multiple time zones
 
-**Short-term features:**
+FormShare can produce dates and times in the following time zones:
 
-- Graph visualization with dashboards.
-- Connecting data fields with ontological variables. This is useful when comparing variables across studies even if variable names are different
-- Real-time data aggregation (pull data from different forms into one common data bucket). This is useful when dealing with slightly different forms for different geographies but where that certain fields could be aggregated into a common pot for analysis
-- Real-time data cleaning scripts using R
+- FormShare: This is the time zone of the Linux server running FormShare.
+- User: This is the time zone of a user logged into FormShare.
+- Project: Each project can have a different time zone. This should be the time zone where submissions happen.
+- Assistant: This is the time zone of an assistant logged into FormShare.
+- Partner: This is the time zone of a partner logged into FormShare.
+
+### User and project management
+
+- User accounts and management.
+- Group-based user permissions.
+- Projects to organize users, permissions, and forms.
+- Separate access for data collectors and data cleaners. This is useful when dealing with hundreds of data collectors that do not need a FormShare user's account.
+- Separate access for partners: Partners are trusted individuals outside your organization that require access to products and other resources in FormShare to collaborate with you. For example, a professor at a university (a partner in your project) requires a KML export to match GPS points with weather data. 
+- User collaborations at a project level, e.g., you can allow a colleague to maintain certain aspects of your project.
+
+### Form and submission management
+
+- Easy setup of ODK Collect Projects using QR images.
+- Support for form version updates.
+- With testing and production stages.
+- Showing structural changes between incremental versions.
+- With form and submission multimedia or data attachments.
+- Table preview of submission data (even with thousands or millions of records) allowing in-table edits and recording any changes made to the data.
+- Fill out forms using the web browser through [Enketo](https://github.com/qlands/formshare_enketo_plugin).
+- Real-time map visualization of geo-referenced submissions at project and form levels.
+- Download form attachments.
+
+### Database management and interoperability 
+
+- Parse submissions into database tables. FormShare will create a MySQL data repository to store your data.
+  - The repository is controlled with a primary key e.g., Farmed ID.
+  - Duplicated submissions go to a cleaning pipeline system that makes it easier to compare submissions and decide what to do with the duplicates.
+- Filtering submissions by submission metadata (e.g., date and time received on server).
+- Data cleaning API integration with R, STATA, or SPSS.
+- OData real-time data feed for analysis with tools like Excel and Power BI. **With all CRUD operations supported (e. g., update)**. You can even use [Excel](https://github.com/qlands/MrBot-OData-Add-In) to clean data.
+- Data dictionary with personal information protection.
+
+### Product management
+
+- Private and publishable data downloads in Excel, CSV, and JSON formats.
+  - Publishable products exclude protected fields (personal information protection) automatically.
+  - Version control on products, e.g., FormShare will let you know if a data export does not have the latest submissions or changes in the database.
+- Download geo-referenced information in KML format.
+
+### Performance, concurrency, and parallelism
+
+Though FormShare with the default settings can handle a load that would fit most organizations, it can be configured to handle any load. FormShare has been tested, using [JMeter](https://jmeter.apache.org/), under extreme traffic (1000 parallel submissions ) in an eight years old laptop with 16 GB of RAM and an [i7-4712HQ](https://www.intel.com/content/www/us/en/products/sku/78932/intel-core-i74712hq-processor-6m-cache-up-to-3-30-ghz/specifications.html).
+
+- Each submission is transactional. This means that a submission is either processed completely or thoroughly discarded for ODK Collect to re-send it.
+- Under extreme traffic,  FormShare can store a complex survey like [RHoMIS](https://www.rhomis.org/) at 18 submissions per second with zero failures.
+- Data exports support concurrent processing. A survey like RHoMIS with 100,000 submissions and millions of rows would take less than a minute to export to JSON or CSV.
+- The performance of the user interface or the data cleaning interface is not affected by the number of submissions.
+
+### Analytics
+
+- Real-time analytics from R using the [FormShare R Package](https://cran.r-project.org/web/packages/FormShare/index.html).
+- Real-time analytics from platforms like [Tableau](https://public.tableau.com/en-us/s/) and [Power BI](https://powerbi.microsoft.com/en-us/) using the [FormShare OData extension](https://github.com/qlands/formshare_odata_plugin).
+
+### Extensibility and others
+
+- Extensibility system, e.g., You can write extensions to connect FormShare with Microsoft 365 authentication system. See a list of extensions [below](#Customization-and-Extension).
+- Documentation for running on AWS using Docker.
+
+### Future features
+
+- Simple graph visualization with dashboards.
+- Connecting data fields with ontological variables. This is useful when comparing variables across studies even if variable names are different.
+- Real-time data aggregation (pull data from different forms into one common data bucket). This is useful when dealing with slightly different forms for different geographies but where that certain fields could be aggregated into a common pot for analysis.
 
 ScreenShot
 ----------
@@ -86,11 +115,11 @@ ScreenShot
 
 Releases
 ------------
-The current stable release is 2.23.0 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.23.0) 
+The current stable release is 2.24.0 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.24.0) 
 
-The database signature for stable 2.23.0 is e2d6d5aa3700
+The database signature for stable 2.24.0 is e2d6d5aa3700
 
-The Docker image for stable 2.23.0 is 20221219
+The Docker image for stable 2.24.0 is 20221229
 
 Installation
 ------------
@@ -110,9 +139,9 @@ sudo apt-get install -y docker-compose
 
 # Get the Docker Compose file
 cd /opt
-sudo mkdir formshare_docker_compose_20221219
-cd formshare_docker_compose_20221219
-sudo wget https://raw.githubusercontent.com/qlands/FormShare/stable-2.23.0/docker_compose/docker-compose.yml
+sudo mkdir formshare_docker_compose_20221229
+cd formshare_docker_compose_20221229
+sudo wget https://raw.githubusercontent.com/qlands/FormShare/stable-2.24.0/docker_compose/docker-compose.yml
 
 # Make the directory structure for FormShare
 sudo mkdir /opt/formshare
@@ -137,11 +166,11 @@ sudo sysctl -w vm.max_map_count=262144
 echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.d/60-vm-max_map_count.conf
 
 # Download all the required Docker Images
-cd /opt/formshare_docker_compose_20221219
+cd /opt/formshare_docker_compose_20221229
 sudo docker-compose pull
 
 # Edit the docker-compose.yml file to set the MySQL root and FormShare admin passwords
-sudo nano /opt/formshare_docker_compose_20221219/docker-compose.yml
+sudo nano /opt/formshare_docker_compose_20221229/docker-compose.yml
 # Press Alt+Shit+3 to show the line numbers in Nano
 
 Edit line 10: Change the root password from "my_secure_password" to your password
@@ -189,7 +218,7 @@ sudo service apache2 start
 # Subsequent start will take about 2 minutes. You can check the status with "sudo docker stats". 
 # FormShare will be ready for usage when the container reaches more than 500 kB of MEM USAGE
 # This is the only two commands you need to start FormShare after a server restart
-cd /opt/formshare_docker_compose_20221219
+cd /opt/formshare_docker_compose_20221229
 sudo docker-compose up -d
 
 # Browse to FormShare

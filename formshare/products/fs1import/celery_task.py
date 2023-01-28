@@ -134,7 +134,7 @@ def store_json_file(
     form,
     assistant,
     project_code,
-    geopoint_variable,
+    geopoint_variables,
     project_of_assistant,
     settings,
     ignore_xform_check=False,
@@ -170,35 +170,40 @@ def store_json_file(
         submission_data["_submission_id"] = submission_id
         submission_data["_project_code"] = project_code
         submission_data["_active"] = 1
-        if geopoint_variable is not None:
-            if geopoint_variable in submission_data.keys():
-                submission_data[geopoint_variable] = submission_data[
-                    geopoint_variable
-                ].replace("\\n", " ")
-                submission_data[geopoint_variable] = submission_data[
-                    geopoint_variable
-                ].replace("\n", " ")
-                submission_data["_geopoint"] = submission_data[geopoint_variable]
-                parts = submission_data["_geopoint"].split(" ")
-                if len(parts) >= 4:
-                    submission_data["_latitude"] = parts[0]
-                    submission_data["_longitude"] = parts[1]
-                    submission_data["_elevation"] = parts[2]
-                    submission_data["_precision"] = parts[3]
-                else:
-                    if len(parts) == 3:
-                        submission_data["_latitude"] = parts[0]
-                        submission_data["_longitude"] = parts[1]
-                        submission_data["_elevation"] = parts[2]
-                    else:
-                        if len(parts) == 2:
+        if geopoint_variables:
+            for geopoint_variable in geopoint_variables:
+                if geopoint_variable in submission_data.keys():
+                    submission_data[geopoint_variable] = submission_data[
+                        geopoint_variable
+                    ].replace("\\n", " ")
+                    submission_data[geopoint_variable] = submission_data[
+                        geopoint_variable
+                    ].replace("\n", " ")
+                    if submission_data[geopoint_variable].strip() != "":
+                        submission_data["_geopoint"] = submission_data[
+                            geopoint_variable
+                        ]
+                        parts = submission_data["_geopoint"].split(" ")
+                        if len(parts) >= 4:
                             submission_data["_latitude"] = parts[0]
                             submission_data["_longitude"] = parts[1]
-                if len(parts) >= 2:
-                    submission_data["_geolocation"] = {
-                        "lat": submission_data["_latitude"],
-                        "lon": submission_data["_longitude"],
-                    }
+                            submission_data["_elevation"] = parts[2]
+                            submission_data["_precision"] = parts[3]
+                        else:
+                            if len(parts) == 3:
+                                submission_data["_latitude"] = parts[0]
+                                submission_data["_longitude"] = parts[1]
+                                submission_data["_elevation"] = parts[2]
+                            else:
+                                if len(parts) == 2:
+                                    submission_data["_latitude"] = parts[0]
+                                    submission_data["_longitude"] = parts[1]
+                        if len(parts) >= 2:
+                            submission_data["_geolocation"] = {
+                                "lat": submission_data["_latitude"],
+                                "lon": submission_data["_longitude"],
+                            }
+                        break  # We store the first gps point with data
 
     with open(temp_json_file, "w") as outfile:
         json_string = json.dumps(submission_data, indent=4, ensure_ascii=False)
@@ -387,7 +392,7 @@ def internal_import_json_files(
     assistant,
     path_to_files,
     project_code,
-    geopoint_variable,
+    geopoint_variables,
     project_of_assistant,
     settings,
     locale,
@@ -453,7 +458,7 @@ def internal_import_json_files(
             form,
             assistant,
             project_code,
-            geopoint_variable,
+            geopoint_variables,
             project_of_assistant,
             settings,
             ignore_xform_check,
@@ -474,7 +479,7 @@ def import_json_files(
     assistant,
     path_to_files,
     project_code,
-    geopoint_variable,
+    geopoint_variables,
     project_of_assistant,
     settings,
     locale,
@@ -496,7 +501,7 @@ def import_json_files(
         assistant,
         path_to_files,
         project_code,
-        geopoint_variable,
+        geopoint_variables,
         project_of_assistant,
         settings,
         locale,

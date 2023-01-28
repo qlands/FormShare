@@ -68,7 +68,7 @@ __all__ = [
     "get_project_forms",
     "get_number_of_submissions_in_database",
     "get_by_details",
-    "get_form_geopoint",
+    "get_form_geopoints",
     "get_number_of_submissions_by_assistant",
     "get_media_files",
     "set_form_status",
@@ -1114,7 +1114,7 @@ def assistant_has_form(request, user, project, form, assistant):
     return found
 
 
-def get_form_geopoint(request, project, form):
+def get_form_geopoints(request, project, form):
     res = (
         request.dbsession.query(Odkform)
         .filter(Odkform.project_id == project)
@@ -1122,8 +1122,9 @@ def get_form_geopoint(request, project, form):
         .first()
     )
     if res is not None:
-        return res.form_geopoint
-    return None
+        if res.form_geopoint is not None:
+            return res.form_geopoint.split(",")
+    return []
 
 
 def get_form_directory(request, project, form):

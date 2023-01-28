@@ -151,14 +151,16 @@ def build_database(
         raise BuildDataBaseError(error_message)
 
 
-def get_geopoint_variable(db_session, project, form):
+def get_geopoint_variables(db_session, project, form):
     res = (
         db_session.query(Odkform)
         .filter(Odkform.project_id == project)
         .filter(Odkform.form_id == form)
         .first()
     )
-    return res.form_geopoint
+    if res.form_geopoint is not None:
+        return res.form_geopoint.split(",")
+    return []
 
 
 def get_one_assistant(db_session, project, form):
@@ -476,7 +478,7 @@ def internal_create_mysql_repository(
             assistant, project_of_assistant = get_one_assistant(
                 db_session, project_id, form
             )
-            geo_point_variable = get_geopoint_variable(db_session, project_id, form)
+            geo_point_variables = get_geopoint_variables(db_session, project_id, form)
         update_dictionary_tables(db_session, project_id, form, create_xml_file)
     engine.dispose()
     delete_dataset_from_index(settings, project_id, form)
@@ -526,7 +528,7 @@ def internal_create_mysql_repository(
                     assistant,
                     temp_path,
                     project_code,
-                    geo_point_variable,
+                    geo_point_variables,
                     project_of_assistant,
                     settings,
                     locale,

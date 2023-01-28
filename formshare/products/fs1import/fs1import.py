@@ -13,7 +13,7 @@ def formshare_one_import_json(
     assistant,
     path_to_files,
     project_code,
-    geopoint_variable,
+    geopoint_variables,
     project_of_assistant,
     ignore_xform_check=False,
 ):
@@ -34,7 +34,7 @@ def formshare_one_import_json(
             assistant,
             path_to_files,
             project_code,
-            geopoint_variable,
+            geopoint_variables,
             project_of_assistant,
             settings,
             request.locale_name,

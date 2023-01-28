@@ -254,7 +254,7 @@ def t_e_s_t_import_data(test_object):
             test_object.assistantLogin,
             path_to_files,
             test_object.project,
-            "si_participa/SECTION/GPS",
+            ["si_participa/SECTION/GPS"],
             test_object.projectID,
             test_object.server_config,
             "en",

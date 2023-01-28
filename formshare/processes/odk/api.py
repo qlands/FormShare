@@ -39,7 +39,7 @@ from formshare.processes.db import (
     get_project_from_assistant,
     get_form_files,
     get_project_code_from_id,
-    get_form_geopoint,
+    get_form_geopoints,
     get_media_files,
     add_file_to_form,
     add_submission_same_as,
@@ -239,21 +239,20 @@ def get_missing_support_files(request, project, form, required_files, form_files
     return missing_files
 
 
-def get_geopoint_variable_from_json(json_dict, parent_array):
-    result = None
+def get_geopoint_variables_from_json(json_dict, parent_array, variables):
     if json_dict["type"] == "survey" or json_dict["type"] == "group":
         if json_dict["type"] == "group":
             parent_array.append(json_dict["name"])
         for child in json_dict["children"]:
-            result = get_geopoint_variable_from_json(child, parent_array)
-            if result is not None:
-                break
-        if result is None:
+            get_geopoint_variables_from_json(child, parent_array, variables)
+        if json_dict["type"] == "group":
             parent_array.pop()
     else:
         if json_dict["type"] in _GPS_types:
-            result = json_dict["name"]
-    return result
+            form_geo_point = "/".join(parent_array) + "/" + json_dict["name"]
+            if form_geo_point[0] == "/":
+                form_geo_point = form_geo_point[1:]
+            variables.append(form_geo_point)
 
 
 def import_external_data(
@@ -303,7 +302,7 @@ def import_external_data(
             return False, "The import file must be Zip", None
 
     project_code = get_project_code_from_id(request, user, project)
-    geopoint_variable = get_form_geopoint(request, project, form)
+    geopoint_variables = get_form_geopoints(request, project, form)
     project_of_assistant = get_project_from_assistant(request, user, project, assistant)
 
     if import_type == 1:
@@ -319,7 +318,7 @@ def import_external_data(
             assistant,
             temp_dir,
             project_code,
-            geopoint_variable,
+            geopoint_variables,
             project_of_assistant,
             ignore_xform,
         )
@@ -369,7 +368,7 @@ def import_external_data(
                 assistant,
                 temp_dir,
                 project_code,
-                geopoint_variable,
+                geopoint_variables,
                 project_of_assistant,
                 import_type,
                 form_post_data,
@@ -1162,11 +1161,12 @@ def upload_odk_form(
                             shutil.copyfile(insert_file, final_insert_xml)
                             parent_array = []
                             try:
-                                geopoint = get_geopoint_variable_from_json(
-                                    json_dict, parent_array
+                                geo_variables = []
+                                get_geopoint_variables_from_json(
+                                    json_dict, parent_array, geo_variables
                                 )
                             except Exception as e:
-                                geopoint = None
+                                geo_variables = []
                                 log.warning(
                                     "Unable to extract GeoPoint from file {}. Error: {}".format(
                                         final_survey, str(e)
@@ -1196,12 +1196,9 @@ def upload_odk_form(
                             form_data["form_insertxmlfile"] = final_insert_xml
                             form_data["form_pubby"] = user_id
                             form_data["form_hexcolor"] = ColorHash(form_id).hex
-                            if geopoint is not None:
-                                form_geopoint = "/".join(parent_array) + "/" + geopoint
-                                if form_geopoint[0] == "/":
-                                    form_geopoint = form_geopoint[1:]
-
-                                form_data["form_geopoint"] = form_geopoint
+                            if geo_variables:
+                                form_geo_points = ",".join(geo_variables)
+                                form_data["form_geopoint"] = form_geo_points
                             if message != "":
                                 form_data["form_reqfiles"] = message
 
@@ -1623,11 +1620,12 @@ def update_odk_form(
                                 shutil.copyfile(insert_file, final_insert_xml)
                                 parent_array = []
                                 try:
-                                    geopoint = get_geopoint_variable_from_json(
-                                        json_dict, parent_array
+                                    geo_point_variables = []
+                                    get_geopoint_variables_from_json(
+                                        json_dict, parent_array, geo_point_variables
                                     )
                                 except Exception as e:
-                                    geopoint = None
+                                    geo_point_variables = []
                                     log.warning(
                                         "Unable to extract GeoPoint from file {}. Error: {}".format(
                                             final_survey, str(e)
@@ -1648,13 +1646,9 @@ def update_odk_form(
                                 form_data["form_mergerrors"] = None
                                 form_data["form_mergetask"] = None
                                 form_data["form_reptask"] = None
-                                if geopoint is not None:
-                                    form_geopoint = (
-                                        "/".join(parent_array) + "/" + geopoint
-                                    )
-                                    if form_geopoint[0] == "/":
-                                        form_geopoint = form_geopoint[1:]
-                                    form_data["form_geopoint"] = form_geopoint
+                                if geo_point_variables:
+                                    form_geo_points = ",".join(geo_point_variables)
+                                    form_data["form_geopoint"] = form_geo_points
                                 if message != "":
                                     form_data["form_reqfiles"] = message
 
@@ -2630,38 +2624,41 @@ def store_json_file(
                 submission_data["_submission_id"] = submission_id
                 submission_data["_project_code"] = project_code
                 submission_data["_active"] = 1
-                geopoint_variable = get_form_geopoint(request, project, form)
-                if geopoint_variable is not None:
-                    if geopoint_variable in submission_data.keys():
-                        submission_data[geopoint_variable] = submission_data[
-                            geopoint_variable
-                        ].replace("\\n", " ")
-                        submission_data[geopoint_variable] = submission_data[
-                            geopoint_variable
-                        ].replace("\n", " ")
-                        submission_data["_geopoint"] = submission_data[
-                            geopoint_variable
-                        ]
-                        parts = submission_data["_geopoint"].split(" ")
-                        if len(parts) >= 4:
-                            submission_data["_latitude"] = parts[0]
-                            submission_data["_longitude"] = parts[1]
-                            submission_data["_elevation"] = parts[2]
-                            submission_data["_precision"] = parts[3]
-                        else:
-                            if len(parts) == 3:
-                                submission_data["_latitude"] = parts[0]
-                                submission_data["_longitude"] = parts[1]
-                                submission_data["_elevation"] = parts[2]
-                            else:
-                                if len(parts) == 2:
+                geopoint_variables = get_form_geopoints(request, project, form)
+                if geopoint_variables:
+                    for geopoint_variable in geopoint_variables:
+                        if geopoint_variable in submission_data.keys():
+                            submission_data[geopoint_variable] = submission_data[
+                                geopoint_variable
+                            ].replace("\\n", " ")
+                            submission_data[geopoint_variable] = submission_data[
+                                geopoint_variable
+                            ].replace("\n", " ")
+                            if submission_data[geopoint_variable] != "":
+                                submission_data["_geopoint"] = submission_data[
+                                    geopoint_variable
+                                ]
+                                parts = submission_data["_geopoint"].split(" ")
+                                if len(parts) >= 4:
                                     submission_data["_latitude"] = parts[0]
                                     submission_data["_longitude"] = parts[1]
-                        if len(parts) >= 2:
-                            submission_data["_geolocation"] = {
-                                "lat": submission_data["_latitude"],
-                                "lon": submission_data["_longitude"],
-                            }
+                                    submission_data["_elevation"] = parts[2]
+                                    submission_data["_precision"] = parts[3]
+                                else:
+                                    if len(parts) == 3:
+                                        submission_data["_latitude"] = parts[0]
+                                        submission_data["_longitude"] = parts[1]
+                                        submission_data["_elevation"] = parts[2]
+                                    else:
+                                        if len(parts) == 2:
+                                            submission_data["_latitude"] = parts[0]
+                                            submission_data["_longitude"] = parts[1]
+                                if len(parts) >= 2:
+                                    submission_data["_geolocation"] = {
+                                        "lat": submission_data["_latitude"],
+                                        "lon": submission_data["_longitude"],
+                                    }
+                                break  # Only one gps point is stored
                 # pkey_variable = get_form_primary_key(request, project, form)
                 # if pkey_variable is not None:
                 #     if geopoint_variable in submission_data.keys():
@@ -3012,40 +3009,41 @@ def store_json_file(
                 submission_data["_user_id"] = user
                 submission_data["_submission_id"] = submission_id
                 submission_data["_project_code"] = project_code
-                geopoint_variable = get_form_geopoint(request, project, form)
-                if geopoint_variable is not None:
-                    try:
-                        submission_data[geopoint_variable] = submission_data[
-                            geopoint_variable
-                        ].replace("\\n", " ")
-                        submission_data[geopoint_variable] = submission_data[
-                            geopoint_variable
-                        ].replace("\n", " ")
-                        submission_data["_geopoint"] = submission_data[
-                            geopoint_variable
-                        ]
-                        parts = submission_data["_geopoint"].split(" ")
-                        if len(parts) >= 4:
-                            submission_data["_latitude"] = parts[0]
-                            submission_data["_longitude"] = parts[1]
-                            submission_data["_elevation"] = parts[2]
-                            submission_data["_precision"] = parts[3]
-                        else:
-                            if len(parts) == 3:
-                                submission_data["_latitude"] = parts[0]
-                                submission_data["_longitude"] = parts[1]
-                                submission_data["_elevation"] = parts[2]
-                            else:
-                                if len(parts) == 2:
+                geopoint_variables = get_form_geopoints(request, project, form)
+                if geopoint_variables:
+                    for geopoint_variable in geopoint_variables:
+                        if geopoint_variable in submission_data.keys():
+                            submission_data[geopoint_variable] = submission_data[
+                                geopoint_variable
+                            ].replace("\\n", " ")
+                            submission_data[geopoint_variable] = submission_data[
+                                geopoint_variable
+                            ].replace("\n", " ")
+                            if submission_data[geopoint_variable] != "":
+                                submission_data["_geopoint"] = submission_data[
+                                    geopoint_variable
+                                ]
+                                parts = submission_data["_geopoint"].split(" ")
+                                if len(parts) >= 4:
                                     submission_data["_latitude"] = parts[0]
                                     submission_data["_longitude"] = parts[1]
-                        if len(parts) >= 2:
-                            submission_data["_geolocation"] = {
-                                "lat": submission_data["_latitude"],
-                                "lon": submission_data["_longitude"],
-                            }
-                    except KeyError:
-                        pass
+                                    submission_data["_elevation"] = parts[2]
+                                    submission_data["_precision"] = parts[3]
+                                else:
+                                    if len(parts) == 3:
+                                        submission_data["_latitude"] = parts[0]
+                                        submission_data["_longitude"] = parts[1]
+                                        submission_data["_elevation"] = parts[2]
+                                    else:
+                                        if len(parts) == 2:
+                                            submission_data["_latitude"] = parts[0]
+                                            submission_data["_longitude"] = parts[1]
+                                if len(parts) >= 2:
+                                    submission_data["_geolocation"] = {
+                                        "lat": submission_data["_latitude"],
+                                        "lon": submission_data["_longitude"],
+                                    }
+                                break  # Only one gps point will be stored
 
             submission_exists = None
             submissions_path = os.path.join(

@@ -116,7 +116,7 @@ class ErrorView(ExceptionView):
                     user = login_data["login"]
 
         if user is None:
-            user = "Unknown"
+            user = "Unknown - {}".format(self.request.client_addr)
         log.error(
             "Server Error in URL {}.\nAccount: {}\nError: \n{}".format(
                 self.request.url, user, traceback.format_exc()

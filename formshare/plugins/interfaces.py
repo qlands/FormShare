@@ -753,7 +753,7 @@ class IImportExternalData(Interface):  # pragma: no cover
         assistant,
         temp_dir,
         project_code,
-        geopoint_variable,
+        geopoint_variables,
         project_of_assistant,
         import_type,
         post_data,

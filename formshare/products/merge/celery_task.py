@@ -335,14 +335,16 @@ def make_database_changes(
         raise MergeDataBaseError(error_message)
 
 
-def get_geopoint_variable(db_session, project, form):
+def get_geopoint_variables(db_session, project, form):
     res = (
         db_session.query(Odkform)
         .filter(Odkform.project_id == project)
         .filter(Odkform.form_id == form)
         .first()
     )
-    return res.form_geopoint
+    if res.form_geopoint is not None:
+        return res.form_geopoint.split(",")
+    return []
 
 
 def get_one_assistant(db_session, project, form):
@@ -707,7 +709,7 @@ def internal_merge_into_repository(
                 assistant, project_of_assistant = get_one_assistant(
                     db_session, project_id, a_form_id
                 )
-                geo_point_variable = get_geopoint_variable(
+                geo_point_variables = get_geopoint_variables(
                     db_session, project_id, a_form_id
                 )
             log.info("Updating dictionaries")
@@ -796,7 +798,7 @@ def internal_merge_into_repository(
                     assistant,
                     temp_path,
                     project_code,
-                    geo_point_variable,
+                    geo_point_variables,
                     project_of_assistant,
                     settings,
                     locale,

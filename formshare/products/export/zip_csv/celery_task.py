@@ -172,6 +172,6 @@ def build_zip_csv(
         protect_sensitive,
         locale,
         options,
-        include_multiselect=False,
-        include_lookups=False,
+        include_multiselect,
+        include_lookups,
     )

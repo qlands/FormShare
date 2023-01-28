@@ -38,7 +38,7 @@ et-xmlfile==1.1.0
 exceptiongroup==1.0.0
 feedparser==6.0.10
 FormEncode==2.0.1
-future==0.18.2
+future==0.18.3
 gevent==22.10.2
 greenlet==2.0.0
 gunicorn==20.1.0

@@ -81,7 +81,7 @@ class TokenView(object):
                     else:
                         response = Response(
                             content_type="application/json",
-                            status=400,
+                            status=401,
                             body=json.dumps(
                                 {
                                     "status": "401",

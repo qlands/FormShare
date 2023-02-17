@@ -57,12 +57,12 @@
             {% block loginform %}
                 <form class="m-t require_busy" role="form" method="post" action="{{ request.url }}">
                     {{ form.secure_form(request) }}
-                    <input id="user" type="text" name="user" class="form-control" placeholder="{{ _('Username') }}">
+                    <input id="user" autocomplete="off" type="text" name="user" class="form-control" placeholder="{{ _('Username') }}">
                     <div class="form-group">
-                        <input type="text" name="email" class="form-control" placeholder="{{ _('Username or email address') }}" required="">
+                        <input type="text" autocomplete="off" name="email" class="form-control" placeholder="{{ _('Username or email address') }}" required="">
                     </div>
                     <div class="form-group">
-                        <input type="password" name="passwd" class="form-control" placeholder="{{ _('Password') }}" required="">
+                        <input type="password" autocomplete="off" name="passwd" class="form-control" placeholder="{{ _('Password') }}" required="">
                     </div>
                     {% block login_extra %}
 

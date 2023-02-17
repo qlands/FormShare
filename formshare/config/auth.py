@@ -120,7 +120,9 @@ def reset_key_exists(request, reset_key):
 
 def set_password_reset_token(request, user_id, reset_key, reset_token):
     token_expires_on = datetime.datetime.now() + relativedelta(hours=+24)
-    request.dbsession.query(userModel).filter(userModel.user_id == user_id).update(
+    request.dbsession.query(userModel).filter(userModel.user_id == user_id).filter(
+        userModel.user_password_reset_key.is_(None)
+    ).update(
         {
             "user_password_reset_key": reset_key,
             "user_password_reset_token": reset_token,

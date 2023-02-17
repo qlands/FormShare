@@ -25,10 +25,10 @@
         {{ form.secure_form(request) }}
         {% block loginform_fields %}
             <div class="form-group">
-                <input type="email" name="login" class="form-control" placeholder="{{ _('Partner Email') }}" required="">
+                <input type="email" autocomplete="off" name="login" class="form-control" placeholder="{{ _('Partner Email') }}" required="">
             </div>
             <div class="form-group">
-                <input type="password" name="passwd" class="form-control" placeholder="{{ _('Password') }}" required="">
+                <input type="password" autocomplete="off" name="passwd" class="form-control" placeholder="{{ _('Password') }}" required="">
             </div>
         {% endblock loginform_fields %}
         {% block loginform_actions %}

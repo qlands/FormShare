@@ -23,7 +23,7 @@ def create_resources(apppath, config):
     )
 
     # ----------------------------Basic JS----------------------------------------------------
-    r.add_js_resource("formshare", "jquery", "js/jquery-3.1.1.min.js")
+    r.add_js_resource("formshare", "jquery", "js/jquery-3.5.1.min.js")
     r.add_js_resource("formshare", "popper", "js/popper.min.js")
     r.add_js_resource("formshare", "bootstrap", "js/bootstrap.min.js")
     r.add_js_resource(

@@ -4,7 +4,7 @@
 **FormShare stores submission data in a repository**. Details of this are covered in the section "[How does FormShare stores my data?](../../fundamentals/repositories/how-does-formshare-stores-my-data.md)".
 {% endhint %}
 
-For each ODK form that you upload into FormShare, the system creates a database to hold its submissions. This database is called a “repository”. At first, forms are uploaded in a “testing” stage (without a repository) but then you can create a repository for them to store “real” data. The reason for a testing stage is that it is easier to replace a form without a repository because FormShare does not need to alter the underlying database, however it is possible to [merge new versions of a form into a common repository](../../fundamentals/repositories/merging-subversions-of-a-form.md).
+For each ODK form that you upload into FormShare, the system creates a database to hold its submissions. This database is called a “repository”. At first, forms are uploaded in a “testing” stage (without a repository) but then you can create a repository for them to store “real” data. The reason for a testing stage is that it is easier to replace a form without a repository because FormShare does not need to alter the underlying database, however, it is possible to [merge new versions of a form into a common repository](../../fundamentals/repositories/merging-subversions-of-a-form.md).
 
 <mark style="color:red;">**After you tested your form**</mark> you can generate a repository for it.
 

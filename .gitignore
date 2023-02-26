@@ -21,7 +21,7 @@ lib64/
 parts/
 sdist/
 var/
-ephemeral/*.js
+formshare/static/ephemeral/*.js
 wheels/
 *.egg-info/
 .installed.cfg

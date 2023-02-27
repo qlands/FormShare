@@ -1,0 +1,2 @@
+The ephemeral directory stores javascripts extracted from body responses
+This files should be removed by a cronjob after 24 hours of beign created

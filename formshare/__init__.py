@@ -22,6 +22,7 @@ from formshare.config.config_indexes import configure_indexes
 
 
 def main(global_config, **settings):
+    apppath = os.path.dirname(os.path.abspath(__file__))
     if global_config is not None:  # pragma: no cover
         config = ConfigParser()
         config.read(global_config["__file__"])
@@ -33,6 +34,7 @@ def main(global_config, **settings):
         port = config.get("server:main", "port")
         composite_section = dict(config.items("composite:main"))
         composite_section.pop("use")
+        settings["apppath"] = apppath
         settings["server:threads"] = threads
         settings["server:main:host"] = host
         settings["server:main:port"] = port
@@ -74,8 +76,6 @@ def main(global_config, **settings):
         authentication_policy=auth_policy,
         authorization_policy=authz_policy,
     )
-
-    apppath = os.path.dirname(os.path.abspath(__file__))
 
     config.include(".models")
     # Load and configure the host application

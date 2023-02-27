@@ -16,7 +16,8 @@ import json
 import logging
 import uuid
 from ast import literal_eval
-
+import io
+import os
 from babel import Locale
 from formencode.variabledecode import variable_decode
 from formshare import plugins as p
@@ -47,6 +48,59 @@ from pyramid.response import Response
 from pyramid.session import check_csrf_token
 
 log = logging.getLogger("formshare")
+
+
+def resource_callback(request, response):
+    """
+    This function moves all script code in a html to an ephemeral js file.
+    This is important to deny any inline JS as part of Content-Security-Policy while
+    keeping the flexibility of having scripts in the jinja2 templates
+    """
+    if response.content_type == "text/html":
+        js_file_id = str(uuid.uuid4())
+        paths = ["static", "ephemeral", js_file_id + ".js"]
+        repo_dir = request.registry.settings["apppath"]
+        js_file = os.path.join(repo_dir, *paths)
+
+        html_content = ""
+        js_content = ""
+        in_html = True
+
+        f = io.StringIO(response.body.decode())
+        lines = f.readlines()
+        f.close()
+        for a_line in lines:
+            ignore_line = False
+            a_line = a_line.strip()
+            if a_line.find("<script>") >= 0:
+                in_html = False
+                ignore_line = True
+            if a_line.find("</script>") >= 0:
+                in_html = True
+                ignore_line = True
+            if a_line.find("<script ") >= 0:
+                ignore_line = False
+            if a_line.find("</body>") >= 0:
+                a_line = (
+                    '<script src="'
+                    + request.application_url
+                    + "/fstatic/ephemeral/"
+                    + js_file_id
+                    + ".js"
+                    + '"></script>\n'
+                    + a_line
+                )
+            if not ignore_line:
+                if in_html:
+                    if a_line != "":
+                        html_content = html_content + a_line + "\n"
+                else:
+                    if a_line != "":
+                        js_content = js_content + a_line + "\n"
+
+        with open(js_file, "w") as jf:
+            jf.write(js_content)
+        response.body = html_content.encode()
 
 
 class ODKView(object):
@@ -240,6 +294,8 @@ class ExceptionView(object):
     """
 
     def __init__(self, request):
+        if request.registry.settings.get("secure.javascript", "false") == "true":
+            request.add_response_callback(resource_callback)
         self.request = request
         self._ = self.request.translate
         self.resultDict = {"errors": []}
@@ -281,6 +337,8 @@ class PublicView(object):
     """
 
     def __init__(self, request):
+        if request.registry.settings.get("secure.javascript", "false") == "true":
+            request.add_response_callback(resource_callback)
         self.request = request
         self._ = self.request.translate
         self.resultDict = {"errors": []}
@@ -392,6 +450,8 @@ def remove_keys(obj, insecure_keys):
 
 class PrivateView(object):
     def __init__(self, request):
+        if request.registry.settings.get("secure.javascript", "false") == "true":
+            request.add_response_callback(resource_callback)
         self.request = request
         self.user = None
         self._ = self.request.translate
@@ -804,6 +864,8 @@ class ProjectsView(PrivateView):
 
 class AssistantView(object):
     def __init__(self, request):
+        if request.registry.settings.get("secure.javascript", "false") == "true":
+            request.add_response_callback(resource_callback)
         self.request = request
         self.projectID = ""
         self.project_has_crowdsourcing = False
@@ -1105,6 +1167,8 @@ class AssistantView(object):
 
 class PartnerView(object):
     def __init__(self, request):
+        if request.registry.settings.get("secure.javascript", "false") == "true":
+            request.add_response_callback(resource_callback)
         self.request = request
         self.partner = None
         self._ = self.request.translate

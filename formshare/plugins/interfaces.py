@@ -300,11 +300,12 @@ class IProject(Interface):  # pragma: no cover
             "before_editing_project must be implemented in subclasses"
         )
 
-    def after_editing_project(self, request, user, project_data):
+    def after_editing_project(self, request, user, project_id, project_data):
         """
         Called by FormShare so plugins can perform actions after editing a project
         :param request: ``pyramid.request`` object
         :param user: User owner of the project
+        :param project_id: Project ID
         :param project_data: project data
         :return: None
         """

@@ -10,6 +10,7 @@ services:
       MYSQL_ROOT_PASSWORD: my_secure_password
     volumes:
       - /opt/formshare/mysql:/var/lib/mysql
+      - /opt/formshare/mysql/mysql-files:/var/lib/mysql-files
     networks:
       fsnet:
         ipv4_address: 172.28.1.5

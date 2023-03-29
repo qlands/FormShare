@@ -621,12 +621,13 @@
                         {% if projectDetails.project_formlist_auth == 1 %}
                             var assistant_can_submit = $( this ).attr('data-assistant-can-submit');
                             var role_submmit = $( "#role_submmit" );
+                            role_submmit.prop( "checked", false );
                             if (assistant_can_submit === "1")
                                 role_submmit.prop( "checked", true );
                         {% endif %}
 
                         var role_clean = $( "#role_clean" );
-
+                        role_clean.prop( "checked", false );
                         if (assistant_can_clean === "1")
                             role_clean.prop( "checked", true );
                     });
@@ -677,12 +678,13 @@
                         {% if projectDetails.project_formlist_auth == 1 %}
                             var group_can_submit = $( this ).attr('data-group-can-submit');
                             var role_submmit = $( "#grp_role_submmit" );
+                            role_submmit.prop( "checked", false );
                             if (group_can_submit === "1")
                                 role_submmit.prop( "checked", true );
                         {% endif %}
 
                         var role_clean = $( "#grp_role_clean" );
-
+                        role_clean.prop( "checked", false );
                         if (group_can_clean === "1")
                             role_clean.prop( "checked", true );
                     });

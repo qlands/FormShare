@@ -149,7 +149,7 @@ def t_e_s_t_assistant_groups(test_object):
         "/user/{}/project/{}/group/{}/members".format(
             test_object.randonLogin, test_object.project, test_object.assistantGroupID
         ),
-        {"add_assistant": ""},
+        {"assistants": ""},
         status=302,
     )
     assert "FS_error" in res.headers
@@ -159,17 +159,17 @@ def t_e_s_t_assistant_groups(test_object):
         "/user/{}/project/{}/group/{}/members".format(
             test_object.randonLogin, test_object.project, test_object.assistantGroupID
         ),
-        {"add_assistant": "", "coll_id": ""},
+        {"assistants": ""},
         status=302,
     )
     assert "FS_error" in res.headers
 
-    # Add a member to a group fails. Collaborator does not exists
+    # Add a member to a group fails. Collaborator does not exist
     res = test_object.testapp.post(
         "/user/{}/project/{}/group/{}/members".format(
             test_object.randonLogin, test_object.project, test_object.assistantGroupID
         ),
-        {"add_assistant": "", "coll_id": "{}|hello2".format(test_object.projectID)},
+        {"assistants": "{}|hello2".format(test_object.projectID)},
         status=302,
     )
     assert "FS_error" in res.headers
@@ -180,8 +180,7 @@ def t_e_s_t_assistant_groups(test_object):
             test_object.randonLogin, test_object.project, test_object.assistantGroupID
         ),
         {
-            "add_assistant": "",
-            "coll_id": "{}|{}".format(
+            "assistants": "{}|{}".format(
                 test_object.projectID, test_object.assistantLogin
             ),
         },
@@ -189,14 +188,27 @@ def t_e_s_t_assistant_groups(test_object):
     )
     assert "FS_error" not in res.headers
 
+    # Adding the same member to a group fails
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/group/{}/members".format(
+            test_object.randonLogin, test_object.project, test_object.assistantGroupID
+        ),
+        {
+            "assistants": "{}|{}".format(
+                test_object.projectID, test_object.assistantLogin
+            ),
+        },
+        status=302,
+    )
+    assert "FS_error" in res.headers
+
     # Add a second member to a group succeeds
     res = test_object.testapp.post(
         "/user/{}/project/{}/group/{}/members".format(
             test_object.randonLogin, test_object.project, test_object.assistantGroupID
         ),
         {
-            "add_assistant": "",
-            "coll_id": "{}|{}".format(
+            "assistants": "{}|{}".format(
                 test_object.projectID, test_object.assistantLogin2
             ),
         },

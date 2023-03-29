@@ -77,37 +77,103 @@
         </div>
     </div>
     <div class="modal inmodal" id="myModal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content animated fadeIn">
                 <div class="modal-header">
                     <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-                    <h4 class="modal-title">{{ _('Adding assistant') }}</h4>
+                    <h4 class="modal-title">{{ _('Add assistants') }}</h4>
                 </div>
-                <form class="require_busy" id="member_form" role="form" method="post" action="{{ request.url }}">
-                    {{ form.secure_form(request) }}
-                    <input type="hidden" id="group_id" name="group_id" value="">
-                    <div class="form-group">
-                            <label class="col-sm-2 col-form-label">{{ _('Assistant') }}</label>
-                        <div class="col-sm-10">
-                            <select name="coll_id" style="width: 100%; !important;" class="collaborator-list form-control">
-                                {% for project in assistants %}
-                                <optgroup label="{{ project.project_desc }}">
-                                    {% for assistant in project.assistants %}
-                                        <option value="{{ assistant.code }}">{{ assistant.name }}</option>
-                                    {% endfor %}
-                                </optgroup>
-                                {% endfor %}
-                            </select>
+                <div class="modal-body">
+                    <div class="ibox-content">
+                        <div class="row">
+                            <div class="col-sm-2 m-b-xs">
+                                <button class="btn btn-block btn-primary" id="checkall">{{ _('Check all') }}</button>
+                            </div>
+                            <div class="col-sm-2 m-b-xs">
+                                <button class="btn btn-block btn-primary" id="uncheckall">{{ _('Uncheck all') }}</button>
+                            </div>
+                            <div class="col-sm-4 m-b-xs">
+
+                            </div>
+                            <div class="col-sm-4">
+                                <div class="input-group">
+                                    <input id="fassistants" placeholder="{{ _('Filter by project') }}" type="text" class="form-control form-control-sm">
+                                </div>
                             </div>
                         </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
-                        <button type="submit" name="add_assistant" class="btn btn-primary">{{ _('Add assistant') }}</button>
+                        <span>{{ _('Note: Assistants excluded by a filter will be automatically unchecked') }}</span>
+                        <div class="table-responsive" style="max-height: 300px">
+                            <table id="tassistants" class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>{{ _('Project') }}</th>
+                                        <th>{{ _('Assistant') }} </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for project in assistants %}
+                                        {% for assistant in project.assistants %}
+                                            {% if assistant.used == False %}
+                                                <tr data-project="{{ project.project_desc  }}">
+                                                    <td>
+                                                        <input type="checkbox" data-project="{{ project.project_desc  }}" data-visible="true" data-code="{{ assistant.code }}" class="assistantCheck">
+                                                    </td>
+                                                    {% if loop.index == 1 %}
+                                                        <td>{{ project.project_desc }}</td>
+                                                    {% else %}
+                                                        <td></td>
+                                                    {% endif %}
+                                                    <td>{{ assistant.name }} ({{ assistant.id }})</td>
+                                                </tr>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-                </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
+                    <button type="button" id="AddAssistants" class="btn btn-primary">{{ _('Add assistants') }}</button>
+                </div>
             </div>
         </div>
     </div>
+
+{#    <div class="modal inmodal" id="myModal" tabindex="-1" role="dialog" aria-hidden="true">#}
+{#        <div class="modal-dialog">#}
+{#            <div class="modal-content animated fadeIn">#}
+{#                <div class="modal-header">#}
+{#                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>#}
+{#                    <h4 class="modal-title">{{ _('Adding assistant') }}</h4>#}
+{#                </div>#}
+{#                <form class="require_busy" id="member_form" role="form" method="post" action="{{ request.url }}">#}
+{#                    {{ form.secure_form(request) }}#}
+{#                    <input type="hidden" id="group_id" name="group_id" value="">#}
+{#                    <div class="form-group">#}
+{#                            <label class="col-sm-2 col-form-label">{{ _('Assistant') }}</label>#}
+{#                        <div class="col-sm-10">#}
+{#                            <select name="coll_id" style="width: 100%; !important;" class="collaborator-list form-control">#}
+{#                                {% for project in assistants %}#}
+{#                                <optgroup label="{{ project.project_desc }}">#}
+{#                                    {% for assistant in project.assistants %}#}
+{#                                        <option value="{{ assistant.code }}">{{ assistant.name }}</option>#}
+{#                                    {% endfor %}#}
+{#                                </optgroup>#}
+{#                                {% endfor %}#}
+{#                            </select>#}
+{#                            </div>#}
+{#                        </div>#}
+{#                    <div class="modal-footer">#}
+{#                        <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>#}
+{#                        <button type="submit" name="add_assistant" class="btn btn-primary">{{ _('Add assistant') }}</button>#}
+{#                    </div>#}
+{#                </form>#}
+{#            </div>#}
+{#        </div>#}
+{#    </div>#}
 
 {% endblock maincontent %}
 
@@ -115,6 +181,69 @@
     {{ super() }}
     <script>
         $(document).ready(function() {
+            $("#fassistants").on("keyup", function() {
+                console.log("Here");
+                var value = $(this).val().toLowerCase();
+                $("#tassistants tr").filter(function() {
+                    if (typeof $(this).attr("data-project") !== 'undefined')
+                        $(this).toggle($(this).attr("data-project").toLowerCase().indexOf(value) > -1);
+                    //$(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                });
+
+                $.each($('.assistantCheck'), function() {
+                    if($(this).attr("data-project").toLowerCase().indexOf(value) < 0){
+                       $(this).prop("checked",false);
+                       $(this).attr("data-visible","false");
+                    }
+                    else {
+                        $(this).attr("data-visible","true");
+                    }
+                });
+            });
+
+            $('#checkall').click(function () {
+                $.each($('.assistantCheck'), function() {
+                    if ($(this).attr("data-visible") === "true")
+                        $(this).prop("checked",true);
+                });
+            });
+
+            $('#uncheckall').click(function () {
+                $.each($('.assistantCheck'), function() {
+                    $(this).prop("checked",false);
+                });
+            });
+
+            $('#AddAssistants').click(function () {
+                var form = document.createElement('form');
+                form.setAttribute('method', 'post');
+                form.setAttribute('action', "{{ request.url }}");
+                form.style.display = 'hidden';
+                let assistant_array = [];
+                $.each($('.assistantCheck'), function() {
+                    if ($(this).prop("checked") === true)
+                    {
+                        assistant_array.push($(this).attr("data-code"));
+                    }
+                });
+                var csrf = document.createElement("input"); //input element, text
+                csrf.setAttribute('type',"text");
+                csrf.setAttribute('name',"csrf_token");
+                csrf.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                form.appendChild(csrf);
+
+                var assistants = document.createElement("input"); //input element, text
+                assistants.setAttribute('type',"text");
+                assistants.setAttribute('name',"assistants");
+                assistants.setAttribute('value',assistant_array.toString());
+                form.appendChild(assistants);
+
+                document.body.appendChild(form);
+                $("#busy").show();
+                form.submit();
+
+            });
+
             $('.remove_assistant').click(function () {
                 var action_url = $( this ).attr('urn');
                 swal({

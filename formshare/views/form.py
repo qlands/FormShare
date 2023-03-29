@@ -646,8 +646,8 @@ class FormDetails(PrivateView):
                     self._(
                         "The variable to control duplicate submissions has an invalid type. "
                         "E.g., the variable cannot be note, picture, video, sound, select_multiple, "
-                        "or geo-spacial. The most appropriate types are text, datetime, barcode, "
-                        "calculate, select_one, or integer."
+                        "or geo-spacial. It cannot be instanceID. The most appropriate types are text, datetime, "
+                        "barcode, calculate, select_one, or integer."
                     )
                 )
             if created == 18:
@@ -2089,6 +2089,19 @@ class AddAssistant(PrivateView):
                 else:
                     assistant_data["coll_can_clean"] = 0
 
+                if (
+                    assistant_data["coll_can_submit"] == 0
+                    and assistant_data["coll_can_clean"] == 0
+                ):
+                    self.add_error("An assistant needs to have a privilege")
+                    next_page = self.request.route_url(
+                        "form_details",
+                        userid=user_id,
+                        projcode=project_code,
+                        formid=form_id,
+                    )
+                    return HTTPFound(location=next_page, headers={"FS_error": "true"})
+
                 if len(parts) == 2:
                     continue_creation = True
                     for plugin in p.PluginImplementations(p.IFormAccess):
@@ -2223,6 +2236,19 @@ class EditAssistant(PrivateView):
                 assistant_data["coll_can_clean"] = 1
             else:
                 assistant_data["coll_can_clean"] = 0
+
+            if (
+                assistant_data["coll_can_submit"] == 0
+                and assistant_data["coll_can_clean"] == 0
+            ):
+                self.add_error("An assistant needs to have a privilege")
+                next_page = self.request.route_url(
+                    "form_details",
+                    userid=user_id,
+                    projcode=project_code,
+                    formid=form_id,
+                )
+                return HTTPFound(location=next_page, headers={"FS_error": "true"})
 
             continue_editing = True
             for plugin in p.PluginImplementations(p.IFormAccess):
@@ -2434,6 +2460,18 @@ class AddGroupToForm(PrivateView):
                     else:
                         can_clean = 0
 
+                    if can_clean == 0 and can_submit == 0:
+                        self.add_error("A group cannot have empty privileges")
+                        next_page = self.request.route_url(
+                            "form_details",
+                            userid=user_id,
+                            projcode=project_code,
+                            formid=form_id,
+                        )
+                        return HTTPFound(
+                            location=next_page, headers={"FS_error": "true"}
+                        )
+
                     added, message = add_group_to_form(
                         self.request,
                         project_id,
@@ -2527,6 +2565,16 @@ class EditFormGroup(PrivateView):
                 can_clean = 1
             else:
                 can_clean = 0
+
+            if can_clean == 0 and can_submit == 0:
+                self.add_error("A group cannot have empty privileges")
+                next_page = self.request.route_url(
+                    "form_details",
+                    userid=user_id,
+                    projcode=project_code,
+                    formid=form_id,
+                )
+                return HTTPFound(location=next_page, headers={"FS_error": "true"})
 
             updated, message = update_group_privileges(
                 self.request, project_id, form_id, group_id, can_submit, can_clean

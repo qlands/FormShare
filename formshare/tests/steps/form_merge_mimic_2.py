@@ -87,8 +87,7 @@ def t_e_s_t_form_merge_mimic_2(test_object):
             test_object.randonLogin, merge_project, "grpmerge001"
         ),
         {
-            "add_assistant": "",
-            "coll_id": "{}|{}".format(merge_project_id, "merge002"),
+            "assistants": "{}|{}".format(merge_project_id, "merge002"),
         },
         status=302,
     )
@@ -156,7 +155,19 @@ def t_e_s_t_form_merge_mimic_2(test_object):
     )
     assert "FS_error" not in res.headers
 
-    # Add an group to a form succeeds
+    # Add a group to a form fails. Empty privileges
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/groups/add".format(
+            test_object.randonLogin, merge_project, "tormenta20201117"
+        ),
+        {
+            "group_id": "grpmerge001",
+        },
+        status=302,
+    )
+    assert "FS_error" in res.headers
+
+    # Add a group to a form succeeds
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/groups/add".format(
             test_object.randonLogin, merge_project, "tormenta20201117"

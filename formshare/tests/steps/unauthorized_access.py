@@ -34,7 +34,7 @@ def t_e_s_t_unauthorized_access(test_object):
         status=404,
     )
 
-    # List members of a project that does not exists
+    # List members of a project that does not exist
     test_object.testapp.get(
         "/user/{}/project/{}/group/{}/members".format(
             test_object.randonLogin, "NotExist", "NotExist"
@@ -42,7 +42,7 @@ def t_e_s_t_unauthorized_access(test_object):
         status=404,
     )
 
-    # Add a member of a project that does not exists
+    # Add a member of a project that does not exist
     test_object.testapp.post(
         "/user/{}/project/{}/group/{}/members".format(
             test_object.randonLogin, "NotExist", "NotExist"

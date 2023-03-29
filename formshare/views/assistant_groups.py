@@ -241,38 +241,47 @@ class GroupMembersView(PrivateView):
 
         members = get_members(self.request, project_id, group_id)
         assistants = get_all_assistants(self.request, user_id, project_id)
+        for a_project in assistants:
+            for an_assistant in a_project["assistants"]:
+                for a_member in members:
+                    if (
+                        a_member["enum_project"] + "|" + a_member["coll_id"]
+                        == an_assistant["code"]
+                    ):
+                        an_assistant["used"] = True
+
         group_data = get_group_data(self.request, project_id, group_id)
-
         if self.request.method == "POST":
-            group_data = self.get_post_dict()
-
             next_page = self.request.params.get("next") or self.request.route_url(
                 "group_members", userid=user_id, projcode=project_code, groupid=group_id
             )
-
-            if "add_assistant" in group_data.keys():
-                self.returnRawViewResult = True
-                if "coll_id" in group_data.keys():
-                    if group_data["coll_id"] != "":
-                        parts = group_data["coll_id"].split("|")
-                        edited, message = add_assistant_to_group(
-                            self.request, project_id, group_id, parts[0], parts[1]
-                        )
-                        if edited:
-                            self.request.session.flash(
-                                self._("The assistant was added successfully")
-                            )
-                            self.returnRawViewResult = True
-                            return HTTPFound(next_page)
-                        else:
-                            self.add_error(message)
-                            return HTTPFound(next_page, headers={"FS_error": "true"})
-                    else:
-                        self.add_error(self._("You need to specify an assistant"))
-                        return HTTPFound(next_page, headers={"FS_error": "true"})
+            group_data = self.get_post_dict()
+            self.returnRawViewResult = True
+            assistants_str = group_data.get("assistants", "")
+            if assistants_str != "":
+                assistant_array = assistants_str.split(",")
+            else:
+                assistant_array = []
+            if len(assistant_array) > 0:
+                added_array = []
+                for an_assistant in assistant_array:
+                    parts = an_assistant.split("|")
+                    added, message = add_assistant_to_group(
+                        self.request, project_id, group_id, parts[0], parts[1]
+                    )
+                    added_array.append(added)
+                if all(added_array):
+                    self.request.session.flash(
+                        self._("The assistant was added successfully")
+                    )
+                    self.returnRawViewResult = True
+                    return HTTPFound(next_page)
                 else:
-                    self.add_error(self._("You need to specify an assistant"))
+                    self.add_error("Some assistants were not added to the group.")
                     return HTTPFound(next_page, headers={"FS_error": "true"})
+            else:
+                self.add_error(self._("You need to specify assistants"))
+                return HTTPFound(next_page, headers={"FS_error": "true"})
         return {
             "groupData": group_data,
             "members": members,

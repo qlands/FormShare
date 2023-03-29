@@ -1011,7 +1011,6 @@ def get_assistant_forms(request, requested_project, assistant_project, assistant
         .filter(Collingroup.coll_id == assistant)
         .all()
     )
-
     for group in groups:
         res = (
             request.dbsession.query(Odkform)
@@ -1019,7 +1018,7 @@ def get_assistant_forms(request, requested_project, assistant_project, assistant
             .filter(Odkform.form_id == Formgrpacces.form_id)
             .filter(Formgrpacces.project_id == group.project_id)
             .filter(Formgrpacces.group_id == group.group_id)
-            .filter(Formgrpacces.group_can_clean == 1)
+            .filter(Formgrpacces.group_can_submit == 1)
             .filter(Odkform.form_accsub == 1)
             .all()
         )

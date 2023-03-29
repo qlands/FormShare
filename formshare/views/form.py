@@ -3667,7 +3667,7 @@ class CaseLookUpCSV(PrivateView):
                     break
         csv_keys = ["list_name", "name", "label"]
         for a_field in fields:
-            if a_field["editable"] == 1 and a_field["checked"] == True:
+            if a_field["editable"] == 1 and a_field["checked"]:
                 csv_keys.append(a_field["field_as"])
         csv_array = []
         for row in range(6):

@@ -42,7 +42,7 @@
 
                             </div>
                             <div class="col-md-3">
-                                <button  onclick="location.href='{{ request.route_url('assistant_add',userid=projectDetails.owner,projcode=projectDetails.project_code) }}';" class="btn btn-block btn-primary"> <i class="fa fa-plus"></i> {{ _('Add assistant') }}</button>
+                                <button id="addAssistant" class="btn btn-block btn-primary"> <i class="fa fa-plus"></i> {{ _('Add assistant') }}</button>
                             </div>
                         </div>
                     {% endblock assistant_list_heading %}
@@ -141,6 +141,9 @@
     {{ super() }}
     <script>
         $(document).ready(function() {
+            $('#addAssistant').click(function () {
+                location.href='{{ request.route_url('assistant_add',userid=projectDetails.owner,projcode=projectDetails.project_code) }}';
+            });
             $('.remove_assistant').click(function () {
                 var action_url = $( this ).attr('urn');
                 swal({

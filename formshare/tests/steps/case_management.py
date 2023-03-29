@@ -45,6 +45,18 @@ def t_e_s_t_case_management(test_object):
         b"You cannot add new forms while you have a case creator", res.body
     )
 
+    # Add an assistant to a form succeeds fails. No privileges
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/assistants/add".format(
+            test_object.randonLogin, "case001", "case_start_20210311"
+        ),
+        {
+            "coll_id": "{}|{}".format(test_object.case_project_id, "caseassistant001"),
+        },
+        status=302,
+    )
+    assert "FS_error" in res.headers
+
     # Add an assistant to a form succeeds
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/assistants/add".format(

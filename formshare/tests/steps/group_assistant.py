@@ -29,8 +29,7 @@ def t_e_s_t_group_assistant(test_object):
             test_object.randonLogin, test_object.project, "assgrp003"
         ),
         {
-            "add_assistant": "",
-            "coll_id": "{}|{}".format(test_object.projectID, "agrpssistant001"),
+            "assistants": "{}|{}".format(test_object.projectID, "agrpssistant001"),
         },
         status=302,
     )

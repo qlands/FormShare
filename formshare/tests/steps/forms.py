@@ -1080,6 +1080,19 @@ def t_e_s_t_forms(test_object):
         status=404,
     )
 
+    # Edit a group fails. Empty privileges
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/group/{}/edit".format(
+            test_object.randonLogin,
+            test_object.project,
+            "Justtest",
+            test_object.assistantGroupID,
+        ),
+        {},
+        status=302,
+    )
+    assert "FS_error" in res.headers
+
     # Edit a group
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/group/{}/edit".format(

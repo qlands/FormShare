@@ -383,8 +383,7 @@ def t_e_s_t_repository(test_object):
                 test_object.randonLogin, mimic_grp_project, "grpmimic001"
             ),
             {
-                "add_assistant": "",
-                "coll_id": "{}|{}".format(mimic_grp_project_id, "mimic003"),
+                "assistants": "{}|{}".format(mimic_grp_project_id, "mimic003"),
             },
             status=302,
         )

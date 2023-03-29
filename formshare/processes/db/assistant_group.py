@@ -6,6 +6,7 @@ from formshare.models import (
     Collgroup,
     Collingroup,
     Collaborator,
+    Project,
     map_from_schema,
     map_to_schema,
 )
@@ -27,9 +28,10 @@ log = logging.getLogger("formshare")
 
 def get_members(request, project, group):
     res = (
-        request.dbsession.query(Collaborator, Collingroup)
+        request.dbsession.query(Collaborator, Collingroup, Project)
         .filter(Collaborator.project_id == Collingroup.enum_project)
         .filter(Collaborator.coll_id == Collingroup.coll_id)
+        .filter(Collingroup.enum_project == Project.project_id)
         .filter(Collingroup.project_id == project)
         .filter(Collingroup.group_id == group)
         .all()
@@ -180,7 +182,6 @@ def add_assistant_to_group(request, project, group, assistant_project, assistant
         request.dbsession.flush()
         return True, ""
     except IntegrityError:
-        request.dbsession.rollback()
         log.error(
             "The group member {} already exists in group {} of project {}".format(
                 assistant, group, project

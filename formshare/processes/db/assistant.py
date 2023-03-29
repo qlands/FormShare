@@ -199,7 +199,9 @@ def get_all_assistants(request, project_user, project_id):
             assistants[index]["assistants"].append(
                 {
                     "code": item["project_id"] + "|" + item["coll_id"],
+                    "id": item["coll_id"],
                     "name": item["coll_name"],
+                    "used": False,
                 }
             )
         else:
@@ -210,7 +212,9 @@ def get_all_assistants(request, project_user, project_id):
                     "assistants": [
                         {
                             "code": item["project_id"] + "|" + item["coll_id"],
+                            "id": item["coll_id"],
                             "name": item["coll_name"],
+                            "used": False,
                         }
                     ],
                 }

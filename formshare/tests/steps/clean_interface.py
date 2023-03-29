@@ -322,6 +322,20 @@ def t_e_s_t_clean_interface(test_object):
         status=401,
     )
 
+    # Set the assistant as nothing fails
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+            test_object.randonLogin,
+            test_object.project,
+            test_object.formID,
+            test_object.projectID,
+            test_object.assistantLogin,
+        ),
+        {},
+        status=302,
+    )
+    assert "FS_error" in res.headers
+
     # Set the assistant as only submit
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(

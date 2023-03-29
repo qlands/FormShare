@@ -581,32 +581,9 @@ def t_e_s_t_json_logs_2(test_object):
             test_object.randonLogin, json2_project, "grp001"
         ),
         {
-            "add_assistant": "",
-            "coll_id": "{}|{}".format(json2_project_id, "jsongrp001"),
-        },
-        status=302,
-    )
-    assert "FS_error" not in res.headers
-
-    res = test_object.testapp.post(
-        "/user/{}/project/{}/group/{}/members".format(
-            test_object.randonLogin, json2_project, "grp002"
-        ),
-        {
-            "add_assistant": "",
-            "coll_id": "{}|{}".format(json2_project_id, "jsongrp002"),
-        },
-        status=302,
-    )
-    assert "FS_error" not in res.headers
-
-    res = test_object.testapp.post(
-        "/user/{}/project/{}/group/{}/members".format(
-            test_object.randonLogin, json2_project, "grp003"
-        ),
-        {
-            "add_assistant": "",
-            "coll_id": "{}|{}".format(json2_project_id, "jsongrp003"),
+            "assistants": "{}|{}".format(json2_project_id, "jsongrp001")
+            + ",{}|{}".format(json2_project_id, "jsongrp002")
+            + ",{}|{}".format(json2_project_id, "jsongrp003"),
         },
         status=302,
     )

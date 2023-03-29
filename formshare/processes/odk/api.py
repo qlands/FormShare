@@ -580,7 +580,8 @@ def check_jxform_file(
             message = _(
                 "The variable to control duplicate submissions has an invalid type. "
                 "E.g., the variable cannot be note, picture, video, sound, select_multiple, or geospatial. "
-                "The most appropriate types are text, datetime, barcode, calculate, select_one, or integer"
+                "It cannot be instanceID. The most appropriate types are text, datetime, barcode, calculate, "
+                "select_one, or integer"
             )
             return 17, message
 

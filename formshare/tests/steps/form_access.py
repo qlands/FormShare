@@ -82,6 +82,7 @@ def t_e_s_t_form_access(test_object):
         ),
         {
             "coll_id": access_assistant,
+            "coll_name": access_assistant,
             "coll_password": "123",
             "coll_password2": "123",
             "coll_prjshare": 1,

@@ -77,6 +77,7 @@ def t_e_s_t_json_logs_2(test_object):
         ),
         {
             "coll_id": "json2001",
+            "coll_name": "json2001",
             "coll_password": "123",
             "coll_password2": "123",
             "coll_prjshare": 1,
@@ -105,6 +106,7 @@ def t_e_s_t_json_logs_2(test_object):
         ),
         {
             "coll_id": "json2002",
+            "coll_name": "json2002",
             "coll_password": "123",
             "coll_password2": "123",
             "coll_prjshare": 1,
@@ -132,6 +134,7 @@ def t_e_s_t_json_logs_2(test_object):
         ),
         {
             "coll_id": "json2003",
+            "coll_name": "json2003",
             "coll_password": "123",
             "coll_password2": "123",
             "coll_prjshare": 1,
@@ -539,6 +542,7 @@ def t_e_s_t_json_logs_2(test_object):
         ),
         {
             "coll_id": "jsongrp001",
+            "coll_name": "jsongrp001",
             "coll_password": "123",
             "coll_password2": "123",
             "coll_prjshare": 1,
@@ -553,6 +557,7 @@ def t_e_s_t_json_logs_2(test_object):
         ),
         {
             "coll_id": "jsongrp002",
+            "coll_name": "jsongrp002",
             "coll_password": "123",
             "coll_password2": "123",
             "coll_prjshare": 1,
@@ -567,6 +572,7 @@ def t_e_s_t_json_logs_2(test_object):
         ),
         {
             "coll_id": "jsongrp003",
+            "coll_name": "jsongrp003",
             "coll_password": "123",
             "coll_password2": "123",
             "coll_prjshare": 1,

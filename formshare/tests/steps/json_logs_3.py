@@ -68,6 +68,7 @@ def t_e_s_t_json_logs_3(test_object):
         ),
         {
             "coll_id": "json3001",
+            "coll_name": "json3001",
             "coll_password": "123",
             "coll_password2": "123",
             "coll_prjshare": 1,

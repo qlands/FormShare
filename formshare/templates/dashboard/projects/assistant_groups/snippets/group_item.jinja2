@@ -23,8 +23,10 @@
             {% block group_item_row_actions %}
                 <div class="text-center">
                     <a href="{{ request.route_url('group_members',userid=userid,projcode=projectDetails.project_code,groupid=group.group_id) }}" class="btn btn-white btn-sm action-buttons"><i class="fas fa-user-friends"></i> {{ _('Members') }} ({{ group.members }})</a>
-                    <a href="{{ request.route_url('group_edit',userid=userid,projcode=projectDetails.project_code,groupid=group.group_id) }}" class="btn btn-white btn-sm action-buttons"><i class="fas fa-pencil-alt text-warning"></i> {{ _('Edit') }} </a>
-                    <a urn="{{ request.route_url('group_delete',userid=userid,projcode=projectDetails.project_code,groupid=group.group_id) }}" class="btn btn-white btn-sm remove_assistant action-buttons"><i class="fas fa-trash text-danger"></i> {{ _('Delete') }} </a>
+                    {% if projectDetails.access_type < 4 %}
+                        <a href="{{ request.route_url('group_edit',userid=userid,projcode=projectDetails.project_code,groupid=group.group_id) }}" class="btn btn-white btn-sm action-buttons"><i class="fas fa-pencil-alt text-warning"></i> {{ _('Edit') }} </a>
+                        <a urn="{{ request.route_url('group_delete',userid=userid,projcode=projectDetails.project_code,groupid=group.group_id) }}" class="btn btn-white btn-sm remove_assistant action-buttons"><i class="fas fa-trash text-danger"></i> {{ _('Delete') }} </a>
+                    {% endif %}
                 </div>
             {% endblock group_item_row_actions %}
         </div>

@@ -1,0 +1,31 @@
+<div class="modal inmodal" id="upload_file" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content animated fadeIn">
+            <div class="modal-header">
+                {% block upload_file_header %}
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                    <h4 class="modal-title">{{ _('Upload file') }}</h4>
+                {% endblock upload_file_header %}
+            </div>
+            <form id="upload_assistant_file_form" class="require_busy" role="form" method="post" enctype="multipart/form-data" action="{{ request.route_url('assistant_upload_csv',userid=projectDetails.owner, projcode=projectDetails.project_code) }}">
+                {% block upload_file_assistant %}
+                    {{ form.secure_form(request) }}
+                    <div class="modal-body">
+                        {% block upload_file_assistant_fields %}
+                            <div class="custom-file">
+                                <input type="file" accept=".csv" name="csv_file" class="custom-file-input">
+                                <label class="custom-file-label" for="inputGroupFile01">{{ _('Choose files') }}</label>
+                            </div>
+                        {% endblock upload_file_assistant_fields %}
+                    </div>
+                    <div class="modal-footer">
+                        {% block upload_file_assistant_actions %}
+                            <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
+                            <button type="submit" class="btn btn-primary">{{ _('Upload') }}</button>
+                        {% endblock upload_file_assistant_actions %}
+                    </div>
+                {% endblock upload_file_assistant %}
+            </form>
+        </div>
+    </div>
+</div>

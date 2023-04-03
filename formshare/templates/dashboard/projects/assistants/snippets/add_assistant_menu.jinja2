@@ -1,0 +1,16 @@
+<div class="dropdown pull-right">
+    <button id="addAssistantMenu" class="btn btn-block btn-primary dropdown-toggle" type="button" data-toggle="dropdown" data-submenu>
+        <i class="fa fa-plus"></i> {{ _('Add assistants') }}
+    </button>
+    <div class="dropdown-menu dropdown-menu-right">
+        <button id="addAssistant" class="dropdown-item" type="button">{{ _('Add one') }}</button>
+        <div class="dropdown-divider"></div>
+        <div class="dropdown dropleft dropdown-submenu">
+            <button class="dropdown-item dropdown-toggle" type="button" data-toggle="dropdown">{{ _('Add many from CSV file') }}</button>
+            <div class="dropdown-menu">
+                <button id="downloadCSVTemplate" class="dropdown-item" type="button">{{ _('Download template file') }}</button>
+                <button data-toggle="modal" data-target="#upload_file" class="dropdown-item" type="button">{{ _('Upload CSV file') }}</button>
+            </div>
+        </div>
+    </div>
+</div>

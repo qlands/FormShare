@@ -653,6 +653,14 @@ def t_e_s_t_unauthorized_access(test_object):
         status=404,
     )
 
+    # The user don't have access to download CSV
+    test_object.testapp.get(
+        "/user/{}/project/{}/assistants/downloadcsv".format(
+            test_object.randonLogin, test_object.project
+        ),
+        status=404,
+    )
+
     # 404 cannot access the project
     test_object.testapp.get(
         "/user/{}/project/{}/assistant/{}/edit".format(
@@ -1434,13 +1442,23 @@ def t_e_s_t_unauthorized_access(test_object):
         status=404,
     )
 
-    # The user don have credentials for looking at assistants
-    test_object.testapp.get(
+    # The user has readonly access assistants
+    res = test_object.testapp.get(
         "/user/{}/project/{}/assistants".format(
             test_object.randonLogin, test_object.project
         ),
-        status=404,
+        status=200,
     )
+    test_object.root.assertFalse(b"remove_assistant" in res.body)
+
+    # The user don't have access to such project
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/groups".format(
+            test_object.randonLogin, test_object.project
+        ),
+        status=200,
+    )
+    test_object.root.assertFalse(b"Add group" in res.body)
 
     # 404 Not credentials to add
     test_object.testapp.post(

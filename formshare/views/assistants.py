@@ -540,6 +540,11 @@ class UploadAssistantsCSV(PrivateView):
             assistants = []
             try:
                 repository = self.request.registry.settings["repository.path"]
+                paths = ["tmp"]
+                temp_path = os.path.join(repository, *paths)
+                if not os.path.exists(temp_path):
+                    os.makedirs(temp_path)
+
                 uid = str(uuid.uuid4())
                 paths = ["tmp", uid + ".csv"]
                 temp_file = os.path.join(repository, *paths)

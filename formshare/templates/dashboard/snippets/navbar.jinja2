@@ -70,7 +70,7 @@
                         <li class="special_link">
                             <a href="{{ request.route_url('project_details', userid=activeProject.owner, projcode=activeProject.project_code) }}"><i class="fas fa-star" style="color: goldenrod" title="{{ activeProject.project_name }} ({{ _('Active') }})"></i> <span class="nav-label" title="{{ _('Active') }}">{{ activeProject.project_name|truncate(15,true,'...') }}</span></a>
                         </li>
-                        {% if activeProject.access_type < 4 %}
+                        {% if activeProject.access_type <= 4 %}
                             {% if activeProject.access_type <= 2 %}
                                 <li {% if activeMenu == 'collaborators' %}class="active" {% endif %}>
                                     <a href="{{ request.route_url('collaborators', userid=activeProject.owner,projcode=activeProject.project_code ) }}" ><i style="margin-left: 20px" class="fas fa-people-carry"></i> <span class="nav-label">{{ _('Collaborators') }}</span></a>

@@ -42,6 +42,8 @@ from formshare.views.assistant_views.jsonlogs import (
 from formshare.views.assistants import (
     AssistantsListView,
     AddAssistantsView,
+    DownloadCSVTemplate,
+    UploadAssistantsCSV,
     EditAssistantsView,
     DeleteAssistant,
     ChangeAssistantPassword,
@@ -475,6 +477,24 @@ def load_routes(config, settings):
             "/user/{userid}/project/{projcode}/assistants/add",
             AddAssistantsView,
             "dashboard/projects/assistants/assistant_add.jinja2",
+        )
+    )
+
+    routes.append(
+        add_route(
+            "assistant_download_csv",
+            "/user/{userid}/project/{projcode}/assistants/downloadcsv",
+            DownloadCSVTemplate,
+            None,
+        )
+    )
+
+    routes.append(
+        add_route(
+            "assistant_upload_csv",
+            "/user/{userid}/project/{projcode}/assistants/uploadcsv",
+            UploadAssistantsCSV,
+            None,
         )
     )
 

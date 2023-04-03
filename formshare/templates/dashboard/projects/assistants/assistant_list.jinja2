@@ -15,8 +15,14 @@
             }
         }
     </style>
+    {% cssresource request,'formshare','submenu' %}
 {% endblock css %}
 
+{% block topScripts %}
+    {{ super() }}
+    {% jsresource request,'formshare','submenu' %}
+    {% jsresource request,'formshare','bs-custom-file-input' %}
+{% endblock topScripts %}
 
 {% block breadcrumbs %}
     {% include 'dashboard/projects/assistants/snippets/brdcrbs_assistlist.jinja2' %}
@@ -42,7 +48,10 @@
 
                             </div>
                             <div class="col-md-3">
-                                <button id="addAssistant" class="btn btn-block btn-primary"> <i class="fa fa-plus"></i> {{ _('Add assistant') }}</button>
+{#                                <button id="addAssistant" class="btn btn-block btn-primary"> <i class="fa fa-plus"></i> {{ _('Add assistant') }}</button>#}
+                                {% if projectDetails.access_type < 4 %}
+                                    {% include 'dashboard/projects/assistants/snippets/add_assistant_menu.jinja2' %}
+                                {% endif %}
                             </div>
                         </div>
                     {% endblock assistant_list_heading %}
@@ -135,53 +144,82 @@
             </div>
         </div>
     </div>
+    {% if projectDetails.access_type < 4 %}
+        {% include 'dashboard/projects/assistants/snippets/upload_file.jinja2' %}
+    {% endif %}
 {% endblock maincontent %}
 
 {% block scripts %}
     {{ super() }}
     <script>
-        $(document).ready(function() {
-            $('#addAssistant').click(function () {
-                location.href='{{ request.route_url('assistant_add',userid=projectDetails.owner,projcode=projectDetails.project_code) }}';
-            });
-            $('.remove_assistant').click(function () {
-                var action_url = $( this ).attr('urn');
-                swal({
-                        title: "{{ _('Are you sure?') }}",
-                        type: "warning",
-                        showCancelButton: true,
-                        confirmButtonColor: "#DD6B55",
-                        confirmButtonText: "{{ _('Yes, remove it!') }}",
-                        cancelButtonText: "{{ _('Oops!, cancel!') }}",
-                        closeOnConfirm: true,
-                        closeOnCancel: true },
-                    function (isConfirm) {
-                        if (isConfirm) {
-                            var form = document.createElement('form');
-                            form.setAttribute('method', 'post');
-                            form.setAttribute('action', action_url);
-                            form.style.display = 'hidden';
+        {% if projectDetails.access_type < 4 %}
+            $(document).ready(function() {
 
-                            var i = document.createElement("input"); //input element, text
-                            i.setAttribute('type',"text");
-                            i.setAttribute('name',"csrf_token");
-                            i.setAttribute('value','{{ request.session.get_csrf_token() }}');
-                            form.appendChild(i);
+                let file_upload_started = false;
+                $('#upload_assistant_file_form').submit(function() {
+                    $(this).find("button[type='submit']").prop('disabled',true);
+                    file_upload_started = true;
+                });
+                $('#upload_file').on('hidden.bs.modal', function () {
+                    if (file_upload_started)
+                        location.reload();
+                });
 
-                            document.body.appendChild(form);
-                            $("#busy").show();
-                            form.submit();
-                        }
-                    });
+                $('.custom-file-input').on('change', function() {
+                    let fileName = $(this).val().split('\\').pop();
+                    $(this).next('.custom-file-label').addClass("selected").html(fileName);
+                });
+
+                $('#addAssistantMenu').submenupicker();
+
+                $('#addAssistant').click(function () {
+                    location.href='{{ request.route_url('assistant_add',userid=projectDetails.owner,projcode=projectDetails.project_code) }}';
+                });
+
+                $('#downloadCSVTemplate').click(function () {
+                    location.href='{{ request.route_url('assistant_download_csv',userid=projectDetails.owner,projcode=projectDetails.project_code) }}';
+                });
+
+                $('.remove_assistant').click(function () {
+                    var action_url = $( this ).attr('urn');
+                    swal({
+                            title: "{{ _('Are you sure?') }}",
+                            type: "warning",
+                            showCancelButton: true,
+                            confirmButtonColor: "#DD6B55",
+                            confirmButtonText: "{{ _('Yes, remove it!') }}",
+                            cancelButtonText: "{{ _('Oops!, cancel!') }}",
+                            closeOnConfirm: true,
+                            closeOnCancel: true },
+                        function (isConfirm) {
+                            if (isConfirm) {
+                                var form = document.createElement('form');
+                                form.setAttribute('method', 'post');
+                                form.setAttribute('action', action_url);
+                                form.style.display = 'hidden';
+
+                                var i = document.createElement("input"); //input element, text
+                                i.setAttribute('type',"text");
+                                i.setAttribute('name',"csrf_token");
+                                i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                                form.appendChild(i);
+
+                                document.body.appendChild(form);
+                                $("#busy").show();
+                                form.submit();
+                            }
+                        });
+                });
+                $('.change_password').click(function () {
+                    var assistant_name = $( this ).attr('data-assistant-name');
+                    var action_url = $( this ).attr('urn');
+                    var action_form = $( "#change_form" );
+                    action_form.prop( "action", action_url );
+                    $("#password_who").text("{{ _('Changing password for') }} " + assistant_name);
+                });
+
             });
-            $('.change_password').click(function () {
-                var assistant_name = $( this ).attr('data-assistant-name');
-                var action_url = $( this ).attr('urn');
-                var action_form = $( "#change_form" );
-                action_form.prop( "action", action_url );
-                $("#password_who").text("{{ _('Changing password for') }} " + assistant_name);
-            });
-        });
+        {% endif %}
     </script>
 
 

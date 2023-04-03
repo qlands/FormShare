@@ -19,6 +19,16 @@ def t_e_s_t_assistants(test_object):
     )
     assert "FS_error" in res.headers
 
+    # Add an assistant fail. The assistant in empty
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/assistants/add".format(
+            test_object.randonLogin, test_object.project
+        ),
+        {"coll_id": "some", "coll_name": ""},
+        status=200,
+    )
+    assert "FS_error" in res.headers
+
     # Add an assistant fail. The assistant is invalid
     res = test_object.testapp.post(
         "/user/{}/project/{}/assistants/add".format(
@@ -64,6 +74,14 @@ def t_e_s_t_assistants(test_object):
             "coll_password2": "123",
             "coll_prjshare": 1,
         },
+        status=404,
+    )
+
+    # Download a CSV of a project that does not exist
+    test_object.testapp.get(
+        "/user/{}/project/{}/assistants/downloadcsv".format(
+            test_object.randonLogin, "Not exist"
+        ),
         status=404,
     )
 

@@ -38,7 +38,9 @@
 
                         </div>
                         <div class="col-md-3">
-                            <button class="btn btn-block btn-primary" data-toggle="modal" data-target="#myModal"> <i class="fa fa-plus"></i> {{ _('Add member') }}</button>
+                            {% if projectDetails.access_type < 4 %}
+                                <button class="btn btn-block btn-primary" data-toggle="modal" data-target="#myModal"> <i class="fa fa-plus"></i> {{ _('Add member') }}</button>
+                            {% endif %}
                         </div>
                     </div>
                     <hr class="hr-line-dashed">
@@ -180,107 +182,110 @@
 {% block scripts %}
     {{ super() }}
     <script>
-        $(document).ready(function() {
-            $("#fassistants").on("keyup", function() {
-                console.log("Here");
-                var value = $(this).val().toLowerCase();
-                $("#tassistants tr").filter(function() {
-                    if (typeof $(this).attr("data-project") !== 'undefined')
-                        $(this).toggle($(this).attr("data-project").toLowerCase().indexOf(value) > -1);
-                    //$(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-                });
+        {% if projectDetails.access_type < 4 %}
+            $(document).ready(function() {
 
-                $.each($('.assistantCheck'), function() {
-                    if($(this).attr("data-project").toLowerCase().indexOf(value) < 0){
-                       $(this).prop("checked",false);
-                       $(this).attr("data-visible","false");
-                    }
-                    else {
-                        $(this).attr("data-visible","true");
-                    }
-                });
-            });
+                $("#fassistants").on("keyup", function() {
+                    console.log("Here");
+                    var value = $(this).val().toLowerCase();
+                    $("#tassistants tr").filter(function() {
+                        if (typeof $(this).attr("data-project") !== 'undefined')
+                            $(this).toggle($(this).attr("data-project").toLowerCase().indexOf(value) > -1);
+                        //$(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
+                    });
 
-            $('#checkall').click(function () {
-                $.each($('.assistantCheck'), function() {
-                    if ($(this).attr("data-visible") === "true")
-                        $(this).prop("checked",true);
-                });
-            });
-
-            $('#uncheckall').click(function () {
-                $.each($('.assistantCheck'), function() {
-                    $(this).prop("checked",false);
-                });
-            });
-
-            $('#AddAssistants').click(function () {
-                var form = document.createElement('form');
-                form.setAttribute('method', 'post');
-                form.setAttribute('action', "{{ request.url }}");
-                form.style.display = 'hidden';
-                let assistant_array = [];
-                $.each($('.assistantCheck'), function() {
-                    if ($(this).prop("checked") === true)
-                    {
-                        assistant_array.push($(this).attr("data-code"));
-                    }
-                });
-                var csrf = document.createElement("input"); //input element, text
-                csrf.setAttribute('type',"text");
-                csrf.setAttribute('name',"csrf_token");
-                csrf.setAttribute('value','{{ request.session.get_csrf_token() }}');
-                form.appendChild(csrf);
-
-                var assistants = document.createElement("input"); //input element, text
-                assistants.setAttribute('type',"text");
-                assistants.setAttribute('name',"assistants");
-                assistants.setAttribute('value',assistant_array.toString());
-                form.appendChild(assistants);
-
-                document.body.appendChild(form);
-                $("#busy").show();
-                form.submit();
-
-            });
-
-            $('.remove_assistant').click(function () {
-                var action_url = $( this ).attr('urn');
-                swal({
-                        title: "{{ _('Are you sure?') }}",
-                        type: "warning",
-                        showCancelButton: true,
-                        confirmButtonColor: "#DD6B55",
-                        confirmButtonText: "{{ _('Yes, remove it!') }}",
-                        cancelButtonText: "{{ _('Oops!, cancel!') }}",
-                        closeOnConfirm: true,
-                        closeOnCancel: true },
-                    function (isConfirm) {
-                        if (isConfirm) {
-                            var form = document.createElement('form');
-                            form.setAttribute('method', 'post');
-                            form.setAttribute('action', action_url);
-                            form.style.display = 'hidden';
-
-                            var i = document.createElement("input"); //input element, text
-                            i.setAttribute('type',"text");
-                            i.setAttribute('name',"csrf_token");
-                            i.setAttribute('value','{{ request.session.get_csrf_token() }}');
-                            form.appendChild(i);
-
-                            document.body.appendChild(form);
-                            $("#busy").show();
-                            form.submit();
+                    $.each($('.assistantCheck'), function() {
+                        if($(this).attr("data-project").toLowerCase().indexOf(value) < 0){
+                            $(this).prop("checked",false);
+                            $(this).attr("data-visible","false");
+                        }
+                        else {
+                            $(this).attr("data-visible","true");
                         }
                     });
+                });
+
+                $('#checkall').click(function () {
+                    $.each($('.assistantCheck'), function() {
+                        if ($(this).attr("data-visible") === "true")
+                            $(this).prop("checked",true);
+                    });
+                });
+
+                $('#uncheckall').click(function () {
+                    $.each($('.assistantCheck'), function() {
+                        $(this).prop("checked",false);
+                    });
+                });
+
+                $('#AddAssistants').click(function () {
+                    var form = document.createElement('form');
+                    form.setAttribute('method', 'post');
+                    form.setAttribute('action', "{{ request.url }}");
+                    form.style.display = 'hidden';
+                    let assistant_array = [];
+                    $.each($('.assistantCheck'), function() {
+                        if ($(this).prop("checked") === true)
+                        {
+                            assistant_array.push($(this).attr("data-code"));
+                        }
+                    });
+                    var csrf = document.createElement("input"); //input element, text
+                    csrf.setAttribute('type',"text");
+                    csrf.setAttribute('name',"csrf_token");
+                    csrf.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                    form.appendChild(csrf);
+
+                    var assistants = document.createElement("input"); //input element, text
+                    assistants.setAttribute('type',"text");
+                    assistants.setAttribute('name',"assistants");
+                    assistants.setAttribute('value',assistant_array.toString());
+                    form.appendChild(assistants);
+
+                    document.body.appendChild(form);
+                    $("#busy").show();
+                    form.submit();
+
+                });
+
+                $('.remove_assistant').click(function () {
+                    var action_url = $( this ).attr('urn');
+                    swal({
+                            title: "{{ _('Are you sure?') }}",
+                            type: "warning",
+                            showCancelButton: true,
+                            confirmButtonColor: "#DD6B55",
+                            confirmButtonText: "{{ _('Yes, remove it!') }}",
+                            cancelButtonText: "{{ _('Oops!, cancel!') }}",
+                            closeOnConfirm: true,
+                            closeOnCancel: true },
+                        function (isConfirm) {
+                            if (isConfirm) {
+                                var form = document.createElement('form');
+                                form.setAttribute('method', 'post');
+                                form.setAttribute('action', action_url);
+                                form.style.display = 'hidden';
+
+                                var i = document.createElement("input"); //input element, text
+                                i.setAttribute('type',"text");
+                                i.setAttribute('name',"csrf_token");
+                                i.setAttribute('value','{{ request.session.get_csrf_token() }}');
+                                form.appendChild(i);
+
+                                document.body.appendChild(form);
+                                $("#busy").show();
+                                form.submit();
+                            }
+                        });
+                });
             });
-        });
+        {% endif %}
     </script>
-    <script>
-        $(document).ready(function() {
-            $(".collaborator-list").select2();
-        });
-    </script>
+{#    <script>#}
+{#        $(document).ready(function() {#}
+{#            $(".collaborator-list").select2();#}
+{#        });#}
+{#    </script>#}
 
 
 

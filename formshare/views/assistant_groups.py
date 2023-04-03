@@ -34,14 +34,13 @@ class GroupListView(PrivateView):
                 self.set_active_menu("projects")
 
         if project_id is not None:
-            if (
-                get_project_access_type(
-                    self.request, project_id, user_id, self.user.login
-                )
-                > 4
-            ):
+            access_type = get_project_access_type(
+                self.request, project_id, user_id, self.user.login
+            )
+            if access_type > 4:
                 raise HTTPNotFound
             project_details = get_project_details(self.request, project_id)
+            project_details["access_type"] = access_type
         else:
             raise HTTPNotFound
 
@@ -228,14 +227,13 @@ class GroupMembersView(PrivateView):
                 self.set_active_menu("projects")
 
         if project_id is not None:
-            if (
-                get_project_access_type(
-                    self.request, project_id, user_id, self.user.login
-                )
-                > 4
-            ):
+            access_type = get_project_access_type(
+                self.request, project_id, user_id, self.user.login
+            )
+            if access_type > 4:
                 raise HTTPNotFound
             project_details = get_project_details(self.request, project_id)
+            project_details["access_type"] = access_type
         else:
             raise HTTPNotFound
 

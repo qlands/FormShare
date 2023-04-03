@@ -34,11 +34,13 @@
         {% endblock assistant_item_badges %}
         {% block assistant_item_actions %}
             <div class="col-md-3">
-                <div class="text-center">
-                    <a urn="{{ request.route_url('assistant_change_pass',userid=projectDetails.owner,projcode=projectDetails.project_code,assistid=assistant.coll_id) }}" data-assistant-name="{{ assistant.coll_name }}" class="btn btn-white btn-sm change_password action-buttons" data-toggle="modal" data-target="#myModal" ><i class="fas fa-key"></i> {{ _('Change password') }} </a>
-                    <a href="{{ request.route_url('assistant_edit',userid=projectDetails.owner,projcode=projectDetails.project_code,assistid=assistant.coll_id) }}" class="btn btn-white btn-sm action-buttons"><i class="fas fa-pencil-alt text-warning"></i> {{ _('Edit') }} </a>
-                    <a urn="{{ request.route_url('assistant_delete',userid=projectDetails.owner,projcode=projectDetails.project_code,assistid=assistant.coll_id) }}" class="btn btn-white btn-sm remove_assistant action-buttons"><i class="fas fa-trash text-danger"></i> {{ _('Delete') }} </a>
-                </div>
+                {% if projectDetails.access_type < 4 %}
+                    <div class="text-center">
+                        <a urn="{{ request.route_url('assistant_change_pass',userid=projectDetails.owner,projcode=projectDetails.project_code,assistid=assistant.coll_id) }}" data-assistant-name="{{ assistant.coll_name }}" class="btn btn-white btn-sm change_password action-buttons" data-toggle="modal" data-target="#myModal" ><i class="fas fa-key"></i> {{ _('Change password') }} </a>
+                        <a href="{{ request.route_url('assistant_edit',userid=projectDetails.owner,projcode=projectDetails.project_code,assistid=assistant.coll_id) }}" class="btn btn-white btn-sm action-buttons"><i class="fas fa-pencil-alt text-warning"></i> {{ _('Edit') }} </a>
+                        <a urn="{{ request.route_url('assistant_delete',userid=projectDetails.owner,projcode=projectDetails.project_code,assistid=assistant.coll_id) }}" class="btn btn-white btn-sm remove_assistant action-buttons"><i class="fas fa-trash text-danger"></i> {{ _('Delete') }} </a>
+                    </div>
+                {% endif %}
             </div>
         {% endblock assistant_item_actions %}
     {% endblock assistant_item_data %}

@@ -207,8 +207,12 @@ def create_resources(apppath, config):
     )
     r.add_js_resource("formshare", "md5", "js/plugins/md5/jquery.md5.js", None)
 
-    r.add_js_resource("formshare", "icheck", "js/plugins/iCheck/icheck.min.js", None)
-    r.add_css_resource("formshare", "icheck", "css/plugins/iCheck/custom.css", None)
+    r.add_js_resource(
+        "formshare", "submenu", "js/plugins/submenu/bootstrap-submenu.min.js", None
+    )
+    r.add_css_resource(
+        "formshare", "submenu", "css/plugins/submenu/bootstrap-submenu.min.css", None
+    )
 
     # --------------------------------------JSON---------------------------
     r.add_css_resource(

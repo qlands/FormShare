@@ -35,6 +35,7 @@ __all__ = [
     "get_assistant_timezone",
     "get_one_assistant",
     "get_assistant_with_token",
+    "assistant_exist",
 ]
 
 log = logging.getLogger("formshare")
@@ -285,8 +286,7 @@ def delete_assistant(request, project, assistant):
         return False, str(e)
 
 
-def add_assistant(request, user, project, assistant_data):
-    _ = request.translate
+def assistant_exist(request, user, project, assistant_data):
     res = (
         request.dbsession.query(func.count(Collaborator.coll_id))
         .filter(Collaborator.project_id == Userproject.project_id)
@@ -297,14 +297,22 @@ def add_assistant(request, user, project, assistant_data):
         .first()
     )
     if res[0] != 0:
-        return (
-            False,
-            _(
-                "The assistant already exists in your account. "
-                "You do not need to duplicate assistants, "
-                'just mark them as "Share among projects" to use them across projects.'
-            ),
-        )
+        return True
+    return False
+
+
+def add_assistant(request, user, project, assistant_data, flush=True, check_exit=True):
+    _ = request.translate
+    if check_exit:
+        if assistant_exist(request, user, project, assistant_data):
+            return (
+                False,
+                _(
+                    "The assistant already exists in your account. "
+                    "You do not need to duplicate assistants, "
+                    'just mark them as "Share among projects" to use them across projects.'
+                ),
+            )
     mapped_data = map_to_schema(Collaborator, assistant_data)
     mapped_data["coll_cdate"] = datetime.datetime.now()
     mapped_data["coll_active"] = 1
@@ -315,7 +323,8 @@ def add_assistant(request, user, project, assistant_data):
     new_assistant = Collaborator(**mapped_data)
     try:
         request.dbsession.add(new_assistant)
-        request.dbsession.flush()
+        if flush:
+            request.dbsession.flush()
         return True, ""
     except IntegrityError:
         request.dbsession.rollback()

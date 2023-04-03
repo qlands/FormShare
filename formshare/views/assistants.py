@@ -1,6 +1,13 @@
+import os
 import re
-
+import uuid
+import logging
+import pandas as pd
+from pyramid.httpexceptions import HTTPFound, HTTPNotFound
+from pyramid.response import FileResponse
+import shutil
 import formshare.plugins as p
+import validators
 from formshare.processes.db import (
     get_project_assistants,
     get_project_id_from_name,
@@ -12,9 +19,12 @@ from formshare.processes.db import (
     get_timezones,
     get_project_details,
     get_project_access_type,
+    assistant_exist,
 )
 from formshare.views.classes import PrivateView
-from pyramid.httpexceptions import HTTPFound, HTTPNotFound
+from sqlalchemy.exc import IntegrityError
+
+log = logging.getLogger("formshare")
 
 
 class AssistantsListView(PrivateView):
@@ -32,14 +42,13 @@ class AssistantsListView(PrivateView):
             self.set_active_menu("projects")
 
         if project_id is not None:
-            if (
-                get_project_access_type(
-                    self.request, project_id, user_id, self.user.login
-                )
-                >= 4
-            ):
+            access_type = get_project_access_type(
+                self.request, project_id, user_id, self.user.login
+            )
+            if access_type > 4:
                 raise HTTPNotFound
             project_details = get_project_details(self.request, project_id)
+            project_details["access_type"] = access_type
         else:
             raise HTTPNotFound
 
@@ -84,75 +93,89 @@ class AddAssistantsView(PrivateView):
             else:
                 assistant_data["coll_prjshare"] = 0
 
-            if assistant_data["coll_id"] != "":
-                if re.match(r"^[A-Za-z0-9._]+$", assistant_data["coll_id"]):
-                    if (
-                        assistant_data["coll_password"]
-                        == assistant_data["coll_password2"]
-                    ):
-                        assistant_data.pop("coll_password2")
-                        if assistant_data["coll_password"] != "":
-                            continue_creation = True
-                            for plugin in p.PluginImplementations(p.IAssistant):
-                                if continue_creation:
-                                    (
-                                        data,
-                                        continue_creation,
-                                        error_message,
-                                    ) = plugin.before_creating_assistant(
-                                        self.request,
-                                        user_id,
-                                        project_id,
-                                        assistant_data,
-                                    )
-                                    if not continue_creation:
-                                        self.append_to_errors(error_message)
-                                    else:
-                                        assistant_data = data
-                            if continue_creation:
-                                next_page = self.request.params.get(
-                                    "next"
-                                ) or self.request.route_url(
-                                    "assistants", userid=user_id, projcode=project_code
-                                )
-                                added, message = add_assistant(
-                                    self.request, user_id, project_id, assistant_data
-                                )
-                                if added:
-                                    for plugin in p.PluginImplementations(p.IAssistant):
-                                        plugin.after_creating_assistant(
+            if assistant_data["coll_id"].strip() != "":
+                if assistant_data["coll_name"].strip() != "":
+                    if re.match(r"^[A-Za-z0-9_]+$", assistant_data["coll_id"]):
+                        if (
+                            assistant_data["coll_password"]
+                            == assistant_data["coll_password2"]
+                        ):
+                            assistant_data.pop("coll_password2")
+                            if assistant_data["coll_password"] != "":
+                                continue_creation = True
+                                for plugin in p.PluginImplementations(p.IAssistant):
+                                    if continue_creation:
+                                        (
+                                            data,
+                                            continue_creation,
+                                            error_message,
+                                        ) = plugin.before_creating_assistant(
                                             self.request,
                                             user_id,
                                             project_id,
                                             assistant_data,
                                         )
-
-                                    self.request.session.flash(
-                                        self._(
-                                            "The assistant was added to this project"
-                                        )
+                                        if not continue_creation:
+                                            self.append_to_errors(error_message)
+                                        else:
+                                            assistant_data = data
+                                if continue_creation:
+                                    next_page = self.request.params.get(
+                                        "next"
+                                    ) or self.request.route_url(
+                                        "assistants",
+                                        userid=user_id,
+                                        projcode=project_code,
                                     )
-                                    self.returnRawViewResult = True
-                                    return HTTPFound(next_page)
-                                else:
-                                    self.append_to_errors(message)
+                                    added, message = add_assistant(
+                                        self.request,
+                                        user_id,
+                                        project_id,
+                                        assistant_data,
+                                    )
+                                    if added:
+                                        for plugin in p.PluginImplementations(
+                                            p.IAssistant
+                                        ):
+                                            plugin.after_creating_assistant(
+                                                self.request,
+                                                user_id,
+                                                project_id,
+                                                assistant_data,
+                                            )
+
+                                        self.request.session.flash(
+                                            self._(
+                                                "The assistant was added to this project"
+                                            )
+                                        )
+                                        self.returnRawViewResult = True
+                                        return HTTPFound(next_page)
+                                    else:
+                                        self.append_to_errors(message)
+                            else:
+                                self.append_to_errors(
+                                    self._("The password cannot be empty")
+                                )
                         else:
                             self.append_to_errors(
-                                self._("The password cannot be empty")
+                                self._(
+                                    "The password and its confirmation are not the same"
+                                )
                             )
                     else:
                         self.append_to_errors(
-                            self._("The password and its confirmation are not the same")
+                            self._(
+                                "The assistant id has invalid characters. Only underscore "
+                                "is allowed"
+                            )
                         )
                 else:
                     self.append_to_errors(
-                        self._(
-                            "The user id has invalid characters. Only underscore "
-                            "and dot are allowed"
-                        )
+                        self._("You need to specify an assistant name")
                     )
             else:
-                self.append_to_errors(self._("You need to specify a user id"))
+                self.append_to_errors(self._("You need to specify an assistant id"))
         else:
             assistant_data = {}
         return {
@@ -419,5 +442,269 @@ class ChangeAssistantPassword(PrivateView):
                     headers={"FS_error": "true"},
                 )
 
+        else:
+            raise HTTPNotFound
+
+
+class DownloadCSVTemplate(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+
+    def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        project_code = self.request.matchdict["projcode"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+        if self.activeProject.get("project_id", None) == project_id:
+            self.set_active_menu("assistants")
+        else:
+            self.set_active_menu("projects")
+
+        if project_id is not None:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 4
+            ):
+                raise HTTPNotFound
+            project_details = get_project_details(self.request, project_id)
+        else:
+            raise HTTPNotFound
+
+        if project_details["project_case"] == 0:
+            raise HTTPNotFound
+
+        csv_array = [
+            {
+                "coll_id": "required, unique and no special characters besides underscore (_)",
+                "coll_name": "required",
+                "coll_password": "required",
+                "coll_email": "optional",
+                "coll_telephone": "optional",
+            }
+        ]
+        for row in range(2):
+            data = {
+                "coll_id": "collaborator_id_{}".format(row + 1),
+                "coll_name": "Assistant number {}".format(row + 1),
+                "coll_password": "Password for assistant number {}".format(row + 1),
+                "coll_email": "",
+                "coll_telephone": "",
+            }
+            csv_array.append(data)
+        df = pd.DataFrame.from_dict(csv_array)
+
+        repository_path = self.request.registry.settings["repository.path"]
+        if not os.path.exists(repository_path):
+            os.makedirs(repository_path)
+        unique_id = str(uuid.uuid4())
+        csv_file = os.path.join(repository_path, *["tmp", unique_id + ".csv"])
+        df.to_csv(csv_file, index=False, header=True)
+
+        response = FileResponse(csv_file, request=self.request, content_type="text/csv")
+        response.content_disposition = (
+            'attachment; filename="assistant_for_' + project_code + '.csv"'
+        )
+        self.returnRawViewResult = True
+        return response
+
+
+class UploadAssistantsCSV(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+
+    def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        project_code = self.request.matchdict["projcode"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+
+        if project_id is not None:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 4
+            ):
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if self.request.method == "POST":
+            input_file = self.request.POST["csv_file"].file
+            self.returnRawViewResult = True
+            next_page = self.request.route_url(
+                "assistants", userid=user_id, projcode=project_code
+            )
+            error = False
+            message = ""
+            assistants = []
+            try:
+                repository = self.request.registry.settings["repository.path"]
+                uid = str(uuid.uuid4())
+                paths = ["tmp", uid + ".csv"]
+                temp_file = os.path.join(repository, *paths)
+
+                input_file.seek(0)
+                with open(temp_file, "wb") as permanent_file:
+                    shutil.copyfileobj(input_file, permanent_file)
+                df = pd.read_csv(temp_file, dtype=str, keep_default_na=False)
+                assistants = df.to_dict("records")
+            except Exception as e:
+                error = True
+                log.error(
+                    "Error while uploading files into project {}. Error: {}".format(
+                        project_id, str(e)
+                    )
+                )
+                message = self._(
+                    "Error {} encountered. A log entry has been produced".format(
+                        type(e).__name__
+                    )
+                )
+            keys_are_correct = True
+            for an_assistant in assistants:
+                if "coll_id" not in an_assistant.keys():
+                    keys_are_correct = False
+                if "coll_name" not in an_assistant.keys():
+                    keys_are_correct = False
+                if "coll_password" not in an_assistant.keys():
+                    keys_are_correct = False
+            if not keys_are_correct:
+                error = True
+                message = (
+                    self._("The CSV must have the following columns:")
+                    + " coll_id, coll_name, and coll_password"
+                )
+
+            for an_assistant in assistants:
+                if not re.match(r"^[A-Za-z0-9_]+$", an_assistant["coll_id"]):
+                    error = True
+                    message = self._(
+                        'The assistant with id = "{}" is invalid. Only _ is allowed'.format(
+                            an_assistant["coll_id"]
+                        )
+                    )
+                    break
+                if an_assistant["coll_name"].strip() == "":
+                    error = True
+                    message = self._(
+                        "The assistant with id = {} has empty coll_name".format(
+                            an_assistant["coll_id"]
+                        )
+                    )
+                    break
+                if an_assistant["coll_password"].strip() == "":
+                    error = True
+                    message = self._(
+                        "The assistant with id = {} has empty coll_password".format(
+                            an_assistant["coll_id"]
+                        )
+                    )
+                    break
+                if an_assistant.get("coll_email", "").strip() != "":
+                    if not validators.email(
+                        an_assistant.get("coll_email")
+                    ) or not re.match(
+                        r"^[A-Za-z0-9._@-]+$", an_assistant.get("coll_email")
+                    ):
+                        error = True
+                        message = self._(
+                            "The assistant with id = {} has an invalid email".format(
+                                an_assistant["coll_id"]
+                            )
+                        )
+                        break
+                if an_assistant.get("coll_telephone", "").strip() != "":
+                    if not re.match(r"^[0-9+]+$", an_assistant.get("coll_telephone")):
+                        error = True
+                        message = self._(
+                            "The assistant with id = {} has an invalid telephone".format(
+                                an_assistant["coll_id"]
+                            )
+                        )
+                        break
+                if assistant_exist(self.request, user_id, project_id, an_assistant):
+                    error = True
+                    message = self._(
+                        "The assistant with id = {} is already part of your account. "
+                        'You do not need to duplicate assistants, just mark them as "Share among projects" to use '
+                        "them across projects.".format(an_assistant["coll_id"])
+                    )
+                    break
+            if not error:
+                all_in = []
+                messages = []
+                for an_assistant in assistants:
+                    continue_creation = True
+                    for plugin in p.PluginImplementations(p.IAssistant):
+                        if continue_creation:
+                            (
+                                data,
+                                continue_creation,
+                                error_message,
+                            ) = plugin.before_creating_assistant(
+                                self.request,
+                                user_id,
+                                project_id,
+                                an_assistant,
+                            )
+                            if not continue_creation:
+                                all_in.append(False)
+                                messages.append(error_message)
+                            else:
+                                an_assistant = data
+                                all_in.append(True)
+                                messages.append("")
+                    if continue_creation:
+                        added, message = add_assistant(
+                            self.request,
+                            user_id,
+                            project_id,
+                            an_assistant,
+                            False,
+                            False,
+                        )
+                        if added:
+                            for plugin in p.PluginImplementations(p.IAssistant):
+                                plugin.after_creating_assistant(
+                                    self.request,
+                                    user_id,
+                                    project_id,
+                                    an_assistant,
+                                )
+                            all_in.append(True)
+                            messages.append("")
+                        if not added:
+                            all_in.append(False)
+                            messages.append(message)
+                try:
+                    self.request.dbsession.flush()
+                except IntegrityError:
+                    self.request.dbsession.rollback()
+                    error = True
+                    message = self._("Your file has assistants with duplicated ids.")
+                except Exception as e:
+                    self.request.dbsession.rollback()
+                    log.error(
+                        "Error {} while adding assistants from CSV in project {}".format(
+                            str(e), project_id
+                        )
+                    )
+                    message = self._("Unknown error. A log entry has been created")
+
+                if not error:
+                    self.request.session.flash(
+                        self._("The file was uploaded successfully")
+                    )
+                    return HTTPFound(location=next_page)
+                else:
+                    self.add_error(message)
+                    return HTTPFound(location=next_page, headers={"FS_error": "true"})
+            else:
+                self.add_error(message)
+                return HTTPFound(location=next_page, headers={"FS_error": "true"})
         else:
             raise HTTPNotFound

@@ -646,6 +646,7 @@ def t_e_s_t_unauthorized_access(test_object):
         ),
         {
             "coll_id": "assistant001",
+            "coll_name": "assistant001",
             "coll_password": "123",
             "coll_password2": "123",
             "coll_prjshare": 1,
@@ -656,6 +657,14 @@ def t_e_s_t_unauthorized_access(test_object):
     # The user don't have access to download CSV
     test_object.testapp.get(
         "/user/{}/project/{}/assistants/downloadcsv".format(
+            test_object.randonLogin, test_object.project
+        ),
+        status=404,
+    )
+
+    # The user don't have access to upload CSV
+    test_object.testapp.post(
+        "/user/{}/project/{}/assistants/uploadcsv".format(
             test_object.randonLogin, test_object.project
         ),
         status=404,
@@ -1467,6 +1476,7 @@ def t_e_s_t_unauthorized_access(test_object):
         ),
         {
             "coll_id": "assistant001",
+            "coll_name": "assistant001",
             "coll_password": "123",
             "coll_password2": "123",
             "coll_prjshare": 1,

@@ -89,6 +89,7 @@ def t_e_s_t_case_management_start(test_object):
         "/user/{}/project/{}/assistants/add".format(test_object.randonLogin, "case001"),
         {
             "coll_id": "caseassistant001",
+            "coll_name": "caseassistant001",
             "coll_password": "123",
             "coll_password2": "123",
             "coll_prjshare": 3,

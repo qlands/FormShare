@@ -57,6 +57,7 @@ def t_e_s_t_one_user_assistant(test_object):
         "/user/{}/project/{}/assistants/add".format(random_login, "test001"),
         {
             "coll_id": "assistant001",
+            "coll_name": "assistant001",
             "coll_password": "123",
             "coll_password2": "123",
             "coll_prjshare": 1,
@@ -129,6 +130,7 @@ def t_e_s_t_one_user_assistant(test_object):
         "/user/{}/project/{}/assistants/add".format(random_login, "test002"),
         {
             "coll_id": "assistant002",
+            "coll_name": "assistant002",
             "coll_password": "123",
             "coll_password2": "123",
             "coll_prjshare": 1,

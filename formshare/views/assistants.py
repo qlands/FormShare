@@ -472,9 +472,6 @@ class DownloadCSVTemplate(PrivateView):
         else:
             raise HTTPNotFound
 
-        if project_details["project_case"] == 0:
-            raise HTTPNotFound
-
         csv_array = [
             {
                 "coll_id": "required, unique and no special characters besides underscore (_)",
@@ -564,76 +561,83 @@ class UploadAssistantsCSV(PrivateView):
                         type(e).__name__
                     )
                 )
-            keys_are_correct = True
-            for an_assistant in assistants:
-                if "coll_id" not in an_assistant.keys():
-                    keys_are_correct = False
-                if "coll_name" not in an_assistant.keys():
-                    keys_are_correct = False
-                if "coll_password" not in an_assistant.keys():
-                    keys_are_correct = False
-            if not keys_are_correct:
-                error = True
-                message = (
-                    self._("The CSV must have the following columns:")
-                    + " coll_id, coll_name, and coll_password"
-                )
-
-            for an_assistant in assistants:
-                if not re.match(r"^[A-Za-z0-9_]+$", an_assistant["coll_id"]):
+            if not error:
+                keys_are_correct = True
+                for an_assistant in assistants:
+                    if "coll_id" not in an_assistant.keys():
+                        keys_are_correct = False
+                    if "coll_name" not in an_assistant.keys():
+                        keys_are_correct = False
+                    if "coll_password" not in an_assistant.keys():
+                        keys_are_correct = False
+                if not keys_are_correct:
                     error = True
-                    message = self._(
-                        'The assistant with id = "{}" is invalid. Only _ is allowed'.format(
-                            an_assistant["coll_id"]
-                        )
+                    message = (
+                        self._("The CSV must have the following columns:")
+                        + " coll_id, coll_name, and coll_password"
                     )
-                    break
-                if an_assistant["coll_name"].strip() == "":
-                    error = True
-                    message = self._(
-                        "The assistant with id = {} has empty coll_name".format(
-                            an_assistant["coll_id"]
-                        )
-                    )
-                    break
-                if an_assistant["coll_password"].strip() == "":
-                    error = True
-                    message = self._(
-                        "The assistant with id = {} has empty coll_password".format(
-                            an_assistant["coll_id"]
-                        )
-                    )
-                    break
-                if an_assistant.get("coll_email", "").strip() != "":
-                    if not validators.email(
-                        an_assistant.get("coll_email")
-                    ) or not re.match(
-                        r"^[A-Za-z0-9._@-]+$", an_assistant.get("coll_email")
-                    ):
-                        error = True
-                        message = self._(
-                            "The assistant with id = {} has an invalid email".format(
-                                an_assistant["coll_id"]
+                if not error:
+                    for an_assistant in assistants:
+                        if not re.match(r"^[A-Za-z0-9_]+$", an_assistant["coll_id"]):
+                            error = True
+                            message = self._(
+                                'The assistant with id = "{}" is invalid. Only _ is allowed'.format(
+                                    an_assistant["coll_id"]
+                                )
                             )
-                        )
-                        break
-                if an_assistant.get("coll_telephone", "").strip() != "":
-                    if not re.match(r"^[0-9+]+$", an_assistant.get("coll_telephone")):
-                        error = True
-                        message = self._(
-                            "The assistant with id = {} has an invalid telephone".format(
-                                an_assistant["coll_id"]
+                            break
+                        if an_assistant["coll_name"].strip() == "":
+                            error = True
+                            message = self._(
+                                "The assistant with id = {} has empty coll_name".format(
+                                    an_assistant["coll_id"]
+                                )
                             )
-                        )
-                        break
-                if assistant_exist(self.request, user_id, project_id, an_assistant):
-                    error = True
-                    message = self._(
-                        "The assistant with id = {} is already part of your account. "
-                        'You do not need to duplicate assistants, just mark them as "Share among projects" to use '
-                        "them across projects.".format(an_assistant["coll_id"])
-                    )
-                    break
+                            break
+                        if an_assistant["coll_password"].strip() == "":
+                            error = True
+                            message = self._(
+                                "The assistant with id = {} has empty coll_password".format(
+                                    an_assistant["coll_id"]
+                                )
+                            )
+                            break
+                        if an_assistant.get("coll_email", "").strip() != "":
+                            if not validators.email(
+                                an_assistant.get("coll_email")
+                            ) or not re.match(
+                                r"^[A-Za-z0-9._@-]+$", an_assistant.get("coll_email")
+                            ):
+                                error = True
+                                message = self._(
+                                    "The assistant with id = {} has an invalid email".format(
+                                        an_assistant["coll_id"]
+                                    )
+                                )
+                                break
+                        if an_assistant.get("coll_telephone", "").strip() != "":
+                            if not re.match(
+                                r"^[0-9+]+$", an_assistant.get("coll_telephone")
+                            ):
+                                error = True
+                                message = self._(
+                                    "The assistant with id = {} has an invalid telephone".format(
+                                        an_assistant["coll_id"]
+                                    )
+                                )
+                                break
+                        if assistant_exist(
+                            self.request, user_id, project_id, an_assistant
+                        ):
+                            error = True
+                            message = self._(
+                                "The assistant with id = {} is already part of your account. "
+                                'You do not need to duplicate assistants, just mark them as "Share among projects" '
+                                "to use them across projects.".format(
+                                    an_assistant["coll_id"]
+                                )
+                            )
+                            break
             if not error:
                 all_in = []
                 messages = []
@@ -677,9 +681,6 @@ class UploadAssistantsCSV(PrivateView):
                                 )
                             all_in.append(True)
                             messages.append("")
-                        if not added:
-                            all_in.append(False)
-                            messages.append(message)
                 try:
                     self.request.dbsession.flush()
                 except IntegrityError:

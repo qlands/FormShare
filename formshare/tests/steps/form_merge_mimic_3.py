@@ -67,6 +67,7 @@ def t_e_s_t_form_merge_mimic_3(test_object):
         ),
         {
             "coll_id": "merge003",
+            "coll_name": "merge003",
             "coll_password": "123",
             "coll_password2": "123",
             "coll_prjshare": 1,

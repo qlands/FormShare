@@ -5,6 +5,7 @@ def t_e_s_t_group_assistant(test_object):
         ),
         {
             "coll_id": "agrpssistant001",
+            "coll_name": "agrpssistant001",
             "coll_password": "123",
             "coll_password2": "123",
             "coll_prjshare": 1,

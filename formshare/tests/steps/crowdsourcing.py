@@ -90,6 +90,7 @@ def t_e_s_t_crowdsourcing(test_object):
         ),
         {
             "coll_id": "crowdsourcing",
+            "coll_name": "crowdsourcing",
             "coll_password": "123",
             "coll_password2": "123",
             "coll_prjshare": 1,

@@ -11,6 +11,7 @@ def t_e_s_t_clean_interface_unauthorized(test_object):
         ),
         {
             "coll_id": "clean001",
+            "coll_name": "clean001",
             "coll_password": "123",
             "coll_password2": "123",
             "coll_prjshare": 1,

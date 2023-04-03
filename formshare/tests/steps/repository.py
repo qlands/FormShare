@@ -52,6 +52,7 @@ def t_e_s_t_repository(test_object):
             ),
             {
                 "coll_id": "mimic000",
+                "coll_name": "mimic000",
                 "coll_password": "123",
                 "coll_password2": "123",
             },
@@ -206,6 +207,7 @@ def t_e_s_t_repository(test_object):
             ),
             {
                 "coll_id": "mimic001",
+                "coll_name": "mimic001",
                 "coll_password": "123",
                 "coll_password2": "123",
                 "coll_prjshare": 1,
@@ -361,6 +363,7 @@ def t_e_s_t_repository(test_object):
             ),
             {
                 "coll_id": "mimic003",
+                "coll_name": "mimic003",
                 "coll_password": "123",
                 "coll_password2": "123",
                 "coll_prjshare": 1,

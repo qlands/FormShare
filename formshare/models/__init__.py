@@ -1,5 +1,5 @@
 import os
-
+import logging
 import zope.sqlalchemy
 from formshare.models.formshare import (
     Base,
@@ -36,6 +36,8 @@ from formshare.models.schema import *
 from sqlalchemy import engine_from_config
 from sqlalchemy.orm import configure_mappers
 from sqlalchemy.orm import sessionmaker
+
+log = logging.getLogger("formshare")
 
 # import or define all models here to ensure they are attached to the
 # Base.metadata prior to any initialization routines
@@ -108,7 +110,10 @@ def includeme(config):
     # use pyramid_retry to retry a request when transient exceptions occur
     config.include("pyramid_retry")
     engine = get_engine(settings)
-    engine.execute("PURGE BINARY LOGS BEFORE '2999-12-12 23:59:59';")
+    try:
+        engine.execute("PURGE BINARY LOGS BEFORE '2999-12-12 23:59:59';")
+    except Exception as e:
+        log.error("Unable to purge binary logs. Error: {}".format(str(e)))
     schemas = engine.execute("show schemas").fetchall()
     path_to_init_file = os.path.dirname(
         os.path.realpath(settings["global:config:file"])

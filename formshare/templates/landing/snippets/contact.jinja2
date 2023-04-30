@@ -13,7 +13,7 @@
             <div class="col-lg-3 ">
                 <address>
                     {% block address %}
-                        <strong><span class="navy">QLands Technology Consultants.</span></strong><br/>
+                        <strong><span class="navy"><a href="https://www.qlands.com" target="_blank">QLands Technology Consultants.</a></span></strong><br/>
                         San Antonio de Belen<br/>
                         Heredia, Costa Rica<br/>
                         <abbr title="{{ _('Telephone') }}">{{ _('P') }}:</abbr> +506 62365878
@@ -41,7 +41,10 @@
                     <li class="list-inline-item"><a href="https://github.com/qlands/FormShare" target="_blank"><i class="fab fa-github"></i></a>
                     </li>
                 </ul>
+                <br>
+                <a href="https://www.qlands.com" target="_blank">www.qlands.com</a>
             </div>
+                </div>
             {% endblock contact_and_social %}
         </div>
         <div class="row">
@@ -51,7 +54,7 @@
                     <p><strong>&copy; 2023 QLands Technology Consultants</strong></p>
                 {% endblock version %}
                 {% block version_extra %}
-
+                    <small>{{ _('FormShare, the FormShare logo, and the slogan "Centralize data – Decentralize knowledge" are either registered trademarks or trademarks of QLands Technology Consultants. All other products, logos, or name brands are trademarks of their respective holders, including QLands Technology Consultants.') }}</small>
                 {% endblock version_extra %}
             </div>
         </div>

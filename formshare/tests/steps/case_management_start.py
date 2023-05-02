@@ -176,12 +176,49 @@ def t_e_s_t_case_management_start(test_object):
     )
     assert "FS_error" in res.headers
 
+    # Upload a case creator fails. No case date
+    paths = ["resources", "forms", "case", "case_start.xlsx"]
+    resource_file = os.path.join(test_object.path, *paths)
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/forms/add".format(test_object.randonLogin, "case001"),
+        {"form_pkey": "hid", "form_caselabel": "fname", "form_casedatetime": ""},
+        status=302,
+        upload_files=[("xlsx", resource_file)],
+    )
+    assert "FS_error" in res.headers
+
+    # Upload a case creator fails. Case date variable same as pkey
+    paths = ["resources", "forms", "case", "case_start.xlsx"]
+    resource_file = os.path.join(test_object.path, *paths)
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/forms/add".format(test_object.randonLogin, "case001"),
+        {"form_pkey": "hid", "form_caselabel": "fname", "form_casedatetime": "hid"},
+        status=302,
+        upload_files=[("xlsx", resource_file)],
+    )
+    assert "FS_error" in res.headers
+
+    # Upload a case creator fails. Case date variable has an invalid type
+    paths = ["resources", "forms", "case", "case_start.xlsx"]
+    resource_file = os.path.join(test_object.path, *paths)
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/forms/add".format(test_object.randonLogin, "case001"),
+        {"form_pkey": "hid", "form_caselabel": "fname", "form_casedatetime": "age"},
+        status=302,
+        upload_files=[("xlsx", resource_file)],
+    )
+    assert "FS_error" in res.headers
+
     # Upload a case creator pass.
     paths = ["resources", "forms", "case", "case_start.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
     res = test_object.testapp.post(
         "/user/{}/project/{}/forms/add".format(test_object.randonLogin, "case001"),
-        {"form_pkey": "hid", "form_caselabel": "fname"},
+        {
+            "form_pkey": "hid",
+            "form_caselabel": "fname",
+            "form_casedatetime": "coll_date",
+        },
         status=302,
         upload_files=[("xlsx", resource_file)],
     )
@@ -193,7 +230,11 @@ def t_e_s_t_case_management_start(test_object):
         "/user/{}/project/{}/form/{}/updateodk".format(
             test_object.randonLogin, "case001", "case_start_20210311"
         ),
-        {"form_pkey": "coll_date", "form_caselabel": "fname"},
+        {
+            "form_pkey": "coll_date",
+            "form_caselabel": "fname",
+            "form_casedatetime": "coll_date",
+        },
         status=302,
         upload_files=[("xlsx", resource_file)],
     )

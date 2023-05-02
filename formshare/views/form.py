@@ -1038,6 +1038,7 @@ class AddNewForm(PrivateView):
                     if project_details["total_forms"] == 0:
                         form_casetype = 1
                         form_caselabel = form_data.get("form_caselabel", "")
+                        form_casedatetime = form_data.get("form_casedatetime", "")
                         if form_caselabel == "":
                             next_page = self.request.params.get(
                                 "next"
@@ -1049,6 +1050,20 @@ class AddNewForm(PrivateView):
                             self.add_error(
                                 self._(
                                     "You need to indicate a variable for labeling the cases"
+                                )
+                            )
+                            return HTTPFound(next_page, headers={"FS_error": "true"})
+                        if form_casedatetime == "":
+                            next_page = self.request.params.get(
+                                "next"
+                            ) or self.request.route_url(
+                                "project_details",
+                                userid=project_details["owner"],
+                                projcode=project_code,
+                            )
+                            self.add_error(
+                                self._(
+                                    "You need to indicate a variable for recording the date of each case"
                                 )
                             )
                             return HTTPFound(next_page, headers={"FS_error": "true"})
@@ -1066,6 +1081,26 @@ class AddNewForm(PrivateView):
                                 )
                             )
                             return HTTPFound(next_page, headers={"FS_error": "true"})
+
+                        if (
+                            form_casedatetime.upper() == primary_key.upper()
+                            or form_casedatetime.upper() == form_caselabel.upper()
+                        ):
+                            next_page = self.request.params.get(
+                                "next"
+                            ) or self.request.route_url(
+                                "project_details",
+                                userid=project_details["owner"],
+                                projcode=project_code,
+                            )
+                            self.add_error(
+                                self._(
+                                    "The datetime variable cannot be the same as the variable to identify each case "
+                                    "or the variable to label each case"
+                                )
+                            )
+                            return HTTPFound(next_page, headers={"FS_error": "true"})
+
                     else:
                         form_casetype = int(form_data.get("form_casetype", "0"))
                         if form_casetype == 0:
@@ -1254,6 +1289,7 @@ class UploadNewVersion(PrivateView):
                     form_casetype = int(form_data.get("form_casetype", 0))
                 if form_casetype == 1:
                     form_caselabel = form_data.get("form_caselabel", "")
+                    form_casedatetime = form_data.get("form_casedatetime", "")
                     if form_caselabel == "":
                         next_page = self.request.route_url(
                             "form_details",
@@ -1267,6 +1303,19 @@ class UploadNewVersion(PrivateView):
                             )
                         )
                         return HTTPFound(next_page, headers={"FS_error": "true"})
+                    if form_casedatetime == "":
+                        next_page = self.request.route_url(
+                            "form_details",
+                            userid=project_details["owner"],
+                            projcode=project_code,
+                            formid=form_id,
+                        )
+                        self.add_error(
+                            self._(
+                                "You need to indicate a variable for recording the date of each case"
+                            )
+                        )
+                        return HTTPFound(next_page, headers={"FS_error": "true"})
                     if form_caselabel.upper() == primary_key.upper():
                         next_page = self.request.route_url(
                             "form_details",
@@ -1277,6 +1326,23 @@ class UploadNewVersion(PrivateView):
                         self.add_error(
                             self._(
                                 "The labeling variable and the variable to identify each case cannot be the same"
+                            )
+                        )
+                        return HTTPFound(next_page, headers={"FS_error": "true"})
+                    if (
+                        form_casedatetime.upper() == primary_key.upper()
+                        or form_casedatetime.upper() == form_caselabel.upper()
+                    ):
+                        next_page = self.request.route_url(
+                            "form_details",
+                            userid=project_details["owner"],
+                            projcode=project_code,
+                            formid=form_id,
+                        )
+                        self.add_error(
+                            self._(
+                                "The datetime variable cannot be the same as the variable to identify each case "
+                                "or the variable to label each case"
                             )
                         )
                         return HTTPFound(next_page, headers={"FS_error": "true"})

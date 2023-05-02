@@ -17,6 +17,7 @@ from formshare.processes.elasticsearch.repository_index import (
     get_dataset_stats_for_project,
 )
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import or_
 
 __all__ = [
     "get_project_id_from_name",
@@ -41,6 +42,7 @@ __all__ = [
     "get_number_of_case_creators",
     "get_number_of_case_creators_with_repository",
     "get_case_form",
+    "get_case_forms",
     "get_case_schema",
     "project_has_case_lookup_table",
     "invalid_aliases",
@@ -866,6 +868,57 @@ def get_number_of_case_creators_with_repository(request, project):
         .count()
     )
     return total
+
+
+def get_case_forms(request, project):
+    """
+    This will return the follow-up forms of a case. If a follow-up form is merged then it will
+    take the latest form.
+    :param request: Pyramid request object
+    :param project: FormShare project
+    :return: A form ID or None
+    """
+    result = []
+    res = (
+        request.dbsession.query(
+            Odkform.form_id,
+            Odkform.form_name,
+            Odkform.form_hexcolor,
+            Odkform.form_schema,
+            Odkform.form_casedatetime,
+            Odkform.form_casetype,
+            Odkform.form_pkey,
+            Odkform.form_caseselector,
+        )
+        .filter(Odkform.project_id == project)
+        .filter(Odkform.form_casetype > 0)
+        .filter(Odkform.form_schema.isnot(None))
+        .order_by(Odkform.form_cdate.asc())
+        .all()
+    )
+    for a_table in res:
+        found = False
+        for a_followup in result:
+            if a_followup["form_schema"] == a_table["form_schema"]:
+                a_followup["form_id"] = a_table["form_id"]
+                a_followup["form_name"] = a_table["form_name"]
+                found = True
+        if not found:
+            new_table = {
+                "form_id": a_table.form_id,
+                "form_name": a_table.form_name,
+                "form_hexcolor": a_table.form_hexcolor,
+                "form_schema": a_table.form_schema,
+                "form_pkey": a_table.form_pkey,
+                "form_casetype": a_table.form_casetype,
+                "form_caseselector": a_table.form_caseselector,
+            }
+            if a_table.form_casedatetime is not None:
+                new_table["form_casedatetime"] = a_table.form_casedatetime
+            else:
+                new_table["form_casedatetime"] = "_submitted_date"
+            result.append(new_table)
+    return result
 
 
 def get_case_form(request, project):

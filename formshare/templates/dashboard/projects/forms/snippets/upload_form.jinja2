@@ -71,6 +71,12 @@
                                         </div>
                                         <hr>
                                         <div style="margin-top: 10px" class="form-group">
+                                            <label><b>{{ _('In this ODK Form that you are uploading into FormShare, which variable will be used to record the date of a case?') }}</b></label>
+                                            <input type="text" name="form_casedatetime" class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the case datetime variable') }}')"  oninput="setCustomValidity('')">
+                                            <span class="form-text m-b-none text-success">{{ _('Each case must be registered in a date. This variable MUST BE either "date" or "datetime".') }}</span>
+                                        </div>
+                                        <hr>
+                                        <div style="margin-top: 10px" class="form-group">
                                             <label><b>{{ _('How many cases do you expect to have?') }}</b></label>
                                             <input type="number" name="form_target" value="0" class="form-control">
                                             <span class="form-text m-b-none">{{ _('Leave blank or indicate 0 if there is no target ') }}</span>

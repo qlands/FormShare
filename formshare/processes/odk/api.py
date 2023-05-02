@@ -1049,6 +1049,24 @@ def upload_odk_form(
                                             form_caselabel
                                         )
                                     )
+
+                                case_datetime_found = False
+                                for a_field in fields:
+                                    if a_field["name"] == form_casedatetime:
+                                        if (
+                                            a_field["type"] == "date"
+                                            or a_field["type"] == "datetime"
+                                        ):
+                                            case_datetime_found = True
+
+                                if not case_datetime_found:
+                                    error = 1
+                                    message = _(
+                                        "The variable {} used to record a date or date and time was not found"
+                                        " or is invalid. The variable must be date or datetime.".format(
+                                            form_casedatetime
+                                        )
+                                    )
                             else:
                                 fields = get_fields_from_table_in_file(
                                     create_file, "maintable"
@@ -1485,6 +1503,24 @@ def update_odk_form(
                                             "The variable {} used to label cases was not found or is invalid. "
                                             "Only text, calculates or integers are allowed.".format(
                                                 form_caselabel
+                                            )
+                                        )
+
+                                    case_datetime_found = False
+                                    for a_field in fields:
+                                        if a_field["name"] == form_casedatetime:
+                                            if (
+                                                a_field["type"] == "date"
+                                                or a_field["type"] == "datetime"
+                                            ):
+                                                case_datetime_found = True
+
+                                    if not case_datetime_found:
+                                        error = 1
+                                        message = _(
+                                            "The variable {} used to record a date or date and time was not found"
+                                            " or is invalid. The variable must be date or datetime.".format(
+                                                form_casedatetime
                                             )
                                         )
                                 else:

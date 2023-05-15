@@ -25,6 +25,7 @@ from formshare.processes.db import (
     get_all_assistants,
     add_assistant_to_form,
     get_form_assistants,
+    get_form_assistants_through_groups,
     update_assistant_privileges,
     remove_assistant_from_form,
     get_project_groups,
@@ -801,6 +802,9 @@ class FormDetails(PrivateView):
             assistants = get_all_assistants(self.request, user_id, project_id)
 
             form_assistants = get_form_assistants(self.request, project_id, form_id)
+            form_assistants_through_groups = get_form_assistants_through_groups(
+                self.request, project_id, form_id
+            )
             groups = get_project_groups(self.request, project_id)
             form_groups = get_form_groups(self.request, project_id, form_id)
             if form_data["form_reqfiles"] is not None:
@@ -946,6 +950,7 @@ class FormDetails(PrivateView):
                 "formFiles": form_files,
                 "assistants": assistants,
                 "formassistants": form_assistants,
+                "form_assistants_through_groups": form_assistants_through_groups,
                 "groups": groups,
                 "formgroups": form_groups,
                 "withgps": number_with_gps,

@@ -511,11 +511,10 @@ def get_assistant_permissions_on_a_form(
             .first()
         )
         if res is not None:
-            privileges = {
-                "enum_cansubmit": res.group_can_submit,
-                "enum_canclean": res.group_can_clean,
-            }
-
+            if privileges["enum_cansubmit"] == 0:
+                privileges["enum_cansubmit"] = res.group_can_submit
+            if privileges["enum_canclean"] == 0:
+                privileges["enum_canclean"] = res.group_can_clean
     return privileges
 
 

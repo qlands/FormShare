@@ -59,6 +59,7 @@ __all__ = [
     "form_file_exists",
     "add_assistant_to_form",
     "get_form_assistants",
+    "get_form_assistants_through_groups",
     "update_assistant_privileges",
     "remove_assistant_from_form",
     "add_group_to_form",
@@ -1611,6 +1612,22 @@ def get_form_assistants(request, project, form):
         .filter(Collaborator.coll_id == Formacces.coll_id)
         .filter(Formacces.form_project == project)
         .filter(Formacces.form_id == form)
+        .all()
+    )
+    mapped_data = map_from_schema(res)
+    return mapped_data
+
+
+def get_form_assistants_through_groups(request, project, form):
+    res = (
+        request.dbsession.query(Collaborator)
+        .distinct(Collaborator.coll_id)
+        .filter(Formgrpacces.project_id == Collingroup.project_id)
+        .filter(Formgrpacces.group_id == Collingroup.group_id)
+        .filter(Collingroup.enum_project == Collaborator.project_id)
+        .filter(Collingroup.coll_id == Collaborator.coll_id)
+        .filter(Formgrpacces.form_project == project)
+        .filter(Formgrpacces.form_id == form)
         .all()
     )
     mapped_data = map_from_schema(res)

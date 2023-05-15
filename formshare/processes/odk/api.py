@@ -735,8 +735,8 @@ def check_jxform_file(
             return (
                 7,
                 _(
-                    "Malformed language in your ODK. You have label:X (Y) when it must be label::X (Y). "
-                    "With two colons (::)"
+                    "Malformed language in your ODK. Labels must be translated in this way: label::Language (Language_code). "
+                    "For example, label::English (en), or label::English-Australia (es-au), or label::Gikuyu (kik)"
                 ),
             )
 

@@ -127,7 +127,7 @@
                             <div class="row m-t-sm">
                                 <div class="col-lg-12">
                                     {% if assistants|length > 0 %}
-                                        {% if formassistants|length > 0 %}
+                                        {% if formassistants|length + form_assistants_through_groups|length > 0 %}
                                             {% if formDetails.form_schema != None %}
                                                 {% include 'dashboard/projects/forms/snippets/form_important_links.jinja2' %}
                                             {% endif %}

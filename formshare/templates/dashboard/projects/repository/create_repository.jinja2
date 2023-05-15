@@ -11,6 +11,7 @@
 {% block topScripts %}
     {{ super() }}
     {% jsresource request,'formshare','switchery' %}
+    {% jsresource request,'formshare','validate_ext' %}
 {% endblock topScripts %}
 
 {% block breadcrumbs %}
@@ -70,13 +71,13 @@
                                             </div>
                                             <div class="hr-line-dashed"></div>
                                             <b>{{ _('Language codes') }}</b><br/>
-                                            <span>{{ _('You must give a code to each language. Use the ')}}<a target="_blank" href="https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes"> {{ _('ISO 639-1') }}</a> {{ _('as reference.') }}</span>
+                                            <span>{{ _('You must give a code to each language. Use the ')}}<a target="_blank" href="https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes"> ISO 639-1</a> {{ _('or the') }} <a href="https://www.ethnologue.com/codes/" target="_blank">ISO 639-3</a> {{ _('as reference.') }} {{ _('You can also use localized languages, for example, (en-au) for English-Australia.') }}
                                             <br/>
                                             <br/>
                                             {% for language in languages %}
                                                 <div class="form-group">
                                                     <label>{{ _('For') }} {{ language.name }}</label>
-                                                    <input class="form-control" style="width: 100px !important;" type="text" pattern="[a-zA-Z]*" required minlength="2" maxlength="2" name="LNG-{{ language.name }}" value="{{ language.code }}">
+                                                    <input class="form-control language-code" style="width: 100px !important;" pattern="[A-Za-z\-]*" type="text" required minlength="2" maxlength="6" name="LNG-{{ language.name }}" value="{{ language.code }}">
                                                 </div>
                                             {% endfor %}
                                             <div class="form-actions">
@@ -192,11 +193,24 @@
         $(document).ready(function() {
             {% if has_submit_assistant %}
                 var elem = document.querySelector('.js-switch');
-                var switchery = new Switchery(elem, { color: '#1AB394' });
+                if (elem)
+                    var switchery = new Switchery(elem, { color: '#1AB394' });
             {% endif %}
             $('#repform').submit(function() {
                 $(this).find("button[type='submit']").prop('disabled',true);
             });
+
+            $('.language-code').on('keypress paste', function (event) {
+                var regex = new RegExp("^[a-zA-Z-]+$");
+                var key = String.fromCharCode(!event.charCode ? event.which : event.charCode);
+                if (!regex.test(key)) {
+                    event.preventDefault();
+                    return false;
+                }
+            });
+
+
+
         });
         </script>
 {% endblock scripts %}

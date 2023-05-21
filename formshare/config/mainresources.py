@@ -232,3 +232,17 @@ def create_resources(apppath, config):
     r.add_js_resource(
         "formshare", "blueimp", "js/plugins/blueimp/jquery.blueimp-gallery.min.js", None
     )
+
+    # ------------------------------------ Tour -------------------------------------
+    r.add_css_resource(
+        "formshare",
+        "tour",
+        "css/plugins/tour/bootstrap-tour-standalone.min.css",
+        "bootstrap",
+    )
+    r.add_js_resource(
+        "formshare",
+        "tour",
+        "js/plugins/tour/bootstrap-tour-standalone.min.js",
+        "bootstrap",
+    )

@@ -1,0 +1,54 @@
+<div class="modal inmodal" id="show_extra_columns" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content animated fadeIn">
+            <div class="modal-header">
+                {% block data_columns_header %}
+                    <button id="cross_upload_form_button" type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">{{ _('Close') }}</span></button>
+                    <h4 class="modal-title">{{ _('Data columns') }}</h4>
+                    <p>{{ _('Data columns are extra columns in your ODK that you can import into FormShare after creating the repository. The data of any extra column in the survey sheet will be stored in the dictionary. The data of any extra column in the choices sheet will be stored in the lookup table created by the choice.') }}</p>
+                {% endblock data_columns_header %}
+            </div>
+            <div class="modal-body">
+                {% if form_survey_columns|length > 0 %}
+                    <h5 style="margin-bottom: 0px">{{ _('Data columns that can be imported into the dictionary:') }}</h5>
+                    <ul class="tag-list" style="padding: 0">
+                        {% for a_form in form_survey_columns %}
+                            <li><a>{{ a_form }}</a></li>
+                        {% endfor %}
+                    </ul>
+                    <br/>
+                {% endif %}
+                {% if form_choices_columns|length > 0 %}
+                    <h5 style="margin-top: 10px; margin-bottom: 0px">{{ _('Data columns that can be imported into lookup tables:') }}</h5>
+                    <ul class="tag-list" style="padding: 0">
+                        {% for a_form in form_choices_columns %}
+                            <li><a>{{ a_form }}</a></li>
+                        {% endfor %}
+                    </ul>
+                    <br/>
+                {% endif %}
+                {% if form_invalid_columns|length > 0 %}
+                    <h5 style="margin-top: 10px; margin-bottom: 0px; color: orange">{{ _('Warning: The following data columns that cannot be imported because their names are invalid') }}</h5>
+                    <ul class="tag-list" style="padding: 0">
+                        {% for a_form in form_invalid_columns %}
+                            <li><a>{{ a_form }}</a></li>
+                        {% endfor %}
+                    </ul>
+                    <br/>
+                    <h5 style="margin-top: 10px; margin-bottom: 0px; color: orange">{{ _('Note: Colums cannot have any special characters besides underscore. A list of restricted words can be found') }} <a href="https://docs.google.com/spreadsheets/d/1PsDsbFZZXnlHRdmntWzX_DDSPCm7K-6knV3qICCxAk0/edit?usp=sharing" target="_blank">{{ _('here') }}.</a></h5>
+                    <br/>
+                {% endif %}
+                {% block note_data_columns %}
+                    <br/>
+                    <hr>
+                    <h5>{{ _('Note: The following columns will be imported if present: ') }} formshare_sensitive, formshare_encrypted, formshare_ontological_term</h5>
+                {% endblock note_data_columns %}
+            </div>
+            <div class="modal-footer">
+                {% block data_columns_actions %}
+                    <button id="cancel_upload_form_button" type="button" class="btn btn-white" data-dismiss="modal">{{ _('Close') }}</button>
+                {% endblock data_columns_actions %}
+            </div>
+        </div>
+    </div>
+</div>

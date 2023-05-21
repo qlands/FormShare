@@ -6,8 +6,10 @@
                     <button id="cross_upload_form_button" type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
                     {% if not upload_for_merging %}
                         {% if projectDetails.project_case == 0 %}
-                            <h4 class="modal-title">{{ _('Upload form') }}</h4><br/>
-                            <b>{{ _('A troubleshooting guide is available') }} <a target="_blank" href="{{ request.url_for_static('upload_infographic_en.pdf') }}" style="color: #0a6aa1">{{ _('here') }}</a></b>
+                            {% block upload_form_title %}
+                                <h4 class="modal-title">{{ _('Upload form') }}</h4><br/>
+                                <b>{{ _('A troubleshooting guide is available') }} <a target="_blank" href="{{ request.url_for_static('upload_infographic_en.pdf') }}" style="color: #0a6aa1">{{ _('here') }}</a></b>
+                            {% endblock upload_form_title %}
                         {% else %}
                             {% if forms|length == 0 %}
                                 <h4 class="modal-title">{{ _('Upload case creator form') }}</h4>
@@ -45,16 +47,20 @@
                                 {% if projectDetails.project_case == 0 %}
                                     <hr>
                                     <div style="margin-top: 10px" class="form-group">
-                                        <label><b>{{ _('In this ODK Form that you are uploading into FormShare, which variable will be used to control duplicate submissions?') }}</b></label>
-                                        <input type="text" name="form_pkey" class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the variable to control duplicate data') }}')"  oninput="setCustomValidity('')">
-                                        <span class="form-text m-b-none text-success">{{ _('To control duplicate submissions, you need to select a variable from your ODK Form whose values will be UNIQUE across all the submissions that you expect to have. If you need to join two or more variables to become UNIQUE, then use an ODK Calculate to merge them into one variable. This variable will become the Primary Key of your ODK Form and CANNOT BE CHANGED afterward.') }}</span>
+                                        {% block form_pkey_label %}
+                                            <label><b>{{ _('In this ODK Form that you are uploading into FormShare, which variable will be used to control duplicate submissions?') }}</b></label>
+                                        {% endblock %}
+                                        <input type="text" name="form_pkey" class="form-control" required oninvalid="this.setCustomValidity('{% block form_pkey_message %}{{ _('You need to indicate the variable to control duplicate data') }}{% endblock form_pkey_message %}')"  oninput="setCustomValidity('')">
+                                        <span class="form-text m-b-none text-success">{% block form_pkey_note %}{{ _('To control duplicate submissions, you need to select a variable from your ODK Form whose values will be UNIQUE across all the submissions that you expect to have. If you need to join two or more variables to become UNIQUE, then use an ODK Calculate to merge them into one variable. This variable will become the Primary Key of your ODK Form and CANNOT BE CHANGED afterward.')}}{% endblock form_pkey_note %}</span>
                                     </div>
                                     <hr>
-                                    <div style="margin-top: 10px" class="form-group">
-                                        <label><b>{{ _('How many submissions to do expect to have?') }}</b></label>
-                                        <input type="number" name="form_target" value="0" class="form-control">
-                                        <span class="form-text m-b-none">{{ _('Leave blank or indicate 0 if there is no target ') }}</span>
-                                    </div>
+                                    {% block form_target %}
+                                        <div style="margin-top: 10px" class="form-group">
+                                            <label><b>{{ _('How many submissions to do expect to have?') }}</b></label>
+                                            <input type="number" name="form_target" value="0" class="form-control">
+                                            <span class="form-text m-b-none">{{ _('Leave blank or indicate 0 if there is no target ') }}</span>
+                                        </div>
+                                    {% endblock form_target %}
                                 {% else %}
                                     {% if projectDetails.total_forms == 0 %}
                                         <hr>

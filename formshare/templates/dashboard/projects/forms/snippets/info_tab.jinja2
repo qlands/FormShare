@@ -115,6 +115,9 @@
                                         {% endif %}
                                     {% endif %}
                                     <li><a id="update_form_btn" class="btn btn-xs btn-white" data-toggle="modal" data-target="#update_form"><i class="fas fa-file-upload"></i> {{ _('Update ODK form') }} </a></li>
+                                    {% if formDetails.form_surveycolumns != None or formDetails.form_choicescolumns != None or formDetails.form_invalidcolumns != None %}
+                                        <li><a {% if formDetails.form_invalidcolumns != None %}style="color: orange" {% endif %} id="extra_columns" class="btn btn-xs btn-white" data-toggle="modal" data-target="#show_extra_columns"><i class="fas fa-columns"></i> {{ _('See data columns') }} </a></li>
+                                    {% endif %}
                                 {% endif %}
                                 {% if formDetails.parent_form != None %}
                                     {% if formDetails.form_schema != None %}

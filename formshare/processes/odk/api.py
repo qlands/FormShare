@@ -381,15 +381,33 @@ def import_external_data(
 
 def check_jxform_file(
     request,
+    user_id,
+    project_id,
+    form_id,
     json_file,
     create_xml_file,
     insert_xml_file,
     primary_key,
     external_files=None,
     get_languages=False,
+    required_files=None,
+    form_languages=None,
+    extra_columns_in_survey=None,
+    extra_columns_in_choices=None,
+    extra_columns_invalid=None,
 ):
     if external_files is None:
         external_files = []
+    if required_files is None:
+        required_files = []
+    if form_languages is None:
+        form_languages = []
+    if extra_columns_in_survey is None:
+        extra_columns_in_survey = []
+    if extra_columns_in_choices is None:
+        extra_columns_in_choices = []
+    if extra_columns_invalid is None:
+        extra_columns_invalid = []
     _ = request.translate
     jxform_to_mysql = os.path.join(
         request.registry.settings["odktools.path"], *["JXFormToMysql", "jxformtomysql"]
@@ -418,17 +436,38 @@ def check_jxform_file(
         try:
             if not get_languages:
                 root = etree.fromstring(stdout)
-                files_array = []
                 missing_files = root.findall(".//missingFile")
                 for a_file in missing_files:
-                    files_array.append(a_file.get("fileName"))
-                if len(files_array) > 0:
-                    return 0, ",".join(files_array)
-                else:
-                    return 0, ""
+                    required_files.append(a_file.get("fileName"))
+
+                extra_columns = root.findall(".//extraColumn")
+                for a_column in extra_columns:
+                    if a_column.get("columType") == "survey":
+                        extra_columns_in_survey.append(a_column.get("columnName"))
+                    if a_column.get("columType") == "choices":
+                        extra_columns_in_choices.append(a_column.get("columnName"))
+                    if a_column.get("columType") == "invalid":
+                        extra_columns_invalid.append(a_column.get("columnName"))
+                # Remove internal columns. These will be added regardless
+                if "formshare_sensitive" in extra_columns_in_survey:
+                    extra_columns_in_survey.remove("formshare_sensitive")
+                if "formshare_encrypted" in extra_columns_in_survey:
+                    extra_columns_in_survey.remove("formshare_encrypted")
+                if "formshare_ontological_term" in extra_columns_in_survey:
+                    extra_columns_in_survey.remove("formshare_ontological_term")
+                if "formshare_ontological_term" in extra_columns_in_choices:
+                    extra_columns_in_choices.remove("formshare_ontological_term")
+                for a_plugin in plugins.PluginImplementations(plugins.IFormColumns):
+                    a_plugin.filter_form_survey_columns(
+                        request, user_id, project_id, form_id, extra_columns_in_survey
+                    )
+                    a_plugin.filter_form_choices_columns(
+                        request, user_id, project_id, form_id, extra_columns_in_choices
+                    )
+
+                return 0, ""
             else:
                 root = etree.fromstring(stdout)
-                language_array = []
                 languages = root.findall(".//language")
                 if languages:
                     for a_language in languages:
@@ -436,14 +475,14 @@ def check_jxform_file(
                         if lng_code != "":
                             if len(lng_code) > 2:
                                 lng_code = ""
-                        language_array.append(
+                        form_languages.append(
                             {
                                 "code": lng_code,
                                 "name": a_language.get("name")
                                 or a_language.get("description"),
                             }
                         )
-                return 0, language_array
+                return 0, ""
 
         except Exception as e:
             log.info(
@@ -991,15 +1030,28 @@ def upload_odk_form(
                 form_title = root.findall(".//{" + h_nsmap + "}title")
                 if not form_exists(request, project_id, form_id):
                     external_files = []
+                    required_files = []
+                    extra_columns_in_survey = []
+                    extra_columns_in_choices = []
+                    extra_columns_invalid = []
                     if itemsets_csv is not None:
                         external_files.append(itemsets_csv)
                     error, message = check_jxform_file(
                         request,
+                        user_id,
+                        project_id,
+                        form_id,
                         survey_file,
                         create_file,
                         insert_file,
                         primary_key,
                         external_files,
+                        False,
+                        required_files,
+                        None,
+                        extra_columns_in_survey,
+                        extra_columns_in_choices,
+                        extra_columns_invalid,
                     )
                     form_caseselector_file = None
                     if project_case == 1:
@@ -1218,8 +1270,20 @@ def upload_odk_form(
                             if geo_variables:
                                 form_geo_points = ",".join(geo_variables)
                                 form_data["form_geopoint"] = form_geo_points
-                            if message != "":
-                                form_data["form_reqfiles"] = message
+                            if len(required_files) > 0:
+                                form_data["form_reqfiles"] = ",".join(required_files)
+                            if len(extra_columns_in_survey) > 0:
+                                form_data["form_surveycolumns"] = ",".join(
+                                    extra_columns_in_survey
+                                )
+                            if len(extra_columns_in_choices) > 0:
+                                form_data["form_choicescolumns"] = ",".join(
+                                    extra_columns_in_choices
+                                )
+                            if len(extra_columns_invalid) > 0:
+                                form_data["form_invalidcolumns"] = ",".join(
+                                    extra_columns_invalid
+                                )
 
                             if project_case == 1:
                                 form_data["form_case"] = 1
@@ -1446,15 +1510,28 @@ def update_odk_form(
                     form_title = root.findall(".//{" + h_nsmap + "}title")
                     if form_exists(request, project_id, form_id):
                         external_files = []
+                        required_files = []
+                        extra_columns_in_survey = []
+                        extra_columns_in_choices = []
+                        extra_columns_invalid = []
                         if itemsets_csv is not None:
                             external_files.append(itemsets_csv)
                         error, message = check_jxform_file(
                             request,
+                            user_id,
+                            project_id,
+                            form_id,
                             survey_file,
                             create_file,
                             insert_file,
                             primary_key,
                             external_files,
+                            False,
+                            required_files,
+                            None,
+                            extra_columns_in_survey,
+                            extra_columns_in_choices,
+                            extra_columns_invalid,
                         )
 
                         form_caseselector_file = None

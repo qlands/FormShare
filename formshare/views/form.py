@@ -157,7 +157,15 @@ class FormDetails(PrivateView):
             )
         )
 
-    def check_repository(self, survey_file, primary_key, external_files):
+    def check_repository(
+        self,
+        c_user_id,
+        c_project_id,
+        c_form_id,
+        survey_file,
+        primary_key,
+        external_files,
+    ):
         odk_dir = get_odk_path(self.request)
         uid = str(uuid.uuid4())
         paths = ["tmp", uid]
@@ -171,6 +179,9 @@ class FormDetails(PrivateView):
 
         return check_jxform_file(
             self.request,
+            c_user_id,
+            c_project_id,
+            c_form_id,
             survey_file,
             create_file,
             insert_file,
@@ -842,7 +853,12 @@ class FormDetails(PrivateView):
                     for aFile in files:
                         media_files.append(aFile)
                 error, message = self.check_repository(
-                    form_data["form_jsonfile"], form_data["form_pkey"], media_files
+                    user_id,
+                    project_id,
+                    form_id,
+                    form_data["form_jsonfile"],
+                    form_data["form_pkey"],
+                    media_files,
                 )
                 if error == 0:
                     if message == "":
@@ -942,6 +958,19 @@ class FormDetails(PrivateView):
                 self.request.registry.settings, project_id, forms
             )
             products = get_form_products(self.request, project_id, form_id)
+
+            form_survey_columns = []
+            if form_data["form_surveycolumns"] is not None:
+                form_survey_columns = form_data["form_surveycolumns"].split(",")
+
+            form_choices_columns = []
+            if form_data["form_choicescolumns"] is not None:
+                form_choices_columns = form_data["form_choicescolumns"].split(",")
+
+            form_invalid_columns = []
+            if form_data["form_invalidcolumns"] is not None:
+                form_invalid_columns = form_data["form_invalidcolumns"].split(",")
+
             return {
                 "projectDetails": project_details,
                 "formid": form_id,
@@ -966,6 +995,9 @@ class FormDetails(PrivateView):
                 ),
                 "merging_errors": merging_errors,
                 "merge_language_problem": merge_language_problem,
+                "form_survey_columns": form_survey_columns,
+                "form_choices_columns": form_choices_columns,
+                "form_invalid_columns": form_invalid_columns,
             }
         else:
             raise HTTPNotFound
@@ -1846,6 +1878,7 @@ class AddFileToForm(PrivateView):
                             )
                             error = True
                             break
+                    tmp_file = ""
                     if file_name.upper().find(".GEOJSON") > 0:
                         tmp_file = get_temporary_file(self.request, "json")
                         file.file.seek(0)
@@ -4224,22 +4257,28 @@ class FixMergeLanguage(PrivateView):
             survey_file = get_form_survey_file(self.request, project_id, form_id)
             create_file = get_form_xml_create_file(self.request, project_id, form_id)
             insert_file = get_form_xml_insert_file(self.request, project_id, form_id)
-            result, languages = check_jxform_file(
+            form_languages = []
+            check_jxform_file(
                 self.request,
+                user_id,
+                project_id,
+                form_id,
                 survey_file,
                 create_file,
                 insert_file,
                 parent_form_data["form_pkey"],
                 odk_media_files,
                 True,
+                None,
+                form_languages,
             )
 
             default = False
             idx = 0
-            for language in languages:
+            for language in form_languages:
                 if language["name"] == "default":
                     default = True
-                    languages.insert(0, languages.pop(idx))
+                    form_languages.insert(0, form_languages.pop(idx))
                 idx = idx + 1
 
             parent_has_no_language = False
@@ -4249,7 +4288,7 @@ class FixMergeLanguage(PrivateView):
             else:
                 parent_has_no_language = True
             if self.request.method == "POST":
-                if languages:
+                if form_languages:
                     run_process = True
                     postdata = self.get_post_dict()
                     default_language_string = "("
@@ -4265,7 +4304,7 @@ class FixMergeLanguage(PrivateView):
                     empty_code_found = False
                     language_codes = []
                     duplicated_code = False
-                    for language in languages:
+                    for language in form_languages:
                         if language["name"] == "default":
                             default = True
                         if postdata.get("LNG-" + language["name"], "") != "":
@@ -4342,7 +4381,7 @@ class FixMergeLanguage(PrivateView):
                         return HTTPFound(location=next_page)
                     else:
                         return {
-                            "languages": languages,
+                            "languages": form_languages,
                             "default": default,
                             "userid": user_id,
                             "formData": form_data,
@@ -4372,7 +4411,7 @@ class FixMergeLanguage(PrivateView):
                     return HTTPFound(location=next_page)
 
             return {
-                "languages": languages,
+                "languages": form_languages,
                 "default": default,
                 "userid": user_id,
                 "formData": form_data,

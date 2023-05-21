@@ -20,6 +20,7 @@ __all__ = [
     "IRepositoryProcess",
     "IProject",
     "IForm",
+    "IFormColumns",
     "ITranslation",
     "IRegistration",
     "IPublicView",
@@ -452,6 +453,76 @@ class IForm(Interface):  # pragma: no cover
         :param form_data: The data of the form that was deleted
         :return: None
         """
+
+
+class IFormColumns(Interface):  # pragma: no cover
+    """
+    Allows to hook into the processes that filters and adds columns to JXFormToMySQL
+    """
+
+    def filter_form_survey_columns(
+        self, request, user_id, project_id, form_id, survey_columns
+    ):
+        """
+        Called by FormShare so plugins can remove extra columns from the survey columns
+        :param request: ``pyramid.request`` object
+        :param user_id: User ID
+        :param project_id: Project id
+        :param form_id: Form ID
+        :param survey_columns: Current survey columns
+        :return: None
+        """
+        raise NotImplementedError(
+            "filter_form_survey_columns must be implemented in subclasses"
+        )
+
+    def filter_form_choices_columns(
+        self, request, user_id, project_id, form_id, choices_columns
+    ):
+        """
+        Called by FormShare so plugins can remove extra columns from the choices columns
+        :param request: ``pyramid.request`` object
+        :param user_id: User ID
+        :param project_id: Project id
+        :param form_id: Form ID
+        :param choices_columns: Current choices columns
+        :return: None
+        """
+        raise NotImplementedError(
+            "filter_form_choices_columns must be implemented in subclasses"
+        )
+
+    def add_to_form_survey_columns(
+        self, request, user_id, project_id, form_id, survey_columns
+    ):
+        """
+        Called by FormShare so plugins can add columns survey columns to be parsed by JXFormToMysql
+        :param request: ``pyramid.request`` object
+        :param user_id: User ID
+        :param project_id: Project id
+        :param form_id: Form ID
+        :param survey_columns: Current survey columns
+        :return: None
+        """
+        raise NotImplementedError(
+            "add_to_form_survey_columns must be implemented in subclasses"
+        )
+
+    def add_to_form_choices_columns(
+        self, request, user_id, project_id, form_id, choices_columns
+    ):
+        """
+        Called by FormShare so plugins can add columns choices columns to be parsed by JXFormToMysql
+        :param request: ``pyramid.request`` object
+        :param user_id: User ID
+        :param project_id: Project id
+        :param form_id: Form ID
+        :param choices_columns: Current survey columns
+        :return: None
+        """
+        raise NotImplementedError(
+            "add_to_form_survey_columns must be implemented in subclasses"
+        )
 
 
 class IRegistration(Interface):  # pragma: no cover

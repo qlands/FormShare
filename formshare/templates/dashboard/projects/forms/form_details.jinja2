@@ -28,6 +28,11 @@
             {% cssresource request,'formshare','blueimp' %}
         {% endif %}
         {% cssresource request,'formshare','codemirror-ambiance' %}
+        {% if formDetails.form_schema == None %}
+            {% if formDetails.form_surveycolumns != None or formDetails.form_choicescolumns != None or formDetails.form_invalidcolumns != None %}
+                {% cssresource request,'formshare','tour' %}
+            {% endif %}
+        {% endif %}
         <style>
             .remove-all-styles {
                 all: unset;
@@ -66,6 +71,10 @@
         {% endif %}
         {% if formDetails.form_schema != None %}
             {% jsresource request,'formshare','codemirror-r' %}
+        {% else %}
+            {% if formDetails.form_surveycolumns != None or formDetails.form_choicescolumns != None or formDetails.form_invalidcolumns != None %}
+                {% jsresource request,'formshare','tour' %}
+            {% endif %}
         {% endif %}
         {% if products|length > 0 %}
             {% jsresource request,'formshare','codemirror-shell' %}
@@ -156,6 +165,10 @@
         </div>
         {% if formDetails.form_schema != None %}
             {% include 'dashboard/projects/forms/snippets/api_examples.jinja2' %}
+        {% else %}
+            {% if formDetails.form_surveycolumns != None or formDetails.form_choicescolumns != None or formDetails.form_invalidcolumns != None %}
+                {% include 'dashboard/projects/forms/snippets/data_columns.jinja2' %}
+            {% endif %}
         {% endif %}
         {% if projectDetails.access_type < 4 %}
             {% include 'dashboard/projects/forms/snippets/update_form.jinja2' %}
@@ -207,6 +220,25 @@
     {% if formDetails.form_type == 1 %}
         <script>
             $(document).ready(function() {
+
+                {% if formDetails.form_schema == None %}
+                    {% if formDetails.form_surveycolumns != None or formDetails.form_choicescolumns != None or formDetails.form_invalidcolumns != None %}
+                        var tour = new Tour({
+                            steps: [
+                                {
+                                    element: "#extra_columns",
+                                    title: "{{ _('Data columns') }}",
+                                    content: "{{ _('Your ODK form has extra columns. You can import these columns into the repository. Click on this button to see which columns you can import.') }}"
+                                }
+                            ],
+                            backdrop: true,
+                            backdropContainer: '#wrapper',
+                            template: '<div class="popover" role="tooltip"> <div class="arrow"></div> <h3 class="popover-title"></h3> <div class="popover-content"></div> <div class="popover-navigation"> <div class="btn-group"> <button class="btn btn-sm btn-default" data-role="prev">&laquo; {{ _("Prev") }}</button> <button class="btn btn-sm btn-default" data-role="next">{{ _("Next") }} &raquo;</button> <button class="btn btn-sm btn-default" data-role="pause-resume" data-pause-text="{{ _("Pause") }}" data-resume-text="{{ _("Resume") }}">{{ _("Pause") }}</button> </div> <button class="btn btn-sm btn-default" data-role="end">{{ _("Close") }}</button> </div> </div>',
+                        });
+                        tour.init();
+                        tour.start();
+                    {% endif %}
+                {% endif %}
 
                 new ClipboardJS('.clipboard');
                 let upload_started = false;

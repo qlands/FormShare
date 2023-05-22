@@ -379,6 +379,17 @@ def import_external_data(
     return True, "", next_page
 
 
+def remove_column_from_array(column, array):
+    idx = -1
+    pos = 0
+    for clm in array:
+        if column.upper() == clm.upper():
+            idx = pos
+        pos = pos + 1
+    if idx >= 0:
+        array.pop(idx)
+
+
 def check_jxform_file(
     request,
     user_id,
@@ -449,14 +460,26 @@ def check_jxform_file(
                     if a_column.get("columType") == "invalid":
                         extra_columns_invalid.append(a_column.get("columnName"))
                 # Remove internal columns. These will be added regardless
-                if "formshare_sensitive" in extra_columns_in_survey:
-                    extra_columns_in_survey.remove("formshare_sensitive")
-                if "formshare_encrypted" in extra_columns_in_survey:
-                    extra_columns_in_survey.remove("formshare_encrypted")
-                if "formshare_ontological_term" in extra_columns_in_survey:
-                    extra_columns_in_survey.remove("formshare_ontological_term")
-                if "formshare_ontological_term" in extra_columns_in_choices:
-                    extra_columns_in_choices.remove("formshare_ontological_term")
+                remove_column_from_array("formshare_sensitive", extra_columns_in_survey)
+                remove_column_from_array("formshare_encrypted", extra_columns_in_survey)
+                remove_column_from_array(
+                    "formshare_ontological_term", extra_columns_in_survey
+                )
+                remove_column_from_array(
+                    "formshare_ontological_term", extra_columns_in_choices
+                )
+
+                # Remove any note or notes columns
+                remove_column_from_array("note", extra_columns_in_survey)
+                remove_column_from_array("note", extra_columns_in_choices)
+                remove_column_from_array("notes", extra_columns_in_survey)
+                remove_column_from_array("notes", extra_columns_in_choices)
+
+                remove_column_from_array("nota", extra_columns_in_survey)
+                remove_column_from_array("notas", extra_columns_in_choices)
+                remove_column_from_array("nota", extra_columns_in_survey)
+                remove_column_from_array("notas", extra_columns_in_choices)
+
                 for a_plugin in plugins.PluginImplementations(plugins.IFormColumns):
                     a_plugin.filter_form_survey_columns(
                         request, user_id, project_id, form_id, extra_columns_in_survey

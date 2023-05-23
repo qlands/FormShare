@@ -118,7 +118,7 @@ qrcode==7.3.1
 redis==4.4.4
 regex==2022.10.31
 repoze.lru==0.7
-requests==2.28.1
+requests==2.31.0
 rutter==0.4
 scipy==1.9.3
 sgmllib3k==1.0.0

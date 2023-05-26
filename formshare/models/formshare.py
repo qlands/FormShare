@@ -729,6 +729,7 @@ class DictTable(Base):
     parent_project = Column(Unicode(64))
     parent_form = Column(Unicode(120))
     parent_table = Column(Unicode(120))
+    extras = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 
     parent = relationship("DictTable", remote_side=[project_id, form_id, table_name])
     project = relationship("Odkform")
@@ -768,6 +769,9 @@ class DictField(Base):
     field_decsize = Column(INTEGER, server_default=text("'0'"))
     field_sensitive = Column(INTEGER, server_default=text("'0'"))
     field_protection = Column(Unicode(64))
+    field_encrypted = Column(INTEGER, server_default=text("'0'"))
+    field_ontology = Column(Unicode(120))
+    extras = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 
     dicttable = relationship("DictTable")
 

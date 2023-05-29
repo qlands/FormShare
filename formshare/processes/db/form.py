@@ -210,6 +210,7 @@ def generate_lookup_file(request, project, schema, file_name, only_inactive):
             .first()
         )
         select_field.append(res[0] + " as label")
+        label_field = res[0]
 
         fields = (
             request.dbsession.query(CaseLookUp)
@@ -241,7 +242,9 @@ def generate_lookup_file(request, project, schema, file_name, only_inactive):
                 sql = sql + " WHERE _active = 0"
             else:
                 sql = sql + " WHERE _active = 1"
-            sql = sql + " ORDER BY _submitted_date"
+            sql = sql + " AND {} IS NOT NULL ORDER BY _submitted_date".format(
+                label_field
+            )
             cursor = request.dbsession.execute(sql)
             out_csv.writerows(cursor.fetchall())
         else:

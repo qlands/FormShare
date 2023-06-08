@@ -6,12 +6,18 @@
 {% block css %}
     {{ super() }}
     {% cssresource request,'formshare','switchery' %}
+    {% if form_data.form_choicescolumns|length > 0 or form_data.form_surveycolumns|length > 0 %}
+        {% cssresource request,'formshare','select2' %}
+    {% endif %}
 {% endblock css %}
 
 {% block topScripts %}
     {{ super() }}
     {% jsresource request,'formshare','switchery' %}
     {% jsresource request,'formshare','validate_ext' %}
+    {% if form_data.form_choicescolumns|length > 0 or form_data.form_surveycolumns|length > 0 %}
+        {% jsresource request,'formshare','select2' %}
+    {% endif %}
 {% endblock topScripts %}
 
 {% block breadcrumbs %}
@@ -191,6 +197,15 @@
     {{ super() }}
     <script>
         $(document).ready(function() {
+            {% if form_data.form_choicescolumns|length > 0 %}
+                $("#form_choicescolumns").select2();
+            {% endif %}
+
+            {% if form_data.form_surveycolumns|length > 0 %}
+                $("#form_surveycolumns").select2();
+            {% endif %}
+
+
             {% if has_submit_assistant %}
                 var elem = document.querySelector('.js-switch');
                 if (elem)

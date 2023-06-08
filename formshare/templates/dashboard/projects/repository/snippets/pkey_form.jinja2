@@ -10,7 +10,6 @@
         <label class="text-danger">{{ _("The form does not have an assistant that can submit data. If you proceed all testing data will get discarded!!!") }}</label>
     {% endif %}
 </div>
-<hr>
 {% if form_data.form_pkey == None %}
 <div class="form-group">
     <label>{{ _('Which variable will be used to control duplicate submissions?') }}</label>
@@ -20,7 +19,33 @@
 {% else %}
     <input id="form_pkey" name="form_pkey" value="{{ form_data.form_pkey }}" type="hidden" class="form-control">
 {% endif %}
+
+{% if form_data.form_surveycolumns|length > 0  %}
+    <hr>
+    <div class="form-group">
+        <label>{{ _('Select the data columns that you want to import from the survey sheet. (All by default)') }}</label>
+        <select id="form_surveycolumns" data-module="autocomplete" name="form_surveycolumns" multiple="multiple" style="width: 100%">
+            {% for a_column in form_data.form_surveycolumns %}
+                <option value="{{ a_column }}" selected >{{ a_column }}</option>
+            {% endfor %}
+        </select>
+    </div>
+{% endif %}
+
+{% if form_data.form_choicescolumns|length > 0  %}
+    <hr>
+    <div class="form-group">
+        <label>{{ _('Select the data columns that you want to import from the choices sheet. (All by default)') }}</label>
+        <select id="form_choicescolumns" data-module="autocomplete" name="form_choicescolumns" multiple="multiple" style="width: 100%">
+            {% for a_column in form_data.form_choicescolumns %}
+                <option value="{{ a_column }}" selected >{{ a_column }}</option>
+            {% endfor %}
+        </select>
+    </div>
+{% endif %}
+
 <div class="form-actions">
+    <hr>
     <button class="btn btn-primary" type="submit">
         {{ _('Create repository') }}
     </button>

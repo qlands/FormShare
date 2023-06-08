@@ -527,26 +527,35 @@ def update_form_repository_info(request, project, form, data):
 
 def get_form_data(project, form, request):
     res = {}
-    data = (
+    res_data = (
         request.dbsession.query(Form)
         .filter(Form.project_id == project)
         .filter(Form.form_id == form)
         .first()
     )
+    data = map_from_schema(res_data)
     if data:
-        res["id"] = data.form_id
-        res["name"] = data.form_name
-        res["directory"] = data.form_directory
-        res["schema"] = data.form_schema
-        res["form_pkey"] = data.form_pkey
-        res["form_deflang"] = data.form_deflang
-        res["form_othlangs"] = data.form_othlangs
-        res["form_stage"] = data.form_stage
-        res["form_abletomerge"] = data.form_abletomerge
-        res["parent_form"] = data.parent_form
-        res["form_createxmlfile"] = data.form_createxmlfile
-        res["form_insertxmlfile"] = data.form_insertxmlfile
-        res["form_hexcolor"] = data.form_hexcolor
+        res["id"] = data["form_id"]
+        res["name"] = data["form_name"]
+        res["directory"] = data["form_directory"]
+        res["schema"] = data["form_schema"]
+        res["form_pkey"] = data["form_pkey"]
+        res["form_deflang"] = data["form_deflang"]
+        res["form_othlangs"] = data["form_othlangs"]
+        res["form_stage"] = data["form_stage"]
+        res["form_abletomerge"] = data["form_abletomerge"]
+        res["parent_form"] = data["parent_form"]
+        res["form_createxmlfile"] = data["form_createxmlfile"]
+        res["form_insertxmlfile"] = data["form_insertxmlfile"]
+        res["form_hexcolor"] = data["form_hexcolor"]
+        if data["form_surveycolumns"] is not None:
+            res["form_surveycolumns"] = data["form_surveycolumns"].split(",")
+        else:
+            res["form_surveycolumns"] = []
+        if data["form_choicescolumns"] is not None:
+            res["form_choicescolumns"] = data["form_choicescolumns"].split(",")
+        else:
+            data["form_choicescolumns"] = []
     return res
 
 

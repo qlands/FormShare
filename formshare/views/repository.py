@@ -82,6 +82,26 @@ class GenerateRepository(PrivateView):
                 if self.request.method == "POST":
                     method = "post"
                     postdata = self.get_post_dict()
+
+                    if "data_columns" not in postdata.keys():
+                        data_columns = ["formshare_sensitive", "formshare_encrypted", "formshare_ontological_term"]
+                        if "form_choicescolumns" in postdata.keys():
+                            if isinstance(postdata["form_choicescolumns"],list):
+                                data_columns = data_columns + postdata["form_choicescolumns"]
+                            else:
+                                data_columns.append(postdata["form_choicescolumns"])
+                        if "form_surveycolumns" in postdata.keys():
+                            if isinstance(postdata["form_surveycolumns"],list):
+                                data_columns = data_columns + postdata["form_surveycolumns"]
+                            else:
+                                data_columns.append(postdata["form_surveycolumns"])
+                        data_columns = ",".join(data_columns)
+                    else:
+                        data_columns = postdata["data_columns"]
+
+
+
+
                     run_process = True
                     if "discard_testing_data" in postdata.keys():
                         discard_testing_data = True

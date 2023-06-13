@@ -6,7 +6,7 @@ import traceback
 import uuid
 from subprocess import Popen, PIPE, check_call, CalledProcessError
 
-import formshare.plugins as p
+import formshare.plugins as plugins
 import transaction
 from celery.utils.log import get_task_logger
 from formshare.config.celery_app import celeryApp
@@ -208,8 +208,10 @@ def get_one_assistant(db_session, project, form):
             return None, None
 
 
-def update_dictionary_tables(db_session, project, form, xml_create_file):
-    def create_new_field_dict(a_table, a_field):
+def update_dictionary_tables(
+    db_session, settings, user, project, form, xml_create_file
+):
+    def create_new_field_dict(f_settings, f_user, f_project, f_form, a_table, a_field):
         field_desc = a_field.get("desc", "")
         field_rlookup = a_field.get("rlookup", "false")
         if field_rlookup == "true":
@@ -222,10 +224,21 @@ def update_dictionary_tables(db_session, project, form, xml_create_file):
         else:
             field_key = 0
         field_sensitive = a_field.get("sensitive", "false")
-        if field_sensitive == "true":
+        formshare_sensitive = a_field.get("formshare_sensitive", "no")
+        if field_sensitive == "true" or formshare_sensitive == "yes":
             field_sensitive = 1
+            field_protection = a_field.get("protection", "exclude")
         else:
             field_sensitive = 0
+            field_protection = None
+
+        if a_field.get("formshare_encrypted", "no") == "yes":
+            field_encrypted = 1
+        else:
+            field_encrypted = 0
+
+        field_ontology = a_field.get("field_ontology")
+
         if field_desc == "":
             field_desc = "Without a description"
         new_field_dict = {
@@ -249,13 +262,25 @@ def update_dictionary_tables(db_session, project, form, xml_create_file):
             "field_size": a_field.get("size", 0),
             "field_decsize": a_field.get("decsize", 0),
             "field_sensitive": field_sensitive,
-            "field_protection": a_field.get("protection"),
+            "field_protection": field_protection,
+            "field_encrypted": field_encrypted,
+            "field_ontology": field_ontology,
         }
         if a_field.get("selecttype") == "2":
             if new_field_dict["field_externalfilename"].upper().find(".CSV") == -1:
                 new_field_dict["field_externalfilename"] = (
                     new_field_dict["field_externalfilename"] + ".csv"
                 )
+
+        extra_properties = []
+        for plugin in plugins.PluginImplementations(plugins.IFormDataColumns):
+            extra_properties = plugin.get_form_survey_properties(
+                f_settings, f_user, f_project, f_form
+            )
+
+        for a_property in extra_properties:
+            new_field_dict[a_property] = a_field.get(a_property)
+
         return new_field_dict
 
     def store_tables(element, lookup):
@@ -298,7 +323,12 @@ def update_dictionary_tables(db_session, project, form, xml_create_file):
                                     .count()
                                 )
                                 if res == 0:
-                                    new_field_dict = create_new_field_dict(table, field)
+                                    new_field_dict = create_new_field_dict(
+                                        settings, user, project, form, table, field
+                                    )
+                                    new_field_dict = map_to_schema(
+                                        DictField, new_field_dict
+                                    )
                                     new_field = DictField(**new_field_dict)
                                     try:
                                         db_session.add(new_field)
@@ -331,7 +361,9 @@ def update_dictionary_tables(db_session, project, form, xml_create_file):
                                 .count()
                             )
                             if res == 0:
-                                new_field_dict = create_new_field_dict(table, field)
+                                new_field_dict = create_new_field_dict(
+                                    settings, user, project, form, table, field
+                                )
                                 new_field = DictField(**new_field_dict)
                                 try:
                                     db_session.add(new_field)
@@ -453,7 +485,9 @@ def internal_create_mysql_repository(
                 db_session, project_id, form
             )
             geo_point_variables = get_geopoint_variables(db_session, project_id, form)
-        update_dictionary_tables(db_session, project_id, form, create_xml_file)
+        update_dictionary_tables(
+            db_session, settings, user, project_id, form, create_xml_file
+        )
     engine.dispose()
     delete_dataset_from_index(settings, project_id, form)
     if discard_testing_data:
@@ -535,7 +569,9 @@ def internal_create_mysql_repository(
                 )
 
     try:
-        for plugin in p.PluginImplementations(p.IRepositoryProcess):  # pragma: no cover
+        for plugin in plugins.PluginImplementations(
+            plugins.IRepositoryProcess
+        ):  # pragma: no cover
             plugin.after_creating_repository(
                 settings,
                 user,

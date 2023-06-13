@@ -1,0 +1,22 @@
+{% extends 'dashboard/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block titlesection %}{{ _('Metadata of field') }} "{{ field }}"{% endblock titlesection %}
+
+{% block breadcrumbs %}
+    {% include 'dashboard/projects/forms/dictionary/snippets/brdcrbs_metadata.jinja2' %}
+{% endblock breadcrumbs %}
+
+{% block mainsection %}
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="wrapper wrapper-content">
+                <div class="ibox">
+                    <div class="ibox-content">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock mainsection %}

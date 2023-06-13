@@ -174,6 +174,7 @@ from formshare.views.repository import GenerateRepository
 from formshare.views.repository_dictionary import (
     EditDictionaryTables,
     EditDictionaryFields,
+    EditDictionaryFieldMetadata,
 )
 from formshare.views.repository_merge import RepositoryMergeForm
 from formshare.views.repository_submissions import (
@@ -1028,6 +1029,15 @@ def load_routes(config, settings):
             "editDictFields",
             "/user/{userid}/project/{projcode}/form/{formid}/dictionary/table/{tableid}/fields",
             EditDictionaryFields,
+            "dashboard/projects/forms/dictionary/edit_fields.jinja2",
+        )
+    )
+
+    routes.append(
+        add_route(
+            "editDictFieldMetadata",
+            "/user/{userid}/project/{projcode}/form/{formid}/dictionary/table/{tableid}/{fieldid}/metadata",
+            EditDictionaryFieldMetadata,
             "dashboard/projects/forms/dictionary/edit_fields.jinja2",
         )
     )

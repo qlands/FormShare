@@ -67,7 +67,7 @@ class ManageSubmissions(PrivateView):
                 )
 
             fields, checked = get_fields_from_table(
-                self.request, project_id, form_id, "maintable", []
+                self.request, user_id, project_id, form_id, "maintable", []
             )
             return {
                 "projectDetails": project_details,
@@ -170,7 +170,7 @@ class GetFormSubmissions(PrivateView):
             search_operator = request_data.get("searchOper", None)
 
             fields, checked = get_fields_from_table(
-                self.request, project_id, form_id, "maintable", []
+                self.request, user_id, project_id, form_id, "maintable", []
             )
             field_names = []
             for field in fields:

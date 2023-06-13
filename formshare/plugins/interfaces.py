@@ -524,6 +524,44 @@ class IFormDataColumns(Interface):  # pragma: no cover
             "add_to_form_survey_columns must be implemented in subclasses"
         )
 
+    def get_form_survey_properties(self, settings, user_id, project_id, form_id):
+        """
+        Called by FormShare so plugins can add survey columns as properties of fields in the dictionary fields as extras
+        :param settings: ``pyramid settings`` dict
+        :param user_id: User ID
+        :param project_id: Project id
+        :param form_id: Form ID
+        :return: [] of extra properties to store in the dictionary fields as extras
+        """
+        raise NotImplementedError(
+            "get_form_survey_properties must be implemented in subclasses"
+        )
+
+    def get_form_survey_property_info(
+        self,
+        request,
+        user_id,
+        project_id,
+        form_id,
+        table_name,
+        field_name,
+        property_name,
+    ):
+        """
+        Called by FormShare so plugins can return the description of a property and whether it is editable
+        :param request: ``pyramid.request`` object
+        :param user_id: user ID
+        :param project_id: project ID
+        :param form_id: form ID
+        :param table_name: table name
+        :param field_name: field name
+        :param property_name: property name
+        :return: Description,True   or  Description,False
+        """
+        raise NotImplementedError(
+            "get_form_survey_property_info must be implemented in subclasses"
+        )
+
 
 class IRegistration(Interface):  # pragma: no cover
     """

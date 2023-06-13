@@ -194,6 +194,7 @@ def load_environment(settings, config, apppath, policy_array):
 
     # Call any connected plugins to add their modifications into the schema. Not all tables has extras so only
     # certain tables are allowed
+    # These tables also need an update trigger. See 1f4badb4de3f_add_more_extra_triggers.py
     schemas_allowed = [
         "fsuser",
         "project",
@@ -205,6 +206,8 @@ def load_environment(settings, config, apppath, policy_array):
         "partner",
         "partnerproject",
         "partnerform",
+        "dicttable",
+        "dictfield",
     ]
 
     modules_allowed = ["formshare.models.formshare"]

@@ -9,7 +9,7 @@ import shutil
 import uuid
 from decimal import Decimal
 from subprocess import Popen, PIPE
-
+import formshare.plugins as plugins
 import paginate
 import pandas as pd
 from PIL import Image
@@ -894,7 +894,7 @@ def _to_string(value):
 
 
 def get_fields_from_table(
-    request, project, form, table_name, current_fields, get_values=True
+    request, user, project, form, table_name, current_fields, get_values=True
 ):
     """
     This function get the fields of a table from the DB or the XML file
@@ -935,7 +935,9 @@ def get_fields_from_table(
                 "decsize": field.get("field_decsize"),
                 "checked": found,
                 "sensitive": _to_string(field.get("field_sensitive", 0)),
+                "encrypted": _to_string(field.get("field_encrypted", 0)),
                 "protection": field.get("field_protection", "None"),
+                "ontology": field.get("field_ontology", "None"),
                 "protection_desc": get_protection_desc(
                     request, field.get("field_protection", "None")
                 ),
@@ -945,6 +947,14 @@ def get_fields_from_table(
                 "rfield": field.get("field_rfield", "None"),
                 "editable": editable,
             }
+
+            extra_properties = []
+            for plugin in plugins.PluginImplementations(plugins.IFormDataColumns):
+                extra_properties = plugin.get_form_survey_properties(
+                    request.registry.settings, user, project, form
+                )
+            for a_property in extra_properties:
+                data[a_property] = field.get(a_property)
 
             if data["rlookup"] == "true" and get_values:
                 data["lookupvalues"] = get_lookup_values(

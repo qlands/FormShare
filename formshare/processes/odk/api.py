@@ -480,7 +480,7 @@ def check_jxform_file(
                 remove_column_from_array("nota", extra_columns_in_survey)
                 remove_column_from_array("notas", extra_columns_in_choices)
 
-                for a_plugin in plugins.PluginImplementations(plugins.IFormColumns):
+                for a_plugin in plugins.PluginImplementations(plugins.IFormDataColumns):
                     a_plugin.filter_form_survey_columns(
                         request, user_id, project_id, form_id, extra_columns_in_survey
                     )
@@ -2325,6 +2325,8 @@ def create_repository(
     xform_directory,
     primary_key,
     discard_testing_data,
+    survey_data_columns,
+    choices_data_columns,
     default_language=None,
     other_languages=None,
     for_merging=False,
@@ -2369,6 +2371,8 @@ def create_repository(
             + os.path.join(
                 odk_dir, *["forms", xform_directory, "repository", "manifest.xml"]
             ),
+            "-y " + survey_data_columns,
+            "-s " + choices_data_columns,
         ]
 
         if other_languages is not None:
@@ -2416,18 +2420,6 @@ def create_repository(
                     language_array = root.findall(".//language")
                     if language_array:
                         return 3, stdout.decode()
-                    #     default_language = "(en)english"
-                    # other_languages_array = []
-                    # for a_language in language_array:
-                    #     if a_language.get("code", "") != "en":
-                    #         other_languages_array.append(
-                    #             "({}){}".format(
-                    #                 a_language.get("code", ""),
-                    #                 a_language.get("description", ""),
-                    #             )
-                    #         )
-                    # if other_languages_array:
-                    #     other_languages = ",".join(other_languages_array)
 
                 update_form_repository_info(
                     request,
@@ -2437,6 +2429,8 @@ def create_repository(
                         "form_pkey": primary_key,
                         "form_deflang": default_language,
                         "form_othlangs": other_languages,
+                        "form_surveycolumns": survey_data_columns,
+                        "form_choicescolumns": choices_data_columns,
                     },
                 )
 

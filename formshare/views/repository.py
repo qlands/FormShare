@@ -15,6 +15,7 @@ from formshare.processes.odk.processes import get_form_data
 from formshare.views.classes import PrivateView
 from lxml import etree
 from pyramid.httpexceptions import HTTPNotFound, HTTPFound
+import formshare.plugins as plugins
 
 log = logging.getLogger("formshare")
 
@@ -77,30 +78,63 @@ class GenerateRepository(PrivateView):
         stage = 1
         primary_key = ""
         discard_testing_data = False
+        survey_data_columns = []
+        choices_data_columns = []
         if form_data:
             if form_data["schema"] is None:
                 if self.request.method == "POST":
                     method = "post"
                     postdata = self.get_post_dict()
 
-                    if "data_columns" not in postdata.keys():
-                        data_columns = ["formshare_sensitive", "formshare_encrypted", "formshare_ontological_term"]
-                        if "form_choicescolumns" in postdata.keys():
-                            if isinstance(postdata["form_choicescolumns"],list):
-                                data_columns = data_columns + postdata["form_choicescolumns"]
+                    if "survey_data_columns" in postdata.keys():
+                        if "survey_data_columns" in postdata.keys():
+                            if isinstance(postdata["survey_data_columns"], list):
+                                survey_data_columns = postdata["survey_data_columns"]
                             else:
-                                data_columns.append(postdata["form_choicescolumns"])
-                        if "form_surveycolumns" in postdata.keys():
-                            if isinstance(postdata["form_surveycolumns"],list):
-                                data_columns = data_columns + postdata["form_surveycolumns"]
+                                survey_data_columns = postdata[
+                                    "survey_data_columns"
+                                ].split("|")
+
+                    if "choices_data_columns" in postdata.keys():
+                        if "choices_data_columns" in postdata.keys():
+                            if isinstance(postdata["choices_data_columns"], list):
+                                choices_data_columns = postdata["choices_data_columns"]
                             else:
-                                data_columns.append(postdata["form_surveycolumns"])
-                        data_columns = ",".join(data_columns)
-                    else:
-                        data_columns = postdata["data_columns"]
+                                choices_data_columns = postdata[
+                                    "choices_data_columns"
+                                ].split("|")
 
+                    if "formshare_sensitive" not in survey_data_columns:
+                        survey_data_columns.append("formshare_sensitive")
+                    if "formshare_encrypted" not in survey_data_columns:
+                        survey_data_columns.append("formshare_encrypted")
+                    if "formshare_ontological_term" not in survey_data_columns:
+                        survey_data_columns.append("formshare_ontological_term")
 
+                    if "formshare_ontological_term" not in choices_data_columns:
+                        choices_data_columns.append("formshare_ontological_term")
 
+                    for a_plugin in plugins.PluginImplementations(
+                        plugins.IFormDataColumns
+                    ):
+                        a_plugin.add_to_form_survey_columns(
+                            self.request,
+                            user_id,
+                            project_id,
+                            form_id,
+                            survey_data_columns,
+                        )
+
+                    for a_plugin in plugins.PluginImplementations(
+                        plugins.IFormDataColumns
+                    ):
+                        a_plugin.add_to_form_choices_columns(
+                            self.request,
+                            user_id,
+                            project_id,
+                            form_id,
+                            choices_data_columns,
+                        )
 
                     run_process = True
                     if "discard_testing_data" in postdata.keys():
@@ -206,6 +240,8 @@ class GenerateRepository(PrivateView):
                                 form_data["directory"],
                                 primary_key,
                                 discard_testing_data,
+                                "|".join(survey_data_columns),
+                                "|".join(choices_data_columns),
                             )
                         else:
                             result_code, message = create_repository(
@@ -217,6 +253,8 @@ class GenerateRepository(PrivateView):
                                 form_data["directory"],
                                 primary_key,
                                 discard_testing_data,
+                                "|".join(survey_data_columns),
+                                "|".join(choices_data_columns),
                                 default_language_string,
                                 other_languages_string,
                             )
@@ -612,6 +650,8 @@ class GenerateRepository(PrivateView):
                     "discard_testing_data": discard_testing_data,
                     "default": default,
                     "has_submit_assistant": has_submit_assistant,
+                    "survey_data_columns": "|".join(survey_data_columns),
+                    "choices_data_columns": "|".join(choices_data_columns),
                 }
             else:
                 raise HTTPNotFound()

@@ -24,7 +24,7 @@
     <hr>
     <div class="form-group">
         <label>{{ _('Select the data columns that you want to import from the survey sheet. (All by default)') }}</label>
-        <select id="form_surveycolumns" data-module="autocomplete" name="form_surveycolumns" multiple="multiple" style="width: 100%">
+        <select id="form_surveycolumns" data-module="autocomplete" name="survey_data_columns" multiple="multiple" style="width: 100%">
             {% for a_column in form_data.form_surveycolumns %}
                 <option value="{{ a_column }}" selected >{{ a_column }}</option>
             {% endfor %}
@@ -36,7 +36,7 @@
     <hr>
     <div class="form-group">
         <label>{{ _('Select the data columns that you want to import from the choices sheet. (All by default)') }}</label>
-        <select id="form_choicescolumns" data-module="autocomplete" name="form_choicescolumns" multiple="multiple" style="width: 100%">
+        <select id="form_choicescolumns" data-module="autocomplete" name="choices_data_columns" multiple="multiple" style="width: 100%">
             {% for a_column in form_data.form_choicescolumns %}
                 <option value="{{ a_column }}" selected >{{ a_column }}</option>
             {% endfor %}

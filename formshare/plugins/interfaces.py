@@ -20,7 +20,7 @@ __all__ = [
     "IRepositoryProcess",
     "IProject",
     "IForm",
-    "IFormColumns",
+    "IFormDataColumns",
     "ITranslation",
     "IRegistration",
     "IPublicView",
@@ -455,7 +455,7 @@ class IForm(Interface):  # pragma: no cover
         """
 
 
-class IFormColumns(Interface):  # pragma: no cover
+class IFormDataColumns(Interface):  # pragma: no cover
     """
     Allows to hook into the processes that filters and adds columns to JXFormToMySQL
     """

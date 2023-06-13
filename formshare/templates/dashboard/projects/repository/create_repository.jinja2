@@ -55,6 +55,8 @@
                                             {% include 'dashboard/projects/repository/snippets/pkey_form.jinja2' %}
                                         {% endif %}
                                         {% if stage == 2 %}
+                                            <input type="hidden" name="survey_data_columns" value="{{ survey_data_columns }}">
+                                            <input type="hidden" name="choices_data_columns" value="{{ choices_data_columns }}">
                                             <input type="hidden" name="csrf_token" value="{{ request.session.get_csrf_token() }}">
                                             <input type="hidden" name="start_stage2">
                                             <input type="hidden" name="languages_string", value="{{ languages_string }}">

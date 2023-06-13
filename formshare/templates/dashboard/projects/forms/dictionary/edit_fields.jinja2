@@ -125,7 +125,6 @@
         </div>
     </div>
 
-    {% include 'dashboard/projects/forms/dictionary/snippets/change_field_name.jinja2' %}
     {% include 'dashboard/projects/forms/dictionary/snippets/set_field_as_sensitive.jinja2' %}
 {% endblock mainsection %}
 
@@ -233,14 +232,6 @@
         }
 
         function field_item_buttons() {
-            var assistant_item = $(".field-item");
-            assistant_item.click(function () {
-                var field_name = $(this).attr('data-field-name');
-                var field_desc = $(this).attr('data-field-desc');
-                $("#field_name").val(field_name);
-                $("#field_desc").val(field_desc);
-            });
-
             var sensitive_item = $(".field-item-sensitive");
             sensitive_item.click(function () {
                 var field_name = $(this).attr('data-field-name');

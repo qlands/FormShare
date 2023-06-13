@@ -10,7 +10,7 @@
                 <div class="actions">
                     {% if access_type <= 3 %}
                         {% block field_item_processing_actions %}
-                            <a id="btn_edit_{{ field.name }}" data-field-name="{{ field.name }}" data-field-desc="{{ field.desc }}" data-toggle="modal" data-target="#edit_field_desc" class="btn btn-xs btn-white field-item"><i class="fas fa-pencil-alt"></i> {{ _('Edit description') }}</a>
+                            <a href="{{ request.route_url("editDictFieldMetadata",userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, tableid=table_name, fieldid=field.name) }}" class="btn btn-xs btn-white"><i class="fas fa-pencil-alt"></i> {{ _('Edit metadata') }}</a>
                             {% if field.sensitive == 'true' %}
                                 <a onclick="post_not_sensitive_change('{{ field.name }}');" class="btn btn-xs btn-white set-not-sensi"><i class="far fa-eye"></i> {{ _('Set as not sensitive') }} </a>
                             {% else %}

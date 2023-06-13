@@ -53,7 +53,12 @@ class CleanInterface(AssistantView):
                         found = True
                 if found:
                     fields, checked = get_fields_from_table(
-                        self.request, self.projectID, form_id, table, current_fields
+                        self.request,
+                        self.userID,
+                        self.projectID,
+                        form_id,
+                        table,
+                        current_fields,
                     )
                     checked_array = []
                     if checked:
@@ -178,7 +183,7 @@ class DataRequest(AssistantView):
                 search_operator = request_data.get("searchOper", None)
 
                 fields, checked = get_fields_from_table(
-                    self.request, self.projectID, form_id, table_name, []
+                    self.request, self.userID, self.projectID, form_id, table_name, []
                 )
                 field_names = []
                 for field in fields:

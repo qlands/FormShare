@@ -102,6 +102,7 @@ __all__ = [
     "form_has_subversion",
     "field_exists",
     "get_all_project_forms",
+    "get_form_survey_columns",
 ]
 
 log = logging.getLogger("formshare")
@@ -1206,6 +1207,24 @@ def get_form_survey_file(request, project, form):
         return form_data.form_jsonfile
     else:
         return None
+
+
+def get_form_survey_columns(request, project, form, filter_columns=True):
+    form_data = (
+        request.dbsession.query(Odkform)
+        .filter(Odkform.project_id == project)
+        .filter(Odkform.form_id == form)
+        .first()
+    )
+    if form_data is not None:
+        res = form_data.form_surveycolumns.split("|")
+        if filter_columns:
+            res.remove("formshare_ontological_term")
+            res.remove("formshare_encrypted")
+            res.remove("formshare_sensitive")
+        return res
+    else:
+        return []
 
 
 def get_form_xls_file(request, project, form):

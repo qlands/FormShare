@@ -209,9 +209,9 @@ def get_one_assistant(db_session, project, form):
 
 
 def update_dictionary_tables(
-    db_session, settings, user, project, form, xml_create_file
+    db_session, project, form, survey_data_columns, xml_create_file
 ):
-    def create_new_field_dict(f_settings, f_user, f_project, f_form, a_table, a_field):
+    def create_new_field_dict(a_table, a_field):
         field_desc = a_field.get("desc", "")
         field_rlookup = a_field.get("rlookup", "false")
         if field_rlookup == "true":
@@ -227,7 +227,10 @@ def update_dictionary_tables(
         formshare_sensitive = a_field.get("formshare_sensitive", "no")
         if field_sensitive == "true" or formshare_sensitive == "yes":
             field_sensitive = 1
-            field_protection = a_field.get("protection", "exclude")
+            if field_key == 0:
+                field_protection = a_field.get("protection", "exclude")
+            else:
+                field_protection = a_field.get("protection", "recode")
         else:
             field_sensitive = 0
             field_protection = None
@@ -237,7 +240,7 @@ def update_dictionary_tables(
         else:
             field_encrypted = 0
 
-        field_ontology = a_field.get("field_ontology")
+        field_ontology = a_field.get("formshare_ontological_term")
 
         if field_desc == "":
             field_desc = "Without a description"
@@ -272,14 +275,9 @@ def update_dictionary_tables(
                     new_field_dict["field_externalfilename"] + ".csv"
                 )
 
-        extra_properties = []
-        for plugin in plugins.PluginImplementations(plugins.IFormDataColumns):
-            extra_properties = plugin.get_form_survey_properties(
-                f_settings, f_user, f_project, f_form
-            )
-
-        for a_property in extra_properties:
-            new_field_dict[a_property] = a_field.get(a_property)
+        for a_column in survey_data_columns:
+            if a_field.get(a_column) is not None:
+                new_field_dict[a_column] = a_field.get(a_column)
 
         return new_field_dict
 
@@ -323,9 +321,7 @@ def update_dictionary_tables(
                                     .count()
                                 )
                                 if res == 0:
-                                    new_field_dict = create_new_field_dict(
-                                        settings, user, project, form, table, field
-                                    )
+                                    new_field_dict = create_new_field_dict(table, field)
                                     new_field_dict = map_to_schema(
                                         DictField, new_field_dict
                                     )
@@ -361,9 +357,7 @@ def update_dictionary_tables(
                                 .count()
                             )
                             if res == 0:
-                                new_field_dict = create_new_field_dict(
-                                    settings, user, project, form, table, field
-                                )
+                                new_field_dict = create_new_field_dict(table, field)
                                 new_field = DictField(**new_field_dict)
                                 try:
                                     db_session.add(new_field)
@@ -425,6 +419,7 @@ def internal_create_mysql_repository(
     repository_string,
     locale,
     discard_testing_data,
+    survey_data_columns,
     task_id,
 ):
     log.info(
@@ -486,7 +481,11 @@ def internal_create_mysql_repository(
             )
             geo_point_variables = get_geopoint_variables(db_session, project_id, form)
         update_dictionary_tables(
-            db_session, settings, user, project_id, form, create_xml_file
+            db_session,
+            project_id,
+            form,
+            survey_data_columns,
+            create_xml_file,
         )
     engine.dispose()
     delete_dataset_from_index(settings, project_id, form)
@@ -617,6 +616,7 @@ def create_mysql_repository(
     repository_string,
     locale,
     discard_testing_data,
+    survey_data_columns,
     testing_task=None,
 ):
     if testing_task is None:
@@ -641,5 +641,6 @@ def create_mysql_repository(
         repository_string,
         locale,
         discard_testing_data,
+        survey_data_columns,
         task_id,
     )

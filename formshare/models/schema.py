@@ -75,6 +75,9 @@ def get_storage_type(table_name, field_name):
             for field in table["fields"]:
                 if field["name"] == field_name:
                     storage_type = field["storage"]
+    # Dictfield always store other properties as extras
+    if storage_type is None and table_name == "dictfield":
+        storage_type = "extras"
     return storage_type
 
 

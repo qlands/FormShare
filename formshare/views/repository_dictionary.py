@@ -210,9 +210,9 @@ class EditDictionaryFieldMetadata(PrivateView):
         if metadata_key == "decsize":
             return self._("Decimal size of the field"), False
         if metadata_key == "sensitive":
-            return self._("The field is sensitive"), True
+            return self._("The field is sensitive"), False
         if metadata_key == "protection":
-            return self._("Protection type of the sensitive field"), True
+            return self._("Protection type of the sensitive field"), False
         if metadata_key == "encrypted":
             return self._("The field is encrypted"), False
         if metadata_key == "ontology":
@@ -236,7 +236,7 @@ class EditDictionaryFieldMetadata(PrivateView):
                 field_name,
                 metadata_key,
             )
-        return self._("Without description"), False
+        return metadata_key, False
 
     def process_view(self):
         user_id = self.request.matchdict["userid"]
@@ -244,7 +244,7 @@ class EditDictionaryFieldMetadata(PrivateView):
         form_id = self.request.matchdict["formid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         table_id = self.request.matchdict["tableid"]
-        field_id = self.request.matchdict["tableid"]
+        field_id = self.request.matchdict["fieldid"]
         if project_id is not None:
             access_type = get_project_access_type(
                 self.request, project_id, user_id, self.user.login
@@ -270,6 +270,7 @@ class EditDictionaryFieldMetadata(PrivateView):
                 self.request, user_id, project_id, form_id, table_id, []
             )
             if not fields:
+                print("No fields")
                 raise HTTPNotFound
 
             field = {}
@@ -279,6 +280,7 @@ class EditDictionaryFieldMetadata(PrivateView):
                     break
 
             if not field:
+                print("Field not found")
                 raise HTTPNotFound
 
             if self.request.method == "POST":
@@ -290,6 +292,7 @@ class EditDictionaryFieldMetadata(PrivateView):
                     a_key != "checked"
                     and a_key != "protection_desc"
                     and a_key != "editable"
+                    and a_key != "lookupvalues"
                 ):
                     key_description, key_editable = self.get_metadata_info(
                         user_id, project_id, form_id, table_id, field["name"], a_key
@@ -297,7 +300,7 @@ class EditDictionaryFieldMetadata(PrivateView):
                     field_metadata.append(
                         {
                             "metadata_key": a_key,
-                            "metadata_value": field["a_key"],
+                            "metadata_value": field[a_key],
                             "metadata_desc": key_description,
                             "metadata_editable": key_editable,
                         }

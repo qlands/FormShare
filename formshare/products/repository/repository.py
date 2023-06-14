@@ -1,5 +1,6 @@
 from formshare.products import register_product_instance
 from formshare.products.repository.celery_task import create_mysql_repository
+from formshare.processes.db import get_form_survey_columns
 
 
 def create_database_repository(
@@ -24,6 +25,9 @@ def create_database_repository(
         if isinstance(value, str):
             settings[key] = value
     project_code = request.matchdict["projcode"]
+
+    survey_columns = get_form_survey_columns(request, project, form)
+
     task = create_mysql_repository.apply_async(
         (
             settings,
@@ -43,6 +47,7 @@ def create_database_repository(
             repository_string,
             request.locale_name,
             discard_testing_data,
+            survey_columns,
         ),
         queue="FormShare",
     )

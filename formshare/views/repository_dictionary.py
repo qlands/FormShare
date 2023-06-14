@@ -13,12 +13,13 @@ from formshare.processes.submission.api import (
     update_table_desc,
     get_fields_from_table,
     get_table_desc,
-    update_field_desc,
+    update_field_metadata,
     update_field_sensitive,
 )
 from formshare.views.classes import PrivateView
 from pyramid.httpexceptions import HTTPNotFound
 from pyramid.response import Response
+from pyramid.httpexceptions import HTTPFound
 
 
 class EditDictionaryTables(PrivateView):
@@ -130,7 +131,7 @@ class EditDictionaryFields(PrivateView):
                 raise HTTPNotFound
             table_desc = get_table_desc(self.request, project_id, form_id, table_id)
             fields, checked = get_fields_from_table(
-                self.request, user_id, project_id, form_id, table_id, []
+                self.request, project_id, form_id, table_id, []
             )
             if not fields:
                 raise HTTPNotFound
@@ -267,7 +268,7 @@ class EditDictionaryFieldMetadata(PrivateView):
                 raise HTTPNotFound
             table_desc = get_table_desc(self.request, project_id, form_id, table_id)
             fields, checked = get_fields_from_table(
-                self.request, user_id, project_id, form_id, table_id, []
+                self.request, project_id, form_id, table_id, []
             )
             if not fields:
                 print("No fields")
@@ -282,9 +283,6 @@ class EditDictionaryFieldMetadata(PrivateView):
             if not field:
                 print("Field not found")
                 raise HTTPNotFound
-
-            if self.request.method == "POST":
-                pass
 
             field_metadata = []
             for a_key in field.keys():
@@ -305,6 +303,28 @@ class EditDictionaryFieldMetadata(PrivateView):
                             "metadata_editable": key_editable,
                         }
                     )
+
+            if self.request.method == "POST":
+                form_data = self.get_post_dict()
+                update_dict = {}
+                for a_key in form_data.keys():
+                    if a_key in field.keys():
+                        key_description, key_editable = self.get_metadata_info(
+                            user_id, project_id, form_id, table_id, field_id, a_key
+                        )
+                        if key_editable:
+                            update_dict[a_key] = form_data[a_key]
+                if update_dict:
+                    update_field_metadata(
+                        self.request,
+                        project_id,
+                        form_id,
+                        table_id,
+                        field_id,
+                        update_dict,
+                    )
+                self.returnRawViewResult = True
+                return HTTPFound(location=self.request.url)
 
             return {
                 "projectDetails": project_details,

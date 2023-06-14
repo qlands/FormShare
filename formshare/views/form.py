@@ -3591,7 +3591,7 @@ class GetSubMissionInfo(PrivateView):
             raise HTTPNotFound
 
         fields, checked = get_fields_from_table(
-            self.request, user_id, project_id, form_id, "maintable", [], False
+            self.request, project_id, form_id, "maintable", [], False
         )
         if form_data["form_schema"] is None:
             submission_info = get_dataset_info_from_file(
@@ -3751,7 +3751,7 @@ class CaseLookUpCSV(PrivateView):
 
         form_id = get_case_form(self.request, project_id)
         fields, checked = get_fields_from_table(
-            self.request, user_id, project_id, form_id, "maintable", [], False
+            self.request, project_id, form_id, "maintable", [], False
         )
 
         form_data = get_form_data(self.request, project_id, form_id)
@@ -3909,7 +3909,7 @@ class CaseLookUpTable(PrivateView):
 
         form_id = get_case_form(self.request, project_id)
         fields, checked = get_fields_from_table(
-            self.request, user_id, project_id, form_id, "maintable", [], False
+            self.request, project_id, form_id, "maintable", [], False
         )
 
         form_data = get_form_data(self.request, project_id, form_id)
@@ -4781,7 +4781,7 @@ class DownloadKML(PrivateView):
             raise HTTPNotFound
 
         fields, checked = get_fields_from_table(
-            self.request, user_id, project_id, form_id, "maintable", [], False
+            self.request, project_id, form_id, "maintable", [], False
         )
 
         if self.request.method == "POST":

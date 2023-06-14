@@ -162,6 +162,7 @@ def t_e_s_t_repository(test_object):
             "",
             "en",
             True,
+            [],
             form_reptask,
         )
 
@@ -318,6 +319,7 @@ def t_e_s_t_repository(test_object):
             "",
             "en",
             False,
+            [],
             form_reptask,
         )
 
@@ -496,6 +498,7 @@ def t_e_s_t_repository(test_object):
             "",
             "en",
             False,
+            [],
             form_reptask,
         )
 

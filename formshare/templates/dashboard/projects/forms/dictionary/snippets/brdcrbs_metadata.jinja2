@@ -17,7 +17,7 @@
             <a href="{{ request.route_url("editDictTables",userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}">{{ _('Dictionary tables') }}</a>
         </li>
         <li class="breadcrumb-item">
-            <a href="{{ request.route_url("editDictFields",userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, tableid=table_name) }}">{{ _('Dictionary fields in') }} {{ table_desc }}</a>
+            <a href="{{ request.route_url("editDictFields",userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, tableid=table_name) }}">{{ _('Dictionary fields in') }} {{ table_name }}</a>
         </li>
         <li class="breadcrumb-item active">
             <strong>{{ _('Metadata of ') }} {{ field }}</strong>

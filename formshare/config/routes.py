@@ -1038,7 +1038,7 @@ def load_routes(config, settings):
             "editDictFieldMetadata",
             "/user/{userid}/project/{projcode}/form/{formid}/dictionary/table/{tableid}/{fieldid}/metadata",
             EditDictionaryFieldMetadata,
-            "dashboard/projects/forms/dictionary/edit_fields.jinja2",
+            "dashboard/projects/forms/dictionary/edit_field_metadata.jinja2",
         )
     )
 

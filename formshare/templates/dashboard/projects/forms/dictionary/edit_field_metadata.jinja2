@@ -13,7 +13,32 @@
             <div class="wrapper wrapper-content">
                 <div class="ibox">
                     <div class="ibox-content">
-
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                {% block metadata_head %}
+                                    <tr>
+                                        <th>Metadata </th>
+                                        <th>Value </th>
+                                    </tr>
+                                {% endblock metadata_head %}
+                                </thead>
+                                <tbody>
+                                {% block metadata_body %}
+                                    {% for an_item in field_metadata %}
+                                        <tr>
+                                            <td>{{ an_item.metadata_desc }}</td>
+                                            {% if an_item.metadata_editable == true %}
+                                                <td><input type="text" name="{{ an_item.metadata_key }}" value="{{ an_item.metadata_value }}"></td>
+                                            {% else %}
+                                                <td>{{ an_item.metadata_value }}</td>
+                                            {% endif %}
+                                        </tr>
+                                    {% endfor %}
+                                {% endblock metadata_body %}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>

@@ -27,6 +27,7 @@ from formshare.processes.db import (
     update_dictionary_table_desc,
     update_dictionary_field_desc,
     update_dictionary_field_sensitive,
+    get_form_survey_columns,
 )
 from formshare.processes.elasticsearch.record_index import (
     delete_form_records,
@@ -909,6 +910,7 @@ def get_fields_from_table(
     result = []
     checked = 0
     dict_fields = get_dictionary_fields(request, project, form, table_name)
+    survey_columns = get_form_survey_columns(request, project, form)
     if dict_fields:
         for field in dict_fields:
             found = False
@@ -948,13 +950,8 @@ def get_fields_from_table(
                 "editable": editable,
             }
 
-            extra_properties = []
-            for plugin in plugins.PluginImplementations(plugins.IFormDataColumns):
-                extra_properties = plugin.get_form_survey_properties(
-                    request.registry.settings, user, project, form
-                )
-            for a_property in extra_properties:
-                data[a_property] = field.get(a_property)
+            for a_column in survey_columns:
+                data[a_column] = field.get(a_column)
 
             if data["rlookup"] == "true" and get_values:
                 data["lookupvalues"] = get_lookup_values(

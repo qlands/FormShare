@@ -9,7 +9,7 @@ import shutil
 import uuid
 from decimal import Decimal
 from subprocess import Popen, PIPE
-import formshare.plugins as plugins
+
 import paginate
 import pandas as pd
 from PIL import Image
@@ -57,7 +57,7 @@ __all__ = [
     "get_tables_from_form",
     "get_tables_from_original_form",
     "update_table_desc",
-    "update_field_desc",
+    "update_field_metadata",
     "update_field_sensitive",
     "get_fields_from_table",
     "get_table_desc",
@@ -740,7 +740,7 @@ def update_table_desc(request, project, form, table_name, description):
         return False
 
 
-def update_field_desc(request, project, form, table_name, field_name, description):
+def update_field_metadata(request, project, form, table_name, field_name, new_metadata):
     """
     Update the description of a field in the DB and in the XML file
     :param request: Pyramid request object
@@ -748,11 +748,25 @@ def update_field_desc(request, project, form, table_name, field_name, descriptio
     :param form: Form ID
     :param table_name: Table name
     :param field_name: Field name
-    :param description: New description
+    :param new_metadata: New metadata
     :return:
     """
+    new_field_data = {}
+    new_xml_data = {}
+    for key, value in new_metadata.items():
+        if key == "desc":
+            new_field_data["field_desc"] = value
+            new_xml_data["desc"] = value
+        else:
+            if key == "ontology":
+                new_field_data["field_ontology"] = value
+                new_xml_data["formshare_ontological_term"] = value
+            else:
+                new_field_data[key] = value
+                new_xml_data[key] = value
+
     update_dictionary_field_desc(
-        request, project, form, table_name, field_name, description
+        request, project, form, table_name, field_name, new_field_data
     )
     create_file = get_form_xml_create_file(request, project, form)
     if os.path.exists(create_file):
@@ -762,7 +776,8 @@ def update_field_desc(request, project, form, table_name, field_name, descriptio
         if table is not None:
             field = table.find(".//field[@name='" + field_name + "']")
             if field is not None:
-                field.set("desc", description)
+                for key, value in new_xml_data.items():
+                    field.set(key, value)
             try:
                 # Crete a backup the first time the file is edited
                 if not os.path.exists(create_file + ".bk"):
@@ -895,7 +910,7 @@ def _to_string(value):
 
 
 def get_fields_from_table(
-    request, user, project, form, table_name, current_fields, get_values=True
+    request, project, form, table_name, current_fields, get_values=True
 ):
     """
     This function get the fields of a table from the DB or the XML file

@@ -4,7 +4,7 @@ import uuid
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
 from sqlalchemy.orm.session import Session
-from formshare.models import DictTable, DictField, map_from_schema
+from formshare.models import DictTable, DictField, map_from_schema, map_to_schema
 from formshare.processes.db.form import get_form_xml_create_file
 from lxml import etree
 from sqlalchemy.exc import IntegrityError
@@ -219,7 +219,7 @@ def update_dictionary_field_sensitive(
         return False
 
 
-def update_dictionary_field_desc(request, project, form, table, field, description):
+def update_dictionary_field_desc(request, project, form, table, field, new_metadata):
     """
     Update the description of a Field
     :param request: Pyramid request object
@@ -227,10 +227,11 @@ def update_dictionary_field_desc(request, project, form, table, field, descripti
     :param form: Form ID
     :param table: Table name
     :param field: Field Name
-    :param description: New description
+    :param new_metadata: New metadata
     :return: True or False
     """
     try:
+        mapped_data = map_to_schema(DictField, new_metadata)
         request.dbsession.query(DictField).filter(
             DictField.project_id == project
         ).filter(DictField.form_id == form).filter(
@@ -238,7 +239,7 @@ def update_dictionary_field_desc(request, project, form, table, field, descripti
         ).filter(
             DictField.field_name == field
         ).update(
-            {"field_desc": description}
+            mapped_data
         )
         request.dbsession.flush()
         return True

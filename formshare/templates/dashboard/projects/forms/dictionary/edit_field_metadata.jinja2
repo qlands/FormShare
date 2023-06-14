@@ -13,32 +13,44 @@
             <div class="wrapper wrapper-content">
                 <div class="ibox">
                     <div class="ibox-content">
-                        <div class="table-responsive">
-                            <table class="table table-striped">
-                                <thead>
-                                {% block metadata_head %}
-                                    <tr>
-                                        <th>Metadata </th>
-                                        <th>Value </th>
-                                    </tr>
-                                {% endblock metadata_head %}
-                                </thead>
-                                <tbody>
-                                {% block metadata_body %}
-                                    {% for an_item in field_metadata %}
-                                        <tr>
-                                            <td>{{ an_item.metadata_desc }}</td>
-                                            {% if an_item.metadata_editable == true %}
-                                                <td><input type="text" name="{{ an_item.metadata_key }}" value="{{ an_item.metadata_value }}"></td>
-                                            {% else %}
-                                                <td>{{ an_item.metadata_value }}</td>
-                                            {% endif %}
-                                        </tr>
-                                    {% endfor %}
-                                {% endblock metadata_body %}
-                                </tbody>
-                            </table>
-                        </div>
+                        {% block metadata_content %}
+                            <form role="form" method="post" action="{{ request.url }}">
+                                {{ form.secure_form(request) }}
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead>
+                                        {% block metadata_head %}
+                                            <tr>
+                                                <th>Metadata </th>
+                                                <th>Value </th>
+                                            </tr>
+                                        {% endblock metadata_head %}
+                                        </thead>
+                                        <tbody>
+                                        {% block metadata_body %}
+                                            {% for an_item in field_metadata %}
+                                                <tr>
+                                                    <td>{{ an_item.metadata_desc }}</td>
+                                                    {% if an_item.metadata_editable == true %}
+                                                        <td><input type="text" name="{{ an_item.metadata_key }}" value="{{ an_item.metadata_value }}"></td>
+                                                    {% else %}
+                                                        <td>{{ an_item.metadata_value }}</td>
+                                                    {% endif %}
+                                                </tr>
+                                            {% endfor %}
+                                        {% endblock metadata_body %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% block metadata_form_actions %}
+                                    <div class="form-group row">
+                                        <div class="col-sm-4 col-sm-offset-2">
+                                            <button class="btn btn-primary btn-sm" type="submit">{{ _('Update metadata') }}</button>
+                                        </div>
+                                    </div>
+                                {% endblock metadata_form_actions %}
+                            </form>
+                        {% endblock metadata_content %}
                     </div>
                 </div>
             </div>

@@ -325,7 +325,7 @@ class PartnerGetSubMissionInfo(PartnerView):
             raise HTTPNotFound
 
         fields, checked = get_fields_from_table(
-            self.request, user_id, project_id, form_id, "maintable", [], False
+            self.request, project_id, form_id, "maintable", [], False
         )
         if form_data["form_schema"] is None:
             submission_info = get_dataset_info_from_file(

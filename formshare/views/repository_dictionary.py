@@ -271,7 +271,6 @@ class EditDictionaryFieldMetadata(PrivateView):
                 self.request, project_id, form_id, table_id, []
             )
             if not fields:
-                print("No fields")
                 raise HTTPNotFound
 
             field = {}
@@ -281,7 +280,6 @@ class EditDictionaryFieldMetadata(PrivateView):
                     break
 
             if not field:
-                print("Field not found")
                 raise HTTPNotFound
 
             field_metadata = []

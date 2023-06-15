@@ -19,7 +19,7 @@ def t_e_s_t_data_columns(test_object):
         status=302,
         upload_files=[("xlsx", a_resource_file)],
     )
-    assert "FS_error" in res.headers
+    assert "FS_error" not in res.headers
 
     # Get the details of a form
     res = test_object.testapp.get(
@@ -63,17 +63,39 @@ def t_e_s_t_data_columns(test_object):
     )
 
     # Generate the repository using celery fails due to language
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/repository/create".format(
+            test_object.randonLogin,
+            test_object.project,
+            "data_columns_20230614",
+        ),
+        status=200,
+    )
+    test_object.root.assertIn(b"climmob", res.body)
+
+    # Generate the repository using celery fails due to language
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/repository/create".format(
             test_object.randonLogin,
             test_object.project,
             "data_columns_20230614",
         ),
-        {"form_pkey": "collection_date", "start_stage1": ""},
+        {
+            "form_pkey": "collection_date",
+            "start_stage1": "",
+            "survey_data_columns": "climmob",
+            "choices_data_columns": ["admlevel1", "admlevel2", "factor", "sequence"],
+        },
         status=200,
     )
     test_object.root.assertIn(b"form_deflang", res.body)
-    test_object.root.assertIn(b"climmob", res.body)
+    test_object.root.assertIn(
+        b"climmob|formshare_sensitive|formshare_encrypted|formshare_ontological_term",
+        res.body,
+    )
+    test_object.root.assertIn(
+        b"admlevel1|admlevel2|factor|sequence|formshare_ontological_term", res.body
+    )
 
     # Generate the repository using celery pass
     res = test_object.testapp.post(
@@ -203,7 +225,7 @@ def t_e_s_t_data_columns(test_object):
             "climmob": "QST000",
             "ontology": "c_34835@cropontology",
         },
-        status=200,
+        status=302,
     )
 
     res = test_object.testapp.get(

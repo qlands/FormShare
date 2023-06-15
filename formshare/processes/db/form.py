@@ -1217,12 +1217,13 @@ def get_form_survey_columns(request, project, form, filter_columns=True):
         .first()
     )
     if form_data is not None:
-        res = form_data.form_surveycolumns.split("|")
-        if filter_columns:
-            res.remove("formshare_ontological_term")
-            res.remove("formshare_encrypted")
-            res.remove("formshare_sensitive")
-        return res
+        if form_data.form_surveycolumns is not None:
+            res = form_data.form_surveycolumns.split("|")
+            if filter_columns:
+                res.remove("formshare_ontological_term")
+                res.remove("formshare_encrypted")
+                res.remove("formshare_sensitive")
+            return res
     else:
         return []
 

@@ -90,36 +90,7 @@ def t_e_s_t_repository_tasks(test_object):
         ),
         status=200,
     )
-    # Update the description of a field without description
-    test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/dictionary/table/{}/fields".format(
-            test_object.randonLogin,
-            test_object.project,
-            test_object.formID,
-            "maintable",
-        ),
-        {
-            "post_type": "change_desc",
-            "field_name": "i_d",
-            "field_desc": "",
-        },
-        status=200,
-    )
-    # Update the description of a field
-    test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/dictionary/table/{}/fields".format(
-            test_object.randonLogin,
-            test_object.project,
-            test_object.formID,
-            "maintable",
-        ),
-        {
-            "post_type": "change_desc",
-            "field_name": "i_d",
-            "field_desc": "ID of the farmer",
-        },
-        status=200,
-    )
+
     # Update the primary key as sensitive
     test_object.testapp.post(
         "/user/{}/project/{}/form/{}/dictionary/table/{}/fields".format(

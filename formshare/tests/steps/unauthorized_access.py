@@ -197,6 +197,17 @@ def t_e_s_t_unauthorized_access(test_object):
     )
 
     test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/dictionary/table/{}/{}/metadata".format(
+            test_object.randonLogin,
+            test_object.project,
+            test_object.formID,
+            "maintable",
+            "surveyid",
+        ),
+        status=404,
+    )
+
+    test_object.testapp.get(
         "/user/{}/project/{}/form/{}/submissions".format(
             test_object.randonLogin, test_object.project, test_object.formID
         ),
@@ -936,6 +947,17 @@ def t_e_s_t_unauthorized_access(test_object):
         status=200,
     )
 
+    test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/dictionary/table/{}/{}/metadata".format(
+            test_object.randonLogin,
+            test_object.project,
+            test_object.formID,
+            "maintable",
+            "surveyid",
+        ),
+        status=200,
+    )
+
     test_object.testapp.post(
         "/user/{}/project/{}/form/{}/dictionary/table/{}/fields".format(
             test_object.randonLogin,
@@ -944,9 +966,23 @@ def t_e_s_t_unauthorized_access(test_object):
             "maintable",
         ),
         {
-            "post_type": "change_desc",
+            "post_type": "change_as_sensitive",
             "field_name": "i_d",
-            "field_desc": "ID of the farmer",
+            "field_protection": "recode",
+        },
+        status=404,
+    )
+
+    test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/dictionary/table/{}/fields".format(
+            test_object.randonLogin,
+            test_object.project,
+            test_object.formID,
+            "maintable",
+            "surveyid",
+        ),
+        {
+            "desc": "Survey ID",
         },
         status=404,
     )

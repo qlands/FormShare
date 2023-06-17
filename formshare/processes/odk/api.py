@@ -491,7 +491,7 @@ def check_jxform_file(
                 return 0, ""
             else:
                 root = etree.fromstring(stdout)
-                languages = root.findall(".//language")
+                languages = root.findall(".//ODKlanguage")
                 if languages:
                     for a_language in languages:
                         lng_code = a_language.get("code", "")
@@ -2417,7 +2417,7 @@ def create_repository(
             if not for_merging:
                 if default_language is None:
                     root = etree.fromstring(stdout.decode())
-                    language_array = root.findall(".//language")
+                    language_array = root.findall(".//ODKlanguage")
                     if language_array:
                         return 3, stdout.decode()
 
@@ -2648,7 +2648,7 @@ def create_repository(
                     df_language = df_language.replace("(", "")
                     parts = df_language.split("|")
                     root = etree.fromstring(stdout.decode())
-                    language_array = root.findall(".//language")  # language
+                    language_array = root.findall(".//ODKlanguage")  # language
                     language_found = False
                     if language_array:
                         for a_language in language_array:
@@ -2682,7 +2682,7 @@ def create_repository(
                         return 22, lng_message
                 else:
                     root = etree.fromstring(stdout.decode())
-                    language_array = root.findall(".//language")  # language
+                    language_array = root.findall(".//ODKlanguage")  # language
                     if language_array:
                         return 23, _(
                             "This version of the form is in multiple languages but the previous one "

@@ -88,7 +88,7 @@ def t_e_s_t_data_columns(test_object):
         },
         status=200,
     )
-    test_object.root.assertIn(b"form_deflang", res.body)
+    test_object.root.assertIn(b"Swahili", res.body)
     test_object.root.assertIn(
         b"climmob|formshare_sensitive|formshare_encrypted|formshare_ontological_term",
         res.body,

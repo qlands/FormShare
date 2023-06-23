@@ -308,7 +308,7 @@ class GenerateRepository(PrivateView):
                                 if result_code == 3 or result_code == 4:
                                     root = etree.fromstring(message)
                                     language_array = root.findall(
-                                        ".//language"
+                                        ".//ODKlanguage"
                                     )  # language
                                     if language_array:
                                         for aLang in language_array:

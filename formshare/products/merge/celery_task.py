@@ -50,7 +50,7 @@ def get_odk_path(settings):
     return os.path.join(repository_path, *["odk"])
 
 
-def move_changes(node_b, root_a):
+def move_changes(node_b, root_a, survey_data_columns):
     target_table = None
     for tag in node_b.iter():
         if not len(tag):
@@ -58,12 +58,20 @@ def move_changes(node_b, root_a):
             field_desc = tag.get("desc")
             field_sensitive = tag.get("sensitive")
             field_protection = tag.get("protection")
+            extra_columns = {}
+            for a_column in survey_data_columns:
+                if a_column != "formshare_sensitive":
+                    if tag.get(a_column, None) is not None:
+                        extra_columns[a_column] = tag.get(a_column)
+
             target_field = target_table.find(".//field[@name='" + field_name + "']")
             if target_field is not None:
                 target_field.set("desc", field_desc)
                 if field_sensitive is not None:
                     target_field.set("sensitive", field_sensitive)
                     target_field.set("protection", field_protection)
+                for key, value in extra_columns.items():
+                    target_field.set(key, value)
         else:
             current_table = tag.get("name")
             if current_table is not None:
@@ -98,6 +106,7 @@ def make_database_changes(
     a_form_directory,
     task_id,
     _,
+    survey_data_columns,
 ):
     error = False
     error_message = ""
@@ -317,7 +326,7 @@ def make_database_changes(
             tree_c = etree.parse(c_create_xml_file)
             root_b = tree_b.getroot()
             root_c = tree_c.getroot()
-            move_changes(root_b, root_c)
+            move_changes(root_b, root_c, survey_data_columns)
             tree_c.write(
                 c_create_xml_file,
                 pretty_print=True,
@@ -393,7 +402,7 @@ def get_one_assistant(db_session, project, form):
             return None, None
 
 
-def update_dictionary_tables(db_session, schema, xml_create_file):
+def update_dictionary_tables(db_session, schema, xml_create_file, survey_data_columns):
     def create_new_field_dict(a_table, a_field, project, form):
         field_desc = a_field.get("desc", "")
         field_rlookup = a_field.get("rlookup", "false")
@@ -407,10 +416,31 @@ def update_dictionary_tables(db_session, schema, xml_create_file):
         else:
             field_key = 0
         field_sensitive = a_field.get("sensitive", "false")
-        if field_sensitive == "true":
+        formshare_sensitive = a_field.get("formshare_sensitive", "no")
+        if (
+            field_sensitive == "true"
+            or formshare_sensitive == "yes"
+            or formshare_sensitive == "1"
+        ):
             field_sensitive = 1
+            if field_key == 0:
+                field_protection = a_field.get("protection", "exclude")
+            else:
+                field_protection = a_field.get("protection", "recode")
         else:
             field_sensitive = 0
+            field_protection = None
+
+        if (
+            a_field.get("formshare_encrypted", "no") == "yes"
+            or a_field.get("formshare_encrypted", "no") == "1"
+        ):
+            field_encrypted = 1
+        else:
+            field_encrypted = 0
+
+        field_ontology = a_field.get("formshare_ontological_term")
+
         if field_desc == "":
             field_desc = "Without a description"
         new_field_dict = {
@@ -434,13 +464,27 @@ def update_dictionary_tables(db_session, schema, xml_create_file):
             "field_size": a_field.get("size", 0),
             "field_decsize": a_field.get("decsize", 0),
             "field_sensitive": field_sensitive,
-            "field_protection": a_field.get("protection"),
+            "field_protection": field_protection,
+            "field_encrypted": field_encrypted,
+            "field_ontology": field_ontology,
         }
         if a_field.get("selecttype") == "2":
             if new_field_dict["field_externalfilename"].upper().find(".CSV") == -1:
                 new_field_dict["field_externalfilename"] = (
                     new_field_dict["field_externalfilename"] + ".csv"
                 )
+
+        if "formshare_ontological_term" in survey_data_columns:
+            survey_data_columns.remove("formshare_ontological_term")
+        if "formshare_encrypted" in survey_data_columns:
+            survey_data_columns.remove("formshare_encrypted")
+        if "formshare_sensitive" in survey_data_columns:
+            survey_data_columns.remove("formshare_sensitive")
+
+        for a_column in survey_data_columns:
+            if a_field.get(a_column) is not None:
+                new_field_dict[a_column] = a_field.get(a_column)
+
         return new_field_dict
 
     def store_tables(element, project, form, lookup):
@@ -578,6 +622,7 @@ def internal_merge_into_repository(
     b_hex_color,
     locale,
     discard_testing_data,
+    survey_data_columns,
     task_id,
 ):
     log.info(
@@ -658,6 +703,7 @@ def internal_merge_into_repository(
                 a_form_directory,
                 task_id,
                 _,
+                survey_data_columns,
             )
             # At this stage all changes were made to the new schema and C XML create file. Now we need to update
             # the FormShare forms with the new schema. This is a critical part. If something goes wrong
@@ -714,7 +760,12 @@ def internal_merge_into_repository(
                 )
             log.info("Updating dictionaries")
             send_task_status_to_form(settings, task_id, _("Updating dictionaries"))
-            update_dictionary_tables(db_session, b_schema_name, c_create_xml_file)
+            update_dictionary_tables(
+                db_session,
+                b_schema_name,
+                c_create_xml_file,
+                survey_data_columns,
+            )
             transaction.commit()
             critical_part = False
         except Exception as e:
@@ -848,6 +899,7 @@ def merge_into_repository(
     b_hex_color,
     locale,
     discard_testing_data,
+    survey_data_columns,
     test_task_id=None,
 ):
     if test_task_id is None:
@@ -869,6 +921,7 @@ def merge_into_repository(
             b_hex_color,
             locale,
             discard_testing_data,
+            survey_data_columns,
             task_id,
         )
     except Exception as e:

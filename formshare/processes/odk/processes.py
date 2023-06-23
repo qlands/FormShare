@@ -542,20 +542,31 @@ def get_form_data(project, form, request):
         res["form_pkey"] = data["form_pkey"]
         res["form_deflang"] = data["form_deflang"]
         res["form_othlangs"] = data["form_othlangs"]
+        res["form_mergelngerror"] = data["form_mergelngerror"]
         res["form_stage"] = data["form_stage"]
         res["form_abletomerge"] = data["form_abletomerge"]
         res["parent_form"] = data["parent_form"]
+
+        res["form_case"] = data["form_case"]
+        res["form_casetype"] = data["form_casetype"]
+        res["form_caseselector"] = data["form_caseselector"]
+
         res["form_createxmlfile"] = data["form_createxmlfile"]
         res["form_insertxmlfile"] = data["form_insertxmlfile"]
         res["form_hexcolor"] = data["form_hexcolor"]
         if data["form_surveycolumns"] is not None:
             res["form_surveycolumns"] = data["form_surveycolumns"].split(",")
+            if len(res["form_surveycolumns"]) == 1:
+                res["form_surveycolumns"] = data["form_surveycolumns"].split("|")
         else:
             res["form_surveycolumns"] = []
+
         if data["form_choicescolumns"] is not None:
             res["form_choicescolumns"] = data["form_choicescolumns"].split(",")
+            if len(res["form_choicescolumns"]) == 1:
+                res["form_choicescolumns"] = data["form_choicescolumns"].split("|")
         else:
-            data["form_choicescolumns"] = []
+            res["form_choicescolumns"] = []
     return res
 
 

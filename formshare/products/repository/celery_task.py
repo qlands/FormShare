@@ -225,7 +225,11 @@ def update_dictionary_tables(
             field_key = 0
         field_sensitive = a_field.get("sensitive", "false")
         formshare_sensitive = a_field.get("formshare_sensitive", "no")
-        if field_sensitive == "true" or formshare_sensitive == "yes":
+        if (
+            field_sensitive == "true"
+            or formshare_sensitive == "yes"
+            or formshare_sensitive == "1"
+        ):
             field_sensitive = 1
             if field_key == 0:
                 field_protection = a_field.get("protection", "exclude")
@@ -235,7 +239,10 @@ def update_dictionary_tables(
             field_sensitive = 0
             field_protection = None
 
-        if a_field.get("formshare_encrypted", "no") == "yes":
+        if (
+            a_field.get("formshare_encrypted", "no") == "yes"
+            or a_field.get("formshare_encrypted", "no") == "1"
+        ):
             field_encrypted = 1
         else:
             field_encrypted = 0

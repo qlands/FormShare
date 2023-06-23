@@ -14,6 +14,7 @@ def merge_form(
     odk_merge_string,
     b_hex_color,
     discard_testing_data,
+    survey_data_columns,
 ):
     settings = {}
     for key, value in request.registry.settings.items():
@@ -36,6 +37,7 @@ def merge_form(
             b_hex_color,
             request.locale_name,
             discard_testing_data,
+            survey_data_columns,
         ),
         queue="FormShare",
     )

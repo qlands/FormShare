@@ -6,11 +6,17 @@
 {% block css %}
     {{ super() }}
     {% cssresource request,'formshare','switchery' %}
+    {% if survey_columns|length > 0 or choices_columns|length > 0 %}
+        {% cssresource request,'formshare','select2' %}
+    {% endif %}
 {% endblock css %}
 
 {% block topScripts %}
     {{ super() }}
     {% jsresource request,'formshare','switchery' %}
+    {% if survey_columns|length > 0 or choices_columns|length > 0 %}
+        {% jsresource request,'formshare','select2' %}
+    {% endif %}
 {% endblock topScripts %}
 
 {% block breadcrumbs %}
@@ -88,6 +94,28 @@
                                                 <label class="text-danger">{{ _("The form does not have an assistant that can submit data. If you proceed all testing data will get discarded!!!") }}</label>
                                             {% endif %}
                                         </div>
+                                        {% if survey_columns|length > 0  %}
+                                            <hr>
+                                            <div class="form-group">
+                                                <label>{{ _('Select the data columns that you want to merge from the survey sheet. (All by default)') }}</label>
+                                                <select id="form_surveycolumns" data-module="autocomplete" name="survey_data_columns" multiple="multiple" style="width: 100%">
+                                                    {% for a_column in survey_columns %}
+                                                        <option value="{{ a_column }}" selected >{{ a_column }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        {% endif %}
+                                        {% if choices_columns|length > 0  %}
+                                            <hr>
+                                            <div class="form-group">
+                                                <label>{{ _('Select the data columns that you want to merge from the choices sheet. (All by default)') }}</label>
+                                                <select id="form_choicescolumns" data-module="autocomplete" name="choices_data_columns" multiple="multiple" style="width: 100%">
+                                                    {% for a_column in choices_columns %}
+                                                        <option value="{{ a_column }}" selected >{{ a_column }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        {% endif %}
                                         {% block merge_form_actions %}
                                             {% if errortype != 1 %}
                                                 <button type="submit" style="margin-top: 10px" class="btn btn-primary">{{ _('Merge new version') }}</button>
@@ -117,6 +145,12 @@
             $('#form_update_form').submit(function() {
                 $(this).find("button[type='submit']").prop('disabled',true);
             });
+            {% if survey_columns|length > 0 %}
+                $("#form_surveycolumns").select2();
+            {% endif %}
+            {% if choices_columns|length > 0 %}
+                $("#form_choicescolumns").select2();
+            {% endif %}
         });
     </script>
 {% endblock scripts %}

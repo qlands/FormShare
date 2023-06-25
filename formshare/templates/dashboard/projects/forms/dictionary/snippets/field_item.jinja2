@@ -6,13 +6,15 @@
             </a>
             <div class="media-body ">
                 {{ field.name }} - <span id="desc_{{ field.name }}"><span>{{ field.desc }}</span></span><br>
-                <p class="text-muted">{% if field.sensitive == 'true' %}<span class="text-danger">{{ _('Sensitive') }} - {{ _('Protection type') }}: {{ field.protection_desc }}</span>{% else %}{{ _('Not sensitive') }}{% endif %}</p>
+                <p class="text-muted">{% if field.sensitive == 'true' or field.encrypted == 'true' %}<span class="text-danger">{{ _('Sensitive') }} - {{ _('Protection type') }}: {% if field.encrypted != "true" %}{{ field.protection_desc }} {% else %} {{ _('encrypted') }} {% endif %}</span>{% else %}{{ _('Not sensitive') }}{% endif %}</p>
                 <div class="actions">
                     {% if access_type <= 3 %}
                         {% block field_item_processing_actions %}
                             <a href="{{ request.route_url("editDictFieldMetadata",userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id, tableid=table_name, fieldid=field.name) }}" class="btn btn-xs btn-white"><i class="fas fa-pencil-alt"></i> {{ _('Edit metadata') }}</a>
-                            {% if field.sensitive == 'true' %}
-                                <a onclick="post_not_sensitive_change('{{ field.name }}');" class="btn btn-xs btn-white set-not-sensi"><i class="far fa-eye"></i> {{ _('Set as not sensitive') }} </a>
+                            {% if field.sensitive == 'true' or field.encrypted == 'true' %}
+                                {% if field.encrypted != 'true' %}
+                                    <a onclick="post_not_sensitive_change('{{ field.name }}');" class="btn btn-xs btn-white set-not-sensi"><i class="far fa-eye"></i> {{ _('Set as not sensitive') }} </a>
+                                {% endif %}
                             {% else %}
                                 <a data-field-type="{% if field.key == 'false' and field.rlookup == 'false' %}normal{% else %}{% if field.key == 'true' %}key{% else %}lookup{% endif %}{% endif %}" data-field-name="{{ field.name }}" data-field-protection="{{ field.protection }}" data-toggle="modal" data-target="#set_as_sensible" class="btn btn-xs btn-white field-item-sensitive"><i class="far fa-eye-slash"></i> {{ _('Set as sensitive') }}</a>
                             {% endif %}

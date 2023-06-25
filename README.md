@@ -121,6 +121,8 @@ The database signature for stable 2.26.0 is e2d6d5aa3700
 
 The Docker image for stable 2.26.0 is 20230330
 
+Requires ODKTools [2.25](https://github.com/qlands/odktools/releases/tag/2.5)
+
 Installation
 ------------
 Please read the [installation guide](install_steps.md) if you want to install FormShare manually. However, we encourage you to use the Docker Compose file available in the docker_compose directory. This will help you later on in backing FormShare or move it to another server.

@@ -319,6 +319,7 @@ def t_e_s_t_data_columns(test_object):
         ),
         {
             "survey_data_columns": "meld",
+            "choices_data_columns": "lbl2_rank",
             "discard_testing_data": "",
         },
         status=302,
@@ -335,3 +336,48 @@ def t_e_s_t_data_columns(test_object):
         status=200,
     )
     test_object.root.assertTrue(b"This is the sub-version of" in res.body)
+
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/dictionary/table/{}/{}/metadata".format(
+            test_object.randonLogin,
+            test_object.project,
+            "data_columns_20230614",
+            "maintable",
+            "hr_qst_007",
+        ),
+        status=200,
+    )
+    test_object.root.assertTrue(b"Gender changed" in res.body)
+    test_object.root.assertTrue(b"c_34835@cropontology" in res.body)
+    test_object.root.assertTrue(b"climmob" in res.body)
+    test_object.root.assertTrue(b"QST008" in res.body)
+    test_object.root.assertFalse(b"meld" in res.body)
+
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/dictionary/table/{}/{}/metadata".format(
+            test_object.randonLogin,
+            test_object.project,
+            "data_columns_20230623",
+            "maintable",
+            "hr_qst_007",
+        ),
+        status=200,
+    )
+    test_object.root.assertTrue(b"Gender" in res.body)
+    test_object.root.assertTrue(b"c_34835@agrovoc" in res.body)
+    test_object.root.assertTrue(b"QST108" in res.body)
+    test_object.root.assertTrue(b"climmob" in res.body)
+    test_object.root.assertTrue(b"meld" in res.body)
+    test_object.root.assertTrue(b"IND008" in res.body)
+
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/dictionary/table/{}/{}/metadata".format(
+            test_object.randonLogin,
+            test_object.project,
+            "data_columns_20230623",
+            "maintable",
+            "hr_qst_874",
+        ),
+        status=200,
+    )
+    test_object.root.assertTrue(b"encrypted" in res.body)

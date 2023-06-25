@@ -833,6 +833,10 @@ def update_field_sensitive(
             if field is not None:
                 field.set("sensitive", sensitive)
                 field.set("protection", protection)
+                if sensitive == "true":
+                    field.set("formshare_sensitive", "yes")
+                else:
+                    field.set("formshare_sensitive", "no")
             try:
                 # Crete a backup the first time the file is edited
                 if not os.path.exists(create_file + ".bk"):

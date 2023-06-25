@@ -97,7 +97,7 @@
                                         {% if survey_columns|length > 0  %}
                                             <hr>
                                             <div class="form-group">
-                                                <label>{{ _('Select the data columns that you want to merge from the survey sheet. (All by default)') }}</label>
+                                                <label>{{ _('Select the data columns that you want to merge from the survey sheet into the dictionary. (All by default)') }}</label>
                                                 <select id="form_surveycolumns" data-module="autocomplete" name="survey_data_columns" multiple="multiple" style="width: 100%">
                                                     {% for a_column in survey_columns %}
                                                         <option value="{{ a_column }}" selected >{{ a_column }}</option>
@@ -116,6 +116,7 @@
                                                 </select>
                                             </div>
                                         {% endif %}
+                                        <p style="color: red">{{ _('Note: Encryption and sensitivity are the ONLY properties in the dictionary that will propagate to the new version. For example, a field that was encrypted in') }} "{{ oldformData.name }}" {{ _('will remain encrypted in') }} "{{ formData.name }}" {{ _('even if its marked as') }} formshare_encrypted=no {{ _('in') }} "{{ formData.name }}". {{ _('The same for fields marked as sensitive.') }}</p>
                                         {% block merge_form_actions %}
                                             {% if errortype != 1 %}
                                                 <button type="submit" style="margin-top: 10px" class="btn btn-primary">{{ _('Merge new version') }}</button>

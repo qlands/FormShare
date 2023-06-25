@@ -2263,6 +2263,7 @@ def merge_versions(
     a_insert,
     b_create,
     b_insert,
+    survey_data_columns,
     ignore_string=None,
 ):
     odk_tools_merge_versions = os.path.join(
@@ -2302,6 +2303,7 @@ def merge_versions(
             odk_dir, *["forms", xform_directory, "merging_files", "output.xml"]
         ),
         "-t m",
+        "-p {}".format(survey_data_columns),
     ]
     if ignore_string is not None:
         args.append("-i " + ignore_string)

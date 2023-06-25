@@ -158,8 +158,8 @@ def t_e_s_t_form_merge(test_object):
             test_object.project,
             "tormenta20201117",
             "tormenta20201105",
-            "discard_testing_data",
         ),
+        {"discard_testing_data": ""},
         status=302,
     )
     assert "FS_error" not in res.headers

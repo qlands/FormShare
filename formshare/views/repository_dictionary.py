@@ -283,6 +283,9 @@ class EditDictionaryFieldMetadata(PrivateView):
                 raise HTTPNotFound
 
             field_metadata = []
+            if field["encrypted"] == "true":
+                field["sensitive"] = "true"
+                field["protection"] = "encrypted"
             for a_key in field.keys():
                 if (
                     a_key != "checked"

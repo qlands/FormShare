@@ -50,28 +50,22 @@ def get_odk_path(settings):
     return os.path.join(repository_path, *["odk"])
 
 
-def move_changes(node_b, root_a, survey_data_columns):
+def move_changes(node_b, root_a):
     target_table = None
     for tag in node_b.iter():
         if not len(tag):
             field_name = tag.get("name")
-            field_desc = tag.get("desc")
             field_sensitive = tag.get("sensitive")
             field_protection = tag.get("protection")
-            extra_columns = {}
-            for a_column in survey_data_columns:
-                if a_column != "formshare_sensitive":
-                    if tag.get(a_column, None) is not None:
-                        extra_columns[a_column] = tag.get(a_column)
-
+            formshare_encrypted = tag.get("formshare_encrypted", "no")
             target_field = target_table.find(".//field[@name='" + field_name + "']")
             if target_field is not None:
-                target_field.set("desc", field_desc)
+                target_field.set("formshare_encrypted", formshare_encrypted)
                 if field_sensitive is not None:
-                    target_field.set("sensitive", field_sensitive)
-                    target_field.set("protection", field_protection)
-                for key, value in extra_columns.items():
-                    target_field.set(key, value)
+                    if field_sensitive == "true":
+                        target_field.set("sensitive", field_sensitive)
+                        target_field.set("protection", field_protection)
+                        target_field.set("formshare_sensitive", "yes")
         else:
             current_table = tag.get("name")
             if current_table is not None:
@@ -106,7 +100,6 @@ def make_database_changes(
     a_form_directory,
     task_id,
     _,
-    survey_data_columns,
 ):
     error = False
     error_message = ""
@@ -326,7 +319,7 @@ def make_database_changes(
             tree_c = etree.parse(c_create_xml_file)
             root_b = tree_b.getroot()
             root_c = tree_c.getroot()
-            move_changes(root_b, root_c, survey_data_columns)
+            move_changes(root_b, root_c)
             tree_c.write(
                 c_create_xml_file,
                 pretty_print=True,
@@ -402,7 +395,7 @@ def get_one_assistant(db_session, project, form):
             return None, None
 
 
-def update_dictionary_tables(db_session, schema, xml_create_file, survey_data_columns):
+def update_dictionary_tables(db_session, form_id, xml_create_file, survey_data_columns):
     def create_new_field_dict(a_table, a_field, project, form):
         field_desc = a_field.get("desc", "")
         field_rlookup = a_field.get("rlookup", "false")
@@ -485,7 +478,9 @@ def update_dictionary_tables(db_session, schema, xml_create_file, survey_data_co
             if a_field.get(a_column) is not None:
                 new_field_dict[a_column] = a_field.get(a_column)
 
-        return new_field_dict
+        mapped_data = map_to_schema(DictField, new_field_dict)
+
+        return mapped_data
 
     def store_tables(element, project, form, lookup):
         tables = element.findall(".//table")
@@ -586,7 +581,7 @@ def update_dictionary_tables(db_session, schema, xml_create_file, survey_data_co
     root = tree.getroot()
     element_lkp_tables = root.find(".//lkptables")
     element_tables = root.find(".//tables")
-    forms = db_session.query(Odkform).filter(Odkform.form_schema == schema).all()
+    forms = db_session.query(Odkform).filter(Odkform.form_id == form_id).all()
     for a_form in forms:
         store_tables(element_lkp_tables, a_form.project_id, a_form.form_id, 1)
         store_tables(element_tables, a_form.project_id, a_form.form_id, 0)
@@ -703,7 +698,6 @@ def internal_merge_into_repository(
                 a_form_directory,
                 task_id,
                 _,
-                survey_data_columns,
             )
             # At this stage all changes were made to the new schema and C XML create file. Now we need to update
             # the FormShare forms with the new schema. This is a critical part. If something goes wrong
@@ -758,11 +752,11 @@ def internal_merge_into_repository(
                 geo_point_variables = get_geopoint_variables(
                     db_session, project_id, a_form_id
                 )
-            log.info("Updating dictionaries")
-            send_task_status_to_form(settings, task_id, _("Updating dictionaries"))
+            log.info("Updating dictionary")
+            send_task_status_to_form(settings, task_id, _("Updating dictionary"))
             update_dictionary_tables(
                 db_session,
-                b_schema_name,
+                a_form_id,
                 c_create_xml_file,
                 survey_data_columns,
             )

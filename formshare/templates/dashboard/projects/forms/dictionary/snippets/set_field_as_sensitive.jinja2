@@ -7,6 +7,8 @@
             </div>
             {% block edit_field_desc_form %}
                 <input type="hidden" id="sensitive_field_name" name="sensitive_field_name" value="">
+                <input type="hidden" id="field_name">
+
                 {% block edit_field_desc_form_fields %}
                     <div class="form-group">
                         <label class="col-sm-2 col-form-label">{{ _('Type of protection:') }}</label>

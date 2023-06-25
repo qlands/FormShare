@@ -169,27 +169,6 @@
 
         });
 
-        function post_field_change() {
-            var field_name = $("#field_name").val();
-            var field_desc = $("#field_desc").val();
-
-            $.post("{{ request.url }}",
-                {
-                    post_type: 'change_desc',
-                    field_name: field_name,
-                    field_desc: field_desc,
-                    csrf_token: "{{ request.session.get_csrf_token() }}"
-                },
-                function (data, status) {
-                    if ((data.status === "changed") && (status === "success"))
-                    {
-                        $("#desc_" + field_name).text(field_desc);
-                        $("#btn_edit_" + field_name).attr("data-field-desc",field_desc);
-                        $("#edit_field_desc").modal('hide');
-                    }
-                });
-        }
-
         function post_sensitive_change() {
             var field_name = $("#field_name").val();
             var field_protection = $("#protection").val();
@@ -237,6 +216,8 @@
                 var field_name = $(this).attr('data-field-name');
                 var field_type = $(this).attr('data-field-type');
                 $("#field_name").val(field_name);
+                console.log(field_type);
+                console.log(field_name);
                 if (field_type === "normal")
                 {
                     $('#protection')
@@ -249,6 +230,7 @@
                 }
                 if (field_type === "key")
                 {
+                    console.log("is key");
                     $('#protection')
                         .find('option')
                         .remove()

@@ -1,4 +1,5 @@
-from formshare.processes.db.form import get_form_xml_create_file
+from formshare.processes.odk.api import get_odk_path
+import os
 from formshare.products import register_product_instance
 from formshare.products.merge.celery_task import merge_into_repository
 
@@ -21,7 +22,10 @@ def merge_form(
         if isinstance(value, str):
             settings[key] = value
     project_code = request.matchdict["projcode"]
-    b_create_xml_file = get_form_xml_create_file(request, project_id, a_form_id)
+    odk_dir = get_odk_path(request)
+    b_create_xml_file = os.path.join(
+        odk_dir, *["forms", b_form_directory, "repository", "create.xml"]
+    )
     task = merge_into_repository.apply_async(
         (
             settings,

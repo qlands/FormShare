@@ -241,3 +241,97 @@ def t_e_s_t_data_columns(test_object):
     test_object.root.assertTrue(b"Gender changed" in res.body)
     test_object.root.assertTrue(b"c_34835@cropontology" in res.body)
     test_object.root.assertTrue(b"QST008" in res.body)
+
+    paths = [
+        "resources",
+        "forms",
+        "data_columns",
+        "data_columns_a.xlsx",
+    ]
+    b_resource_file = os.path.join(test_object.path, *paths)
+
+    # Merge a new version
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/merge".format(
+            test_object.randonLogin, test_object.project, "data_columns_20230614"
+        ),
+        {
+            "for_merging": "",
+            "parent_project": test_object.projectID,
+            "parent_form": "data_columns_20230614",
+        },
+        status=302,
+        upload_files=[("xlsx", b_resource_file)],
+    )
+    assert "FS_error" not in res.headers
+
+    # Get the details of a form
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}".format(
+            test_object.randonLogin,
+            test_object.project,
+            "data_columns_20230623",
+        ),
+        status=200,
+    )
+    test_object.root.assertTrue(b"climmob" in res.body)
+    test_object.root.assertTrue(b"meld" in res.body)
+
+    # Add an assistant to a form succeeds
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/assistants/add".format(
+            test_object.randonLogin,
+            test_object.project,
+            "data_columns_20230623",
+        ),
+        {
+            "coll_id": "{}|{}".format(
+                test_object.projectID, test_object.assistantLogin
+            ),
+            "coll_can_submit": "1",
+            "coll_can_clean": "1",
+        },
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+
+    # Show the merge repository page
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/merge/into/{}".format(
+            test_object.randonLogin,
+            test_object.project,
+            "data_columns_20230623",
+            "data_columns_20230614",
+        ),
+        status=200,
+    )
+    assert "FS_error" not in res.headers
+    test_object.root.assertTrue(b"meld" in res.body)
+    test_object.root.assertFalse(b"climmob" in res.body)
+
+    # Merge the repository using celery
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/merge/into/{}".format(
+            test_object.randonLogin,
+            test_object.project,
+            "data_columns_20230623",
+            "data_columns_20230614",
+        ),
+        {
+            "survey_data_columns": "meld",
+            "discard_testing_data": "",
+        },
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+
+    time.sleep(60)  # Wait for the merge to finish
+
+    # Get the details of a form data_columns_20230623
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}".format(
+            test_object.randonLogin, test_object.project, "data_columns_20230623"
+        ),
+        status=200,
+    )
+    test_object.root.assertTrue(b"This is the sub-version of" in res.body)

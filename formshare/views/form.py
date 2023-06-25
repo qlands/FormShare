@@ -300,6 +300,7 @@ class FormDetails(PrivateView):
                 new_insert_file,
                 old_create_file,
                 old_insert_file,
+                "formshare_sensitive|formshare_encrypted|formshare_ontological_term",
             )
             if merged == 0:
                 form_data = {"form_abletomerge": 1}

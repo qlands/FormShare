@@ -149,15 +149,6 @@ class RepositoryMergeForm(PrivateView):
             old_create_file = old_form_data["form_createxmlfile"]
             old_insert_file = old_form_data["form_insertxmlfile"]
 
-            new_create_file = os.path.join(
-                odk_path,
-                *["forms", new_form_data["directory"], "repository", "create.xml"]
-            )
-            new_insert_file = os.path.join(
-                odk_path,
-                *["forms", new_form_data["directory"], "repository", "insert.xml"]
-            )
-
             if new_form_data["form_mergelngerror"] != 2:
                 def_language_to_use = old_form_data["form_deflang"]
                 other_languages_to_use = old_form_data["form_othlangs"]
@@ -271,6 +262,7 @@ class RepositoryMergeForm(PrivateView):
                     new_insert_file,
                     old_create_file,
                     old_insert_file,
+                    "|".join(survey_data_columns),
                     s_values_to_ignore,
                 )
                 if merged == 0:
@@ -289,7 +281,11 @@ class RepositoryMergeForm(PrivateView):
                         survey_data_columns,
                     )
 
-                    form_data = {"form_mergetask": task_id}
+                    form_data = {
+                        "form_mergetask": task_id,
+                        "form_surveycolumns": "|".join(survey_data_columns),
+                        "form_choicescolumns": "|".join(choices_data_columns),
+                    }
                     update_form(self.request, project_id, new_form_id, form_data)
 
                     next_page = self.request.route_url(

@@ -82,6 +82,8 @@ class User(Base):
     user_apitoken_expires_on = Column(DateTime)
     user_query_user = Column(Unicode(64))
     user_query_password = Column(Unicode(256))
+    user_can_projects = Column(INTEGER, server_default=text("'1'"))
+    user_can_forms = Column(INTEGER, server_default=text("'1'"))
 
     user_password_reset_key = Column(Unicode(64))
     user_password_reset_token = Column(Unicode(64))
@@ -107,6 +109,7 @@ class Project(Base):
     project_public = Column(INTEGER)
     project_image = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     project_case = Column(INTEGER, server_default=text("'0'"))
+    project_encrypted = Column(INTEGER, server_default=text("'0'"))
     project_icon = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     project_formlist_auth = Column(INTEGER, server_default=text("'1'"))
     project_hexcolor = Column(Unicode(60))

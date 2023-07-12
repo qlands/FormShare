@@ -19,6 +19,7 @@ __all__ = [
     "IRepository",
     "IRepositoryProcess",
     "IProject",
+    "IProjectEncryption",
     "IForm",
     "IFormDataColumns",
     "ITranslation",
@@ -46,6 +47,7 @@ __all__ = [
     "ICollaborator",
     "IAPISecurity",
     "IUserPassword",
+    "IDatabaseEncryption",
 ]
 
 
@@ -338,6 +340,89 @@ class IProject(Interface):  # pragma: no cover
         raise NotImplementedError(
             "before_deleting_project must be implemented in subclasses"
         )
+
+
+class IProjectEncryption(Interface):  # pragma: no cover
+    """
+    Allows to hook into the processes that provides support for submission encryption
+    """
+
+    def generate_keys(self, request, user, project_data):
+        """
+        Called by FormShare so a plugin can generate and store public and private keys per project.
+        Note: Take into consideration container persistence if you run FormShare using Docker. Your keys
+        might disappear when upgrading to a newer Docker image of FormShare in you don't ensure their persistence
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project_data: project data
+        :return: None
+        """
+        raise NotImplementedError("generate_keys must be implemented in subclasses")
+
+    def get_private_key(self, request, user, project_id):
+        """
+        Called by FormShare so FormShare can retrieve the private key to decrypt the submission. Note: FormShare
+        will not store encrypted data in the database unless is marked as formshare_encrypted = yes in the
+        ODK form. NEVER SHOW THE PRIVATE KEY IN THE INTERFACE
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project_id: project data
+        :return: Private key as string
+        """
+        raise NotImplementedError("get_private_key must be implemented in subclasses")
+
+    def get_public_key(self, request, user, project_id):
+        """
+        Called by FormShare so FormShare can retrieve the public key to encrypt the data.
+        You need to show the public key in the interface for users to add it in ODK forms.
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project_id: project data
+        :return: Public key as string
+        """
+        raise NotImplementedError("get_public_key must be implemented in subclasses")
+
+
+class IDatabaseEncryption(Interface):  # pragma: no cover
+    """
+    Allows to hook into the processes that provides support for database column encryption
+    for those columns marked with formshare_encrypted = yes in ODK forms.
+    """
+
+    def generate_key(self, request, user, project_id, form_id):
+        """
+        Called by FormShare so a plugin can generate and store a 32-bit key to use to encrypt column data in the repository.
+
+        Note: Take into consideration container persistence if you run FormShare using Docker. Your keys
+        might disappear when upgrading to a newer Docker image of FormShare in you don't ensure their persistence.
+
+        Note: FormShare will pass this key to ODK Tools (jsontomysql) and data will be encrypted using
+        AES_ENCRYPT('text_to_encrypt', UNHEX(SHA2('32_bit_key_to_use',512)),'','hkdf')
+
+        The key is per form
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project_id: Project ID
+        :param form_id: Form ID
+        :return: None
+        """
+        raise NotImplementedError("generate_key must be implemented in subclasses")
+
+    def get_key(self, request, user, project_id, form_id):
+        """
+        Called by FormShare so FormShare can retrieve the key to encrypt and decrypt column data into the database.
+
+        Note: FormShare will pass this key to ODK Tools (jsontomysql) and data will be encrypted using
+        AES_ENCRYPT('text_to_encrypt', UNHEX(SHA2('32_bit_key_to_use',512)),'','hkdf')
+
+        NEVER SHOW THE KEY IN THE INTERFACE
+        :param request: ``pyramid.request`` object
+        :param user: User owner of the project
+        :param project_id: project data
+        :param form_id: Form ID
+        :return: 32-bit encryption key as string
+        """
+        raise NotImplementedError("get_key must be implemented in subclasses")
 
 
 class IForm(Interface):  # pragma: no cover

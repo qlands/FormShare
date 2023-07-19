@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: formshare 0.0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2023-03-30 08:42-0400\n"
+"POT-Creation-Date: 2023-07-13 12:50-0400\n"
 "PO-Revision-Date: 2017-11-15 22:40-0600\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -57,16 +57,16 @@ msgstr ""
 msgid "The collaborator is already part of this project"
 msgstr ""
 
-#: formshare/processes/db/form.py:1351 formshare/processes/db/form.py:1405
-#: formshare/processes/db/form.py:1436 formshare/processes/db/form.py:1513
-#: formshare/processes/db/form.py:1542 formshare/processes/db/form.py:1604
-#: formshare/processes/db/form.py:1654 formshare/processes/db/form.py:1686
-#: formshare/processes/db/form.py:1726 formshare/processes/db/form.py:1771
-#: formshare/processes/db/form.py:1801
+#: formshare/processes/db/form.py:1354 formshare/processes/db/form.py:1408
+#: formshare/processes/db/form.py:1439 formshare/processes/db/form.py:1516
+#: formshare/processes/db/form.py:1545 formshare/processes/db/form.py:1607
+#: formshare/processes/db/form.py:1657 formshare/processes/db/form.py:1689
+#: formshare/processes/db/form.py:1729 formshare/processes/db/form.py:1774
+#: formshare/processes/db/form.py:1804
 msgid "This form is blocked and cannot be changed at the moment."
 msgstr ""
 
-#: formshare/processes/db/form.py:1492 formshare/processes/db/project.py:1267
+#: formshare/processes/db/form.py:1495 formshare/processes/db/project.py:1267
 msgid "The file {} already exist"
 msgstr ""
 
@@ -1664,7 +1664,7 @@ msgid "Language"
 msgstr ""
 
 #: formshare/templates/assistant/snippets/header.jinja2:90
-#: formshare/templates/dashboard/snippets/header.jinja2:72
+#: formshare/templates/dashboard/snippets/header.jinja2:73
 #: formshare/templates/partner/snippets/header.jinja2:84
 msgid "Sign out"
 msgstr ""
@@ -5711,7 +5711,7 @@ msgstr ""
 msgid "Welcome to FormShare"
 msgstr ""
 
-#: formshare/templates/dashboard/snippets/header.jinja2:145
+#: formshare/templates/dashboard/snippets/header.jinja2:146
 #: formshare/templates/dashboard/snippets/header_home.jinja2:57
 #: formshare/templates/dashboard/snippets/navbar.jinja2:25
 #: formshare/templates/generic/assistant_login.jinja2:35
@@ -5724,7 +5724,7 @@ msgstr ""
 msgid "Sign in"
 msgstr ""
 
-#: formshare/templates/dashboard/snippets/header.jinja2:152
+#: formshare/templates/dashboard/snippets/header.jinja2:153
 #: formshare/templates/dashboard/snippets/header_home.jinja2:64
 #: formshare/templates/generic/login.jinja2:79
 #: formshare/templates/landing/snippets/header.jinja2:67

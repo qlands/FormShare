@@ -54,14 +54,21 @@
         {% set action_url = request.route_url('form_add',userid=activeProject.owner,projcode=activeProject.project_code,_query={'next': request.url}) %}
         {% include 'dashboard/projects/forms/snippets/upload_form.jinja2' %}
     {% else %}
-        <div class="middle-box text-center animated fadeInDown">
-            <h1><i class="fas fa-folder-plus"></i></h1>
-            <h3 class="font-bold">{{ _('It seems that you are new here!') }}</h3>
-            <div class="error-desc">
+        {% if activeUser.can_projects == 1 %}
+            <div class="middle-box text-center animated fadeInDown">
+                <h1><i class="fas fa-folder-plus"></i></h1>
+                <h3 class="font-bold">{{ _('It seems that you are new here!') }}</h3>
+                <div class="error-desc">
 
-                <button type="button" onclick="location.href='{{ request.route_url('projects_add',userid=activeUser.login,_query={'next':request.url}) }}';" class="btn btn-w-m btn-success">{{ _('Create a new project') }}</button>
+                    <button type="button" onclick="location.href='{{ request.route_url('projects_add',userid=activeUser.login,_query={'next':request.url}) }}';" class="btn btn-w-m btn-success">{{ _('Create a new project') }}</button>
+                </div>
             </div>
-        </div>
+        {% else %}
+            <div class="middle-box text-center animated fadeInDown">
+                <h3 class="font-bold">{{ _('It seems that you are new here!') }}</h3>
+                {{ _('A collaborator will assign you a project soon') }}
+            </div>
+        {% endif %}
     {% endif %}
 {% endblock mainsection %}
 

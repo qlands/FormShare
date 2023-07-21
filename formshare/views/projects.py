@@ -176,6 +176,9 @@ class AddProjectView(ProjectsView):
         if user_id != self.user.login:
             raise HTTPNotFound()
 
+        if self.user.can_projects == 0:
+            raise HTTPNotFound()
+
         if self.request.method == "POST":
             project_details = self.get_post_dict()
             project_details["project_public"] = 0

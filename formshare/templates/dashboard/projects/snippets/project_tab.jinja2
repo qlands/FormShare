@@ -5,7 +5,9 @@
         <div class="ibox-tools">
             {% block project_tab_tools %}
                 {% if activeUser != None %}
-                    <a href="{{ request.route_url('projects_add',userid=activeUser.login) }}" class="btn btn-primary btn-xs" style="margin-right: 20px">{{ _('Create new project') }}</a>
+                    {% if activeUser.can_projects == 1 %}
+                        <a href="{{ request.route_url('projects_add',userid=activeUser.login) }}" class="btn btn-primary btn-xs" style="margin-right: 20px">{{ _('Create new project') }}</a>
+                    {% endif %}
                 {% endif %}
                 <a class="fullscreen-link">
                     <i class="fas fa-expand" style="margin-right: 10px"></i>

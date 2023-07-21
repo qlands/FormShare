@@ -53,6 +53,13 @@
             {% endblock logingheadmsg %}
             {% block login_errors %}
                 {{ form.display_errors(errors) }}
+                {% set messageData = request.session.pop_flash() %}
+                {% if messageData|length > 0 %}
+                    <div class="alert alert-danger alert-dismissable">
+                        <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
+                        {{ messageData[0] }}.
+                    </div>
+                {% endif %}
             {% endblock login_errors %}
             {% block loginform %}
                 <form class="m-t require_busy" role="form" method="post" action="{{ request.url }}">

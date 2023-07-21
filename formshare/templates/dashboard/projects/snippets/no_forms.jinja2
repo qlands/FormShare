@@ -5,23 +5,27 @@
         {% endif %}
         <h3 class="font-bold">{{ _('This project has no forms.') }}</h3>
         <div class="error-desc">
-            {% if projectData.access_type < 4 %}
-                {% if projectData.project_case == 0 %}
-                    <button id="add_form" data-toggle="modal" data-target="#upload_form" type="button" class="btn btn-block btn-outline btn-primary">{{ _('Add new form') }}</button>
-                {% else %}
-                    {% if projectData.total_case_creators == 0 or (projectData.total_case_creators > 0 and projectData.total_case_creators_with_repository > 0) %}
-                        {% if projectData.has_case_lookup_table or forms|length == 0 %}
-                            <button id="add_form" data-toggle="modal" data-target="#upload_form" type="button" class="btn btn-block btn-outline btn-primary">{{ _('Add new form') }}</button>
-                        {% else %}
-                            <button type="button" class="btn btn-block btn-outline btn-default" title="{{ _('Create the case lookup table before adding new forms') }}">{{ _('Add new form (Inactive)') }}</button>
-                        {% endif %}
-                        {% if projectData.total_case_creators > 0 and projectData.total_case_creators_with_repository > 0 %}
-                            <button type="button" onclick="location.href='{{ request.route_url('project_case_lookup_table', userid=projectDetails.owner, projcode=projectDetails.project_code) }}';" class="btn btn-block btn-outline btn-warning">{% if projectData.has_case_lookup_table %}{{ _('View/edit case lookup table') }}{% else %}{{ _('Create the case lookup table') }}{% endif %}</button>
-                        {% endif %}
+            {% if activeUser.can_forms == 1 %}
+                {% if projectData.access_type < 4 %}
+                    {% if projectData.project_case == 0 %}
+                        <button id="add_form" data-toggle="modal" data-target="#upload_form" type="button" class="btn btn-block btn-outline btn-primary">{{ _('Add new form') }}</button>
                     {% else %}
-                        <button type="button" class="btn btn-block btn-outline btn-default" title="{{ _('You cannot add new forms while you have a case creator form in testing stage.') }}">{{ _('Add new form (Inactive)') }}</button>
+                        {% if projectData.total_case_creators == 0 or (projectData.total_case_creators > 0 and projectData.total_case_creators_with_repository > 0) %}
+                            {% if projectData.has_case_lookup_table or forms|length == 0 %}
+                                <button id="add_form" data-toggle="modal" data-target="#upload_form" type="button" class="btn btn-block btn-outline btn-primary">{{ _('Add new form') }}</button>
+                            {% else %}
+                                <button type="button" class="btn btn-block btn-outline btn-default" title="{{ _('Create the case lookup table before adding new forms') }}">{{ _('Add new form (Inactive)') }}</button>
+                            {% endif %}
+                            {% if projectData.total_case_creators > 0 and projectData.total_case_creators_with_repository > 0 %}
+                                <button type="button" onclick="location.href='{{ request.route_url('project_case_lookup_table', userid=projectDetails.owner, projcode=projectDetails.project_code) }}';" class="btn btn-block btn-outline btn-warning">{% if projectData.has_case_lookup_table %}{{ _('View/edit case lookup table') }}{% else %}{{ _('Create the case lookup table') }}{% endif %}</button>
+                            {% endif %}
+                        {% else %}
+                            <button type="button" class="btn btn-block btn-outline btn-default" title="{{ _('You cannot add new forms while you have a case creator form in testing stage.') }}">{{ _('Add new form (Inactive)') }}</button>
+                        {% endif %}
                     {% endif %}
                 {% endif %}
+            {% else %}
+                {{ _('A collaborator will add forms to this project soon') }}
             {% endif %}
         </div>
     {% endblock no_forms_info %}

@@ -8,7 +8,7 @@ from .sql import get_tokens_from_user, change_user_status
 def t_e_s_t_login(test_object):
     # Login failed
     res = test_object.testapp.post(
-        "/login", {"user": "", "email": "some", "passwd": "none"}, status=200
+        "/login", {"user": "", "email": "some", "passwd": "none"}, status=302
     )
     assert "FS_error" in res.headers
 
@@ -320,7 +320,7 @@ def t_e_s_t_login(test_object):
     res = test_object.testapp.post(
         "/login",
         {"user": "", "email": random_login, "passwd": "wrong_pass"},
-        status=200,
+        status=302,
     )
     assert "FS_error" in res.headers
 
@@ -330,7 +330,7 @@ def t_e_s_t_login(test_object):
     res = test_object.testapp.post(
         "/login",
         {"user": "test", "email": random_login, "passwd": "123"},
-        status=200,
+        status=302,
     )
     assert "FS_error" in res.headers
 

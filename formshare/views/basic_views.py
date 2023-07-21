@@ -199,8 +199,10 @@ class LoginView(PublicView):
                             self.request, user
                         )
                         if not continue_with_login:
-                            self.append_to_errors(error_message)
-                            continue_login = False
+                            self.returnRawViewResult = True
+                            self.request.session.flash(error_message)
+                            self.request.response.headers["FS_error"] = "true"
+                            return HTTPFound(self.request.route_url("login"))
                         break  # Only one plugging will be called to extend after_login
                     if continue_login:
                         update_last_login(self.request, user.login)
@@ -214,17 +216,13 @@ class LoginView(PublicView):
 
                         return HTTPFound(location=next_page, headers=headers)
                 else:
-                    log.error(
-                        "Logging into account {} provided an invalid password. Message: {}".format(
-                            login, message
-                        )
-                    )
-                    self.append_to_errors(message)
+                    self.returnRawViewResult = True
+                    self.request.session.flash(message)
+                    return HTTPFound(self.request.route_url("login"), headers={"FS_error": "true"})
             else:
-                log.error("User account {} does not exist".format(login))
-                self.append_to_errors(
-                    self._("The user account does not exist or the password is invalid")
-                )
+                self.returnRawViewResult = True
+                self.request.session.flash(self._("The user account does not exist or the password is invalid"))
+                return HTTPFound(self.request.route_url("login"), headers={"FS_error": "true"})
         return {"next": next_page}
 
 

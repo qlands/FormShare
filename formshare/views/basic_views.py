@@ -161,7 +161,13 @@ class LoginView(PublicView):
             ):
                 safe = check_csrf_token(self.request, raises=False)
                 if not safe:
-                    raise HTTPNotFound()
+                    self.returnRawViewResult = True
+                    self.request.session.flash(
+                        self._("Your session has expired. Try again")
+                    )
+                    return HTTPFound(
+                        self.request.route_url("login"), headers={"FS_error": "true"}
+                    )
             data = self.get_post_dict()
 
             try:
@@ -218,11 +224,17 @@ class LoginView(PublicView):
                 else:
                     self.returnRawViewResult = True
                     self.request.session.flash(message)
-                    return HTTPFound(self.request.route_url("login"), headers={"FS_error": "true"})
+                    return HTTPFound(
+                        self.request.route_url("login"), headers={"FS_error": "true"}
+                    )
             else:
                 self.returnRawViewResult = True
-                self.request.session.flash(self._("The user account does not exist or the password is invalid"))
-                return HTTPFound(self.request.route_url("login"), headers={"FS_error": "true"})
+                self.request.session.flash(
+                    self._("The user account does not exist or the password is invalid")
+                )
+                return HTTPFound(
+                    self.request.route_url("login"), headers={"FS_error": "true"}
+                )
         return {"next": next_page}
 
 

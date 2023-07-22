@@ -51,6 +51,9 @@
                         <li {% if activeMenu == 'users' %}class="active" {% endif %}>
                             <a href="{{ request.route_url('manage_users',userid=activeUser.login) }}"><i class="fas fa-user-plus text-warning"></i> <span class="nav-label text-warning">{{ _('Manage users') }}</span></a>
                         </li>
+                        {% block super_tools_extra %}
+
+                        {% endblock super_tools_extra %}
                     {% endif %}
                     <li {% if activeMenu == 'projects' %}class="active" {% endif %}>
                         <a href="{{ request.route_url('projects',userid=activeUser.login) }}"><i class="fas fa-project-diagram"></i> <span class="nav-label">{{ _('Projects') }}</span></a>

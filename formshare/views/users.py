@@ -97,6 +97,16 @@ class EditUserView(PrivateView):
                         else:
                             user_details["user_super"] = 0
 
+                        if "user_can_projects" in user_details.keys():
+                            user_details["user_can_projects"] = 1
+                        else:
+                            user_details["user_can_projects"] = 0
+
+                        if "user_can_forms" in user_details.keys():
+                            user_details["user_can_forms"] = 1
+                        else:
+                            user_details["user_can_forms"] = 0
+
                         if "user_active" in user_details.keys():
                             user_details["user_active"] = 1
                         else:
@@ -295,6 +305,17 @@ class AddUserView(PrivateView):
                                         user_details["user_super"] = 1
                                     else:
                                         user_details["user_super"] = 0
+
+                                    if "user_can_projects" in user_details.keys():
+                                        user_details["user_can_projects"] = 1
+                                    else:
+                                        user_details["user_can_projects"] = 0
+
+                                    if "user_can_forms" in user_details.keys():
+                                        user_details["user_can_forms"] = 1
+                                    else:
+                                        user_details["user_can_forms"] = 0
+
                                     user_details["user_password"] = encoded_password
                                     user_details.pop("user_password2", None)
                                     user_details["user_cdate"] = datetime.datetime.now()

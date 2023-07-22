@@ -21,7 +21,9 @@
                     <ul class="tag-list" style="padding: 0">
                         {% block repo_tab_tools %}
                             {% if formDetails.has_sub_version == None %}
-                                <li><a data-toggle="modal" data-target="#upload_form"><i class="fas fa-code-branch"></i> {{ _('Merge new version') }}</a></li>
+                                {% if activeUser.can_forms == 1 %}
+                                    <li><a data-toggle="modal" data-target="#upload_form"><i class="fas fa-code-branch"></i> {{ _('Merge new version') }}</a></li>
+                                {% endif %}
                             {% endif %}
                             <li><a title="{{ numsensitive }} {{ request.h.pluralize(_('field'),numsensitive,request.locale_name) }} {{ _('marked as sensitive among ') }}{{ numtables }} {{ request.h.pluralize(_('table'),numtables,request.locale_name) }}" href="{{ request.route_url('editDictTables', userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fas fa-book"></i><span style="color: red"> {{ _('Dictionary') }}</span></a></li>
                             {% if formDetails.indb > 0 %}

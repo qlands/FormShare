@@ -155,7 +155,7 @@ sudo cp csv2xlsx /bin
 ```sh
 cd /opt
 sudo mkdir odktools-deps
-sudo git clone https://github.com/qlands/odktools.git
+sudo git clone https://github.com/qlands/odktools.git -b stable-2.5
 
 cd /opt/odktools-deps
 sudo wget https://github.com/mongodb/mongo-c-driver/releases/download/1.21.1/mongo-c-driver-1.21.1.tar.gz
@@ -257,7 +257,7 @@ sudo chown -R $whoami formshare_env
 
 ```sh
 cd /opt
-sudo git clone https://github.com/qlands/FormShare.git -b stable-2.26.0 formshare
+sudo git clone https://github.com/qlands/FormShare.git -b stable-2.27.0 formshare
 sudo chown -R $whoami formshare
 ```
 

@@ -628,7 +628,7 @@ class IFormDataColumns(Interface):  # pragma: no cover
         :param table_name: table name
         :param field_name: field name
         :param property_name: property name
-        :return: Description,True   or  Description,False
+        :return: If implemented then Description,True or Description,False. If not implemented property_name, False
         """
         raise NotImplementedError(
             "get_form_survey_property_info must be implemented in subclasses"

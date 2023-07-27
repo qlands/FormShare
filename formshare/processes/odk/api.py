@@ -462,6 +462,7 @@ def check_jxform_file(
                 # Remove internal columns. These will be added regardless
                 remove_column_from_array("formshare_sensitive", extra_columns_in_survey)
                 remove_column_from_array("formshare_encrypted", extra_columns_in_survey)
+                remove_column_from_array("formshare_unique", extra_columns_in_survey)
                 remove_column_from_array(
                     "formshare_ontological_term", extra_columns_in_survey
                 )
@@ -1786,8 +1787,23 @@ def update_odk_form(
                                 if geo_point_variables:
                                     form_geo_points = ",".join(geo_point_variables)
                                     form_data["form_geopoint"] = form_geo_points
-                                if message != "":
-                                    form_data["form_reqfiles"] = message
+
+                                if len(required_files) > 0:
+                                    form_data["form_reqfiles"] = ",".join(
+                                        required_files
+                                    )
+                                if len(extra_columns_in_survey) > 0:
+                                    form_data["form_surveycolumns"] = ",".join(
+                                        extra_columns_in_survey
+                                    )
+                                if len(extra_columns_in_choices) > 0:
+                                    form_data["form_choicescolumns"] = ",".join(
+                                        extra_columns_in_choices
+                                    )
+                                if len(extra_columns_invalid) > 0:
+                                    form_data["form_invalidcolumns"] = ",".join(
+                                        extra_columns_invalid
+                                    )
 
                                 if project_case == 1:
                                     form_data["form_case"] = 1

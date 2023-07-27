@@ -108,6 +108,8 @@ class GenerateRepository(PrivateView):
                         survey_data_columns.append("formshare_sensitive")
                     if "formshare_encrypted" not in survey_data_columns:
                         survey_data_columns.append("formshare_encrypted")
+                    if "formshare_unique" not in survey_data_columns:
+                        survey_data_columns.append("formshare_unique")
                     if "formshare_ontological_term" not in survey_data_columns:
                         survey_data_columns.append("formshare_ontological_term")
 

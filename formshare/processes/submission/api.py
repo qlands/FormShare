@@ -957,6 +957,7 @@ def get_fields_from_table(
                 "checked": found,
                 "sensitive": _to_string(field.get("field_sensitive", 0)),
                 "encrypted": _to_string(field.get("field_encrypted", 0)),
+                "unique": _to_string(field.get("field_unique", 0)),
                 "protection": field.get("field_protection", "None"),
                 "ontology": field.get("field_ontology", "None"),
                 "protection_desc": get_protection_desc(

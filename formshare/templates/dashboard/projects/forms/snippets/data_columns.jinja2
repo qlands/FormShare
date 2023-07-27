@@ -19,6 +19,7 @@
                     <br/>
                 {% endif %}
                 {% if form_choices_columns|length > 0 %}
+                    <br/>
                     <h5 style="margin-top: 10px; margin-bottom: 0px">{{ _('Data columns that can be imported into lookup tables:') }}</h5>
                     <ul class="tag-list" style="padding: 0">
                         {% for a_form in form_choices_columns %}
@@ -28,6 +29,7 @@
                     <br/>
                 {% endif %}
                 {% if form_invalid_columns|length > 0 %}
+                    <br/>
                     <h5 style="margin-top: 10px; margin-bottom: 0px; color: orange">{{ _('Warning: The following data columns that cannot be imported because their names are invalid') }}</h5>
                     <ul class="tag-list" style="padding: 0">
                         {% for a_form in form_invalid_columns %}

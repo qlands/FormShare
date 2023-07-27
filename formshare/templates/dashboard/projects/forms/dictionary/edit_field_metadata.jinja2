@@ -34,7 +34,7 @@
                                                     {% if an_item.metadata_editable == true %}
                                                         <td><input type="text" name="{{ an_item.metadata_key }}" value="{{ an_item.metadata_value }}"></td>
                                                     {% else %}
-                                                        <td>{{ an_item.metadata_value }}</td>
+                                                        <td {% if an_item.metadata_key == "unique" and an_item.metadata_value == "true" %} class="unique_field"{% endif %}>{{ an_item.metadata_value }}</td>
                                                     {% endif %}
                                                 </tr>
                                             {% endfor %}

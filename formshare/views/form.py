@@ -139,6 +139,17 @@ from formshare.processes.odk.geojson import check_geojson, update_lookup_from_ge
 log = logging.getLogger("formshare")
 
 
+def remove_column_from_array(column, array):
+    idx = -1
+    pos = 0
+    for clm in array:
+        if column.upper() == clm.upper():
+            idx = pos
+        pos = pos + 1
+    if idx >= 0:
+        array.pop(idx)
+
+
 class FormDetails(PrivateView):
     def report_critical_error(
         self, user, project, form, error_code, message
@@ -964,15 +975,38 @@ class FormDetails(PrivateView):
 
             form_survey_columns = []
             if form_data["form_surveycolumns"] is not None:
-                form_survey_columns = form_data["form_surveycolumns"].split(",")
+                if form_data["form_surveycolumns"].find(",") >= 0:
+                    form_survey_columns = form_data["form_surveycolumns"].split(",")
+                else:
+                    form_survey_columns = form_data["form_surveycolumns"].split("|")
 
             form_choices_columns = []
             if form_data["form_choicescolumns"] is not None:
-                form_choices_columns = form_data["form_choicescolumns"].split(",")
+                if form_data["form_choicescolumns"].find(",") >= 0:
+                    form_choices_columns = form_data["form_choicescolumns"].split(",")
+                else:
+                    form_choices_columns = form_data["form_choicescolumns"].split("|")
 
             form_invalid_columns = []
             if form_data["form_invalidcolumns"] is not None:
-                form_invalid_columns = form_data["form_invalidcolumns"].split(",")
+                if form_data["form_invalidcolumns"].find(",") >= 0:
+                    form_invalid_columns = form_data["form_invalidcolumns"].split(",")
+                else:
+                    form_invalid_columns = form_data["form_invalidcolumns"].split("|")
+
+            remove_column_from_array("formshare_sensitive", form_survey_columns)
+            remove_column_from_array("formshare_encrypted", form_survey_columns)
+            remove_column_from_array("formshare_unique", form_survey_columns)
+            remove_column_from_array("formshare_ontological_term", form_survey_columns)
+            remove_column_from_array("formshare_ontological_term", form_choices_columns)
+
+            for a_plugin in p.PluginImplementations(p.IFormDataColumns):
+                a_plugin.filter_form_survey_columns(
+                    self.request, user_id, project_id, form_id, form_survey_columns
+                )
+                a_plugin.filter_form_choices_columns(
+                    self.request, user_id, project_id, form_id, form_choices_columns
+                )
 
             return {
                 "projectDetails": project_details,

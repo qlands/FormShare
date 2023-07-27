@@ -90,7 +90,7 @@ def t_e_s_t_data_columns(test_object):
     )
     test_object.root.assertIn(b"Swahili", res.body)
     test_object.root.assertIn(
-        b"climmob|formshare_sensitive|formshare_encrypted|formshare_ontological_term",
+        b"climmob|formshare_sensitive|formshare_unique|formshare_encrypted|formshare_ontological_term",
         res.body,
     )
     test_object.root.assertIn(
@@ -111,7 +111,7 @@ def t_e_s_t_data_columns(test_object):
             "LNG-English": "en",
             "LNG-Swahili": "sw",
             "languages_string": '[{"code": "en", "name": "English"}, {"code": "sw", "name": "Swahili"}]',
-            "survey_data_columns": "climmob|formshare_sensitive|formshare_encrypted|formshare_ontological_term",
+            "survey_data_columns": "climmob|formshare_sensitive|formshare_unique|formshare_encrypted|formshare_ontological_term",
             "choices_data_columns": "admlevel1|admlevel2|factor|sequence|formshare_ontological_term",
         },
         status=302,
@@ -381,3 +381,15 @@ def t_e_s_t_data_columns(test_object):
         status=200,
     )
     test_object.root.assertTrue(b"encrypted" in res.body)
+
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/dictionary/table/{}/{}/metadata".format(
+            test_object.randonLogin,
+            test_object.project,
+            "data_columns_20230623",
+            "maintable",
+            "hr_qst_874b",
+        ),
+        status=200,
+    )
+    test_object.root.assertTrue(b"unique_field" in res.body)

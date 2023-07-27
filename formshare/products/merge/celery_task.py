@@ -432,6 +432,14 @@ def update_dictionary_tables(db_session, form_id, xml_create_file, survey_data_c
         else:
             field_encrypted = 0
 
+        if (
+            a_field.get("formshare_unique", "no") == "yes"
+            or a_field.get("formshare_unique", "no") == "1"
+        ):
+            field_unique = 1
+        else:
+            field_unique = 0
+
         field_ontology = a_field.get("formshare_ontological_term")
 
         if field_desc == "":
@@ -459,6 +467,7 @@ def update_dictionary_tables(db_session, form_id, xml_create_file, survey_data_c
             "field_sensitive": field_sensitive,
             "field_protection": field_protection,
             "field_encrypted": field_encrypted,
+            "field_unique": field_unique,
             "field_ontology": field_ontology,
         }
         if a_field.get("selecttype") == "2":
@@ -471,6 +480,8 @@ def update_dictionary_tables(db_session, form_id, xml_create_file, survey_data_c
             survey_data_columns.remove("formshare_ontological_term")
         if "formshare_encrypted" in survey_data_columns:
             survey_data_columns.remove("formshare_encrypted")
+        if "formshare_unique" in survey_data_columns:
+            survey_data_columns.remove("formshare_unique")
         if "formshare_sensitive" in survey_data_columns:
             survey_data_columns.remove("formshare_sensitive")
 

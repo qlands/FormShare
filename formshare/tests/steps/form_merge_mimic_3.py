@@ -236,7 +236,12 @@ def t_e_s_t_form_merge_mimic_3(test_object):
         form_details_b["form_hexcolor"],
         "en",
         True,
-        ["formshare_sensitive", "formshare_encrypted", "formshare_ontological_term"],
+        [
+            "formshare_sensitive",
+            "formshare_encrypted",
+            "formshare_ontological_term",
+            "formshare_unique",
+        ],
         task_id,
     )
 

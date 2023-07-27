@@ -216,6 +216,8 @@ class EditDictionaryFieldMetadata(PrivateView):
             return self._("Protection type of the sensitive field"), False
         if metadata_key == "encrypted":
             return self._("The field is encrypted"), False
+        if metadata_key == "unique":
+            return self._("The field has unique values"), False
         if metadata_key == "ontology":
             return self._("Ontological code"), True
         if metadata_key == "key":

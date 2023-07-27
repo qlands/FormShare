@@ -247,6 +247,14 @@ def update_dictionary_tables(
         else:
             field_encrypted = 0
 
+        if (
+            a_field.get("formshare_unique", "no") == "yes"
+            or a_field.get("formshare_unique", "no") == "1"
+        ):
+            field_unique = 1
+        else:
+            field_unique = 0
+
         field_ontology = a_field.get("formshare_ontological_term")
 
         if field_desc == "":
@@ -274,6 +282,7 @@ def update_dictionary_tables(
             "field_sensitive": field_sensitive,
             "field_protection": field_protection,
             "field_encrypted": field_encrypted,
+            "field_unique": field_unique,
             "field_ontology": field_ontology,
         }
         if a_field.get("selecttype") == "2":

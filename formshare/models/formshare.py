@@ -773,6 +773,7 @@ class DictField(Base):
     field_sensitive = Column(INTEGER, server_default=text("'0'"))
     field_protection = Column(Unicode(64))
     field_encrypted = Column(INTEGER, server_default=text("'0'"))
+    field_unique = Column(INTEGER, server_default=text("'0'"))
     field_ontology = Column(Unicode(120))
     extras = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 

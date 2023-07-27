@@ -19,7 +19,9 @@
             </div>
         </div>
         <div class="col-md-6 text-center  wow zoomIn">
-            <img src="{{ request.url_for_static('mainlogo.png') }}" alt="dashboard" class="img-fluid">
+            {% block central_logo %}
+                <img src="{{ request.url_for_static('mainlogo.png') }}" alt="dashboard" class="img-fluid">
+            {% endblock central_logo %}
         </div>
         <div class="col-md-3 text-center wow fadeInRight">
             <div>

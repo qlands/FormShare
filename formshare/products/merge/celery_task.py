@@ -58,9 +58,11 @@ def move_changes(node_b, root_a):
             field_sensitive = tag.get("sensitive")
             field_protection = tag.get("protection")
             formshare_encrypted = tag.get("formshare_encrypted", "no")
+            formshare_unique = tag.get("formshare_unique", "no")
             target_field = target_table.find(".//field[@name='" + field_name + "']")
             if target_field is not None:
                 target_field.set("formshare_encrypted", formshare_encrypted)
+                target_field.set("formshare_unique", formshare_unique)
                 if field_sensitive is not None:
                     if field_sensitive == "true":
                         target_field.set("sensitive", field_sensitive)

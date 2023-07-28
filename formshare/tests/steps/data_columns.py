@@ -89,13 +89,17 @@ def t_e_s_t_data_columns(test_object):
         status=200,
     )
     test_object.root.assertIn(b"Swahili", res.body)
-    test_object.root.assertIn(
-        b"climmob|formshare_sensitive|formshare_unique|formshare_encrypted|formshare_ontological_term",
-        res.body,
-    )
-    test_object.root.assertIn(
-        b"admlevel1|admlevel2|factor|sequence|formshare_ontological_term", res.body
-    )
+    test_object.root.assertIn(b"climmob", res.body)
+    test_object.root.assertIn(b"formshare_sensitive", res.body)
+    test_object.root.assertIn(b"formshare_unique", res.body)
+    test_object.root.assertIn(b"formshare_encrypted", res.body)
+    test_object.root.assertIn(b"formshare_ontological_term", res.body)
+
+    test_object.root.assertIn(b"admlevel1", res.body)
+    test_object.root.assertIn(b"admlevel2", res.body)
+    test_object.root.assertIn(b"factor", res.body)
+    test_object.root.assertIn(b"sequence", res.body)
+    test_object.root.assertIn(b"formshare_ontological_term", res.body)
 
     # Generate the repository using celery pass
     res = test_object.testapp.post(

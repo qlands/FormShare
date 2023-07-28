@@ -466,6 +466,105 @@ def t_e_s_t_forms(test_object):
     )
     assert "FS_error" not in res.headers
 
+    # The form does not have data columns
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}".format(
+            test_object.randonLogin, test_object.project, "Justtest"
+        ),
+        status=200,
+    )
+    test_object.root.assertNotIn(b"See data columns", res.body)
+
+    # Update the form with one having data columns
+    paths = ["resources", "forms", "form08_OK_dc.xlsx"]
+    resource_file_dc = os.path.join(test_object.path, *paths)
+    # Update a form a succeeds with data columns
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/updateodk".format(
+            test_object.randonLogin, test_object.project, "Justtest"
+        ),
+        {"form_pkey": "hid"},
+        status=302,
+        upload_files=[("xlsx", resource_file_dc)],
+    )
+    assert "FS_error" not in res.headers
+
+    # The form have data columns
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}".format(
+            test_object.randonLogin, test_object.project, "Justtest"
+        ),
+        status=200,
+    )
+    test_object.root.assertIn(b"See data columns", res.body)
+
+    # Update a form a succeeds with a form that does not have data columns
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/updateodk".format(
+            test_object.randonLogin, test_object.project, "Justtest"
+        ),
+        {"form_pkey": "hid"},
+        status=302,
+        upload_files=[("xlsx", resource_file)],
+    )
+    assert "FS_error" not in res.headers
+
+    # The form does not have data columns
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}".format(
+            test_object.randonLogin, test_object.project, "Justtest"
+        ),
+        status=200,
+    )
+    test_object.root.assertNotIn(b"See data columns", res.body)
+
+    # Update the form with one that requires a csv files and has data columns
+    paths = ["resources", "forms", "form08_OK_external.xlsx"]
+    resource_file_external = os.path.join(test_object.path, *paths)
+    # Update a form a succeeds with data columns
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/updateodk".format(
+            test_object.randonLogin, test_object.project, "Justtest"
+        ),
+        {"form_pkey": "hid"},
+        status=302,
+        upload_files=[("xlsx", resource_file_external)],
+    )
+    assert "FS_error" not in res.headers
+
+    # The form have data columns and external files
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}".format(
+            test_object.randonLogin, test_object.project, "Justtest"
+        ),
+        status=200,
+    )
+    test_object.root.assertIn(b"See data columns", res.body)
+    test_object.root.assertIn(b"You need to attach the following", res.body)
+
+    # Update the form with one without data columns or CSV files
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/updateodk".format(
+            test_object.randonLogin, test_object.project, "Justtest"
+        ),
+        {"form_pkey": "hid"},
+        status=302,
+        upload_files=[("xlsx", resource_file)],
+    )
+    assert "FS_error" not in res.headers
+
+    # The form does not have data columns
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}".format(
+            test_object.randonLogin, test_object.project, "Justtest"
+        ),
+        status=200,
+    )
+    test_object.root.assertNotIn(b"See data columns", res.body)
+    test_object.root.assertNotIn(b"You need to attach the following", res.body)
+
+    # ----
+
     # Edit a form for a project that does not exists goes to 404
     test_object.testapp.get(
         "/user/{}/project/{}/form/{}/edit".format(

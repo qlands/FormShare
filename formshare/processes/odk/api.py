@@ -1792,18 +1792,27 @@ def update_odk_form(
                                     form_data["form_reqfiles"] = ",".join(
                                         required_files
                                     )
+                                else:
+                                    form_data["form_reqfiles"] = None
+
                                 if len(extra_columns_in_survey) > 0:
                                     form_data["form_surveycolumns"] = ",".join(
                                         extra_columns_in_survey
                                     )
+                                else:
+                                    form_data["form_surveycolumns"] = None
                                 if len(extra_columns_in_choices) > 0:
                                     form_data["form_choicescolumns"] = ",".join(
                                         extra_columns_in_choices
                                     )
+                                else:
+                                    form_data["form_choicescolumns"] = None
                                 if len(extra_columns_invalid) > 0:
                                     form_data["form_invalidcolumns"] = ",".join(
                                         extra_columns_invalid
                                     )
+                                else:
+                                    form_data["form_invalidcolumns"] = None
 
                                 if project_case == 1:
                                     form_data["form_case"] = 1

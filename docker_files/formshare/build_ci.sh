@@ -1,1 +1,1 @@
-sudo docker build --no-cache --rm -t qlands/odktools_circleci:20230625 -f ./circleci.Dockerfile .
+sudo docker build --no-cache --rm -t qlands/odktools_circleci:20230727 -f ./circleci.Dockerfile .

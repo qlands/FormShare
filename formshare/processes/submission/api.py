@@ -970,8 +970,9 @@ def get_fields_from_table(
                 "editable": editable,
             }
 
-            for a_column in survey_columns:
-                data[a_column] = field.get(a_column)
+            if survey_columns is not None:
+                for a_column in survey_columns:
+                    data[a_column] = field.get(a_column)
 
             if data["rlookup"] == "true" and get_values:
                 data["lookupvalues"] = get_lookup_values(

@@ -771,7 +771,6 @@ class JSONCancelDisregard(AssistantView):
             form_data = get_form_data(self.request, self.projectID, form_id)
             if data is not None:
                 if data["status"] == 4:
-
                     if self.request.method == "POST":
                         post_data = self.get_post_dict()
                         notes = post_data["notes"]

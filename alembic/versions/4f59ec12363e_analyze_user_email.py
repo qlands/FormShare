@@ -20,7 +20,6 @@ depends_on = None
 
 
 def upgrade():
-
     email_analyzer = {
         "settings": {
             "analysis": {

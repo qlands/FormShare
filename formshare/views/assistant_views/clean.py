@@ -21,7 +21,6 @@ class CleanInterface(AssistantView):
         self.checkCrossPost = False
 
     def process_view(self):
-
         form_id = self.request.matchdict["formid"]
 
         if "table" in self.request.params.keys():
@@ -222,7 +221,6 @@ class PerformAction(AssistantView):
         self.checkCrossPost = False
 
     def process_view(self):
-
         form_id = self.request.matchdict["formid"]
 
         table_name = self.request.matchdict["tablename"]

@@ -20,7 +20,6 @@ depends_on = None
 
 
 def upgrade():
-
     new_mapping = {
         "properties": {
             "user_email": {"type": "text", "copy_to": ["all_data", "user_email2"]},

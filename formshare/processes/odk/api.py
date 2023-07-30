@@ -4177,7 +4177,6 @@ def push_revision(
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()
     if p.returncode == 0:
-
         # Add the JSON to the Elastic Search index
         index_data = {
             "_submitted_date": submission_data.get("_submitted_date", ""),

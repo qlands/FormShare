@@ -313,7 +313,6 @@ class EditPartnerView(PrivateView):
 
             partner_data = self.get_post_dict()
             if "modify" in partner_data.keys():
-
                 if partner_data["partner_organization"] == "":
                     self.append_to_errors(self._("The organization cannot be empty"))
                     return {
@@ -519,7 +518,10 @@ class DeletePartnerView(PrivateView):
             continue_delete = True
             for plugin in p.PluginImplementations(p.IPartner):
                 if continue_delete:
-                    (continue_delete, error_message,) = plugin.before_deleting_partner(
+                    (
+                        continue_delete,
+                        error_message,
+                    ) = plugin.before_deleting_partner(
                         self.request, partner_to_delete, partner_details
                     )
                     if not continue_delete:

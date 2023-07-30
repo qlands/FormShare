@@ -4012,7 +4012,6 @@ class AddPartnerToForm(PrivateView):
             partner_data = self.get_post_dict()
             if "partner_id" in partner_data.keys():
                 if partner_data["partner_id"] != "":
-
                     if "time_bound" in partner_data.keys():
                         partner_data["time_bound"] = True
                     else:

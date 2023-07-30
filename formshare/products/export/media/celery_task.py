@@ -35,7 +35,6 @@ def internal_build_media_zip(
     task_id,
     task_object=None,
 ):
-
     parts = __file__.split("/products/")
     this_file_path = parts[0] + "/locale"
     es = gettext.translation("formshare", localedir=this_file_path, languages=[locale])

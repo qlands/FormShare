@@ -268,7 +268,6 @@ class RepositoryMergeForm(PrivateView):
                     s_values_to_ignore,
                 )
                 if merged == 0:
-
                     task_id = merge_form(
                         self.request,
                         project_details["owner"],

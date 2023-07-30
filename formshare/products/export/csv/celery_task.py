@@ -98,7 +98,6 @@ def internal_build_csv(
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()
     if p.returncode == 0:
-
         paths = ["*.json"]
         out_path2 = os.path.join(out_path, *paths)
         files = glob.glob(out_path2)

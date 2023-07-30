@@ -139,7 +139,6 @@ class CeleryTask(AbortableTask):  # pragma: no cover
         }
         connection = engine.connect()
         try:
-
             connection.execute(
                 "INSERT INTO finishedtask(task_id,task_enumber) VALUES ('{}',{})".format(
                     str(task_id), 0

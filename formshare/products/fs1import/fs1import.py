@@ -17,7 +17,6 @@ def formshare_one_import_json(
     project_of_assistant,
     ignore_xform_check=False,
 ):
-
     settings = {}
     for key, value in request.registry.settings.items():
         if isinstance(value, str):

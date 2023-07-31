@@ -1108,6 +1108,8 @@ class AddNewForm(PrivateView):
                         form_caseselector,
                         form_casedatetime,
                     ) = get_form_case_params(self.request, project_id, form_id)
+                    if form_casedatetime is None:
+                        form_casedatetime = form_data.get("form_casedatetime", None)
             else:
                 primary_key = form_data.get("form_pkey", None)
                 if project_details["project_case"] == 1:

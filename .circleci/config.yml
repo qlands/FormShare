@@ -34,6 +34,12 @@ jobs:
       - run:          
           name: Run servers
           command: |
+            sudo chown -R redis /etc/redis
+            sudo chgrp -R redis /etc/redis            
+            sudo chown -R redis /var/log/redis
+            sudo chgrp -R redis /var/log/redis            
+            sudo chown -R redis /var/lib/redis
+            sudo chgrp -R redis /var/lib/redis
             sudo /etc/init.d/redis-server start
             sudo mongod --fork --pidfilepath /var/run/mongod.pid --logpath /var/log/mongodb/mongod.log --config /etc/mongod.conf
             sudo service mosquitto start

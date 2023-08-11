@@ -117,15 +117,16 @@
                                     {% endif %}
                                 {% endif %}
                             {% else %}
-                                {% if formDetails.form_casedatetime == None %}
-                                    <hr>
-                                    <div style="margin-top: 10px" class="form-group">
-                                        <label><b>{{ _('In this ODK Form that you are merging, which variable will be used to record the date of a case?') }}</b></label>
-                                        <input type="text" name="form_casedatetime" class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the case datetime variable') }}')"  oninput="setCustomValidity('')">
-                                        <span class="form-text m-b-none text-success">{{ _('Each case must be registered in a date. This variable MUST BE either "date" or "datetime".') }}</span>
-                                    </div>
+                                {% if formDetails.form_case == 1 %}
+                                    {% if formDetails.form_casedatetime == None %}
+                                        <hr>
+                                        <div style="margin-top: 10px" class="form-group">
+                                            <label><b>{{ _('In this ODK Form that you are merging, which variable will be used to record the date of a case?') }}</b></label>
+                                            <input type="text" name="form_casedatetime" class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the case datetime variable') }}')"  oninput="setCustomValidity('')">
+                                            <span class="form-text m-b-none text-success">{{ _('Each case must be registered in a date. This variable MUST BE either "date" or "datetime".') }}</span>
+                                        </div>
+                                    {% endif %}
                                 {% endif %}
-
                                 <input type="hidden" name="for_merging">
                                 <input type="hidden" name="parent_project" value="{{ parent_project }}">
                                 <input type="hidden" name="parent_form" value="{{ parent_form }}">

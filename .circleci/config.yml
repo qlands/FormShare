@@ -43,6 +43,16 @@ jobs:
           # Install dependencies with --user to enable easier caching
           name: Install dependencies
           command: |
+            sudo chown -R circleci /opt/formshare_repository
+            sudo chown -R circleci /opt/formshare_log
+            sudo chown -R circleci /opt/formshare_celery
+            sudo chown -R circleci /opt/formshare_gunicorn
+            sudo chown -R circleci /opt/formshare_config            
+            sudo chgrp -R circleci /opt/formshare_repository
+            sudo chgrp -R circleci /opt/formshare_log
+            sudo chgrp -R circleci /opt/formshare_celery
+            sudo chgrp -R circleci /opt/formshare_gunicorn
+            sudo chgrp -R circleci /opt/formshare_config
             pip install -r requirements.txt --user
             pip install codecov --user
             /home/circleci/.local/bin/codecov

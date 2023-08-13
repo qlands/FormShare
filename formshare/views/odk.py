@@ -172,7 +172,8 @@ class ODKSubmission(ODKView):
                                 self.request.route_url(
                                     "odkpush", userid=user_id, projcode=project_code
                                 ),
-                            )
+                            ),
+                            ("x-openrosa-accept-content-length", "10000000"),
                         ]
                         response = Response(headerlist=headers, status=204)
                         return response
@@ -185,7 +186,8 @@ class ODKSubmission(ODKView):
                             self.request.route_url(
                                 "odkpush", userid=user_id, projcode=project_code
                             ),
-                        )
+                        ),
+                        ("x-openrosa-accept-content-length", "10000000"),
                     ]
                     response = Response(headerlist=headers, status=204)
                     return response

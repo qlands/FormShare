@@ -464,6 +464,7 @@ class PrivateView(object):
         self.privateOnly = True
         self.showWelcome = False
         self.checkCrossPost = True
+        self.checkCSRF = True
         self.queryProjects = True
         self.stripApiResult = False
         self.activeProject = {}
@@ -537,9 +538,10 @@ class PrivateView(object):
             ):  # pragma: no cover
                 safe = check_csrf_token(self.request, raises=False)
                 if not safe:
-                    self.request.session.pop_flash()
-                    log.error("SECURITY-CSRF error at {} ".format(self.request.url))
-                    raise HTTPFound(self.request.route_url("refresh"))
+                    if self.checkCSRF:
+                        self.request.session.pop_flash()
+                        log.error("SECURITY-CSRF error at {} ".format(self.request.url))
+                        raise HTTPFound(self.request.route_url("refresh"))
                 else:
                     if self.checkCrossPost:
                         if self.request.referer != self.request.url:

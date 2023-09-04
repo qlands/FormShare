@@ -36,6 +36,9 @@
                                 <li><a href="{{ request.route_url('form_download_media',userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formDetails.form_id) }}"><i class="fa fa-images"></i> {{ _('Download submitted media') }}</a></li>
                             {% endblock form_downloads_norep %}
                         {% endif %}
+                        {% block extra_links_tools %}
+
+                        {% endblock extra_links_tools %}
                     </ul>
                 </div>
             </div>

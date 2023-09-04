@@ -40,6 +40,7 @@ __all__ = [
     "IXMLSubmission",
     "IMediaSubmission",
     "IJSONSubmission",
+    "IRawSubmission",
     "IPartner",
     "IPartnerAuthentication",
     "IExport",
@@ -1897,6 +1898,27 @@ class IMediaSubmission(Interface):  # pragma: no cover
         :param json_file: XML Data file
         :param media_file: Media file
         :return: None
+        """
+
+
+class IRawSubmission(Interface):  # pragma: no cover
+    """
+    Allows to hook into the process that receives a submission from ODK Collect
+    """
+
+    def process_submission(
+        self, request, user, project, form_data, assistant, submission_id, post_data
+    ):
+        """
+        Called by FormShare before FormShare process the XML submission file
+        :param request: Pyramid request object
+        :param user: User ID
+        :param project: Project ID
+        :param form_data: Form data
+        :param assistant: Assistant ID submitting the XML file
+        :param submission_id: Submission ID
+        :param post_data: Raw post data as received by FormShare from ODK Collect
+        :return None
         """
 
 

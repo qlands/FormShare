@@ -434,6 +434,8 @@ def check_jxform_file(
         "-o m",
         "-K",
     ]
+    if request.registry.settings.get("ignore_too_many_selects", "false") == "true":
+        args.append("-x")
     if get_languages:
         args.append("-L")
     for a_file in external_files:
@@ -3677,6 +3679,18 @@ def store_submission(request, user, project, assistant):
             form_data = get_form_data(request, project, xform_id)
             if form_data is not None:
                 if form_data["form_accsub"] == 1:
+                    for a_plugin in plugins.PluginImplementations(
+                        plugins.IRawSubmission
+                    ):
+                        a_plugin.process_submission(
+                            request,
+                            user,
+                            project,
+                            form_data,
+                            assistant,
+                            str(unique_id),
+                            request.POST,
+                        )
                     if form_data["form_schema"] is None:
                         total, t1, t2 = get_dataset_stats_for_form(
                             request.registry.settings, project, xform_id

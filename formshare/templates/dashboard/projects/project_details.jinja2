@@ -590,6 +590,11 @@
                     $('.scroll_content').slimscroll();
                 {% endif %}
             {% endif %}
+
+            $( "#editQRData" ).on( "click", function() {
+                location.href = "{{ request.route_url('project_edit_qr',userid=projectData.owner,projcode=projectData.project_code,_query={'next':request.url}) }}";
+            } );
+
         });
     </script>
 {% endblock scripts %}

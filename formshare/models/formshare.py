@@ -121,6 +121,30 @@ class Project(Base):
     extras = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     tags = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 
+    # ODK Collect settings
+    odk_update_mode = Column(
+        INTEGER, server_default=text("'1'")
+    )  # 1=manual, 2=previously_downloaded, 3=match_exactly
+    odk_update_period = Column(
+        INTEGER, server_default=text("'1'")
+    )  # 1=every_fifteen_minutes, 2=every_one_hour, 3=every_six_hours, 4=every_24_hours
+    odk_update_auto = Column(INTEGER, server_default=text("'0'"))
+    odk_hide_old = Column(INTEGER, server_default=text("'1'"))
+
+    odk_auto_send = Column(
+        INTEGER, server_default=text("'0'")
+    )  # 0=off, 1=wifi_only, 2=cellular_only, 3=wifi_and_cellular
+    odk_delete_after_send = Column(INTEGER, server_default=text("'0'"))
+
+    odk_high_res_video = Column(INTEGER, server_default=text("'1'"))
+    odk_image_size = Column(
+        INTEGER, server_default=text("'1'")
+    )  # 1=original, 2=small, 3=very_small, 4=medium, 5=large
+    odk_audio_app = Column(INTEGER, server_default=text("'0'"))
+    odk_navigation = Column(
+        INTEGER, server_default=text("'2'")
+    )  # 1=swipe, 2=buttons, 3=swipe_buttons
+
     timezone = relationship("TimeZone")
 
 

@@ -1,0 +1,67 @@
+{% extends 'dashboard/page.jinja2' %}
+{% import 'dashboard/macros/form.jinja2' as form %}
+
+{% block titlesection %}{{ _("Edit QR") }}{% endblock titlesection %}
+
+{% block css %}
+    {{ super() }}
+    {% cssresource request,'formshare','switchery' %}
+    {% cssresource request,'formshare','select2' %}
+{% endblock css %}
+
+{% block topScripts %}
+    {{ super() }}
+    {% jsresource request,'formshare','switchery' %}
+    {% jsresource request,'formshare','select2' %}
+{% endblock topScripts %}
+
+{% block breadcrumbs %}
+    {% include 'dashboard/projects/snippets/brdcrbs_prj_qr_edit.jinja2' %}
+{% endblock breadcrumbs %}
+
+{% block maincontent %}
+    {% include 'dashboard/projects/snippets/project_form_qr_edit.jinja2' %}
+{% endblock maincontent %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        $(document).ready(function() {
+
+            var elem = document.querySelector('.js-switch2');
+            var odk_update_auto = new Switchery(elem, {});
+
+            $(".select2").select2();
+
+            function setSwitchery(switchElement, checkedBool) {
+                if ((checkedBool && !switchElement.isChecked()) || (!checkedBool && switchElement.isChecked())) {
+                    switchElement.setPosition(true);
+                    switchElement.handleOnchange(true);
+                }
+            }
+
+            $('#odk_update_mode').select2()
+                .on("change", function(e) {
+                    // mostly used event, fired to the original element when the value changes
+                    if ($(this).val() === "1")
+                    {
+                        $("#odk_update_period").prop("disabled", true);
+                        setSwitchery(odk_update_auto,false);
+                        odk_update_auto.disable();
+                        $("#odk_update_period").val("1").trigger("change");
+                    }
+                    else
+                    {
+                        $("#odk_update_period").prop("disabled", false);
+                        odk_update_auto.enable();
+                    }
+                })
+
+            var elems = Array.prototype.slice.call(document.querySelectorAll('.js-switch'));
+            elems.forEach(function(html) {
+                var switchery = new Switchery(html);
+            });
+
+        });
+    </script>
+{% endblock scripts %}

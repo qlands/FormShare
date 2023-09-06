@@ -7,7 +7,7 @@ available to Controllers. This module is available to templates as 'request.h'.
 
 import datetime
 import logging
-
+import uuid
 import arrow
 import formshare.plugins as p
 import timeago
@@ -384,6 +384,15 @@ def get_icon_from_mime_type(mime_type):
         icon = "far fa-file-archive"
 
     return icon
+
+
+@core_helper
+def get_uuid():
+    """
+    Generates and returns a UUID4
+    :return: UUID
+    """
+    return str(uuid.uuid4())
 
 
 def load_plugin_helpers():

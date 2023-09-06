@@ -47,7 +47,8 @@
             <hr>
             <div style="text-align: center">
                 <span class="text-center">{{ _('Use this QR to configure ODK Collect') }}</span><br/>
-                <a title="{{ _('ODK settings') }}" href="{{ request.route_url('project_qr', userid=projectDetails.owner, projcode=projectDetails.project_code) }}"><img style="max-width: 150px" src="{{ request.route_url('project_qr', userid=projectDetails.owner, projcode=projectDetails.project_code) }}" class="img-fluid"></a>
+                <a title="{{ _('ODK settings') }}" href="{{ request.route_url('project_qr', userid=projectDetails.owner, projcode=projectDetails.project_code) }}"><img style="max-width: 150px" src="{{ request.route_url('project_qr', userid=projectDetails.owner, projcode=projectDetails.project_code, _query={"id": request.h.get_uuid()}) }}" class="img-fluid"></a><br/>
+                <button id="editQRData" class="btn btn-xs btn-default">{{ _('Edit QR data') }}</button>
             </div>
             ODK URL:<br/>
             <div class="input-group">

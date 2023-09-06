@@ -407,6 +407,88 @@ class EditProjectView(ProjectsView):
         }
 
 
+class EditProjectQRView(ProjectsView):
+    def __init__(self, request):
+        ProjectsView.__init__(self, request)
+        self.privateOnly = True
+
+    def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        project_code = self.request.matchdict["projcode"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+
+        if project_id is not None:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                >= 4
+            ):
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        if self.request.method == "POST":
+            qr_details = self.get_post_dict()
+
+            if "set_default" not in qr_details.keys():
+                if "odk_delete_after_send" in qr_details.keys():
+                    qr_details["odk_delete_after_send"] = 1
+                else:
+                    qr_details["odk_delete_after_send"] = 0
+
+                if "odk_update_auto" in qr_details.keys():
+                    qr_details["odk_update_auto"] = 1
+                else:
+                    qr_details["odk_update_auto"] = 0
+
+                if "odk_hide_old" in qr_details.keys():
+                    qr_details["odk_hide_old"] = 1
+                else:
+                    qr_details["odk_hide_old"] = 0
+
+                if "odk_high_res_video" in qr_details.keys():
+                    qr_details["odk_high_res_video"] = 1
+                else:
+                    qr_details["odk_high_res_video"] = 0
+
+                if "odk_audio_app" in qr_details.keys():
+                    qr_details["odk_audio_app"] = 1
+                else:
+                    qr_details["odk_audio_app"] = 0
+            else:
+                qr_details["odk_delete_after_send"] = 0
+                qr_details["odk_update_auto"] = 0
+                qr_details["odk_hide_old"] = 1
+                qr_details["odk_high_res_video"] = 1
+                qr_details["odk_audio_app"] = 0
+
+                qr_details["odk_auto_send"] = 0
+                qr_details["odk_update_mode"] = 1
+                qr_details["odk_update_period"] = 1
+                qr_details["odk_navigation"] = 2
+                qr_details["odk_image_size"] = 1
+
+            next_page = self.request.params.get("next") or self.request.url
+            modified, message = modify_project(self.request, project_id, qr_details)
+            if modified:
+                if "set_default" not in qr_details.keys():
+                    self.request.session.flash(self._("The QR image has been modified"))
+                else:
+                    self.request.session.flash(
+                        self._("The QR image has been set to the default values")
+                    )
+                self.returnRawViewResult = True
+                return HTTPFound(location=next_page)
+            else:
+                self.append_to_errors(message)
+        project_details = get_project_details(self.request, project_id)
+        return {
+            "projectDetails": project_details,
+            "timezones": get_timezones(self.request),
+        }
+
+
 class ActivateProjectView(ProjectsView):
     def __init__(self, request):
         ProjectsView.__init__(self, request)
@@ -700,6 +782,59 @@ class DownloadProjectGPSPoints(ProjectsView):
         return data
 
 
+def get_update_mode(mode):
+    if mode == 1:
+        return "manual"
+    if mode == 2:
+        return "previously_downloaded"
+    if mode == 3:
+        return "match_exactly"
+
+
+def get_update_period(period):
+    if period == 1:
+        return "every_fifteen_minutes"
+    if period == 2:
+        return "every_one_hour"
+    if period == 3:
+        return "every_six_hours"
+    if period == 4:
+        return "every_24_hours"
+
+
+def get_auto_send(send_type):
+    if send_type == 0:
+        return "off"
+    if send_type == 1:
+        return "wifi_only"
+    if send_type == 2:
+        return "cellular_only"
+    if send_type == 3:
+        return "wifi_and_cellular"
+
+
+def get_image_size(size):
+    if size == 1:
+        return "original"
+    if size == 2:
+        return "very_small"
+    if size == 3:
+        return "small"
+    if size == 4:
+        return "medium"
+    if size == 5:
+        return "large"
+
+
+def get_navigation_type(nav_type):
+    if nav_type == 1:
+        return "swipe"
+    if nav_type == 2:
+        return "buttons"
+    if nav_type == 3:
+        return "swipe_buttons"
+
+
 class GetProjectQRCode(ProjectsView):
     def process_view(self):
         user_id = self.request.matchdict["userid"]
@@ -727,8 +862,19 @@ class GetProjectQRCode(ProjectsView):
             "admin": {"change_server": True, "change_form_metadata": False},
             "general": {
                 "change_server": True,
-                "navigation": "buttons",
                 "server_url": url,
+                "form_update_mode": get_update_mode(project_details["odk_update_mode"]),
+                "periodic_form_updates_check": get_update_period(
+                    project_details["odk_update_period"]
+                ),
+                "automatic_update": bool(project_details["odk_update_auto"]),
+                "hide_old_form_versions": bool(project_details["odk_update_auto"]),
+                "autosend": get_auto_send(project_details["odk_auto_send"]),
+                "delete_send": bool(project_details["odk_delete_after_send"]),
+                "high_resolution": bool(project_details["odk_high_res_video"]),
+                "image_size": get_image_size(project_details["odk_image_size"]),
+                "external_app_recording": bool(project_details["odk_audio_app"]),
+                "navigation": get_navigation_type(project_details["odk_navigation"]),
             },
             "project": {
                 "name": project_details["project_name"],

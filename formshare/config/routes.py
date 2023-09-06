@@ -160,6 +160,7 @@ from formshare.views.projects import (
     ProjectDetailsView,
     ProjectStoredFileView,
     EditProjectView,
+    EditProjectQRView,
     DeleteProjectView,
     AddFileToProject,
     RemoveFileFromProject,
@@ -395,6 +396,15 @@ def load_routes(config, settings):
     routes.append(
         add_route(
             "project_qr", "/user/{userid}/project/{projcode}/qr", GetProjectQRCode, None
+        )
+    )
+
+    routes.append(
+        add_route(
+            "project_edit_qr",
+            "/user/{userid}/project/{projcode}/qr/edit",
+            EditProjectQRView,
+            "dashboard/projects/project_edit_qr.jinja2",
         )
     )
 

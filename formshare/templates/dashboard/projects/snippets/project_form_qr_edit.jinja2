@@ -1,0 +1,118 @@
+
+<form class="m-t require_busy" role="form" method="post" action="{{ request.url }}" enctype="multipart/form-data" >
+    {{ form.secure_form(request) }}
+    {% block qr_settings %}
+    <div class="row">
+        <div class="col-md-4">
+            <div class="ibox">
+                <div class="ibox-title">
+                    <b>{{ _('Form submission settings') }}</b>
+                </div>
+                <div class="ibox-content">
+                    <div class="form-group row"><label class="col-sm-6 col-form-label">{{ _('Automatically send a finalized form') }}</label>
+                        <div class="col-sm-6">
+                            <select style="width: 100%" id="odk_auto_send" name="odk_auto_send" class="select2" data-module="autocomplete" data-module-dropdown-class="lang-dropdown" data-module-container-class="lang-container">
+                                <option value="0" {% if projectDetails.odk_auto_send == 0 %} selected {% endif %} >{{ _('No') }}</option>
+                                <option value="3" {% if projectDetails.odk_auto_send == 3 %} selected {% endif %} >{{ _('Yes') }}</option>
+                                <option value="1" {% if projectDetails.odk_auto_send == 1 %} selected {% endif %} >{{ _('Yes, but when using wifi') }}</option>
+                                <option value="2" {% if projectDetails.odk_auto_send == 2 %} selected {% endif %} >{{ _('Yes, but when using cellular') }}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="hr-line-dashed"></div>
+                    <div class="form-group row"><label class="col-sm-10 col-form-label">{{ _('Delete the form from the device after sending it') }}</label>
+                        <div class="col-sm-2"><input type="checkbox" name="odk_delete_after_send" class="js-switch" {% if projectDetails.odk_delete_after_send == 1 %}checked{% endif %} ></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="ibox">
+                <div class="ibox-title">
+                    <b>{{ _('Form update settings') }}</b>
+                </div>
+                <div class="ibox-content">
+                    <div class="form-group row"><label class="col-sm-6 col-form-label">{{ _('Update mode for blank forms') }}</label>
+                        <div class="col-sm-6">
+                            <select style="width: 100%" id="odk_update_mode" name="odk_update_mode" data-module="autocomplete" data-module-dropdown-class="lang-dropdown" data-module-container-class="lang-container">
+                                <option value="1" {% if projectDetails.odk_update_mode == 1 %} selected {% endif %} >{{ _('Manual') }}</option>
+                                <option value="2" {% if projectDetails.odk_update_mode == 2 %} selected {% endif %} >{{ _('Previously downloaded') }}</option>
+                                <option value="3" {% if projectDetails.odk_update_mode == 3 %} selected {% endif %} >{{ _('Match exactly') }}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="hr-line-dashed"></div>
+
+                    <div class="form-group row"><label class="col-sm-6 col-form-label">{{ _('Automatic update frequency') }}</label>
+                        <div class="col-sm-6">
+                            <select style="width: 100%" id="odk_update_period" name="odk_update_period" class="select2" data-module="autocomplete" data-module-dropdown-class="lang-dropdown" data-module-container-class="lang-container" {% if projectDetails.odk_update_mode == 1 %}disabled{% endif %}>
+                                <option value="1" {% if projectDetails.odk_update_period == 1 %} selected {% endif %} >{{ _('Every fifteen minutes') }}</option>
+                                <option value="2" {% if projectDetails.odk_update_period == 2 %} selected {% endif %} >{{ _('Every one hour') }}</option>
+                                <option value="3" {% if projectDetails.odk_update_period == 3 %} selected {% endif %} >{{ _('Every six hours') }}</option>
+                                <option value="4" {% if projectDetails.odk_update_period == 4 %} selected {% endif %} >{{ _('Every 24 hours') }}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="hr-line-dashed"></div>
+                    <div class="form-group row"><label class="col-sm-10 col-form-label">{{ _('Automatically download updated forms') }}</label>
+                        <div class="col-sm-2"><input type="checkbox" id="odk_update_auto" name="odk_update_auto" class="js-switch2" {% if projectDetails.odk_update_auto == 1 %}checked{% endif %} {% if projectDetails.odk_update_mode == 1 %}disabled{% endif %}></div>
+                    </div>
+                    <div class="hr-line-dashed"></div>
+                    <div class="form-group row"><label class="col-sm-10 col-form-label">{{ _('Hide old versions of a form') }}</label>
+                        <div class="col-sm-2"><input type="checkbox" name="odk_hide_old" class="js-switch" {% if projectDetails.odk_hide_old == 1 %}checked{% endif %} ></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="ibox">
+                <div class="ibox-title">
+                    <b>{{ _('Form filling settings') }}</b>
+                </div>
+                <div class="ibox-content">
+                    <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Navigation') }}</label>
+                        <div class="col-sm-10">
+                            <select style="width: 100%" id="odk_navigation" name="odk_navigation" class="select2" data-module="autocomplete" data-module-dropdown-class="lang-dropdown" data-module-container-class="lang-container">
+                                <option value="1" {% if projectDetails.odk_navigation == 1 %} selected {% endif %} >{{ _('Swipe') }}</option>
+                                <option value="2" {% if projectDetails.odk_navigation == 2 %} selected {% endif %} >{{ _('Buttons') }}</option>
+                                <option value="3" {% if projectDetails.odk_navigation == 3 %} selected {% endif %} >{{ _('Swipe and buttons') }}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="hr-line-dashed"></div>
+                    <div class="form-group row"><label class="col-sm-10 col-form-label">{{ _('Use high-resolution in video recordings') }}</label>
+                        <div class="col-sm-2"><input type="checkbox" name="odk_high_res_video" class="js-switch" {% if projectDetails.odk_high_res_video == 1 %}checked{% endif %} ></div>
+                    </div>
+                    <div class="hr-line-dashed"></div>
+                    <div class="form-group row"><label class="col-sm-6 col-form-label">{{ _('Size of images') }}</label>
+                        <div class="col-sm-6">
+                            <select style="width: 100%" id="odk_image_size" name="odk_image_size" class="select2" data-module="autocomplete" data-module-dropdown-class="lang-dropdown" data-module-container-class="lang-container">
+                                <option value="1" {% if projectDetails.odk_image_size == 1 %} selected {% endif %} >{{ _('Original size from the camera') }}</option>
+                                <option value="2" {% if projectDetails.odk_image_size == 2 %} selected {% endif %} >{{ _('Very small (640 pixels)') }}</option>
+                                <option value="3" {% if projectDetails.odk_image_size == 3 %} selected {% endif %} >{{ _('Small (1024 pixels)') }}</option>
+                                <option value="4" {% if projectDetails.odk_image_size == 4 %} selected {% endif %} >{{ _('Medium (2048 pixels)') }}</option>
+                                <option value="5" {% if projectDetails.odk_image_size == 5 %} selected {% endif %} >{{ _('Large (3072 pixels)') }}</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="hr-line-dashed"></div>
+                    <div class="form-group row"><label class="col-sm-10 col-form-label">{{ _('Use an external App for recording audio') }}</label>
+                        <div class="col-sm-2"><input type="checkbox" name="odk_audio_app" class="js-switch" {% if projectDetails.odk_audio_app == 1 %}checked{% endif %} ></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% endblock qr_settings %}
+    {% block qr_settings_extra %}
+
+    {% endblock qr_settings_extra %}
+    {% block qr_settings_actions %}
+        <div class="form-group row">
+            <div class="col-sm-4 col-sm-offset-2">
+                <button class="btn btn-primary btn-sm" type="submit">{{ _('Save QR settings') }}</button> <button class="btn btn-warning btn-sm" name="set_default" type="submit">{{ _('Go back to the defaults') }}</button>
+            </div>
+        </div>
+    {% endblock qr_settings_actions %}
+</form>

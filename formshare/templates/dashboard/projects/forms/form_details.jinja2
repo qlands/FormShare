@@ -221,6 +221,10 @@
         <script>
             $(document).ready(function() {
 
+                $( "#editQRData" ).on( "click", function() {
+                    location.href = "{{ request.route_url('project_edit_qr',userid=projectDetails.owner, projcode=projectDetails.project_code,_query={'next':request.url}) }}";
+                } );
+
                 {% if formDetails.form_schema == None %}
                     {% if formDetails.form_surveycolumns != None or formDetails.form_choicescolumns != None or formDetails.form_invalidcolumns != None %}
                         var tour = new Tour({

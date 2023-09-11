@@ -123,6 +123,16 @@ ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password by '[my_secu
 flush privileges;
 ```
 
+#### If you are using AWS RDS you need the following statements:
+
+```mysql
+GRANT ROLE_ADMIN on *.* to 'NAME_OF_YOUR_MASTER_USER'@'%';
+GRANT SESSION_VARIABLES_ADMIN on *.* to 'NAME_OF_YOUR_MASTER_USER'@'%';
+GRANT SYSTEM_VARIABLES_ADMIN on *.* to 'NAME_OF_YOUR_MASTER_USER'@'%';
+```
+
+You may also need the to set the parameter log_bin_trust_function_creators = 1 in your parameters group.
+
 ### Upgrade Java SDK (Only for Ubuntu 20.04)
 
 ```sh

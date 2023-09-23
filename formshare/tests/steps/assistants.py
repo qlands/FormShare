@@ -345,48 +345,39 @@ def t_e_s_t_assistants(test_object):
 
     # Change assistant password fails. Password is empty
     res = test_object.testapp.post(
-        "/user/{}/project/{}/assistant/{}/change".format(
+        "/user/{}/project/{}/assistant/{}/edit".format(
             test_object.randonLogin, test_object.project, test_object.assistantLogin
         ),
-        {"coll_password": ""},
-        status=302,
+        {"change_password": "", "coll_password": ""},
+        status=200,
     )
     assert "FS_error" in res.headers
 
     # Change assistant password fails. Passwords are not the same
     res = test_object.testapp.post(
-        "/user/{}/project/{}/assistant/{}/change".format(
+        "/user/{}/project/{}/assistant/{}/edit".format(
             test_object.randonLogin, test_object.project, test_object.assistantLogin
         ),
-        {"coll_password": "123", "coll_password2": "321"},
-        status=302,
+        {"change_password": "", "coll_password": "123", "coll_password2": "321"},
+        status=200,
     )
     assert "FS_error" in res.headers
 
     # 404 for password change to a project that does not exist
     test_object.testapp.post(
-        "/user/{}/project/{}/assistant/{}/change".format(
+        "/user/{}/project/{}/assistant/{}/edit".format(
             test_object.randonLogin, "not_exist", test_object.assistantLogin
         ),
-        {"coll_password": "123", "coll_password2": "123"},
-        status=404,
-    )
-
-    # 404 change password with get
-    test_object.testapp.get(
-        "/user/{}/project/{}/assistant/{}/change".format(
-            test_object.randonLogin, test_object.project, test_object.assistantLogin
-        ),
-        {"coll_password": "123", "coll_password2": "123"},
+        {"change_password": "", "coll_password": "123", "coll_password2": "123"},
         status=404,
     )
 
     # Change assistant succeeds
     res = test_object.testapp.post(
-        "/user/{}/project/{}/assistant/{}/change".format(
+        "/user/{}/project/{}/assistant/{}/edit".format(
             test_object.randonLogin, test_object.project, test_object.assistantLogin
         ),
-        {"coll_password": "123", "coll_password2": "123"},
+        {"change_password": "", "coll_password": "123", "coll_password2": "123"},
         status=302,
     )
     assert "FS_error" not in res.headers

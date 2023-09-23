@@ -46,7 +46,6 @@ from formshare.views.assistants import (
     UploadAssistantsCSV,
     EditAssistantsView,
     DeleteAssistant,
-    ChangeAssistantPassword,
 )
 from formshare.views.basic_views import (
     NotFoundView,
@@ -523,15 +522,6 @@ def load_routes(config, settings):
             "assistant_delete",
             "/user/{userid}/project/{projcode}/assistant/{assistid}/delete",
             DeleteAssistant,
-            None,
-        )
-    )
-
-    routes.append(
-        add_route(
-            "assistant_change_pass",
-            "/user/{userid}/project/{projcode}/assistant/{assistid}/change",
-            ChangeAssistantPassword,
             None,
         )
     )

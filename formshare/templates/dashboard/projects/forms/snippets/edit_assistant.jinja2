@@ -3,9 +3,10 @@
         <div class="modal-content animated fadeIn">
             <div class="modal-header">
                 {% block edit_assistant_header %}
-                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">{{ _('Close') }}</span></button>
                     <h4 class="modal-title">{{ _('Change privilege') }}</h4>
                     <small id="rolewho" class="font-bold">Changing privilege of Carlos Quiros</small>
+                    <p style="color: red" id="assistant_readonly_note">{{ _('This assistant belongs to the project') }} "<spam id="assistant_project_name"></spam>" {{ _('in the account of') }} "<spam id="assistant_owner_name"></spam>" {{ _("but you don't have editor access to this project. Therefore, you cannot edit any details of the assistant for example, change its password or deactivate it.") }}</p>
                 {% endblock edit_assistant_header %}
             </div>
             <form class="require_busy" id="edit_assistant_form" role="form" method="post" action="">
@@ -31,6 +32,7 @@
                         <div class="modal-footer">
                             <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
                             <button type="submit" name="add_assistant" class="btn btn-primary">{{ _('Change privileges') }}</button>
+                            <button type="button" id="edit_assistant_details" class="btn btn-white">{{ _('Edit assistant details') }}</button>
                         </div>
                     {% endblock edit_assistant_form_actions %}
                 {% endblock edit_assistant_form %}

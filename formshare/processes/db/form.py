@@ -108,6 +108,33 @@ __all__ = [
 log = logging.getLogger("formshare")
 
 
+def _get_project_owner(request, project):
+    res = (
+        request.dbsession.query(Userproject.user_id, User.user_name)
+        .filter(Userproject.project_id == project)
+        .filter(Userproject.user_id == User.user_id)
+        .filter(Userproject.access_type == 1)
+        .first()
+    )
+    if res is not None:
+        return res.user_id, res.user_name
+    else:
+        return None, None
+
+
+def _check_my_access(request, user, project):
+    res = (
+        request.dbsession.query(Userproject.access_type)
+        .filter(Userproject.project_id == project)
+        .filter(Userproject.user_id == user)
+        .first()
+    )
+    if res is not None:
+        return res.access_type
+    else:
+        return 5
+
+
 def field_exists(request, project, field_name):
     res = (
         request.dbsession.query(CaseLookUp)
@@ -1633,9 +1660,10 @@ def add_assistant_to_form(request, project, form, privilege_data):
         return False, _("This form is blocked and cannot be changed at the moment.")
 
 
-def get_form_assistants(request, project, form):
+def get_form_assistants(request, project, form, with_owner=False, for_user=None):
     res = (
-        request.dbsession.query(Collaborator, Formacces)
+        request.dbsession.query(Project, Collaborator, Formacces)
+        .filter(Collaborator.project_id == Project.project_id)
         .filter(Collaborator.project_id == Formacces.project_id)
         .filter(Collaborator.coll_id == Formacces.coll_id)
         .filter(Formacces.form_project == project)
@@ -1643,6 +1671,14 @@ def get_form_assistants(request, project, form):
         .all()
     )
     mapped_data = map_from_schema(res)
+    if with_owner:
+        for an_assistant in mapped_data:
+            an_assistant["owner"], an_assistant["owner_name"] = _get_project_owner(
+                request, an_assistant["project_id"]
+            )
+            an_assistant["access_type"] = _check_my_access(
+                request, for_user, an_assistant["project_id"]
+            )
     return mapped_data
 
 

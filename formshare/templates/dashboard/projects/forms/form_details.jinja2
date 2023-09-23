@@ -645,6 +645,12 @@
                         });
                     {% endif %}
 
+                    $('#edit_assistant_details').click(function () {
+                        var assistant_edit_url = $(this).attr('urn');
+                        location.href = assistant_edit_url;
+                    });
+
+
                     var assistant_item = $(".assistant-item");
 
                     assistant_item.click(function() {
@@ -661,6 +667,26 @@
                             if (assistant_can_submit === "1")
                                 role_submmit.prop( "checked", true );
                         {% endif %}
+
+                        var assistant_access_type = parseInt($(this).attr('data-assistant-access_type'));
+                        if (assistant_access_type < 4)
+                        {
+                            $("#edit_assistant_details").prop('disabled', false)
+                            $("#assistant_readonly_note").hide();
+                            var assistant_edit_url = $(this).attr('data-assistant_edit_url');
+                            $("#edit_assistant_details").attr("urn",assistant_edit_url)
+                        }
+                        else
+                        {
+                            var project_name = $(this).attr('data-assistant-project_name');
+                            var owner_name = $(this).attr('data-assistant-owner_name');
+                            $("#assistant_project_name").text(project_name)
+                            $("#assistant_owner_name").text(owner_name)
+                            $("#assistant_readonly_note").show();
+                            $("#edit_assistant_details").prop('disabled', true)
+                        }
+
+
 
                         var role_clean = $( "#role_clean" );
                         role_clean.prop( "checked", false );

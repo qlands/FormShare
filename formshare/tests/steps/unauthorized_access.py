@@ -699,10 +699,10 @@ def t_e_s_t_unauthorized_access(test_object):
 
     # 404 not access to project
     test_object.testapp.post(
-        "/user/{}/project/{}/assistant/{}/change".format(
+        "/user/{}/project/{}/assistant/{}/edit".format(
             test_object.randonLogin, test_object.project, test_object.assistantLogin
         ),
-        {"coll_password": "123", "coll_password2": "123"},
+        {"change_password": "", "coll_password": "123", "coll_password2": "123"},
         status=404,
     )
 
@@ -1538,10 +1538,10 @@ def t_e_s_t_unauthorized_access(test_object):
 
     # No credentials to change password
     test_object.testapp.post(
-        "/user/{}/project/{}/assistant/{}/change".format(
+        "/user/{}/project/{}/assistant/{}/edit".format(
             test_object.randonLogin, test_object.project, test_object.assistantLogin
         ),
-        {"coll_password": "123", "coll_password2": "123"},
+        {"change_password": "", "coll_password": "123", "coll_password2": "123"},
         status=404,
     )
 

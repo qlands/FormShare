@@ -20,6 +20,9 @@
 {% endblock breadcrumbs %}
 
 {% block maincontent %}
+    {% block form_errors %}
+        {{ form.display_errors(errors) }}
+    {% endblock form_errors %}
     <div class="ibox">
         <div class="ibox-title">
             {% block assistant_edit_title %}
@@ -35,11 +38,27 @@
         </div>
         <div class="ibox-content">
             {% block assistant_edit_content %}
-                {% block form_errors %}
-                    {{ form.display_errors(errors) }}
-                {% endblock form_errors %}
                 {% include 'dashboard/projects/assistants/snippets/assistant_form_edit.jinja2' %}
             {% endblock assistant_edit_content %}
+        </div>
+    </div>
+    <div class="ibox" id="password_section">
+        <div class="ibox-title">
+            {% block assistant_password_title %}
+                <h5>{{ _('Change password') }}</h5>
+                <div class="ibox-tools">
+                    {% block assistant_password_tools %}
+                        <a class="fullscreen-link">
+                            <i class="fa fa-expand"></i>
+                        </a>
+                    {% endblock assistant_password_tools %}
+                </div>
+            {% endblock assistant_password_title %}
+        </div>
+        <div class="ibox-content">
+            {% block assistant_password_content %}
+                {% include 'dashboard/projects/assistants/snippets/assistant_password_change.jinja2' %}
+            {% endblock assistant_password_content %}
         </div>
     </div>
 {% endblock maincontent %}

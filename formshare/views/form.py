@@ -826,7 +826,9 @@ class FormDetails(PrivateView):
 
             assistants = get_all_assistants(self.request, user_id, project_id)
 
-            form_assistants = get_form_assistants(self.request, project_id, form_id)
+            form_assistants = get_form_assistants(
+                self.request, project_id, form_id, True, self.user.login
+            )
             form_assistants_through_groups = get_form_assistants_through_groups(
                 self.request, project_id, form_id
             )

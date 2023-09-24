@@ -2878,7 +2878,7 @@ class DownloadPublicXLSData(PrivateView):
                 get_project_access_type(
                     self.request, project_id, user_id, self.user.login
                 )
-                >= 4
+                > 4
             ):
                 raise HTTPNotFound
         else:
@@ -2939,7 +2939,7 @@ class DownloadPublicZIPCSVData(PrivateView):
                 get_project_access_type(
                     self.request, project_id, user_id, self.user.login
                 )
-                >= 4
+                > 4
             ):
                 raise HTTPNotFound
         else:
@@ -3000,7 +3000,7 @@ class DownloadPublicZIPJSONData(PrivateView):
                 get_project_access_type(
                     self.request, project_id, user_id, self.user.login
                 )
-                >= 4
+                > 4
             ):
                 raise HTTPNotFound
         else:
@@ -3062,7 +3062,7 @@ class DownloadPrivateXLSData(PrivateView):
                 get_project_access_type(
                     self.request, project_id, user_id, self.user.login
                 )
-                >= 4
+                > 4
             ):
                 raise HTTPNotFound
         else:
@@ -3123,7 +3123,7 @@ class DownloadPrivateZIPCSVData(PrivateView):
                 get_project_access_type(
                     self.request, project_id, user_id, self.user.login
                 )
-                >= 4
+                > 4
             ):
                 raise HTTPNotFound
         else:
@@ -3184,7 +3184,7 @@ class DownloadPrivateZIPJSONData(PrivateView):
                 get_project_access_type(
                     self.request, project_id, user_id, self.user.login
                 )
-                >= 4
+                > 4
             ):
                 raise HTTPNotFound
         else:
@@ -3302,7 +3302,7 @@ class DownloadSubmissionFiles(PrivateView):
                 get_project_access_type(
                     self.request, project_id, user_id, self.user.login
                 )
-                >= 4
+                > 4
             ):
                 raise HTTPNotFound
 
@@ -3382,7 +3382,7 @@ class DownloadPublicCSV(PrivateView):
                 get_project_access_type(
                     self.request, project_id, user_id, self.user.login
                 )
-                >= 4
+                > 4
             ):
                 raise HTTPNotFound
         else:
@@ -3438,7 +3438,7 @@ class DownloadPrivateCSV(PrivateView):
                 get_project_access_type(
                     self.request, project_id, user_id, self.user.login
                 )
-                >= 4
+                > 4
             ):
                 raise HTTPNotFound
         else:
@@ -3568,7 +3568,7 @@ class StopTask(PrivateView):
                 get_project_access_type(
                     self.request, project_id, user_id, self.user.login
                 )
-                >= 4
+                > 4
             ):
                 raise HTTPNotFound
         else:
@@ -4489,7 +4489,7 @@ class ExportData(PrivateView):
                 get_project_access_type(
                     self.request, project_id, user_id, self.user.login
                 )
-                >= 4
+                > 4
             ):
                 raise HTTPNotFound
         else:
@@ -4581,7 +4581,7 @@ class ExportDataToXLSX(PrivateView):
                 get_project_access_type(
                     self.request, project_id, user_id, self.user.login
                 )
-                >= 4
+                > 4
             ):
                 raise HTTPNotFound
             project_details = get_project_details(self.request, project_id)
@@ -4640,7 +4640,7 @@ class ExportDataToZIPCSV(PrivateView):
                 get_project_access_type(
                     self.request, project_id, user_id, self.user.login
                 )
-                >= 4
+                > 4
             ):
                 raise HTTPNotFound
             project_details = get_project_details(self.request, project_id)
@@ -4699,7 +4699,7 @@ class ExportDataToZIPJSON(PrivateView):
                 get_project_access_type(
                     self.request, project_id, user_id, self.user.login
                 )
-                >= 4
+                > 4
             ):
                 raise HTTPNotFound
             project_details = get_project_details(self.request, project_id)
@@ -4759,7 +4759,7 @@ class ExportDataToCSV(PrivateView):
                 get_project_access_type(
                     self.request, project_id, user_id, self.user.login
                 )
-                >= 4
+                > 4
             ):
                 raise HTTPNotFound
             project_details = get_project_details(self.request, project_id)
@@ -4813,7 +4813,7 @@ class DownloadKML(PrivateView):
                 get_project_access_type(
                     self.request, project_id, user_id, self.user.login
                 )
-                >= 4
+                > 4
             ):
                 raise HTTPNotFound
             project_details = get_project_details(self.request, project_id)

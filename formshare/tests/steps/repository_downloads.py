@@ -705,6 +705,22 @@ def t_e_s_t_repository_downloads(test_object):
         status=404,
     )
 
+    # Generate public zip JSON for a project that does not exist goes to 404
+    test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/generate/public_zip_json".format(
+            test_object.randonLogin, "not_exist", test_object.formID
+        ),
+        status=404,
+    )
+
+    # Generate private zip JSON for a project that does not exist goes to 404
+    test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/generate/private_zip_json".format(
+            test_object.randonLogin, "not_exist", test_object.formID
+        ),
+        status=404,
+    )
+
     # Generate public XLSX for a form that does not exist goes to 404
     test_object.testapp.get(
         "/user/{}/project/{}/form/{}/generate/public_xlsx".format(
@@ -712,6 +728,40 @@ def t_e_s_t_repository_downloads(test_object):
         ),
         status=404,
     )
+
+    # Generate public ZIP JSON for a form that does not exist goes to 404
+    test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/generate/public_zip_json".format(
+            test_object.randonLogin, test_object.project, "not_exist"
+        ),
+        status=404,
+    )
+
+    # Generate private ZIP JSON for a form that does not exist goes to 404
+    test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/generate/private_zip_json".format(
+            test_object.randonLogin, test_object.project, "not_exist"
+        ),
+        status=404,
+    )
+
+    # Generate public ZIP JSON
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/generate/public_zip_json".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+
+    # Generate public ZIP JSON
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/generate/private_zip_json".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        status=302,
+    )
+    assert "FS_error" not in res.headers
 
     # Generate public XLSX
     res = test_object.testapp.get(

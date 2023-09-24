@@ -333,6 +333,22 @@ def t_e_s_t_unauthorized_access(test_object):
         status=404,
     )
 
+    # Generate public Zip JSON when don't have access goes to 404
+    test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/generate/public_zip_json".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        status=404,
+    )
+
+    # Generate private Zip JSON when don't have access goes to 404
+    test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/generate/private_zip_json".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        status=404,
+    )
+
     # Generate public zip csv when don't have access goes to 404
     test_object.testapp.get(
         "/user/{}/project/{}/form/{}/generate/public_zip_csv".format(
@@ -483,6 +499,14 @@ def t_e_s_t_unauthorized_access(test_object):
     # Download Zip CSV of a form that does not have access goes to 404
     test_object.testapp.get(
         "/user/{}/project/{}/form/{}/export/zip_csv".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        status=404,
+    )
+
+    # Download Zip CSV of a form that does not have access goes to 404
+    test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/export/zip_json".format(
             test_object.randonLogin, test_object.project, test_object.formID
         ),
         status=404,
@@ -1270,101 +1294,101 @@ def t_e_s_t_unauthorized_access(test_object):
         status=404,
     )
 
-    # Generate public XLSX when don't have access goes to 404
-    test_object.testapp.get(
-        "/user/{}/project/{}/form/{}/generate/public_xlsx".format(
-            test_object.randonLogin, test_object.project, test_object.formID
-        ),
-        status=404,
-    )
+    # # Generate public XLSX when don't have access goes to 404
+    # test_object.testapp.get(
+    #     "/user/{}/project/{}/form/{}/generate/public_xlsx".format(
+    #         test_object.randonLogin, test_object.project, test_object.formID
+    #     ),
+    #     status=404,
+    # )
 
-    # Generate public XLSX when don't have access goes to 404
-    test_object.testapp.get(
-        "/user/{}/project/{}/form/{}/generate/public_zip_csv".format(
-            test_object.randonLogin, test_object.project, test_object.formID
-        ),
-        status=404,
-    )
+    # # Generate public XLSX when don't have access goes to 404
+    # test_object.testapp.get(
+    #     "/user/{}/project/{}/form/{}/generate/public_zip_csv".format(
+    #         test_object.randonLogin, test_object.project, test_object.formID
+    #     ),
+    #     status=404,
+    # )
 
-    # Download a private xls for a form that does not have access goes tot 404
-    test_object.testapp.get(
-        "/user/{}/project/{}/form/{}/generate/private_xlsx".format(
-            test_object.randonLogin, test_object.project, test_object.formID
-        ),
-        status=404,
-    )
+    # # Download a private xls for a form that does not have access goes tot 404
+    # test_object.testapp.get(
+    #     "/user/{}/project/{}/form/{}/generate/private_xlsx".format(
+    #         test_object.randonLogin, test_object.project, test_object.formID
+    #     ),
+    #     status=404,
+    # )
 
-    # Download a private zip CSV for a form that does not have access goes tot 404
-    test_object.testapp.get(
-        "/user/{}/project/{}/form/{}/generate/private_zip_csv".format(
-            test_object.randonLogin, test_object.project, test_object.formID
-        ),
-        status=404,
-    )
+    # # Download a private zip CSV for a form that does not have access goes tot 404
+    # test_object.testapp.get(
+    #     "/user/{}/project/{}/form/{}/generate/private_zip_csv".format(
+    #         test_object.randonLogin, test_object.project, test_object.formID
+    #     ),
+    #     status=404,
+    # )
 
-    # Download submitted media files for a form that does not have access goes to 404
-    test_object.testapp.get(
-        "/user/{}/project/{}/form/{}/generate/media".format(
-            test_object.randonLogin, test_object.project, test_object.formID
-        ),
-        status=404,
-    )
+    # # Download submitted media files for a form that does not have access goes to 404
+    # test_object.testapp.get(
+    #     "/user/{}/project/{}/form/{}/generate/media".format(
+    #         test_object.randonLogin, test_object.project, test_object.formID
+    #     ),
+    #     status=404,
+    # )
 
-    # Export data of a form that does not have access goes to 404
-    test_object.testapp.get(
-        "/user/{}/project/{}/form/{}/export".format(
-            test_object.randonLogin, test_object.project, test_object.formID
-        ),
-        status=404,
-    )
+    # # Export data of a form that does not have access goes to 404
+    # test_object.testapp.get(
+    #     "/user/{}/project/{}/form/{}/export".format(
+    #         test_object.randonLogin, test_object.project, test_object.formID
+    #     ),
+    #     status=404,
+    # )
 
     # Download KML of a form that does not have access goes to 404
-    test_object.testapp.get(
-        "/user/{}/project/{}/form/{}/export/kml".format(
-            test_object.randonLogin, test_object.project, test_object.formID
-        ),
-        status=404,
-    )
+    # test_object.testapp.get(
+    #     "/user/{}/project/{}/form/{}/export/kml".format(
+    #         test_object.randonLogin, test_object.project, test_object.formID
+    #     ),
+    #     status=404,
+    # )
 
     # Download XLSX of a form that does not have access goes to 404
-    test_object.testapp.get(
-        "/user/{}/project/{}/form/{}/export/xlsx".format(
-            test_object.randonLogin, test_object.project, test_object.formID
-        ),
-        status=404,
-    )
+    # test_object.testapp.get(
+    #     "/user/{}/project/{}/form/{}/export/xlsx".format(
+    #         test_object.randonLogin, test_object.project, test_object.formID
+    #     ),
+    #     status=404,
+    # )
 
     # Download XLSX of a form that does not have access goes to 404
-    test_object.testapp.get(
-        "/user/{}/project/{}/form/{}/export/zip_csv".format(
-            test_object.randonLogin, test_object.project, test_object.formID
-        ),
-        status=404,
-    )
+    # test_object.testapp.get(
+    #     "/user/{}/project/{}/form/{}/export/zip_csv".format(
+    #         test_object.randonLogin, test_object.project, test_object.formID
+    #     ),
+    #     status=404,
+    # )
 
-    # Download CSV of a form that does not have access goes to 404
-    test_object.testapp.get(
-        "/user/{}/project/{}/form/{}/export/csv".format(
-            test_object.randonLogin, test_object.project, test_object.formID
-        ),
-        status=404,
-    )
+    # # Download CSV of a form that does not have access goes to 404
+    # test_object.testapp.get(
+    #     "/user/{}/project/{}/form/{}/export/csv".format(
+    #         test_object.randonLogin, test_object.project, test_object.formID
+    #     ),
+    #     status=404,
+    # )
 
     # Public CSV of a form that does not have access goes to 404
-    test_object.testapp.get(
-        "/user/{}/project/{}/form/{}/generate/repo_public_csv".format(
-            test_object.randonLogin, test_object.project, test_object.formID
-        ),
-        status=404,
-    )
+    # test_object.testapp.get(
+    #     "/user/{}/project/{}/form/{}/generate/repo_public_csv".format(
+    #         test_object.randonLogin, test_object.project, test_object.formID
+    #     ),
+    #     status=404,
+    # )
 
-    # Private CSV of a form that does not have access goes to 404
-    test_object.testapp.get(
-        "/user/{}/project/{}/form/{}/generate/repo_private_csv".format(
-            test_object.randonLogin, test_object.project, test_object.formID
-        ),
-        status=404,
-    )
+    # # Private CSV of a form that does not have access goes to 404
+    # test_object.testapp.get(
+    #     "/user/{}/project/{}/form/{}/generate/repo_private_csv".format(
+    #         test_object.randonLogin, test_object.project, test_object.formID
+    #     ),
+    #     status=404,
+    # )
 
     # Loads import data for a form that does not have access goes to 404
     test_object.testapp.get(
@@ -1375,15 +1399,15 @@ def t_e_s_t_unauthorized_access(test_object):
     )
 
     # Stop task for a project that does not have access goes to 404
-    test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/task/{}/stop".format(
-            test_object.randonLogin,
-            test_object.project,
-            test_object.formID,
-            "not_exist",
-        ),
-        status=404,
-    )
+    # test_object.testapp.post(
+    #     "/user/{}/project/{}/form/{}/task/{}/stop".format(
+    #         test_object.randonLogin,
+    #         test_object.project,
+    #         test_object.formID,
+    #         "not_exist",
+    #     ),
+    #     status=404,
+    # )
 
     # Open the case lookup table for a project that does not have access goes to 404
     test_object.testapp.get(

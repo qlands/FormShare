@@ -40,7 +40,7 @@ exceptiongroup==1.1.2
 feedparser==6.0.10
 FormEncode==2.0.1
 future==0.18.3
-gevent==23.7.0
+gevent==23.9.1
 greenlet==2.0.2
 gunicorn==21.2.0
 hupper==1.12

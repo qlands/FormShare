@@ -422,6 +422,17 @@ class FormDetails(PrivateView):
                         "An email has been sent to the technical team and they will contact you ASAP."
                     )
                 )
+            if created == 34:
+                # Too many fields. Report issue because this was checked before
+                self.report_critical_error(
+                    user_id, project_id, new_form_id, created, message
+                )
+                errors.append(
+                    self._(
+                        "An unexpected error occurred while processing the merge. "
+                        "An email has been sent to the technical team and they will contact you ASAP."
+                    )
+                )
             if created == 7:
                 # Malformed language in the ODK Form. Report issue because this was checked before
                 self.report_critical_error(

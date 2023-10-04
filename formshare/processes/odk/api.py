@@ -958,6 +958,88 @@ def check_jxform_file(
             )
             return 2, message
 
+        if p.returncode == 34:
+            log.error(
+                ". Error: "
+                + str(p.returncode)
+                + "-"
+                + stderr.decode()
+                + " while checking PyXForm. Command line: "
+                + " ".join(args)
+            )
+            message = (
+                "\n"
+                + _(
+                    "FormShare manages your data in a better way, but by doing so, it has more restrictions."
+                )
+                + "\n"
+            )
+            message = message + _("The following tables have too many fields: ") + "\n"
+            root = etree.fromstring(stdout)
+            tables_with_errors = root.findall(".//table")
+            one_table = ""
+            one_table_fields = 0
+            for a_table in tables_with_errors:
+                table_name = a_table.get("name")
+                one_table = table_name
+                num_fields = a_table.get("fields")
+                one_table_fields = num_fields
+                message = message + table_name + _(" with ") + num_fields + _(" fields")
+            message = message + "\n\n"
+            message = (
+                message
+                + _("Some information on this restriction and how to correct it:")
+                + "\n\n"
+            )
+            message = (
+                message
+                + _(
+                    "We organize our ODK forms in sections with questions around a topic. "
+                    'For example: "livestock inputs" or "crops sales".'
+                )
+                + "\n\n"
+            )
+            message = (
+                message
+                + _(
+                    'These sections have type = "begin/end group." We also organize questions that repeat in '
+                    'sections with type = "begin/end repeat."'
+                )
+                + "\n\n"
+            )
+            message = (
+                message
+                + _(
+                    "FormShare stores repeats as separate tables (like different Excel sheets) however, "
+                    "groups are not stored as repeats. FormShare stores all variables (questions, notes, calculations, "
+                    'etc.) outside repeats into a table called "maintable". Thus, "maintable" usually end up '
+                    "with several variables. In FormShare, each variable uses a certain amount of bytes to store data. "
+                    "For example, a DateTime uses 8 bytes, and a text, independently of its content, uses 768. "
+                    "In FormShare, a table cannot have more than 149,886 bytes. This amount of bytes may look "
+                    "relatively small, but it is around 193 text variables or 16,654 decimal variables. "
+                    "Most ODK forms do not reach that limit, but your form did."
+                )
+                + "\n\n"
+            )
+            message = (
+                message
+                + _(
+                    "You can bypass this restriction by creating groups of variables inside repeats BUT WITH "
+                    "repeat_count = 1. A repeat with repeat_count = 1 will behave the same way as a group, "
+                    "but FormShare will create a new table to store all its variables. Basically, you need to split "
+                    "several variables across different tables so each table will have fewer fields. For example, "
+                    'separate the {} fields in table "{}" in independent repeats BUT WITH repeat_count = 1. '
+                    "Eventually, if you export the data to Excel, your variables will be organized in different sheets, "
+                    "each representing a table.".format(one_table_fields, one_table)
+                )
+                + "\n\n"
+            )
+            message = message + _(
+                "Please edit your ODK XLSX/XLS file, split your variables across repeats with repeat_count = 1, "
+                "and try to upload the form again."
+            )
+            return 34, message
+
         log.error(
             ". Error: "
             + "-"

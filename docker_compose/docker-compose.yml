@@ -1,9 +1,9 @@
 version: '3'
 services:
-  fsmysql_20230930:
+  fsmysql_20231005:
     image: mysql:8.0.23
     command: --default-authentication-plugin=mysql_native_password
-    container_name: fs_mysql_20230930
+    container_name: fs_mysql_20231005
     cap_add:
       - SYS_NICE
     environment:
@@ -15,15 +15,15 @@ services:
       fsnet:
         ipv4_address: 172.28.1.5
 
-  fses20230930n01:
+  fses20231005n01:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.14.2
-    container_name: fses20230930n01
+    container_name: fses20231005n01
     environment:
       - network.host=172.28.1.1
-      - node.name=fses20230930n01
+      - node.name=fses20231005n01
       - cluster.name=fs-es-cluster
-      - discovery.seed_hosts=fses20230930n02
-      - cluster.initial_master_nodes=fses20230930n01,fses20230930n02
+      - discovery.seed_hosts=fses20231005n02
+      - cluster.initial_master_nodes=fses20231005n01,fses20231005n02
       - bootstrap.memory_lock=true
       - xpack.security.enabled=false
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
@@ -37,15 +37,15 @@ services:
       fsnet:
         ipv4_address: 172.28.1.1
 
-  fses20230930n02:
+  fses20231005n02:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.14.2
-    container_name: fses20230930n02
+    container_name: fses20231005n02
     environment:
       - network.host=172.28.1.2
-      - node.name=fses20230930n02
+      - node.name=fses20231005n02
       - cluster.name=fs-es-cluster
-      - discovery.seed_hosts=fses20230930n01
-      - cluster.initial_master_nodes=fses20230930n01,fses20230930n02
+      - discovery.seed_hosts=fses20231005n01
+      - cluster.initial_master_nodes=fses20231005n01,fses20231005n02
       - bootstrap.memory_lock=true
       - xpack.security.enabled=false
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
@@ -59,9 +59,9 @@ services:
       fsnet:
         ipv4_address: 172.28.1.2
 
-  formshare_20230930:
-    image: qlands/formshare2:20230930
-    container_name: formshare_20230930
+  formshare_20231005:
+    image: qlands/formshare2:20231005
+    container_name: formshare_20231005
     environment:
       MYSQL_HOST_NAME: 172.28.1.5
       MYSQL_USER_NAME: root
@@ -95,4 +95,4 @@ networks:
      ipam:
         driver: default
         config:
-          - subnet: 172.29.1.0/16
+          - subnet: 172.30.0.0/16

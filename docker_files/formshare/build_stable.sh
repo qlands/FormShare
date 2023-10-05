@@ -1,1 +1,1 @@
-sudo docker build --no-cache --rm -t qlands/formshare2:20230930 -f ./stable.Dockerfile .
+sudo docker build --no-cache --rm -t qlands/formshare2:20231005 -f ./stable.Dockerfile .

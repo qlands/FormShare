@@ -49,6 +49,12 @@
                                             <input type="text" name="form_caselabel" {% if formDetails.form_caselabel != None %}value="{{ formDetails.form_caselabel }}" {% endif %} class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the variable to label each case') }}')"  oninput="setCustomValidity('')">
                                             <span class="form-text m-b-none text-success">{{ _('Each case needs to have a label. You need to select a variable from your ODK Form to label each case. Follow-up forms will use this variable to search and select each case. If you need to join two or more variables to create a label, then use an ODK Calculate to merge them into one variable.') }}</span>
                                         </div>
+                                        <hr>
+                                        <div style="margin-top: 10px" class="form-group">
+                                            <label><b>{{ _('In this ODK Form that you are uploading into FormShare, which variable will be used to record the date of a case?') }}</b></label>
+                                            <input type="text" name="form_casedatetime" {% if formDetails.form_casedatetime != None %}value="{{ formDetails.form_casedatetime }}" class="form-control" required oninvalid="this.setCustomValidity('{{ _('You need to indicate the case datetime variable') }}')"  oninput="setCustomValidity('')">
+                                            <span class="form-text m-b-none text-success">{{ _('Each case must be registered in a date. This variable MUST BE either "date" or "datetime".') }}</span>
+                                        </div>
                                     {% else %}
                                         <hr>
                                         <div style="margin-top: 10px" class="form-group">

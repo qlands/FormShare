@@ -33,7 +33,7 @@ class Avatar(object):
             font=font,
         )
         stream = BytesIO()
-        image = image.resize((size, size), Image.ANTIALIAS)
+        image = image.resize((size, size), Image.LANCZOS)
         image.save(stream, format=filetype, optimize=True)
         return stream.getvalue()
 
@@ -101,7 +101,7 @@ class Avatar(object):
         """
         Returns the left-top point where the text should be positioned.
         """
-        width, height = font.getsize(text)
+        p, z, width, height = font.getbbox(text)
         left = (size - width) / 2.0
         top = (size - height) / 2.3
         return left, top

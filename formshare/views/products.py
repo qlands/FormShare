@@ -62,7 +62,10 @@ class DownloadPrivateProduct(PrivateView):
                 if file_extension == "":
                     file_extension = "unknown"
                 response = FileResponse(
-                    output_file, request=self.request, content_type=mime_type
+                    output_file,
+                    request=self.request,
+                    content_type=mime_type,
+                    cache_max_age=0,
                 )
                 response.content_disposition = (
                     'attachment; filename="' + form_id + file_extension + '"'
@@ -112,7 +115,10 @@ class DownloadPublicProduct(PublicView):
                 if file_extension == "":
                     file_extension = "unknown"
                 response = FileResponse(
-                    output_file, request=self.request, content_type=mime_type
+                    output_file,
+                    request=self.request,
+                    content_type=mime_type,
+                    cache_max_age=0,
                 )
                 response.content_disposition = (
                     'attachment; filename="' + form_id + file_extension + '"'

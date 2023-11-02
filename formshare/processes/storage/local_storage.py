@@ -103,6 +103,8 @@ def response_stream(stream, file_name, response, unique_filename=None):
     if content_type is None:
         content_type = "application/binary"
     response.headers["Content-Type"] = content_type
+    response.cache_control.no_cache = True
+    response.cache_control.no_store = True
     if unique_filename is None:
         response.content_disposition = 'attachment; filename="' + file_name + '"'
     else:

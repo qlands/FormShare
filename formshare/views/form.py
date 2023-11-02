@@ -2849,7 +2849,10 @@ class DownloadCSVData(PrivateView):
         created, file = json_to_csv(self.request, project_id, form_id)
         if created:
             response = FileResponse(
-                file, request=self.request, content_type="application/csv"
+                file,
+                request=self.request,
+                content_type="application/csv",
+                cache_max_age=0,
             )
             response.content_disposition = 'attachment; filename="' + form_id + '.csv"'
             return response
@@ -3260,7 +3263,10 @@ class DownloadXLSX(PrivateView):
 
         xlsx_file = get_form_xls_file(self.request, project_id, form_id)
         response = FileResponse(
-            xlsx_file, request=self.request, content_type="application/csv"
+            xlsx_file,
+            request=self.request,
+            content_type="application/csv",
+            cache_max_age=0,
         )
         response.content_disposition = (
             'attachment; filename="' + os.path.basename(xlsx_file) + '"'
@@ -3293,7 +3299,10 @@ class DownloadSubmissionFiles(PrivateView):
             )
             if created:
                 response = FileResponse(
-                    file, request=self.request, content_type="application/zip"
+                    file,
+                    request=self.request,
+                    content_type="application/zip",
+                    cache_max_age=0,
                 )
                 response.content_disposition = (
                     'attachment; filename="' + form_id + '.zip"'
@@ -3761,7 +3770,9 @@ class GetMediaFile(PrivateView):
         file_type = mimetypes.guess_type(file)[0]
         if file_type is None:
             file_type = "application/octet-stream"
-        response = FileResponse(file, request=self.request, content_type=file_type)
+        response = FileResponse(
+            file, request=self.request, content_type=file_type, cache_max_age=0
+        )
         response.content_disposition = 'attachment; filename="' + os.path.basename(file)
         return response
 
@@ -3857,7 +3868,9 @@ class CaseLookUpCSV(PrivateView):
         csv_file = os.path.join(repository_path, *["tmp", unique_id + ".csv"])
         df.to_csv(csv_file, index=False, header=True)
 
-        response = FileResponse(csv_file, request=self.request, content_type="text/csv")
+        response = FileResponse(
+            csv_file, request=self.request, content_type="text/csv", cache_max_age=0
+        )
         response.content_disposition = (
             'attachment; filename="cases_of_' + project_code + '.csv"'
         )

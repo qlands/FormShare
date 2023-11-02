@@ -3158,6 +3158,7 @@ def store_json_file(
                         )
                         return 1, ""
                 else:
+                    log.error("Submission {} is the same as {}.".format(submission_id, sameas.submission_id))
                     # If the MD5Sum is the same then add it to the submission table
                     # indicating the "sameas" field. Any media files of the
                     # duplicated submission moves to the "sameas" submission.

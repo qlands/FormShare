@@ -2334,7 +2334,9 @@ def get_xml_form(request, project, form):
     if xml_file is not None:
         content_type, content_enc = mimetypes.guess_type(xml_file)
         file_name = os.path.basename(xml_file)
-        response = FileResponse(xml_file, request=request, content_type=content_type)
+        response = FileResponse(
+            xml_file, request=request, content_type=content_type, cache_max_age=0
+        )
         response.content_disposition = 'attachment; filename="' + file_name + '"'
         return response
     else:
@@ -2355,7 +2357,9 @@ def get_submission_file(request, project, form, submission):
         if os.path.isfile(path):
             content_type, content_enc = mimetypes.guess_type(path)
             file_name = os.path.basename(path)
-            response = FileResponse(path, request=request, content_type=content_type)
+            response = FileResponse(
+                path, request=request, content_type=content_type, cache_max_age=0
+            )
             response.content_disposition = 'attachment; filename="' + file_name + '"'
             return response
         else:
@@ -3158,7 +3162,11 @@ def store_json_file(
                         )
                         return 1, ""
                 else:
-                    log.error("Submission {} is the same as {}.".format(submission_id, sameas.submission_id))
+                    log.error(
+                        "Submission {} is the same as {}.".format(
+                            submission_id, sameas.submission_id
+                        )
+                    )
                     # If the MD5Sum is the same then add it to the submission table
                     # indicating the "sameas" field. Any media files of the
                     # duplicated submission moves to the "sameas" submission.

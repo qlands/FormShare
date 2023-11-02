@@ -459,7 +459,9 @@ class DownloadCSVTemplate(PrivateView):
         csv_file = os.path.join(repository_path, *["tmp", unique_id + ".csv"])
         df.to_csv(csv_file, index=False, header=True)
 
-        response = FileResponse(csv_file, request=self.request, content_type="text/csv")
+        response = FileResponse(
+            csv_file, request=self.request, content_type="text/csv", cache_max_age=0
+        )
         response.content_disposition = (
             'attachment; filename="assistant_for_' + project_code + '.csv"'
         )

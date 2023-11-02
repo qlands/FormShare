@@ -902,7 +902,10 @@ class JSONGetSubmissionsMedia(AssistantView):
                 )
             if created:
                 response = FileResponse(
-                    file, request=self.request, content_type="application/zip"
+                    file,
+                    request=self.request,
+                    content_type="application/zip",
+                    cache_max_age=0,
                 )
                 response.content_disposition = (
                     'attachment; filename="' + form_id + '.zip"'

@@ -898,7 +898,9 @@ class GetProjectQRCode(ProjectsView):
 
         qr_file = os.path.join(temp_path, *[project_id + ".png"])
         img.save(qr_file)
-        response = FileResponse(qr_file, request=self.request, content_type="image/png")
+        response = FileResponse(
+            qr_file, request=self.request, content_type="image/png", cache_max_age=0
+        )
         response.content_disposition = 'attachment; filename="' + project_code + '.png"'
         self.returnRawViewResult = True
         return response

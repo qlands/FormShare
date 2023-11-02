@@ -446,7 +446,9 @@ class GetPartnerMediaFile(PartnerView):
         file_type = mimetypes.guess_type(file)[0]
         if file_type is None:
             file_type = "application/octet-stream"
-        response = FileResponse(file, request=self.request, content_type=file_type)
+        response = FileResponse(
+            file, request=self.request, content_type=file_type, cache_max_age=0
+        )
         response.content_disposition = 'attachment; filename="' + os.path.basename(file)
         self.returnRawViewResult = True
         return response
@@ -544,7 +546,10 @@ class PartnerDownloadPrivateProduct(PartnerView):
                 if file_extension == "":
                     file_extension = "unknown"
                 response = FileResponse(
-                    output_file, request=self.request, content_type=mime_type
+                    output_file,
+                    request=self.request,
+                    content_type=mime_type,
+                    cache_max_age=0,
                 )
                 response.content_disposition = (
                     'attachment; filename="' + form_id + file_extension + '"'

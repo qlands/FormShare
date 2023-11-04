@@ -1881,7 +1881,7 @@ class AddFileToForm(PrivateView):
             )
 
             error = False
-            message = ""
+            messages = []
             if "overwrite" in form_data.keys():
                 overwrite = True
             else:
@@ -1922,6 +1922,7 @@ class AddFileToForm(PrivateView):
                                         message = "The CSV file does not have the columns '{}' or '{}'".format(
                                             name, label
                                         )
+                                        messages.append(message)
                                         error = True
                                         break
                                     csv_is_lookup = True
@@ -1934,6 +1935,7 @@ class AddFileToForm(PrivateView):
                                     file_name
                                 )
                             )
+                            messages.append(message)
                             error = True
                             break
                     tmp_file = ""
@@ -1960,6 +1962,7 @@ class AddFileToForm(PrivateView):
                                             )
                                         )
                                         message = error_message
+                                        messages.append(message)
                                         error = True
                                         break
                                     geo_json_is_lookup = True
@@ -1973,6 +1976,7 @@ class AddFileToForm(PrivateView):
                                     file_name
                                 )
                             )
+                            messages.append(message)
                             error = True
                             break
 
@@ -2022,6 +2026,8 @@ class AddFileToForm(PrivateView):
                                     csv_data,
                                 )
                                 error = not result
+                                if error:
+                                    messages.append(message)
                             if file_name in required_files and geo_json_is_lookup:
                                 result, message = update_lookup_from_geo_json(
                                     self.request,
@@ -2033,6 +2039,8 @@ class AddFileToForm(PrivateView):
                                     tmp_file,
                                 )
                                 error = not result
+                                if error:
+                                    messages.append(message)
                     else:
                         error = True
                         break
@@ -2070,7 +2078,8 @@ class AddFileToForm(PrivateView):
                     )
                 return HTTPFound(location=next_page)
             else:
-                self.add_error(message)
+                for a_message in messages:
+                    self.add_error(a_message)
                 next_page = self.request.route_url(
                     "form_details",
                     userid=user_id,

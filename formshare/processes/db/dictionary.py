@@ -54,8 +54,13 @@ def update_lookup_from_csv(
             request, project_id, form_id, file_name
         )
         for ind in dataframe.index:
-            sql = "INSERT INTO {}.{} (var_code, var_label) VALUES ('{}', '{}')".format(
-                form_schema, uid, dataframe[name][ind], dataframe[label][ind]
+            sql = (
+                "INSERT INTO {}.{} (var_code, var_label) VALUES ('{}', \"{}\")".format(
+                    form_schema,
+                    uid,
+                    dataframe[name][ind].replace("'", "`").replace('"', ""),
+                    dataframe[label][ind].replace('"', ""),
+                )
             )
             session.execute(sql)
 

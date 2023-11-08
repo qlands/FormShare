@@ -2958,16 +2958,6 @@ def store_json_file(
                             os.path.basename(log_file_name),
                         ]
                     )
-                    imported_file = os.path.join(
-                        odk_dir,
-                        *[
-                            "forms",
-                            xform_directory,
-                            "submissions",
-                            "logs",
-                            "imported.sqlite",
-                        ]
-                    )
                     uuid_file = os.path.join(
                         odk_dir,
                         *["forms", xform_directory, "submissions", uuid_file_name]
@@ -2992,7 +2982,6 @@ def store_json_file(
                     args.append("-s " + schema)
                     args.append("-o " + log_file)
                     args.append("-j " + json_file)
-                    args.append("-i " + imported_file)
                     args.append("-M " + maps_directory)
                     args.append("-m " + manifest_file)
                     args.append("-U " + uuid_file)
@@ -4212,9 +4201,7 @@ def push_revision(
     log_file = os.path.join(
         odk_dir, *["forms", form_directory, "submissions", "logs", submission + ".xml"]
     )
-    imported_file = os.path.join(
-        odk_dir, *["forms", form_directory, "submissions", "logs", "imported.sqlite"]
-    )
+
     maps_directory = os.path.join(
         odk_dir, *["forms", form_directory, "submissions", "maps"]
     )
@@ -4273,7 +4260,7 @@ def push_revision(
     args.append("-s " + schema)
     args.append("-o " + log_file)
     args.append("-j " + current_file)
-    args.append("-i " + imported_file)
+
     args.append("-M " + maps_directory)
     args.append("-m " + manifest_file)
     args.append("-U " + uuid_file)

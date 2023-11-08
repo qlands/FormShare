@@ -1260,25 +1260,6 @@ def delete_submission(
     odk_dir = get_odk_path(request)
     form_directory = get_form_directory(request, project, form)
 
-    # Remove the submissions from the submission DB created by ODK Tools
-    # So the submission could enter later on
-    paths = ["forms", form_directory, "submissions", "logs", "imported.sqlite"]
-    imported_db = os.path.join(odk_dir, *paths)
-    sqlite_engine = "sqlite:///{}".format(imported_db)
-    engine = create_engine(sqlite_engine, poolclass=NullPool)
-    try:
-        engine.execute(
-            "DELETE FROM submissions WHERE submission_id ='{}'".format(submission_id)
-        )
-    except Exception as e:
-        log.error(
-            "Error {} removing submission {} from {}".format(
-                str(e), submission_id, imported_db
-            )
-        )
-        return False
-    engine.dispose()
-
     if not move_to_logs:
         log.info(
             "DeleteSubmission: Submission {} in form {} for project {} was deleted by {}".format(

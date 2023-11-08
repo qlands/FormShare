@@ -261,10 +261,7 @@ def store_json_file(
                 os.path.basename(log_file_name),
             ]
         )
-        imported_file = os.path.join(
-            odk_dir,
-            *["forms", xform_directory, "submissions", "logs", "imported.sqlite"]
-        )
+
         uuid_file = os.path.join(
             odk_dir, *["forms", xform_directory, "submissions", uuid_file_name]
         )
@@ -283,7 +280,6 @@ def store_json_file(
             "-s " + schema,
             "-o " + log_file,
             "-j " + json_file,
-            "-i " + imported_file,
             "-M " + maps_directory,
             "-m " + manifest_file,
             "-U " + uuid_file,

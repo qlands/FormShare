@@ -312,6 +312,12 @@ class GenerateRepository(PrivateView):
                                     user_id, project_id, form_id, result_code, message
                                 )
                                 stage = -1
+                            if result_code == 35:  # pragma: no cover
+                                # Or other was used. Report issue because this was checked before
+                                self.report_critical_error(
+                                    user_id, project_id, form_id, result_code, message
+                                )
+                                stage = -1
                             if 3 <= result_code <= 6:
                                 if result_code == 3 or result_code == 4:
                                     root = etree.fromstring(message)

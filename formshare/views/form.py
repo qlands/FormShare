@@ -433,6 +433,20 @@ class FormDetails(PrivateView):
                         "An email has been sent to the technical team and they will contact you ASAP."
                     )
                 )
+            if created == 35:
+                # Or other was used. Report issue because this was checked before
+                self.report_critical_error(
+                    user_id, project_id, new_form_id, created, message
+                )
+                msg = self._(
+                    'Your ODK form uses select or multi-select variables with "or other." '
+                    'Using "or other" is a bad practice because FormShare would need to assume the code '
+                    'for "other" and the variable\'s name to store "other." '
+                    'Using "or other" was allowed before, but not anymore. '
+                    'Manually add an option for "other" in your select and multi-select variables and '
+                    'a text variable to store "other."'
+                )
+                errors.append(msg)
             if created == 7:
                 # Malformed language in the ODK Form. Report issue because this was checked before
                 self.report_critical_error(

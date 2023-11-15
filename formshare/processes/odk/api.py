@@ -1040,6 +1040,17 @@ def check_jxform_file(
             )
             return 34, message
 
+        if p.returncode == 35:
+            message = _(
+                'Your ODK form uses select or multi-select variables with "or other." '
+                'Using "or other" is a bad practice because FormShare would need to assume the code '
+                'for "other" and the variable\'s name to store "other." '
+                'Using "or other" was allowed before, but not anymore. '
+                'Manually add an option for "other" in your select and multi-select variables and '
+                'a text variable to store "other."'
+            )
+            return 35, message
+
         log.error(
             ". Error: "
             + "-"

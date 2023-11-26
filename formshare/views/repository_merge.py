@@ -55,22 +55,22 @@ class RepositoryMergeForm(PrivateView):
         new_form_data = get_form_data(project_id, new_form_id, self.request)
         old_form_data = get_form_data(project_id, old_form_id, self.request)
 
-        if old_form_data["form_surveycolumns"] is not None:
+        if old_form_data.get("form_surveycolumns",None) is not None:
             old_survey_columns = old_form_data["form_surveycolumns"]
         else:
             old_survey_columns = []
 
-        if old_form_data["form_choicescolumns"] is not None:
+        if old_form_data.get("form_choicescolumns", None) is not None:
             old_choices_columns = old_form_data["form_choicescolumns"]
         else:
             old_choices_columns = []
 
-        if new_form_data["form_surveycolumns"] is not None:
+        if new_form_data.get("form_surveycolumns", None) is not None:
             new_survey_columns = new_form_data["form_surveycolumns"]
         else:
             new_survey_columns = []
 
-        if new_form_data["form_choicescolumns"] is not None:
+        if new_form_data.get("form_choicescolumns", None) is not None:
             new_choices_columns = new_form_data["form_choicescolumns"]
         else:
             new_choices_columns = []

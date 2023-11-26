@@ -123,12 +123,12 @@ class Project(Base):
 
     # ODK Collect settings
     odk_update_mode = Column(
-        INTEGER, server_default=text("'1'")
+        INTEGER, server_default=text("'3'")
     )  # 1=manual, 2=previously_downloaded, 3=match_exactly
     odk_update_period = Column(
-        INTEGER, server_default=text("'1'")
+        INTEGER, server_default=text("'2'")
     )  # 1=every_fifteen_minutes, 2=every_one_hour, 3=every_six_hours, 4=every_24_hours
-    odk_update_auto = Column(INTEGER, server_default=text("'0'"))
+    odk_update_auto = Column(INTEGER, server_default=text("'1'"))
     odk_hide_old = Column(INTEGER, server_default=text("'1'"))
 
     odk_auto_send = Column(

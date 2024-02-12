@@ -16,8 +16,8 @@ RUN sudo echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb.gpg 
 WORKDIR /opt
 RUN sudo mkdir mysql_config
 WORKDIR /opt/mysql_config
-RUN sudo wget https://dev.mysql.com/get/mysql-apt-config_0.8.24-1_all.deb
-RUN sudo dpkg -i ./mysql-apt-config_0.8.24-1_all.deb
+RUN sudo wget https://dev.mysql.com/get/mysql-apt-config_0.8.29-1_all.deb
+RUN sudo dpkg -i ./mysql-apt-config_0.8.29-1_all.deb
 WORKDIR /home/circleci/project
 
 RUN sudo apt-get update
@@ -62,7 +62,7 @@ WORKDIR /home/circleci/project
 
 WORKDIR /opt
 RUN sudo mkdir odktools-deps
-RUN sudo git clone https://github.com/qlands/odktools.git -b stable-2.8
+RUN sudo git clone https://github.com/qlands/odktools.git -b stable-2.10
 
 WORKDIR /opt/odktools-deps
 RUN sudo wget https://github.com/mongodb/mongo-c-driver/releases/download/1.21.1/mongo-c-driver-1.21.1.tar.gz

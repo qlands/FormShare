@@ -47,6 +47,7 @@ from formshare.processes.db import (
     get_case_schema,
     get_last_clean_date_from_schema,
     get_last_submission_date_from_schema,
+    get_last_clean_date_from_log_history,
     generate_lookup_file,
     get_case_form,
     get_field_details,
@@ -2163,12 +2164,18 @@ def get_manifest(request, user, project, project_id, form):
                         last_clean_date = get_last_clean_date_from_schema(
                             request, schema
                         )
+                        last_clean_date_in_logs = get_last_clean_date_from_log_history(
+                            request, project_id, form
+                        )
                         outdated = False
                         if last_submission_date is not None:
                             if last_submission_date > last_gen:
                                 outdated = True
                         if last_clean_date is not None:
                             if last_clean_date > last_gen:
+                                outdated = True
+                        if last_clean_date_in_logs is not None:
+                            if last_clean_date_in_logs > last_gen:
                                 outdated = True
                         if outdated:
                             generate_file = True

@@ -79,6 +79,7 @@ __all__ = [
     "update_form_directory",
     "get_last_clean_info",
     "get_last_clean_date_from_schema",
+    "get_last_clean_date_from_log_history",
     "get_form_size",
     "collect_maps_for_schema",
     "get_create_xml_for_schema",
@@ -597,6 +598,19 @@ def get_last_clean_date_from_schema(request, schema):
             return res[0]
         else:
             return None
+    else:
+        return None
+
+
+def get_last_clean_date_from_log_history(request, project, form):
+    sql = (
+        "SELECT log_dtime from formshare.jsonhistory "
+        "WHERE project_id = '{}' AND form_id = '{}' AND log_action = 0 "
+        "ORDER BY log_dtime DESC LIMIT 1".format(project, form)
+    )
+    res = request.dbsession.execute(sql).fetchone()
+    if res is not None:
+        return res[0]
     else:
         return None
 

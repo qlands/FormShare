@@ -137,11 +137,15 @@ def internal_build_xlsx(
                                         errors="coerce",
                                         format="%Y-%m-%d %H:%M:%S",
                                     )
-                            if a_field.get("type", "varchar") == "int":
-                                if field_name in df.columns:
-                                    df[field_name] = pd.to_numeric(
-                                        df[field_name], errors="coerce"
-                                    )
+                            if a_field.get("rlookup", "false") == "false" or (
+                                a_field.get("rlookup", "false") == "true"
+                                and options != 2
+                            ):
+                                if a_field.get("type", "varchar") == "int":
+                                    if field_name in df.columns:
+                                        df[field_name] = pd.to_numeric(
+                                            df[field_name], errors="coerce"
+                                        )
                             if a_field.get("type", "varchar") == "decimal":
                                 if field_name in df.columns:
                                     df[field_name] = pd.to_numeric(

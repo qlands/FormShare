@@ -7,6 +7,7 @@ from sqlalchemy.orm.session import Session
 from formshare.models import DictTable, DictField, map_from_schema, map_to_schema
 from formshare.processes.db.form import get_form_xml_create_file
 from lxml import etree
+import traceback
 from sqlalchemy.exc import IntegrityError
 
 __all__ = [
@@ -27,7 +28,14 @@ log = logging.getLogger("formshare")
 
 
 def update_lookup_from_csv(
-    request, user_id, project_id, form_id, form_schema, file_name, dataframe
+    request,
+    user_id,
+    project_id,
+    form_id,
+    form_schema,
+    form_insert_file,
+    file_name,
+    dataframe,
 ):
     uid = str(uuid.uuid4())
     uid = "TMP_" + uid.replace("-", "_")
@@ -54,11 +62,14 @@ def update_lookup_from_csv(
             request, project_id, form_id, file_name
         )
         for ind in dataframe.index:
+            code = dataframe[name][ind]
+            if isinstance(code, str):
+                code = code.replace("'", "`").replace('"', "")
             sql = (
                 "INSERT INTO {}.{} (var_code, var_label) VALUES ('{}', \"{}\")".format(
                     form_schema,
                     uid,
-                    dataframe[name][ind].replace("'", "`").replace('"', ""),
+                    code,
                     dataframe[label][ind].replace('"', ""),
                 )
             )
@@ -75,11 +86,6 @@ def update_lookup_from_csv(
             form_schema, rel_table, form_schema, uid, rel_field_desc, rel_field
         )
         session.execute(sql)
-        # Delete items that do not exist
-        sql = "DELETE IGNORE FROM {}.{} WHERE {} NOT IN (SELECT var_code FROM {}.{})".format(
-            form_schema, rel_table, rel_field, form_schema, uid
-        )
-        session.execute(sql)
 
         # Insert new items
         sql = "INSERT IGNORE INTO {}.{} ({},{}) SELECT var_code, var_label FROM {}.{}".format(
@@ -89,6 +95,37 @@ def update_lookup_from_csv(
 
         sql = "DROP TABLE {}.{}".format(form_schema, uid)
         session.execute(sql)
+        temp_table_created = False
+
+        sql = "SELECT {},{} FROM {}.{}".format(
+            rel_field, rel_field_desc, form_schema, rel_table
+        )
+        new_values = session.execute(sql).fetchall()
+
+        # Now we update the Insert XML file based on the values of the Lookup table
+        parser = etree.XMLParser(remove_blank_text=True)
+        tree = etree.parse(form_insert_file, parser)
+
+        tables = tree.xpath('//table[@name="{}"]'.format(rel_table))
+        for a_table in tables:
+            curren_values = a_table.findall(".//value")
+            for a_new_value in new_values:
+                new_value_found = False
+                new_value = a_new_value[0]
+                if isinstance(new_value, int):
+                    new_value = str(new_value)
+                for a_current_value in curren_values:
+                    if a_current_value.get("code", None) == new_value:
+                        new_value_found = True
+                        a_current_value.set("description", a_new_value[1])
+                if not new_value_found:
+                    new_element = etree.Element(
+                        "value", code=new_value, description=a_new_value[1]
+                    )
+                    a_table.append(new_element)
+        tree.write(
+            form_insert_file, pretty_print=True, encoding="UTF-8", xml_declaration=True
+        )
 
         session.commit()
         engine.dispose()
@@ -101,6 +138,7 @@ def update_lookup_from_csv(
         session.commit()
         engine.dispose()
         log.error("Unable to upload lookup connected to CSV. Error: {}".format(str(e)))
+        print(traceback.format_exc())
         return False, str(e)
 
 

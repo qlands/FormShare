@@ -5,6 +5,7 @@ Revises: 3dd1ebdcd7e0
 Create Date: 2021-07-13 10:12:39.296734
 
 """
+
 from alembic import op
 from formshare.models.formshare import Odkform
 from sqlalchemy.orm.session import Session

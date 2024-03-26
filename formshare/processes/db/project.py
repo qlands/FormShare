@@ -1058,9 +1058,9 @@ def get_user_projects(request, user, logged_user):
         project["total_case_creators"] = get_number_of_case_creators(
             request, project["project_id"]
         )
-        project[
-            "total_case_creators_with_repository"
-        ] = get_number_of_case_creators_with_repository(request, project["project_id"])
+        project["total_case_creators_with_repository"] = (
+            get_number_of_case_creators_with_repository(request, project["project_id"])
+        )
         project["case_form"] = get_case_form(request, project["project_id"])
         project["case_schema"] = get_case_schema(request, project["project_id"])
         project["has_case_lookup_table"] = project_has_case_lookup_table(
@@ -1397,9 +1397,9 @@ def get_extended_project_details(request, user, project_id):
     project["total_case_creators"] = get_number_of_case_creators(
         request, project["project_id"]
     )
-    project[
-        "total_case_creators_with_repository"
-    ] = get_number_of_case_creators_with_repository(request, project["project_id"])
+    project["total_case_creators_with_repository"] = (
+        get_number_of_case_creators_with_repository(request, project["project_id"])
+    )
     project["case_form"] = get_case_form(request, project["project_id"])
     project["case_schema"] = get_case_schema(request, project["project_id"])
     project["has_case_lookup_table"] = project_has_case_lookup_table(

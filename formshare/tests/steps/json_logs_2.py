@@ -378,9 +378,9 @@ def t_e_s_t_json_logs_2(test_object):
             status=200,
         )
         data = json.loads(res.body)
-        data[
-            "si_participa/section_household_info/RespondentDetails/I_D"
-        ] = "109750690ABC{}".format(index)
+        data["si_participa/section_household_info/RespondentDetails/I_D"] = (
+            "109750690ABC{}".format(index)
+        )
         paths = ["tmp", a_duplicate + ".json"]
         submission_file = os.path.join(test_object.path, *paths)
 

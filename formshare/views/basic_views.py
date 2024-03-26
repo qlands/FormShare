@@ -629,10 +629,10 @@ class RegisterView(PublicView):
                                 for plugin in p.PluginImplementations(
                                     p.IUserPassword
                                 ):  # pragma: no cover
-                                    data[
-                                        "user_password"
-                                    ] = plugin.encrypt_user_password(
-                                        self.request, data["user_password"]
+                                    data["user_password"] = (
+                                        plugin.encrypt_user_password(
+                                            self.request, data["user_password"]
+                                        )
                                     )
                                     plugin_password = True
                                     break  # Only one plugin will encrypt the password

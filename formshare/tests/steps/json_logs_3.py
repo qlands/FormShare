@@ -62,6 +62,18 @@ def t_e_s_t_json_logs_3(test_object):
     )
     assert "FS_error" not in res.headers
 
+    # Uploads a file to the form
+    paths = ["resources", "forms", "complex_form", "generated.csv"]
+    resource_file = os.path.join(test_object.path, *paths)
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/upload".format(
+            test_object.randonLogin, json3_project, json3_form
+        ),
+        status=302,
+        upload_files=[("filetoupload", resource_file)],
+    )
+    assert "FS_error" not in res.headers
+
     mimic_res = test_object.testapp.post(
         "/user/{}/project/{}/assistants/add".format(
             test_object.randonLogin, json3_project

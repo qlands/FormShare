@@ -1921,7 +1921,7 @@ class AddFileToForm(PrivateView):
                             pd.read_csv(
                                 tmp_file, header=None
                             )  # Read first without headers to check structure
-                            csv_data = pd.read_csv(tmp_file)
+                            csv_data = pd.read_csv(tmp_file, keep_default_na=False)
                             if current_form_data["form_schema"] is not None:
                                 if is_file_a_lookup(
                                     self.request, project_id, form_id, file_name
@@ -2036,6 +2036,7 @@ class AddFileToForm(PrivateView):
                                     project_id,
                                     form_id,
                                     current_form_data["form_schema"],
+                                    current_form_data["form_insertxmlfile"],
                                     file_name,
                                     csv_data,
                                 )

@@ -578,6 +578,17 @@ def t_e_s_t_repository(test_object):
 
     time.sleep(60)  # Wait for Celery to finish
 
+    # This will generate the manifest using a generated file from a plugin after repository
+    test_object.testapp.get(
+        "/user/{}/project/{}/{}/manifest".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        status=200,
+        extra_environ=dict(
+            FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
+        ),
+    )
+
     # Get the details of a form. The form now should have a repository
     res = test_object.testapp.get(
         "/user/{}/project/{}/form/{}".format(

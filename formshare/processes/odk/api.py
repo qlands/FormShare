@@ -13,7 +13,7 @@ import zipfile
 from hashlib import md5
 from subprocess import Popen, PIPE
 from uuid import uuid4
-
+import pandas as pd
 import formshare.plugins as plugins
 from bs4 import BeautifulSoup
 from formshare.processes.color_hash import ColorHash
@@ -54,6 +54,10 @@ from formshare.processes.db import (
     get_assistant_password,
     project_has_crowdsourcing,
     get_all_project_forms,
+    is_file_a_lookup,
+    get_name_and_label_from_file,
+    get_form_xml_insert_file,
+    update_lookup_from_csv,
 )
 from formshare.processes.elasticsearch.record_index import (
     add_record,
@@ -2138,6 +2142,23 @@ def get_form_list(request, user, project_code, assistant, api=False):
     return generate_form_list(prj_list)
 
 
+def is_csv_usable(file_path):
+    try:
+        pd.read_csv(file_path, header=None)
+        return True
+    except Exception as e:
+        log.error("Unable to read {}. Error {}".format(file_path, str(e)))
+    return False
+
+
+def is_csv_a_select(request, project_id, form_id, file_name, file_path):
+    csv_data = pd.read_csv(file_path)
+    name, label = get_name_and_label_from_file(request, project_id, form_id, file_name)
+    if name not in csv_data.columns or label not in csv_data.columns:
+        return False
+    return True
+
+
 def get_manifest(request, user, project, project_id, form):
     form_files = get_form_files(request, project_id, form)
     if form_files:
@@ -2243,6 +2264,7 @@ def get_manifest(request, user, project, project_id, form):
                                         }
                                     )
                                 else:
+                                    csv_file.close()
                                     file_name = file["file_name"]
                                     file_array.append(
                                         {
@@ -2314,6 +2336,229 @@ def get_manifest(request, user, project, project_id, form):
                         )
                 else:
                     file_name = file["file_name"]
+                    plugin_form_file = None
+                    plugin_file_generated = False
+                    for a_plugin in plugins.PluginImplementations(
+                        plugins.IFormFileGenerator
+                    ):
+                        plugin_form_file = a_plugin.generate_form_file(
+                            request, user, project_id, form, file_name
+                        )
+                    if plugin_form_file is not None and os.path.exists(
+                        plugin_form_file
+                    ):
+                        file_is_usable = True
+                        if file_name.upper().find(".CSV") > 0:
+                            file_is_usable = is_csv_usable(plugin_form_file)
+                        if file_name.upper().find(".GEOJSON") > 0:
+                            pass  # We need to control GEOJSON formats
+                        file_stats = os.stat(plugin_form_file)
+                        if file_stats.st_size > 0 and file_is_usable:
+                            plugin_file = open(plugin_form_file, "rb")
+                            md5sum = md5(plugin_file.read()).hexdigest()
+                            if file["file_md5"] != md5sum:
+                                added, message = add_file_to_form(
+                                    request,
+                                    project_id,
+                                    form,
+                                    file["file_name"],
+                                    True,
+                                    md5sum,
+                                )
+                                if added:
+                                    plugin_file.seek(0)
+                                    bucket_id = project_id + form
+                                    bucket_id = md5(
+                                        bucket_id.encode("utf-8")
+                                    ).hexdigest()
+                                    store_file(
+                                        request,
+                                        bucket_id,
+                                        file["file_name"],
+                                        plugin_file,
+                                    )
+                                    plugin_file.close()
+                                    file_array.append(
+                                        {
+                                            "filename": file_name,
+                                            "hash": "md5:" + md5sum,
+                                            "downloadUrl": request.route_url(
+                                                "odkmediafile",
+                                                userid=user,
+                                                projcode=project,
+                                                formid=form,
+                                                fileid=file_name,
+                                            ),
+                                        }
+                                    )
+                                    form_schema = get_form_schema(
+                                        request, project_id, form
+                                    )
+                                    if form_schema is not None:
+                                        if is_file_a_lookup(
+                                            request, project_id, form, file_name
+                                        ):
+                                            if file_name.upper().find(".CSV") > 0:
+                                                if is_csv_a_select(
+                                                    request,
+                                                    project_id,
+                                                    form,
+                                                    file["file_name"],
+                                                    plugin_form_file,
+                                                ):
+                                                    form_xml_insert_file = (
+                                                        get_form_xml_insert_file(
+                                                            request, project_id, form
+                                                        )
+                                                    )
+                                                    csv_data = pd.read_csv(
+                                                        plugin_form_file,
+                                                        keep_default_na=False,
+                                                    )
+                                                    (
+                                                        result,
+                                                        message,
+                                                    ) = update_lookup_from_csv(
+                                                        request,
+                                                        user,
+                                                        project_id,
+                                                        form,
+                                                        form_schema,
+                                                        form_xml_insert_file,
+                                                        file_name,
+                                                        csv_data,
+                                                    )
+                                                    error = not result
+                                                    if error:
+                                                        log.error(
+                                                            "Error {} while updating lookup from file {}. "
+                                                            "Schema {}".format(
+                                                                message,
+                                                                plugin_form_file,
+                                                                form_schema,
+                                                            )
+                                                        )
+                                            if file_name.upper().find(".GEOJSON") > 0:
+                                                pass  # We need to implement GEOJSON
+                                    plugin_file_generated = True
+                                else:
+                                    plugin_file.close()
+                    if not plugin_file_generated:
+                        file_array.append(
+                            {
+                                "filename": file_name,
+                                "hash": "md5:" + file["file_md5"],
+                                "downloadUrl": request.route_url(
+                                    "odkmediafile",
+                                    userid=user,
+                                    projcode=project,
+                                    formid=form,
+                                    fileid=file_name,
+                                ),
+                            }
+                        )
+        else:
+            for file in form_files:
+                file_name = file["file_name"]
+                plugin_form_file = None
+                plugin_file_generated = False
+                for a_plugin in plugins.PluginImplementations(
+                    plugins.IFormFileGenerator
+                ):
+                    plugin_form_file = a_plugin.generate_form_file(
+                        request, user, project_id, form, file_name
+                    )
+                if plugin_form_file is not None and os.path.exists(plugin_form_file):
+                    file_is_usable = True
+                    if file_name.upper().find(".CSV") > 0:
+                        file_is_usable = is_csv_usable(plugin_form_file)
+                    if file_name.upper().find(".GEOJSON") > 0:
+                        pass  # We need to control GEOJSON formats
+                    file_stats = os.stat(plugin_form_file)
+                    if file_stats.st_size > 0 and file_is_usable:
+                        plugin_file = open(plugin_form_file, "rb")
+                        md5sum = md5(plugin_file.read()).hexdigest()
+                        if file["file_md5"] != md5sum:
+                            added, message = add_file_to_form(
+                                request,
+                                project_id,
+                                form,
+                                file["file_name"],
+                                True,
+                                md5sum,
+                            )
+                            if added:
+                                plugin_file.seek(0)
+                                bucket_id = project_id + form
+                                bucket_id = md5(bucket_id.encode("utf-8")).hexdigest()
+                                store_file(
+                                    request, bucket_id, file["file_name"], plugin_file
+                                )
+                                plugin_file.close()
+                                file_array.append(
+                                    {
+                                        "filename": file_name,
+                                        "hash": "md5:" + md5sum,
+                                        "downloadUrl": request.route_url(
+                                            "odkmediafile",
+                                            userid=user,
+                                            projcode=project,
+                                            formid=form,
+                                            fileid=file_name,
+                                        ),
+                                    }
+                                )
+                                form_schema = get_form_schema(request, project_id, form)
+                                if form_schema is not None:
+                                    if is_file_a_lookup(
+                                        request, project_id, form, file_name
+                                    ):
+                                        if file_name.upper().find(".CSV") > 0:
+                                            if is_csv_a_select(
+                                                request,
+                                                project_id,
+                                                form,
+                                                file["file_name"],
+                                                plugin_form_file,
+                                            ):
+                                                form_xml_insert_file = (
+                                                    get_form_xml_insert_file(
+                                                        request, project_id, form
+                                                    )
+                                                )
+                                                csv_data = pd.read_csv(
+                                                    plugin_form_file,
+                                                    keep_default_na=False,
+                                                )
+                                                (
+                                                    result,
+                                                    message,
+                                                ) = update_lookup_from_csv(
+                                                    request,
+                                                    user,
+                                                    project_id,
+                                                    form,
+                                                    form_schema,
+                                                    form_xml_insert_file,
+                                                    file_name,
+                                                    csv_data,
+                                                )
+                                                error = not result
+                                                if error:
+                                                    log.error(
+                                                        "Error {} while updating lookup from file {}. "
+                                                        "Schema {}".format(
+                                                            message,
+                                                            plugin_form_file,
+                                                            form_schema,
+                                                        )
+                                                    )
+                                        if file_name.upper().find(".GEOJSON") > 0:
+                                            pass  # We need to implement GEOJSON
+                                plugin_file_generated = True
+                            else:
+                                plugin_file.close()
+                if not plugin_file_generated:
                     file_array.append(
                         {
                             "filename": file_name,
@@ -2327,22 +2572,6 @@ def get_manifest(request, user, project, project_id, form):
                             ),
                         }
                     )
-        else:
-            for file in form_files:
-                file_name = file["file_name"]
-                file_array.append(
-                    {
-                        "filename": file_name,
-                        "hash": "md5:" + file["file_md5"],
-                        "downloadUrl": request.route_url(
-                            "odkmediafile",
-                            userid=user,
-                            projcode=project,
-                            formid=form,
-                            fileid=file_name,
-                        ),
-                    }
-                )
         return generate_manifest(file_array)
     else:
         return generate_manifest([])

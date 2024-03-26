@@ -49,6 +49,7 @@ __all__ = [
     "IAPISecurity",
     "IUserPassword",
     "IDatabaseEncryption",
+    "IFormFileGenerator",
 ]
 
 
@@ -2046,6 +2047,27 @@ class IUserPassword(Interface):  # pragma: no cover
         :param clear_text_password: The password in clear text (unencrypted)
         : returns True or False if the validation is correct
         """
+
+
+class IFormFileGenerator(Interface):  # pragma: no cover
+    """
+    Plugin into the generation of form files before making them available to the ODK in the manifest file.
+    """
+
+    def generate_form_file(self, request, user_id, project_id, form_id, file_name):
+        """
+        Called by FormShare so plugins can generate a form file before it is served to ODK in the manifest file
+        :param request: ``pyramid.request`` object
+        :param user_id: The user owned of the project
+        :param project_id: The project ID
+        :param form_id: The form ID
+        :param file_name: The file that has been requested
+        :return path to the new file being generated. If None or the files does not exist then FormShare will use the
+        one in storage.
+        """
+        raise NotImplementedError(
+            "generate_form_file must be implemented in subclasses"
+        )
 
 
 class IPluginObserver(Interface):  # pragma: no cover

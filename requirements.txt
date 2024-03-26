@@ -12,7 +12,7 @@ backports.csv==1.0.7
 beautifulsoup4==4.12.2
 billiard==4.1.0
 binaryornot==0.4.4
-black==23.7.0
+black==24.3.0
 boto==2.49.0
 celery==5.3.1
 certifi==2023.7.22
@@ -27,7 +27,7 @@ click-plugins==1.1.1
 click-repl==0.3.0
 cookiecutter==2.2.3
 coverage==7.2.7
-cryptography==42.0.0
+cryptography==42.0.4
 decorator==5.1.1
 defusedxml==0.7.1
 Deprecated==1.2.14

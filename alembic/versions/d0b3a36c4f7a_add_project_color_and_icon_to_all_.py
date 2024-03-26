@@ -5,6 +5,7 @@ Revises: d5b5f9171d34
 Create Date: 2021-07-29 15:27:36.822801
 
 """
+
 import random
 
 from alembic import op

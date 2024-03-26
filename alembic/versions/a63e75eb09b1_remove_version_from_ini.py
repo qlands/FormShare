@@ -5,6 +5,7 @@ Revises: 5657a4829a73
 Create Date: 2020-04-26 11:24:22.016565
 
 """
+
 import configparser
 
 from alembic import context

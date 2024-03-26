@@ -1415,9 +1415,9 @@ def upload_odk_form(
                                 form_data["form_caselabel"] = form_caselabel
                                 form_data["form_caseselector"] = form_caseselector
                                 form_data["form_casedatetime"] = form_casedatetime
-                                form_data[
-                                    "form_caseselectorfilename"
-                                ] = form_caseselector_file
+                                form_data["form_caseselectorfilename"] = (
+                                    form_caseselector_file
+                                )
 
                             continue_adding = True
                             for a_plugin in plugins.PluginImplementations(
@@ -1920,9 +1920,9 @@ def update_odk_form(
                                     form_data["form_caselabel"] = form_caselabel
                                     form_data["form_caseselector"] = form_caseselector
                                     form_data["form_casedatetime"] = form_casedatetime
-                                    form_data[
-                                        "form_caseselectorfilename"
-                                    ] = form_caseselector_file
+                                    form_data["form_caseselectorfilename"] = (
+                                        form_caseselector_file
+                                    )
 
                                 continue_updating = True
                                 for a_plugin in plugins.PluginImplementations(

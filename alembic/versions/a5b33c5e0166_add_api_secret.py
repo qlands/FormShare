@@ -5,6 +5,7 @@ Revises: 7b448dc9906c
 Create Date: 2022-05-13 07:05:09.227446
 
 """
+
 import secrets
 
 import sqlalchemy as sa

@@ -5,6 +5,7 @@ Revises: 448376431f7b
 Create Date: 2021-11-27 07:23:54.698672
 
 """
+
 import sqlalchemy as sa
 from alembic import op
 from formshare.models.formshare import Odkform, DictField

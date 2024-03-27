@@ -159,7 +159,6 @@ mkdir /opt/formshare/formshare_odata_webapps
 mkdir /opt/formshare/elasticsearch
 mkdir /opt/formshare/elasticsearch/esdata
 mkdir /opt/formshare/elasticsearch/esdata2
-mkdir /opt/formshare/elasticsearch/esdata3
 sudo chmod -R g+w /opt/formshare
 
 # Set enough memory for Elasticsearch

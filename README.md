@@ -120,7 +120,7 @@ The database signature for stable 2.34.0 is 1903afedb92d
 
 The Docker image for stable 2.34.0 is 20240328
 
-Requires ODKTools [2.10](https://github.com/qlands/odktools/tree/stable-2.10)
+Requires ODKTools [2.11](https://github.com/qlands/odktools/tree/stable-2.11)
 
 Installation
 ------------

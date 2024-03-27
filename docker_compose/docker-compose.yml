@@ -7,7 +7,7 @@ services:
     cap_add:
       - SYS_NICE
     environment:
-      MYSQL_ROOT_PASSWORD: my_secure_password
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD}
     volumes:
       - /opt/formshare/mysql:/var/lib/mysql
       - /opt/formshare/mysql-files:/var/lib/mysql-files
@@ -65,10 +65,10 @@ services:
     environment:
       MYSQL_HOST_NAME: 172.28.1.5
       MYSQL_USER_NAME: root
-      MYSQL_USER_PASSWORD: my_secure_password
-      FORMSHARE_ADMIN_USER: admin
-      FORMSHARE_ADMIN_EMAIL: admin@myserver.com
-      FORMSHARE_ADMIN_PASSWORD: my_secure_password
+      MYSQL_USER_PASSWORD: ${MYSQL_PASSWORD}
+      FORMSHARE_ADMIN_USER: ${FORMSHARE_ADMIN_USER}
+      FORMSHARE_ADMIN_EMAIL: ${FORMSHARE_ADMIN_EMAIL}
+      FORMSHARE_ADMIN_PASSWORD: ${FORMSHARE_ADMIN_PASSWORD}
       ELASTIC_SEARCH_HOST: 172.28.1.2
       ELASTIC_SEARCH_PORT: 9200
       FORMSHARE_HOST: 172.28.1.4

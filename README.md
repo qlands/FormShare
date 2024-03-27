@@ -169,16 +169,12 @@ echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.d/60-vm-max_map_count.c
 cd /opt/formshare_docker_compose_20240213
 sudo docker-compose pull
 
-# Edit the docker-compose.yml file to set the MySQL root and FormShare admin passwords
-sudo nano /opt/formshare_docker_compose_20240213/docker-compose.yml
-# Press Alt+Shit+3 to show the line numbers in Nano
-
-Edit line 10: Change the root password from "my_secure_password" to your password
-Edit line 67: Change the root password from "my_secure_password" to the same password of line 10
-Edit line 68: Change the admin user name (optional)
-Edit line 69: Change the admin email address
-Edit line 70: Change the admin user password from "my_secure_password" to your password
-Edit line 75: Change the IP address for the IP address of the machine running the Docker service
+# Set environment variables. Make sure to change the following:
+# MYSQL_PASSWORD
+# FORMSHARE_ADMIN_EMAIL
+# FORMSHARE_ADMIN_PASSWORD
+sudo wget -O .env https://raw.githubusercontent.com/qlands/FormShare/stable-2.33.0/docker_compose/env.example
+sudo nano .env
 
 # Save the file with Ctlr+o Enter . Exit with Ctrl+x
 

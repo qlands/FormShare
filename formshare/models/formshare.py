@@ -15,7 +15,7 @@ from sqlalchemy import (
     text,
     Unicode,
 )
-from sqlalchemy.dialects.mysql import MEDIUMTEXT
+from sqlalchemy.dialects.mysql import MEDIUMTEXT, BIGINT
 from sqlalchemy.ext import mutable
 from sqlalchemy.orm import relationship
 
@@ -470,6 +470,7 @@ class Product(Base):
 
     celery_taskid = Column(Unicode(64), primary_key=True, nullable=False)
     output_file = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    output_size = Column(BIGINT(unsigned=True), server_default=text("'0'"))
     project_id = Column(Unicode(64), nullable=False)
     form_id = Column(Unicode(120), nullable=False)
     product_id = Column(Unicode(120), nullable=False)

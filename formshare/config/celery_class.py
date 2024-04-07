@@ -2,7 +2,7 @@ import logging
 import smtplib
 from email.mime.text import MIMEText
 from email.utils import formatdate
-
+import os
 from celery.contrib.abortable import AbortableTask
 from celery.worker.request import Request
 from formshare.config.celery_app import get_ini_value
@@ -139,6 +139,26 @@ class CeleryTask(AbortableTask):  # pragma: no cover
         }
         connection = engine.connect()
         try:
+            sql = "SELECT output_file FROM product WHERE celery_taskid = '{}' AND output_file is not null".format(
+                task_id
+            )
+            product = connection.execute(sql).fetchone()
+            if product is not None:
+                if os.path.exists(product[0]):
+                    file_stats = os.stat(product[0])
+                    file_size = file_stats.st_size
+                    sql = "UPDATE product SET output_size = {} WHERE celery_taskid = '{}'".format(
+                        file_size, task_id
+                    )
+                    connection.execute(sql)
+                else:
+                    log.error(
+                        "Product file {} for task {} does not exist".format(
+                            product[0], task_id
+                        )
+                    )
+            else:
+                log.error("Task {} has no product".format(task_id))
             connection.execute(
                 "INSERT INTO finishedtask(task_id,task_enumber) VALUES ('{}',{})".format(
                     str(task_id), 0

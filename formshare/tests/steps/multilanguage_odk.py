@@ -159,7 +159,7 @@ def t_e_s_t_multilanguage_odk(test_object):
         status=302,
     )
     assert "FS_error" not in res.headers
-    time.sleep(60)  # Waiting for Celery to create the repository
+    time.sleep(70)  # Waiting for Celery to create the repository
 
     # Get the details of a form. The form now should have a repository
     res = test_object.testapp.get(

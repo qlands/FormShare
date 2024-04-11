@@ -2,6 +2,11 @@ from uuid import UUID
 
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import RequestError
+import logging
+import os
+import json
+
+log = logging.getLogger("formshare")
 
 
 def _get_record_index_definition(number_of_shards, number_of_replicas):
@@ -202,19 +207,48 @@ def delete_from_record_index(settings, record_uuid):
 
 
 def add_record(settings, project_id, form_id, schema, table, record_uuid):
-    connection = create_connection(settings)
-    if connection is not None:
-        index_name = get_index_name(settings)
+    try:
+        connection = create_connection(settings)
+        if connection is not None:
+            index_name = get_index_name(settings)
+            data_dict = {
+                "project_id": project_id,
+                "form_id": form_id,
+                "schema": schema,
+                "table": table,
+            }
+            connection.index(index=index_name, id=record_uuid, body=data_dict)
+            connection.close()
+        else:
+            raise RequestError("Cannot connect to ElasticSearch")
+    except Exception as e:  # pragma: no cover
         data_dict = {
             "project_id": project_id,
             "form_id": form_id,
             "schema": schema,
             "table": table,
         }
-        connection.index(index=index_name, id=record_uuid, body=data_dict)
-        connection.close()
-    else:
-        raise RequestError("Cannot connect to ElasticSearch")
+        try:
+            log.error(
+                "ES Record FailSafe for project {} form {} record {}. Error: {}".format(
+                    project_id, form_id, record_uuid, str(e)
+                )
+            )
+            repository_dir = settings["repository.path"]
+            parts = ["es_failsafe", "record_index", project_id, form_id]
+            target_dir = os.path.join(repository_dir, *parts)
+            if not os.path.exists(target_dir):
+                os.makedirs(target_dir)
+            parts = [record_uuid + ".json"]
+            target_file = os.path.join(target_dir, *parts)
+            with open(target_file, "w", encoding="utf-8") as f:
+                json.dump(data_dict, f, ensure_ascii=False, indent=4, default=str)
+        except Exception as e:
+            log.error(
+                "ES Record FailSafe error for project {} form {} record {}. Error: {} Data: {}".format(
+                    project_id, form_id, record_uuid, str(e), json.dumps(data_dict)
+                )
+            )
 
 
 def _validate_uuid4(uuid_string):

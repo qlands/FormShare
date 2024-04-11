@@ -3277,7 +3277,11 @@ def store_json_file(
                         )
 
                         if not added:
-                            log.error(message)
+                            log.error(
+                                "FormShare was not able to store submission {}. Error: {}".format(
+                                    submission_id, message
+                                )
+                            )
                             return 1, message
 
                         media_path = os.path.join(

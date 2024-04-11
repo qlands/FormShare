@@ -56,6 +56,7 @@ def main():
                                             settings,
                                             a_form.project_id,
                                             a_form.form_id,
+                                            a_file,
                                             a_form.form_schema,
                                             parts[0],
                                             parts[1].replace("\n", ""),

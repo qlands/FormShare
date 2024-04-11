@@ -345,6 +345,7 @@ def store_json_file(
                             settings,
                             project,
                             form,
+                            submission_id,
                             schema,
                             parts[0],
                             parts[1].replace("\n", ""),

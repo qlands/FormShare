@@ -206,7 +206,9 @@ def delete_from_record_index(settings, record_uuid):
         raise RequestError("Cannot connect to ElasticSearch")
 
 
-def add_record(settings, project_id, form_id, schema, table, record_uuid):
+def add_record(
+    settings, project_id, form_id, submission_id, schema, table, record_uuid
+):
     try:
         connection = create_connection(settings)
         if connection is not None:
@@ -230,8 +232,8 @@ def add_record(settings, project_id, form_id, schema, table, record_uuid):
         }
         try:
             log.error(
-                "ES Record FailSafe for project {} form {} record {}. Error: {}".format(
-                    project_id, form_id, record_uuid, str(e)
+                "ES Record FailSafe for project {} form {} submission {} record {}. Error: {}".format(
+                    project_id, form_id, submission_id, record_uuid, str(e)
                 )
             )
             repository_dir = settings["repository.path"]
@@ -245,8 +247,13 @@ def add_record(settings, project_id, form_id, schema, table, record_uuid):
                 json.dump(data_dict, f, ensure_ascii=False, indent=4, default=str)
         except Exception as e:
             log.error(
-                "ES Record FailSafe error for project {} form {} record {}. Error: {} Data: {}".format(
-                    project_id, form_id, record_uuid, str(e), json.dumps(data_dict)
+                "ES Record FailSafe error for project {} form {} submission {} record {}. Error: {} Data: {}".format(
+                    project_id,
+                    form_id,
+                    submission_id,
+                    record_uuid,
+                    str(e),
+                    json.dumps(data_dict),
                 )
             )
 

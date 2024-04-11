@@ -5,7 +5,7 @@ import secrets
 import traceback
 import uuid
 from ast import literal_eval
-
+import shutil
 import formshare.plugins as p
 import validators
 from elasticfeeds.activity import Actor, Object, Activity
@@ -42,6 +42,12 @@ log = logging.getLogger("formshare")
 
 class HealthView(PublicView):
     def process_view(self):
+        repository_path = self.request.registry.settings["repository.path"]
+        stat = shutil.disk_usage(repository_path)
+        percentage_disk_usage = round((stat[1] * 100) / stat[0])
+        max_disk_usage = int(self.request.registry.settings.get("max_disk_usage", "80"))
+        if percentage_disk_usage > max_disk_usage:
+            self.request.response.status = 500
         self.returnRawViewResult = True
         engine = self.request.dbsession.get_bind()
         try:
@@ -55,6 +61,7 @@ class HealthView(PublicView):
             "health": {
                 "pool": engine.pool.status(),
                 "threads_connected": threads_connected,
+                "percentage_disk_usage": percentage_disk_usage,
             }
         }
 

@@ -136,6 +136,7 @@ def register_user(request, user_data):
         .filter(User.user_email == mapped_data["user_email"])
         .first()
     )
+    save_point = request.tm.savepoint()
     if res is None:
         new_user = User(**mapped_data)
         try:
@@ -143,11 +144,11 @@ def register_user(request, user_data):
             request.dbsession.flush()
             return True, ""
         except IntegrityError:
-            request.dbsession.rollback()
+            save_point.rollback()
             log.error("Duplicated user {}".format(mapped_data["user_id"]))
             return False, _("Username is already taken")
         except Exception as e:
-            request.dbsession.rollback()
+            save_point.rollback()
             log.error(
                 "Error {} when inserting user {}".format(str(e), mapped_data["user_id"])
             )

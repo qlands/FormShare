@@ -43,16 +43,13 @@ def add_submission(
         md5sum=md5sum,
         original_md5sum=original_md5sum,
     )
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.add(new_submission)
         request.dbsession.flush()
         return True, ""
-    except IntegrityError as e:
-        request.dbsession.rollback()
-        log.error(str(e))
-        return False, str(e)
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error(str(e))
         return False, str(e)
 
@@ -79,15 +76,12 @@ def add_submission_same_as(
         md5sum=md5sum,
         sameas=same_as,
     )
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.add(new_submission)
         request.dbsession.flush()
         return True, ""
-    except IntegrityError as e:
-        request.dbsession.rollback()
-        log.error(str(e))
-        return False, str(e)
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error(str(e))
         return False, str(e)

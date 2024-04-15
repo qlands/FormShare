@@ -588,7 +588,13 @@ def checkout_submission(
         enum_project=project_of_assistant,
         coll_id=assistant,
     )
-    request.dbsession.add(new_record)
+    save_point = request.tm.savepoint()
+    try:
+        request.dbsession.add(new_record)
+        request.dbsession.flush()
+    except Exception as e:
+        save_point.rollback()
+        log.error("Error {} when checking out submission {}".format(str(e), submission))
 
 
 def cancel_checkout(
@@ -609,7 +615,17 @@ def cancel_checkout(
         enum_project=project_of_assistant,
         coll_id=assistant,
     )
-    request.dbsession.add(new_record)
+    save_point = request.tm.savepoint()
+    try:
+        request.dbsession.add(new_record)
+        request.dbsession.flush()
+    except Exception as e:
+        save_point.rollback()
+        log.error(
+            "Error {} when canceling checkout for submission {}".format(
+                str(e), submission
+            )
+        )
 
 
 def cancel_revision(
@@ -631,7 +647,17 @@ def cancel_revision(
         coll_id=assistant,
         log_commit=revision,
     )
-    request.dbsession.add(new_record)
+    save_point = request.tm.savepoint()
+    try:
+        request.dbsession.add(new_record)
+        request.dbsession.flush()
+    except Exception as e:
+        save_point.rollback()
+        log.error(
+            "Error {} when canceling revision for submission {}".format(
+                str(e), submission
+            )
+        )
 
 
 def fix_revision(
@@ -653,7 +679,15 @@ def fix_revision(
         coll_id=assistant,
         log_commit=revision,
     )
-    request.dbsession.add(new_record)
+    save_point = request.tm.savepoint()
+    try:
+        request.dbsession.add(new_record)
+        request.dbsession.flush()
+    except Exception as e:
+        save_point.rollback()
+        log.error(
+            "Error {} when fixing revision for submission {}".format(str(e), submission)
+        )
 
 
 def fix_submission(request, project, form, submission, project_of_assistant, assistant):
@@ -672,7 +706,13 @@ def fix_submission(request, project, form, submission, project_of_assistant, ass
         enum_project=project_of_assistant,
         coll_id=assistant,
     )
-    request.dbsession.add(new_record)
+    save_point = request.tm.savepoint()
+    try:
+        request.dbsession.add(new_record)
+        request.dbsession.flush()
+    except Exception as e:
+        save_point.rollback()
+        log.error("Error {} when fixing submission {}".format(str(e), submission))
 
 
 def fail_revision(
@@ -694,7 +734,17 @@ def fail_revision(
         coll_id=assistant,
         log_commit=revision,
     )
-    request.dbsession.add(new_record)
+    save_point = request.tm.savepoint()
+    try:
+        request.dbsession.add(new_record)
+        request.dbsession.flush()
+    except Exception as e:
+        save_point.rollback()
+        log.error(
+            "Error {} when failing revision for submission {}".format(
+                str(e), submission
+            )
+        )
 
 
 def disregard_revision(
@@ -716,7 +766,15 @@ def disregard_revision(
         coll_id=assistant,
         log_notes=notes,
     )
-    request.dbsession.add(new_record)
+    save_point = request.tm.savepoint()
+    try:
+        request.dbsession.add(new_record)
+        request.dbsession.flush()
+    except Exception as e:
+        save_point.rollback()
+        log.error(
+            "Error {} when disregarding for submission {}".format(str(e), submission)
+        )
 
 
 def cancel_disregard_revision(
@@ -738,4 +796,14 @@ def cancel_disregard_revision(
         coll_id=assistant,
         log_notes=notes,
     )
-    request.dbsession.add(new_record)
+    save_point = request.tm.savepoint()
+    try:
+        request.dbsession.add(new_record)
+        request.dbsession.flush()
+    except Exception as e:
+        save_point.rollback()
+        log.error(
+            "Error {} when cancelling a disregard for submission {}".format(
+                str(e), submission
+            )
+        )

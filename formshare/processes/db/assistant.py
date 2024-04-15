@@ -269,6 +269,7 @@ def get_assistant_by_api_key(request, api_key):
 
 
 def delete_assistant(request, project, assistant):
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.query(Collaborator).filter(
             Collaborator.project_id == project
@@ -276,8 +277,7 @@ def delete_assistant(request, project, assistant):
         request.dbsession.flush()
         return True, ""
     except Exception as e:
-        # We had to remove this rollback. It seems to be creating problems now.
-        # request.dbsession.rollback()
+        save_point.rollback()
         log.error(
             "Error {} while removing assistant {} from project {}".format(
                 str(e), assistant, project
@@ -301,9 +301,9 @@ def assistant_exist(request, user, project, assistant_data):
     return False
 
 
-def add_assistant(request, user, project, assistant_data, flush=True, check_exit=True):
+def add_assistant(request, user, project, assistant_data, flush=True, check_exist=True):
     _ = request.translate
-    if check_exit:
+    if check_exist:
         if assistant_exist(request, user, project, assistant_data):
             return (
                 False,
@@ -321,16 +321,22 @@ def add_assistant(request, user, project, assistant_data, flush=True, check_exit
     mapped_data["coll_apisecret"] = encode_data(request, secrets.token_hex(16))
     mapped_data["coll_password"] = encode_data(request, mapped_data["coll_password"])
     new_assistant = Collaborator(**mapped_data)
+    if flush:
+        save_point = request.tm.savepoint()
+    else:
+        save_point = None
     try:
         request.dbsession.add(new_assistant)
         if flush:
             request.dbsession.flush()
         return True, ""
     except IntegrityError:
-        request.dbsession.rollback()
+        if flush:
+            save_point.rollback()
         return False, _("The assistant is already part of this project")
     except Exception as e:
-        request.dbsession.rollback()
+        if flush:
+            save_point.rollback()
         log.error(
             "Error {} while adding assistant {} in project {}".format(
                 str(e), assistant_data["coll_name"], project
@@ -349,17 +355,15 @@ def modify_assistant(request, project, assistant, assistant_data):
         )
     _ = request.translate
     mapped_data = map_to_schema(Collaborator, assistant_data)
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.query(Collaborator).filter(
             Collaborator.project_id == project
         ).filter(Collaborator.coll_id == assistant).update(mapped_data)
         request.dbsession.flush()
         return True, ""
-    except IntegrityError:
-        request.dbsession.rollback()
-        return False, _("The assistant is already part of this project")
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error(
             "Error {} while adding assistant {} in project {}".format(
                 str(e), assistant_data["coll_name"], project
@@ -370,6 +374,7 @@ def modify_assistant(request, project, assistant, assistant_data):
 
 def change_assistant_password(request, project, assistant, password):
     encrypted_password = encode_data(request, password)
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.query(Collaborator).filter(
             Collaborator.project_id == project
@@ -379,9 +384,9 @@ def change_assistant_password(request, project, assistant, password):
         request.dbsession.flush()
         return True, ""
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error(
-            "Error {} while adding assistant {} in project {}".format(
+            "Error {} while changing password for assistant {} in project {}".format(
                 str(e), assistant, project
             )
         )

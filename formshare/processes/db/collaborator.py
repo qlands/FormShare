@@ -47,15 +47,37 @@ def get_project_collaborators(request, project, current_user, retrieve_max=0):
 
 
 def remove_collaborator_from_project(request, project, collaborator):
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.query(Userproject).filter(
             Userproject.project_id == project
         ).filter(Userproject.user_id == collaborator).filter(
             Userproject.access_type != 1
         ).delete()
+
+        active_project = (
+            request.dbsession.query(Userproject)
+            .filter(Userproject.user_id == collaborator)
+            .filter(Userproject.project_active == 1)
+            .first()
+        )
+        if active_project is None:
+            last_project = (
+                request.dbsession.query(Userproject)
+                .filter(Userproject.user_id == collaborator)
+                .order_by(Userproject.access_date.desc())
+                .first()
+            )
+            if last_project is not None:
+                last_project_id = last_project.project_id
+                request.dbsession.query(Userproject).filter(
+                    Userproject.user_id == collaborator
+                ).filter(Userproject.project_id == last_project_id).update(
+                    {"project_active": 1}
+                )
         request.dbsession.flush()
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error(
             "Error {} while removing collaborator {} from project {}".format(
                 str(e), collaborator, project
@@ -63,31 +85,11 @@ def remove_collaborator_from_project(request, project, collaborator):
         )
         return False, str(e)
 
-    active_project = (
-        request.dbsession.query(Userproject)
-        .filter(Userproject.user_id == collaborator)
-        .filter(Userproject.project_active == 1)
-        .first()
-    )
-    if active_project is None:
-        last_project = (
-            request.dbsession.query(Userproject)
-            .filter(Userproject.user_id == collaborator)
-            .order_by(Userproject.access_date.desc())
-            .first()
-        )
-        if last_project is not None:
-            last_project_id = last_project.project_id
-            request.dbsession.query(Userproject).filter(
-                Userproject.user_id == collaborator
-            ).filter(Userproject.project_id == last_project_id).update(
-                {"project_active": 1}
-            )
-
     return True, ""
 
 
 def set_collaborator_role(request, project, collaborator, role):
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.query(Userproject).filter(
             Userproject.project_id == project
@@ -95,7 +97,7 @@ def set_collaborator_role(request, project, collaborator, role):
         request.dbsession.flush()
         return True, ""
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error(
             "Error {} while changing role to collaborator {} in project {}".format(
                 str(e), collaborator, project
@@ -135,15 +137,16 @@ def add_collaborator_to_project(request, project, collaborator):
         project_accepted=project_accepted,
         project_accepted_date=project_accepted_date,
     )
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.add(new_collaborator)
         request.dbsession.flush()
         return True, ""
     except IntegrityError:
-        request.dbsession.rollback()
+        save_point.rollback()
         return False, _("The collaborator is already part of this project")
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error(
             "Error {} while adding collaborator {} in project {}".format(
                 str(e), collaborator, project
@@ -156,6 +159,7 @@ def accept_collaboration(request, user, project):  # pragma: no cover
     # This function is not covered because accepting a collaboration
     # requires a SMTP server and cannot be tested during pytest
     _ = request.translate
+    save_point = request.tm.savepoint()
     request.dbsession.query(Userproject).filter(Userproject.user_id == user).update(
         {"project_active": 0}
     )
@@ -172,7 +176,7 @@ def accept_collaboration(request, user, project):  # pragma: no cover
         request.dbsession.flush()
         return True, ""
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error(
             "Error {} while accepting collaboration for user {} in project {}".format(
                 str(e), user, project
@@ -185,6 +189,7 @@ def decline_collaboration(request, user, project):  # pragma: no cover
     # This function is not covered because accepting a collaboration
     # requires a SMTP server and cannot be tested during pytest
     _ = request.translate
+    save_point = request.tm.savepoint()
     request.dbsession.query(Userproject).filter(Userproject.user_id == user).filter(
         Userproject.project_id == project
     ).filter(Userproject.project_accepted == 0).delete()
@@ -192,7 +197,7 @@ def decline_collaboration(request, user, project):  # pragma: no cover
         request.dbsession.flush()
         return True, ""
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error(
             "Error {} while declining collaboration for user {} in project {}".format(
                 str(e), user, project

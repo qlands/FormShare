@@ -28,6 +28,7 @@ def add_json_log(
         .filter(Jsonlog.log_id == submission)
         .first()
     )
+    save_point = request.tm.savepoint()
     try:
         if res is None:
             new_json_log = Jsonlog(
@@ -63,28 +64,21 @@ def add_json_log(
                 }
             )
             return True, ""
-    except IntegrityError as e:
-        request.dbsession.rollback()
-        log.debug(str(e))
-        return False, str(e)
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.debug(str(e))
         return False, str(e)
 
 
 def update_json_status(request, project, form, submission, status):
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
             Jsonlog.form_id == form, Jsonlog.log_id == submission
         ).update({"status": status})
         request.dbsession.flush()
-    except IntegrityError as e:
-        request.dbsession.rollback()
-        log.debug(str(e))
-        return False, str(e)
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.debug(str(e))
         return False, str(e)
 
@@ -112,15 +106,12 @@ def add_json_history(
         log_commit=sequence,
         log_notes=notes,
     )
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.add(new_record)
         request.dbsession.flush()
         return True, ""
-    except IntegrityError as e:
-        request.dbsession.rollback()
-        log.debug(str(e))
-        return False, str(e)
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.debug(str(e))
         return True, str(e)

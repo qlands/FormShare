@@ -489,9 +489,10 @@ def update_dictionary_tables(request, project, form):  # pragma: no cover
                         new_table_dict["parent_form"] = form
                         new_table_dict["parent_table"] = parent.get("name")
                     new_table = DictTable(**new_table_dict)
+                    save_point = request.tm.savepoint()
                     try:
                         request.dbsession.add(new_table)
-                        request.dbsession.flush()
+                        error_in_fields = False
                         for field in table.getchildren():
                             if field.tag == "field":
                                 res = (
@@ -507,9 +508,8 @@ def update_dictionary_tables(request, project, form):  # pragma: no cover
                                     new_field = DictField(**new_field_dict)
                                     try:
                                         request.dbsession.add(new_field)
-                                        request.dbsession.flush()
                                     except IntegrityError:
-                                        request.dbsession.rollback()
+                                        save_point.rollback()
                                         log.error(
                                             "Duplicated field {} in table {} in project {} form {}".format(
                                                 field.get("name"),
@@ -518,16 +518,42 @@ def update_dictionary_tables(request, project, form):  # pragma: no cover
                                                 form,
                                             )
                                         )
-                                        return False
+                                        error_in_fields = True
+                                    except Exception as e:
+                                        save_point.rollback()
+                                        log.error(
+                                            "Error adding field {} in table {} in project {} form {}. Error: {}".format(
+                                                field.get("name"),
+                                                table.get("name"),
+                                                project,
+                                                form,
+                                                str(e),
+                                            )
+                                        )
+                                        error_in_fields = True
+                        if not error_in_fields:
+                            request.dbsession.flush()
+                        else:
+                            return False
                     except IntegrityError:
-                        request.dbsession.rollback()
+                        save_point.rollback()
                         log.error(
                             "Duplicated table {} in project {} form {}".format(
                                 table.get("name"), project, form
                             )
                         )
                         return False
+                    except Exception as e:
+                        save_point.rollback()
+                        log.error(
+                            "Error adding table {} in project {} form {}. Error: {}".format(
+                                table.get("name"), project, form, str(e)
+                            )
+                        )
+                        return False
                 else:
+                    error_in_fields = False
+                    save_point = request.tm.savepoint()
                     for field in table.getchildren():
                         if field.tag == "field":
                             res = (
@@ -543,9 +569,8 @@ def update_dictionary_tables(request, project, form):  # pragma: no cover
                                 new_field = DictField(**new_field_dict)
                                 try:
                                     request.dbsession.add(new_field)
-                                    request.dbsession.flush()
                                 except IntegrityError:
-                                    request.dbsession.rollback()
+                                    save_point.rollback()
                                     log.error(
                                         "Duplicated field {} in table {} in project {} form {}".format(
                                             field.get("name"),
@@ -554,7 +579,32 @@ def update_dictionary_tables(request, project, form):  # pragma: no cover
                                             form,
                                         )
                                     )
-                                    return False
+                                    error_in_fields = True
+                                except Exception as e:
+                                    save_point.rollback()
+                                    log.error(
+                                        "Error adding field {} in table {} in project {} form {}. Error: {}".format(
+                                            field.get("name"),
+                                            table.get("name"),
+                                            project,
+                                            form,
+                                            str(e),
+                                        )
+                                    )
+                                    error_in_fields = True
+                    if not error_in_fields:
+                        try:
+                            request.dbsession.flush()
+                        except Exception as e:
+                            save_point.rollback()
+                            log.error(
+                                "Eroror {} inserting fileds in table {} in project {} form {}".format(
+                                    str(e),
+                                    table.get("name"),
+                                    project,
+                                    form,
+                                )
+                            )
         return True
 
     create_file = get_form_xml_create_file(request, project, form)

@@ -77,16 +77,17 @@ def register_partner(request, partner_data):
     partner_data.pop("partner_password2", None)
     mapped_data = map_to_schema(Partner, partner_data)
     new_partner = Partner(**mapped_data)
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.add(new_partner)
         request.dbsession.flush()
         return True, ""
     except IntegrityError:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error("Duplicated partner {}".format(mapped_data["partner_email"]))
         return False, _("Partner email is already taken")
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error(
             "Error {} when inserting partner {}".format(
                 str(e), mapped_data["partner_email"]
@@ -122,6 +123,7 @@ def partner_email_exists(request, partner_id, email):
 
 def update_partner(request, partner_id, partner_data):
     mapped_data = map_to_schema(Partner, partner_data)
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.query(Partner).filter(
             Partner.partner_id == partner_id
@@ -129,8 +131,8 @@ def update_partner(request, partner_id, partner_data):
         request.dbsession.flush()
         return True, ""
     except Exception as e:
-        request.dbsession.rollback()
         log.error("Error {} when updating partner {}".format(str(e), partner_id))
+        save_point.rollback()
         return False, str(e)
 
 
@@ -166,12 +168,13 @@ def add_partner_to_project(request, link_data):
     _ = request.translate
     mapped_data = map_to_schema(PartnerProject, link_data)
     new_link = PartnerProject(**mapped_data)
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.add(new_link)
         request.dbsession.flush()
         return True, ""
     except IntegrityError:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error(
             "Duplicated partner {} for project {}".format(
                 mapped_data["partner_id"], mapped_data["project_id"]
@@ -179,7 +182,7 @@ def add_partner_to_project(request, link_data):
         )
         return False, _("The partner is already linked to this project")
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error(
             "Error {} when inserting partner {} to project {}".format(
                 str(e), mapped_data["partner_id"], mapped_data["project_id"]
@@ -250,12 +253,13 @@ def add_partner_to_form(request, link_data):
     _ = request.translate
     mapped_data = map_to_schema(PartnerForm, link_data)
     new_link = PartnerForm(**mapped_data)
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.add(new_link)
         request.dbsession.flush()
         return True, ""
     except IntegrityError:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error(
             "Duplicated partner {} for form {} in project {}".format(
                 mapped_data["partner_id"],
@@ -265,7 +269,7 @@ def add_partner_to_form(request, link_data):
         )
         return False, _("The partner is already linked to this form")
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error(
             "Error {} when inserting partner {} to form {} in project {}".format(
                 str(e),

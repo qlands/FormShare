@@ -608,6 +608,7 @@ class UploadAssistantsCSV(PrivateView):
             if not error:
                 all_in = []
                 messages = []
+                save_point = self.request.tm.savepoint()
                 for an_assistant in assistants:
                     continue_creation = True
                     for plugin in p.PluginImplementations(p.IAssistant):
@@ -651,11 +652,12 @@ class UploadAssistantsCSV(PrivateView):
                 try:
                     self.request.dbsession.flush()
                 except IntegrityError:
-                    self.request.dbsession.rollback()
+                    save_point.rollback()
                     error = True
                     message = self._("Your file has assistants with duplicated ids.")
                 except Exception as e:
-                    self.request.dbsession.rollback()
+                    save_point.rollback()
+                    error = True
                     log.error(
                         "Error {} while adding assistants from CSV in project {}".format(
                             str(e), project_id

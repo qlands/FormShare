@@ -64,12 +64,13 @@ def add_product_instance(
         report_updates=report_updates,
         product_desc=product_description,
     )
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.add(new_instance)
         request.dbsession.flush()
         return True, ""
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error("Error {} while adding product instance".format(str(e)))
         return False, str(e)
 

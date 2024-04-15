@@ -1154,9 +1154,9 @@ def add_project(request, user, project_data):
 
         mapped_data = map_to_schema(Project, project_data)
         new_project = Project(**mapped_data)
+        save_point = request.tm.savepoint()
         try:
             request.dbsession.add(new_project)
-            request.dbsession.flush()
 
             request.dbsession.query(Userproject).filter(
                 Userproject.user_id == user
@@ -1171,32 +1171,15 @@ def add_project(request, user, project_data):
                 project_accepted=1,
                 project_accepted_date=project_data["project_cdate"],
             )
-            try:
-                request.dbsession.add(new_access)
-                request.dbsession.flush()
-            except IntegrityError:
-                request.dbsession.rollback()
-                log.error(
-                    "Duplicated access for user {} in project {}".format(
-                        user, mapped_data["project_id"]
-                    )
-                )
-                return False, _("Error allocating access")
-            except Exception as e:
-                request.dbsession.rollback()
-                log.error(
-                    "Error {} while allocating access for user {} in project {}".format(
-                        str(e), user, mapped_data["project_id"]
-                    )
-                )
-                return False, str(e)
+            request.dbsession.add(new_access)
+            request.dbsession.flush()
             return True, project_data["project_id"]
         except IntegrityError:
-            request.dbsession.rollback()
+            save_point.rollback()
             log.error("Duplicated project {}".format(mapped_data["project_id"]))
-            return False, _("The project already exists")
+            return False, _("The project already exist or the access to it exist")
         except Exception as e:
-            request.dbsession.rollback()
+            save_point.rollback()
             log.error(
                 "Error {} while inserting project {}".format(
                     str(e), mapped_data["project_id"]
@@ -1303,11 +1286,12 @@ def add_file_to_project(request, project, file_name, overwrite=False):
             file_name=file_name,
             file_udate=datetime.datetime.now(),
         )
+        save_point = request.tm.savepoint()
         try:
             request.dbsession.add(new_file)
             request.dbsession.flush()
         except Exception as e:
-            request.dbsession.rollback()
+            save_point.rollback()
             log.error(
                 "Error {} while adding file {} in project {}".format(
                     str(e), file_name, project

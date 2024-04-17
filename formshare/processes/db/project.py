@@ -1199,13 +1199,14 @@ def modify_project(request, project, project_data):
     if project_data.get("project_code", None) is not None:
         project_data.pop("project_code")
     mapped_data = map_to_schema(Project, project_data)
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.query(Project).filter(Project.project_id == project).update(
             mapped_data
         )
         request.dbsession.flush()
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error("Error {} while updating project {}".format(str(e), project))
         return False, str(e)
     return True, ""
@@ -1213,9 +1214,9 @@ def modify_project(request, project, project_data):
 
 def delete_project(request, user, project):
     _ = request.translate
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.query(Project).filter(Project.project_id == project).delete()
-        request.dbsession.flush()
         res = (
             request.dbsession.query(Userproject)
             .filter(Userproject.user_id == user)
@@ -1236,9 +1237,10 @@ def delete_project(request, user, project):
                 ).filter(Userproject.project_id == new_active_project).update(
                     {"project_active": 1}
                 )
-                request.dbsession.flush()
+        request.dbsession.flush()
+        return True, ""
     except IntegrityError as e:
-        # request.dbsession.rollback()
+        save_point.rollback()
         log.error("Error {} while deleting project {}".format(str(e), project))
         return (
             False,
@@ -1247,24 +1249,24 @@ def delete_project(request, user, project):
             ),
         )
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error("Error {} while deleting project {}".format(str(e), project))
         return False, str(e)
     return True, ""
 
 
 def set_project_as_active(request, user, project):
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.query(Userproject).filter(Userproject.user_id == user).update(
             {"project_active": 0}
         )
-        request.dbsession.flush()
         request.dbsession.query(Userproject).filter(Userproject.user_id == user).filter(
             Userproject.project_id == project
         ).update({"project_active": 1})
         request.dbsession.flush()
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error("Error {} while setting project {} as active".format(str(e), project))
         return False, str(e)
     return True, ""
@@ -1316,6 +1318,7 @@ def get_project_files(request, project):
 
 
 def remove_file_from_project(request, project, file_name):
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.query(ProjectFile).filter(
             ProjectFile.project_id == project
@@ -1323,7 +1326,7 @@ def remove_file_from_project(request, project, file_name):
         request.dbsession.flush()
         return True, ""
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error(
             "Error {} while removing file {} in project {}".format(
                 str(e), file_name, project

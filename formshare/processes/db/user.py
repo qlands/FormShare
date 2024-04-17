@@ -201,6 +201,7 @@ def get_query_password(request, user_id):
 
 
 def set_query_user(request, user_id, query_user, query_encrypted_password):
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.query(User).filter(User.user_id == user_id).update(
             {
@@ -211,7 +212,7 @@ def set_query_user(request, user_id, query_user, query_encrypted_password):
         request.dbsession.flush()
         return True, ""
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error(
             "Error {} when setting query user details for user {}".format(
                 str(e), user_id
@@ -325,12 +326,13 @@ def get_user_id_with_email(request, email):
 
 def update_profile(request, user, profile_data):
     mapped_data = map_to_schema(User, profile_data)
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.query(User).filter(User.user_id == user).update(mapped_data)
         request.dbsession.flush()
         return True, ""
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error("Error {} when updating user {}".format(str(e), user))
         return False, str(e)
 
@@ -382,6 +384,7 @@ def get_user_by_api_key(request, api_key, api_secret, with_stats=True):
 
 
 def update_password(request, user, password):
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.query(User).filter(User.user_id == user).update(
             {"user_password": password}
@@ -389,12 +392,13 @@ def update_password(request, user, password):
         request.dbsession.flush()
         return True, ""
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error("Error {} when changing password for user {}".format(str(e), user))
         return False, str(e)
 
 
 def update_api_key(request, user, api_key, api_secret):
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.query(User).filter(User.user_id == user).update(
             {
@@ -406,7 +410,7 @@ def update_api_key(request, user, api_key, api_secret):
         request.dbsession.flush()
         return True, ""
     except Exception as e:
-        # request.dbsession.rollback()
+        save_point.rollback()
         log.error("Error {} when changing password for user {}".format(str(e), user))
         return False, str(e)
 

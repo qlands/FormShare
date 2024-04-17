@@ -137,6 +137,7 @@ def update_partner(request, partner_id, partner_data):
 
 
 def update_partner_password(request, partner_id, password):
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.query(Partner).filter(
             Partner.partner_id == partner_id
@@ -144,7 +145,7 @@ def update_partner_password(request, partner_id, password):
         request.dbsession.flush()
         return True, ""
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error(
             "Error {} when changing password for partner {}".format(str(e), partner_id)
         )
@@ -152,6 +153,7 @@ def update_partner_password(request, partner_id, password):
 
 
 def delete_partner(request, partner_id):
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.query(Partner).filter(
             Partner.partner_id == partner_id
@@ -159,7 +161,7 @@ def delete_partner(request, partner_id):
         request.dbsession.flush()
         return True, ""
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error("Error {} when updating partner {}".format(str(e), partner_id))
         return False, str(e)
 
@@ -204,6 +206,7 @@ def get_project_partners(request, project_id):
 
 def update_partner_options(request, project_id, partner_id, partner_data):
     mapped_data = map_to_schema(PartnerProject, partner_data)
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.query(PartnerProject).filter(
             PartnerProject.project_id == project_id
@@ -211,7 +214,7 @@ def update_partner_options(request, project_id, partner_id, partner_data):
         request.dbsession.flush()
         return True, ""
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error(
             "Error {} when updating partner {} in project {}".format(
                 str(e), partner_id, project_id
@@ -221,6 +224,7 @@ def update_partner_options(request, project_id, partner_id, partner_data):
 
 
 def remove_partner_from_project(request, project_id, partner_id):
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.query(PartnerProject).filter(
             PartnerProject.project_id == project_id
@@ -228,7 +232,7 @@ def remove_partner_from_project(request, project_id, partner_id):
         request.dbsession.flush()
         return True, ""
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error(
             "Error {} when removing the partner partner {} from {}".format(
                 str(e), partner_id, project_id
@@ -283,6 +287,7 @@ def add_partner_to_form(request, link_data):
 
 def update_partner_form_options(request, project_id, form_id, partner_id, partner_data):
     mapped_data = map_to_schema(PartnerForm, partner_data)
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.query(PartnerForm).filter(
             PartnerForm.project_id == project_id
@@ -294,7 +299,7 @@ def update_partner_form_options(request, project_id, form_id, partner_id, partne
         request.dbsession.flush()
         return True, ""
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error(
             "Error {} when updating partner {} in form {} of project {}".format(
                 str(e), partner_id, form_id, project_id
@@ -304,6 +309,7 @@ def update_partner_form_options(request, project_id, form_id, partner_id, partne
 
 
 def remove_partner_from_form(request, project_id, form_id, partner_id):
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.query(PartnerForm).filter(
             PartnerForm.project_id == project_id
@@ -313,7 +319,7 @@ def remove_partner_from_form(request, project_id, form_id, partner_id):
         request.dbsession.flush()
         return True, ""
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error(
             "Error {} when removing the partner partner {} from form {} of project {}".format(
                 str(e), partner_id, form_id, project_id

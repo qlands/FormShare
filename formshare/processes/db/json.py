@@ -63,6 +63,7 @@ def add_json_log(
                     "command_executed": command_executed,
                 }
             )
+            request.dbsession.flush()
             return True, ""
     except Exception as e:
         save_point.rollback()

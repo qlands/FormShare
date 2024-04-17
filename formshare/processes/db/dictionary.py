@@ -235,6 +235,7 @@ def update_dictionary_field_sensitive(
     :param protection: New type of protection
     :return: True or False
     """
+    save_point = request.tm.savepoint()
     try:
         update_dict = {"field_sensitive": sensitive}
         if sensitive == 1:
@@ -259,6 +260,7 @@ def update_dictionary_field_sensitive(
                 str(e), field, table, form, project
             )
         )
+        save_point.rollback()
         return False
 
 
@@ -273,6 +275,7 @@ def update_dictionary_field_desc(request, project, form, table, field, new_metad
     :param new_metadata: New metadata
     :return: True or False
     """
+    save_point = request.tm.savepoint()
     try:
         mapped_data = map_to_schema(DictField, new_metadata)
         request.dbsession.query(DictField).filter(
@@ -293,6 +296,7 @@ def update_dictionary_field_desc(request, project, form, table, field, new_metad
                 str(e), field, table, form, project
             )
         )
+        save_point.rollback()
         return False
 
 
@@ -306,6 +310,7 @@ def update_dictionary_table_desc(request, project, form, table, description):
     :param description: New description
     :return: True or False
     """
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.query(DictTable).filter(
             DictTable.project_id == project
@@ -321,6 +326,7 @@ def update_dictionary_table_desc(request, project, form, table, description):
             "Error {} while updating description "
             "for table {} in form {} of project {}".format(str(e), table, form, project)
         )
+        save_point.rollback()
         return False
 
 

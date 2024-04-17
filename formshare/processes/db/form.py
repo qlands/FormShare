@@ -1571,6 +1571,7 @@ def remove_file_from_form(request, project, form, file_name):
         .one()
     )
     if blocked[0] == 0:
+        save_point = request.tm.savepoint()
         try:
             request.dbsession.query(MediaFile).filter(
                 MediaFile.project_id == project
@@ -1584,7 +1585,7 @@ def remove_file_from_form(request, project, form, file_name):
                     str(e), file_name, form, project
                 )
             )
-            request.dbsession.rollback()
+            save_point.rollback()
             return False, str(e)
         return True, ""
     else:

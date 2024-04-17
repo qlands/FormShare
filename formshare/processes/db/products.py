@@ -100,6 +100,7 @@ def delete_product(request, project, form, product, output):
             else:
                 file_deleted = True
         if file_deleted:
+            save_point = request.tm.savepoint()
             try:
                 request.dbsession.query(Product).filter(
                     Product.project_id == project
@@ -111,7 +112,7 @@ def delete_product(request, project, form, product, output):
                 request.dbsession.flush()
                 return True, ""
             except Exception as e:
-                request.dbsession.rollback()
+                save_point.rollback()
                 log.error(
                     "Error {} while updating setting public access for product {} output ()".format(
                         str(e), product, output
@@ -242,6 +243,7 @@ def output_exists(request, project, form, product, output):
 
 
 def update_download_counter(request, project, form, product, output):
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.query(Product).filter(Product.project_id == project).filter(
             Product.form_id == form
@@ -255,7 +257,7 @@ def update_download_counter(request, project, form, product, output):
         )
         request.dbsession.flush()
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error(
             "Error {} while updating product download counter for product {} output ()".format(
                 str(e), product, output
@@ -269,6 +271,7 @@ def set_output_public_state(request, project, form, product, output, public, by)
         public = 0
     else:
         public = 1
+    save_point = request.tm.savepoint()
     try:
         request.dbsession.query(Product).filter(Product.project_id == project).filter(
             Product.form_id == form
@@ -283,7 +286,7 @@ def set_output_public_state(request, project, form, product, output, public, by)
         )
         request.dbsession.flush()
     except Exception as e:
-        request.dbsession.rollback()
+        save_point.rollback()
         log.error(
             "Error {} while updating setting public access for product {} output ()".format(
                 str(e), product, output

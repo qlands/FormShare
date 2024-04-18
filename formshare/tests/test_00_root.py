@@ -78,6 +78,7 @@ from .steps.update_form_missing_files import t_e_s_t_update_form_missing_files
 from .steps.utility_functions import t_e_s_t_utility_functions
 from .steps.geoJSON import t_e_s_t_geo_json
 from .steps.data_columns import t_e_s_t_data_columns
+from .steps.select_from_csv import t_e_s_t_select_from_csv
 
 """
 This testing module test all routes. It launch start the server and test all the routes and processes
@@ -181,6 +182,8 @@ class FunctionalTests(unittest.TestCase):
 
         print("Testing data columns")
         t_e_s_t_data_columns(self.test_object)
+        print("Test selects from CSV")
+        t_e_s_t_select_from_csv(self.test_object)
 
         print("Testing Support for ZIP files")
         t_e_s_t_support_zip_file(self.test_object)

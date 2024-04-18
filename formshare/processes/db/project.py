@@ -17,7 +17,6 @@ from formshare.processes.elasticsearch.repository_index import (
     get_dataset_stats_for_project,
 )
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy import or_
 
 __all__ = [
     "get_project_id_from_name",

@@ -793,6 +793,42 @@ def check_jxform_file(
                     )
             return 9, message
 
+        if p.returncode == 36:
+            log.error(
+                ". Error: "
+                + str(p.returncode)
+                + "-"
+                + stderr.decode()
+                + " while checking PyXForm. Command line: "
+                + " ".join(args)
+            )
+            root = etree.fromstring(stdout)
+            invalid_items = root.findall(".//invalidItem")
+            message = (
+                _("FormShare thoroughly checks your ODK for inconsistencies.") + "\n"
+            )
+            message = (
+                message
+                + _(
+                    "The ODK you just submitted have multi-select variables with spaces in their options. "
+                    "See details below:"
+                )
+                + "\n"
+            )
+            if invalid_items:
+                for a_item in invalid_items:
+                    variable_name = a_item.get("variableName")
+                    duplicated_option = a_item.get("invalidValue")
+                    message = (
+                        message
+                        + "\t"
+                        + _('Option "{}" in variable {}').format(
+                            duplicated_option, variable_name
+                        )
+                        + "\n"
+                    )
+            return 36, message
+
         if p.returncode == 7:
             log.error(
                 ". Error: "
@@ -2395,9 +2431,10 @@ def get_manifest(request, user, project, project_id, form):
                                         request, project_id, form
                                     )
                                     if form_schema is not None:
-                                        if is_file_a_lookup(
+                                        lookup_type = is_file_a_lookup(
                                             request, project_id, form, file_name
-                                        ):
+                                        )
+                                        if lookup_type != 0:
                                             if file_name.upper().find(".CSV") > 0:
                                                 if is_csv_a_select(
                                                     request,
@@ -2427,6 +2464,7 @@ def get_manifest(request, user, project, project_id, form):
                                                         form_xml_insert_file,
                                                         file_name,
                                                         csv_data,
+                                                        lookup_type,
                                                     )
                                                     error = not result
                                                     if error:
@@ -2510,9 +2548,10 @@ def get_manifest(request, user, project, project_id, form):
                                 )
                                 form_schema = get_form_schema(request, project_id, form)
                                 if form_schema is not None:
-                                    if is_file_a_lookup(
+                                    lookup_type = is_file_a_lookup(
                                         request, project_id, form, file_name
-                                    ):
+                                    )
+                                    if lookup_type != 0:
                                         if file_name.upper().find(".CSV") > 0:
                                             if is_csv_a_select(
                                                 request,
@@ -2542,6 +2581,7 @@ def get_manifest(request, user, project, project_id, form):
                                                     form_xml_insert_file,
                                                     file_name,
                                                     csv_data,
+                                                    lookup_type,
                                                 )
                                                 error = not result
                                                 if error:

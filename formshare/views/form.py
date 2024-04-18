@@ -398,8 +398,8 @@ class FormDetails(PrivateView):
                             "they will contact you ASAP."
                         )
                     )
-        else:
-            # This might not happen. Left here just in case
+        else:  # pragma: no cover
+            # This might not happen. Left here just in case. Don't cover it in tests
             if created == 1:
                 # Internal error: Report issue
                 self.report_critical_error(
@@ -611,6 +611,36 @@ class FormDetails(PrivateView):
                     for a_item in duplicated_items:
                         variable_name = a_item.get("variableName")
                         duplicated_option = a_item.get("duplicatedValue")
+                        txt_message = (
+                            txt_message
+                            + "\t"
+                            + self._("Option {} in variable {}").format(
+                                duplicated_option, variable_name
+                            )
+                            + "\n"
+                        )
+                errors.append(txt_message)
+
+            if created == 36:
+                # Options with spaces used in multi-selects
+                root = etree.fromstring(message)
+                invalid_items = root.findall(".//invalidItem")
+                txt_message = (
+                    self._("FormShare thoroughly checks your ODK for inconsistencies.")
+                    + "\n"
+                )
+                txt_message = (
+                    txt_message
+                    + self._(
+                        "The ODK you just submitted have multi-select variables with spaces in their options. "
+                        "See details below:"
+                    )
+                    + "\n"
+                )
+                if invalid_items:
+                    for a_item in invalid_items:
+                        variable_name = a_item.get("variableName")
+                        duplicated_option = a_item.get("invalidValue")
                         txt_message = (
                             txt_message
                             + "\t"
@@ -1912,6 +1942,9 @@ class AddFileToForm(PrivateView):
                     csv_is_lookup = False
                     geo_json_is_lookup = False
                     csv_data = None
+                    lookup_type = is_file_a_lookup(
+                        self.request, project_id, form_id, file_name
+                    )
                     if file_name.upper().find(".CSV") > 0:
                         tmp_file = get_temporary_file(self.request, "csv")
                         file.file.seek(0)
@@ -1923,9 +1956,7 @@ class AddFileToForm(PrivateView):
                             )  # Read first without headers to check structure
                             csv_data = pd.read_csv(tmp_file, keep_default_na=False)
                             if current_form_data["form_schema"] is not None:
-                                if is_file_a_lookup(
-                                    self.request, project_id, form_id, file_name
-                                ):
+                                if lookup_type != 0:
                                     name, label = get_name_and_label_from_file(
                                         self.request, project_id, form_id, file_name
                                     )
@@ -1960,9 +1991,7 @@ class AddFileToForm(PrivateView):
                             shutil.copyfileobj(file.file, output_file)
                         try:
                             if current_form_data["form_schema"] is not None:
-                                if is_file_a_lookup(
-                                    self.request, project_id, form_id, file_name
-                                ):
+                                if lookup_type != 0:
                                     name, label = get_name_and_label_from_file(
                                         self.request, project_id, form_id, file_name
                                     )
@@ -2039,8 +2068,10 @@ class AddFileToForm(PrivateView):
                                     current_form_data["form_insertxmlfile"],
                                     file_name,
                                     csv_data,
+                                    lookup_type,
                                 )
-                                error = not result
+                                if not error:
+                                    error = not result
                                 if error:
                                     messages.append(message)
                             if file_name in required_files and geo_json_is_lookup:
@@ -2053,7 +2084,8 @@ class AddFileToForm(PrivateView):
                                     file_name,
                                     tmp_file,
                                 )
-                                error = not result
+                                if not error:
+                                    error = not result
                                 if error:
                                     messages.append(message)
                     else:

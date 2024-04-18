@@ -129,6 +129,34 @@
                                             {% endfor %}
                                         </UL>
                                     {% endif %}
+                                    {% if result_code == 36 %}
+                                        <h2>{{ _('Your ODK form has multi-select variables with spaces in their options.') }}</h2>
+                                        {{ _('You need to fix the below errors in CSV files, upload the new version and continue the process.') }}
+                                        <UL>
+                                            {% for aList in list_array %}
+                                                <LI><span style="color: red">{{ _('CSV with invalid options') }}:</span> {{ aList.name }}
+                                                    <UL>
+                                                        <LI>{{ _('Invalid options') }}:
+                                                            <UL>
+                                                                {% for aValue in aList['values'] %}
+                                                                    <LI>{{ aValue }}</LI>
+                                                                {% endfor %}
+                                                            </UL>
+                                                        </LI>
+                                                        {% if aList['references']|length > 0 %}
+                                                            <LI>{{ _('Used by the following variables') }}:
+                                                                <UL>
+                                                                    {% for aRef in aList['references'] %}
+                                                                        <LI><b>{{ aRef.variable }}</b> -- {{ _('Choice used') }}: {{ aRef.option }}</LI>
+                                                                    {% endfor %}
+                                                                </UL>
+                                                            </LI>
+                                                        {% endif %}
+                                                    </UL>
+                                                </LI>
+                                            {% endfor %}
+                                        </UL>
+                                    {% endif %}
                                     {% if result_code == 11 %}
                                         <h2>{{ _('One of your resource XML files is missing') }}</h2>
                                         {{ _('The file') }} {{ file_with_error }} {{ _(' was not attached.') }}<br/>

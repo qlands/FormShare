@@ -543,6 +543,57 @@ class GenerateRepository(PrivateView):
                                                     "values"
                                                 ].append(duplicated_value)
 
+                            if result_code == 36:  # pragma: no cover
+                                # Multi-select variable with spaces in options
+                                stage = -1
+                                root = etree.fromstring(message)
+                                xml_lists = root.findall(".//list")
+                                if xml_lists:
+                                    for aList in xml_lists:
+                                        list_element = {"name": aList.get("name")}
+                                        xml_values = aList.findall(".//value")
+                                        value_array = []
+                                        for aValue in xml_values:
+                                            value_array.append(aValue.text)
+                                        list_element["values"] = value_array
+                                        xml_references = aList.findall(".//reference")
+                                        ref_array = []
+                                        for aRef in xml_references:
+                                            ref_array.append(
+                                                {
+                                                    "variable": aRef.get("variable"),
+                                                    "option": aRef.get("option"),
+                                                }
+                                            )
+                                        list_element["references"] = ref_array
+                                        list_array.append(list_element)
+                                else:
+                                    xml_lists = root.findall(".//invalidItem")
+                                    if xml_lists:
+                                        for aList in xml_lists:
+                                            variable_name = aList.get("variableName")
+                                            duplicated_value = aList.get("invalidValue")
+                                            found_index = -1
+                                            for index, an_error in enumerate(
+                                                list_array
+                                            ):
+                                                if (
+                                                    an_error["name"]
+                                                    == variable_name + ".csv"
+                                                ):
+                                                    found_index = index
+                                                    break
+                                            if found_index == -1:
+                                                list_element = {
+                                                    "name": variable_name + ".csv",
+                                                    "values": [duplicated_value],
+                                                }
+                                                list_array.append(list_element)
+                                            else:
+                                                list_array[found_index][
+                                                    "values"
+                                                ].append(duplicated_value)
+
                             if result_code == 10:  # pragma: no cover
                                 # Primary key not found
                                 stage = 1

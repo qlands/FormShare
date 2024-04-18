@@ -1,0 +1,14 @@
+list_name,name,label
+provincias,1,San José
+provincias,2,Heredia
+provincias,3,Cartago
+provincias,4,Alajuela
+provincias,5,Limon
+provincias,6,Guanacaste
+provincias,7,Puntarenas
+provincias,-88,NA
+provincias,-99,Missing
+provincias,-77,Other
+provincias,8,Belen
+provincias,8,Cacao
+provincias,a b c,ABC

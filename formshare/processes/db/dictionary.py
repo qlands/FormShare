@@ -36,6 +36,7 @@ def update_lookup_from_csv(
     form_insert_file,
     file_name,
     dataframe,
+    lookup_type,
 ):
     uid = str(uuid.uuid4())
     uid = "TMP_" + uid.replace("-", "_")
@@ -65,6 +66,17 @@ def update_lookup_from_csv(
             code = dataframe[name][ind]
             if isinstance(code, str):
                 code = code.replace("'", "`").replace('"', "")
+                if lookup_type == 2:
+                    if code.find(" ") >= 0:
+                        sql = "DROP TABLE {}.{}".format(form_schema, uid)
+                        session.execute(sql)
+                        return (
+                            False,
+                            '{} is used by a multi-select but it has spaces in the column "name"'.format(
+                                file_name
+                            ),
+                        )
+
             sql = (
                 "INSERT INTO {}.{} (var_code, var_label) VALUES ('{}', \"{}\")".format(
                     form_schema,
@@ -131,13 +143,24 @@ def update_lookup_from_csv(
         engine.dispose()
 
         return True, ""
+    except IntegrityError:
+        if temp_table_created:
+            sql = "DROP TABLE {}.{}".format(form_schema, uid)
+            session.execute(sql)
+        session.commit()
+        engine.dispose()
+        return False, "You have a duplicated option in {}".format(file_name)
     except Exception as e:
         if temp_table_created:
             sql = "DROP TABLE {}.{}".format(form_schema, uid)
             session.execute(sql)
         session.commit()
         engine.dispose()
-        log.error("Unable to upload lookup connected to CSV. Error: {}".format(str(e)))
+        log.error(
+            "Unable to upload lookup connected to {}. Error: {}".format(
+                file_name, str(e)
+            )
+        )
         print(traceback.format_exc())
         return False, str(e)
 
@@ -151,17 +174,29 @@ def is_file_a_lookup(request, project_id, form_id, file_name):
     :param file_name: CSV file
     """
     res = (
-        request.dbsession.query(DictField.field_rlookup)
+        request.dbsession.query(DictField)
         .filter(DictField.project_id == project_id)
         .filter(DictField.form_id == form_id)
         .filter(DictField.field_externalfilename == file_name)
         .filter(DictField.field_rlookup == 1)
         .first()
     )
+    if res is None:
+        # Check if the CSV is used in a multi select
+        res = (
+            request.dbsession.query(DictField)
+            .filter(DictField.project_id == project_id)
+            .filter(DictField.form_id == form_id)
+            .filter(DictField.field_externalfilename == file_name)
+            .filter(DictField.field_odktype == "select all that apply")
+            .first()
+        )
     if res is not None:
-        return True
+        if res.field_odktype == "select all that apply":
+            return 2
+        return 1
     else:
-        return False
+        return 0
 
 
 def get_references_from_file(request, project_id, form_id, file_name):
@@ -180,6 +215,29 @@ def get_references_from_file(request, project_id, form_id, file_name):
         .filter(DictField.field_rlookup == 1)
         .first()
     )
+    if res is None:
+        # Check if the csv is linked to a multi_select
+        res = (
+            request.dbsession.query(DictField.table_name, DictField.field_name)
+            .filter(DictField.project_id == project_id)
+            .filter(DictField.form_id == form_id)
+            .filter(DictField.field_externalfilename == file_name)
+            .filter(DictField.field_odktype == "select all that apply")
+            .first()
+        )
+        if res is not None:
+            res = (
+                request.dbsession.query(DictField.field_rtable, DictField.field_rfield)
+                .filter(DictField.project_id == project_id)
+                .filter(DictField.form_id == form_id)
+                .filter(
+                    DictField.table_name
+                    == "{}_msel_{}".format(res.table_name, res.field_name)
+                )
+                .filter(DictField.field_rlookup == 1)
+                .first()
+            )
+            return res.field_rtable, res.field_rfield
     return res.field_rtable, res.field_rfield
 
 
@@ -199,6 +257,29 @@ def get_type_and_size_from_file(request, project_id, form_id, file_name):
         .filter(DictField.field_rlookup == 1)
         .first()
     )
+    if res is None:
+        # Look for type and size in LookUp table
+        res = (
+            request.dbsession.query(DictField.table_name, DictField.field_name)
+            .filter(DictField.project_id == project_id)
+            .filter(DictField.form_id == form_id)
+            .filter(DictField.field_externalfilename == file_name)
+            .filter(DictField.field_odktype == "select all that apply")
+            .first()
+        )
+        if res is not None:
+            res = (
+                request.dbsession.query(DictField.field_type, DictField.field_size)
+                .filter(DictField.project_id == project_id)
+                .filter(DictField.form_id == form_id)
+                .filter(
+                    DictField.table_name
+                    == "{}_msel_{}".format(res.table_name, res.field_name)
+                )
+                .filter(DictField.field_rlookup == 1)
+                .first()
+            )
+            return res.field_type, res.field_size
     return res.field_type, res.field_size
 
 
@@ -218,6 +299,18 @@ def get_name_and_label_from_file(request, project_id, form_id, file_name):
         .filter(DictField.field_rlookup == 1)
         .first()
     )
+    if res is None:
+        # Check if the file is multiselect
+        res = (
+            request.dbsession.query(
+                DictField.field_codecolumn, DictField.field_desccolumn
+            )
+            .filter(DictField.project_id == project_id)
+            .filter(DictField.form_id == form_id)
+            .filter(DictField.field_externalfilename == file_name)
+            .filter(DictField.field_odktype == "select all that apply")
+            .first()
+        )
     return res.field_codecolumn, res.field_desccolumn
 
 

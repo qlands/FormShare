@@ -3981,13 +3981,22 @@ def store_submission(request, user, project, assistant):
     path = os.path.join(odk_dir, *["submissions", str(unique_id)])
     os.makedirs(path)
     xml_file = ""
+    submission_message = ""
     if request.registry.settings.get("log_submissions", "false").upper() == "TRUE":
-        log.error(
-            "Received submission {}. user: {}, project: {}, assistant: {}. "
-            "It contains the following files:".format(
-                unique_id, user, project, assistant
+        if not "*isIncomplete*" in request.POST.keys():
+            submission_message = (
+                "Received submission {}. user: {}, project: {}, assistant: {}. "
+                "It contains the following files:\n".format(
+                    unique_id, user, project, assistant
+                )
             )
-        )
+        else:
+            submission_message = (
+                "Received incomplete submission {}. user: {}, project: {}, assistant: {}. "
+                "It contains the following files:\n".format(
+                    unique_id, user, project, assistant
+                )
+            )
     for key in request.POST.keys():
         try:
             if key != "*isIncomplete*":
@@ -4006,7 +4015,7 @@ def store_submission(request, user, project, assistant):
                     request.registry.settings.get("log_submissions", "false").upper()
                     == "TRUE"
                 ):
-                    log.error(filename)
+                    submission_message = submission_message + filename + "\n"
                 input_file = request.POST[key].file
                 file_path = os.path.join(path, filename)
                 if file_path.upper().find(".XML") >= 0:
@@ -4056,6 +4065,11 @@ def store_submission(request, user, project, assistant):
                 + ". URL: "
                 + request.url
             )
+    if request.registry.settings.get("log_submissions", "false").upper() == "TRUE":
+        submission_message = submission_message + "End of submission {}".format(
+            unique_id
+        )
+        log.error(submission_message)
     if xml_file != "":
         tree = etree.parse(xml_file)
         root = tree.getroot()

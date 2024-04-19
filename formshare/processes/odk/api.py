@@ -3981,6 +3981,13 @@ def store_submission(request, user, project, assistant):
     path = os.path.join(odk_dir, *["submissions", str(unique_id)])
     os.makedirs(path)
     xml_file = ""
+    if request.registry.settings.get("log_submissions", "false").upper() == "TRUE":
+        log.error(
+            "Received submission {}. user: {}, project: {}, assistant: {}. "
+            "It contains the following files:".format(
+                unique_id, user, project, assistant
+            )
+        )
     for key in request.POST.keys():
         try:
             if key != "*isIncomplete*":
@@ -3995,6 +4002,11 @@ def store_submission(request, user, project, assistant):
                 else:
                     if filename == "xml_submission_file":
                         filename = str(unique_id) + ".xml"
+                if (
+                    request.registry.settings.get("log_submissions", "false").upper()
+                    == "TRUE"
+                ):
+                    log.error(filename)
                 input_file = request.POST[key].file
                 file_path = os.path.join(path, filename)
                 if file_path.upper().find(".XML") >= 0:

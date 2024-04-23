@@ -1458,6 +1458,7 @@ def delete_form(request, project, form):
     )
     if blocked[0] == 0:
         this_form_schema = get_form_schema(request, project, form)
+        save_point = request.tm.savepoint()
         if this_form_schema is not None:
             if form_has_parent(request, project, form):
                 deleted = delete_form_by_database(request, this_form_schema)
@@ -1473,7 +1474,6 @@ def delete_form(request, project, form):
             request.dbsession.query(Odkform).filter(
                 Odkform.project_id == project
             ).filter(Odkform.form_id == form).delete()
-        save_point = request.tm.savepoint()
         try:
             request.dbsession.flush()
             return (

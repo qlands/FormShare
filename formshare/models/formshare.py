@@ -454,6 +454,8 @@ class MediaFile(Base):
     file_udate = Column(DateTime)
     file_md5 = Column(Unicode(64))
     file_mimetype = Column(Unicode(120))
+    file_realtimecsv = Column(INTEGER, server_default=text("'0'"))
+    file_lastgen = Column(DateTime)
 
     project = relationship("Odkform")
 

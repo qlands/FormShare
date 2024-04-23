@@ -104,6 +104,7 @@ __all__ = [
     "field_exists",
     "get_all_project_forms",
     "get_form_survey_columns",
+    "update_media_lastgen",
 ]
 
 log = logging.getLogger("formshare")
@@ -305,11 +306,33 @@ def get_case_lookup_file(request, project, form):
         .filter(Odkform.form_id == form)
         .filter(Odkform.form_case == 1)
         .filter(Odkform.form_casetype > 1)
+        .filter(Odkform.form_caseselectorfilename != "barcode")
         .first()
     )
     if res is not None:
-        return res[0], res[1], res[2]
-    return None, None, None
+        return res[0], res[1], res[2], True
+    else:
+        form_casetype = (
+            request.dbsession.query(
+                Odkform.form_casetype,
+            )
+            .filter(Odkform.project_id == project)
+            .filter(Odkform.form_id == form)
+            .filter(Odkform.form_case == 1)
+            .filter(Odkform.form_casetype > 1)
+            .first()
+        )
+        if form_casetype is not None:
+            res = (
+                request.dbsession.query(MediaFile.file_name, MediaFile.file_lastgen)
+                .filter(MediaFile.project_id == project)
+                .filter(MediaFile.form_id == form)
+                .filter(MediaFile.file_realtimecsv == 1)
+                .first()
+            )
+            if res is not None:
+                return res[0], res[1], form_casetype, False
+    return None, None, None, False
 
 
 def update_case_lookup_field_alias(request, project, case_field, case_alias):
@@ -1361,6 +1384,28 @@ def update_form_directory(request, project, form, directory):  # pragma: no cove
     ).update({"form_directory": directory})
 
 
+def update_media_lastgen(request, project, form, file_name, last_generated_on):
+    save_point = request.tm.savepoint()
+    try:
+        request.dbsession.query(MediaFile).filter(
+            MediaFile.project_id == project
+        ).filter(MediaFile.form_id == form).filter(
+            MediaFile.file_name == file_name
+        ).update(
+            {"file_lastgen": last_generated_on}
+        )
+        request.dbsession.flush()
+        return True, ""
+    except Exception as e:
+        log.error(
+            "Error while updating last updated on file {} for form {} in project {}. Error: {}".format(
+                file_name, project, form, str(e)
+            )
+        )
+        save_point.rollback()
+        return False, str(e)
+
+
 def update_form(request, project, form, form_data):
     _ = request.translate
     mapped_data = map_to_schema(Odkform, form_data)
@@ -1493,7 +1538,19 @@ def get_media_files(request, project, form):
     return res
 
 
-def add_file_to_form(request, project, form, file_name, overwrite=False, md5sum=None):
+def add_file_to_form(
+    request,
+    project,
+    form,
+    file_name,
+    overwrite=False,
+    md5sum=None,
+    link_to_realtime_csv=False,
+):
+    if link_to_realtime_csv:
+        link_to_realtime_csv = 1
+    else:
+        link_to_realtime_csv = 0
     _ = request.translate
     blocked = (
         request.dbsession.query(Odkform.form_blocked)
@@ -1522,6 +1579,8 @@ def add_file_to_form(request, project, form, file_name, overwrite=False, md5sum=
                 file_udate=datetime.datetime.now(),
                 file_md5=md5sum,
                 file_mimetype=content_type,
+                file_realtimecsv=link_to_realtime_csv,
+                file_lastgen=datetime.datetime.now(),
             )
             save_point = request.tm.savepoint()
             try:
@@ -1546,7 +1605,7 @@ def add_file_to_form(request, project, form, file_name, overwrite=False, md5sum=
                     ).filter(MediaFile.form_id == form).filter(
                         MediaFile.file_name == file_name
                     ).update(
-                        {"file_md5": md5sum}
+                        {"file_md5": md5sum, "file_realtimecsv": link_to_realtime_csv}
                     )
                     request.dbsession.flush()
                 except Exception as e:

@@ -569,6 +569,15 @@
                     {% if projectDetails.access_type < 4 %}
                         var elem = document.querySelector('.js-switch');
                         var overwrite_switch = new Switchery(elem, { color: '#1AB394' });
+                        {% if projectDetails.project_case == 1 %}
+                            {% if formDetails.form_casetype != 1 %}
+                                {% if formDetails.form_caseselectorfilename == "barcode" %}
+                                    var elem2 = document.querySelector('.js-switch-casecsv');
+                                    if (elem2 != null)
+                                        var casecsv_switch = new Switchery(elem2, { color: '#1AB394' });
+                                {% endif %}
+                            {% endif %}
+                        {% endif %}
                     {% endif %}
 
                     {% if projectDetails.access_type < 4 %}

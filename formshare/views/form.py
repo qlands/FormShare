@@ -1930,6 +1930,10 @@ class AddFileToForm(PrivateView):
                 overwrite = True
             else:
                 overwrite = False
+            if "realtime" in form_data.keys():
+                file_is_realtime_csv = True
+            else:
+                file_is_realtime_csv = False
             for file in files:
                 try:
                     file_name = file.filename
@@ -2024,7 +2028,13 @@ class AddFileToForm(PrivateView):
                             break
 
                     added, message = add_file_to_form(
-                        self.request, project_id, form_id, file_name, overwrite, md5sum
+                        self.request,
+                        project_id,
+                        form_id,
+                        file_name,
+                        overwrite,
+                        md5sum,
+                        file_is_realtime_csv,
                     )
                     if added:
                         file.file.seek(0)

@@ -58,6 +58,7 @@ from formshare.processes.db import (
     get_name_and_label_from_file,
     get_form_xml_insert_file,
     update_lookup_from_csv,
+    update_media_lastgen,
 )
 from formshare.processes.elasticsearch.record_index import (
     add_record,
@@ -2199,7 +2200,7 @@ def get_manifest(request, user, project, project_id, form):
     form_files = get_form_files(request, project_id, form)
     if form_files:
         file_array = []
-        case_lookup_file, last_gen, case_type = get_case_lookup_file(
+        case_lookup_file, last_gen, case_type, case_selector = get_case_lookup_file(
             request, project_id, form
         )
         if case_lookup_file is not None:
@@ -2277,14 +2278,23 @@ def get_manifest(request, user, project, project_id, form):
                                         request, bucket_id, file["file_name"], csv_file
                                     )
                                     csv_file.close()
-                                    update_form(
-                                        request,
-                                        project_id,
-                                        form,
-                                        {
-                                            "form_caseselectorlastgen": datetime.datetime.now()
-                                        },
-                                    )
+                                    if case_selector:
+                                        update_form(
+                                            request,
+                                            project_id,
+                                            form,
+                                            {
+                                                "form_caseselectorlastgen": datetime.datetime.now()
+                                            },
+                                        )
+                                    else:
+                                        update_media_lastgen(
+                                            request,
+                                            project_id,
+                                            form,
+                                            file["file_name"],
+                                            datetime.datetime.now(),
+                                        )
                                     file_name = file["file_name"]
                                     file_array.append(
                                         {

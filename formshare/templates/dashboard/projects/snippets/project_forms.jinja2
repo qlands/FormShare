@@ -49,6 +49,10 @@
                                             <button type="button" class="btn btn-block btn-outline btn-default" title="{{ _('You cannot add new forms while you have a case creator form in testing stage.') }}">{{ _('Add new form (Inactive)') }}</button>
                                         {% endif %}
                                     {% endif %}
+                                {% else %}
+                                    {% block ready_only_tools %}
+
+                                    {% endblock ready_only_tools %}
                                 {% endif %}
                             {% endif %}
                         </div>

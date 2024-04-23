@@ -36,6 +36,7 @@ from pyramid.httpexceptions import HTTPNotFound
 from pyramid.response import Response
 from pyramid.security import remember
 from pyramid.session import check_csrf_token
+from formshare.processes.db.utility import get_db_connection
 
 log = logging.getLogger("formshare")
 
@@ -49,6 +50,8 @@ class HealthView(PublicView):
         if percentage_disk_usage > max_disk_usage:
             self.request.response.status = 500
         self.returnRawViewResult = True
+        db_conn = get_db_connection(self.request)
+        db_conn.disconnect()
         engine = self.request.dbsession.get_bind()
         try:
             res = self.request.dbsession.execute(

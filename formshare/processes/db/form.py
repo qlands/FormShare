@@ -1580,7 +1580,6 @@ def add_file_to_form(
                 file_md5=md5sum,
                 file_mimetype=content_type,
                 file_realtimecsv=link_to_realtime_csv,
-                file_lastgen=None,
             )
             save_point = request.tm.savepoint()
             try:

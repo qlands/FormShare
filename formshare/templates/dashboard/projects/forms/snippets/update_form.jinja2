@@ -89,6 +89,7 @@
                                 {% else %}
                                     <input type="hidden" name="form_pkey" value="{{ formDetails.parent_form_data.form_pkey }}">
                                     <input type="hidden" name="form_casetype" value="{{ formDetails.parent_form_data.form_casetype }}">
+                                    <input type="hidden" name="form_casedatetime" value="{{ formDetails.parent_form_data.form_casedatetime }}">
                                     {% if formDetails.parent_form_data.form_casetype == 1 %}
                                         <input type="hidden" name="form_caselabel" value="{{ formDetails.parent_form_data.form_caselabel }}">
                                     {% else %}

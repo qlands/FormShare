@@ -167,12 +167,33 @@ def make_database_changes(
     try:
         check_call(args)
     except CalledProcessError as e:
-        error_message = "Error dropping schema \n"
+        error_message = "Error creating backup schema \n"
         error_message = error_message + "Error: \n"
         if e.stderr is not None:
             error_message = error_message + e.stderr.encode() + "\n"
         log.error(error_message)
         error = True
+
+    working_schema = a_schema.replace("FS_", "TMP_")
+    working_schema_created = False
+    if not error:
+        args = [
+            "mysql",
+            "--defaults-file=" + cnf_file,
+            "--execute=CREATE SCHEMA "
+            + working_schema
+            + " DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_unicode_ci",
+        ]
+        try:
+            check_call(args)
+            working_schema_created = True
+        except CalledProcessError as e:
+            error_message = "Error creating working schema \n"
+            error_message = error_message + "Error: \n"
+            if e.stderr is not None:
+                error_message = error_message + e.stderr.encode() + "\n"
+            log.error(error_message)
+            error = True
 
     if not error:
         args = ["mysqldump", "--defaults-file=" + cnf_file, b_schema]
@@ -198,6 +219,64 @@ def make_database_changes(
             if proc.returncode != 0:  # pragma: no cover
                 log_message(
                     "Error creating database from backup",
+                    error_str,
+                    output,
+                    " ".join(args),
+                )
+                error = True
+
+    if not error:
+        log.info(
+            "Creating schema {} as working schema of {}".format(
+                working_schema, b_schema
+            )
+        )
+        send_task_status_to_form(settings, task_id, _("Creating backup of schema"))
+        args = ["mysql", "--defaults-file=" + cnf_file, working_schema]
+        with open(b_backup_file) as input_file:
+            proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)
+            output, error_str = proc.communicate()
+            if proc.returncode != 0:  # pragma: no cover
+                log_message(
+                    "Error creating database from backup",
+                    error_str,
+                    output,
+                    " ".join(args),
+                )
+                error = True
+
+    if not error:
+        log.info("Applying structure changes in the working schema ...")
+        send_task_status_to_form(
+            settings, task_id, _("Applying structure changes in the schema...")
+        )
+        args = ["mysql", "--defaults-file=" + cnf_file, working_schema]
+        with open(merge_create_file) as input_file:
+            proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)
+            output, error_str = proc.communicate()
+            if proc.returncode != 0:  # pragma: no cover
+                log_message(
+                    "Error applying changes to schema",
+                    error_str,
+                    output,
+                    " ".join(args),
+                )
+                error = True
+
+    if not error:
+        log.info("Applying lookup value changes in the working schema...")
+        send_task_status_to_form(
+            settings,
+            task_id,
+            _("Applying lookup value changes in the working schema..."),
+        )
+        args = ["mysql", "--defaults-file=" + cnf_file, working_schema]
+        with open(merge_insert_file) as input_file:
+            proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)
+            output, error_str = proc.communicate()
+            if proc.returncode != 0:  # pragma: no cover
+                log_message(
+                    "Error applying lookup changes to schema",
                     error_str,
                     output,
                     " ".join(args),
@@ -239,6 +318,23 @@ def make_database_changes(
                     " ".join(args),
                 )
                 error = True
+
+    if working_schema_created:
+        engine_created = False
+        engine = None
+        try:
+            engine = create_engine(settings.get("sqlalchemy.url"), poolclass=NullPool)
+            engine_created = True
+            engine.execute("DROP SCHEMA {}".format(working_schema))
+            engine.dispose()
+        except Exception as e:
+            if engine_created:
+                engine.dispose()
+            log.error(
+                "Error when dropping working schema {}. Error: {}".format(
+                    working_schema, str(e)
+                )
+            )
 
     if not error:
         try:

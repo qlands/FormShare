@@ -260,3 +260,23 @@ class PerformAction(AssistantView):
             return {}
         else:
             raise HTTPForbidden()
+
+
+class CleanMultiSelect(AssistantView):
+    def __init__(self, request):
+        AssistantView.__init__(self, request)
+        self.checkCrossPost = False
+
+    def process_view(self):
+        form_id = self.request.matchdict["formid"]
+        table_name = self.request.matchdict["table"]
+        row_id = self.request.matchdict["rowuuid"]
+
+        permissions = get_assistant_permissions_on_a_form(
+            self.request, self.userID, self.projectID, self.assistantID, form_id
+        )
+
+        if permissions["enum_canclean"] == 1:
+            return {"table": table_name, "rowuuid": row_id}
+        else:
+            raise HTTPForbidden()

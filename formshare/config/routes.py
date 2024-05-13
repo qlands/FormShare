@@ -15,6 +15,7 @@ from formshare.views.assistant_views.clean import (
     CleanInterface,
     PerformAction,
     DataRequest,
+    CleanMultiSelect,
 )
 from formshare.views.assistant_views.forms import (
     AssistantForms,
@@ -1304,6 +1305,15 @@ def load_routes(config, settings):
             "/user/{userid}/project/{projcode}/assistantaccess/form/{formid}/clean",
             CleanInterface,
             "assistant/clean/clean_data.jinja2",
+        )
+    )
+
+    routes.append(
+        add_route(
+            "cleanmultiselect",
+            "/user/{userid}/project/{projcode}/assistantaccess/form/{formid}/clean/multiselect/{table}/{rowuuid}",
+            CleanMultiSelect,
+            "assistant/clean/clean_msel.jinja2",
         )
     )
 

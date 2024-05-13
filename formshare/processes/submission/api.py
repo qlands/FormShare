@@ -967,6 +967,7 @@ def get_fields_from_table(
                 "rlookup": _to_string(field.get("field_rlookup", 0)),
                 "rtable": field.get("field_rtable", "None"),
                 "rfield": field.get("field_rfield", "None"),
+                "field_selecttype": field.get("field_selecttype", 0),
                 "editable": editable,
             }
 

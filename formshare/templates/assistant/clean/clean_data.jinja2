@@ -25,6 +25,7 @@
     {% else %}
         {% jsresource request,'formshare','select2' %}
         {% jsresource request,'formshare','jqgrid' %}
+        {% jsresource request,'formshare','multiselect' %}
     {% endif %}
 {% endblock topScripts %}
 
@@ -91,6 +92,7 @@
             {% endif %}
         </div>
     </div>
+    {% include 'assistant/clean/snippets/update_form.jinja2' %}
 {% endblock maincontent %}
 
 
@@ -131,6 +133,26 @@
                                             editoptions : {
                                                 value: {{ field.lookupvalues }}
                                             }
+                                        {% else %}
+                                            {% if field.field_selecttype != 0 %}
+                                                edittype:'button',
+                                                editoptions : {
+                                                    table_name: '{{ table }}_msel_{{ field.name }}',
+                                                    dataInit: function (elem) {
+                                                        $(elem).click(function () {
+                                                            $("#update_title").text('{{ _("Update multi select field") }} "{{ field.desc }}"');
+                                                            let info_url = "{{ request.route_url('cleanmultiselect', userid=userid, projcode=projcode, formid=formid, table='table-to-change', rowuuid='rowuuid_to_change') }}";
+                                                            let info_url_final = info_url.replace("table-to-change", $(elem).attr("table_name")) + " #msel_content";
+                                                            info_url_final = info_url_final.replace("rowuuid_to_change",$(elem).attr("rowid"))
+                                                            $('#multi_select_content').html('{{ _('Loading...') }}');
+                                                            $('#multi_select_content').load(info_url_final, function() {
+                                                                $('#multiselect').multiselect();
+                                                            });
+                                                            $('#update_form').modal('show');
+                                                        });
+                                                    }
+                                                }
+                                            {% endif %}
                                         {% endif %}
                                     },
                                 {% endif %}
@@ -146,6 +168,27 @@
                                                 editoptions : {
                                                     value: {{ field.lookupvalues }}
                                                 }
+                                            {% else %}
+                                                {% if field.field_selecttype != 0 %}
+                                                    edittype:'button',
+                                                    editoptions : {
+                                                        table_name: '{{ field.name }}_msel_{{ table }}',
+                                                        dataInit: function (elem) {
+                                                            $(elem).click(function () {
+                                                                console.log(elem)
+                                                                $("#update_title").text('{{ _("Update multi select field") }} "{{ field.desc }}"');
+                                                                let info_url = "{{ request.route_url('cleanmultiselect', userid=userid, projcode=projcode, formid=formid, table='table-to-change', rowuuid='rowuuid_to_change') }}";
+                                                                let info_url_final = info_url.replace("table-to-change", $(elem).attr("table_name")) + " #msel_content";
+                                                                info_url_final = info_url_final.replace("rowuuid_to_change",$(elem).attr("rowid"))
+                                                                $('#multi_select_content').html('{{ _('Loading...') }}');
+                                                                $('#multi_select_content').load(info_url_final, function() {
+                                                                    $('#multiselect').multiselect();
+                                                                });
+                                                                $('#update_form').modal('show');
+                                                            });
+                                                        }
+                                                    }
+                                                {% endif %}
                                             {% endif %}
                                         },
                                     {% endif %}

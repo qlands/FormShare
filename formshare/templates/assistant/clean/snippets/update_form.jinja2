@@ -1,0 +1,30 @@
+<div class="modal inmodal" id="update_form" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content animated fadeIn">
+            <div class="modal-header">
+                {% block update_form_header %}
+                    <button id="cross_update_form_button" type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">{{ _('Close') }}</span></button>
+                    {% block update_form_title %}
+                        <h4 id="update_title" class="modal-title">{{ _('Update multi select') }}</h4><br/>
+                    {% endblock update_form_title %}
+
+                {% endblock update_form_header %}
+            </div>
+            <form id="update_multiselect" role="form" method="post" class="require_busy" enctype="multipart/form-data" action="{{ action_url }}">
+                {% block update_form_content %}
+                    {{ form.secure_form(request) }}
+                    <div class="modal-body">
+                        <div id="multi_select_content">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        {% block update_form_actions %}
+                            <button id="cancel_update_form_button" type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>
+                            <button id="update_form_button" type="submit" class="btn btn-primary">{{ _('Update') }}</button>
+                        {% endblock update_form_actions %}
+                    </div>
+                {% endblock update_form_content %}
+            </form>
+        </div>
+    </div>
+</div>

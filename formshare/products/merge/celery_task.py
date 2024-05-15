@@ -53,7 +53,7 @@ def get_odk_path(settings):
 def move_changes(node_b, root_a):
     target_table = None
     for tag in node_b.iter():
-        if not len(tag):
+        if not len(tag) and target_table is not None:
             field_name = tag.get("name")
             field_sensitive = tag.get("sensitive")
             field_protection = tag.get("protection")
@@ -86,6 +86,57 @@ def log_message(message, error_str, output, command):
         message
         + "\nError: {} \n Output: {} \nCommand {}\n".format(error_str, output, command)
     )
+
+
+def restore_backup(cnf_file, schema_name, backup_file):
+    error = False
+    error_message = ""
+    args = [
+        "mysql",
+        "--defaults-file=" + cnf_file,
+        "--execute=DROP SCHEMA " + schema_name,
+    ]
+    try:
+        check_call(args)
+    except CalledProcessError as e:
+        error_message = "Error dropping schema {}\n".format(schema_name)
+        error_message = error_message + "Error: \n"
+        if e.stderr is not None:
+            error_message = error_message + e.stderr.encode() + "\n"
+        log.error(error_message)
+        error = True
+
+    if not error:
+        args = [
+            "mysql",
+            "--defaults-file=" + cnf_file,
+            "--execute=CREATE SCHEMA "
+            + schema_name
+            + " DEFAULT CHARACTER SET utf8mb4 DEFAULT COLLATE utf8mb4_unicode_ci",
+        ]
+        try:
+            check_call(args)
+        except CalledProcessError as e:
+            error_message = "Error creating schema {} \n".format(schema_name)
+            error_message = error_message + "Error: \n"
+            if e.stderr is not None:
+                error_message = error_message + e.stderr.encode() + "\n"
+            log.error(error_message)
+            error = True
+    if not error:
+        args = ["mysql", "--defaults-file=" + cnf_file, schema_name]
+        with open(backup_file) as input_file:
+            proc = Popen(args, stdin=input_file, stderr=PIPE, stdout=PIPE)
+            output, error_str = proc.communicate()
+            if proc.returncode != 0:  # pragma: no cover
+                log_message(
+                    "Error creating database from backup",
+                    error_str,
+                    output,
+                    " ".join(args),
+                )
+                error = True
+    return error, error_message
 
 
 def make_database_changes(
@@ -155,6 +206,9 @@ def make_database_changes(
             if proc.returncode != 0:
                 log_message("Error creating backup", error_str, output, " ".join(args))
                 error = True
+            else:
+                ok_file = b_backup_file.replace(".sql", ".ok")
+                open(ok_file, "a").close()
     if not error:
         log.info("Creating schema {} as backup of {}".format(a_schema, b_schema))
         send_task_status_to_form(settings, task_id, _("Creating backup of schema"))
@@ -426,8 +480,8 @@ def make_database_changes(
             )
         except Exception as e:
             log.error(
-                "Error while moving metadata changes from {} to {}. Error: {}".format(
-                    b_create_xml_file, c_create_xml_file, str(e)
+                "Error while moving metadata changes from {} to {}. Error: {}. TraceBack: {}".format(
+                    b_create_xml_file, c_create_xml_file, str(e), traceback.format_exc()
                 )
             )
             error = True
@@ -897,92 +951,124 @@ def internal_merge_into_repository(
                 locale,
             )
             log.error("Error while merging the form: {}".format(str(e)))
+            log.error(
+                "Restoring schema {} from backup file {}".format(
+                    b_schema_name, b_backup_file
+                )
+            )
+            ok_file = b_backup_file.replace(".sql", ".ok")
+            if os.path.exists(ok_file):
+                restore_error, restore_message = restore_backup(
+                    cnf_file, b_schema_name, b_backup_file
+                )
+                if restore_error:
+                    send_async_email(
+                        settings,
+                        email_from,
+                        email_to,
+                        status,
+                        "Error while restoring backup for schema {} from file {}. Error {}".format(
+                            b_schema_name, b_backup_file, restore_message
+                        ),
+                        None,
+                        locale,
+                    )
+                else:
+                    log.error("Backup restored")
             db_session.query(Odkform).filter(
                 Odkform.form_schema == b_schema_name
             ).update({"form_blocked": 0})
             update_form(db_session, project_id, a_form_id, {"form_blocked": 0})
             transaction.commit()
+            engine.dispose()
             raise MergeDataBaseError(str(e))
     # Delete the dataset index
-    engine.dispose()
-    delete_dataset_from_index(settings, project_id, a_form_id)
-    if discard_testing_data:
-        # Remove any test submissions if any
-        submissions_path = os.path.join(
-            odk_dir, *["forms", a_form_directory, "submissions", "*.*"]
-        )
-        files = glob.glob(submissions_path)
-        if files:
-            for file in files:
-                try:
-                    os.remove(file)
-                except Exception as e:
-                    log.error(str(e))
-        submissions_path = os.path.join(
-            odk_dir, *["forms", a_form_directory, "submissions", "*/"]
-        )
-        files = glob.glob(submissions_path)
-        if files:
-            for file in files:
-                if file[-5:] != "logs/" and file[-5:] != "maps/":
+    try:
+        engine.dispose()
+        delete_dataset_from_index(settings, project_id, a_form_id)
+        if discard_testing_data:
+            # Remove any test submissions if any
+            submissions_path = os.path.join(
+                odk_dir, *["forms", a_form_directory, "submissions", "*.*"]
+            )
+            files = glob.glob(submissions_path)
+            if files:
+                for file in files:
                     try:
-                        shutil.rmtree(file)
+                        os.remove(file)
                     except Exception as e:
                         log.error(str(e))
-    else:
-        unique_id = str(uuid.uuid4())
-        temp_path = os.path.join(settings["repository.path"], *["tmp", unique_id])
-        os.makedirs(temp_path)
+            submissions_path = os.path.join(
+                odk_dir, *["forms", a_form_directory, "submissions", "*/"]
+            )
+            files = glob.glob(submissions_path)
+            if files:
+                for file in files:
+                    if file[-5:] != "logs/" and file[-5:] != "maps/":
+                        try:
+                            shutil.rmtree(file)
+                        except Exception as e:
+                            log.error(str(e))
+        else:
+            unique_id = str(uuid.uuid4())
+            temp_path = os.path.join(settings["repository.path"], *["tmp", unique_id])
+            os.makedirs(temp_path)
 
-        submissions_path = os.path.join(
-            odk_dir, *["forms", a_form_directory, "submissions", "*.json"]
-        )
-        files = glob.glob(submissions_path)
-        if files:
-            for file in files:
-                shutil.copy(file, temp_path)
-            if assistant is not None and project_of_assistant is not None:
-                internal_import_json_files(
-                    user,
-                    project_id,
-                    a_form_id,
-                    odk_dir,
-                    a_form_directory,
-                    a_schema_name,
-                    assistant,
-                    temp_path,
-                    project_code,
-                    geo_point_variables,
-                    project_of_assistant,
-                    settings,
-                    locale,
-                    False,
-                    None,
-                    False,
-                    None,
-                )
-            else:  # pragma: no cover
-                log.error(
-                    "Error while importing testing files. "
-                    "The process was not able to find an assistant. "
-                    "The testing files are in {} You can import them later on".format(
-                        temp_path
+            submissions_path = os.path.join(
+                odk_dir, *["forms", a_form_directory, "submissions", "*.json"]
+            )
+            files = glob.glob(submissions_path)
+            if files:
+                for file in files:
+                    shutil.copy(file, temp_path)
+                if assistant is not None and project_of_assistant is not None:
+                    internal_import_json_files(
+                        user,
+                        project_id,
+                        a_form_id,
+                        odk_dir,
+                        a_form_directory,
+                        a_schema_name,
+                        assistant,
+                        temp_path,
+                        project_code,
+                        geo_point_variables,
+                        project_of_assistant,
+                        settings,
+                        locale,
+                        False,
+                        None,
+                        False,
+                        None,
                     )
-                )
-                email_from = settings.get("mail.from", None)
-                email_to = settings.get("mail.error", None)
-                send_async_email(
-                    settings,
-                    email_from,
-                    email_to,
-                    "Error while importing testing files",
-                    "The process was not able to find an assistant. \n\n"
-                    "The testing files for form {} of project {} are in {}. You can import them later on".format(
-                        a_form_id, project_id, temp_path
-                    ),
-                    None,
-                    locale,
-                )
+                else:  # pragma: no cover
+                    log.error(
+                        "Error while importing testing files. "
+                        "The process was not able to find an assistant. "
+                        "The testing files are in {} You can import them later on".format(
+                            temp_path
+                        )
+                    )
+                    email_from = settings.get("mail.from", None)
+                    email_to = settings.get("mail.error", None)
+                    send_async_email(
+                        settings,
+                        email_from,
+                        email_to,
+                        "Error while importing testing files",
+                        "The process was not able to find an assistant. \n\n"
+                        "The testing files for form {} of project {} are in {}. You can import them later on".format(
+                            a_form_id, project_id, temp_path
+                        ),
+                        None,
+                        locale,
+                    )
+    except Exception as e:
+        log.error(
+            "Error at the last steps of merging. Error: {}. Traceback: {}".format(
+                str(e), traceback.format_exc()
+            )
+        )
     log.info("Merging successful")
 
 

@@ -10,6 +10,9 @@
                 <div class="col-md-12">
                     {% block form_item_content %}
                         <strong><a href="{{ request.route_url('partner_form_details',userid=form.user_id,projcode=form.project_code,formid=form.form_id) }}">{{ form.form_name }}</a></strong>
+                        {% if form.form_blocked != 0 %}
+                            <span title="{{ _('This form has an internal problem and cannot receive submissions. Contact the technical support') }}" class="label label-danger">{{ _('Blocked') }}</span>
+                        {% endif %}
                         {% if form.form_geopoint != None %}
                             <span class="label label-default">{{ _('Geo-referenced') }}</span>
                         {% endif %}

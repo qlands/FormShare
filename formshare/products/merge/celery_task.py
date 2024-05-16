@@ -284,6 +284,10 @@ def make_database_changes(
                 error = True
 
     if not error:
+        production_file = b_backup_file.replace(".sql", ".prod")
+        open(production_file, "a").close()
+
+    if not error:
         log.info("Applying structure changes in the schema...")
         send_task_status_to_form(
             settings, task_id, _("Applying structure changes in the schema...")
@@ -959,40 +963,48 @@ def internal_merge_into_repository(
             ok_file = b_backup_file.replace(".sql", ".ok")
             restore_error = False
             if os.path.exists(ok_file):
-                restore_error, restore_message = restore_backup(
-                    cnf_file, b_schema_name, b_backup_file
-                )
-                if restore_error:
+                production_file = b_backup_file.replace(".sql", ".prod")
+                if os.path.exists(production_file):
+                    restore_error, restore_message = restore_backup(
+                        cnf_file, b_schema_name, b_backup_file
+                    )
+                    if restore_error:
+                        send_async_email(
+                            settings,
+                            email_from,
+                            email_to,
+                            status,
+                            "Error while restoring backup for schema {} from file {}. Error {}".format(
+                                b_schema_name, b_backup_file, restore_message
+                            ),
+                            None,
+                            locale,
+                        )
+                    else:
+                        log.error("Backup restored")
+                else:
+                    log.error(
+                        "Error did not reached the production database. No need to restore the backup"
+                    )
+            else:
+                production_file = b_backup_file.replace(".sql", ".prod")
+                if os.path.exists(production_file):
+                    log.error(
+                        "There is no backup for schema {} while merging form {} in project {}".format(
+                            b_schema_name, a_form_id, project_id
+                        )
+                    )
                     send_async_email(
                         settings,
                         email_from,
                         email_to,
                         status,
-                        "Error while restoring backup for schema {} from file {}. Error {}".format(
-                            b_schema_name, b_backup_file, restore_message
+                        "There was an error in merging form {} in project {} but there is not backup of schema {}".format(
+                            a_form_id, project_id, b_schema_name
                         ),
                         None,
                         locale,
                     )
-                else:
-                    log.error("Backup restored")
-            else:
-                log.error(
-                    "There is no backup for schema {} while merging form {} in project {}".format(
-                        b_schema_name, a_form_id, project_id
-                    )
-                )
-                send_async_email(
-                    settings,
-                    email_from,
-                    email_to,
-                    status,
-                    "There was an error in merging form {} in project {} but there is not backup of schema {}".format(
-                        a_form_id, project_id, b_schema_name
-                    ),
-                    None,
-                    locale,
-                )
             if not restore_error:
                 db_session.query(Odkform).filter(
                     Odkform.form_schema == b_schema_name

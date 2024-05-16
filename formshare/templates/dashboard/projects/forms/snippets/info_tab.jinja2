@@ -61,7 +61,7 @@
                                 <li><a style="border-radius: 25px">{{ _('Geo-referenced') }}</a></li>
                             {% endif %}
                             {% if formDetails.form_blocked != 0 %}
-                                <li><a title="{{ _('This form has an internal problem and cannot receive submissions. Contact the technical support') }}" style="color: red; border-radius: 25px">{{ _('Blocked') }}</a></li>
+                                <li><a title="{{ _('This form is merging with another form or it had a problem while merging and cannot receive submissions. Contact the technical support.') }}" style="color: red; border-radius: 25px">{{ _('Blocked') }}</a></li>
                             {% endif %}
                             {% if formDetails.form_casetype == 1 %}
                                 {% if formDetails.form_schema == None %}

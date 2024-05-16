@@ -957,6 +957,7 @@ def internal_merge_into_repository(
                 )
             )
             ok_file = b_backup_file.replace(".sql", ".ok")
+            restore_error = False
             if os.path.exists(ok_file):
                 restore_error, restore_message = restore_backup(
                     cnf_file, b_schema_name, b_backup_file
@@ -975,10 +976,28 @@ def internal_merge_into_repository(
                     )
                 else:
                     log.error("Backup restored")
-            db_session.query(Odkform).filter(
-                Odkform.form_schema == b_schema_name
-            ).update({"form_blocked": 0})
-            update_form(db_session, project_id, a_form_id, {"form_blocked": 0})
+            else:
+                log.error(
+                    "There is no backup for schema {} while merging form {} in project {}".format(
+                        b_schema_name, a_form_id, project_id
+                    )
+                )
+                send_async_email(
+                    settings,
+                    email_from,
+                    email_to,
+                    status,
+                    "There was an error in merging form {} in project {} but there is not backup of schema {}".format(
+                        a_form_id, project_id, b_schema_name
+                    ),
+                    None,
+                    locale,
+                )
+            if not restore_error:
+                db_session.query(Odkform).filter(
+                    Odkform.form_schema == b_schema_name
+                ).update({"form_blocked": 0})
+                update_form(db_session, project_id, a_form_id, {"form_blocked": 0})
             transaction.commit()
             engine.dispose()
             raise MergeDataBaseError(str(e))

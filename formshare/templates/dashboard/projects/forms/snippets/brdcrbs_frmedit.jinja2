@@ -11,7 +11,7 @@
             <a href="{{ request.route_url("project_details",userid=projectDetails.owner, projcode=projectDetails.project_code) }}">{{ projectDetails.project_name }}</a>
         </li>
         <li class="breadcrumb-item">
-            <a href="{{ request.route_url("form_details",userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formData.form_id) }}">{{ formData.form_name }}</a>
+            <a href="{{ request.route_url("form_details",userid=projectDetails.owner, projcode=projectDetails.project_code, formid=formid) }}">{{ formData.form_name }}</a>
         </li>
         <li class="breadcrumb-item active">
             <strong>{{ _('Edit metadata') }}</strong>

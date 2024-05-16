@@ -50,13 +50,18 @@
                                     <li title="{{ _('FormShare is generating your repository. Please wait....') }}"><a style="background-color: #c67d09; color: white; border-radius: 25px">{{ _('Generating repository...') }}</a></li>
                                 {% endif %}
                             {% endif %}
-                            {% if formDetails.form_accsub == 1 %}
-                                <li title="{{ _('Accept submissions') }}"><a style="background-color: #1c84c6; color: white; border-radius: 25px"> {{ _('Active') }}</a></li>
-                            {% else %}
-                                <li title="{{ _('Doesn\'t accept submissions') }}"><a style="background-color: red; color: white; border-radius: 25px">{{ _('Inactive') }}</a></li>
+                            {% if formDetails.form_blocked == 0 %}
+                                {% if formDetails.form_accsub == 1 %}
+                                    <li title="{{ _('Accept submissions') }}"><a style="background-color: #1c84c6; color: white; border-radius: 25px"> {{ _('Active') }}</a></li>
+                                {% else %}
+                                    <li title="{{ _('Doesn\'t accept submissions') }}"><a style="background-color: red; color: white; border-radius: 25px">{{ _('Inactive') }}</a></li>
+                                {% endif %}
                             {% endif %}
                             {% if formDetails.form_geopoint != None %}
                                 <li><a style="border-radius: 25px">{{ _('Geo-referenced') }}</a></li>
+                            {% endif %}
+                            {% if formDetails.form_blocked != 0 %}
+                                <li><a title="{{ _('This form has an internal problem and cannot receive submissions. Contact the technical support') }}" style="color: red; border-radius: 25px">{{ _('Blocked') }}</a></li>
                             {% endif %}
                             {% if formDetails.form_casetype == 1 %}
                                 {% if formDetails.form_schema == None %}

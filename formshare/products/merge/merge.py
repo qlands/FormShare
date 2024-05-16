@@ -1,4 +1,5 @@
 from formshare.processes.odk.api import get_odk_path
+from formshare.processes.db import block_forms_with_schema
 import os
 from formshare.products import register_product_instance
 from formshare.products.merge.celery_task import merge_into_repository
@@ -26,6 +27,7 @@ def merge_form(
     b_create_xml_file = os.path.join(
         odk_dir, *["forms", b_form_directory, "repository", "create.xml"]
     )
+    block_forms_with_schema(request, b_schema_name)
     task = merge_into_repository.apply_async(
         (
             settings,

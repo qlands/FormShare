@@ -105,6 +105,7 @@ __all__ = [
     "get_all_project_forms",
     "get_form_survey_columns",
     "update_media_lastgen",
+    "block_forms_with_schema",
 ]
 
 log = logging.getLogger("formshare")
@@ -1204,6 +1205,12 @@ def is_form_blocked(request, project, form):
         return False
     else:
         return True
+
+
+def block_forms_with_schema(request, schema):
+    request.dbsession.query(Odkform).filter(Odkform.form_schema == schema).update(
+        {"form_blocked": 1}
+    )
 
 
 def get_form_xml_create_file(request, project, form):

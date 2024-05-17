@@ -324,6 +324,8 @@ class GenerateRepository(PrivateView):
                                     language_array = root.findall(
                                         ".//language"
                                     )  # language
+                                    if not language_array:
+                                        language_array = root.findall(".//ODKlanguage")
                                     if language_array:
                                         for aLang in language_array:
                                             if (

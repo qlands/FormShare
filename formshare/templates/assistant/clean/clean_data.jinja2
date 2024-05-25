@@ -137,16 +137,18 @@
                                             {% if field.field_selecttype != 0 %}
                                                 edittype:'button',
                                                 editoptions : {
-                                                    table_name: '{{ table }}_msel_{{ field.name }}',
+                                                    mseltable_name: '{{ table }}_msel_{{ field.name }}',
+                                                    table_name: '{{ table }}',
                                                     dataInit: function (elem) {
                                                         $(elem).click(function () {
                                                             $("#update_title").text('{{ _("Update multi select field") }} "{{ field.desc }}"');
-                                                            let info_url = "{{ request.route_url('cleanmultiselect', userid=userid, projcode=projcode, formid=formid, table='table-to-change', rowuuid='rowuuid_to_change') }}";
-                                                            let info_url_final = info_url.replace("table-to-change", $(elem).attr("table_name")) + " #msel_content";
-                                                            info_url_final = info_url_final.replace("rowuuid_to_change",$(elem).attr("rowid"))
+                                                            let info_url = "{{ request.route_url('cleanmultiselect', userid=userid, projcode=projcode, formid=formid, table='table-to-change', mseltable= 'mseltable-to-change',rowuuid='rowuuid-to-change') }}";
+                                                            let info_url_final = info_url.replace("mseltable-to-change", $(elem).attr("mseltable_name")) + " #msel_content";
+                                                            info_url_final = info_url_final.replace("rowuuid-to-change",$(elem).attr("rowid"))
+                                                            info_url_final = info_url_final.replace("table-to-change",$(elem).attr("table_name"))
                                                             $('#multi_select_content').html('{{ _('Loading...') }}');
                                                             $('#multi_select_content').load(info_url_final, function() {
-                                                                $('#multiselect').multiselect();
+                                                                $('#multiselect').multiselect({keepRenderingSort: true, sort: false});
                                                             });
                                                             $('#update_form').modal('show');
                                                         });
@@ -172,17 +174,18 @@
                                                 {% if field.field_selecttype != 0 %}
                                                     edittype:'button',
                                                     editoptions : {
-                                                        table_name: '{{ field.name }}_msel_{{ table }}',
+                                                        mseltable_name: '{{ table }}_msel_{{ field.name }}',
+                                                        table_name: '{{ table }}',
                                                         dataInit: function (elem) {
                                                             $(elem).click(function () {
-                                                                console.log(elem)
                                                                 $("#update_title").text('{{ _("Update multi select field") }} "{{ field.desc }}"');
-                                                                let info_url = "{{ request.route_url('cleanmultiselect', userid=userid, projcode=projcode, formid=formid, table='table-to-change', rowuuid='rowuuid_to_change') }}";
-                                                                let info_url_final = info_url.replace("table-to-change", $(elem).attr("table_name")) + " #msel_content";
-                                                                info_url_final = info_url_final.replace("rowuuid_to_change",$(elem).attr("rowid"))
+                                                                let info_url = "{{ request.route_url('cleanmultiselect', userid=userid, projcode=projcode, formid=formid, table='table-to-change', mseltable= 'mseltable-to-change',rowuuid='rowuuid-to-change') }}";
+                                                                let info_url_final = info_url.replace("mseltable-to-change", $(elem).attr("mseltable_name")) + " #msel_content";
+                                                                info_url_final = info_url_final.replace("rowuuid-to-change",$(elem).attr("rowid"))
+                                                                info_url_final = info_url_final.replace("table-to-change",$(elem).attr("table_name"))
                                                                 $('#multi_select_content').html('{{ _('Loading...') }}');
                                                                 $('#multi_select_content').load(info_url_final, function() {
-                                                                    $('#multiselect').multiselect();
+                                                                    $('#multiselect').multiselect({keepRenderingSort: true, sort:false});
                                                                 });
                                                                 $('#update_form').modal('show');
                                                             });

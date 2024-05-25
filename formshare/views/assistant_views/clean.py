@@ -8,6 +8,12 @@ from formshare.processes.submission.api import (
     get_fields_from_table,
     get_request_data_jqgrid,
     update_data,
+    get_primary_key_data,
+    get_lookup_options,
+)
+from formshare.processes.db.dictionary import (
+    get_primary_keys,
+    get_lookup_relation_fields,
 )
 from formshare.views.classes import AssistantView
 from pyramid.httpexceptions import HTTPNotFound, HTTPFound, HTTPForbidden
@@ -270,13 +276,44 @@ class CleanMultiSelect(AssistantView):
     def process_view(self):
         form_id = self.request.matchdict["formid"]
         table_name = self.request.matchdict["table"]
-        row_id = self.request.matchdict["rowuuid"]
+        multi_select_table_name = self.request.matchdict["mseltable"]
+        row_uuid = self.request.matchdict["rowuuid"]
 
         permissions = get_assistant_permissions_on_a_form(
             self.request, self.userID, self.projectID, self.assistantID, form_id
         )
 
         if permissions["enum_canclean"] == 1:
-            return {"table": table_name, "rowuuid": row_id}
+            primary_keys = get_primary_keys(
+                self.request, self.projectID, form_id, table_name
+            )
+            primary_key_data = get_primary_key_data(
+                self.request,
+                self.projectID,
+                form_id,
+                table_name,
+                primary_keys,
+                row_uuid,
+            )
+            field_name, related_table, related_field = get_lookup_relation_fields(
+                self.request, self.projectID, form_id, multi_select_table_name
+            )
+            available_options, selected_options = get_lookup_options(
+                self.request,
+                self.projectID,
+                form_id,
+                related_table,
+                related_field,
+                multi_select_table_name,
+                field_name,
+                primary_key_data,
+            )
+            print(selected_options)
+            return {
+                "table": table_name,
+                "rowuuid": row_uuid,
+                "avaoptions": available_options,
+                "seloptions": selected_options,
+            }
         else:
             raise HTTPForbidden()

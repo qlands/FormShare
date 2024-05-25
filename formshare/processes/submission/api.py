@@ -69,6 +69,8 @@ __all__ = [
     "get_dataset_info_from_file",
     "list_submission_media_files",
     "get_submission_media_file",
+    "get_primary_key_data",
+    "get_lookup_options",
 ]
 
 log = logging.getLogger("formshare")
@@ -1074,14 +1076,30 @@ def get_request_data_jqgrid(
     search_field,
     search_string,
     search_operator,
+    fixed_filter_field=None,
+    fixed_filter_value=None,
 ):
     _ = request.translate
     schema = get_form_schema(request, project, form)
     sql_fields = ",".join(fields)
 
     if search_field is None or search_string == "":
-        sql = "SELECT " + sql_fields + " FROM " + schema + "." + table_name
-        where_clause = ""
+        if fixed_filter_field is None:
+            sql = "SELECT " + sql_fields + " FROM " + schema + "." + table_name
+            where_clause = ""
+        else:
+            sql = (
+                "SELECT "
+                + sql_fields
+                + " FROM "
+                + schema
+                + "."
+                + table_name
+                + " WHERE {} = '{}'".format(fixed_filter_field, fixed_filter_value)
+            )
+            where_clause = " WHERE {} = '{}'".format(
+                fixed_filter_field, fixed_filter_value
+            )
     else:
         sql = "SELECT " + sql_fields + " FROM " + schema + "." + table_name
         if search_operator == "like":
@@ -1115,6 +1133,11 @@ def get_request_data_jqgrid(
                 + ") not like '%"
                 + search_string.lower()
                 + "%'"
+            )
+        if fixed_filter_field is not None:
+            sql = sql + " AND {} = '{}'".format(fixed_filter_field, fixed_filter_value)
+            where_clause = where_clause + " AND {} = '{}'".format(
+                fixed_filter_field, fixed_filter_value
             )
 
     count_sql = (
@@ -1180,6 +1203,75 @@ def get_request_data_jqgrid(
         "rows": data,
     }
     return result
+
+
+def get_lookup_options(
+    request,
+    project,
+    form,
+    lookup_table,
+    lookup_field,
+    multiselect_table,
+    multiselect_field,
+    key_data,
+):
+    schema = get_form_schema(request, project, form)
+    field_desc = lookup_field.replace("_cod", "_des")
+    key_array = []
+    for key, value in key_data.items():
+        key_array.append("{} = '{}'".format(key, value))
+    # Select the available items in the lookup table
+    sql = "SELECT {},{} FROM {}.{} WHERE {} NOT IN (SELECT {} FROM {}.{} WHERE {})".format(
+        lookup_field,
+        field_desc,
+        schema,
+        lookup_table,
+        lookup_field,
+        multiselect_field,
+        schema,
+        multiselect_table,
+        " AND ".join(key_array),
+    )
+    res = request.dbsession.execute(sql).fetchall()
+    available_options = []
+    if res is not None:
+        for a_row in res:
+            available_options.append({"code": a_row[0], "desc": a_row[1]})
+
+    # Select the items selected from the lookup table
+    sql = "SELECT {},{} from {}.{}, {}.{} WHERE {} = {} AND {} ORDER BY {}.rowindex ASC".format(
+        lookup_field,
+        field_desc,
+        schema,
+        lookup_table,
+        schema,
+        multiselect_table,
+        lookup_field,
+        multiselect_field,
+        " AND ".join(key_array),
+        multiselect_table,
+    )
+    res = request.dbsession.execute(sql).fetchall()
+    selected_options = []
+    if res is not None:
+        for a_row in res:
+            selected_options.append({"code": a_row[0], "desc": a_row[1]})
+
+    return available_options, selected_options
+
+
+def get_primary_key_data(request, project, form, table_name, keys, row_uuid):
+    schema = get_form_schema(request, project, form)
+    sql = "SELECT {} FROM {}.{} WHERE rowuuid = '{}'".format(
+        ",".join(keys), schema, table_name, row_uuid
+    )
+    res = request.dbsession.execute(sql).fetchone()
+    if res is not None:
+        result = {}
+        for a_key in keys:
+            result[a_key] = res[a_key]
+        return result
+    return None
 
 
 def update_data(request, user, project, form, table_name, row_uuid, field, value):

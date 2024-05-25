@@ -1311,7 +1311,7 @@ def load_routes(config, settings):
     routes.append(
         add_route(
             "cleanmultiselect",
-            "/user/{userid}/project/{projcode}/assistantaccess/form/{formid}/clean/multiselect/{table}/{rowuuid}",
+            "/user/{userid}/project/{projcode}/assistantaccess/form/{formid}/clean/{table}/multiselect/{mseltable}/{rowuuid}",
             CleanMultiSelect,
             "assistant/clean/clean_msel.jinja2",
         )

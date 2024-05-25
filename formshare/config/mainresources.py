@@ -201,7 +201,7 @@ def create_resources(apppath, config):
     r.add_js_resource(
         "formshare",
         "multiselect",
-        "js/plugins/multiselect/multiselect.min.js",
+        "js/plugins/multiselect/multiselect.js",
         None,
     )
 

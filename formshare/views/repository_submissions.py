@@ -195,6 +195,8 @@ class GetFormSubmissions(PrivateView):
                 search_field,
                 search_string,
                 search_operator,
+                "_xform_id_string",
+                form_id,
             )
 
             return call_back + "(" + json.dumps(data) + ")"

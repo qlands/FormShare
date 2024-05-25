@@ -22,6 +22,8 @@ __all__ = [
     "get_name_and_label_from_file",
     "update_lookup_from_csv",
     "get_references_from_file",
+    "get_primary_keys",
+    "get_lookup_relation_fields",
 ]
 
 log = logging.getLogger("formshare")
@@ -480,6 +482,44 @@ def get_dictionary_table_desc(request, project, form, table):
         .filter(DictTable.table_name == table)
         .first()
     )
+
+
+def get_lookup_relation_fields(request, project, form, multiselect_table):
+    """
+    Get the relational fields on a multiselect table
+    """
+    res = (
+        request.dbsession.query(
+            DictField.field_name, DictField.field_rtable, DictField.field_rfield
+        )
+        .filter(DictField.project_id == project)
+        .filter(DictField.form_id == form)
+        .filter(DictField.table_name == multiselect_table)
+        .filter(DictField.field_rlookup == 1)
+        .first()
+    )
+    if res is not None:
+        return res[0], res[1], res[2]
+
+
+def get_primary_keys(request, project, form, table):
+    """
+    Get the primary keys of a table
+    """
+
+    res = (
+        request.dbsession.query(DictField.field_name)
+        .filter(DictField.project_id == project)
+        .filter(DictField.form_id == form)
+        .filter(DictField.table_name == table)
+        .filter(DictField.field_key == 1)
+        .all()
+    )
+    if res is not None:
+        primary_keys = []
+        for a_key in res:
+            primary_keys.append(a_key[0])
+        return primary_keys
 
 
 def get_dictionary_fields(request, project, form, table):

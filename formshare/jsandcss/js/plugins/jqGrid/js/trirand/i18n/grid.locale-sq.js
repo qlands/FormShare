@@ -17,7 +17,7 @@ $.jgrid = $.jgrid || {};
 if(!$.jgrid.hasOwnProperty("regional")) {
 	$.jgrid.regional = [];
 }
-$.jgrid.regional["en"] = {
+$.jgrid.regional["sq"] = {
 	defaults : {
 		recordtext: "Shfaq {0} - {1}/{2}",
 		emptyrecords: "Nuk ka rreshta për të shfaqur",
@@ -37,7 +37,11 @@ $.jgrid.regional["en"] = {
 		nomorerecs : "Nuk ka rreshta të tjerë...",
 		scrollPullup: "Tërhiq për lart për të tjerë...",
 		scrollPulldown : "Tërqiq për poshtë për rifreskim...",
-		scrollRefresh : "Lësho për rifreskim..."
+		scrollRefresh : "Lësho për rifreskim...",
+		valT : "checked",
+		valF : "unchecked",
+		selectLine : "Select row",
+		selectAllLines : "Select all rows"
 	},
 	search : {
 		caption: "Kërko...",
@@ -46,7 +50,15 @@ $.jgrid.regional["en"] = {
 		odata: [{ oper:'eq', text:'baraz'},{ oper:'ne', text:'jo baraz'},{ oper:'lt', text:'me e vogel'},{ oper:'le', text:'me e vogel ose baraz'},{ oper:'gt', text:'me e madhe'},{ oper:'ge', text:'me e madhe ose baraz'},{ oper:'bw', text:'fillon me'},{ oper:'bn', text:'nuk fillon me'},{ oper:'in', text:'brenda'},{ oper:'ni', text:'jo brenda'},{ oper:'ew', text:'mbaron me'},{ oper:'en', text:'nuk mbaron me'},{ oper:'cn', text:'permban'},{ oper:'nc', text:'nuk permban'},{ oper:'nu', text:'eshte bosh'},{ oper:'nn', text:'nuk eshte bosh'}, {oper:'bt', text:'between'}],
 		groupOps: [{ op: "AND", text: "te gjithe" },{ op: "OR",  text: "cfaredo" }],
 		operandTitle : "Kliko per te zgjedhur veprimin.",
-		resetTitle : "Fshi vlerat e kerkimit"
+		resetTitle : "Fshi vlerat e kerkimit",
+		addsubgrup : "Add subgroup",
+		addrule : "Add rule",
+		delgroup : "Delete group",
+		delrule : "Delete rule",
+		Close : "Close",
+		Operand : "Operand : ",
+		Operation : "Oper : ",
+		filterFor : "filter for"
 	},
 	edit : {
 		addCaption: "Shto rresht",
@@ -206,7 +218,8 @@ $.jgrid.regional["en"] = {
 		searchTitle : "Get items with value that:",
 		freeze : "Freeze",
 		unfreeze : "Unfreeze",
-		reorder : "Move to reorder"
+		reorder : "Move to reorder",
+		hovermenu: "Click for column quick actions"
 	}
 };
 }));

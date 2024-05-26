@@ -31,21 +31,25 @@ $.jgrid.regional["ro"] = {
 		emptyrecords: "Nu există înregistrări de vizualizat",
 		loadtext: "Încărcare...",
 		pgtext : "Pagina {0} din {1}",
-		savetext: "Saving...",
-		pgfirst : "First Page",
-		pglast : "Last Page",
-		pgnext : "Next Page",
-		pgprev : "Previous Page",
-		pgrecs : "Records per Page",
-		showhide: "Toggle Expand Collapse Grid",
+		savetext: "Salvare...",
+		pgfirst : "Prima pagină",
+		pglast : "Ultima pagină",
+		pgnext : "Următoarea pagină",
+		pgprev : "Pagina anterioară",
+		pgrecs : "Înregistrări pe pagină",
+		showhide: "Comutați Extindeți Restrângeți grila",
 		// mobile
-		pagerCaption : "Grid::Page Settings",
-		pageText : "Page:",
-		recordPage : "Records per Page",
-		nomorerecs : "No more records...",
-		scrollPullup: "Pull up to load more...",
-		scrollPulldown : "Pull down to refresh...",
-		scrollRefresh : "Release to refresh..."
+		pagerCaption : "Setări Grid::Page",
+		pageText : "Pagina:",
+		recordPage : "Înregistrări pe pagină",
+		nomorerecs : "Nu mai există înregistrări...",
+		scrollPullup: "Trageți în sus pentru a încărca mai multe...",
+		scrollPulldown : "Trageți în jos pentru a reîmprospăta...",
+		scrollRefresh : "Eliberați pentru a reîmprospăta...",
+		valT : "checked",
+		valF : "unchecked",
+		selectLine : "Select row",
+		selectAllLines : "Select all rows"
 	},
 	search : {
 		caption: "Caută...",
@@ -53,8 +57,16 @@ $.jgrid.regional["ro"] = {
 		Reset: "Resetare",
 		odata: [{ oper:'eq', text:"egal"},{ oper:'ne', text:"diferit"},{ oper:'lt', text:"mai mic"},{ oper:'le', text:"mai mic sau egal"},{ oper:'gt', text:"mai mare"},{ oper:'ge', text:"mai mare sau egal"},{ oper:'bw', text:"începe cu"},{ oper:'bn', text:"nu începe cu"},{ oper:'in', text:"se găsește în"},{ oper:'ni', text:"nu se găsește în"},{ oper:'ew', text:"se termină cu"},{ oper:'en', text:"nu se termină cu"},{ oper:'cn', text:"conține"},{ oper:'nc', text:""},{ oper:'nu', text:'is null'},{ oper:'nn', text:'is not null'}, {oper:'bt', text:'between'}],
 		groupOps: [	{ op: "AND", text: "toate" },	{ op: "OR",  text: "oricare" }	],
-		operandTitle : "Click to select search operation.",
-		resetTitle : "Reset Search Value"
+		operandTitle : "Faceți clic pentru a selecta operația de căutare.",
+		resetTitle : "Resetați valoarea căutării",
+		addsubgrup : "Adăugați subgrup",
+		addrule : "Adăugați o regulă",
+		delgroup : "Șterge grupul",
+		delrule : "Ștergeți regula",
+		Close : "Închide",
+		Operand : "Operand : ",
+		Operation : "Operație : ",
+		filterFor : "filter for"
 	},
 	edit : {
 		addCaption: "Adăugare înregistrare",
@@ -75,10 +87,10 @@ $.jgrid.regional["ro"] = {
 			integer: "Vă rugăm introduceți un număr valid",
 			date: "Vă rugăm să introduceți o dată validă",
 			url: "Nu este un URL valid. Prefixul  este necesar('http://' or 'https://')",
-			nodefined : " is not defined!",
-			novalue : " return value is required!",
-			customarray : "Custom function should return array!",
-			customfcheck : "Custom function should be present in case of custom checking!"
+			nodefined : " nu este definit!",
+			novalue : " valoarea returnată este necesară!",
+			customarray : "Funcția personalizată ar trebui să returneze Array!",
+			customfcheck : "Funcția personalizată ar trebui să fie prezentă în cazul verificării personalizate!"
 		}
 	},
 	view : {
@@ -107,10 +119,10 @@ $.jgrid.regional["ro"] = {
 		viewtext: "",
 		viewtitle: "Vizualizează rândul selectat",
 		savetext: "",
-		savetitle: "Save row",
+		savetitle: "Salvați rândul",
 		canceltext: "",
-		canceltitle : "Cancel row editing",
-		selectcaption : "Actions..."
+		canceltitle : "Anulați editarea rândurilor",
+		selectcaption : "Acțiuni..."
 	},
 	col : {
 		caption: "Arată/Ascunde coloanele",
@@ -176,16 +188,17 @@ $.jgrid.regional["ro"] = {
 		idName : 'id'
 	},
 	colmenu : {
-		sortasc : "Sort Ascending",
-		sortdesc : "Sort Descending",
-		columns : "Columns",
-		filter : "Filter",
-		grouping : "Group By",
-		ungrouping : "Ungroup",
-		searchTitle : "Get items with value that:",
+		sortasc : "Sortare ascendentă",
+		sortdesc : "Sortează descrescător",
+		columns : "Coloane",
+		filter : "Filtru",
+		grouping : "Grupează după",
+		ungrouping : "Eliminarea Gruparea",
+		searchTitle : "Obțineți elemente cu valoare care:",
 		freeze : "Freeze",
 		unfreeze : "Unfreeze",
-		reorder : "Move to reorder"
+		reorder : "Mutați pentru a reordona",
+		hovermenu: "Faceți clic pentru acțiuni rapide pe coloană"
 	}
 };
 }));

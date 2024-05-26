@@ -4,6 +4,7 @@
  * Traduccion corregida y ampliada por Faserline, S.L. 
  * http://www.faserline.com
  * Traduccion corregida y ampliada por Fernán Castro Asensio
+ * Traducción corregida y ampliada por Luis Sánchez
  * Dual licensed under the MIT and GPL licenses:
  * http://www.opensource.org/licenses/mit-license.php
  * http://www.gnu.org/licenses/gpl.html
@@ -36,27 +37,39 @@ $.jgrid.regional["es"] = {
 		pgtext : "Página {0} de {1}",
 		pgfirst : "Primera Página",
 		pglast : "Última Página",
-		pgnext : "Siguiente Página",
-		pgprev : "Anterior Página",
-		pgrecs : "Registros por Página",
+		pgnext : "Página Siguiente",
+		pgprev : "Página Anterior",
+		pgrecs : "Registros por página",
 		showhide: "Alternar Contraer Expandir Grid",
 		// mobile
-		pagerCaption : "Grid::Configurar Página",
+		pagerCaption : "Grid::Configurar página",
 		pageText : "Página:",
-		recordPage : "Registros por Página",
+		recordPage : "Registros por página",
 		nomorerecs : "No más registros...",
 		scrollPullup: "Arrastrar arriba para cargar más...",
 		scrollPulldown : "Arrastrar arriba para refrescar...",
-		scrollRefresh : "Soltar para refrescar..."		
+		scrollRefresh : "Soltar para refrescar...",
+		valT : "marcada",
+		valF : "sin marcar",
+		selectLine : "Seleccionar fila",
+		selectAllLines : "Seleccionar todas las filas"		
 	},
 	search : {
 	    caption: "Búsqueda...",
 	    Find: "Buscar",
 	    Reset: "Limpiar",
-	    odata: [{ oper:'eq', text:"igual "},{ oper:'ne', text:"no igual a"},{ oper:'lt', text:"menor que"},{ oper:'le', text:"menor o igual que"},{ oper:'gt', text:"mayor que"},{ oper:'ge', text:"mayor o igual a"},{ oper:'bw', text:"empiece por"},{ oper:'bn', text:"no empiece por"},{ oper:'in', text:"está en"},{ oper:'ni', text:"no está en"},{ oper:'ew', text:"termina por"},{ oper:'en', text:"no termina por"},{ oper:'cn', text:"contiene"},{ oper:'nc', text:"no contiene"},{ oper:'nu', text:'is null'},{ oper:'nn', text:'is not null'}, {oper:'bt', text:'between'}],
+	    odata: [{ oper:'eq', text:"igual "},{ oper:'ne', text:"no igual a"},{ oper:'lt', text:"menor que"},{ oper:'le', text:"menor o igual que"},{ oper:'gt', text:"mayor que"},{ oper:'ge', text:"mayor o igual a"},{ oper:'bw', text:"empiece por"},{ oper:'bn', text:"no empiece por"},{ oper:'in', text:"está en"},{ oper:'ni', text:"no está en"},{ oper:'ew', text:"termina por"},{ oper:'en', text:"no termina por"},{ oper:'cn', text:"contiene"},{ oper:'nc', text:"no contiene"},{ oper:'nu', text:'es nulo'},{ oper:'nn', text:'no es nulo'}, {oper:'bt', text:'entre'}],
 	    groupOps: [	{ op: "AND", text: "todo" },	{ op: "OR",  text: "cualquier" }	],
-		operandTitle : "Click para seleccionar la operación de búsqueda.",
-		resetTitle : "Resetear valor de Búsqueda"
+		operandTitle : "Clic para seleccionar la operación de búsqueda.",
+		resetTitle : "Reiniciar valores de búsqueda",
+		addsubgrup : "Agregar subgrupo",
+		addrule : "Agregar regla",
+		delgroup : "Borrar grupo",
+		delrule : "Borrar regla",
+		Close : "Cerrar",
+		Operand : "Operador : ",
+		Operation : "Oper : ",
+		filterFor : "filtro para"
 	},
 	edit : {
 	    addCaption: "Agregar registro",
@@ -75,12 +88,12 @@ $.jgrid.regional["es"] = {
 	        maxValue:"El valor debe ser menor o igual a ",
 	        email: "no es una dirección de correo válida",
 	        integer: "Introduzca un valor entero",
-			date: "Introduza una fecha correcta ",
-			url: "no es una URL válida. Prefijo requerido ('http://' or 'https://')",
-			nodefined : " no está definido.",
-			novalue : " valor de retorno es requerido.",
-			customarray : "La función personalizada debe devolver un array.",
-			customfcheck : "La función personalizada debe estar presente en el caso de validación personalizada."
+		date: "Introduzca una fecha correcta ",
+		url: "no es una URL válida. Prefijo requerido ('http://' or 'https://')",
+		nodefined : " no está definido.",
+		novalue : " valor de retorno es requerido.",
+		customarray : "La función personalizada debe devolver un array.",
+		customfcheck : "La función personalizada debe estar presente en el caso de validación personalizada."
 		}
 	},
 	view : {
@@ -94,9 +107,9 @@ $.jgrid.regional["es"] = {
 	    bCancel: "Cancelar"
 	},
 	nav : {
-		edittext: " ",
+	    edittext: " ",
 	    edittitle: "Modificar fila seleccionada",
-		addtext:" ",
+	    addtext:" ",
 	    addtitle: "Agregar nueva fila",
 	    deltext: " ",
 	    deltitle: "Eliminar fila seleccionada",
@@ -112,7 +125,7 @@ $.jgrid.regional["es"] = {
 		savetitle: "Guardar fila",
 		canceltext: "",
 		canceltitle : "Cancelar edición de fila",
-		selectcaption : "Actions..."
+		selectcaption : "Acciones..."
 	},
 	col : {
 	    caption: "Mostrar/ocultar columnas",
@@ -123,7 +136,7 @@ $.jgrid.regional["es"] = {
 		errcap : "Error",
 		nourl : "No se ha especificado una URL",
 		norecords: "No hay datos para procesar",
-	    model : "Las columnas de nombres son diferentes de las columnas de modelo"
+	    model : "Las columnas de nombres son diferentes de las columnas del modelo"
 	},
 	formatter : {
 		integer : {thousandsSeparator: ".", defaultValue: '0'},
@@ -132,7 +145,7 @@ $.jgrid.regional["es"] = {
 		date : {
 			dayNames:   [
 				"Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa",
-				"Domingo", "Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado"
+				"Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"
 			],
 			monthNames: [
 				"Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic",
@@ -166,16 +179,17 @@ $.jgrid.regional["es"] = {
 		idName : 'id'
 	},
 	colmenu : {
-		sortasc : "Sort Ascending",
-		sortdesc : "Sort Descending",
-		columns : "Columns",
-		filter : "Filter",
-		grouping : "Group By",
-		ungrouping : "Ungroup",
-		searchTitle : "Get items with value that:",
-		freeze : "Freeze",
-		unfreeze : "Unfreeze",
-		reorder : "Move to reorder"
+		sortasc : "Orden Ascendente",
+		sortdesc : "Orden Descendente",
+		columns : "Columnas",
+		filter : "Filtrar",
+		grouping : "Agrupar por",
+		ungrouping : "Desagrupar",
+		searchTitle : "Obtener elementos con un valor que:",
+		freeze : "Inmovilizar",
+		unfreeze : "Movilizar",
+		reorder : "Mover para reordenar",
+		hovermenu: "Click para accion rápida de columna"
 	}
 };
 }));

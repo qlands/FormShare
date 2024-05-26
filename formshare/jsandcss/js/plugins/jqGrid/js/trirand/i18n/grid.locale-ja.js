@@ -45,7 +45,11 @@ $.jgrid.regional["ja"] = {
 		nomorerecs : "\u30ec\u30b3\u30fc\u30c9\u304c\u3042\u308a\u307e\u305b\u3093...",
 		scrollPullup: "\u4e0a\u306b\u30b9\u30af\u30ed\u30fc\u30eb\u3057\u3066\u8aad\u307f\u8fbc\u307f...",
 		scrollPulldown : "\u4e0b\u306b\u30b9\u30af\u30ed\u30fc\u30eb\u3057\u3066\u66f4\u65b0...",
-		scrollRefresh : "\u653e\u3057\u3066\u66f4\u65b0..."
+		scrollRefresh : "\u653e\u3057\u3066\u66f4\u65b0...",
+		valT : "checked",
+		valF : "unchecked",
+		selectLine : "Select row",
+		selectAllLines : "Select all rows"
 	},
 	search : {
 	    caption: "\u691c\u7d22...",
@@ -68,7 +72,15 @@ $.jgrid.regional["ja"] = {
                 text: "\u3044\u305A\u308C\u304B\u306E"
             }],
 		operandTitle : "\u30af\u30ea\u30c3\u30af\u3057\u3066\u691c\u7d22\u64cd\u4f5c\u3092\u9078\u629e",
-		resetTitle : "\u691c\u7d22\u5024\u3092\u30ea\u30bb\u30c3\u30c8"
+		resetTitle : "\u691c\u7d22\u5024\u3092\u30ea\u30bb\u30c3\u30c8",
+		addsubgrup : "Add subgroup",
+		addrule : "Add rule",
+		delgroup : "Delete group",
+		delrule : "Delete rule",
+		Close : "Close",
+		Operand : "Operand : ",
+		Operation : "Oper : ",
+		filterFor : "filter for"
 	},
 	edit : {
 	    addCaption: "\u30ec\u30b3\u30fc\u30c9\u8ffd\u52a0",
@@ -88,7 +100,7 @@ $.jgrid.regional["ja"] = {
 	        email: "e-mail\u304c\u6b63\u3057\u304f\u3042\u308a\u307e\u305b\u3093\u3002",
 	        integer: "\u6b63\u3057\u3044\u6574\u6570\u5024\u3092\u5165\u529b\u3057\u3066\u4e0b\u3055\u3044\u3002",
     			date: "\u6b63\u3057\u3044\u5024\u3092\u5165\u529b\u3057\u3066\u4e0b\u3055\u3044\u3002",
-          url: "\u306F\u6709\u52B9\u306AURL\u3067\u306F\u3042\u308A\u307E\u305B\u3093\u3002\20\u30D7\u30EC\u30D5\u30A3\u30C3\u30AF\u30B9\u304C\u5FC5\u8981\u3067\u3059\u3002 ('http://' \u307E\u305F\u306F 'https://')",
+          url: "\u306F\u6709\u52B9\u306AURL\u3067\u306F\u3042\u308A\u307E\u305B\u3093\u3002\u30D7\u30EC\u30D5\u30A3\u30C3\u30AF\u30B9\u304C\u5FC5\u8981\u3067\u3059\u3002 ('http://' \u307E\u305F\u306F 'https://')",
           nodefined: " \u304C\u5B9A\u7FA9\u3055\u308C\u3066\u3044\u307E\u305B\u3093",
           novalue: " \u623B\u308A\u5024\u304C\u5FC5\u8981\u3067\u3059",
           customarray: "\u30AB\u30B9\u30BF\u30E0\u95A2\u6570\u306F\u914D\u5217\u3092\u8FD4\u3059\u5FC5\u8981\u304C\u3042\u308A\u307E\u3059",
@@ -202,7 +214,8 @@ $.jgrid.regional["ja"] = {
 		searchTitle : "Get items with value that:",
 		freeze : "Freeze",
 		unfreeze : "Unfreeze",
-		reorder : "Move to reorder"
+		reorder : "Move to reorder",
+		hovermenu: "Click for column quick actions"
 	}
 };
 }));

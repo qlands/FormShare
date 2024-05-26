@@ -39,7 +39,11 @@ $.jgrid.regional["nl"] = {
 			nomorerecs : "No more records...",
 			scrollPullup: "Pull up to load more...",
 			scrollPulldown : "Pull down to refresh...",
-			scrollRefresh : "Release to refresh..."
+			scrollRefresh : "Release to refresh...",
+			valT : "checked",
+			valF : "unchecked",
+			selectLine : "Select row",
+			selectAllLines : "Select all rows"
         },
         search:
         {
@@ -49,7 +53,15 @@ $.jgrid.regional["nl"] = {
             odata: [{ oper:'eq', text:"gelijk aan"},{ oper:'ne', text:"niet gelijk aan"},{ oper:'lt', text:"kleiner dan"},{ oper:'le', text:"kleiner dan of gelijk aan"},{ oper:'gt', text:"groter dan"},{ oper:'ge', text:"groter dan of gelijk aan"},{ oper:'bw', text:"begint met"},{ oper:'bn', text:"begint niet met"},{ oper:'in', text:"is in"},{ oper:'ni', text:"is niet in"},{ oper:'ew', text:"eindigt met"},{ oper:'en', text:"eindigt niet met"},{ oper:'cn', text:"bevat"},{ oper:'nc', text:"bevat niet"},{ oper:'nu', text:'is null'},{ oper:'nn', text:'is not null'}, {oper:'bt', text:'between'}],
             groupOps: [{ op: "AND", text: "alle" }, { op: "OR", text: "een van de"}],
 			operandTitle : "Klik om de zoekterm te selecteren.",
-			resetTitle : "Herstel zoekterm"
+			resetTitle : "Herstel zoekterm",
+			addsubgrup : "Add subgroup",
+			addrule : "Add rule",
+			delgroup : "Delete group",
+			delrule : "Delete rule",
+			Close : "Close",
+			Operand : "Operand : ",
+			Operation : "Oper : ",
+			filterFor : "filter for"
         },
         edit:
         {
@@ -195,7 +207,8 @@ $.jgrid.regional["nl"] = {
 		searchTitle : "Get items with value that:",
 		freeze : "Freeze",
 		unfreeze : "Unfreeze",
-		reorder : "Move to reorder"
+		reorder : "Move to reorder",
+		hovermenu: "Click for column quick actions"
 	}
     };
 }));

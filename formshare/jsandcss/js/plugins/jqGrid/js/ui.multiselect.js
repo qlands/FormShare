@@ -163,7 +163,7 @@ $.widget("ui.multiselect", {
 	},
 	_getOptionNode: function(option) {
 		option = $(option);
-		var node = $('<li class="ui-state-default ui-element" title="'+option.text()+'"><span class="ui-icon"/>'+option.text()+'<a href="#" class="action"><span class="ui-corner-all ui-icon"/></a></li>').hide();
+		var node = $('<li class="ui-state-default ui-element" title="'+option.text()+'"><span class="ui-icon"></span>'+option.text()+'<a href="#" class="action"><span class="ui-corner-all ui-icon"></span></a></li>').hide();
 		node.data('optionLink', option);
 		return node;
 	},
@@ -287,19 +287,19 @@ $.widget("ui.multiselect", {
 		
 		// make draggable
 		if (this.options.sortable) {
-  		elements.each(function() {
-  			$(this).parent().draggable({
-  	      connectToSortable: that.selectedList,
-  				helper: function() {
-  					var selectedItem = that._cloneWithData($(this)).width($(this).width() - 50);
-  					selectedItem.width($(this).width());
-  					return selectedItem;
-  				},
-  				appendTo: that.container,
-  				containment: that.container,
-  				revert: 'invalid'
-  	    });
-  		});		  
+			elements.each(function() {
+				$(this).parent().draggable({
+					connectToSortable: that.selectedList,
+					helper: function() {
+						var selectedItem = that._cloneWithData($(this)).width($(this).width() - 50);
+						selectedItem.width($(this).width());
+						return selectedItem;
+					},
+					appendTo: that.container,
+					containment: that.container,
+					revert: 'invalid'
+				});
+			});		  
 		}
 	},
 	_registerRemoveEvents: function(elements) {

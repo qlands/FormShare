@@ -31,13 +31,17 @@ $.jgrid.regional["it"] = {
 		pgrecs : "Records per Pagina",
 		showhide: "Espandi o collassa griglia",
 		// mobile
-		pagerCaption : "Griglia::Impostaioni della pagina",
+		pagerCaption : "Griglia::Impostazioni della pagina",
 		pageText : "Pagina:",
 		recordPage : "Records per Pagina",
 		nomorerecs : "Non ci sono altri record...",
 		scrollPullup: "Trascina verso l'alto per altri...",
 		scrollPulldown : "Trascina verso il basso per aggiornare...",
-		scrollRefresh : "Rilascia per aggiornare..."
+		scrollRefresh : "Rilascia per aggiornare...",
+		valT : "checked",
+		valF : "unchecked",
+		selectLine : "Select row",
+		selectAllLines : "Select all rows"
 	},
 	search : {
 		caption: "Cerca...",
@@ -46,7 +50,15 @@ $.jgrid.regional["it"] = {
 		odata: [{ oper:'eq', text:'uguale'},{ oper:'ne', text:'diverso'},{ oper:'lt', text:'minore'},{ oper:'le', text:'minore o uguale'},{ oper:'gt', text:'maggiore'},{ oper:'ge', text:'maggiore o uguale'},{ oper:'bw', text:'inizia per'},{ oper:'bn', text:'non inizia per'},{ oper:'in', text:'è in'},{ oper:'ni', text:'non è in'},{ oper:'ew', text:'finisce per'},{ oper:'en', text:'non finisce per'},{ oper:'cn', text:'contiene'},{ oper:'nc', text:'non contiene'},{ oper:'nu', text:'è null'},{ oper:'nn', text:'non è null'}, {oper:'bt', text:'between'}],
 		groupOps: [{ op: "AND", text: "tutti" },{ op: "OR",  text: "ciascuno" }],
 		operandTitle : "Clicca sull'opzione di ricerca scelta.",
-		resetTitle : "Resetta valori di ricerca"
+		resetTitle : "Resetta valori di ricerca",
+		addsubgrup : "Aggiungi Sottogruppo",
+		addrule : "Aggiungi Regola",
+		delgroup : "Cancella Sottogruppo",
+		delrule : "Cancella Regola",
+		Close : "Close",
+		Operand : "Operand : ",
+		Operation : "Oper : ",
+		filterFor : "filter for"
 	},
 	edit : {
 		addCaption: "Aggiungi Record",
@@ -81,7 +93,7 @@ $.jgrid.regional["it"] = {
 	del : {
 		caption: "Cancella",
 		msg: "Cancellare i record selezionati?",
-		bSubmit: "Canella",
+		bSubmit: "Cancella",
 		bCancel: "Annulla"
 	},
 	nav : {
@@ -103,7 +115,7 @@ $.jgrid.regional["it"] = {
 		savetitle: "Salva riga",
 		canceltext: "",
 		canceltitle : "Annulla modifica riga",
-		selectcaption : "Actions..."
+		selectcaption : "Azioni..."
 	},
 	col : {
 		caption: "Seleziona colonne",
@@ -166,16 +178,17 @@ $.jgrid.regional["it"] = {
 		idName:"id"
 	},
 	colmenu : {
-		sortasc : "Sort Ascending",
-		sortdesc : "Sort Descending",
-		columns : "Columns",
-		filter : "Filter",
-		grouping : "Group By",
-		ungrouping : "Ungroup",
-		searchTitle : "Get items with value that:",
-		freeze : "Freeze",
-		unfreeze : "Unfreeze",
-		reorder : "Move to reorder"
+		sortasc : "Ordinamento Ascendente",
+		sortdesc : "Ordinamento Discendente",
+		columns : "Colonne",
+		filter : "Filtro",
+		grouping : "Raggruppa",
+		ungrouping : "Separa",
+		searchTitle : "Cerca righe con i valori:",
+		freeze : "Blocca",
+		unfreeze : "Sblocca",
+		reorder : "Sposta per riordinare",
+		hovermenu: "Click for column quick actions"
 	}
 };
 }));

@@ -45,7 +45,11 @@ $.jgrid.regional["tr"] = {
 		nomorerecs : "No more records...",
 		scrollPullup: "Pull up to load more...",
 		scrollPulldown : "Pull down to refresh...",
-		scrollRefresh : "Release to refresh..."
+		scrollRefresh : "Release to refresh...",
+		valT : "checked",
+		valF : "unchecked",
+		selectLine : "Select row",
+		selectAllLines : "Select all rows"
 	},
 	search : {
 	    caption: "Arama...",
@@ -54,7 +58,15 @@ $.jgrid.regional["tr"] = {
 	    odata: [{ oper:'eq', text:"eşit"},{ oper:'ne', text:"eşit değil"},{ oper:'lt', text:"daha az"},{ oper:'le', text:"daha az veya eşit"},{ oper:'gt', text:"daha fazla"},{ oper:'ge', text:"daha fazla veya eşit"},{ oper:'bw', text:"ile başlayan"},{ oper:'bn', text:"ile başlamayan"},{ oper:'in', text:"içinde"},{ oper:'ni', text:"içinde değil"},{ oper:'ew', text:"ile biten"},{ oper:'en', text:"ile bitmeyen"},{ oper:'cn', text:"içeren"},{ oper:'nc', text:"içermeyen"},{ oper:'nu', text:'is null'},{ oper:'nn', text:'is not null'}, {oper:'bt', text:'between'}],
 	    groupOps: [	{ op: "VE", text: "tüm" },	{ op: "VEYA",  text: "herhangi" }],
 		operandTitle : "Click to select search operation.",
-		resetTitle : "Reset Search Value"
+		resetTitle : "Reset Search Value",
+		addsubgrup : "Add subgroup",
+		addrule : "Add rule",
+		delgroup : "Delete group",
+		delrule : "Delete rule",
+		Close : "Close",
+		Operand : "Operand : ",
+		Operation : "Oper : ",
+		filterFor : "filter for"
 	},
 	edit : {
 	    addCaption: "Kayıt Ekle",
@@ -172,7 +184,8 @@ $.jgrid.regional["tr"] = {
 		searchTitle : "Get items with value that:",
 		freeze : "Freeze",
 		unfreeze : "Unfreeze",
-		reorder : "Move to reorder"
+		reorder : "Move to reorder",
+		hovermenu: "Click for column quick actions"
 	}
 };
 }));

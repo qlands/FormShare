@@ -47,7 +47,11 @@ $.jgrid.regional["ru"] = {
 		nomorerecs : "Нет больше записей...",
 		scrollPullup: "Потяните, чтобы загрузить более...",
 		scrollPulldown : "Потяните вниз чтобы обновить...",
-		scrollRefresh : "Отпустите, чтобы обновить..."
+		scrollRefresh : "Отпустите, чтобы обновить...",
+		valT : "checked",
+		valF : "unchecked",
+		selectLine : "Select row",
+		selectAllLines : "Select all rows"
 	},
 	search : {
 		caption: "Поиск...",
@@ -56,7 +60,15 @@ $.jgrid.regional["ru"] = {
 		odata: [{ oper:'eq', text:"равно"},{ oper:'ne', text:"не равно"},{ oper:'lt', text:"меньше"},{ oper:'le', text:"меньше или равно"},{ oper:'gt', text:"больше"},{ oper:'ge', text:"больше или равно"},{ oper:'bw', text:"начинается с"},{ oper:'bn', text:"не начинается с"},{ oper:'in', text:"находится в"},{ oper:'ni', text:"не находится в"},{ oper:'ew', text:"заканчивается на"},{ oper:'en', text:"не заканчивается на"},{ oper:'cn', text:"содержит"},{ oper:'nc', text:"не содержит"},{ oper:'nu', text:"равно NULL"},{ oper:'nn', text:"не равно NULL"}, {oper:'bt', text:'между'}],
 		groupOps: [	{ op: "AND", text: "все" }, { op: "OR", text: "любой" }],
 		operandTitle : "Выбрать поисковую операцию.",
-		resetTitle : "Сбросить поиск"
+		resetTitle : "Сбросить поиск",
+		addsubgrup : "Добавить группу",
+		addrule : "Добавить правило",
+		delgroup : "Удалить группу",
+		delrule : "Удалить правило",
+		Close : "Закрыть",
+		Operand : "Операнд : ",
+		Operation : "Опер. : ",
+		filterFor : "filter for"
 	},
 	edit : {
 		addCaption: "Добавить запись",
@@ -175,7 +187,8 @@ $.jgrid.regional["ru"] = {
 		searchTitle : "Строки со значениями",
 		freeze : "Закрепление",
 		unfreeze : "Отмена закрепление",
-		reorder : "Переместить в порядок"
+		reorder : "Переместить в порядок",
+		hovermenu: "Щелкните, чтобы перейти к быстрым действиям в столбце "
 	}
 };
 }));

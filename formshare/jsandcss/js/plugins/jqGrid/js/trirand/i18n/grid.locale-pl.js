@@ -50,7 +50,11 @@ $.jgrid.regional["pl"] = {
 		nomorerecs : "No more records...",
 		scrollPullup: "Pull up to load more...",
 		scrollPulldown : "Pull down to refresh...",
-		scrollRefresh : "Release to refresh..."
+		scrollRefresh : "Release to refresh...",
+		valT : "checked",
+		valF : "unchecked",
+		selectLine : "Select row",
+		selectAllLines : "Select all rows"
 	},
 	search : {
 		caption: "Wyszukiwanie...",
@@ -59,7 +63,15 @@ $.jgrid.regional["pl"] = {
 		odata: [{ oper:'eq', text:"dokładnie"},{ oper:'ne', text:"różne od"},{ oper:'lt', text:"mniejsze od"},{ oper:'le', text:"mniejsze lub równe"},{ oper:'gt', text:"większe od"},{ oper:'ge', text:"większe lub równe"},{ oper:'bw', text:"zaczyna się od"},{ oper:'bn', text:"nie zaczyna się od"},{ oper:'in', text:"jest w"},{ oper:'ni', text:"nie jest w"},{ oper:'ew', text:"kończy się na"},{ oper:'en', text:"nie kończy się na"},{ oper:'cn', text:"zawiera"},{ oper:'nc', text:"nie zawiera"},{ oper:'nu', text:'is null'},{ oper:'nn', text:'is not null'}, {oper:'bt', text:'between'}],
 		groupOps: [	{ op: "AND", text: "oraz" },	{ op: "OR",  text: "lub" }	],
 		operandTitle : "Click to select search operation.",
-		resetTitle : "Reset Search Value"
+		resetTitle : "Reset Search Value",
+		addsubgrup : "Add subgroup",
+		addrule : "Add rule",
+		delgroup : "Delete group",
+		delrule : "Delete rule",
+		Close : "Close",
+		Operand : "Operand : ",
+		Operation : "Oper : ",
+		filterFor : "filter for"
 	},
 	edit : {
 		addCaption: "Dodaj rekord",
@@ -178,7 +190,8 @@ $.jgrid.regional["pl"] = {
 		searchTitle : "Get items with value that:",
 		freeze : "Freeze",
 		unfreeze : "Unfreeze",
-		reorder : "Move to reorder"
+		reorder : "Move to reorder",
+		hovermenu: "Click for column quick actions"
 	}
 };
 }));

@@ -45,7 +45,11 @@ $.jgrid.regional["id"] = {
 		nomorerecs : "No more records...",
 		scrollPullup: "Pull up to load more...",
 		scrollPulldown : "Pull down to refresh...",
-		scrollRefresh : "Release to refresh..."
+		scrollRefresh : "Release to refresh...",
+		valT : "checked",
+		valF : "unchecked",
+		selectLine : "Select row",
+		selectAllLines : "Select all rows"
 	},
 	search : {
 		caption: "Pencarian",
@@ -54,7 +58,15 @@ $.jgrid.regional["id"] = {
 		odata: [{ oper:'eq', text:"sama dengan"},{ oper:'ne', text:"tidak sama dengan"},{ oper:'lt', text:"kurang dari"},{ oper:'le', text:"kurang dari atau sama dengan"},{ oper:'gt', text:"lebih besar"},{ oper:'ge', text:"lebih besar atau sama dengan"},{ oper:'bw', text:"dimulai dengan"},{ oper:'bn', text:"tidak dimulai dengan"},{ oper:'in', text:"di dalam"},{ oper:'ni', text:"tidak di dalam"},{ oper:'ew', text:"diakhiri dengan"},{ oper:'en', text:"tidak diakhiri dengan"},{ oper:'cn', text:"mengandung"},{ oper:'nc', text:"tidak mengandung"},{ oper:'nu', text:'is null'},{ oper:'nn', text:'is not null'}, {oper:'bt', text:'between'}],
 		groupOps: [	{ op: "AND", text: "all" },	{ op: "OR",  text: "any" }	],
 		operandTitle : "Click to select search operation.",
-		resetTitle : "Reset Search Value"
+		resetTitle : "Reset Search Value",
+		addsubgrup : "Add subgroup",
+		addrule : "Add rule",
+		delgroup : "Delete group",
+		delrule : "Delete rule",
+		Close : "Close",
+		Operand : "Operand : ",
+		Operation : "Oper : ",
+		filterFor : "filter for"
 	},
 	edit : {
 		addCaption: "Tambah Data",
@@ -214,7 +226,8 @@ $.jgrid.regional["id"] = {
 		searchTitle : "Get items with value that:",
 		freeze : "Freeze",
 		unfreeze : "Unfreeze",
-		reorder : "Move to reorder"
+		reorder : "Move to reorder",
+		hovermenu: "Click for column quick actions"
 	}
 };
 }));

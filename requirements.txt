@@ -152,7 +152,7 @@ typing_extensions==4.7.1
 tzdata==2023.3
 unicodecsv==0.14.1
 unittest2==1.1.0
-urllib3==1.26.18
+urllib3==1.26.19
 validators==0.20.0
 venusian==3.0.0
 vine==5.0.0

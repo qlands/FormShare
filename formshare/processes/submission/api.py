@@ -1274,6 +1274,99 @@ def get_primary_key_data(request, project, form, table_name, keys, row_uuid):
     return None
 
 
+def update_multiselect_data(
+    request,
+    user,
+    project,
+    form,
+    row_uuid,
+    parent_table,
+    parent_field,
+    multiselect_table,
+    multiselect_field,
+    primary_key_data,
+    multiselect_values,
+):
+    _ = request.translate
+    sql_url = request.registry.settings.get("sqlalchemy.url")
+    schema = get_form_schema(request, project, form)
+
+    # Update the multiselect field in the parent table
+    string_value = " ".join(multiselect_values)
+    string_value = string_value.strip()
+    parent_sql = (
+        "UPDATE "
+        + schema
+        + "."
+        + parent_table
+        + " SET "
+        + parent_field
+        + " = '"
+        + string_value
+        + "'"
+    )
+    parent_sql = parent_sql + " WHERE rowuuid = '" + row_uuid + "'"
+    parent_sql = parent_sql.replace("''", "null")
+
+    delete_array = []
+    for key, value in primary_key_data.items():
+        delete_array.append("{} = '{}'".format(key, value))
+
+    # Delete the current multiselect values
+    delete_sql = "DELETE FROM {}.{} WHERE {}".format(
+        schema, multiselect_table, " AND ".join(delete_array)
+    )
+
+    # Insert the selected values
+    insert_array = []
+    if len(multiselect_values) > 0:
+        columns_array = []
+        for key in primary_key_data.keys():
+            columns_array.append(key)
+        columns_array.append("rowindex")
+        columns_array.append(multiselect_field)
+        index = 1
+        for a_value in multiselect_values:
+            value_array = []
+            for pk_value in primary_key_data.values():
+                value_array.append("{}".format(pk_value))
+            value_array.append("{}".format(index))
+            value_array.append("{}".format(a_value))
+            insert_sql = "INSERT INTO {}.{} ({}) VALUES ({})".format(
+                schema,
+                multiselect_table,
+                ",".join(columns_array),
+                ",".join(value_array),
+            )
+            insert_array.append(insert_sql)
+            index = index + 1
+
+    engine = create_engine(sql_url, poolclass=NullPool)
+    try:
+        session = Session(bind=engine)
+        session.execute("SET @odktools_current_user = '" + user + "'")
+        # print(parent_sql)
+        # print(delete_sql)
+        # for an_insert in insert_array:
+        #     print(an_insert)
+        session.execute(parent_sql)
+        session.execute(delete_sql)
+        for an_insert in insert_array:
+            session.execute(an_insert)
+
+        session.commit()
+        engine.dispose()
+        return True
+    except exc.IntegrityError as e:
+        engine.dispose()
+        log.error(
+            "Error while updating multiselect table {} schema {} parent table {} rowuuid {}. Error {}".format(
+                multiselect_table, schema, parent_table, row_uuid, str(e)
+            )
+        )
+        return False
+
+
 def update_data(request, user, project, form, table_name, row_uuid, field, value):
     _ = request.translate
     sql_url = request.registry.settings.get("sqlalchemy.url")

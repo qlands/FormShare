@@ -23,6 +23,7 @@ from formshare.processes.db import (
     get_project_id_from_name,
     add_new_form,
     form_exists,
+    form_version_exists,
     get_form_directory,
     update_form_directory,
     get_form_xml_file,
@@ -1187,6 +1188,11 @@ def upload_odk_form(
         eid = root.findall(".//{" + nsmap + "}data")
         if eid:
             form_id = eid[0].get("id")
+            form_version = eid[0].get("version", None)
+            if form_version is None:
+                return False, _(
+                    "The form does not have a version. Add the version column to the settings sheet."
+                )
             if re.match(r"^[A-Za-z0-9_]+$", form_id):
                 form_title = root.findall(".//{" + h_nsmap + "}title")
                 if not form_exists(request, project_id, form_id):
@@ -1406,6 +1412,7 @@ def upload_odk_form(
                                 )
                             form_data["project_id"] = project_id
                             form_data["form_id"] = form_id
+                            form_data["form_version"] = form_version
                             if for_merging:
                                 form_data["form_incversion"] = 1
                             form_data["form_name"] = form_title[0].text
@@ -1666,418 +1673,445 @@ def update_odk_form(
         eid = root.findall(".//{" + nsmap + "}data")
         if eid:
             form_id = eid[0].get("id")
+            form_version = eid[0].get("version")
+            if form_version is None:
+                return False, _(
+                    "The form does not have a version. Add the version column to the settings sheet."
+                )
             if re.match(r"^[A-Za-z0-9_]+$", form_id):
                 if form_id == for_form_id:
                     form_title = root.findall(".//{" + h_nsmap + "}title")
                     if form_exists(request, project_id, form_id):
-                        external_files = []
-                        required_files = []
-                        extra_columns_in_survey = []
-                        extra_columns_in_choices = []
-                        extra_columns_invalid = []
-                        if itemsets_csv is not None:
-                            external_files.append(itemsets_csv)
-                        error, message = check_jxform_file(
-                            request,
-                            user_id,
-                            project_id,
-                            form_id,
-                            survey_file,
-                            create_file,
-                            insert_file,
-                            primary_key,
-                            external_files,
-                            False,
-                            required_files,
-                            None,
-                            extra_columns_in_survey,
-                            extra_columns_in_choices,
-                            extra_columns_invalid,
-                        )
-
-                        form_caseselector_file = None
-                        if project_case == 1:
-                            if error == 0:
-                                if form_casetype == 1:
-                                    fields = get_fields_from_table_in_file(
-                                        create_file, "maintable"
-                                    )
-                                    case_id_type_correct = False
-                                    for a_field in fields:
-                                        if a_field["name"] == primary_key:
-                                            if (
-                                                a_field["type"] == "varchar"
-                                                or a_field["type"] == "text"
-                                                or (
-                                                    a_field["type"] == "integer"
-                                                    and a_field["decsize"] == 0
-                                                )
-                                            ):
-                                                case_id_type_correct = True
-                                    if not case_id_type_correct:
-                                        error = 1
-                                        message = _(
-                                            "The variable {} used to identify the cases is invalid. "
-                                            "Only text, calculates or integers are allowed.".format(
-                                                form_caselabel
-                                            )
-                                        )
-
-                                    case_label_found = False
-                                    for a_field in fields:
-                                        if a_field["name"] == form_caselabel:
-                                            if (
-                                                a_field["type"] == "varchar"
-                                                or a_field["type"] == "text"
-                                                or (
-                                                    a_field["type"] == "integer"
-                                                    and a_field["decsize"] == 0
-                                                )
-                                            ):
-                                                case_label_found = True
-                                    if not case_label_found:
-                                        error = 1
-                                        message = _(
-                                            "The variable {} used to label cases was not found or is invalid. "
-                                            "Only text, calculates or integers are allowed.".format(
-                                                form_caselabel
-                                            )
-                                        )
-
-                                    case_datetime_found = False
-                                    for a_field in fields:
-                                        if a_field["name"] == form_casedatetime:
-                                            if (
-                                                a_field["type"] == "date"
-                                                or a_field["type"] == "datetime"
-                                            ):
-                                                case_datetime_found = True
-
-                                    if not case_datetime_found:
-                                        error = 1
-                                        message = _(
-                                            "The variable {} used to record a date or date and time was not found"
-                                            " or is invalid. The variable must be date or datetime.".format(
-                                                form_casedatetime
-                                            )
-                                        )
-                                else:
-                                    fields = get_fields_from_table_in_file(
-                                        create_file, "maintable"
-                                    )
-                                    case_selector_found = False
-                                    for a_field in fields:
-                                        if a_field["name"] == form_caseselector:
-                                            if (
-                                                a_field["odktype"] == "select one"
-                                                and a_field["selecttype"] == "3"
-                                            ):
-                                                case_selector_found = True
-                                                form_caseselector_file = a_field[
-                                                    "externalfilename"
-                                                ]
-                                            if a_field["odktype"] == "barcode":
-                                                case_selector_found = True
-                                                form_caseselector_file = "barcode"
-                                    if not case_selector_found:
-                                        error = 1
-                                        message = _(
-                                            "The variable {} used to search and select cases was not found or "
-                                            "is invalid. "
-                                            "The variable must be select_one_from_file using a CSV file "
-                                            "or a barcode.".format(form_caseselector)
-                                        )
-
-                                    case_datetime_found = False
-                                    for a_field in fields:
-                                        if a_field["name"] == form_casedatetime:
-                                            if (
-                                                a_field["type"] == "date"
-                                                or a_field["type"] == "datetime"
-                                            ):
-                                                case_datetime_found = True
-
-                                    if not case_datetime_found:
-                                        error = 1
-                                        message = _(
-                                            "The variable {} used to record a date or date and time was not found"
-                                            " or is invalid. The variable must be date or datetime.".format(
-                                                form_casedatetime
-                                            )
-                                        )
-
-                        if error == 0:
-                            old_form_directory = get_form_directory(
-                                request, project_id, form_id
+                        if not form_version_exists(
+                            request, project_id, form_id, form_version
+                        ):
+                            external_files = []
+                            required_files = []
+                            extra_columns_in_survey = []
+                            extra_columns_in_choices = []
+                            extra_columns_invalid = []
+                            if itemsets_csv is not None:
+                                external_files.append(itemsets_csv)
+                            error, message = check_jxform_file(
+                                request,
+                                user_id,
+                                project_id,
+                                form_id,
+                                survey_file,
+                                create_file,
+                                insert_file,
+                                primary_key,
+                                external_files,
+                                False,
+                                required_files,
+                                None,
+                                extra_columns_in_survey,
+                                extra_columns_in_choices,
+                                extra_columns_invalid,
                             )
-                            form_directory = uid
-                            continue_creation = True
-                            for a_plugin in plugins.PluginImplementations(
-                                plugins.IForm
-                            ):
+
+                            form_caseselector_file = None
+                            if project_case == 1:
+                                if error == 0:
+                                    if form_casetype == 1:
+                                        fields = get_fields_from_table_in_file(
+                                            create_file, "maintable"
+                                        )
+                                        case_id_type_correct = False
+                                        for a_field in fields:
+                                            if a_field["name"] == primary_key:
+                                                if (
+                                                    a_field["type"] == "varchar"
+                                                    or a_field["type"] == "text"
+                                                    or (
+                                                        a_field["type"] == "integer"
+                                                        and a_field["decsize"] == 0
+                                                    )
+                                                ):
+                                                    case_id_type_correct = True
+                                        if not case_id_type_correct:
+                                            error = 1
+                                            message = _(
+                                                "The variable {} used to identify the cases is invalid. "
+                                                "Only text, calculates or integers are allowed.".format(
+                                                    form_caselabel
+                                                )
+                                            )
+
+                                        case_label_found = False
+                                        for a_field in fields:
+                                            if a_field["name"] == form_caselabel:
+                                                if (
+                                                    a_field["type"] == "varchar"
+                                                    or a_field["type"] == "text"
+                                                    or (
+                                                        a_field["type"] == "integer"
+                                                        and a_field["decsize"] == 0
+                                                    )
+                                                ):
+                                                    case_label_found = True
+                                        if not case_label_found:
+                                            error = 1
+                                            message = _(
+                                                "The variable {} used to label cases was not found or is invalid. "
+                                                "Only text, calculates or integers are allowed.".format(
+                                                    form_caselabel
+                                                )
+                                            )
+
+                                        case_datetime_found = False
+                                        for a_field in fields:
+                                            if a_field["name"] == form_casedatetime:
+                                                if (
+                                                    a_field["type"] == "date"
+                                                    or a_field["type"] == "datetime"
+                                                ):
+                                                    case_datetime_found = True
+
+                                        if not case_datetime_found:
+                                            error = 1
+                                            message = _(
+                                                "The variable {} used to record a date or date and time was not found"
+                                                " or is invalid. The variable must be date or datetime.".format(
+                                                    form_casedatetime
+                                                )
+                                            )
+                                    else:
+                                        fields = get_fields_from_table_in_file(
+                                            create_file, "maintable"
+                                        )
+                                        case_selector_found = False
+                                        for a_field in fields:
+                                            if a_field["name"] == form_caseselector:
+                                                if (
+                                                    a_field["odktype"] == "select one"
+                                                    and a_field["selecttype"] == "3"
+                                                ):
+                                                    case_selector_found = True
+                                                    form_caseselector_file = a_field[
+                                                        "externalfilename"
+                                                    ]
+                                                if a_field["odktype"] == "barcode":
+                                                    case_selector_found = True
+                                                    form_caseselector_file = "barcode"
+                                        if not case_selector_found:
+                                            error = 1
+                                            message = _(
+                                                "The variable {} used to search and select cases was not found or "
+                                                "is invalid. "
+                                                "The variable must be select_one_from_file using a CSV file "
+                                                "or a barcode.".format(
+                                                    form_caseselector
+                                                )
+                                            )
+
+                                        case_datetime_found = False
+                                        for a_field in fields:
+                                            if a_field["name"] == form_casedatetime:
+                                                if (
+                                                    a_field["type"] == "date"
+                                                    or a_field["type"] == "datetime"
+                                                ):
+                                                    case_datetime_found = True
+
+                                        if not case_datetime_found:
+                                            error = 1
+                                            message = _(
+                                                "The variable {} used to record a date or date and time was not found"
+                                                " or is invalid. The variable must be date or datetime.".format(
+                                                    form_casedatetime
+                                                )
+                                            )
+
+                            if error == 0:
+                                old_form_directory = get_form_directory(
+                                    request, project_id, form_id
+                                )
+                                form_directory = uid
+                                continue_creation = True
+                                for a_plugin in plugins.PluginImplementations(
+                                    plugins.IForm
+                                ):
+                                    if continue_creation:
+                                        (
+                                            continue_creation,
+                                            message,
+                                        ) = a_plugin.after_odk_form_checks(
+                                            request,
+                                            user_id,
+                                            project_id,
+                                            form_id,
+                                            form_data,
+                                            form_directory,
+                                            survey_file,
+                                            create_file,
+                                            insert_file,
+                                            itemsets_csv,
+                                        )
                                 if continue_creation:
-                                    (
-                                        continue_creation,
-                                        message,
-                                    ) = a_plugin.after_odk_form_checks(
-                                        request,
-                                        user_id,
-                                        project_id,
-                                        form_id,
-                                        form_data,
-                                        form_directory,
-                                        survey_file,
-                                        create_file,
-                                        insert_file,
-                                        itemsets_csv,
-                                    )
-                            if continue_creation:
-                                paths = ["forms", form_directory, "media"]
-                                if not os.path.exists(os.path.join(odk_dir, *paths)):
-                                    os.makedirs(os.path.join(odk_dir, *paths))
+                                    paths = ["forms", form_directory, "media"]
+                                    if not os.path.exists(
+                                        os.path.join(odk_dir, *paths)
+                                    ):
+                                        os.makedirs(os.path.join(odk_dir, *paths))
 
-                                    paths = ["forms", form_directory, "submissions"]
-                                    os.makedirs(os.path.join(odk_dir, *paths))
+                                        paths = ["forms", form_directory, "submissions"]
+                                        os.makedirs(os.path.join(odk_dir, *paths))
 
-                                    paths = [
-                                        "forms",
-                                        form_directory,
-                                        "submissions",
-                                        "logs",
-                                    ]
-                                    os.makedirs(os.path.join(odk_dir, *paths))
+                                        paths = [
+                                            "forms",
+                                            form_directory,
+                                            "submissions",
+                                            "logs",
+                                        ]
+                                        os.makedirs(os.path.join(odk_dir, *paths))
 
-                                    paths = [
-                                        "forms",
-                                        form_directory,
-                                        "submissions",
-                                        "maps",
-                                    ]
-                                    os.makedirs(os.path.join(odk_dir, *paths))
+                                        paths = [
+                                            "forms",
+                                            form_directory,
+                                            "submissions",
+                                            "maps",
+                                        ]
+                                        os.makedirs(os.path.join(odk_dir, *paths))
 
-                                    paths = ["forms", form_directory, "repository"]
-                                    os.makedirs(os.path.join(odk_dir, *paths))
+                                        paths = ["forms", form_directory, "repository"]
+                                        os.makedirs(os.path.join(odk_dir, *paths))
+                                        paths = [
+                                            "forms",
+                                            form_directory,
+                                            "repository",
+                                            "temp",
+                                        ]
+                                        os.makedirs(os.path.join(odk_dir, *paths))
+
+                                    xls_file_fame = os.path.basename(file_name)
+                                    xml_file_name = os.path.basename(xml_file)
+                                    survey_file_name = os.path.basename(survey_file)
+                                    paths = ["forms", form_directory, xls_file_fame]
+                                    final_xls = os.path.join(odk_dir, *paths)
+                                    paths = ["forms", form_directory, xml_file_name]
+                                    final_xml = os.path.join(odk_dir, *paths)
+                                    paths = ["forms", form_directory, survey_file_name]
+                                    final_survey = os.path.join(odk_dir, *paths)
                                     paths = [
                                         "forms",
                                         form_directory,
                                         "repository",
-                                        "temp",
+                                        "create.xml",
                                     ]
-                                    os.makedirs(os.path.join(odk_dir, *paths))
-
-                                xls_file_fame = os.path.basename(file_name)
-                                xml_file_name = os.path.basename(xml_file)
-                                survey_file_name = os.path.basename(survey_file)
-                                paths = ["forms", form_directory, xls_file_fame]
-                                final_xls = os.path.join(odk_dir, *paths)
-                                paths = ["forms", form_directory, xml_file_name]
-                                final_xml = os.path.join(odk_dir, *paths)
-                                paths = ["forms", form_directory, survey_file_name]
-                                final_survey = os.path.join(odk_dir, *paths)
-                                paths = [
-                                    "forms",
-                                    form_directory,
-                                    "repository",
-                                    "create.xml",
-                                ]
-                                final_create_xml = os.path.join(odk_dir, *paths)
-                                paths = [
-                                    "forms",
-                                    form_directory,
-                                    "repository",
-                                    "insert.xml",
-                                ]
-                                final_insert_xml = os.path.join(odk_dir, *paths)
-                                shutil.copyfile(file_name, final_xls)
-                                shutil.copyfile(xml_file, final_xml)
-                                shutil.copyfile(survey_file, final_survey)
-                                shutil.copyfile(create_file, final_create_xml)
-                                shutil.copyfile(insert_file, final_insert_xml)
-                                parent_array = []
-                                try:
-                                    geo_point_variables = []
-                                    get_geopoint_variables_from_json(
-                                        json_dict, parent_array, geo_point_variables
-                                    )
-                                except Exception as e:
-                                    geo_point_variables = []
-                                    log.warning(
-                                        "Unable to extract GeoPoint from file {}. Error: {}".format(
-                                            final_survey, str(e)
-                                        )
-                                    )
-                                form_data["project_id"] = project_id
-                                form_data["form_id"] = form_id
-                                form_data["form_directory"] = form_directory
-                                form_data["form_name"] = form_title[0].text
-                                form_data["form_lupdate"] = datetime.datetime.now()
-                                form_data["form_xlsfile"] = final_xls
-                                form_data["form_xmlfile"] = final_xml
-                                form_data["form_createxmlfile"] = final_create_xml
-                                form_data["form_insertxmlfile"] = final_insert_xml
-                                form_data["form_jsonfile"] = final_survey
-                                form_data["form_abletomerge"] = -1
-                                form_data["form_repositorypossible"] = -1
-                                form_data["form_mergerrors"] = None
-                                form_data["form_mergetask"] = None
-                                form_data["form_reptask"] = None
-                                if geo_point_variables:
-                                    form_geo_points = ",".join(geo_point_variables)
-                                    form_data["form_geopoint"] = form_geo_points
-
-                                if len(required_files) > 0:
-                                    form_data["form_reqfiles"] = ",".join(
-                                        required_files
-                                    )
-                                else:
-                                    form_data["form_reqfiles"] = None
-
-                                if len(extra_columns_in_survey) > 0:
-                                    form_data["form_surveycolumns"] = ",".join(
-                                        extra_columns_in_survey
-                                    )
-                                else:
-                                    form_data["form_surveycolumns"] = None
-                                if len(extra_columns_in_choices) > 0:
-                                    form_data["form_choicescolumns"] = ",".join(
-                                        extra_columns_in_choices
-                                    )
-                                else:
-                                    form_data["form_choicescolumns"] = None
-                                if len(extra_columns_invalid) > 0:
-                                    form_data["form_invalidcolumns"] = ",".join(
-                                        extra_columns_invalid
-                                    )
-                                else:
-                                    form_data["form_invalidcolumns"] = None
-
-                                if project_case == 1:
-                                    form_data["form_case"] = 1
-                                    form_data["form_casetype"] = form_casetype
-                                    form_data["form_caselabel"] = form_caselabel
-                                    form_data["form_caseselector"] = form_caseselector
-                                    form_data["form_casedatetime"] = form_casedatetime
-                                    form_data["form_caseselectorfilename"] = (
-                                        form_caseselector_file
-                                    )
-
-                                continue_updating = True
-                                for a_plugin in plugins.PluginImplementations(
-                                    plugins.IForm
-                                ):
-                                    if continue_updating:
-                                        (
-                                            continue_updating,
-                                            message,
-                                            form_data,
-                                        ) = a_plugin.before_updating_form(
-                                            request,
-                                            "ODK",
-                                            user_id,
-                                            project_id,
-                                            form_id,
-                                            form_data,
-                                        )
-                                if continue_updating:
-                                    updated, message = update_form(
-                                        request, project_id, for_form_id, form_data
-                                    )
-                                    if not updated:
-                                        # Rollbacks the form directory
-                                        update_form_directory(
-                                            request,
-                                            project_id,
-                                            for_form_id,
-                                            old_form_directory,
-                                        )
-                                        return updated, message
-
-                                    for a_plugin in plugins.PluginImplementations(
-                                        plugins.IForm
-                                    ):
-                                        a_plugin.after_updating_form(
-                                            request,
-                                            "ODK",
-                                            user_id,
-                                            project_id,
-                                            form_id,
-                                            form_data,
-                                        )
-
-                                    # If we have itemsets.csv add it as media files
-                                    if itemsets_csv is not None:
-                                        bucket_id = project_id + form_id
-                                        bucket_id = md5(
-                                            bucket_id.encode("utf-8")
-                                        ).hexdigest()
-                                        try:
-                                            delete_stream(
-                                                request, bucket_id, "itemsets.csv"
-                                            )
-                                        except Exception as e:
-                                            log.error(
-                                                "Error {} removing filename {} from bucket {}".format(
-                                                    str(e), "itemsets.csv", bucket_id
-                                                )
-                                            )
-                                        with open(itemsets_csv, "rb") as itemset_file:
-                                            md5sum = md5(
-                                                itemset_file.read()
-                                            ).hexdigest()
-                                            added, message = add_file_to_form(
-                                                request,
-                                                project_id,
-                                                form_id,
-                                                "itemsets.csv",
-                                                True,
-                                                md5sum,
-                                            )
-                                            if added:
-                                                itemset_file.seek(0)
-                                                store_file(
-                                                    request,
-                                                    bucket_id,
-                                                    "itemsets.csv",
-                                                    itemset_file,
-                                                )
-
+                                    final_create_xml = os.path.join(odk_dir, *paths)
                                     paths = [
                                         "forms",
                                         form_directory,
-                                        parts[0] + ".json",
+                                        "repository",
+                                        "insert.xml",
                                     ]
-                                    json_file = os.path.join(odk_dir, *paths)
-
-                                    metadata = {
-                                        "formID": form_id,
-                                        "name": form_title[0].text,
-                                        "majorMinorVersion": "",
-                                        "version": datetime.datetime.now().strftime(
-                                            "%Y%m%d"
-                                        ),
-                                        "hash": "md5:"
-                                        + md5(open(final_xml, "rb").read()).hexdigest(),
-                                        "descriptionText": form_title[0].text,
-                                    }
-
-                                    with open(json_file, "w") as outfile:
-                                        json_string = json.dumps(
-                                            metadata, indent=4, ensure_ascii=False
+                                    final_insert_xml = os.path.join(odk_dir, *paths)
+                                    shutil.copyfile(file_name, final_xls)
+                                    shutil.copyfile(xml_file, final_xml)
+                                    shutil.copyfile(survey_file, final_survey)
+                                    shutil.copyfile(create_file, final_create_xml)
+                                    shutil.copyfile(insert_file, final_insert_xml)
+                                    parent_array = []
+                                    try:
+                                        geo_point_variables = []
+                                        get_geopoint_variables_from_json(
+                                            json_dict, parent_array, geo_point_variables
                                         )
-                                        outfile.write(json_string)
-                                    return True, form_id
+                                    except Exception as e:
+                                        geo_point_variables = []
+                                        log.warning(
+                                            "Unable to extract GeoPoint from file {}. Error: {}".format(
+                                                final_survey, str(e)
+                                            )
+                                        )
+                                    form_data["project_id"] = project_id
+                                    form_data["form_id"] = form_id
+                                    form_data["form_version"] = form_version
+                                    form_data["form_directory"] = form_directory
+                                    form_data["form_name"] = form_title[0].text
+                                    form_data["form_lupdate"] = datetime.datetime.now()
+                                    form_data["form_xlsfile"] = final_xls
+                                    form_data["form_xmlfile"] = final_xml
+                                    form_data["form_createxmlfile"] = final_create_xml
+                                    form_data["form_insertxmlfile"] = final_insert_xml
+                                    form_data["form_jsonfile"] = final_survey
+                                    form_data["form_abletomerge"] = -1
+                                    form_data["form_repositorypossible"] = -1
+                                    form_data["form_mergerrors"] = None
+                                    form_data["form_mergetask"] = None
+                                    form_data["form_reptask"] = None
+                                    if geo_point_variables:
+                                        form_geo_points = ",".join(geo_point_variables)
+                                        form_data["form_geopoint"] = form_geo_points
+
+                                    if len(required_files) > 0:
+                                        form_data["form_reqfiles"] = ",".join(
+                                            required_files
+                                        )
+                                    else:
+                                        form_data["form_reqfiles"] = None
+
+                                    if len(extra_columns_in_survey) > 0:
+                                        form_data["form_surveycolumns"] = ",".join(
+                                            extra_columns_in_survey
+                                        )
+                                    else:
+                                        form_data["form_surveycolumns"] = None
+                                    if len(extra_columns_in_choices) > 0:
+                                        form_data["form_choicescolumns"] = ",".join(
+                                            extra_columns_in_choices
+                                        )
+                                    else:
+                                        form_data["form_choicescolumns"] = None
+                                    if len(extra_columns_invalid) > 0:
+                                        form_data["form_invalidcolumns"] = ",".join(
+                                            extra_columns_invalid
+                                        )
+                                    else:
+                                        form_data["form_invalidcolumns"] = None
+
+                                    if project_case == 1:
+                                        form_data["form_case"] = 1
+                                        form_data["form_casetype"] = form_casetype
+                                        form_data["form_caselabel"] = form_caselabel
+                                        form_data["form_caseselector"] = (
+                                            form_caseselector
+                                        )
+                                        form_data["form_casedatetime"] = (
+                                            form_casedatetime
+                                        )
+                                        form_data["form_caseselectorfilename"] = (
+                                            form_caseselector_file
+                                        )
+
+                                    continue_updating = True
+                                    for a_plugin in plugins.PluginImplementations(
+                                        plugins.IForm
+                                    ):
+                                        if continue_updating:
+                                            (
+                                                continue_updating,
+                                                message,
+                                                form_data,
+                                            ) = a_plugin.before_updating_form(
+                                                request,
+                                                "ODK",
+                                                user_id,
+                                                project_id,
+                                                form_id,
+                                                form_data,
+                                            )
+                                    if continue_updating:
+                                        updated, message = update_form(
+                                            request, project_id, for_form_id, form_data
+                                        )
+                                        if not updated:
+                                            # Rollbacks the form directory
+                                            update_form_directory(
+                                                request,
+                                                project_id,
+                                                for_form_id,
+                                                old_form_directory,
+                                            )
+                                            return updated, message
+
+                                        for a_plugin in plugins.PluginImplementations(
+                                            plugins.IForm
+                                        ):
+                                            a_plugin.after_updating_form(
+                                                request,
+                                                "ODK",
+                                                user_id,
+                                                project_id,
+                                                form_id,
+                                                form_data,
+                                            )
+
+                                        # If we have itemsets.csv add it as media files
+                                        if itemsets_csv is not None:
+                                            bucket_id = project_id + form_id
+                                            bucket_id = md5(
+                                                bucket_id.encode("utf-8")
+                                            ).hexdigest()
+                                            try:
+                                                delete_stream(
+                                                    request, bucket_id, "itemsets.csv"
+                                                )
+                                            except Exception as e:
+                                                log.error(
+                                                    "Error {} removing filename {} from bucket {}".format(
+                                                        str(e),
+                                                        "itemsets.csv",
+                                                        bucket_id,
+                                                    )
+                                                )
+                                            with open(
+                                                itemsets_csv, "rb"
+                                            ) as itemset_file:
+                                                md5sum = md5(
+                                                    itemset_file.read()
+                                                ).hexdigest()
+                                                added, message = add_file_to_form(
+                                                    request,
+                                                    project_id,
+                                                    form_id,
+                                                    "itemsets.csv",
+                                                    True,
+                                                    md5sum,
+                                                )
+                                                if added:
+                                                    itemset_file.seek(0)
+                                                    store_file(
+                                                        request,
+                                                        bucket_id,
+                                                        "itemsets.csv",
+                                                        itemset_file,
+                                                    )
+
+                                        paths = [
+                                            "forms",
+                                            form_directory,
+                                            parts[0] + ".json",
+                                        ]
+                                        json_file = os.path.join(odk_dir, *paths)
+
+                                        metadata = {
+                                            "formID": form_id,
+                                            "name": form_title[0].text,
+                                            "majorMinorVersion": "",
+                                            "version": datetime.datetime.now().strftime(
+                                                "%Y%m%d"
+                                            ),
+                                            "hash": "md5:"
+                                            + md5(
+                                                open(final_xml, "rb").read()
+                                            ).hexdigest(),
+                                            "descriptionText": form_title[0].text,
+                                        }
+
+                                        with open(json_file, "w") as outfile:
+                                            json_string = json.dumps(
+                                                metadata, indent=4, ensure_ascii=False
+                                            )
+                                            outfile.write(json_string)
+                                        return True, form_id
+                                    else:
+                                        paths = ["forms", form_directory]
+                                        dir_to_delete = os.path.join(odk_dir, *paths)
+                                        shutil.rmtree(dir_to_delete)
+                                        return False, message
                                 else:
                                     paths = ["forms", form_directory]
                                     dir_to_delete = os.path.join(odk_dir, *paths)
                                     shutil.rmtree(dir_to_delete)
                                     return False, message
                             else:
-                                paths = ["forms", form_directory]
-                                dir_to_delete = os.path.join(odk_dir, *paths)
-                                shutil.rmtree(dir_to_delete)
                                 return False, message
                         else:
-                            return False, message
+                            return False, _(
+                                "The version of this form already exists. Update its version and try again"
+                            )
                     else:
                         return False, _("The form does not exist in this project")
                 else:

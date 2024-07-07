@@ -417,6 +417,7 @@ class Odkform(Base):
     form_geopoint = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     form_hexcolor = Column(Unicode(60))
     form_reptask = Column(Unicode(64))
+    form_version = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     form_index = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     form_type = Column(INTEGER, server_default=text("'1'"))
     form_case = Column(INTEGER, server_default=text("'0'"))

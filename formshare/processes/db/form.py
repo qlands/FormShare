@@ -47,6 +47,7 @@ __all__ = [
     "is_form_blocked",
     "add_new_form",
     "form_exists",
+    "form_version_exists",
     "get_form_xml_file",
     "get_form_xls_file",
     "update_form",
@@ -1344,6 +1345,20 @@ def form_exists(request, project, form):
         request.dbsession.query(Odkform)
         .filter(Odkform.form_id == form)
         .filter(Odkform.project_id == project)
+        .first()
+    )
+    if res is None:
+        return False
+    else:
+        return True
+
+
+def form_version_exists(request, project, form, version):
+    res = (
+        request.dbsession.query(Odkform)
+        .filter(Odkform.form_id == form)
+        .filter(Odkform.project_id == project)
+        .filter(Odkform.form_version == version)
         .first()
     )
     if res is None:

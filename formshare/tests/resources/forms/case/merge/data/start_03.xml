@@ -1,2 +1,2 @@
 <?xml version='1.0' ?>
-<data id="case_start_20210331"><provincia>3</provincia><canton>3_5</canton><distrito>30506</distrito><coll_date>2021-04-20</coll_date><hid>003</hid><fname>Jos&#233; Mora</fname><sex>1</sex><age>25</age><ndep>3</ndep><gps_point>9.8877497 -83.6559489 627.1196693633253 24.9</gps_point><meta><instanceID>uuid:a638a883-82af-4373-81ec-556996faed16</instanceID></meta></data>
+<data id="case_start_20210331" version="1"><provincia>3</provincia><canton>3_5</canton><distrito>30506</distrito><coll_date>2021-04-20</coll_date><hid>003</hid><fname>Jos&#233; Mora</fname><sex>1</sex><age>25</age><ndep>3</ndep><gps_point>9.8877497 -83.6559489 627.1196693633253 24.9</gps_point><meta><instanceID>uuid:a638a883-82af-4373-81ec-556996faed16</instanceID></meta></data>

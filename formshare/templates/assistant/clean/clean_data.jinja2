@@ -112,6 +112,7 @@
 
             $(document).ready(function () {
                 let pulled_data = [];
+                let info_url_final = "";
                 $("#jqGrid").jqGrid({
                     url: "{{ request.route_url('request',userid=userid,projcode=projcode,formid=formid,tablename=table) }}",
                     mtype: "POST",
@@ -126,7 +127,7 @@
                         {% if checked == 0 %}
                             {% for field in fields -%}
                                 {% if field.name != "rowuuid" %}
-                                    {label: '{{ field.desc|truncate(30,true,'...') }}', name: '{{ field.name }}' , key: false, editable: {{ field.editable }},
+                                    {label: '{{ field.name }}', name: '{{ field.name }}' , key: false, editable: {{ field.editable }},
                                         {% if field.rlookup == 'true' %}
                                             formatter:'select',
                                             edittype:'select',
@@ -142,15 +143,15 @@
                                                     dataInit: function (elem) {
                                                         $(elem).click(function () {
                                                             $("#update_title").text('{{ _("Update multi select field") }} "{{ field.desc }}"');
-                                                            let info_url = "{{ request.route_url('cleanmultiselect', userid=userid, projcode=projcode, formid=formid, table='table-to-change', mseltable= 'mseltable-to-change',rowuuid='rowuuid-to-change') }}";
-                                                            let info_url_final = info_url.replace("mseltable-to-change", $(elem).attr("mseltable_name")) + " #msel_content";
+                                                            let info_url = "{{ request.route_url('cleanmultiselect', userid=userid, projcode=projcode, formid=formid, table='table-to-change', mseltable= 'mseltable-to-change',rowuuid='rowuuid-to-change')}}";
+                                                            info_url_final = info_url.replace("mseltable-to-change", $(elem).attr("mseltable_name")) + " #msel_content";
                                                             info_url_final = info_url_final.replace("rowuuid-to-change",$(elem).attr("rowid"))
                                                             info_url_final = info_url_final.replace("table-to-change",$(elem).attr("table_name"))
                                                             $('#multi_select_content').html('{{ _('Loading...') }}');
                                                             $('#multi_select_content').load(info_url_final, function() {
-                                                                $('#multiselect').multiselect({keepRenderingSort: true, sort: false});
+                                                                $('#multiselect').multiselect({keepRenderingSort: true, sort:false});
+                                                                $('#update_form').modal('show');
                                                             });
-                                                            $('#update_form').modal('show');
                                                         });
                                                     }
                                                 }
@@ -163,7 +164,7 @@
                             {% for field in fields -%}
                                 {% if field.checked -%}
                                     {% if field.name != "rowuuid" %}
-                                        {label: '{{ field.desc|truncate(30,true,'...') }}', name: '{{ field.name }}' , key: false, editable: {{ field.editable }},
+                                        {label: '{{ field.name }}', name: '{{ field.name }}' , key: false, editable: {{ field.editable }},
                                             {% if field.rlookup == 'true' %}
                                                 formatter:'select',
                                                 edittype:'select',
@@ -179,15 +180,15 @@
                                                         dataInit: function (elem) {
                                                             $(elem).click(function () {
                                                                 $("#update_title").text('{{ _("Update multi select field") }} "{{ field.desc }}"');
-                                                                let info_url = "{{ request.route_url('cleanmultiselect', userid=userid, projcode=projcode, formid=formid, table='table-to-change', mseltable= 'mseltable-to-change',rowuuid='rowuuid-to-change') }}";
+                                                                let info_url = "{{ request.route_url('cleanmultiselect', userid=userid, projcode=projcode, formid=formid, table='table-to-change', mseltable= 'mseltable-to-change',rowuuid='rowuuid-to-change')}}";
                                                                 let info_url_final = info_url.replace("mseltable-to-change", $(elem).attr("mseltable_name")) + " #msel_content";
                                                                 info_url_final = info_url_final.replace("rowuuid-to-change",$(elem).attr("rowid"))
                                                                 info_url_final = info_url_final.replace("table-to-change",$(elem).attr("table_name"))
                                                                 $('#multi_select_content').html('{{ _('Loading...') }}');
                                                                 $('#multi_select_content').load(info_url_final, function() {
                                                                     $('#multiselect').multiselect({keepRenderingSort: true, sort:false});
+                                                                    $('#update_form').modal('show');
                                                                 });
-                                                                $('#update_form').modal('show');
                                                             });
                                                         }
                                                     }
@@ -270,6 +271,26 @@
                         sopt: ['like','notlike'],
                         odata: [{ oper:'like', text:"{{ _('like') }}"}, { oper:'notlike', text:"{{ _('not like') }}"}],
                     });
+
+                $('#update_multiselect').submit(function(e) {
+                    e.preventDefault();
+                    $('#multiselect option').prop('selected', true);
+                    $('#multiselect_to option').prop('selected', true);
+                    var formData = $("#update_multiselect").serialize();
+                    $.ajax({
+                        url: info_url_final, // Specify the URL to post the form data to
+                        type: 'POST', // Specify the HTTP method (POST in this case)
+                        data: formData, // Specify the form data to be sent
+                        success: function (response) {
+                            console.log("Done");
+                            //$('#sData').click();
+                        },
+                        error: function (xhr, status, error) {
+                            // Handle errors here
+                            console.error(xhr.responseText);
+                        }
+                    });
+                });
             });
         {% endif %}
     </script>

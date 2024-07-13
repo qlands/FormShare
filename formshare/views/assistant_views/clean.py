@@ -1,6 +1,6 @@
 import json
 import logging
-
+from pyramid.response import Response
 from formshare.processes.db import get_form_data, is_form_blocked
 from formshare.processes.odk.processes import get_assistant_permissions_on_a_form
 from formshare.processes.submission.api import (
@@ -10,6 +10,7 @@ from formshare.processes.submission.api import (
     update_data,
     get_primary_key_data,
     get_lookup_options,
+    update_multiselect_data,
 )
 from formshare.processes.db.dictionary import (
     get_primary_keys,
@@ -278,42 +279,102 @@ class CleanMultiSelect(AssistantView):
         table_name = self.request.matchdict["table"]
         multi_select_table_name = self.request.matchdict["mseltable"]
         row_uuid = self.request.matchdict["rowuuid"]
+        row_uuid = row_uuid.strip()
 
         permissions = get_assistant_permissions_on_a_form(
             self.request, self.userID, self.projectID, self.assistantID, form_id
         )
 
         if permissions["enum_canclean"] == 1:
-            primary_keys = get_primary_keys(
-                self.request, self.projectID, form_id, table_name
-            )
-            primary_key_data = get_primary_key_data(
-                self.request,
-                self.projectID,
-                form_id,
-                table_name,
-                primary_keys,
-                row_uuid,
-            )
-            field_name, related_table, related_field = get_lookup_relation_fields(
-                self.request, self.projectID, form_id, multi_select_table_name
-            )
-            available_options, selected_options = get_lookup_options(
-                self.request,
-                self.projectID,
-                form_id,
-                related_table,
-                related_field,
-                multi_select_table_name,
-                field_name,
-                primary_key_data,
-            )
-            print(selected_options)
-            return {
-                "table": table_name,
-                "rowuuid": row_uuid,
-                "avaoptions": available_options,
-                "seloptions": selected_options,
-            }
+            if self.request.method == "GET":
+                primary_keys = get_primary_keys(
+                    self.request, self.projectID, form_id, table_name
+                )
+                primary_key_data = get_primary_key_data(
+                    self.request,
+                    self.projectID,
+                    form_id,
+                    table_name,
+                    primary_keys,
+                    row_uuid,
+                )
+                field_name, related_table, related_field = get_lookup_relation_fields(
+                    self.request, self.projectID, form_id, multi_select_table_name
+                )
+                available_options, selected_options = get_lookup_options(
+                    self.request,
+                    self.projectID,
+                    form_id,
+                    related_table,
+                    related_field,
+                    multi_select_table_name,
+                    field_name,
+                    primary_key_data,
+                )
+                return {
+                    "table": table_name,
+                    "rowuuid": row_uuid,
+                    "avaoptions": available_options,
+                    "seloptions": selected_options,
+                }
+            else:
+                self.returnRawViewResult = True
+                self.checkCrossPost = False
+                form_data = self.get_post_dict()
+
+                selected_items = []
+                to_items = form_data.get("to[]", [])
+                if isinstance(to_items, str):
+                    selected_items.append(to_items)
+                else:
+                    selected_items = to_items
+
+                primary_keys = get_primary_keys(
+                    self.request, self.projectID, form_id, table_name
+                )
+                primary_key_data = get_primary_key_data(
+                    self.request,
+                    self.projectID,
+                    form_id,
+                    table_name,
+                    primary_keys,
+                    row_uuid,
+                )
+                field_name, related_table, related_field = get_lookup_relation_fields(
+                    self.request, self.projectID, form_id, multi_select_table_name
+                )
+
+                parts = multi_select_table_name.split("_msel_")
+                print("****{}***".format(row_uuid))
+                updated = update_multiselect_data(
+                    self.request,
+                    self.assistant.login,
+                    self.projectID,
+                    form_id,
+                    row_uuid,
+                    table_name,
+                    parts[1],
+                    multi_select_table_name,
+                    field_name,
+                    primary_key_data,
+                    selected_items,
+                )
+                if updated:
+                    status = 200
+                    message = self._("The multiselect has been updated")
+                else:
+                    status = 400
+                    message = self._("The multiselect has been updated")
+                response = Response(
+                    content_type="application/json",
+                    status=200,
+                    body=json.dumps(
+                        {
+                            "status": status,
+                            "message": message,
+                        }
+                    ).encode(),
+                )
+                return response
         else:
             raise HTTPForbidden()

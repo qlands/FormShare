@@ -36,6 +36,7 @@ from formshare.processes.elasticsearch.repository_index import (
     get_dataset_stats_for_form,
 )
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import or_
 
 __all__ = [
     "get_form_details",
@@ -791,13 +792,22 @@ def get_creator_data(request, user):
     return map_from_schema(res)
 
 
-def get_form_data(request, project, form):
-    res = (
-        request.dbsession.query(Odkform)
-        .filter(Odkform.project_id == project)
-        .filter(Odkform.form_id == form)
-        .first()
-    )
+def get_form_data(request, project, form, version=None):
+    if version is None:
+        res = (
+            request.dbsession.query(Odkform)
+            .filter(Odkform.project_id == project)
+            .filter(Odkform.form_id == form)
+            .first()
+        )
+    else:
+        res = (
+            request.dbsession.query(Odkform)
+            .filter(Odkform.project_id == project)
+            .filter(Odkform.form_id == form)
+            .filter(or_(Odkform.form_version == version, Odkform.form_version == None))
+            .first()
+        )
     if res is not None:
         return map_from_schema(res)
     else:

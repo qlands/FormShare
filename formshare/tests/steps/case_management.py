@@ -123,7 +123,7 @@ def t_e_s_t_case_management(test_object):
     )
 
     # Update a form fails. Invalid primary key variable
-    paths = ["resources", "forms", "case", "case_start.xlsx"]
+    paths = ["resources", "forms", "case", "case_start_u.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/updateodk".format(
@@ -136,7 +136,7 @@ def t_e_s_t_case_management(test_object):
     assert "FS_error" in res.headers
 
     # Update a form fails. Invalid case label variable
-    paths = ["resources", "forms", "case", "case_start.xlsx"]
+    paths = ["resources", "forms", "case", "case_start_u.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/updateodk".format(
@@ -149,7 +149,7 @@ def t_e_s_t_case_management(test_object):
     assert "FS_error" in res.headers
 
     # Update a form fails. label variable empty
-    paths = ["resources", "forms", "case", "case_start.xlsx"]
+    paths = ["resources", "forms", "case", "case_start_u.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/updateodk".format(
@@ -162,7 +162,7 @@ def t_e_s_t_case_management(test_object):
     assert "FS_error" in res.headers
 
     # Update a form fails. label variable and key are the same
-    paths = ["resources", "forms", "case", "case_start.xlsx"]
+    paths = ["resources", "forms", "case", "case_start_u.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/updateodk".format(
@@ -175,7 +175,7 @@ def t_e_s_t_case_management(test_object):
     assert "FS_error" in res.headers
 
     # Update a form fails. Date variable is empty
-    paths = ["resources", "forms", "case", "case_start.xlsx"]
+    paths = ["resources", "forms", "case", "case_start_u.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/updateodk".format(
@@ -188,7 +188,7 @@ def t_e_s_t_case_management(test_object):
     assert "FS_error" in res.headers
 
     # Update a form fails. Date variable is the same as the primary key
-    paths = ["resources", "forms", "case", "case_start.xlsx"]
+    paths = ["resources", "forms", "case", "case_start_u.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/updateodk".format(
@@ -201,7 +201,7 @@ def t_e_s_t_case_management(test_object):
     assert "FS_error" in res.headers
 
     # Update a form fails. Date variable is invalid
-    paths = ["resources", "forms", "case", "case_start.xlsx"]
+    paths = ["resources", "forms", "case", "case_start_u.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/updateodk".format(
@@ -213,8 +213,25 @@ def t_e_s_t_case_management(test_object):
     )
     assert "FS_error" in res.headers
 
-    # Update a form pass
+    # Update form fails. Same version
     paths = ["resources", "forms", "case", "case_start.xlsx"]
+    resource_file = os.path.join(test_object.path, *paths)
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/updateodk".format(
+            test_object.randonLogin, "case001", "case_start_20210311"
+        ),
+        {
+            "form_pkey": "hid",
+            "form_caselabel": "fname",
+            "form_casedatetime": "coll_date",
+        },
+        status=302,
+        upload_files=[("xlsx", resource_file)],
+    )
+    assert "FS_error" in res.headers
+
+    # Update a form pass
+    paths = ["resources", "forms", "case", "case_start_u.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/updateodk".format(
@@ -756,7 +773,7 @@ def t_e_s_t_case_management(test_object):
         "forms",
         "case",
         "data",
-        "start_01.xml",
+        "start_01_u.xml",
     ]
     submission_file = os.path.join(test_object.path, *paths)
     test_object.testapp.post(
@@ -796,7 +813,7 @@ def t_e_s_t_case_management(test_object):
         "forms",
         "case",
         "data",
-        "start_04.xml",
+        "start_04_u.xml",
     ]
     submission_file = os.path.join(test_object.path, *paths)
     test_object.testapp.post(
@@ -912,7 +929,7 @@ def t_e_s_t_case_management(test_object):
     )
 
     # Update a form fails. Invalid primary key variable
-    paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
+    paths = ["resources", "forms", "case", "case_follow_up_u.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/updateodk".format(
@@ -925,7 +942,7 @@ def t_e_s_t_case_management(test_object):
     assert "FS_error" in res.headers
 
     # Update a form fails. Invalid case selector variable
-    paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
+    paths = ["resources", "forms", "case", "case_follow_up_u.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/updateodk".format(
@@ -942,7 +959,7 @@ def t_e_s_t_case_management(test_object):
     assert "FS_error" in res.headers
 
     # Update a form fails. No case type
-    paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
+    paths = ["resources", "forms", "case", "case_follow_up_u.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/updateodk".format(
@@ -955,7 +972,7 @@ def t_e_s_t_case_management(test_object):
     assert "FS_error" in res.headers
 
     # Update a form. Empty case selector
-    paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
+    paths = ["resources", "forms", "case", "case_follow_up_u.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/updateodk".format(
@@ -972,7 +989,7 @@ def t_e_s_t_case_management(test_object):
     assert "FS_error" in res.headers
 
     # Update a form. Case selector and primary key are the same
-    paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
+    paths = ["resources", "forms", "case", "case_follow_up_u.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/updateodk".format(
@@ -989,7 +1006,7 @@ def t_e_s_t_case_management(test_object):
     assert "FS_error" in res.headers
 
     # Update a form fails. The date or datetime variable is empty
-    paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
+    paths = ["resources", "forms", "case", "case_follow_up_u.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/updateodk".format(
@@ -1007,7 +1024,7 @@ def t_e_s_t_case_management(test_object):
     assert "FS_error" in res.headers
 
     # Update a form fails. The date or datetime variable is is the same as the key selector
-    paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
+    paths = ["resources", "forms", "case", "case_follow_up_u.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/updateodk".format(
@@ -1025,7 +1042,7 @@ def t_e_s_t_case_management(test_object):
     assert "FS_error" in res.headers
 
     # Update a form fails. The date or datetime variable has an invalid type
-    paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
+    paths = ["resources", "forms", "case", "case_follow_up_u.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/updateodk".format(
@@ -1042,8 +1059,26 @@ def t_e_s_t_case_management(test_object):
     )
     assert "FS_error" in res.headers
 
-    # Update a form pass
+    # Update a form fails same version
     paths = ["resources", "forms", "case", "case_follow_up.xlsx"]
+    resource_file = os.path.join(test_object.path, *paths)
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/updateodk".format(
+            test_object.randonLogin, "case001", "case_follow_up_20210319"
+        ),
+        {
+            "form_pkey": "survey_id",
+            "form_caseselector": "hid",
+            "form_casedatetime": "start_date",
+            "form_casetype": "2",
+        },
+        status=302,
+        upload_files=[("xlsx", resource_file)],
+    )
+    assert "FS_error" in res.headers
+
+    # Update a form pass
+    paths = ["resources", "forms", "case", "case_follow_up_u.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/updateodk".format(
@@ -1066,7 +1101,7 @@ def t_e_s_t_case_management(test_object):
         "forms",
         "case",
         "data",
-        "start_02.xml",
+        "start_02_u.xml",
     ]
     submission_file = os.path.join(test_object.path, *paths)
     test_object.testapp.post(
@@ -1916,8 +1951,26 @@ def t_e_s_t_case_management(test_object):
     )
     assert "FS_error" not in res.headers
 
-    # Update the same form passes
+    # Update the same form fails. Same version
     paths = ["resources", "forms", "case", "case_follow_up_barcode.xlsx"]
+    resource_file = os.path.join(test_object.path, *paths)
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/form/{}/updateodk".format(
+            test_object.randonLogin, "case001", "case_follow_up_barcode_20210428"
+        ),
+        {
+            "form_pkey": "survey_id",
+            "form_caseselector": "hid",
+            "form_casedatetime": "start_date",
+            "form_casetype": "2",
+        },
+        status=302,
+        upload_files=[("xlsx", resource_file)],
+    )
+    assert "FS_error" in res.headers
+
+    # Update the same form passes
+    paths = ["resources", "forms", "case", "case_follow_up_barcode_u.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/updateodk".format(

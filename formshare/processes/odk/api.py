@@ -4118,8 +4118,9 @@ def store_submission(request, user, project, assistant):
         tree = etree.parse(xml_file)
         root = tree.getroot()
         xform_id = root.get("id")
+        xform_version = root.get("version")
         if xform_id is not None:
-            form_data = get_form_data(request, project, xform_id)
+            form_data = get_form_data(request, project, xform_id, xform_version)
             if form_data is not None:
                 if form_data["form_accsub"] == 1:
                     for a_plugin in plugins.PluginImplementations(
@@ -4258,7 +4259,9 @@ def store_submission(request, user, project, assistant):
                     return False, 404
             else:
                 log.error(
-                    "Submission for ID %s does not exist in the database", xform_id
+                    "Submission for ID {} with version {} does not exist in the database".format(
+                        xform_id, xform_version
+                    )
                 )
                 return False, 404
         else:

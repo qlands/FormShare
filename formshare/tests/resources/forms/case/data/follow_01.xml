@@ -1,2 +1,2 @@
 <?xml version='1.0' ?>
-<data id="case_follow_up_20210319"><start_date>2021-03-31T18:43:24.725-06:00</start_date><provincia>4</provincia><canton>4_7</canton><distrito>40701</distrito><hid>001</hid><survey_id>0012021-03-31</survey_id><receivedcheck>0</receivedcheck><meta><instanceID>uuid:d6283c37-fd6c-48d3-b51c-b694e77aa513</instanceID></meta></data>
+<data id="case_follow_up_20210319" version="2"><start_date>2021-03-31T18:43:24.725-06:00</start_date><provincia>4</provincia><canton>4_7</canton><distrito>40701</distrito><hid>001</hid><survey_id>0012021-03-31</survey_id><receivedcheck>0</receivedcheck><meta><instanceID>uuid:d6283c37-fd6c-48d3-b51c-b694e77aa513</instanceID></meta></data>

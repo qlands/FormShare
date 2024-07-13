@@ -25,7 +25,7 @@ def t_e_s_t_external_select(test_object):
     )
 
     # Update a form a succeeds with external selects
-    paths = ["resources", "forms", "external", "select_one_external.xlsx"]
+    paths = ["resources", "forms", "external", "select_one_external_u.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
 
     res = test_object.testapp.post(

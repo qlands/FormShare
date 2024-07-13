@@ -224,7 +224,7 @@ def t_e_s_t_case_management_start(test_object):
     )
     assert "FS_error" not in res.headers
 
-    paths = ["resources", "forms", "case", "case_start.xlsx"]
+    paths = ["resources", "forms", "case", "case_start_u.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
     res = test_object.testapp.post(
         "/user/{}/project/{}/form/{}/updateodk".format(

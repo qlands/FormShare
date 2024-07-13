@@ -1,2 +1,2 @@
 <?xml version='1.0' ?>
-<data id="case_deactivate_20210331"><start_date>2021-04-15T18:56:04.602-06:00</start_date><provincia>4</provincia><canton>4_7</canton><distrito>40701</distrito><hid>001</hid><survey_id>0012021-04-15</survey_id><whyexit>2</whyexit><meta><instanceID>uuid:0dad1054-317e-411e-9917-39a641750d43</instanceID></meta></data>
+<data id="case_deactivate_20210331" version="1"><start_date>2021-04-15T18:56:04.602-06:00</start_date><provincia>4</provincia><canton>4_7</canton><distrito>40701</distrito><hid>001</hid><survey_id>0012021-04-15</survey_id><whyexit>2</whyexit><meta><instanceID>uuid:0dad1054-317e-411e-9917-39a641750d43</instanceID></meta></data>

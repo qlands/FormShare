@@ -25,7 +25,7 @@ def t_e_s_t_update_form_missing_files(test_object):
     )
 
     # Update a form a succeeds even if support files are missing
-    paths = ["resources", "forms", "support_zip_file", "support_zip_fileB.xlsx"]
+    paths = ["resources", "forms", "support_zip_file", "support_zip_fileB_u.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
 
     res = test_object.testapp.post(

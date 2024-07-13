@@ -10,7 +10,7 @@
 
                 {% endblock update_form_header %}
             </div>
-            <form id="update_multiselect" role="form" method="post" class="require_busy" enctype="multipart/form-data" action="{{ action_url }}">
+            <form id="update_multiselect" role="form" method="post" class="require_busy">
                 {% block update_form_content %}
                     {{ form.secure_form(request) }}
                     <div class="modal-body">

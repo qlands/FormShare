@@ -452,7 +452,7 @@ def t_e_s_t_forms(test_object):
     )
     assert "FS_error" in res.headers
 
-    paths = ["resources", "forms", "form08_OK.xlsx"]
+    paths = ["resources", "forms", "form08_OK_u.xlsx"]
     resource_file = os.path.join(test_object.path, *paths)
 
     # Update to a project that does not exists fails

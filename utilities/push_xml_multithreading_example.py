@@ -2,7 +2,7 @@ import datetime
 import glob
 import os
 from multiprocessing import Process
-
+from multiprocessing import Value
 import numpy as np
 import requests
 from requests.auth import HTTPDigestAuth
@@ -29,7 +29,7 @@ assistant_to_use = "assistant"
 assistant_password = "123"
 
 
-def process_directories(directories):
+def process_directories(directories, counter):
     for a_directory in directories:
         files = {}
         files_array = []
@@ -38,6 +38,7 @@ def process_directories(directories):
             file_name = os.path.basename(a_file)
             files[file_name] = open(a_file, "rb")
         if files:
+            print("Sending: {}".format(a_directory))
             r = requests.post(
                 url_to_project + "/push",
                 auth=HTTPDigestAuth(assistant_to_use, assistant_password),
@@ -45,6 +46,10 @@ def process_directories(directories):
             )
             if r.status_code != 201:
                 print("{}-{}".format(r.status_code, a_directory))
+                with counter.get_lock():
+                    counter.value += 1
+                with open("./errors/{}.error".format(file_name), "w") as fp:
+                    pass
             for a_file in files_array:
                 file_name = os.path.basename(a_file)
                 files[file_name].close()
@@ -58,14 +63,17 @@ start_time = datetime.datetime.now()
 # However, the FormShare installation receiving the submissions must be running
 # with the same or higher number of threads as you are sending.
 # See https://docs.gunicorn.org/en/latest/settings.html#threads
-number_of_threads = 6
 
+if not os.path.exists("./errors"):
+    os.makedirs("./errors")
+
+number_of_threads = 2
 directory_list = glob.glob(path_to_submissions)
 arrays = np.array_split(np.array(directory_list), number_of_threads)
-
+counter = Value("i", 0)
 threads = list()
 for ii in range(len(arrays)):
-    keywords = {"directories": arrays[ii]}
+    keywords = {"directories": arrays[ii], "counter": counter}
     process = Process(target=process_directories, kwargs=keywords)
     process.start()
     threads.append(process)
@@ -77,4 +85,4 @@ end_time = datetime.datetime.now()
 time_delta = end_time - start_time
 total_seconds = time_delta.total_seconds()
 minutes = total_seconds / 60
-print("Finished in {} minutes".format(minutes))
+print("Finished in {} minutes with {} errors".format(minutes, counter.value))

@@ -752,6 +752,15 @@ def t_e_s_t_odk(test_object):
         "forms",
         "complex_form",
         "submissions_norepo",
+        "submission001_bad_version.xml",
+    ]
+    submission_file_bad_version = os.path.join(test_object.path, *paths)
+
+    paths = [
+        "resources",
+        "forms",
+        "complex_form",
+        "submissions_norepo",
         "submission001.json",
     ]
     submission_file_json = os.path.join(test_object.path, *paths)
@@ -830,6 +839,21 @@ def t_e_s_t_odk(test_object):
         status=302,
     )
     assert "FS_error" not in res.headers
+
+    test_object.testapp.post(
+        "/user/{}/project/{}/submission".format(
+            test_object.randonLogin, test_object.project
+        ),
+        status=404,
+        upload_files=[
+            ("filetoupload", submission_file_bad_version),
+            ("image", image_file),
+            ("sound", sound_file),
+        ],
+        extra_environ=dict(
+            FS_for_testing="true", FS_user_for_testing=test_object.assistantLogin
+        ),
+    )
 
     test_object.testapp.post(
         "/user/{}/project/{}/submission".format(

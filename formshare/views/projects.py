@@ -354,6 +354,7 @@ class EditProjectView(ProjectsView):
                 project_details["project_formlist_auth"] = 0
 
             project_details["project_code"] = project_code
+            project_details["project_id"] = project_id
 
             if project_details["project_hexcolor"] == "":
                 project_details["project_hexcolor"] = ColorHash(

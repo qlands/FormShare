@@ -121,7 +121,6 @@ PyUtilib==6.0.0
 pyxform==1.12.1
 PyYAML==6.0.1
 qrcode==7.4.2
-query==1.0
 redis==5.0.7
 regex==2024.5.15
 repoze.lru==0.7

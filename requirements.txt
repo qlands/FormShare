@@ -35,7 +35,7 @@ Deprecated==1.2.14
 docutils==0.21.2
 -e git+https://github.com/qlands/elasticfeeds.git@e9bb8ec7f91141bd72f80307cee0eb93e4732e04#egg=elasticfeeds
 elasticsearch==7.17.3
-emoji==2.12.1
+emoji==2.7.0
 et-xmlfile==1.1.0
 exceptiongroup==1.2.2
 feedparser==6.0.11

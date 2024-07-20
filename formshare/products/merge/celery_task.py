@@ -1059,7 +1059,7 @@ def internal_merge_into_repository(
                         a_form_id,
                         odk_dir,
                         a_form_directory,
-                        a_schema_name,
+                        b_schema_name,
                         assistant,
                         temp_path,
                         project_code,

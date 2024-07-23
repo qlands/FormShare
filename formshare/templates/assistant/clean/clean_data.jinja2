@@ -109,7 +109,8 @@
         );
         {% if table != None %}
             //Construct the editor
-
+            let update_button = 0;
+            let cancel_button = 0;
             $(document).ready(function () {
                 let pulled_data = [];
                 let info_url_final = "";
@@ -150,6 +151,8 @@
                                                             $('#multi_select_content').html('{{ _('Loading...') }}');
                                                             $('#multi_select_content').load(info_url_final, function() {
                                                                 $('#multiselect').multiselect({keepRenderingSort: true, sort:false});
+                                                                update_button = $('#sData')
+                                                                cancel_button = $('#cData')
                                                                 $('#update_form').modal('show');
                                                             });
                                                         });
@@ -187,6 +190,8 @@
                                                                 $('#multi_select_content').html('{{ _('Loading...') }}');
                                                                 $('#multi_select_content').load(info_url_final, function() {
                                                                     $('#multiselect').multiselect({keepRenderingSort: true, sort:false});
+                                                                    update_button = $('#sData')
+                                                                    cancel_button = $('#cData')
                                                                     $('#update_form').modal('show');
                                                                 });
                                                             });
@@ -282,8 +287,9 @@
                         type: 'POST', // Specify the HTTP method (POST in this case)
                         data: formData, // Specify the form data to be sent
                         success: function (response) {
-                            console.log("Done");
-                            //$('#sData').click();
+                            update_button.click();
+                            cancel_button.click();
+                            $('#update_form').modal('hide');
                         },
                         error: function (xhr, status, error) {
                             // Handle errors here

@@ -1323,15 +1323,13 @@ def update_multiselect_data(
         columns_array = []
         for key in primary_key_data.keys():
             columns_array.append(key)
-        columns_array.append("rowindex")
         columns_array.append(multiselect_field)
         index = 1
         for a_value in multiselect_values:
             value_array = []
             for pk_value in primary_key_data.values():
-                value_array.append("{}".format(pk_value))
-            value_array.append("{}".format(index))
-            value_array.append("{}".format(a_value))
+                value_array.append("'{}'".format(pk_value))
+            value_array.append("'{}'".format(a_value))
             insert_sql = "INSERT INTO {}.{} ({}) VALUES ({})".format(
                 schema,
                 multiselect_table,
@@ -1345,10 +1343,10 @@ def update_multiselect_data(
     try:
         session = Session(bind=engine)
         session.execute("SET @odktools_current_user = '" + user + "'")
-        # print(parent_sql)
-        # print(delete_sql)
-        # for an_insert in insert_array:
-        #     print(an_insert)
+        print(parent_sql)
+        print(delete_sql)
+        for an_insert in insert_array:
+            print(an_insert)
         session.execute(parent_sql)
         session.execute(delete_sql)
         for an_insert in insert_array:

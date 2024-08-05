@@ -79,12 +79,15 @@ def update_lookup_from_csv(
                             ),
                         )
 
+            value = dataframe[label][ind]
+            if isinstance(value, str):
+                value = value.replace('"', "")
             sql = (
                 "INSERT INTO {}.{} (var_code, var_label) VALUES ('{}', \"{}\")".format(
                     form_schema,
                     uid,
                     code,
-                    dataframe[label][ind].replace('"', ""),
+                    value,
                 )
             )
             session.execute(sql)

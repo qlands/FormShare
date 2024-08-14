@@ -798,7 +798,14 @@ class PrivateView(object):
                     dct[key] = value.strip()
             return dct
         else:
-            return self.request.json_body
+            try:
+                return self.request.json_body
+            except json.JSONDecodeError:
+                dct = variable_decode(self.request.POST)
+                for key, value in dct.items():
+                    if isinstance(value, str):
+                        dct[key] = value.strip()
+                return dct
 
     def reload_user_details(self):
         self.classResult["userDetails"] = get_user_details(self.request, self.userID)

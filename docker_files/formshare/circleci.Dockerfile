@@ -62,7 +62,7 @@ WORKDIR /home/circleci/project
 
 WORKDIR /opt
 RUN sudo mkdir odktools-deps
-RUN sudo git clone https://github.com/qlands/odktools.git -b stable-2.12
+RUN sudo git clone https://github.com/qlands/odktools.git -b stable-2.13
 
 WORKDIR /opt/odktools-deps
 RUN sudo wget https://github.com/mongodb/mongo-c-driver/releases/download/1.21.1/mongo-c-driver-1.21.1.tar.gz

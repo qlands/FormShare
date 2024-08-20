@@ -949,6 +949,16 @@ def get_fields_from_table(
                 editable = "false"
             else:
                 editable = field_is_editable(field.get("field_name"))
+
+            relfield = field.get("field_rtable", "")
+            if relfield is None:
+                relfield = ""
+            if relfield.find("FS_") == 0:
+                related_to_case = "true"
+                editable = "false"
+            else:
+                related_to_case = "false"
+
             data = {
                 "name": field.get("field_name"),
                 "desc": desc,
@@ -969,6 +979,7 @@ def get_fields_from_table(
                 "rlookup": _to_string(field.get("field_rlookup", 0)),
                 "rtable": field.get("field_rtable", "None"),
                 "rfield": field.get("field_rfield", "None"),
+                "related_to_case": related_to_case,
                 "field_selecttype": field.get("field_selecttype", 0),
                 "editable": editable,
             }

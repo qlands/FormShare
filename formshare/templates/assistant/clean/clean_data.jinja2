@@ -136,7 +136,7 @@
                                                 value: {{ field.lookupvalues }}
                                             }
                                         {% else %}
-                                            {% if field.field_selecttype == 1 or field.field_selecttype == 3 %}
+                                            {% if field.field_selecttype > 0 and field.related_to_case == "false" %}
                                                 edittype:'button',
                                                 editoptions : {
                                                     mseltable_name: '{{ table }}_msel_{{ field.name }}',
@@ -175,7 +175,7 @@
                                                     value: {{ field.lookupvalues }}
                                                 }
                                             {% else %}
-                                                {% if field.field_selecttype == 1 or field.field_selecttype == 3 %}
+                                                {% if field.field_selecttype > 0 and field.related_to_case == "false" %}
                                                     edittype:'button',
                                                     editoptions : {
                                                         mseltable_name: '{{ table }}_msel_{{ field.name }}',

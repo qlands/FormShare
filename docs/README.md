@@ -5,9 +5,9 @@ description: This is the official documentation of FormShare
 # Welcome to FormShare
 
 {% hint style="info" %}
-[Create an account / login](https://app.gitbook.com/s/86B4V7nCcexVq6gvzZTW/\~/changes/yDSwoeExcEZ2lYixAsbw/guides/create-an-account-login)**What is FormShare:** FormShare is an advanced and professional data management platform for [Open Data Kit](https://docs.getodk.org/) (ODK) that handles your data in a secure, consistent, and interoperable way using technologies like [MySQL](https://www.mysql.com/products/community/), [Elasticsearch](https://www.elastic.co/), and [OData](https://www.odata.org/)
+**What is FormShare:** FormShare is an advanced and professional data management platform for [Open Data Kit](https://docs.getodk.org/) (ODK) that handles your data in a secure, consistent, and interoperable way using technologies like [MySQL](https://www.mysql.com/products/community/), [Elasticsearch](https://www.elastic.co/), and [OData](https://www.odata.org/)
 
-With FormShare you can create data collection projects, upload ODK Forms, manage submissions, perform data cleaning, create data products, and analyze data with the tools of your choice.
+With FormShare, you can create data collection projects, upload ODK Forms, manage submissions, clean data, create data products, and analyze data with the tools of your choice.
 
 FormShare is [open source](https://github.com/qlands/FormShare) and offered for free to individuals and small organizations at [https://formshare.org](https://formshare.org)
 {% endhint %}

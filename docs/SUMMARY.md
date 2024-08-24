@@ -4,7 +4,7 @@
 
 ## Guides
 
-* [Registering and logging in](guides/registering-and-logging-in.md)
+* [Registering and logging in](guides/create-an-account-login.md)
 * [Creating your first project](guides/creating-your-first-project.md)
 * [Uploading your first ODK Form](guides/creating-your-first-task/README.md)
   * [Create and assign assistants](guides/creating-your-first-task/create-and-assign-assistants.md)

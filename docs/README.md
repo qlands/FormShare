@@ -5,7 +5,7 @@ description: This is the official documentation of FormShare
 # Welcome to FormShare
 
 {% hint style="info" %}
-**What is FormShare:** FormShare is an advanced and professional data management platform for [Open Data Kit](https://docs.getodk.org/) (ODK) that handles your data in a secure, consistent, and interoperable way using technologies like [MySQL](https://www.mysql.com/products/community/), [Elasticsearch](https://www.elastic.co/), and [OData](https://www.odata.org/)
+[Create an account / login](https://app.gitbook.com/s/86B4V7nCcexVq6gvzZTW/\~/changes/yDSwoeExcEZ2lYixAsbw/guides/create-an-account-login)**What is FormShare:** FormShare is an advanced and professional data management platform for [Open Data Kit](https://docs.getodk.org/) (ODK) that handles your data in a secure, consistent, and interoperable way using technologies like [MySQL](https://www.mysql.com/products/community/), [Elasticsearch](https://www.elastic.co/), and [OData](https://www.odata.org/)
 
 With FormShare you can create data collection projects, upload ODK Forms, manage submissions, perform data cleaning, create data products, and analyze data with the tools of your choice.
 
@@ -17,6 +17,10 @@ FormShare is [open source](https://github.com/qlands/FormShare) and offered for 
 ### Guides: Jump right in
 
 Follow our handy guides to get started on the basics as quickly as possible:
+
+{% content-ref url="guides/create-an-account-login.md" %}
+[create-an-account-login.md](guides/create-an-account-login.md)
+{% endcontent-ref %}
 
 {% content-ref url="guides/creating-your-first-project.md" %}
 [creating-your-first-project.md](guides/creating-your-first-project.md)

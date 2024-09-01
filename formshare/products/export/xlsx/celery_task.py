@@ -100,70 +100,74 @@ def internal_build_xlsx(
     p = Popen(args, stdout=PIPE, stderr=PIPE)
     stdout, stderr = p.communicate()
     if p.returncode == 0:
-        sheets_tree = etree.parse(xlsx_file_tmp + ".xml")
-        sheets_root = sheets_tree.getroot()
-        element_sheets = sheets_root.findall(".//sheet")
+        if settings.get("export.excel.with.format", "False") == "True":
+            sheets_tree = etree.parse(xlsx_file_tmp + ".xml")
+            sheets_root = sheets_tree.getroot()
+            element_sheets = sheets_root.findall(".//sheet")
 
-        # Open the create XML file
-        create_tree = etree.parse(create_xml)
-        create_root = create_tree.getroot()
+            # Open the create XML file
+            create_tree = etree.parse(create_xml)
+            create_root = create_tree.getroot()
 
-        for a_sheet in element_sheets:
-            # Open the Excel with Pandas
-            xls = pd.ExcelFile(xlsx_file_tmp)
-            sheet_name = a_sheet.get("name", "~!Empty")
-            if sheet_name in xls.sheet_names:
-                xls.close()
-                df = pd.read_excel(xlsx_file_tmp, sheet_name=sheet_name)
-                table_name = a_sheet.get("table", None)
-                if table_name is not None:
-                    tables = create_root.xpath('//table[@name="{}"]'.format(table_name))
-                    for a_table in tables:
-                        fields = a_table.findall(".//field")
-                        for a_field in fields:
-                            field_name = a_field.get("name", "~not_found")
-                            if a_field.get("type", "varchar") == "date":
-                                if field_name in df.columns:
-                                    df[field_name] = pd.to_datetime(
-                                        df[field_name],
-                                        errors="coerce",
-                                        format="%Y-%m-%d",
-                                    )
-                                    df[field_name] = df[field_name].dt.date
-                            if a_field.get("type", "varchar") == "datetime":
-                                if field_name in df.columns:
-                                    df[field_name] = pd.to_datetime(
-                                        df[field_name],
-                                        errors="coerce",
-                                        format="%Y-%m-%d %H:%M:%S",
-                                    )
-                            if a_field.get("rlookup", "false") == "false" or (
-                                a_field.get("rlookup", "false") == "true"
-                                and options != 2
-                            ):
-                                if a_field.get("type", "varchar") == "int":
+            for a_sheet in element_sheets:
+                # Open the Excel with Pandas
+                xls = pd.ExcelFile(xlsx_file_tmp)
+                sheet_name = a_sheet.get("name", "~!Empty")
+                if sheet_name in xls.sheet_names:
+                    xls.close()
+                    df = pd.read_excel(xlsx_file_tmp, sheet_name=sheet_name)
+                    table_name = a_sheet.get("table", None)
+                    if table_name is not None:
+                        tables = create_root.xpath(
+                            '//table[@name="{}"]'.format(table_name)
+                        )
+                        for a_table in tables:
+                            fields = a_table.findall(".//field")
+                            for a_field in fields:
+                                field_name = a_field.get("name", "~not_found")
+                                if a_field.get("type", "varchar") == "date":
+                                    if field_name in df.columns:
+                                        df[field_name] = pd.to_datetime(
+                                            df[field_name],
+                                            errors="coerce",
+                                            format="%Y-%m-%d",
+                                        )
+                                        df[field_name] = df[field_name].dt.date
+                                if a_field.get("type", "varchar") == "datetime":
+                                    if field_name in df.columns:
+                                        df[field_name] = pd.to_datetime(
+                                            df[field_name],
+                                            errors="coerce",
+                                            format="%Y-%m-%d %H:%M:%S",
+                                        )
+                                if a_field.get("rlookup", "false") == "false" or (
+                                    a_field.get("rlookup", "false") == "true"
+                                    and options != 2
+                                ):
+                                    if a_field.get("type", "varchar") == "int":
+                                        if field_name in df.columns:
+                                            df[field_name] = pd.to_numeric(
+                                                df[field_name], errors="coerce"
+                                            )
+                                if a_field.get("type", "varchar") == "decimal":
                                     if field_name in df.columns:
                                         df[field_name] = pd.to_numeric(
                                             df[field_name], errors="coerce"
                                         )
-                            if a_field.get("type", "varchar") == "decimal":
-                                if field_name in df.columns:
-                                    df[field_name] = pd.to_numeric(
-                                        df[field_name], errors="coerce"
-                                    )
-                if not os.path.exists(xlsx_file):
-                    with pd.ExcelWriter(
-                        xlsx_file, engine="openpyxl", mode="w"
-                    ) as writer:
-                        df.to_excel(writer, sheet_name=sheet_name, index=False)
+                    if not os.path.exists(xlsx_file):
+                        with pd.ExcelWriter(
+                            xlsx_file, engine="openpyxl", mode="w"
+                        ) as writer:
+                            df.to_excel(writer, sheet_name=sheet_name, index=False)
+                    else:
+                        with pd.ExcelWriter(
+                            xlsx_file, engine="openpyxl", mode="a"
+                        ) as writer:
+                            df.to_excel(writer, sheet_name=sheet_name, index=False)
                 else:
-                    with pd.ExcelWriter(
-                        xlsx_file, engine="openpyxl", mode="a"
-                    ) as writer:
-                        df.to_excel(writer, sheet_name=sheet_name, index=False)
-            else:
-                xls.close()
-
+                    xls.close()
+        else:
+            os.rename(xlsx_file_tmp, xlsx_file)
         return True, xlsx_file
     else:
         email_from = settings.get("mail.from", None)

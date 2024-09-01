@@ -28,7 +28,7 @@ def main(global_config, **settings):
         config.read(global_config["__file__"])
         host = config.get("server:main", "host")
         try:
-            threads = config.get("server:main", "threads")
+            threads = config.get("app:formshare", "odk.threads")
         except NoOptionError:
             threads = "1"
         port = config.get("server:main", "port")

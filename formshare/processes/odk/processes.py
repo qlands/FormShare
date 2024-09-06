@@ -1,5 +1,6 @@
 import datetime
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import re
 import uuid
 
@@ -19,6 +20,7 @@ from formshare.processes.db.project import project_has_crowdsourcing
 from lxml import etree
 from sqlalchemy.event import listen
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

@@ -14,6 +14,7 @@ import datetime
 import hashlib
 import json
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import uuid
 from ast import literal_eval
 import io
@@ -47,6 +48,7 @@ from pyramid.httpexceptions import HTTPNotFound, exception_response
 from pyramid.response import Response
 from pyramid.session import check_csrf_token
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

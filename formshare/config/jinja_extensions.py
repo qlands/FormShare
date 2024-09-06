@@ -1,4 +1,5 @@
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import os
 import re
 
@@ -10,6 +11,7 @@ from jinja2 import nodes
 from webhelpers2.html import literal
 
 jinjaEnv = Environment()
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

@@ -1,5 +1,6 @@
 import json
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import os
 
 from formshare.processes.db import (
@@ -17,6 +18,7 @@ from lxml import etree
 from pyramid.httpexceptions import HTTPNotFound, HTTPFound
 import formshare.plugins as plugins
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

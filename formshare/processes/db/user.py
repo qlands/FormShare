@@ -1,5 +1,6 @@
 import datetime
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import secrets
 
 from formshare.models import (
@@ -38,6 +39,7 @@ __all__ = [
     "get_user_with_token",
 ]
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

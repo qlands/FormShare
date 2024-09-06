@@ -1,5 +1,6 @@
 import datetime
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import uuid
 
 from formshare.models import (
@@ -23,6 +24,7 @@ __all__ = [
     "remove_assistant_from_group",
 ]
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

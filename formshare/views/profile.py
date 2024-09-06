@@ -1,4 +1,5 @@
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import formshare.plugins as p
 from formshare.config.auth import get_user_data
 from formshare.config.encdecdata import encode_data
@@ -11,6 +12,7 @@ from formshare.processes.elasticsearch.user_index import (
 from formshare.views.classes import ProfileView
 from pyramid.httpexceptions import HTTPNotFound, HTTPFound
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

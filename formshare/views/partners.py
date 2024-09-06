@@ -1,5 +1,6 @@
 import datetime
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import uuid
 
 import formshare.plugins as p
@@ -25,6 +26,7 @@ from formshare.products.products import get_product_description, get_product
 from formshare.views.classes import PrivateView
 from pyramid.httpexceptions import HTTPNotFound, HTTPFound
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

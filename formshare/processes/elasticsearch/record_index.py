@@ -3,9 +3,11 @@ from uuid import UUID
 from elasticsearch import Elasticsearch
 from elasticsearch.exceptions import RequestError
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import os
 import json
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

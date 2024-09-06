@@ -1,4 +1,5 @@
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import os
 
 import formshare.plugins as p
@@ -197,6 +198,7 @@ from formshare.views.testing import (
 )
 from formshare.views.users import UsersListView, EditUserView, AddUserView
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 route_list = []

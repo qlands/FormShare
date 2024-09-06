@@ -1,5 +1,6 @@
 import datetime
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import secrets
 from uuid import uuid4
 
@@ -38,6 +39,7 @@ __all__ = [
     "assistant_exist",
 ]
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

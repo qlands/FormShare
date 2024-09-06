@@ -1,5 +1,6 @@
 import gettext
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import smtplib
 from email.mime.text import MIMEText
 from email.utils import formatdate
@@ -7,6 +8,7 @@ from email.utils import formatdate
 from formshare.config.celery_app import celeryApp
 from formshare.config.celery_class import CeleryTask
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

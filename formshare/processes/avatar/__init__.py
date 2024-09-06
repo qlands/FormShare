@@ -1,10 +1,12 @@
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import os
 from io import BytesIO
 
 from PIL import Image, ImageDraw, ImageFont
 
 __all__ = ["Avatar"]
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

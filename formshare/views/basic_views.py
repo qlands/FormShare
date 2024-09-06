@@ -1,5 +1,6 @@
 import datetime
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import re
 import secrets
 import traceback
@@ -38,6 +39,7 @@ from pyramid.security import remember
 from pyramid.session import check_csrf_token
 from formshare.processes.db.utility import get_db_connection
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

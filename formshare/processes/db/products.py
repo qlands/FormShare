@@ -1,5 +1,6 @@
 import datetime
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import os
 
 from formshare.models import Product, FinishedTask, map_from_schema
@@ -18,6 +19,7 @@ __all__ = [
     "output_exists",
 ]
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

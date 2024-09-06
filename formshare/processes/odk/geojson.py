@@ -1,5 +1,6 @@
 import json
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import uuid
 from formshare.processes.db.dictionary import (
     get_dictionary_fields,
@@ -10,6 +11,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
 from sqlalchemy.orm.session import Session
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

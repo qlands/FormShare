@@ -2,6 +2,7 @@ import datetime
 import glob
 import json
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import mimetypes
 import os
 import re
@@ -136,6 +137,7 @@ from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from pyramid.response import FileResponse
 from formshare.processes.odk.geojson import check_geojson, update_lookup_from_geo_json
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

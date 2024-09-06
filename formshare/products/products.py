@@ -1,4 +1,5 @@
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import os
 
 import formshare.plugins as p
@@ -27,6 +28,7 @@ __all__ = [
     "get_product_description",
 ]
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 _PRODUCTS = []

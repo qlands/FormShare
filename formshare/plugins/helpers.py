@@ -7,6 +7,7 @@ available to Controllers. This module is available to templates as 'request.h'.
 
 import datetime
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import uuid
 import arrow
 import formshare.plugins as p
@@ -18,6 +19,7 @@ from pattern.en import pluralize as pluralize_en
 from pattern.es import pluralize as pluralize_es
 from pytz import timezone
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

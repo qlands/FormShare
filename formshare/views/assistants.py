@@ -2,6 +2,7 @@ import os
 import re
 import uuid
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import pandas as pd
 from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from pyramid.response import FileResponse
@@ -24,6 +25,7 @@ from formshare.processes.db import (
 from formshare.views.classes import PrivateView
 from sqlalchemy.exc import IntegrityError
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

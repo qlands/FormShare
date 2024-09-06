@@ -1,7 +1,9 @@
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 
 import paho.mqtt.publish as publish
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

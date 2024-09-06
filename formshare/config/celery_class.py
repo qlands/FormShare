@@ -1,4 +1,5 @@
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import smtplib
 from email.mime.text import MIMEText
 from email.utils import formatdate
@@ -11,6 +12,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.pool import NullPool
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

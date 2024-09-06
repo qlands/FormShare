@@ -3,6 +3,7 @@ import datetime
 import glob
 import json
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import mimetypes
 import os
 import shutil
@@ -110,6 +111,7 @@ __all__ = [
     "block_forms_with_schema",
 ]
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

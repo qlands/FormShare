@@ -1,4 +1,5 @@
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 
 from formshare.models import (
     map_to_schema,
@@ -44,6 +45,7 @@ __all__ = [
     "get_partner_timezone",
 ]
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

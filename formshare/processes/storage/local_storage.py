@@ -1,4 +1,5 @@
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import mimetypes
 import os
 import uuid
@@ -19,6 +20,7 @@ __all__ = [
 
 _BLOCK_SIZE = 4096 * 64  # 256K
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

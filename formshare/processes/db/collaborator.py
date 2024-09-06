@@ -1,5 +1,6 @@
 import datetime
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 
 from formshare.models import Userproject, User, map_from_schema
 from sqlalchemy.exc import IntegrityError
@@ -14,6 +15,7 @@ __all__ = [
     "get_collaboration_details",
 ]
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

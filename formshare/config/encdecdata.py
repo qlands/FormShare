@@ -1,10 +1,12 @@
 import base64
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import traceback
 
 from Crypto.Cipher import AES
 from cryptography.fernet import Fernet
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

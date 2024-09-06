@@ -1,11 +1,13 @@
 import datetime
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 
 from formshare.config.jinja_extensions import jinjaEnv, ExtendThis
 from formshare.plugins.helpers import readble_date
 from formshare.processes.email.send_async_email import send_async_email
 from jinja2 import ext
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

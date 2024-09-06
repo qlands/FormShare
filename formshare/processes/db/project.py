@@ -1,5 +1,6 @@
 import datetime
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import uuid
 
 import dateutil.parser
@@ -49,6 +50,7 @@ __all__ = [
     "get_forms_number",
 ]
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 invalid_aliases = [

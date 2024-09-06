@@ -3,6 +3,7 @@ import glob
 import io
 import json
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import mimetypes
 import os
 import re
@@ -87,6 +88,7 @@ from pyxform import xls2xform
 from pyxform.errors import PyXFormError
 from pyxform.xls2json import parse_file_to_json
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 __all__ = [

@@ -1,5 +1,6 @@
 import os
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import zope.sqlalchemy
 from formshare.models.formshare import (
     Base,
@@ -37,6 +38,7 @@ from sqlalchemy import engine_from_config
 from sqlalchemy.orm import configure_mappers
 from sqlalchemy.orm import sessionmaker
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 # import or define all models here to ensure they are attached to the

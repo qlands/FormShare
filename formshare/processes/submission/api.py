@@ -3,6 +3,7 @@ import glob
 import imghdr
 import json
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import os
 import re
 import shutil
@@ -73,6 +74,7 @@ __all__ = [
     "get_lookup_options",
 ]
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

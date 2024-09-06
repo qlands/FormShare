@@ -1,4 +1,5 @@
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import os
 import uuid
 import shutil
@@ -19,6 +20,7 @@ from formshare.views.classes import PrivateView
 from lxml import etree
 from pyramid.httpexceptions import HTTPNotFound, HTTPFound
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

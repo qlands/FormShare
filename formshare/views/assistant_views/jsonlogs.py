@@ -1,5 +1,6 @@
 import json
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import os
 import uuid
 
@@ -39,6 +40,7 @@ from pyramid.httpexceptions import HTTPNotFound, HTTPFound, HTTPForbidden
 from pyramid.response import FileResponse
 from webhelpers2.html import literal
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

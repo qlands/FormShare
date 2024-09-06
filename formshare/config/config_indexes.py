@@ -1,4 +1,5 @@
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import time
 
 import requests
@@ -10,6 +11,7 @@ from formshare.processes.elasticsearch.record_index import create_record_index
 from formshare.processes.elasticsearch.repository_index import create_dataset_index
 from formshare.processes.elasticsearch.user_index import configure_user_index_manager
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

@@ -1,5 +1,6 @@
 import datetime
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import re
 import secrets
 import uuid
@@ -21,6 +22,7 @@ from formshare.processes.elasticsearch.user_index import get_user_index_manager
 from formshare.views.classes import PrivateView
 from pyramid.httpexceptions import HTTPNotFound, HTTPFound
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

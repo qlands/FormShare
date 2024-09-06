@@ -1,9 +1,11 @@
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 from formshare.processes.email.send_email import send_error_to_technical_team
 import time
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

@@ -1,6 +1,7 @@
 import argparse
 import configparser
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import os
 import shutil
 import uuid

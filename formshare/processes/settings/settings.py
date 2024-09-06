@@ -1,9 +1,11 @@
 import json
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 
 from formshare.models import Settings
 from sqlalchemy.exc import IntegrityError
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 __all__ = ["store_settings", "update_settings", "delete_settings", "get_settings"]

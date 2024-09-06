@@ -2,6 +2,7 @@ import base64
 import io
 import json
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import os
 import re
 import uuid
@@ -58,6 +59,7 @@ from pyramid.httpexceptions import HTTPFound, HTTPNotFound
 from pyramid.response import FileResponse
 from pyramid.response import Response
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

@@ -1,4 +1,5 @@
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 import os
 import uuid
 from sqlalchemy import create_engine
@@ -26,6 +27,7 @@ __all__ = [
     "get_lookup_relation_fields",
 ]
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

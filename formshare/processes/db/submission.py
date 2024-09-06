@@ -1,11 +1,13 @@
 import datetime
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 
 from formshare.models import Submission
 from sqlalchemy.exc import IntegrityError
 
 __all__ = ["get_submission_data", "add_submission", "add_submission_same_as"]
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

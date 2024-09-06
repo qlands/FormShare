@@ -1,11 +1,13 @@
 import datetime
 import logging
+from formshare.processes.logging.loggerclass import SecretLogger
 
 from formshare.models import Jsonlog, Jsonhistory
 from sqlalchemy.exc import IntegrityError
 
 __all__ = ["add_json_log", "update_json_status", "add_json_history"]
 
+logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
 
 

@@ -113,10 +113,6 @@ from formshare.processes.submission.api import (
 )
 from formshare.products import get_form_products
 from formshare.products import stop_task
-from formshare.products.export.csv import (
-    generate_public_csv_file,
-    generate_private_csv_file,
-)
 from formshare.products.export.kml import generate_kml_file
 from formshare.products.export.media import generate_media_zip_file
 from formshare.products.export.xlsx import (
@@ -3451,119 +3447,6 @@ class DownloadGPSPoints(PrivateView):
         return data
 
 
-class DownloadPublicCSV(PrivateView):
-    def __init__(self, request):
-        PrivateView.__init__(self, request)
-        self.privateOnly = True
-        self.checkCrossPost = False
-        self.returnRawViewResult = True
-
-    def process_view(self):
-        user_id = self.request.matchdict["userid"]
-        project_code = self.request.matchdict["projcode"]
-        form_id = self.request.matchdict["formid"]
-        project_id = get_project_id_from_name(self.request, user_id, project_code)
-        options = int(self.request.params.get("options", "1"))
-
-        if project_id is not None:
-            if (
-                get_project_access_type(
-                    self.request, project_id, user_id, self.user.login
-                )
-                > 4
-            ):
-                raise HTTPNotFound
-        else:
-            raise HTTPNotFound
-
-        form_data = get_form_data(self.request, project_id, form_id)
-        if form_data is None:
-            raise HTTPNotFound
-        form_schema = form_data["form_schema"]
-        maps_directory = collect_maps_for_schema(self.request, form_schema)
-        create_xml_file = get_create_xml_for_schema(self.request, form_schema)
-        insert_xml_file = get_insert_xml_for_schema(self.request, form_schema)
-
-        generate_public_csv_file(
-            self.request,
-            self.user.id,
-            project_id,
-            form_id,
-            form_schema,
-            maps_directory,
-            create_xml_file,
-            insert_xml_file,
-            options,
-        )
-
-        next_page = self.request.params.get("next") or self.request.route_url(
-            "form_details",
-            userid=user_id,
-            projcode=project_code,
-            formid=form_id,
-            _query={"tab": "task", "product": "csv_public_export"},
-            _anchor="products_and_tasks",
-        )
-        return HTTPFound(location=next_page)
-
-
-class DownloadPrivateCSV(PrivateView):
-    def __init__(self, request):
-        PrivateView.__init__(self, request)
-        self.privateOnly = True
-        self.checkCrossPost = False
-        self.returnRawViewResult = True
-
-    def process_view(self):
-        user_id = self.request.matchdict["userid"]
-        project_code = self.request.matchdict["projcode"]
-        form_id = self.request.matchdict["formid"]
-        project_id = get_project_id_from_name(self.request, user_id, project_code)
-        options = int(self.request.params.get("options", "1"))
-
-        if project_id is not None:
-            if (
-                get_project_access_type(
-                    self.request, project_id, user_id, self.user.login
-                )
-                > 4
-            ):
-                raise HTTPNotFound
-        else:
-            raise HTTPNotFound
-
-        form_data = get_form_data(self.request, project_id, form_id)
-        if form_data is None:
-            raise HTTPNotFound
-
-        form_schema = form_data["form_schema"]
-        maps_directory = collect_maps_for_schema(self.request, form_schema)
-        create_xml_file = get_create_xml_for_schema(self.request, form_schema)
-        insert_xml_file = get_insert_xml_for_schema(self.request, form_schema)
-
-        generate_private_csv_file(
-            self.request,
-            self.user.id,
-            project_id,
-            form_id,
-            form_data["form_schema"],
-            maps_directory,
-            create_xml_file,
-            insert_xml_file,
-            options,
-        )
-
-        next_page = self.request.params.get("next") or self.request.route_url(
-            "form_details",
-            userid=user_id,
-            projcode=project_code,
-            formid=form_id,
-            _query={"tab": "task", "product": "csv_private_export"},
-            _anchor="products_and_tasks",
-        )
-        return HTTPFound(location=next_page)
-
-
 class ImportData(PrivateView):
     def __init__(self, request):
         PrivateView.__init__(self, request)
@@ -4602,15 +4485,6 @@ class ExportData(PrivateView):
                             formid=form_id,
                         )
                     )
-                if export_data["export_type"] == "CSV":
-                    return HTTPFound(
-                        location=self.request.route_url(
-                            "form_export_csv",
-                            userid=user_id,
-                            projcode=project_code,
-                            formid=form_id,
-                        )
-                    )
                 if export_data["export_type"] == "ZIP_CSV":
                     return HTTPFound(
                         location=self.request.route_url(
@@ -4828,60 +4702,6 @@ class ExportDataToZIPJSON(PrivateView):
                     projcode=project_code,
                     formid=form_id,
                     _query=options_dict,
-                )
-                return HTTPFound(location=location)
-
-        return {
-            "projectDetails": project_details,
-            "formid": form_id,
-            "formDetails": form_data,
-            "userid": user_id,
-        }
-
-
-class ExportDataToCSV(PrivateView):
-    def process_view(self):
-        user_id = self.request.matchdict["userid"]
-        project_code = self.request.matchdict["projcode"]
-        form_id = self.request.matchdict["formid"]
-        project_id = get_project_id_from_name(self.request, user_id, project_code)
-
-        if project_id is not None:
-            if (
-                get_project_access_type(
-                    self.request, project_id, user_id, self.user.login
-                )
-                > 4
-            ):
-                raise HTTPNotFound
-            project_details = get_project_details(self.request, project_id)
-        else:
-            raise HTTPNotFound
-
-        form_data = get_form_data(self.request, project_id, form_id)
-        if form_data is None:
-            raise HTTPNotFound
-
-        if self.request.method == "POST":
-            export_data = self.get_post_dict()
-            options_type = int(export_data["labels"])
-            self.returnRawViewResult = True
-            if export_data["publishable"] == "yes":
-                location = self.request.route_url(
-                    "form_download_repo_public_csv",
-                    userid=user_id,
-                    projcode=project_code,
-                    formid=form_id,
-                    _query={"options": options_type},
-                )
-                return HTTPFound(location=location)
-            if export_data["publishable"] == "no":
-                location = self.request.route_url(
-                    "form_download_repo_private_csv",
-                    userid=user_id,
-                    projcode=project_code,
-                    formid=form_id,
-                    _query={"options": options_type},
                 )
                 return HTTPFound(location=location)
 

@@ -14,11 +14,6 @@
                                 <select name="export_type" style="width: 100%; !important;" class="form-control">
                                     {% block export_types %}
                                         <option value="XLSX">{{ _('XLSX') }}</option>
-                                        {% if formDetails.indb < 10000 %}
-                                            <option value="CSV">{{ _('Flat CSV (One file)') }}</option>
-                                        {% else %}
-                                            <option disabled value="CSV">{{ _('Flat CSV (One file) (Disabled)') }}</option>
-                                        {% endif %}
                                         <option value="ZIP_CSV">{{ _('Zip CSV (Multiple files)') }}</option>
                                         <option value="ZIP_JSON">{{ _('Zip JSON (Multiple files)') }}</option>
                                         <option value="KML">{{ _('KML') }}</option>

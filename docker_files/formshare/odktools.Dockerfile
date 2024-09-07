@@ -13,8 +13,8 @@ RUN add-apt-repository ppa:mosquitto-dev/mosquitto-ppa -y
 RUN wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc |  gpg --dearmor | tee /usr/share/keyrings/mongodb.gpg > /dev/null
 RUN echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-6.0.list
 
-RUN wget https://dev.mysql.com/get/mysql-apt-config_0.8.29-1_all.deb
-RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC dpkg -i ./mysql-apt-config_0.8.29-1_all.deb
+RUN wget https://dev.mysql.com/get/mysql-apt-config_0.8.32-1_all.deb
+RUN DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC dpkg -i ./mysql-apt-config_0.8.32-1_all.deb
 
 RUN apt-get update
 
@@ -40,10 +40,10 @@ RUN mkdir odktools-deps
 RUN git clone https://github.com/qlands/odktools.git -b stable-2.13
 
 WORKDIR /opt/odktools-deps
-RUN wget https://github.com/mongodb/mongo-c-driver/releases/download/1.21.1/mongo-c-driver-1.21.1.tar.gz
-RUN wget https://github.com/mongodb/mongo-cxx-driver/releases/download/r3.6.7/mongo-cxx-driver-r3.6.7.tar.gz
-RUN wget https://github.com/jmcnamara/libxlsxwriter/archive/refs/tags/RELEASE_1.1.4.tar.gz
-RUN wget https://github.com/stachenov/quazip/archive/refs/tags/v1.3.tar.gz
+RUN wget https://github.com/mongodb/mongo-c-driver/releases/download/1.27.6/mongo-c-driver-1.27.6.tar.gz
+RUN wget https://github.com/mongodb/mongo-cxx-driver/releases/download/r3.10.2/mongo-cxx-driver-r3.10.2.tar.gz
+RUN wget https://github.com/jmcnamara/libxlsxwriter/archive/refs/tags/v1.1.8.tar.gz
+RUN wget https://github.com/stachenov/quazip/archive/refs/tags/v1.4.tar.gz
 RUN git clone https://github.com/rgamble/libcsv.git
 
 RUN tar xvfz mongo-c-driver-1.21.1.tar.gz
@@ -64,10 +64,10 @@ RUN make
 RUN make install
 WORKDIR /opt/odktools-deps
 
-RUN tar xvfz v1.3.tar.gz
-WORKDIR /opt/odktools-deps/quazip-1.3
+RUN tar xvfz v1.4.tar.gz
+WORKDIR /opt/odktools-deps/quazip-1.4
 RUN mkdir build
-WORKDIR /opt/odktools-deps/quazip-1.3/build
+WORKDIR /opt/odktools-deps/quazip-1.4/build
 RUN cmake -DCMAKE_C_FLAGS:STRING="-fPIC" -DCMAKE_CXX_FLAGS:STRING="-fPIC" ..
 RUN make
 RUN make install
@@ -76,10 +76,10 @@ WORKDIR /opt/odktools-deps
 RUN ln -s /usr/bin/aclocal-1.16 /usr/bin/aclocal-1.14
 RUN ln -s /usr/bin/automake-1.16 /usr/bin/automake-1.14
 
-RUN tar xvfz RELEASE_1.1.4.tar.gz
-WORKDIR /opt/odktools-deps/libxlsxwriter-RELEASE_1.1.4
+RUN tar xvfz v1.1.8.tar.gz
+WORKDIR /opt/odktools-deps/libxlsxwriter-1.1.8
 RUN mkdir build
-WORKDIR /opt/odktools-deps/libxlsxwriter-RELEASE_1.1.4/build
+WORKDIR /opt/odktools-deps/libxlsxwriter-1.1.8/build
 RUN cmake ..
 RUN make
 RUN make install

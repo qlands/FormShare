@@ -100,8 +100,6 @@ from formshare.views.form import (
     ImportData,
     DownloadKML,
     StopTask,
-    DownloadPublicCSV,
-    DownloadPrivateCSV,
     DownloadPrivateXLSData,
     DownloadPrivateZIPCSVData,
     DownloadPrivateZIPJSONData,
@@ -115,7 +113,6 @@ from formshare.views.form import (
     FixMergeLanguage,
     ExportData,
     ExportDataToXLSX,
-    ExportDataToCSV,
     ExportDataToZIPCSV,
     ExportDataToZIPJSON,
     CompareForms,
@@ -831,14 +828,6 @@ def load_routes(config, settings):
     )
     routes.append(
         add_route(
-            "form_export_csv",
-            "/user/{userid}/project/{projcode}/form/{formid}/export/csv",
-            ExportDataToCSV,
-            "dashboard/projects/forms/export/csv.jinja2",
-        )
-    )
-    routes.append(
-        add_route(
             "form_export_zip_csv",
             "/user/{userid}/project/{projcode}/form/{formid}/export/zip_csv",
             ExportDataToZIPCSV,
@@ -951,24 +940,6 @@ def load_routes(config, settings):
             "/user/{userid}/project/{projcode}/form/{formid}/get/gpspoints",
             DownloadGPSPoints,
             "json",
-        )
-    )
-
-    routes.append(
-        add_route(
-            "form_download_repo_public_csv",
-            "/user/{userid}/project/{projcode}/form/{formid}/generate/repo_public_csv",
-            DownloadPublicCSV,
-            None,
-        )
-    )
-
-    routes.append(
-        add_route(
-            "form_download_repo_private_csv",
-            "/user/{userid}/project/{projcode}/form/{formid}/generate/repo_private_csv",
-            DownloadPrivateCSV,
-            None,
         )
     )
 

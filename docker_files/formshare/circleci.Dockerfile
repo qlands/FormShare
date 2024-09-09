@@ -10,9 +10,6 @@ RUN sudo apt-get install -y wget
 
 RUN sudo add-apt-repository ppa:mosquitto-dev/mosquitto-ppa -y
 
-RUN sudo wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc |  sudo gpg --dearmor | sudo tee /usr/share/keyrings/mongodb.gpg > /dev/null
-RUN sudo echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
-
 WORKDIR /opt
 RUN sudo mkdir mysql_config
 WORKDIR /opt/mysql_config
@@ -22,7 +19,7 @@ WORKDIR /home/circleci/project
 
 RUN sudo apt-get update
 
-RUN sudo DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y build-essential qtbase5-dev qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client sqlite3 libqt5sql5-sqlite git wget python3-venv tidy golang-go mosquitto curl nano mongodb-org mysql-shell openjdk-17-jre-headless
+RUN sudo DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y build-essential qtbase5-dev qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client sqlite3 libqt5sql5-sqlite git wget python3-venv tidy golang-go mosquitto curl nano mysql-shell openjdk-17-jre-headless
 
 # BEGIN IMAGE CUSTOMIZATIONS
 
@@ -62,37 +59,18 @@ WORKDIR /home/circleci/project
 
 WORKDIR /opt
 RUN sudo mkdir odktools-deps
-RUN sudo git clone https://github.com/qlands/odktools.git -b stable-2.13
+RUN sudo git clone https://github.com/qlands/odktools.git -b stable-2.14
 
 WORKDIR /opt/odktools-deps
-RUN sudo wget https://github.com/mongodb/mongo-c-driver/releases/download/1.21.1/mongo-c-driver-1.21.1.tar.gz
-RUN sudo wget https://github.com/mongodb/mongo-cxx-driver/releases/download/r3.6.7/mongo-cxx-driver-r3.6.7.tar.gz
-RUN sudo wget https://github.com/jmcnamara/libxlsxwriter/archive/refs/tags/RELEASE_1.1.4.tar.gz
-RUN sudo wget https://github.com/stachenov/quazip/archive/refs/tags/v1.3.tar.gz
+RUN sudo wget https://github.com/jmcnamara/libxlsxwriter/archive/refs/tags/v1.1.8.tar.gz
+RUN sudo wget https://github.com/stachenov/quazip/archive/refs/tags/v1.4.tar.gz
 RUN sudo git clone https://github.com/rgamble/libcsv.git
 
-RUN sudo tar xvfz mongo-c-driver-1.21.1.tar.gz
-WORKDIR /opt/odktools-deps/mongo-c-driver-1.21.1
-RUN sudo mkdir build_here
-WORKDIR /opt/odktools-deps/mongo-c-driver-1.21.1/build_here
-RUN sudo cmake ..
-RUN sudo make
-RUN sudo make install
-WORKDIR /opt/odktools-deps
 
-RUN sudo tar xvfz mongo-cxx-driver-r3.6.7.tar.gz
-WORKDIR /opt/odktools-deps/mongo-cxx-driver-r3.6.7
-RUN sudo mkdir build_here
-WORKDIR /opt/odktools-deps/mongo-cxx-driver-r3.6.7/build_here
-RUN sudo cmake -DCMAKE_C_FLAGS:STRING="-O2 -fPIC" -DCMAKE_CXX_FLAGS:STRING="-O2 -fPIC" -DBSONCXX_POLY_USE_BOOST=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
-RUN sudo make
-RUN sudo make install
-WORKDIR /opt/odktools-deps
-
-RUN sudo tar xvfz v1.3.tar.gz
-WORKDIR /opt/odktools-deps/quazip-1.3
+RUN sudo tar xvfz v1.4.tar.gz
+WORKDIR /opt/odktools-deps/quazip-1.4
 RUN sudo mkdir build
-WORKDIR /opt/odktools-deps/quazip-1.3/build
+WORKDIR /opt/odktools-deps/quazip-1.4/build
 RUN sudo cmake -DCMAKE_C_FLAGS:STRING="-fPIC" -DCMAKE_CXX_FLAGS:STRING="-fPIC" ..
 RUN sudo make
 RUN sudo make install
@@ -101,10 +79,10 @@ WORKDIR /opt/odktools-deps
 RUN sudo ln -s /usr/bin/aclocal-1.16 /usr/bin/aclocal-1.14
 RUN sudo ln -s /usr/bin/automake-1.16 /usr/bin/automake-1.14
 
-RUN sudo tar xvfz RELEASE_1.1.4.tar.gz
-WORKDIR /opt/odktools-deps/libxlsxwriter-RELEASE_1.1.4
+RUN sudo tar xvfz v1.1.8.tar.gz
+WORKDIR /opt/odktools-deps/libxlsxwriter-1.1.8
 RUN sudo mkdir build
-WORKDIR /opt/odktools-deps/libxlsxwriter-RELEASE_1.1.4/build
+WORKDIR /opt/odktools-deps/libxlsxwriter-1.1.8/build
 RUN sudo cmake ..
 RUN sudo make
 RUN sudo make install

@@ -1,7 +1,5 @@
 #!/bin/bash
 
-rm /var/run/mongod.pid
-mongod --fork --pidfilepath /var/run/mongod.pid --logpath /var/log/mongodb/mongod.log --config /etc/mongod.conf
 rm /var/run/redis/redis-server.pid
 chown -R redis /etc/redis
 chgrp -R redis /etc/redis

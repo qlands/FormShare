@@ -2,7 +2,7 @@ version: 2
 jobs:
   py-3.10: &build-template
     docker:
-      - image: qlands/odktools_circleci:20240816
+      - image: qlands/odktools_circleci:20240908
       - image: docker.elastic.co/elasticsearch/elasticsearch:7.14.0
         environment:
           - bootstrap.memory_lock=true
@@ -41,7 +41,6 @@ jobs:
             sudo chown -R redis /var/lib/redis
             sudo chgrp -R redis /var/lib/redis
             sudo /etc/init.d/redis-server start
-            sudo mongod --fork --pidfilepath /var/run/mongod.pid --logpath /var/log/mongodb/mongod.log --config /etc/mongod.conf
             sudo service mosquitto start
             tail -f /dev/null
           background: true

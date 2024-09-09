@@ -40,10 +40,6 @@ sudo apt-get install -y wget
 
 sudo add-apt-repository ppa:mosquitto-dev/mosquitto-ppa -y
 
-# The following two lines apply if you are using Ubuntu 22.04
-sudo wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc |  gpg --dearmor | sudo tee /usr/share/keyrings/mongodb.gpg > /dev/null
-sudo echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-6.0.list
-
 sudo wget https://dev.mysql.com/get/mysql-apt-config_0.8.24-1_all.deb
 sudo dpkg -i ./mysql-apt-config_0.8.24-1_all.deb
 
@@ -105,9 +101,9 @@ Result:
 
 ```sh
 # if Ubuntu 22.04
-sudo apt-get install -y mysql-server build-essential qtbase5-dev qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client-8.0 sqlite3 libqt5sql5-sqlite git wget python3-venv tidy golang-go mosquitto curl nano mongodb-org mysql-shell openjdk-17-jre-headless mysql-shell
+sudo apt-get install -y mysql-server build-essential qtbase5-dev qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client-8.0 sqlite3 libqt5sql5-sqlite git wget python3-venv tidy golang-go mosquitto curl nano mysql-shell openjdk-17-jre-headless mysql-shell
 # if Ubuntu 20.04
-sudo sudo apt-get install -y mysql-server build-essential qt5-default qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake mongodb jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client-8.0 sqlite3 libqt5sql5-sqlite git wget python3-venv tidy golang-go mosquitto nano mysql-shell
+sudo sudo apt-get install -y mysql-server build-essential qt5-default qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client-8.0 sqlite3 libqt5sql5-sqlite git wget python3-venv tidy golang-go mosquitto nano mysql-shell
 ```
 
 ### Update MySQL root password
@@ -165,37 +161,17 @@ sudo cp csv2xlsx /bin
 ```sh
 cd /opt
 sudo mkdir odktools-deps
-sudo git clone https://github.com/qlands/odktools.git -b stable-2.5
+sudo git clone https://github.com/qlands/odktools.git -b stable-2.14
 
 cd /opt/odktools-deps
-sudo wget https://github.com/mongodb/mongo-c-driver/releases/download/1.21.1/mongo-c-driver-1.21.1.tar.gz
-sudo wget https://github.com/mongodb/mongo-cxx-driver/releases/download/r3.6.7/mongo-cxx-driver-r3.6.7.tar.gz
-sudo wget https://github.com/jmcnamara/libxlsxwriter/archive/refs/tags/RELEASE_1.1.4.tar.gz
-sudo wget https://github.com/stachenov/quazip/archive/refs/tags/v1.3.tar.gz
+sudo wget https://github.com/jmcnamara/libxlsxwriter/archive/refs/tags/v1.1.8.tar.gz
+sudo wget https://github.com/stachenov/quazip/archive/refs/tags/v1.4.tar.gz
 sudo git clone https://github.com/rgamble/libcsv.git
 
-sudo tar xvfz mongo-c-driver-1.21.1.tar.gz
-cd /opt/odktools-deps/mongo-c-driver-1.21.1
-sudo mkdir build_here
-cd /opt/odktools-deps/mongo-c-driver-1.21.1/build_here
-sudo cmake ..
-sudo make
-sudo make install
-cd /opt/odktools-deps
-
-sudo tar xvfz mongo-cxx-driver-r3.6.7.tar.gz
-cd /opt/odktools-deps/mongo-cxx-driver-r3.6.7
-sudo mkdir build_here
-cd /opt/odktools-deps/mongo-cxx-driver-r3.6.7/build_here
-sudo cmake -DCMAKE_C_FLAGS:STRING="-O2 -fPIC" -DCMAKE_CXX_FLAGS:STRING="-O2 -fPIC" -DBSONCXX_POLY_USE_BOOST=1 -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
-sudo make
-sudo make install
-cd /opt/odktools-deps
-
-sudo tar xvfz v1.3.tar.gz
-cd /opt/odktools-deps/quazip-1.3
+sudo tar xvfz v1.4.tar.gz
+cd quazip-1.4
 sudo mkdir build
-cd /opt/odktools-deps/quazip-1.3/build
+cd build
 sudo cmake -DCMAKE_C_FLAGS:STRING="-fPIC" -DCMAKE_CXX_FLAGS:STRING="-fPIC" ..
 sudo make
 sudo make install
@@ -204,10 +180,10 @@ cd /opt/odktools-deps
 sudo ln -s /usr/bin/aclocal-1.16 /usr/bin/aclocal-1.14
 sudo ln -s /usr/bin/automake-1.16 /usr/bin/automake-1.14
 
-sudo tar xvfz RELEASE_1.1.4.tar.gz
-cd /opt/odktools-deps/libxlsxwriter-RELEASE_1.1.4
+sudo tar xvfz v1.1.8.tar.gz
+cd libxlsxwriter-1.1.8
 sudo mkdir build
-cd /opt/odktools-deps/libxlsxwriter-RELEASE_1.1.4/build
+cd build
 sudo cmake ..
 sudo make
 sudo make install
@@ -267,7 +243,7 @@ sudo chown -R $whoami formshare_env
 
 ```sh
 cd /opt
-sudo git clone https://github.com/qlands/FormShare.git -b stable-2.38.0 formshare
+sudo git clone https://github.com/qlands/FormShare.git -b stable-2.39.0 formshare
 sudo chown -R $whoami formshare
 ```
 

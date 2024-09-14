@@ -23,4 +23,24 @@ Assistants help you collect and clean data. Assistants are created under a proje
 
 
 
+<figure><img src="../.gitbook/assets/list_assistants.png" alt=""><figcaption></figcaption></figure>
+
+
+
+1. **Assistant list:** This list shows the assistants created under the selected project.
+2. **Add assistants:** Click the "Add assistants" button to add new assistants. You can add assistants individually or upload a CSV file with several assistants.
+3. **Add one:** Click the "Add one" button to add one assistant. The assistant form will appear.
+4. **Template file:** Click on the "Download template file" to obtain an example CSV file to help you set each assistant's information.
+5. **Upload:** Click the "Upload CSV file" button to upload the assistants from the CSV file. FormShare will upload all or none. If you have an error uploading the file, none of the assistants will be uploaded.  FormShare will tell you the error in your CSV file.
+6. **Change password:** Click the "Change password" button to set a new password for the assistant. The assistant can also change its password after logging in on the Assistance Access portal.
+7. **Delete assistant:** Click the "Delete" button to delete the assistant. FormShare will ask you if you are sure that you want to delete the assistant.
+8. **Edit assistant:** Click the "Edit" button to edit the assistant's details.
+9. **Status:** The status shows whether the assistant is active or not. Inactive assistants cannot collect or clean data. You can use assistants that have this badge across projects within your account.
+
+### Add assistants individually
+
+Click the "Add one" button to add one assistant. The assistant form will appear.
+
+
+
 ## Groups of assistants

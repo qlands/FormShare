@@ -41,6 +41,22 @@ Assistants help you collect and clean data. Assistants are created under a proje
 
 Click the "Add one" button to add one assistant. The assistant form will appear.
 
+<figure><img src="../.gitbook/assets/assistant_form.png" alt=""><figcaption></figcaption></figure>
+
+* Assistant ID: This is a simple name to identify the assistant in FormShare. It is the name that the assistant will use in ODK Collect. The assistant ID must be unique across your account and cannot be changed afterward.
+* Full name: Indicate the name of the assistant here.
+* Email: Indicate the assistant's email here. Two assistants cannot have the same email within your account.
+* Time zone: This is where the assistant performs their activities.
+* Password and Password confirmation: Indicate here the password of the assistant account. This will be used in ODK Collect to authenticate the assistant.
+* Share among projects: If selected (green), this person can assist with different projects within your account.
+
+Click the "Add assistant" button to add the assistant. FormShare will take you to the assistant list or redirect you to where you were before.
+
+
+
+
+
 
 
 ## Groups of assistants
+

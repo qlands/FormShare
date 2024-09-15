@@ -106,7 +106,7 @@ To add a file click on the "+" button. You can select one or more files and deci
 Case sensitive file names: FormShare is case sensitive, therefore if you declare a file in your ODK form called "Regions.csv" then you need to attach "**R**egions.csv" and not "**r**egions.csv".
 {% endhint %}
 
-8\. Add new assistants: **This button only appears when the project does not have any assistants or if there are no assistants shared across projects**. Click on the "Add an assistant" button to add a new assistant. More details about assistants are covered in the "[Assistants](../tasks.md)" section.
+8\. Add new assistants: **This button only appears when the project does not have any assistants or if there are no assistants shared across projects**. Click on the "Add an assistant" button to add a new assistant. More details about assistants are covered in the "[Assistants](../tasks/)" section.
 
 9\. Assigned assistants: Assistants help you to collect and clean data. Once you have one or more assistants in your project you can assign them to a form. Click on the "+" button to assign an assistant to the form. The "Adding assistant" screen will appear.
 
@@ -114,7 +114,7 @@ Case sensitive file names: FormShare is case sensitive, therefore if you declare
 
 An assistant can submit data and/or clean data. Click on the "Add assistant" button to add the assistant to the form.
 
-10\. Assigned assistant groups. You can assign groups to a form in the same way that you assign assistants. Each group can submit data and/or clean data. Details on assistant groups are covered in the section "[Assistants](../tasks.md)".
+10\. Assigned assistant groups. You can assign groups to a form in the same way that you assign assistants. Each group can submit data and/or clean data. Details on assistant groups are covered in the section "[Assistants](../tasks/)".
 
 #### Testing a Form
 

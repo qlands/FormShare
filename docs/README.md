@@ -50,6 +50,6 @@ Learn the fundamentals of FormShare to get a deeper understanding of our main fe
 [forms](fundamentals/forms/)
 {% endcontent-ref %}
 
-{% content-ref url="fundamentals/tasks.md" %}
-[tasks.md](fundamentals/tasks.md)
+{% content-ref url="fundamentals/tasks/" %}
+[tasks](fundamentals/tasks/)
 {% endcontent-ref %}

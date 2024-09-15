@@ -1,17 +1,17 @@
 # Assistants
 
 {% hint style="info" %}
-**Active project vs current project**
+**Active project vs. current project**
 
-* In FormShare you can have one active project. The active project is marked with a star (⭐) and is the one showing on the [Dashboard](the-dashboard.md).
-* The current project is the one displayed on the screen. This can be any project that you select including the active project.
+* In FormShare, you can have one active project. The active project is marked with a star (⭐) and is the one showing on the [Dashboard](../the-dashboard.md).
+* The current project is displayed on the screen. It can be any project you select, including the active project.
 {% endhint %}
 
-## Assistants
 
-Assistants help you collect and clean data. Assistants are created under a project (they belong to a project) but they can assist in several forms in different capacities across projects.
 
-<figure><img src="../.gitbook/assets/assistants_captions.png" alt=""><figcaption></figcaption></figure>
+Assistants help you collect and clean data. Assistants are created under a project (they belong to a project) but can assist in several forms and different capacities across projects.
+
+<figure><img src="../../.gitbook/assets/assistants_captions.png" alt=""><figcaption></figcaption></figure>
 
 1. **Assistants in the active project**: Click on the "Assistants" link to access the list of assistants in the active project.
 2. **Assistants in the current project**: On the "Project Details" page the assistants are shown in the "Assistants" section.
@@ -23,7 +23,7 @@ Assistants help you collect and clean data. Assistants are created under a proje
 
 
 
-<figure><img src="../.gitbook/assets/list_assistants.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/list_assistants.png" alt=""><figcaption></figcaption></figure>
 
 
 
@@ -41,7 +41,7 @@ Assistants help you collect and clean data. Assistants are created under a proje
 
 Click the "Add one" button on the assistant list page to add one assistant. The assistant form will appear.
 
-<figure><img src="../.gitbook/assets/assistant_form.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/assistant_form.png" alt=""><figcaption></figcaption></figure>
 
 * Assistant ID: This is a simple name to identify the assistant in FormShare. It is the name that the assistant will use in ODK Collect. The assistant ID must be unique across your account and cannot be changed afterward.
 * Full name: Indicate the name of the assistant here.
@@ -59,7 +59,7 @@ Click the "Edit assistant" button on the assistant list page to modify an assist
 
 #### Current information
 
-<figure><img src="../.gitbook/assets/edit_assistant.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/edit_assistant.png" alt=""><figcaption></figcaption></figure>
 
 * Assistant ID: This shows the assistant's ID. It cannot be changed.
 * Full name: Indicate the name of the assistant here.
@@ -74,7 +74,7 @@ Click the "Modify assistant" button to save the changes.
 
 #### Change password
 
-<figure><img src="../.gitbook/assets/change_assistant_psass.png" alt=""><figcaption></figcaption></figure>
+<figure><img src="../../.gitbook/assets/change_assistant_psass.png" alt=""><figcaption></figcaption></figure>
 
 * Password and confirmation: Indicate a new password for the assistant here.
 

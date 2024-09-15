@@ -84,6 +84,6 @@ An assistant is defined in a project **but can be used** across several projects
 
 An assistant can submit data and/or clean data. Click on the "Add assistant" button to add the assistant to the form.
 
-10\. Assigned assistant groups. You can assign groups to a form in the same way that you assign assistants. Each group can submit data and/or clean data. Details on assistant groups are covered in the section "[Assistants](../../fundamentals/tasks.md)".
+10\. Assigned assistant groups. You can assign groups to a form in the same way that you assign assistants. Each group can submit data and/or clean data. Details on assistant groups are covered in the section "[Assistants](../../fundamentals/tasks/)".
 
 At this stage, your form will be ready for testing. The next section covers more details on the testing stage.

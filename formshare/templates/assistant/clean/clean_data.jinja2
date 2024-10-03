@@ -261,7 +261,20 @@
                                             }
                                         }
                                         else {
-                                            delete postedData[key]
+                                            let read_only_keys = ['surveyid','originid','_submitted_by','_xform_id_string','_submitted_date','_geopoint','_longitude','_latitude','gps_point','rowuuid'];
+                                            if (read_only_keys.includes(key)) {
+                                                delete postedData[key]
+                                            }
+                                            else
+                                            {
+                                                let current_value = section[key];
+                                                if (current_value === null) {
+                                                    current_value = '';
+                                                }
+                                                if (current_value == postedData[key]) {
+                                                    delete postedData[key];
+                                                }
+                                            }
                                         }
                                     });
                                 }

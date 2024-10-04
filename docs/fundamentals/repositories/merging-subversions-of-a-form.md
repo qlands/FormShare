@@ -41,3 +41,5 @@ Example of merged data. In yellow coming from form "example\_20230225" and in gr
 It will be through [data cleaning](../../data-management/for-designers/figma-integration/) to have both data in one coherent set.
 
 ## Merging a new version
+
+Some content here

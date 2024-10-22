@@ -51,3 +51,8 @@
 ## Technical pages
 
 * [Settings](technical-pages/keyboard-shortcuts.md)
+
+## Plugins
+
+* [What are plugins?](plugins/what-are-plugins.md)
+* [Enketo plugin](plugins/enketo-plugin.md)

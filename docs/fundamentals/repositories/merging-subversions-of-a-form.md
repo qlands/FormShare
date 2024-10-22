@@ -38,7 +38,7 @@ FormShare will be able to merge the form by changing the name of the variables (
 Example of merged data. In yellow coming from form "example\_20230225" and in green from form "example\_20230228"
 {% endembed %}
 
-It will be through [data cleaning](../../data-management/for-designers/figma-integration/) to have both data in one coherent set.
+It will be through data cleaning to have both data in one coherent set.
 
 ## Merging a new version
 

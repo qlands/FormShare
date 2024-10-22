@@ -40,7 +40,7 @@ Example of merged data. In yellow coming from form "example\_20230225" and in gr
 
 It will be through data cleaning to have both data in one coherent set.
 
-## Merging a new version
+## Upload a new version.
 
 To merge a new version of a form, go to the "Form Details" page **of the latest version**.
 
@@ -61,6 +61,8 @@ Though FormShare checks for specific errors in your form, it does not check:
 * Missing a question is common, and a field test can spot such problems.
 * Field agents might not understand the survey, so more notes are required.
 {% endhint %}
+
+## Merge the new version.
 
 <figure><img src="../../.gitbook/assets/merge_form_02.png" alt=""><figcaption></figcaption></figure>
 

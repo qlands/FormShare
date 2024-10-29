@@ -170,6 +170,20 @@ def get_last_log_entry(request, user, project, form, submission_id):
         return None
 
 
+def get_form_id_from_submission(request, user, project, submission_id):
+    res = (
+        request.dbsession.query(Submission)
+        .filter(Submission.project_id == project)
+        .filter(Submission.submission_id == submission_id)
+        .first()
+    )
+    if res is not None:
+        mapped_data = map_from_schema(res)
+        return mapped_data["form_id"]
+    else:
+        return None
+
+
 def get_submission_details(request, project, form, submission):
     if not project_has_crowdsourcing(request, project):
         res = (
@@ -177,7 +191,6 @@ def get_submission_details(request, project, form, submission):
             .filter(Submission.enum_project == Collaborator.project_id)
             .filter(Submission.coll_id == Collaborator.coll_id)
             .filter(Submission.project_id == project)
-            .filter(Submission.form_id == form)
             .filter(Submission.submission_id == submission)
             .first()
         )
@@ -185,6 +198,7 @@ def get_submission_details(request, project, form, submission):
         if res is not None:
             mapped_data = map_from_schema(res)
             return {
+                "form_id": mapped_data["form_id"],
                 "submission_dtime": mapped_data["submission_dtime"],
                 "submission_id": mapped_data["submission_id"],
                 "enum_name": mapped_data["coll_name"],
@@ -196,7 +210,6 @@ def get_submission_details(request, project, form, submission):
         res = (
             request.dbsession.query(Submission)
             .filter(Submission.project_id == project)
-            .filter(Submission.form_id == form)
             .filter(Submission.submission_id == submission)
             .first()
         )
@@ -204,6 +217,7 @@ def get_submission_details(request, project, form, submission):
         if res is not None:
             mapped_data = map_from_schema(res)
             return {
+                "form_id": mapped_data["form_id"],
                 "submission_dtime": mapped_data["submission_dtime"],
                 "submission_id": mapped_data["submission_id"],
                 "enum_name": "public",

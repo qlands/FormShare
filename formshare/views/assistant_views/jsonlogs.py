@@ -33,6 +33,7 @@ from formshare.processes.odk.processes import (
     cancel_disregard_revision,
     get_error_description_from_file,
     get_number_of_errors_by_assistant,
+    get_form_id_from_submission,
 )
 from formshare.processes.submission.api import get_submission_media_files
 from formshare.views.classes import AssistantView
@@ -168,7 +169,7 @@ class JSONCompare(AssistantView):
                 self.request, self.projectID, form_id, submission_id
             )
             form_data = get_form_data(self.request, self.projectID, form_id)
-            comp_data = {}
+            comp_data_b = {}
             if data is not None:
                 if data["status"] != 0:
                     diff = None
@@ -176,15 +177,19 @@ class JSONCompare(AssistantView):
                         post_data = self.get_post_dict()
                         if post_data["submissionid"] != submission_id:
                             comp_code = post_data["submissionid"].strip()
-                            comp_data = get_submission_details(
+                            comp_data_a = get_submission_details(
+                                self.request, self.projectID, form_id, submission_id
+                            )
+                            comp_data_b = get_submission_details(
                                 self.request, self.projectID, form_id, comp_code
                             )
-                            if comp_data is not None:
+                            if comp_data_b is not None:
                                 error, diff = generate_diff(
                                     self.request,
                                     self.projectID,
-                                    form_id,
+                                    comp_data_a["form_id"],
                                     submission_id,
+                                    comp_data_b["form_id"],
                                     comp_code,
                                 )
                                 if error != 0:
@@ -201,7 +206,7 @@ class JSONCompare(AssistantView):
                                 else:
                                     diff = literal(diff)
                             else:
-                                comp_data = {}
+                                comp_data_b = {}
                                 self.append_to_errors(
                                     self._("The submission ID does not exist")
                                 )
@@ -216,7 +221,7 @@ class JSONCompare(AssistantView):
                         "formid": form_id,
                         "submissionid": submission_id,
                         "data": data,
-                        "compData": comp_data,
+                        "compData": comp_data_b,
                         "diff": diff,
                         "formData": form_data,
                         "project_has_crowdsourcing": self.project_has_crowdsourcing,
@@ -829,7 +834,14 @@ class JSONCompareSubmissions(AssistantView):
     def process_view(self):
         form_id = self.request.matchdict["formid"]
         submission_a = self.request.matchdict["submissiona"].strip()
+        form_a = get_form_id_from_submission(
+            self.request, self.userID, self.projectID, submission_a
+        )
+
         submission_b = self.request.matchdict["submissionb"].strip()
+        form_b = get_form_id_from_submission(
+            self.request, self.userID, self.projectID, submission_b
+        )
 
         permissions = get_assistant_permissions_on_a_form(
             self.request, self.userID, self.projectID, self.assistantID, form_id
@@ -845,7 +857,7 @@ class JSONCompareSubmissions(AssistantView):
             )
 
             error, diff = generate_diff(
-                self.request, self.projectID, form_id, submission_a, submission_b
+                self.request, self.projectID, form_a, submission_a, form_b, submission_b
             )
             if error != 0:
                 self.append_to_errors(

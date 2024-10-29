@@ -4354,16 +4354,17 @@ def get_html_from_diff(request, project, form, submission, revision):
         return 1, "BeautifulSoup was not able to find difference data"
 
 
-def generate_diff(request, project, form, json_file_a, json_file_b):
+def generate_diff(request, project, form_a, json_file_a, form_b, json_file_b):
     odk_dir = get_odk_path(request)
-    form_directory = get_form_directory(request, project, form)
+    form_directory_a = get_form_directory(request, project, form_a)
+    form_directory_b = get_form_directory(request, project, form_b)
     file_a = os.path.join(
         odk_dir,
-        *["forms", form_directory, "submissions", json_file_a + ".ordered.json"]
+        *["forms", form_directory_a, "submissions", json_file_a + ".ordered.json"]
     )
     file_b = os.path.join(
         odk_dir,
-        *["forms", form_directory, "submissions", json_file_b + ".ordered.json"]
+        *["forms", form_directory_b, "submissions", json_file_b + ".ordered.json"]
     )
 
     diff_id = str(uuid.uuid4())

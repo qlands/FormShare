@@ -162,7 +162,7 @@ urllib3==1.26.19
 validators==0.33.0
 venusian==3.1.0
 vine==5.1.0
-waitress==3.0.0
+waitress==3.0.1
 wcwidth==0.2.13
 WebHelpers2==2.1
 WebOb==1.8.8

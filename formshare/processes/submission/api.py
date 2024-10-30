@@ -70,6 +70,7 @@ __all__ = [
     "get_dataset_info_from_file",
     "list_submission_media_files",
     "get_submission_media_file",
+    "get_submission_json_files",
     "get_primary_key_data",
     "get_lookup_options",
 ]
@@ -235,6 +236,38 @@ def get_gps_points_from_form(
                 except Exception as e:
                     log.error(str(e) + " in " + dataset["_xform_id_string"])
     return True, {"points": data}
+
+
+def get_submission_json_files(request, project, form, just_for_submissions=None):
+    if just_for_submissions is None:
+        just_for_submissions = []
+    _ = request.translate
+    uid = str(uuid.uuid4())
+    form_directory = get_form_directory(request, project, form)
+    odk_dir = get_odk_path(request)
+
+    submissions_path = os.path.join(
+        odk_dir, *["forms", form_directory, "submissions", "*.json"]
+    )
+    submissions = glob.glob(submissions_path)
+    tmp_dir = os.path.join(odk_dir, *["tmp", uid])
+    if submissions:
+        created = False
+        for submission in submissions:
+            submission_id = os.path.basename(submission).replace(".json", "")
+            if just_for_submissions:
+                if submission_id not in just_for_submissions:
+                    continue
+
+            os.makedirs(tmp_dir)
+            shutil.copy(submission, tmp_dir)
+            created = True
+        if created:
+            zip_file = os.path.join(odk_dir, *["tmp", uid])
+            shutil.make_archive(zip_file, "zip", tmp_dir)
+            return True, zip_file + ".zip"
+
+    return False, _("There are no submissions to download")
 
 
 def get_submission_media_files(request, project, form, just_for_submissions=None):

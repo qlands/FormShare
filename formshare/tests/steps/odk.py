@@ -262,6 +262,15 @@ def t_e_s_t_odk(test_object):
     )
     test_object.root.assertFalse(b"Repository check pending" in res.body)
 
+    # Download JSON submissions. No submissions
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/generate/json".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        status=302,
+    )
+    assert "FS_error" in res.headers
+
     # Test getting the forms goes to 404
     test_object.testapp.get(
         "/user/{}/project/{}/formList".format(test_object.randonLogin, "not_exist"),
@@ -1224,6 +1233,14 @@ def t_e_s_t_odk(test_object):
         status=404,
     )
 
+    # Download data in JSON format of a project that does not exist goes to 404
+    test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/generate/json".format(
+            test_object.randonLogin, "project_not_exist", test_object.formID
+        ),
+        status=404,
+    )
+
     # Download data in CSV format of a form that does not exist goes to 404
     test_object.testapp.get(
         "/user/{}/project/{}/form/{}/generate/csv".format(
@@ -1232,9 +1249,25 @@ def t_e_s_t_odk(test_object):
         status=404,
     )
 
+    # Download data in JSON format of a form that does not exist goes to 404
+    test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/generate/json".format(
+            test_object.randonLogin, test_object.project, "form_not_exist"
+        ),
+        status=404,
+    )
+
     # Download data in CSV format
     test_object.testapp.get(
         "/user/{}/project/{}/form/{}/generate/csv".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        status=200,
+    )
+
+    # Download data in JSON format
+    test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/generate/json".format(
             test_object.randonLogin, test_object.project, test_object.formID
         ),
         status=200,

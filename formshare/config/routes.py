@@ -88,6 +88,7 @@ from formshare.views.form import (
     EditFormGroup,
     RemoveGroupForm,
     DownloadCSVData,
+    DownloadJSONSubmissions,
     DownloadXLSX,
     DownloadSubmissionFiles,
     DownloadGPSPoints,
@@ -858,6 +859,15 @@ def load_routes(config, settings):
             "form_download_csv",
             "/user/{userid}/project/{projcode}/form/{formid}/generate/csv",
             DownloadCSVData,
+            None,
+        )
+    )
+
+    routes.append(
+        add_route(
+            "form_download_json_submissions",
+            "/user/{userid}/project/{projcode}/form/{formid}/generate/json",
+            DownloadJSONSubmissions,
             None,
         )
     )

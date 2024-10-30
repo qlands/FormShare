@@ -102,6 +102,7 @@ from formshare.processes.storage import (
 )
 from formshare.processes.submission.api import (
     get_submission_media_files,
+    get_submission_json_files,
     json_to_csv,
     get_gps_points_from_form,
     get_tables_from_form,
@@ -2919,6 +2920,52 @@ class DownloadCSVData(PrivateView):
                 cache_max_age=0,
             )
             response.content_disposition = 'attachment; filename="' + form_id + '.csv"'
+            return response
+        else:
+            self.add_error(file)
+            next_page = self.request.params.get("next") or self.request.route_url(
+                "form_details", userid=user_id, projcode=project_code, formid=form_id
+            )
+            return HTTPFound(location=next_page, headers={"FS_error": "true"})
+
+
+class DownloadJSONSubmissions(PrivateView):
+    def __init__(self, request):
+        PrivateView.__init__(self, request)
+        self.privateOnly = True
+        self.checkCrossPost = False
+        self.returnRawViewResult = True
+
+    def process_view(self):
+        user_id = self.request.matchdict["userid"]
+        project_code = self.request.matchdict["projcode"]
+        form_id = self.request.matchdict["formid"]
+        project_id = get_project_id_from_name(self.request, user_id, project_code)
+
+        if project_id is not None:
+            if (
+                get_project_access_type(
+                    self.request, project_id, user_id, self.user.login
+                )
+                > 4
+            ):
+                raise HTTPNotFound
+        else:
+            raise HTTPNotFound
+
+        form_data = get_form_data(self.request, project_id, form_id)
+        if form_data is None:
+            raise HTTPNotFound
+
+        created, file = get_submission_json_files(self.request, project_id, form_id)
+        if created:
+            response = FileResponse(
+                file,
+                request=self.request,
+                content_type="application/zip",
+                cache_max_age=0,
+            )
+            response.content_disposition = 'attachment; filename="' + form_id + '.zip"'
             return response
         else:
             self.add_error(file)

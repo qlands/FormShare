@@ -19,3 +19,21 @@
         {% endif %}
     {% endif %}
 {% endmacro %}
+
+{% macro display_warning_messages(warning_messages,modal=false) %}
+    {% if modal == false %}
+        {% for warning in warning_messages %}
+            <div class="alert alert-warning alert-dismissable">
+                <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
+                {{ warning }}
+            </div>
+        {% endfor %}
+    {% else %}
+        {% if warning_messages|length > 0 %}
+            <div class="alert alert-warning alert-dismissable">
+                <button aria-hidden="true" data-dismiss="alert" class="close" type="button">×</button>
+                {{ _('The last action reported warning messages') }}. <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#warning_modal">{{ _('See warning messages') }}</button>
+            </div>
+        {% endif %}
+    {% endif %}
+{% endmacro %}

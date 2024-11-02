@@ -93,6 +93,7 @@
 {% block mainsection %}
     {% if formDetails.form_type == 1 %}
         {{ form.display_errors(errors,True) }}
+        {{ form.display_warning_messages(warning_messages,True) }}
         <div class="row">
             <div class="col-lg-3">
                 <div class="wrapper wrapper-content project-manager">
@@ -567,6 +568,15 @@
                     });
 
                     {% if projectDetails.access_type < 4 %}
+
+                        var elem_assistants = document.querySelector('.js-switch-assistants');
+                        if (elem_assistants != null)
+                            var assistants_switch = new Switchery(elem_assistants, { color: '#1AB394' });
+
+                        var elem_files = document.querySelector('.js-switch-files');
+                        if (elem_files != null)
+                            var files_switch = new Switchery(elem_files, { color: '#1AB394' });
+
                         var elem = document.querySelector('.js-switch');
                         var overwrite_switch = new Switchery(elem, { color: '#1AB394' });
                         {% if projectDetails.project_case == 1 %}

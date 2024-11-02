@@ -345,6 +345,7 @@ class PublicView(object):
         self._ = self.request.translate
         self.resultDict = {"errors": []}
         self.errors = []
+        self.warning_messages = []
         self.returnRawViewResult = False
         locale = Locale(request.locale_name)
         if locale.character_order == "left-to-right":
@@ -354,6 +355,7 @@ class PublicView(object):
 
     def __call__(self):
         self.resultDict["errors"] = self.errors
+        self.resultDict["warning_messages"] = self.warning_messages
 
         if self.request.matched_route is not None:
             for plugin in p.PluginImplementations(p.IPublicView):
@@ -387,6 +389,9 @@ class PublicView(object):
     def append_to_errors(self, error):
         self.request.response.headers["FS_error"] = "true"
         self.errors.append(error)
+
+    def add_warning(self, error):
+        self.warning_messages.append(error)
 
 
 keys_to_remove = [
@@ -458,6 +463,7 @@ class PrivateView(object):
         self.user = None
         self._ = self.request.translate
         self.errors = []
+        self.warning_messages = []
         self.error_occurred = False
         self.userID = ""
         self.classResult = {"activeUser": None, "userProjects": [], "activeProject": {}}
@@ -520,6 +526,10 @@ class PrivateView(object):
         self.error_occurred = True
         self.request.response.headers["FS_error"] = "true"
         self.errors.append(error)
+
+    def add_warning_message(self, message):
+        self.request.session.flash("{}|warning".format(message))
+        self.warning_messages.append(message)
 
     def get_policy(self, policy_name):
         policies = self.request.policies()
@@ -672,6 +682,7 @@ class PrivateView(object):
             self.classResult["activeProject"] = {}
 
         self.classResult["errors"] = self.errors
+        self.classResult["warning_messages"] = self.warning_messages
         self.classResult["showWelcome"] = self.showWelcome
 
         if self.request.matched_route is not None:
@@ -731,6 +742,7 @@ class PrivateView(object):
                 data_result = {
                     "error": self.error_occurred,
                     "errors": self.errors,
+                    "warning_messages": self.warning_messages,
                     "message": "",
                     "result": self.clean_api_result(self.classResult),
                 }
@@ -757,6 +769,7 @@ class PrivateView(object):
                     data_result = {
                         "error": self.error_occurred,
                         "errors": self.errors,
+                        "warning_messages": self.warning_messages,
                         "message": "",
                         "result": {},
                     }
@@ -765,6 +778,7 @@ class PrivateView(object):
                     data_result = {
                         "error": self.error_occurred,
                         "errors": [],
+                        "warning_messages": self.warning_messages,
                         "message": self.request.session.pop_flash(),
                         "result": {},
                     }

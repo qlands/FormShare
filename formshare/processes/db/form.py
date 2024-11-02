@@ -3,6 +3,8 @@ import datetime
 import glob
 import json
 import logging
+
+from formshare.config.auth import Assistant
 from formshare.processes.logging.loggerclass import SecretLogger
 import mimetypes
 import os
@@ -109,6 +111,7 @@ __all__ = [
     "get_form_survey_columns",
     "update_media_lastgen",
     "block_forms_with_schema",
+    "copy_assistants",
 ]
 
 logging.setLoggerClass(SecretLogger)
@@ -1336,6 +1339,39 @@ def get_form_files(request, project, form):
         .all()
     )
     return map_from_schema(files)
+
+
+def copy_assistants(request, project_id, parent_form, new_form):
+    res = (
+        request.dbsession.query(Formacces)
+        .filter(Formacces.form_project == project_id)
+        .filter(Formacces.form_id == parent_form)
+        .all()
+    )
+    assistants = map_from_schema(res)
+    save_point = request.tm.savepoint()
+    add_error = False
+    error_message = ""
+    for an_assistant in assistants:
+        an_assistant["form_id"] = new_form
+        mapped_data = map_to_schema(Formacces, an_assistant)
+        new_assistant = Formacces(**mapped_data)
+        try:
+            request.dbsession.add(new_assistant)
+            request.dbsession.flush()
+        except Exception as e:
+            error_message = str(e)
+            log.error(
+                "Error {} while moving assistants from {} to {}".format(
+                    str(e), parent_form, new_form
+                )
+            )
+            add_error = True
+    if add_error:
+        save_point.rollback()
+        return False, error_message
+    else:
+        return True, error_message
 
 
 def add_new_form(request, form_data):

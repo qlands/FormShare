@@ -9,7 +9,7 @@ import re
 import shutil
 import uuid
 from hashlib import md5
-
+import traceback
 import formshare.plugins as p
 import formshare.plugins as plugins
 import pandas as pd
@@ -40,9 +40,7 @@ from formshare.processes.db import (
     get_form_processing_products,
     get_task_status,
     get_output_by_task,
-    collect_maps_for_schema,
-    get_create_xml_for_schema,
-    get_insert_xml_for_schema,
+    copy_assistants,
     get_form_directories_for_schema,
     get_forms_for_schema,
     get_media_files,
@@ -92,6 +90,7 @@ from formshare.processes.odk.api import (
     merge_versions,
     check_jxform_file,
     store_file_in_directory,
+    retrieve_form_file_stream,
 )
 from formshare.processes.odk.processes import get_form_primary_key, get_form_case_params
 from formshare.processes.storage import (
@@ -1139,6 +1138,16 @@ class AddNewForm(PrivateView):
             if form_data["form_target"] == "":
                 form_data["form_target"] = 0
 
+            if "keep_assistants" in form_data.keys():
+                keep_assistants = True
+            else:
+                keep_assistants = False
+
+            if "keep_files" in form_data.keys():
+                keep_files = True
+            else:
+                keep_files = False
+
             if not for_merging:
                 if "form_pkey" not in form_data.keys():
                     next_page = self.request.params.get(
@@ -1339,11 +1348,97 @@ class AddNewForm(PrivateView):
             )
 
             if uploaded:
+                new_form_id = message
+                if keep_assistants:
+                    copied, copied_message = copy_assistants(
+                        self.request, project_id, form_data["parent_form"], new_form_id
+                    )
+                    if not copied:
+                        self.add_warning_message(
+                            self._(
+                                "FormShare uploaded your form but it was not able to move the assistants. Please move them manually. "
+                                "The technical team has been informed."
+                            )
+                        )
+                        log.error(
+                            "Unable to move assistants. Error {}".format(copied_message)
+                        )
+                        send_error_to_technical_team(self.request, copied_message)
+
+                if keep_files:
+                    form_files = get_form_files(
+                        self.request, project_id, form_data["parent_form"]
+                    )
+                    add_file_error = False
+                    for a_file in form_files:
+                        file_stream = retrieve_form_file_stream(
+                            self.request,
+                            project_id,
+                            form_data["parent_form"],
+                            a_file["file_name"],
+                        )
+                        md5sum = md5(file_stream.read()).hexdigest()
+                        if a_file["file_realtimecsv"] == 1:
+                            file_realtimecsv = True
+                        else:
+                            file_realtimecsv = False
+
+                        try:
+                            bucket_id = project_id + new_form_id
+                            bucket_id = md5(bucket_id.encode("utf-8")).hexdigest()
+                            store_file(
+                                self.request,
+                                bucket_id,
+                                a_file["file_name"],
+                                file_stream,
+                            )
+                            added, message = add_file_to_form(
+                                self.request,
+                                project_id,
+                                new_form_id,
+                                a_file["file_name"],
+                                False,
+                                md5sum,
+                                file_realtimecsv,
+                            )
+                            if not added:
+                                add_file_error = True
+                                log.error(
+                                    "Unable to move File: {} Project: {} Form: {} Error: {}".format(
+                                        a_file["file_name"],
+                                        project_id,
+                                        new_form_id,
+                                        message,
+                                    )
+                                )
+                                break
+                        except Exception as e:
+                            log.error(
+                                "Unable to move stream for File: {} Project: {} Form: {} Error: {} Traceback: {}".format(
+                                    a_file["file_name"],
+                                    project_id,
+                                    new_form_id,
+                                    str(e),
+                                    traceback.format_exc(),
+                                )
+                            )
+                            send_error_to_technical_team(
+                                self.request, str(e) + traceback.format_exc()
+                            )
+                            add_file_error = True
+                            break
+
+                    if add_file_error:
+                        self.add_warning_message(
+                            "FormShare uploaded your form but was not able to move all the files. "
+                            "Please move them manually. The technical team has been informed."
+                        )
+
                 next_page = self.request.route_url(
                     "form_details",
                     userid=project_details["owner"],
                     projcode=project_code,
-                    formid=message,
+                    formid=new_form_id,
                 )
                 self.request.session.flash(self._("The form was added successfully"))
                 return HTTPFound(next_page)

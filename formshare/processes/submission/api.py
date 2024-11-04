@@ -251,6 +251,7 @@ def get_submission_json_files(request, project, form, just_for_submissions=None)
     )
     submissions = glob.glob(submissions_path)
     tmp_dir = os.path.join(odk_dir, *["tmp", uid])
+    os.makedirs(tmp_dir)
     if submissions:
         created = False
         for submission in submissions:
@@ -259,7 +260,6 @@ def get_submission_json_files(request, project, form, just_for_submissions=None)
                 if submission_id not in just_for_submissions:
                     continue
 
-            os.makedirs(tmp_dir)
             shutil.copy(submission, tmp_dir)
             created = True
         if created:

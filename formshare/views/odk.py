@@ -138,7 +138,7 @@ class ODKPushJSONData(ODKView):
                         return response
                 else:
                     self.user = "public"
-                    stored, error = store_submission(
+                    stored, error = store_json_submission(
                         self.request, user_id, project_id, self.user
                     )
                     if stored:

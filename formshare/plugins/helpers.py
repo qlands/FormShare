@@ -115,7 +115,7 @@ def get_version():
     This returns the version of FormShare
     :return: The version of FormShare
     """
-    return "2.41.0 (20241104)"
+    return "2.42.0 (20241111)"
 
 
 @core_helper

@@ -243,7 +243,7 @@ sudo chown -R $whoami formshare_env
 
 ```sh
 cd /opt
-sudo git clone https://github.com/qlands/FormShare.git -b stable-2.41.0 formshare
+sudo git clone https://github.com/qlands/FormShare.git -b stable-2.42.0 formshare
 sudo chown -R $whoami formshare
 ```
 

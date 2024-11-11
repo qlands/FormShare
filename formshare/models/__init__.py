@@ -53,12 +53,18 @@ def get_engine(settings, prefix="sqlalchemy."):
     pool_size = int(settings.get("pool.size", "30"))
     max_overflow = int(settings.get("pool.max.overflow", "10"))
     pool_recycle = int(settings.get("pool.recycle", "2000"))
+    pool_pre_ping = int(settings.get("pool.pre.ping", "false"))
+    if pool_pre_ping == "false":
+        pool_pre_ping = False
+    else:
+        pool_pre_ping = True
     engine = engine_from_config(
         settings,
         prefix,
         pool_recycle=pool_recycle,
         pool_size=pool_size,
         max_overflow=max_overflow,
+        pool_pre_ping=pool_pre_ping,
     )
     return engine
 

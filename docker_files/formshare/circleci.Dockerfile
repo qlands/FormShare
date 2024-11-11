@@ -59,7 +59,7 @@ WORKDIR /home/circleci/project
 
 WORKDIR /opt
 RUN sudo mkdir odktools-deps
-RUN sudo git clone https://github.com/qlands/odktools.git -b stable-2.14
+RUN sudo git clone https://github.com/qlands/odktools.git -b stable-2.16
 
 WORKDIR /opt/odktools-deps
 RUN sudo wget https://github.com/jmcnamara/libxlsxwriter/archive/refs/tags/v1.1.8.tar.gz

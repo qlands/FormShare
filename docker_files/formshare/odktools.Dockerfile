@@ -34,7 +34,7 @@ RUN cp csv2xlsx /bin
 
 WORKDIR /opt
 RUN mkdir odktools-deps
-RUN git clone https://github.com/qlands/odktools.git -b stable-2.15
+RUN git clone https://github.com/qlands/odktools.git -b stable-2.16
 
 WORKDIR /opt/odktools-deps
 RUN wget https://github.com/jmcnamara/libxlsxwriter/archive/refs/tags/v1.1.8.tar.gz

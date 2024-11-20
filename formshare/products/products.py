@@ -98,12 +98,24 @@ def get_products():
 
 def stop_task(request, user, project, form, task):
     if task_exists(request, project, form, task):
-        log.warning("Stopping task {}".format(task))
+        log.error(
+            "Stopping task {} in project {} in form {}".format(task, project, form)
+        )
         backend = celeryApp.backend
         task_to_abort = AbortableAsyncResult(task, backend=backend)
         task_to_abort.abort()
-        log.warning("Cancelling task {} in database ".format(task))
+        log.error(
+            "Cancelling task {} in project {} in form {} in database ".format(
+                task, project, form
+            )
+        )
         return cancel_task(request, user, task)
+    else:
+        log.error(
+            "Task {} in project {} in form {} does not exist".format(
+                task, project, form
+            )
+        )
     return False, ""
 
 

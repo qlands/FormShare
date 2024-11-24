@@ -329,7 +329,7 @@ class ExceptionView(object):
         return dct
 
     def append_to_errors(self, error):
-        log.error(error)
+        log.error("GUI error: {}".format(error))
         self.request.response.headers["FS_error"] = "true"
         self.errors.append(error)
 
@@ -388,7 +388,7 @@ class PublicView(object):
         return dct
 
     def append_to_errors(self, error):
-        log.error(error)
+        log.error("GUI error: {}".format(error))
         self.request.response.headers["FS_error"] = "true"
         self.errors.append(error)
 
@@ -525,7 +525,7 @@ class PrivateView(object):
         This function returns an error to the screen when redirects DO NOT happen.
         The error will appear to the user as a div or in a modal
         """
-        log.error(error)
+        log.error("GUI error: {}".format(error))
         self.error_occurred = True
         self.request.response.headers["FS_error"] = "true"
         self.errors.append(error)
@@ -835,6 +835,7 @@ class PrivateView(object):
         This function returns an error to the screen when redirects happen.
         The error will appear to the user as a sweet alert
         """
+        log.error("GUI error: {}".format(message))
         self.error_occurred = True
         if not self.api:
             self.request.response.headers["FS_error"] = "true"
@@ -957,7 +958,7 @@ class AssistantView(object):
         return None
 
     def append_to_errors(self, error):
-        log.error(error)
+        log.error("GUI error: {}".format(error))
         self.error_occurred = True
         self.request.response.headers["FS_error"] = "true"
         self.errors.append(error)
@@ -1254,7 +1255,7 @@ class PartnerView(object):
         return None
 
     def append_to_errors(self, error):
-        log.error(error)
+        log.error("GUI error: {}".format(error))
         self.request.response.headers["FS_error"] = "true"
         self.errors.append(error)
 

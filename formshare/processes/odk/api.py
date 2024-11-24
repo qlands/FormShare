@@ -1098,9 +1098,10 @@ def check_jxform_file(
             return 35, message
 
         log.error(
-            ". Error: "
+            ". Error: {}".format(p.returncode)
             + "-"
             + stderr.decode()
+            + stdout.decode()
             + " while checking PyXForm. Command line: "
             + " ".join(args)
         )

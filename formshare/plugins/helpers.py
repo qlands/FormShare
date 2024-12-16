@@ -15,8 +15,9 @@ import timeago
 import validators
 from dateutil.parser import parse
 from formshare.models import TimeZone
-from pattern.en import pluralize as pluralize_en
-from pattern.es import pluralize as pluralize_es
+
+# from pattern.en import pluralize as pluralize_en
+# from pattern.es import pluralize as pluralize_es
 from pytz import timezone
 
 logging.setLoggerClass(SecretLogger)
@@ -303,10 +304,10 @@ def pluralize(noun, size, locale="en"):
 
     plural = noun
 
-    if locale == "en":
-        plural = pluralize_en(noun)
-    if locale == "es":
-        plural = pluralize_es(noun)
+    # if locale == "en":
+    #     plural = pluralize_en(noun)
+    # if locale == "es":
+    #     plural = pluralize_es(noun)
 
     # Call connected plugins to see if they have extended or overwrite FormShare pluralize function
     for plugin in p.PluginImplementations(p.IPluralize):

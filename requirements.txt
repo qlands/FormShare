@@ -81,7 +81,6 @@ Pairtree==0.8.1
 pandas==2.0.3
 PasteDeploy==3.1.0
 pathspec==0.12.1
-Pattern==3.6
 pdfminer.six==20240706
 pillow==10.4.0
 plaster==1.1.2

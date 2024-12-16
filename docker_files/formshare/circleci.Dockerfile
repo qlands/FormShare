@@ -19,7 +19,7 @@ WORKDIR /home/circleci/project
 
 RUN sudo apt-get update
 
-RUN sudo DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y build-essential qtbase5-dev qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client sqlite3 libqt5sql5-sqlite git wget python3-venv tidy golang-go mosquitto curl nano mysql-shell openjdk-17-jre-headless
+RUN sudo DEBIAN_FRONTEND=noninteractive TZ=Etc/UTC apt-get install -y build-essential qtbase5-dev qtbase5-private-dev qtdeclarative5-dev libqt5sql5-mysql cmake jq libboost-all-dev unzip zlib1g-dev automake npm redis-server libmysqlclient-dev mysql-client sqlite3 libqt5sql5-sqlite git wget python3-venv tidy golang-go mosquitto curl nano mysql-shell openjdk-17-jre-headless csvkit
 
 # BEGIN IMAGE CUSTOMIZATIONS
 
@@ -59,7 +59,7 @@ WORKDIR /home/circleci/project
 
 WORKDIR /opt
 RUN sudo mkdir odktools-deps
-RUN sudo git clone https://github.com/qlands/odktools.git -b stable-2.16
+RUN sudo git clone https://github.com/qlands/odktools.git -b stable-2.17
 
 WORKDIR /opt/odktools-deps
 RUN sudo wget https://github.com/jmcnamara/libxlsxwriter/archive/refs/tags/v1.1.8.tar.gz

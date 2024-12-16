@@ -45,7 +45,7 @@ from formshare.processes.db import (
 )
 from pyramid.httpexceptions import HTTPFound
 from pyramid.httpexceptions import HTTPNotFound, exception_response
-from pyramid.response import Response
+from pyramid.response import Response, FileResponse
 from pyramid.session import check_csrf_token
 
 logging.setLoggerClass(SecretLogger)
@@ -1165,17 +1165,20 @@ class AssistantView(object):
                         "result": {},
                     }
                     status_code = 200
-                response = Response(
-                    content_type="application/json",
-                    status=status_code,
-                    body=json.dumps(
-                        self.clean_api_result(data_result),
-                        indent=4,
-                        default=str,
-                        ensure_ascii=False,
-                    ).encode(),
-                )
-                return response
+                if not isinstance(process_dict, FileResponse):
+                    response = Response(
+                        content_type="application/json",
+                        status=status_code,
+                        body=json.dumps(
+                            self.clean_api_result(data_result),
+                            indent=4,
+                            default=str,
+                            ensure_ascii=False,
+                        ).encode(),
+                    )
+                    return response
+                else:
+                    return process_dict
 
     def process_view(self):
         return {"activeAssistant": self.assistant}

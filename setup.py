@@ -78,7 +78,6 @@ requires = [
     "pandas",
     "PasteDeploy",
     "pathspec",
-    "Pattern",
     "pdfminer.six",
     "Pillow",
     "plaster",

@@ -59,6 +59,7 @@ jobs:
             sudo chgrp -R circleci /opt/formshare_gunicorn
             sudo chgrp -R circleci /opt/formshare_config
             pip install -r requirements.txt --user
+            pip install csvkit==1.0.6 --user
             pip install codecov --user
             /home/circleci/.local/bin/codecov
             mysql -h 127.0.0.1 -u root --ssl-mode=DISABLED --password=circleci --execute='CREATE SCHEMA IF NOT EXISTS formshare'

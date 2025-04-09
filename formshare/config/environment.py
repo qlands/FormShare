@@ -134,16 +134,6 @@ def load_environment(settings, config, apppath, policy_array):
     # Add the template directories to jinja2
     config.add_jinja2_search_path(templates_path)
 
-    # Load all connected plugins
-    plugin_list = settings.get("formshare.plugins", "").split()
-    plugin_list.reverse()
-    print(
-        "FormShare will execute the following plugins in this order: {}".format(
-            ",".join(plugin_list)
-        )
-    )
-    p.load_all(settings)
-
     # Add a series of helper functions to the request like pluralize
     helpers.load_plugin_helpers()
     config.add_request_method(__helper, "h", reify=True)

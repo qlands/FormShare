@@ -19,6 +19,7 @@ from pyramid.authorization import ACLAuthorizationPolicy
 from pyramid_authstack import AuthenticationStackPolicy
 from formshare.config.environment import load_environment
 from formshare.config.config_indexes import configure_indexes
+import formshare.plugins as p
 
 
 def main(global_config, **settings):
@@ -40,6 +41,16 @@ def main(global_config, **settings):
         settings["server:main:port"] = port
         settings["server:main:root"] = list(composite_section.keys())[0]
         settings["global:config:file"] = global_config["__file__"]
+
+    # Load all connected plugins
+    plugin_list = settings.get("formshare.plugins", "").split()
+    plugin_list.reverse()
+    print(
+        "FormShare will execute the following plugins in this order: {}".format(
+            ",".join(plugin_list)
+        )
+    )
+    p.load_all(settings)
 
     """This function returns a Pyramid WSGI application."""
     auth_policy = AuthenticationStackPolicy()
@@ -68,6 +79,18 @@ def main(global_config, **settings):
     )
     auth_policy.add_policy("partner", partner_policy)
     policy_array.append({"name": "partner", "policy": partner_policy})
+
+    # Load any change in the configuration done by connected plugins
+    policy_used = ["main","assistant","partner"]
+    for plugin in p.PluginImplementations(p.IAuthenticationPolicy):
+        policy_class, policy_name = plugin.create_policy(settings)
+        if policy_name not in policy_used:
+            auth_policy.add_policy(policy_name, policy_class)
+            policy_array.append({"name": policy_name, "policy": policy_class})
+            policy_used.append(policy_name)
+        else:
+            print("Policy name {} already in use".format(policy_name))
+
 
     # authn_policy = AuthTktAuthenticationPolicy(settings['auth.secret'], cookie_name='formshare_auth_tkt')
     authz_policy = ACLAuthorizationPolicy()

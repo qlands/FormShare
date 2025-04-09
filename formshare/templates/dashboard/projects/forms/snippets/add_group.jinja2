@@ -28,12 +28,13 @@
                                     <label class="text-danger"> {{ _('Anybody can submit') }}</label><br/>
                                 {% endif %}
                                 <label><input type="checkbox" name="group_can_clean"> {{ _('Can clean') }}</label><br/>
+                                {% block add_group_form_extra_privileges %}
+
+                                {% endblock add_group_form_extra_privileges %}
                             </div>
                         </div>
                     {% endblock add_group_form_fields %}
-                    {% block add_group_form_fields_extra %}
 
-                    {% endblock add_group_form_fields_extra %}
                     {% block add_group_form_fields_actions %}
                         <div class="modal-footer">
                             <button type="button" class="btn btn-white" data-dismiss="modal">{{ _('Cancel') }}</button>

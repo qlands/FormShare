@@ -1815,7 +1815,8 @@ class DeleteForm(PrivateView):
                             form_data["form_case"] == 1
                             and form_data["form_casetype"] == 1
                         ):
-                            delete_case_lookup_table(self.request, project_id)
+                            if form_data["form_schema"] is not None:
+                                delete_case_lookup_table(self.request, project_id)
                         for a_deleted_form in forms_deleted:
                             delete_dataset_from_index(
                                 self.request.registry.settings,

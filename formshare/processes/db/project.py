@@ -43,6 +43,7 @@ __all__ = [
     "get_number_of_case_creators_with_repository",
     "get_case_form",
     "get_case_forms",
+    "get_case_creator_forms",
     "get_case_schema",
     "project_has_case_lookup_table",
     "invalid_aliases",
@@ -942,6 +943,30 @@ def get_case_form(request, project):
         return res.form_id
     else:
         return None
+
+
+def get_case_creator_forms(request, project):
+    """
+    This will return the case form of a project. If the form is merged then it will return any
+    because the dictionary and database are the same across merged forms.
+    :param request: Pyramid request object
+    :param project: FormShare project
+    :return: A form ID or None
+    """
+    res = (
+        request.dbsession.query(Odkform.form_id)
+        .filter(Odkform.project_id == project)
+        .filter(Odkform.form_casetype == 1)
+        .filter(Odkform.form_schema.isnot(None))
+        .all()
+    )
+    if res is not None:
+        result = []
+        for a_form in res:
+            result.append(a_form.form_id)
+        return result
+    else:
+        return []
 
 
 def get_case_schema(request, project):

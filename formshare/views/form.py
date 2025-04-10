@@ -72,6 +72,7 @@ from formshare.processes.db import (
     is_file_a_lookup,
     get_name_and_label_from_file,
     update_lookup_from_csv,
+    get_case_creator_forms,
 )
 from formshare.processes.elasticsearch.record_index import delete_form_records
 from formshare.processes.elasticsearch.repository_index import (
@@ -1814,7 +1815,8 @@ class DeleteForm(PrivateView):
                             form_data["form_case"] == 1
                             and form_data["form_casetype"] == 1
                         ):
-                            delete_case_lookup_table(self.request, project_id)
+                            if form_data["form_schema"] is not None:
+                                delete_case_lookup_table(self.request, project_id)
                         for a_deleted_form in forms_deleted:
                             delete_dataset_from_index(
                                 self.request.registry.settings,
@@ -4069,11 +4071,21 @@ class CaseLookUpTable(PrivateView):
                         )
                     )
 
-        form_id = get_case_form(self.request, project_id)
-        fields, checked = get_fields_from_table(
-            self.request, project_id, form_id, "maintable", [], False
-        )
+        form_ids = get_case_creator_forms(self.request, project_id)
+        total_fields = []
+        for a_form_id in form_ids:
+            fields, checked = get_fields_from_table(
+                self.request, project_id, a_form_id, "maintable", [], False
+            )
+            for a_field in fields:
+                field_found = False
+                for t_field in total_fields:
+                    if a_field["name"] == t_field["name"]:
+                        field_found = True
+                if not field_found:
+                    total_fields.append(a_field)
 
+        form_id = get_case_form(self.request, project_id)
         form_data = get_form_data(self.request, project_id, form_id)
         case_fields, created = get_case_lookup_fields(
             self.request,
@@ -4081,7 +4093,7 @@ class CaseLookUpTable(PrivateView):
             form_data["form_pkey"],
             form_data["form_caselabel"],
         )
-        for a_field in fields:
+        for a_field in total_fields:
             a_field["checked"] = False
             a_field["editable"] = 1
             a_field["as"] = ""
@@ -4095,7 +4107,7 @@ class CaseLookUpTable(PrivateView):
         return {
             "projectDetails": project_details,
             "userid": user_id,
-            "fields": fields,
+            "fields": total_fields,
             "created": created,
         }
 

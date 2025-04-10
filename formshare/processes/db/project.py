@@ -936,8 +936,7 @@ def get_case_form(request, project):
         .filter(Odkform.project_id == project)
         .filter(Odkform.form_casetype == 1)
         .filter(Odkform.form_schema.isnot(None))
-        .order_by(Odkform.form_cdate.asc())
-        .last()
+        .first()
     )
     if res is not None:
         return res.form_id

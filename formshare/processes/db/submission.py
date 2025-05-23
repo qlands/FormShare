@@ -13,11 +13,11 @@ log = logging.getLogger("formshare")
 
 def get_submission_data(request, project, form, original_md5sum):
     res = (
-        request.dbsession.query(Submission)
+        request.dbsession.query(Submission.submission_id)
         .filter(Submission.project_id == project)
         .filter(Submission.form_id == form)
         .filter(Submission.original_md5sum == original_md5sum)
-        .order_by(Submission.submission_dtime.asc())
+        .filter(Submission.sameas.is_(None))
         .first()
     )
     return res

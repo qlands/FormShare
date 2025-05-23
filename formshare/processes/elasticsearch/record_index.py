@@ -6,6 +6,7 @@ import logging
 from formshare.processes.logging.loggerclass import SecretLogger
 import os
 import json
+import traceback
 
 logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
@@ -211,53 +212,80 @@ def delete_from_record_index(settings, record_uuid):
 def add_record(
     settings, project_id, form_id, submission_id, schema, table, record_uuid
 ):
-    try:
-        connection = create_connection(settings)
-        if connection is not None:
-            index_name = get_index_name(settings)
+    if settings.get("record_index_create_batch", "False") == "False":
+        try:
+            connection = create_connection(settings)
+            if connection is not None:
+                index_name = get_index_name(settings)
+                data_dict = {
+                    "project_id": project_id,
+                    "form_id": form_id,
+                    "schema": schema,
+                    "table": table,
+                }
+                connection.index(index=index_name, id=record_uuid, body=data_dict)
+                connection.close()
+            else:
+                raise RequestError("Cannot connect to ElasticSearch")
+        except Exception as e:  # pragma: no cover
             data_dict = {
                 "project_id": project_id,
                 "form_id": form_id,
                 "schema": schema,
                 "table": table,
             }
-            connection.index(index=index_name, id=record_uuid, body=data_dict)
-            connection.close()
-        else:
-            raise RequestError("Cannot connect to ElasticSearch")
-    except Exception as e:  # pragma: no cover
+            try:
+                log.error(
+                    "ES Record FailSafe for project {} form {} submission {} record {}. Error: {}".format(
+                        project_id,
+                        form_id,
+                        submission_id,
+                        record_uuid,
+                        traceback.format_exc(),
+                    )
+                )
+                repository_dir = settings["repository.path"]
+                parts = ["es_failsafe", "record_index", project_id, form_id]
+                target_dir = str(os.path.join(repository_dir, *parts))
+                if not os.path.exists(target_dir):
+                    os.makedirs(target_dir)
+                parts = [record_uuid + ".json"]
+                target_file = os.path.join(target_dir, *parts)
+                with open(target_file, "w", encoding="utf-8") as f:
+                    json.dump(data_dict, f, ensure_ascii=False, indent=4, default=str)
+            except Exception as e:
+                log.error(
+                    "ES Record FailSafe error for project {} form {} submission {} record {}. Error: {} Data: {}".format(
+                        project_id,
+                        form_id,
+                        submission_id,
+                        record_uuid,
+                        traceback.format_exc(),
+                        json.dumps(data_dict),
+                    )
+                )
+                log.error(traceback.format_exc())
+    else:
+        repository_dir = settings["repository.path"]
+        parts = ["es_batch", "record_index"]
+        target_dir = str(os.path.join(repository_dir, *parts))
+        if not os.path.exists(target_dir):
+            os.makedirs(target_dir)
+        parts = [submission_id + ".ndjson"]
+        target_file = os.path.join(target_dir, *parts)
+        index_name = get_index_name(settings)
+        action_line = {"index": {"_index": index_name, "_id": record_uuid}}
         data_dict = {
             "project_id": project_id,
             "form_id": form_id,
             "schema": schema,
             "table": table,
         }
-        try:
-            log.error(
-                "ES Record FailSafe for project {} form {} submission {} record {}. Error: {}".format(
-                    project_id, form_id, submission_id, record_uuid, str(e)
-                )
-            )
-            repository_dir = settings["repository.path"]
-            parts = ["es_failsafe", "record_index", project_id, form_id]
-            target_dir = os.path.join(repository_dir, *parts)
-            if not os.path.exists(target_dir):
-                os.makedirs(target_dir)
-            parts = [record_uuid + ".json"]
-            target_file = os.path.join(target_dir, *parts)
-            with open(target_file, "w", encoding="utf-8") as f:
-                json.dump(data_dict, f, ensure_ascii=False, indent=4, default=str)
-        except Exception as e:
-            log.error(
-                "ES Record FailSafe error for project {} form {} submission {} record {}. Error: {} Data: {}".format(
-                    project_id,
-                    form_id,
-                    submission_id,
-                    record_uuid,
-                    str(e),
-                    json.dumps(data_dict),
-                )
-            )
+        action_str = json.dumps(action_line, ensure_ascii=False, default=str)
+        data_str = json.dumps(data_dict, ensure_ascii=False, default=str)
+        with open(target_file, "a", encoding="utf-8") as f:
+            f.write(action_str + "\n")
+            f.write(data_str + "\n")
 
 
 def _validate_uuid4(uuid_string):

@@ -5,6 +5,7 @@ import logging
 from formshare.processes.logging.loggerclass import SecretLogger
 import os
 import json
+import traceback
 
 logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
@@ -389,39 +390,59 @@ def delete_dataset_index_by_project(settings, project_id):
 
 
 def add_dataset(settings, project_id, form_id, submission_id, data_dict):
-    try:
+    if settings.get("dataset_index_create_batch", "False") == "False":
+        try:
+            index_name = get_index_name(settings)
+            data_dict["project_id"] = project_id
+            data_dict["form_id"] = form_id
+            data_dict["submission_id"] = submission_id
+            connection = create_connection(settings)
+            if connection is not None:
+                connection.index(index=index_name, id=submission_id, body=data_dict)
+                connection.close()
+            else:
+                raise RequestError("Cannot connect to ElasticSearch")
+        except Exception as e:  # pragma: no cover
+            try:
+                log.error(
+                    "ES Dataset FailSafe for submission {}. Error: {}".format(
+                        submission_id, traceback.format_exc()
+                    )
+                )
+                repository_dir = settings["repository.path"]
+                parts = ["es_failsafe", "dataset_index", project_id, form_id]
+                target_dir = str(os.path.join(repository_dir, *parts))
+                if not os.path.exists(target_dir):
+                    os.makedirs(target_dir)
+                parts = [submission_id + ".json"]
+                target_file = os.path.join(target_dir, *parts)
+                with open(target_file, "w", encoding="utf-8") as f:
+                    json.dump(data_dict, f, ensure_ascii=False, indent=4, default=str)
+            except Exception as e:
+                log.error(
+                    "ES Dataset FailSafe error for submission {}. Error: {} Data: {}".format(
+                        submission_id, traceback.format_exc(), json.dumps(data_dict)
+                    )
+                )
+    else:
+        repository_dir = settings["repository.path"]
+        parts = ["es_batch", "dataset_index"]
+        target_dir = str(os.path.join(repository_dir, *parts))
+        if not os.path.exists(target_dir):
+            os.makedirs(target_dir)
+        parts = [submission_id + ".ndjson"]
+        target_file = os.path.join(target_dir, *parts)
         index_name = get_index_name(settings)
+        action_line = {"index": {"_index": index_name, "_id": submission_id}}
         data_dict["project_id"] = project_id
         data_dict["form_id"] = form_id
         data_dict["submission_id"] = submission_id
-        connection = create_connection(settings)
-        if connection is not None:
-            connection.index(index=index_name, id=submission_id, body=data_dict)
-            connection.close()
-        else:
-            raise RequestError("Cannot connect to ElasticSearch")
-    except Exception as e:  # pragma: no cover
-        try:
-            log.error(
-                "ES Dataset FailSafe for submission {}. Error: {}".format(
-                    submission_id, str(e)
-                )
-            )
-            repository_dir = settings["repository.path"]
-            parts = ["es_failsafe", "dataset_index", project_id, form_id]
-            target_dir = os.path.join(repository_dir, *parts)
-            if not os.path.exists(target_dir):
-                os.makedirs(target_dir)
-            parts = [submission_id + ".json"]
-            target_file = os.path.join(target_dir, *parts)
-            with open(target_file, "w", encoding="utf-8") as f:
-                json.dump(data_dict, f, ensure_ascii=False, indent=4, default=str)
-        except Exception as e:
-            log.error(
-                "ES Dataset FailSafe error for submission {}. Error: {} Data: {}".format(
-                    submission_id, str(e), json.dumps(data_dict)
-                )
-            )
+
+        action_str = json.dumps(action_line, ensure_ascii=False, default=str)
+        data_str = json.dumps(data_dict, ensure_ascii=False, default=str)
+        with open(target_file, "a", encoding="utf-8") as f:
+            f.write(action_str + "\n")
+            f.write(data_str + "\n")
 
 
 def get_dataset_stats_for_form(settings, project_id, form_id):

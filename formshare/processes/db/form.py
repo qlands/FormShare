@@ -662,7 +662,7 @@ def get_last_submission_date_from_schema(request, schema):
 
 def get_maintable_information(request, project, form, submission_id):
     schema = get_form_schema(request, project, form)
-    sql = "SELECT * from {}.maintable WHERE surveyid = '{}'".format(
+    sql = "SELECT * from {}.maintable WHERE surveyid = '{}' LIMIT 1".format(
         schema, submission_id
     )
     res = request.dbsession.execute(sql).fetchone()

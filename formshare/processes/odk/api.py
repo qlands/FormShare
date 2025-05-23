@@ -2399,7 +2399,7 @@ def get_manifest(request, user, project, project_id, form):
                                 }
                             )
                     else:
-                        log.info(
+                        log.error(
                             "File {} will not be generated. Using stored file".format(
                                 file["file_name"]
                             )
@@ -3506,20 +3506,22 @@ def store_json_file(
                     project_of_assistant = get_project_from_assistant(
                         request, user, project, assistant
                     )
-                    added, message = add_submission_same_as(
-                        request,
-                        project,
-                        form,
-                        project_of_assistant,
-                        assistant,
-                        submission_id,
-                        md5sum,
-                        0,
-                        sameas.submission_id,
-                    )
-                    if not added:
-                        log.error(message)
-                        return 1, message
+                    if request.registry.settings.get("store_submission_same_as", "True") == "True":
+                        added, message = add_submission_same_as(
+                            request,
+                            project,
+                            form,
+                            project_of_assistant,
+                            assistant,
+                            submission_id,
+                            md5sum,
+                            0,
+                            sameas.submission_id,
+                        )
+                        if not added:
+                            log.error(message)
+                            return 1, message
+
 
                     media_path = os.path.join(
                         odk_dir,

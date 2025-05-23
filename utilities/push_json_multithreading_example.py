@@ -23,9 +23,10 @@ path_to_submissions = /home/me/submissions/*/
 
 """
 
-path_to_submissions = "/path/to/the/submissions/*/"
-url_to_project = "http://localhost:5900/user/me/project/my_project"
-assistant_to_use = "assistant"
+path_to_submissions = "/home/cquiros/data/projects2017/personal/software/FormShare_million/submissions/part_20/*/"
+# path_to_submissions = '/home/cquiros/data/projects2017/personal/software/FormShare_million/submissions/test/*/'
+url_to_project = "http://127.0.0.1:5900/user/qlands/project/two_million"
+assistant_to_use = "qlands"
 assistant_password = "123"
 
 
@@ -67,7 +68,7 @@ start_time = datetime.datetime.now()
 if not os.path.exists("./errors"):
     os.makedirs("./errors")
 
-number_of_threads = 2
+number_of_threads = 40
 directory_list = glob.glob(path_to_submissions)
 arrays = np.array_split(np.array(directory_list), number_of_threads)
 counter = Value("i", 0)

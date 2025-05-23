@@ -2077,12 +2077,11 @@ class IAuthenticationPolicy(Interface):
 
     def create_policy(self, settings):
         """Called by FormShare so plugins can create authentication policies.
-           This function must return a pyramid authentication policy class and a name. For example:
-           AuthTktAuthenticationPolicy, "policy_name"
+        This function must return a pyramid authentication policy class and a name. For example:
+        AuthTktAuthenticationPolicy, "policy_name"
         """
-        raise NotImplementedError(
-            "create_policy must be implemented in subclasses"
-        )
+        raise NotImplementedError("create_policy must be implemented in subclasses")
+
 
 class IPluginObserver(Interface):  # pragma: no cover
     """

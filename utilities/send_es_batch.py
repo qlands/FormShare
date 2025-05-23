@@ -10,7 +10,7 @@ MAX_BYTES = MAX_MB * 1024 * 1024
 
 def send_bulk_to_es(payload, bulk_number):
     print("Sending bulk to ES of {} elements".format(bulk_number))
-    headers = {'Content-Type': 'application/x-ndjson'}
+    headers = {"Content-Type": "application/x-ndjson"}
     response = requests.post(f"{ES_HOST}/_bulk", headers=headers, data=payload)
     if response.status_code != 200 or response.json().get("errors"):
         print("❌ Error in bulk {} request: {}".format(bulk_number, response.text))
@@ -36,7 +36,7 @@ def process_directory():
 
         # Check if adding this file would exceed the limit
         if current_size + size > MAX_BYTES and current_batch:
-            payload = ''.join(current_batch)
+            payload = "".join(current_batch)
             send_bulk_to_es(payload, bulk_number)
             current_batch = []
             current_size = 0
@@ -46,7 +46,7 @@ def process_directory():
 
     # Send last batch if any
     if current_batch:
-        payload = ''.join(current_batch)
+        payload = "".join(current_batch)
         send_bulk_to_es(payload, bulk_number)
 
     end_time = datetime.datetime.now()
@@ -54,6 +54,7 @@ def process_directory():
     total_seconds = time_delta.total_seconds()
     minutes = total_seconds / 60
     print("Finished in {} minutes".format(minutes))
+
 
 if __name__ == "__main__":
     process_directory()

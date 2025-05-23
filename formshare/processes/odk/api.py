@@ -3506,7 +3506,12 @@ def store_json_file(
                     project_of_assistant = get_project_from_assistant(
                         request, user, project, assistant
                     )
-                    if request.registry.settings.get("store_submission_same_as", "True") == "True":
+                    if (
+                        request.registry.settings.get(
+                            "store_submission_same_as", "True"
+                        )
+                        == "True"
+                    ):
                         added, message = add_submission_same_as(
                             request,
                             project,
@@ -3521,7 +3526,6 @@ def store_json_file(
                         if not added:
                             log.error(message)
                             return 1, message
-
 
                     media_path = os.path.join(
                         odk_dir,

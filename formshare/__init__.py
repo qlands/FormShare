@@ -81,7 +81,7 @@ def main(global_config, **settings):
     policy_array.append({"name": "partner", "policy": partner_policy})
 
     # Load any change in the configuration done by connected plugins
-    policy_used = ["main","assistant","partner"]
+    policy_used = ["main", "assistant", "partner"]
     for plugin in p.PluginImplementations(p.IAuthenticationPolicy):
         policy_class, policy_name = plugin.create_policy(settings)
         if policy_name not in policy_used:
@@ -90,7 +90,6 @@ def main(global_config, **settings):
             policy_used.append(policy_name)
         else:
             print("Policy name {} already in use".format(policy_name))
-
 
     # authn_policy = AuthTktAuthenticationPolicy(settings['auth.secret'], cookie_name='formshare_auth_tkt')
     authz_policy = ACLAuthorizationPolicy()

@@ -28,7 +28,7 @@ click-plugins==1.1.1
 click-repl==0.3.0
 cookiecutter==2.6.0
 coverage==7.6.0
-cryptography==43.0.1
+cryptography==44.0.1
 decorator==5.1.1
 defusedxml==0.7.1
 Deprecated==1.2.14
@@ -43,7 +43,7 @@ FormEncode==2.1.0
 future==1.0.0
 gevent==24.2.1
 greenlet==3.0.3
-gunicorn==22.0.0
+gunicorn==23.0.0
 hupper==1.12.1
 idna==3.7
 imagesize==1.4.1
@@ -55,7 +55,7 @@ jaraco.collections==5.0.1
 jaraco.context==5.3.0
 jaraco.functools==4.0.1
 jaraco.text==3.14.0
-Jinja2==3.1.4
+Jinja2==3.1.6
 jinja2-time==0.2.0
 joblib==1.4.2
 kombu==5.3.7
@@ -90,7 +90,7 @@ pluggy==1.5.0
 portend==3.2.0
 poyo==0.5.0
 prompt_toolkit==3.0.47
-protobuf==5.27.2
+protobuf==5.29.5
 py==1.11.0
 pycparser==2.22
 pycrypto==2.6.1
@@ -123,7 +123,7 @@ qrcode==7.4.2
 redis==5.0.7
 regex==2024.5.15
 repoze.lru==0.7
-requests==2.32.3
+requests==2.32.4
 rich==13.7.1
 rutter==1.0
 scipy==1.14.0

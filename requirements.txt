@@ -34,7 +34,7 @@ defusedxml==0.7.1
 Deprecated==1.2.14
 docutils==0.21.2
 -e git+https://github.com/qlands/elasticfeeds.git@e9bb8ec7f91141bd72f80307cee0eb93e4732e04#egg=elasticfeeds
-elasticsearch==7.17.3
+elasticsearch==9.1.0
 emoji==2.7.0
 et-xmlfile==1.1.0
 exceptiongroup==1.2.2
@@ -157,7 +157,7 @@ typing_extensions==4.12.2
 tzdata==2024.1
 unicodecsv==0.14.1
 unittest2==1.1.0
-urllib3==1.26.19
+urllib3==2.5.0
 validators==0.33.0
 venusian==3.1.0
 vine==5.1.0

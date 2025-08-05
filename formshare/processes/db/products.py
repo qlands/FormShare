@@ -17,6 +17,7 @@ __all__ = [
     "update_download_counter",
     "set_output_public_state",
     "output_exists",
+    "product_max_number",
 ]
 
 logging.setLoggerClass(SecretLogger)
@@ -75,6 +76,27 @@ def add_product_instance(
         save_point.rollback()
         log.error("Error {} while adding product instance".format(str(e)))
         return False, str(e)
+
+
+def product_max_number(request, project, form, product):
+    res = (
+        request.dbsession.query(Product)
+        .filter(Product.project_id == project)
+        .filter(Product.form_id == form)
+        .filter(Product.product_id == product)
+        .count()
+    )
+    print("**********************************")
+    print(project)
+    print(form)
+    print(product)
+    print(res)
+    print("**********************************")
+    max_products = int(request.registry.settings.get("max_products", "2"))
+    if res <= max_products - 1:
+        return False
+    else:
+        return True
 
 
 def delete_product(request, project, form, product, output):

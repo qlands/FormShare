@@ -79,6 +79,18 @@ def get_last_task(config, project_id, form_id, product_id):
     return result
 
 
+def delete_products(config, project_id, form_id, product_id):
+    engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
+    sql = (
+        "DELETE FROM product "
+        "WHERE project_id = '{}' "
+        "AND form_id = '{}' "
+        "AND product_id = '{}' ".format(project_id, form_id, product_id)
+    )
+    engine.execute(sql)
+    engine.dispose()
+
+
 def get_tokens_from_user(config, user_email):
     engine = create_engine(config["sqlalchemy.url"], poolclass=NullPool)
     sql = (

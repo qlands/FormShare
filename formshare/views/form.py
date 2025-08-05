@@ -3111,7 +3111,7 @@ class DownloadPublicXLSData(PrivateView):
             raise HTTPNotFound
 
         odk_dir = get_odk_path(self.request)
-        generate_public_xlsx_file(
+        created = generate_public_xlsx_file(
             self.request,
             self.user.id,
             project_id,
@@ -3122,17 +3122,39 @@ class DownloadPublicXLSData(PrivateView):
             include_multiselect,
             include_lookups,
         )
-
-        next_page = self.request.route_url(
-            "form_details",
-            userid=user_id,
-            projcode=project_code,
-            formid=form_id,
-            _query={"tab": "task", "product": "xlsx_public_export"},
-            _anchor="products_and_tasks",
-        )
-        self.returnRawViewResult = True
-        return HTTPFound(location=next_page)
+        if created:
+            next_page = self.request.route_url(
+                "form_details",
+                userid=user_id,
+                projcode=project_code,
+                formid=form_id,
+                _query={"tab": "task", "product": "xlsx_public_export"},
+                _anchor="products_and_tasks",
+            )
+            self.returnRawViewResult = True
+            return HTTPFound(location=next_page)
+        else:
+            max_products = int(self.request.registry.settings.get("max_products", "2"))
+            self.add_error(
+                self._(
+                    "You have too many publishable Excel exports in this form. "
+                    "The platform only allows {} per form to ensure fairness for all users. "
+                    "Save the old ones on your local computer and delete them from the platform.".format(
+                        max_products
+                    )
+                ),
+                True,
+            )
+            next_page = self.request.route_url(
+                "form_details",
+                userid=user_id,
+                projcode=project_code,
+                formid=form_id,
+                _query={"tab": "task", "product": "xlsx_public_export"},
+                _anchor="products_and_tasks",
+            )
+            self.returnRawViewResult = True
+            return HTTPFound(location=next_page, headers={"FS_error": "true"})
 
 
 class DownloadPublicZIPCSVData(PrivateView):
@@ -3172,7 +3194,7 @@ class DownloadPublicZIPCSVData(PrivateView):
             raise HTTPNotFound
 
         odk_dir = get_odk_path(self.request)
-        generate_public_zip_csv_file(
+        generated = generate_public_zip_csv_file(
             self.request,
             self.user.id,
             project_id,
@@ -3183,17 +3205,39 @@ class DownloadPublicZIPCSVData(PrivateView):
             include_multiselect,
             include_lookups,
         )
-
-        next_page = self.request.route_url(
-            "form_details",
-            userid=user_id,
-            projcode=project_code,
-            formid=form_id,
-            _query={"tab": "task", "product": "zip_csv_public_export"},
-            _anchor="products_and_tasks",
-        )
-        self.returnRawViewResult = True
-        return HTTPFound(location=next_page)
+        if generated:
+            next_page = self.request.route_url(
+                "form_details",
+                userid=user_id,
+                projcode=project_code,
+                formid=form_id,
+                _query={"tab": "task", "product": "zip_csv_public_export"},
+                _anchor="products_and_tasks",
+            )
+            self.returnRawViewResult = True
+            return HTTPFound(location=next_page)
+        else:
+            max_products = int(self.request.registry.settings.get("max_products", "2"))
+            self.add_error(
+                self._(
+                    "You have too many publishable CSV exports in this form. "
+                    "The platform only allows {} per form to ensure fairness for all users. "
+                    "Save the old ones on your local computer and delete them from the platform.".format(
+                        max_products
+                    )
+                ),
+                True,
+            )
+            next_page = self.request.route_url(
+                "form_details",
+                userid=user_id,
+                projcode=project_code,
+                formid=form_id,
+                _query={"tab": "task", "product": "zip_csv_public_export"},
+                _anchor="products_and_tasks",
+            )
+            self.returnRawViewResult = True
+            return HTTPFound(location=next_page, headers={"FS_error": "true"})
 
 
 class DownloadPublicZIPJSONData(PrivateView):
@@ -3233,7 +3277,7 @@ class DownloadPublicZIPJSONData(PrivateView):
             raise HTTPNotFound
 
         odk_dir = get_odk_path(self.request)
-        generate_public_zip_json_file(
+        generated = generate_public_zip_json_file(
             self.request,
             self.user.id,
             project_id,
@@ -3244,17 +3288,39 @@ class DownloadPublicZIPJSONData(PrivateView):
             include_multiselects,
             include_lookups,
         )
-
-        next_page = self.request.route_url(
-            "form_details",
-            userid=user_id,
-            projcode=project_code,
-            formid=form_id,
-            _query={"tab": "task", "product": "zip_json_public_export"},
-            _anchor="products_and_tasks",
-        )
-        self.returnRawViewResult = True
-        return HTTPFound(location=next_page)
+        if generated:
+            next_page = self.request.route_url(
+                "form_details",
+                userid=user_id,
+                projcode=project_code,
+                formid=form_id,
+                _query={"tab": "task", "product": "zip_json_public_export"},
+                _anchor="products_and_tasks",
+            )
+            self.returnRawViewResult = True
+            return HTTPFound(location=next_page)
+        else:
+            max_products = int(self.request.registry.settings.get("max_products", "2"))
+            self.add_error(
+                self._(
+                    "You have too many publishable JSON exports in this form. "
+                    "The platform only allows {} per form to ensure fairness for all users. "
+                    "Save the old ones on your local computer and delete them from the platform.".format(
+                        max_products
+                    )
+                ),
+                True,
+            )
+            next_page = self.request.route_url(
+                "form_details",
+                userid=user_id,
+                projcode=project_code,
+                formid=form_id,
+                _query={"tab": "task", "product": "zip_json_public_export"},
+                _anchor="products_and_tasks",
+            )
+            self.returnRawViewResult = True
+            return HTTPFound(location=next_page, headers={"FS_error": "true"})
 
 
 class DownloadPrivateXLSData(PrivateView):
@@ -3295,7 +3361,7 @@ class DownloadPrivateXLSData(PrivateView):
             raise HTTPNotFound
 
         odk_dir = get_odk_path(self.request)
-        generate_private_xlsx_file(
+        generated = generate_private_xlsx_file(
             self.request,
             self.user.id,
             project_id,
@@ -3306,17 +3372,39 @@ class DownloadPrivateXLSData(PrivateView):
             include_multiselect,
             include_lookups,
         )
-
-        next_page = self.request.route_url(
-            "form_details",
-            userid=user_id,
-            projcode=project_code,
-            formid=form_id,
-            _query={"tab": "task", "product": "xlsx_private_export"},
-            _anchor="products_and_tasks",
-        )
-        self.returnRawViewResult = True
-        return HTTPFound(location=next_page)
+        if generated:
+            next_page = self.request.route_url(
+                "form_details",
+                userid=user_id,
+                projcode=project_code,
+                formid=form_id,
+                _query={"tab": "task", "product": "xlsx_private_export"},
+                _anchor="products_and_tasks",
+            )
+            self.returnRawViewResult = True
+            return HTTPFound(location=next_page)
+        else:
+            max_products = int(self.request.registry.settings.get("max_products", "2"))
+            self.add_error(
+                self._(
+                    "You have too many not publishable Excel exports in this form. "
+                    "The platform only allows {} per form to ensure fairness for all users. "
+                    "Save the old ones on your local computer and delete them from the platform.".format(
+                        max_products
+                    )
+                ),
+                True,
+            )
+            next_page = self.request.route_url(
+                "form_details",
+                userid=user_id,
+                projcode=project_code,
+                formid=form_id,
+                _query={"tab": "task", "product": "xlsx_private_export"},
+                _anchor="products_and_tasks",
+            )
+            self.returnRawViewResult = True
+            return HTTPFound(location=next_page, headers={"FS_error": "true"})
 
 
 class DownloadPrivateZIPCSVData(PrivateView):
@@ -3356,7 +3444,7 @@ class DownloadPrivateZIPCSVData(PrivateView):
             raise HTTPNotFound
 
         odk_dir = get_odk_path(self.request)
-        generate_private_zip_csv_file(
+        generated = generate_private_zip_csv_file(
             self.request,
             self.user.id,
             project_id,
@@ -3367,17 +3455,39 @@ class DownloadPrivateZIPCSVData(PrivateView):
             include_multiselect,
             include_lookups,
         )
-
-        next_page = self.request.route_url(
-            "form_details",
-            userid=user_id,
-            projcode=project_code,
-            formid=form_id,
-            _query={"tab": "task", "product": "zip_csv_private_export"},
-            _anchor="products_and_tasks",
-        )
-        self.returnRawViewResult = True
-        return HTTPFound(location=next_page)
+        if generated:
+            next_page = self.request.route_url(
+                "form_details",
+                userid=user_id,
+                projcode=project_code,
+                formid=form_id,
+                _query={"tab": "task", "product": "zip_csv_private_export"},
+                _anchor="products_and_tasks",
+            )
+            self.returnRawViewResult = True
+            return HTTPFound(location=next_page)
+        else:
+            max_products = int(self.request.registry.settings.get("max_products", "2"))
+            self.add_error(
+                self._(
+                    "You have too many not publishable CSV exports in this form. "
+                    "The platform only allows {} per form to ensure fairness for all users. "
+                    "Save the old ones on your local computer and delete them from the platform.".format(
+                        max_products
+                    )
+                ),
+                True,
+            )
+            next_page = self.request.route_url(
+                "form_details",
+                userid=user_id,
+                projcode=project_code,
+                formid=form_id,
+                _query={"tab": "task", "product": "zip_csv_private_export"},
+                _anchor="products_and_tasks",
+            )
+            self.returnRawViewResult = True
+            return HTTPFound(location=next_page, headers={"FS_error": "true"})
 
 
 class DownloadPrivateZIPJSONData(PrivateView):
@@ -3417,7 +3527,7 @@ class DownloadPrivateZIPJSONData(PrivateView):
             raise HTTPNotFound
 
         odk_dir = get_odk_path(self.request)
-        generate_private_zip_json_file(
+        generated = generate_private_zip_json_file(
             self.request,
             self.user.id,
             project_id,
@@ -3428,17 +3538,39 @@ class DownloadPrivateZIPJSONData(PrivateView):
             include_multiselects,
             include_lookups,
         )
-
-        next_page = self.request.route_url(
-            "form_details",
-            userid=user_id,
-            projcode=project_code,
-            formid=form_id,
-            _query={"tab": "task", "product": "zip_json_private_export"},
-            _anchor="products_and_tasks",
-        )
-        self.returnRawViewResult = True
-        return HTTPFound(location=next_page)
+        if generated:
+            next_page = self.request.route_url(
+                "form_details",
+                userid=user_id,
+                projcode=project_code,
+                formid=form_id,
+                _query={"tab": "task", "product": "zip_json_private_export"},
+                _anchor="products_and_tasks",
+            )
+            self.returnRawViewResult = True
+            return HTTPFound(location=next_page)
+        else:
+            max_products = int(self.request.registry.settings.get("max_products", "2"))
+            self.add_error(
+                self._(
+                    "You have too many not publishable JSON exports in this form. "
+                    "The platform only allows {} per form to ensure fairness for all users. "
+                    "Save the old ones on your local computer and delete them from the platform.".format(
+                        max_products
+                    )
+                ),
+                True,
+            )
+            next_page = self.request.route_url(
+                "form_details",
+                userid=user_id,
+                projcode=project_code,
+                formid=form_id,
+                _query={"tab": "task", "product": "zip_json_private_export"},
+                _anchor="products_and_tasks",
+            )
+            self.returnRawViewResult = True
+            return HTTPFound(location=next_page, headers={"FS_error": "true"})
 
 
 class DownloadXLSX(PrivateView):

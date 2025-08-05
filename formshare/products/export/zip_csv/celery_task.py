@@ -11,6 +11,12 @@ from celery.utils.log import get_task_logger
 from formshare.config.celery_app import celeryApp
 from formshare.config.celery_class import CeleryTask
 from formshare.processes.email.send_async_email import send_async_email
+from formshare.processes.sse.messaging import send_task_status_to_form
+from formshare.products.block import (
+    get_redis_client,
+    global_export_lock,
+    LockAcquisitionError,
+)
 
 log = get_task_logger(__name__)
 
@@ -161,17 +167,34 @@ def build_zip_csv(
     include_multiselect=False,
     include_lookups=False,
 ):
-    internal_build_zip_csv(
-        settings,
-        odk_dir,
-        form_schema,
-        form_id,
-        create_xml,
-        encryption_key,
-        zip_file,
-        protect_sensitive,
-        locale,
-        options,
-        include_multiselect,
-        include_lookups,
-    )
+    task_id = build_zip_csv.request.id
+    redis_client = get_redis_client(settings)
+    # Only one export is permitted at time. The others have to wait. Otherwise, the exports can overwhelm MySQL
+    send_task_status_to_form(settings, task_id, "Scheduling")
+    try:
+        with global_export_lock(
+            task_id, redis_client, lock_key="export-lock", timeout=60, expire=660
+        ):
+            send_task_status_to_form(settings, task_id, "Creating Zip CSV file")
+            internal_build_zip_csv(
+                settings,
+                odk_dir,
+                form_schema,
+                form_id,
+                create_xml,
+                encryption_key,
+                zip_file,
+                protect_sensitive,
+                locale,
+                options,
+                include_multiselect,
+                include_lookups,
+            )
+    except LockAcquisitionError as e:
+        # Retry if we couldn't acquire the lock (e.g., another task running)
+        self.retry(exc=e, countdown=60)
+    except Exception as e:
+        redis_client.close()
+        # Let the task fail if export logic raises an error
+        raise e
+    redis_client.close()

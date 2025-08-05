@@ -5,6 +5,7 @@ from formshare.processes.db.form import (
     get_form_xml_create_file,
 )
 from formshare.products import register_product_instance
+from formshare.processes.db.products import product_max_number
 from formshare.products.export.xlsx.celery_task import build_xlsx
 
 
@@ -19,6 +20,8 @@ def generate_public_xlsx_file(
     include_multiselect=False,
     include_lookups=False,
 ):
+    if product_max_number(request, project, form, "xlsx_public_export"):
+        return False
     settings = {}
     for key, value in request.registry.settings.items():
         if isinstance(value, str):
@@ -59,6 +62,7 @@ def generate_public_xlsx_file(
         False,
         True,
     )
+    return True
 
 
 def generate_private_xlsx_file(
@@ -72,6 +76,8 @@ def generate_private_xlsx_file(
     include_multiselect=False,
     include_lookups=False,
 ):
+    if product_max_number(request, project, form, "xlsx_private_export"):
+        return False
     settings = {}
     for key, value in request.registry.settings.items():
         if isinstance(value, str):
@@ -112,3 +118,4 @@ def generate_private_xlsx_file(
         False,
         False,
     )
+    return True

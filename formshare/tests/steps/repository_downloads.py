@@ -6,7 +6,7 @@ import uuid
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
 
-from .sql import get_form_details, store_task_status, get_last_task
+from .sql import get_form_details, store_task_status, get_last_task, delete_products
 
 
 def t_e_s_t_repository_downloads(test_object):
@@ -345,7 +345,15 @@ def t_e_s_t_repository_downloads(test_object):
         status=404,
     )
 
-    # Generate public XLSX
+    # Generate public Zip CSV
+    # Deleting all products zip_csv_private_export
+    delete_products(
+        test_object.server_config,
+        test_object.projectID,
+        test_object.formID,
+        "zip_csv_public_export",
+    )
+
     res = test_object.testapp.get(
         "/user/{}/project/{}/form/{}/generate/public_zip_csv".format(
             test_object.randonLogin, test_object.project, test_object.formID
@@ -353,6 +361,22 @@ def t_e_s_t_repository_downloads(test_object):
         status=302,
     )
     assert "FS_error" not in res.headers
+
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/generate/public_zip_csv".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/generate/public_zip_csv".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        status=302,
+    )
+    assert "FS_error" in res.headers
 
     # Generate public XLSX for a project that does not exist goes to 404
     test_object.testapp.get(
@@ -402,6 +426,13 @@ def t_e_s_t_repository_downloads(test_object):
         status=404,
     )
 
+    delete_products(
+        test_object.server_config,
+        test_object.projectID,
+        test_object.formID,
+        "zip_json_public_export",
+    )
+
     # Generate public ZIP JSON
     res = test_object.testapp.get(
         "/user/{}/project/{}/form/{}/generate/public_zip_json".format(
@@ -413,12 +444,63 @@ def t_e_s_t_repository_downloads(test_object):
 
     # Generate public ZIP JSON
     res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/generate/public_zip_json".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+
+    # Generate public ZIP JSON
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/generate/public_zip_json".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        status=302,
+    )
+    assert "FS_error" in res.headers
+
+    delete_products(
+        test_object.server_config,
+        test_object.projectID,
+        test_object.formID,
+        "zip_json_private_export",
+    )
+
+    # Generate private ZIP JSON
+    res = test_object.testapp.get(
         "/user/{}/project/{}/form/{}/generate/private_zip_json".format(
             test_object.randonLogin, test_object.project, test_object.formID
         ),
         status=302,
     )
     assert "FS_error" not in res.headers
+
+    # Generate private ZIP JSON
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/generate/private_zip_json".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+
+    # Generate private ZIP JSON
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/generate/private_zip_json".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        status=302,
+    )
+    assert "FS_error" in res.headers
+
+    # Deleting all products xlsx_public_export
+    delete_products(
+        test_object.server_config,
+        test_object.projectID,
+        test_object.formID,
+        "xlsx_public_export",
+    )
 
     # Generate public XLSX
     res = test_object.testapp.get(
@@ -491,6 +573,15 @@ def t_e_s_t_repository_downloads(test_object):
     )
     assert "FS_error" not in res.headers
 
+    # Generate public XLSX No more generations
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/generate/public_xlsx".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        status=302,
+    )
+    assert "FS_error" in res.headers
+
     # Download a private xls for a project that does not exist goes tot 404
     test_object.testapp.get(
         "/user/{}/project/{}/form/{}/generate/private_xlsx".format(
@@ -532,6 +623,14 @@ def t_e_s_t_repository_downloads(test_object):
         status=404,
     )
 
+    # Deleting all products zip_csv_private_export
+    delete_products(
+        test_object.server_config,
+        test_object.projectID,
+        test_object.formID,
+        "zip_csv_private_export",
+    )
+
     # Private private zip CSV
     res = test_object.testapp.get(
         "/user/{}/project/{}/form/{}/generate/private_zip_csv".format(
@@ -540,6 +639,24 @@ def t_e_s_t_repository_downloads(test_object):
         status=302,
     )
     assert "FS_error" not in res.headers
+
+    # Private private zip CSV
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/generate/private_zip_csv".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        status=302,
+    )
+    assert "FS_error" not in res.headers
+
+    # Private private zip CSV
+    res = test_object.testapp.get(
+        "/user/{}/project/{}/form/{}/generate/private_zip_csv".format(
+            test_object.randonLogin, test_object.project, test_object.formID
+        ),
+        status=302,
+    )
+    assert "FS_error" in res.headers
 
     # Export data of a project that does not exist goes to 404
     test_object.testapp.get(

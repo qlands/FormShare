@@ -213,8 +213,8 @@ class CeleryTask(AbortableTask):  # pragma: no cover
         **options
     ):
         options["countdown"] = 2
-        options["time_limit"] = 600
-        options["soft_time_limit"] = 480
+        options["time_limit"] = 3600
+        options["soft_time_limit"] = 2700
         options["retry"] = False
         return AbortableTask.apply_async(
             self, args, kwargs, task_id, producer, link, link_error, shadow, **options

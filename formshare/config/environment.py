@@ -198,6 +198,7 @@ def load_environment(settings, config, apppath, policy_array):
         "partnerform",
         "dicttable",
         "dictfield",
+        "tenant",
     ]
 
     modules_allowed = ["formshare.models.formshare"]

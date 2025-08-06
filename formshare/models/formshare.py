@@ -14,6 +14,7 @@ from sqlalchemy import (
     Index,
     text,
     Unicode,
+    PrimaryKeyConstraint,
 )
 from sqlalchemy.dialects.mysql import MEDIUMTEXT, BIGINT
 from sqlalchemy.ext import mutable
@@ -62,6 +63,17 @@ class Collaboratorlog(Base):
     tableid = Column(Unicode(120))
 
 
+class Tenant(Base):
+    __tablename__ = "tenant"
+
+    tenant_id = Column(Unicode(120), primary_key=True)
+    tenant_name = Column(Unicode(120))
+    tenant_cdate = Column(DateTime)
+    tenat_active = Column(INTEGER, server_default=text("'0'"))
+    extras = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    tags = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+
+
 class User(Base):
     __tablename__ = "fsuser"
 
@@ -84,7 +96,7 @@ class User(Base):
     user_query_password = Column(Unicode(256))
     user_can_projects = Column(INTEGER, server_default=text("'1'"))
     user_can_forms = Column(INTEGER, server_default=text("'1'"))
-
+    user_is_workspace = Column(INTEGER, server_default=text("'0'"))
     user_password_reset_key = Column(Unicode(64))
     user_password_reset_token = Column(Unicode(64))
     user_password_reset_expires_on = Column(DateTime)
@@ -94,8 +106,12 @@ class User(Base):
         nullable=False,
         server_default=text("'UTC'"),
     )
+    user_tenant = Column(
+        ForeignKey("tenant.tenant_id", ondelete="RESTRICT"), nullable=True
+    )
 
     timezone = relationship("TimeZone")
+    tenant = relationship("Tenant")
 
 
 class Project(Base):
@@ -512,9 +528,7 @@ class Userproject(Base):
         nullable=False,
         index=True,
     )
-    access_type = Column(
-        INTEGER
-    )  # 1=Owner,2=Admin,3=Editor,4=Member. Note: 5=Public access (Set internally)
+    access_type = Column(INTEGER)  # 1=Owner,2=Admin,3=Editor,4=Member.
     access_date = Column(DateTime)
     project_active = Column(INTEGER, server_default=text("'1'"))
     project_accepted = Column(INTEGER, server_default=text("'1'"))
@@ -522,6 +536,25 @@ class Userproject(Base):
 
     project = relationship("Project")
     user = relationship("User")
+
+
+class UserWorkSpace(Base):
+    __tablename__ = "userworkspace"
+
+    workspace_id = Column(
+        ForeignKey("fsuser.user_id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+    user_id = Column(
+        ForeignKey("fsuser.user_id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+    access_date = Column(DateTime)
+    access_type = Column(INTEGER)  # 1=Creator,2=Admin,3=Editor
+
+    __table_args__ = (PrimaryKeyConstraint("workspace_id", "user_id"),)
 
 
 class Collingroup(Base):

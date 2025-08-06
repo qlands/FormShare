@@ -32,6 +32,8 @@ from formshare.models.formshare import (
     PartnerProject,
     PartnerForm,
     TimeZone,
+    Tenant,
+    UserWorkSpace,
 )
 from formshare.models.schema import *
 from sqlalchemy import engine_from_config

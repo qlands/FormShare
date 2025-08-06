@@ -68,6 +68,7 @@ def _get_user_index_definition(number_of_shards, number_of_replicas):
                 "user_name": {"type": "text", "copy_to": "all_data"},
                 "all_data": {"type": "text", "analyzer": "standard"},
                 "user_email2": {"type": "text", "analyzer": "email"},
+                "tenant_id": {"type": "text", "copy_to": "all_data"},
             }
         },
     }

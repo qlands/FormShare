@@ -391,6 +391,9 @@ class AddUserView(PrivateView):
                                                     "user_email"
                                                 ],
                                                 "user_name": user_details["user_name"],
+                                                "tenant_id": user_details.get(
+                                                    "tenant_id", ""
+                                                ),
                                             }
                                             user_index.add_user(
                                                 user_details["user_id"], user_index_data

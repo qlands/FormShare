@@ -26,6 +26,8 @@ class User(object):
         self.super = user_data["user_super"]
         self.can_projects = user_data["user_can_projects"]
         self.can_forms = user_data["user_can_forms"]
+        self.tenant = user_data["user_tenant"]
+        self.workspace = user_data["user_is_workspace"]
         self.APIKey = user_data["user_apikey"]
         self.gravatarURL = "#"
         if user_data["user_about"] is None:

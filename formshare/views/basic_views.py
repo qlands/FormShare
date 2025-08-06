@@ -699,6 +699,7 @@ class RegisterView(PublicView):
                                             "user_id": data["user_id"],
                                             "user_email": data["user_email"],
                                             "user_name": data["user_name"],
+                                            "tenant_id": "",
                                         }
                                         user_index.add_user(
                                             data["user_id"], user_index_data

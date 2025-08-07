@@ -114,11 +114,11 @@ ScreenShot
 
 Releases
 ------------
-The current stable release is 2.42.0 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.42.0) 
+The current stable release is 2.43.0 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.43.0) 
 
-The database signature for stable 2.42.0 is 01ddfd994185
+The database signature for stable 2.43.0 is 84032d0b43d2
 
-The Docker image for stable 2.42.0 is 20241111
+The Docker image for stable 2.43.0 is 20241111
 
 Requires ODKTools [2.15](https://github.com/qlands/odktools/tree/stable-2.15)
 
@@ -142,7 +142,7 @@ sudo apt-get install -y docker-compose
 cd /opt
 sudo mkdir formshare_docker_compose_20241111
 cd formshare_docker_compose_20241111
-sudo wget https://raw.githubusercontent.com/qlands/FormShare/stable-2.42.0/docker_compose/docker-compose.yml
+sudo wget https://raw.githubusercontent.com/qlands/FormShare/stable-2.43.0/docker_compose/docker-compose.yml
 
 # Make the directory structure for FormShare
 sudo mkdir /opt/formshare

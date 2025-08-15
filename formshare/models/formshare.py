@@ -81,6 +81,7 @@ class User(Base):
     user_name = Column(Unicode(120))
     user_email = Column(Unicode(120))
     user_password = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
+    user_assistant_password = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     user_about = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     user_cdate = Column(DateTime)
     user_llogin = Column(DateTime)

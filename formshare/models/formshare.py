@@ -74,6 +74,13 @@ class Tenant(Base):
     tags = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 
 
+class Roles(Base):
+    __tablename__ = "role"
+
+    role_id = Column(Unicode(64), primary_key=True)
+    role_name = Column(Unicode(120))
+
+
 class User(Base):
     __tablename__ = "fsuser"
 
@@ -113,6 +120,26 @@ class User(Base):
 
     timezone = relationship("TimeZone")
     tenant = relationship("Tenant")
+
+
+class UserRoles(Base):
+    __tablename__ = "userrole"
+
+    user_id = Column(
+        ForeignKey("fsuser.user_id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+    )
+    role_id = Column(
+        ForeignKey("role.role_id", ondelete="CASCADE"),
+        primary_key=True,
+        nullable=False,
+        index=True,
+    )
+    grant_date = Column(DateTime)
+
+    role = relationship("Roles")
+    user = relationship("User")
 
 
 class Project(Base):

@@ -2083,6 +2083,18 @@ class IAuthenticationPolicy(Interface):
         raise NotImplementedError("create_policy must be implemented in subclasses")
 
 
+class IRoles(Interface):
+    """
+    Plugin into the definition of roles
+    """
+
+    def get_roles(self, request):
+        """Called by FormShare so plugins can add new roles.
+        This function must return an array of roles
+        """
+        raise NotImplementedError("get_roles must be implemented in subclasses")
+
+
 class IPluginObserver(Interface):  # pragma: no cover
     """
     Plugin to the plugin loading mechanism

@@ -34,6 +34,8 @@ from formshare.models.formshare import (
     TimeZone,
     Tenant,
     UserWorkSpace,
+    Roles,
+    UserRoles,
 )
 from formshare.models.schema import *
 from sqlalchemy import engine_from_config

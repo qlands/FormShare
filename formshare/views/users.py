@@ -99,15 +99,12 @@ class EditUserView(PrivateView):
                         else:
                             user_details["user_super"] = 0
 
-                        if "user_can_projects" in user_details.keys():
-                            user_details["user_can_projects"] = 1
-                        else:
-                            user_details["user_can_projects"] = 0
+                        user_roles = []
+                        if "roles" not in user_details.keys():
+                            user_roles.append("can_forms")
+                            user_roles.append("can_projects")
 
-                        if "user_can_forms" in user_details.keys():
-                            user_details["user_can_forms"] = 1
-                        else:
-                            user_details["user_can_forms"] = 0
+                        user_details.roles = user_roles
 
                         if "user_active" in user_details.keys():
                             user_details["user_active"] = 1
@@ -308,15 +305,12 @@ class AddUserView(PrivateView):
                                     else:
                                         user_details["user_super"] = 0
 
-                                    if "user_can_projects" in user_details.keys():
-                                        user_details["user_can_projects"] = 1
-                                    else:
-                                        user_details["user_can_projects"] = 0
+                                    user_roles = []
+                                    if "roles" not in user_details.keys():
+                                        user_roles.append("can_forms")
+                                        user_roles.append("can_projects")
 
-                                    if "user_can_forms" in user_details.keys():
-                                        user_details["user_can_forms"] = 1
-                                    else:
-                                        user_details["user_can_forms"] = 0
+                                    user_details.roles = user_roles
 
                                     user_details["user_password"] = encoded_password
                                     user_details.pop("user_password2", None)

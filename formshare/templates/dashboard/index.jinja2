@@ -54,7 +54,7 @@
         {% set action_url = request.route_url('form_add',userid=activeProject.owner,projcode=activeProject.project_code,_query={'next': request.url}) %}
         {% include 'dashboard/projects/forms/snippets/upload_form.jinja2' %}
     {% else %}
-        {% if activeUser.can_projects == 1 %}
+        {% if request.h.user_has_role(activeUser,"can_projects")  %}
             <div class="middle-box text-center animated fadeInDown">
                 <h1><i class="fas fa-folder-plus"></i></h1>
                 <h3 class="font-bold">{{ _('It seems that you are new here!') }}</h3>

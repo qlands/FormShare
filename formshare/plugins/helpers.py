@@ -398,6 +398,17 @@ def get_uuid():
     return str(uuid.uuid4())
 
 
+@core_helper
+def user_has_role(user, role):
+    """
+    Generates and returns a UUID4
+    :return: True or False
+    """
+    if role in user.roles:
+        return True
+    return False
+
+
 def load_plugin_helpers():
     """
     (Re)loads the list of helpers provided by plugins.

@@ -653,6 +653,14 @@ class RegisterView(PublicView):
                                         self.request, data["user_password"]
                                     )
                                 data["user_active"] = 1
+
+                                user_roles = []
+                                if "roles" not in data.keys():
+                                    user_roles.append("can_forms")
+                                    user_roles.append("can_projects")
+
+                                data.roles = user_roles
+
                                 # Load connected plugins and check if they modify the registration of an user
                                 continue_registration = True
                                 for plugin in p.PluginImplementations(p.IRegistration):

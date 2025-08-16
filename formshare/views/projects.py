@@ -178,7 +178,7 @@ class AddProjectView(ProjectsView):
         if user_id != self.user.login:
             raise HTTPNotFound()
 
-        if self.user.can_projects == 0:
+        if "can_projects" not in self.user.roles:
             raise HTTPNotFound()
 
         if self.request.method == "POST":

@@ -5,7 +5,7 @@
         {% endif %}
         <h3 class="font-bold">{{ _('This project has no forms.') }}</h3>
         <div class="error-desc">
-            {% if activeUser.can_forms == 1 %}
+            {% if request.h.user_has_role(activeUser,"can_forms") %}
                 {% if projectData.access_type < 4 %}
                     {% if projectData.project_case == 0 %}
                         <button id="add_form" data-toggle="modal" data-target="#upload_form" type="button" class="btn btn-block btn-outline btn-primary">{{ _('Add new form') }}</button>

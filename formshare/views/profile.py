@@ -3,7 +3,7 @@ from formshare.processes.logging.loggerclass import SecretLogger
 import formshare.plugins as p
 from formshare.config.auth import get_user_data
 from formshare.config.encdecdata import encode_data
-from formshare.processes.db import update_profile, get_timezones, get_user_projects
+from formshare.processes.db import update_my_profile, get_timezones, get_user_projects
 from formshare.processes.db.user import update_password, update_api_key
 from formshare.processes.elasticsearch.user_index import (
     get_user_index_manager,
@@ -46,7 +46,7 @@ class EditProfileView(ProfileView):
                         == "false"
                     ):
                         data["user_name"] = self.user.name
-                    res, message = update_profile(self.request, user_id, data)
+                    res, message = update_my_profile(self.request, user_id, data)
                     if res:
                         user_index = get_user_index_manager(self.request)
                         try:

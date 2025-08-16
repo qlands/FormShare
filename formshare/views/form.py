@@ -1115,7 +1115,7 @@ class AddNewForm(PrivateView):
                 >= 4
             ):
                 raise HTTPNotFound
-            if self.user.can_forms == 0:
+            if "can_forms" not in self.user.roles:
                 raise HTTPNotFound
             project_details = get_project_details(self.request, project_id)
             project_details["total_forms"] = get_forms_number(self.request, project_id)
@@ -1487,7 +1487,7 @@ class UploadNewVersion(PrivateView):
             ):
                 raise HTTPNotFound
 
-            if self.user.can_forms == 0:
+            if "can_forms" not in self.user.roles:
                 raise HTTPNotFound
 
             project_details = get_project_details(self.request, project_id)

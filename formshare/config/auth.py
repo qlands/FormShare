@@ -5,10 +5,10 @@ from dateutil.relativedelta import relativedelta
 from formshare.config.encdecdata import decode_data
 from formshare.models import Collaborator as collaboratorModel
 from formshare.models import Partner as partnerModel
-from formshare.models import User as userModel
+from formshare.models import User as userModel, UserRoles
 from formshare.models import map_from_schema
 from formshare.plugins.core import PluginImplementations
-from formshare.plugins.interfaces import IUserAuthentication, IUserPassword
+from formshare.plugins.interfaces import IUserAuthentication, IUserPassword, IRoles
 from sqlalchemy import func
 
 
@@ -17,15 +17,14 @@ class User(object):
     This class represents a user in the system
     """
 
-    def __init__(self, user_data):
+    def __init__(self, user_data, request):
         self.id = user_data["user_id"]
         self.email = user_data["user_email"]
         self.userData = user_data
         self.login = user_data["user_id"]
         self.name = user_data["user_name"]
         self.super = user_data["user_super"]
-        self.can_projects = user_data["user_can_projects"]
-        self.can_forms = user_data["user_can_forms"]
+        self.roles = get_user_roles(request, user_data["user_id"])
         self.tenant = user_data["user_tenant"]
         self.workspace = user_data["user_is_workspace"]
         self.APIKey = user_data["user_apikey"]
@@ -111,6 +110,27 @@ class Partner(object):
     #     return self.id
 
 
+def get_user_roles(request, user_id):
+    # These are the basic roles
+    roles = ["can_projects", "can_forms"]
+    # Call plugins so they can add new roles
+    for plugin in PluginImplementations(IRoles):
+        plugin_roles = plugin.get_roles(request)
+        roles = roles + plugin_roles
+    # Get the roles from the roles table
+    res = (
+        request.dbsession.query(UserRoles.role_id)
+        .filter(UserRoles.user_id == user_id)
+        .all()
+    )
+    final_roles = ["can_projects", "can_forms"]
+    # Only add to the final list of roles those that have been defined through plugins
+    for a_role in res:
+        if a_role.role_id in roles:
+            final_roles = final_roles + [a_role.role_id]
+    return final_roles
+
+
 def reset_key_exists(request, reset_key):
     res = (
         request.dbsession.query(userModel)
@@ -180,7 +200,7 @@ def get_user_data(user, request):
             # The plugin authenticated the user. Check now that such user exists in FormShare.
             internal_user = get_formshare_user_data(request, user, email_valid)
             if internal_user:
-                return User(plugin_result_dict)
+                return User(plugin_result_dict, request)
             else:
                 return None
         else:
@@ -189,7 +209,7 @@ def get_user_data(user, request):
         result = get_formshare_user_data(request, user, email_valid)
         if result:
             result["user_password"] = ""  # Remove the password form the result
-            return User(result)
+            return User(result, request)
         return None
 
 

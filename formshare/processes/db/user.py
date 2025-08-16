@@ -6,6 +6,7 @@ import secrets
 from formshare.models import (
     map_to_schema,
     User,
+    UserRoles,
     map_from_schema,
     Userproject,
     Odkform,
@@ -22,6 +23,7 @@ __all__ = [
     "user_exists",
     "get_user_details",
     "update_profile",
+    "update_my_profile",
     "get_user_name",
     "get_user_by_api_key",
     "update_password",
@@ -143,6 +145,16 @@ def register_user(request, user_data):
         new_user = User(**mapped_data)
         try:
             request.dbsession.add(new_user)
+
+            for a_role in user_data.roles:
+                role_data = {
+                    "user_id": mapped_data["user_id"],
+                    "role_id": a_role,
+                    "grant_date": datetime.datetime.now(),
+                }
+                new_role = User(**role_data)
+                request.dbsession.add(new_role)
+
             request.dbsession.flush()
             return True, ""
         except IntegrityError:
@@ -326,11 +338,34 @@ def get_user_id_with_email(request, email):
         return None
 
 
+def update_my_profile(request, user, profile_data):
+    mapped_data = map_to_schema(User, profile_data)
+    save_point = request.tm.savepoint()
+    try:
+        request.dbsession.query(User).filter(User.user_id == user).update(mapped_data)
+        request.dbsession.flush()
+        return True, ""
+    except Exception as e:
+        save_point.rollback()
+        log.error("Error {} when updating user {}".format(str(e), user))
+        return False, str(e)
+
+
 def update_profile(request, user, profile_data):
     mapped_data = map_to_schema(User, profile_data)
     save_point = request.tm.savepoint()
     try:
         request.dbsession.query(User).filter(User.user_id == user).update(mapped_data)
+        request.dbsession.query(UserRoles).filter(UserRoles.user_id == user).delete()
+        for a_role in profile_data.roles:
+            role_data = {
+                "user_id": user,
+                "role_id": a_role,
+                "grant_date": datetime.datetime.now(),
+            }
+            new_role = User(**role_data)
+            request.dbsession.add(new_role)
+
         request.dbsession.flush()
         return True, ""
     except Exception as e:

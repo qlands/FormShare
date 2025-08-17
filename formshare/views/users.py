@@ -104,7 +104,7 @@ class EditUserView(PrivateView):
                             user_roles.append("can_forms")
                             user_roles.append("can_projects")
 
-                        user_details.roles = user_roles
+                        user_details["roles"] = user_roles
 
                         if "user_active" in user_details.keys():
                             user_details["user_active"] = 1
@@ -310,7 +310,7 @@ class AddUserView(PrivateView):
                                         user_roles.append("can_forms")
                                         user_roles.append("can_projects")
 
-                                    user_details.roles = user_roles
+                                    user_details["roles"] = user_roles
 
                                     user_details["user_password"] = encoded_password
                                     user_details.pop("user_password2", None)

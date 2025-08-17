@@ -659,7 +659,7 @@ class RegisterView(PublicView):
                                     user_roles.append("can_forms")
                                     user_roles.append("can_projects")
 
-                                data.roles = user_roles
+                                data["roles"] = user_roles
 
                                 # Load connected plugins and check if they modify the registration of an user
                                 continue_registration = True

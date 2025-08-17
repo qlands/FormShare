@@ -146,13 +146,13 @@ def register_user(request, user_data):
         try:
             request.dbsession.add(new_user)
 
-            for a_role in user_data.roles:
+            for a_role in user_data["roles"]:
                 role_data = {
                     "user_id": mapped_data["user_id"],
                     "role_id": a_role,
                     "grant_date": datetime.datetime.now(),
                 }
-                new_role = User(**role_data)
+                new_role = UserRoles(**role_data)
                 request.dbsession.add(new_role)
 
             request.dbsession.flush()
@@ -357,13 +357,13 @@ def update_profile(request, user, profile_data):
     try:
         request.dbsession.query(User).filter(User.user_id == user).update(mapped_data)
         request.dbsession.query(UserRoles).filter(UserRoles.user_id == user).delete()
-        for a_role in profile_data.roles:
+        for a_role in profile_data["roles"]:
             role_data = {
                 "user_id": user,
                 "role_id": a_role,
                 "grant_date": datetime.datetime.now(),
             }
-            new_role = User(**role_data)
+            new_role = UserRoles(**role_data)
             request.dbsession.add(new_role)
 
         request.dbsession.flush()

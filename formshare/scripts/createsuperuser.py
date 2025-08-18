@@ -99,7 +99,7 @@ def main(raw_args=None):
                         user_apisecret=api_secret,
                         user_super=1,
                         user_active=1,
-                        user_tenant='main',
+                        user_tenant="main",
                         user_cdate=datetime.datetime.now(),
                     )
                     dbsession.add(new_user)

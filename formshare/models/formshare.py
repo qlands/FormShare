@@ -69,7 +69,8 @@ class Tenant(Base):
     tenant_id = Column(Unicode(120), primary_key=True)
     tenant_name = Column(Unicode(120))
     tenant_cdate = Column(DateTime)
-    tenat_active = Column(INTEGER, server_default=text("'0'"))
+    tenant_active = Column(INTEGER, server_default=text("'0'"))
+    tenant_main = Column(INTEGER, server_default=text("'0'"))
     extras = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     tags = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 
@@ -115,7 +116,7 @@ class User(Base):
         server_default=text("'UTC'"),
     )
     user_tenant = Column(
-        ForeignKey("tenant.tenant_id", ondelete="RESTRICT"), nullable=True
+        ForeignKey("tenant.tenant_id", ondelete="RESTRICT"), nullable=False
     )
 
     timezone = relationship("TimeZone")

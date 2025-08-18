@@ -99,6 +99,7 @@ def main(raw_args=None):
                         user_apisecret=api_secret,
                         user_super=1,
                         user_active=1,
+                        user_tenant='main',
                         user_cdate=datetime.datetime.now(),
                     )
                     dbsession.add(new_user)
@@ -118,6 +119,7 @@ def main(raw_args=None):
                         "user_id": args.user_id,
                         "user_email": args.user_email,
                         "user_name": "FormShare Administrator",
+                        "tenant_id": "main",
                     }
                     # The user join FormShare
                     actor = Actor(user_details["user_id"], "person")

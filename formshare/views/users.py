@@ -103,8 +103,10 @@ class EditUserView(PrivateView):
                         if "roles" not in user_details.keys():
                             user_roles.append("can_forms")
                             user_roles.append("can_projects")
-
                         user_details["roles"] = user_roles
+
+                        if "user_tenant" not in user_details.keys():
+                            user_details["user_tenant"] = "main"
 
                         if "user_active" in user_details.keys():
                             user_details["user_active"] = 1
@@ -169,6 +171,7 @@ class EditUserView(PrivateView):
                                 user_index_data = {
                                     "user_id": user_to_modify,
                                     "user_email": user_details["user_email"],
+                                    "tenant_id": user_details["user_tenant"],
                                     "user_name": user_to_modify,
                                 }
 
@@ -309,8 +312,10 @@ class AddUserView(PrivateView):
                                     if "roles" not in user_details.keys():
                                         user_roles.append("can_forms")
                                         user_roles.append("can_projects")
-
                                     user_details["roles"] = user_roles
+
+                                    if "user_tenant" not in user_details.keys():
+                                        user_details["user_tenant"] = "main"
 
                                     user_details["user_password"] = encoded_password
                                     user_details.pop("user_password2", None)
@@ -385,9 +390,9 @@ class AddUserView(PrivateView):
                                                     "user_email"
                                                 ],
                                                 "user_name": user_details["user_name"],
-                                                "tenant_id": user_details.get(
-                                                    "tenant_id", ""
-                                                ),
+                                                "tenant_id": user_details[
+                                                    "user_tenant"
+                                                ],
                                             }
                                             user_index.add_user(
                                                 user_details["user_id"], user_index_data

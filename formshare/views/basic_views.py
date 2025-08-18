@@ -658,8 +658,10 @@ class RegisterView(PublicView):
                                 if "roles" not in data.keys():
                                     user_roles.append("can_forms")
                                     user_roles.append("can_projects")
-
                                 data["roles"] = user_roles
+
+                                if "user_tenant" not in data.keys():
+                                    data["user_tenant"] = "main"
 
                                 # Load connected plugins and check if they modify the registration of an user
                                 continue_registration = True
@@ -707,7 +709,7 @@ class RegisterView(PublicView):
                                             "user_id": data["user_id"],
                                             "user_email": data["user_email"],
                                             "user_name": data["user_name"],
-                                            "tenant_id": "",
+                                            "tenant_id": data["user_tenant"],
                                         }
                                         user_index.add_user(
                                             data["user_id"], user_index_data

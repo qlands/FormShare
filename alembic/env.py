@@ -25,9 +25,46 @@ target_metadata = Base.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
+formshare_tables = [
+    "caselookup",
+    "collaborator",
+    "collaboratorlog",
+    "collgroup",
+    "collingroup",
+    "dictfield",
+    "dicttable",
+    "finishedtask",
+    "formaccess",
+    "formgrpaccess",
+    "formsettings",
+    "fsuser",
+    "jsonhistory",
+    "jsonlog",
+    "mediafile",
+    "odkform",
+    "partner",
+    "partnerform",
+    "partnerproject",
+    "prjsettings",
+    "product",
+    "project",
+    "projectfile",
+    "role",
+    "settings",
+    "submission",
+    "tenant",
+    "timezone",
+    "userlog",
+    "userproject",
+    "userrole",
+    "userworkspace",
+]
+
 
 def include_object(object, name, type_, reflected, compare_to):
-    return not reflected
+    if type_ == "table" and name not in formshare_tables:
+        return False
+    return True
 
 
 def run_migrations_offline():

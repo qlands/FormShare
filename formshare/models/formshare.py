@@ -228,6 +228,10 @@ class Collaborator(Base):
         primary_key=True,
         nullable=False,
     )
+    coll_uuid = Column(Unicode(120))
+    coll_type = Column(
+        INTEGER, server_default=text("'1'")
+    )  # 1 = Project assistant, 2=A collaborator
     coll_id = Column(Unicode(120), primary_key=True, nullable=False)
     coll_name = Column(Unicode(120))
     coll_password = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
@@ -247,11 +251,18 @@ class Collaborator(Base):
         nullable=False,
         server_default=text("'UTC'"),
     )
+    coll_tenant = Column(
+        ForeignKey("tenant.tenant_id", ondelete="RESTRICT"), nullable=True
+    )
+    linked_user = Column(ForeignKey("fsuser.user_id", ondelete="CASCADE"), index=True)
+
     extras = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     tags = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 
     project = relationship("Project")
     timezone = relationship("TimeZone")
+    tenant = relationship("Tenant")
+    fsuser = relationship("User")
 
 
 class Partner(Base):
@@ -722,6 +733,17 @@ class Submission(Base):
         ),
         Index("fk_submission_enumerator1_idx", "enum_project", "coll_id"),
         Index("fk_submission_form1_idx", "project_id", "form_id"),
+        Index(
+            "idx_submission_fast",
+            "project_id",
+            "form_id",
+            "original_md5sum",
+            "sameas",
+            "submission_id",
+        ),
+        Index(
+            "idx_submission_last", "project_id", "form_id", "sameas", "submission_dtime"
+        ),
     )
 
     project_id = Column(Unicode(64), primary_key=True, nullable=False)

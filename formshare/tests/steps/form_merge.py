@@ -100,8 +100,10 @@ def t_e_s_t_form_merge(test_object):
             test_object.randonLogin, test_object.project, "tormenta20201117"
         ),
         {
-            "coll_id": "{}|{}".format(
-                test_object.projectID, test_object.assistantLogin
+            "coll_id": "{}|{}|{}".format(
+                test_object.projectID,
+                test_object.assistantLogin,
+                test_object.assistantLoginUUID,
             ),
             "coll_can_submit": "1",
             "coll_can_clean": "1",

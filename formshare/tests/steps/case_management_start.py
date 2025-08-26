@@ -85,9 +85,11 @@ def t_e_s_t_case_management_start(test_object):
     )
     assert "FS_error" not in res.headers
 
+    test_object.caseassistantUUID = str(uuid.uuid4())
     res = test_object.testapp.post(
         "/user/{}/project/{}/assistants/add".format(test_object.randonLogin, "case001"),
         {
+            "coll_uuid": test_object.caseassistantUUID,
             "coll_id": "caseassistant001",
             "coll_name": "caseassistant001",
             "coll_password": "123",

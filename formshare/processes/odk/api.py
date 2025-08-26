@@ -39,6 +39,7 @@ from formshare.processes.db import (
     add_json_history,
     form_file_exists,
     get_project_from_assistant,
+    get_assistant_uuid,
     get_form_files,
     get_project_code_from_id,
     get_form_geopoints,
@@ -61,6 +62,7 @@ from formshare.processes.db import (
     get_form_xml_insert_file,
     update_lookup_from_csv,
     update_media_lastgen,
+    get_assistant_uuid,
 )
 from formshare.processes.elasticsearch.record_index import (
     add_record,
@@ -3349,15 +3351,20 @@ def store_json_file(
                             project_of_assistant = get_project_from_assistant(
                                 request, user, project, assistant
                             )
+                            assistant_uuid = get_assistant_uuid(
+                                request, project_of_assistant, assistant
+                            )
                         else:
                             project_of_assistant = None
                             assistant = None
+                            assistant_uuid = None
                         added, message = add_submission(
                             request,
                             project,
                             form,
                             project_of_assistant,
                             assistant,
+                            assistant_uuid,
                             submission_id,
                             md5sum,
                             original_md5,
@@ -3414,6 +3421,7 @@ def store_json_file(
                                 1,
                                 project_of_assistant,
                                 assistant,
+                                assistant_uuid,
                                 " ".join(args),
                             )
                             if not added:
@@ -3506,6 +3514,9 @@ def store_json_file(
                     project_of_assistant = get_project_from_assistant(
                         request, user, project, assistant
                     )
+                    assistant_uuid = get_assistant_uuid(
+                        request, project_of_assistant, assistant
+                    )
                     if (
                         request.registry.settings.get(
                             "store_submission_same_as", "True"
@@ -3518,6 +3529,7 @@ def store_json_file(
                             form,
                             project_of_assistant,
                             assistant,
+                            assistant_uuid,
                             submission_id,
                             md5sum,
                             0,
@@ -4488,6 +4500,9 @@ def store_new_version(
                     project_of_assistant = get_project_from_assistant(
                         request, user, project, assistant
                     )
+                    assistant_uuid = get_assistant_uuid(
+                        request, project_of_assistant, assistant
+                    )
                     added, message = add_json_history(
                         request,
                         project,
@@ -4497,6 +4512,7 @@ def store_new_version(
                         3,
                         project_of_assistant,
                         assistant,
+                        assistant_uuid,
                         notes,
                     )
                     if not added:

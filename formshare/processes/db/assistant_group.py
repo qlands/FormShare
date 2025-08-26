@@ -170,13 +170,16 @@ def modify_group(request, project, group, group_data):
         return False, _("This group already exists in this project")
 
 
-def add_assistant_to_group(request, project, group, assistant_project, assistant):
+def add_assistant_to_group(
+    request, project, group, assistant_project, assistant, assistant_uuid
+):
     _ = request.translate
     new_member = Collingroup(
         project_id=project,
         group_id=group,
         enum_project=assistant_project,
         coll_id=assistant,
+        coll_uuid=assistant_uuid,
         join_date=datetime.datetime.now(),
     )
     save_point = request.tm.savepoint()

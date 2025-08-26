@@ -2,6 +2,7 @@ import json
 import os
 import time
 import uuid
+from uuid import uuid4
 
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
@@ -83,11 +84,13 @@ def t_e_s_t_json_logs_2(test_object):
     )
     assert "FS_error" not in res.headers
 
+    json2001_uuid = str(uuid.uuid4())
     mimic_res = test_object.testapp.post(
         "/user/{}/project/{}/assistants/add".format(
             test_object.randonLogin, json2_project
         ),
         {
+            "coll_uuid": json2001_uuid,
             "coll_id": "json2001",
             "coll_name": "json2001",
             "coll_password": "123",
@@ -104,7 +107,7 @@ def t_e_s_t_json_logs_2(test_object):
             test_object.randonLogin, json2_project, json2_form
         ),
         {
-            "coll_id": "{}|{}".format(json2_project_id, "json2001"),
+            "coll_id": "{}|{}|{}".format(json2_project_id, "json2001", json2001_uuid),
             "coll_can_submit": "1",
             "coll_can_clean": "1",
         },
@@ -112,11 +115,13 @@ def t_e_s_t_json_logs_2(test_object):
     )
     assert "FS_error" not in mimic_res.headers
 
+    json2002_uuid = str(uuid.uuid4())
     mimic_res = test_object.testapp.post(
         "/user/{}/project/{}/assistants/add".format(
             test_object.randonLogin, json2_project
         ),
         {
+            "coll_uuid": json2002_uuid,
             "coll_id": "json2002",
             "coll_name": "json2002",
             "coll_password": "123",
@@ -133,18 +138,20 @@ def t_e_s_t_json_logs_2(test_object):
             test_object.randonLogin, json2_project, json2_form
         ),
         {
-            "coll_id": "{}|{}".format(json2_project_id, "json2002"),
+            "coll_id": "{}|{}|{}".format(json2_project_id, "json2002", json2002_uuid),
             "coll_can_submit": "1",
         },
         status=302,
     )
     assert "FS_error" not in mimic_res.headers
 
+    json2003_uuid = str(uuid.uuid4())
     mimic_res = test_object.testapp.post(
         "/user/{}/project/{}/assistants/add".format(
             test_object.randonLogin, json2_project
         ),
         {
+            "coll_uuid": json2003_uuid,
             "coll_id": "json2003",
             "coll_name": "json2003",
             "coll_password": "123",
@@ -161,7 +168,7 @@ def t_e_s_t_json_logs_2(test_object):
             test_object.randonLogin, json2_project, json2_form
         ),
         {
-            "coll_id": "{}|{}".format(json2_project_id, "json2003"),
+            "coll_id": "{}|{}|{}".format(json2_project_id, "json2003", json2003_uuid),
             "coll_can_clean": "1",
         },
         status=302,
@@ -548,11 +555,13 @@ def t_e_s_t_json_logs_2(test_object):
     assert "FS_error" not in res.headers
 
     # Add three assistants
+    jsongrp001_uuid = str(uuid.uuid4())
     mimic_res = test_object.testapp.post(
         "/user/{}/project/{}/assistants/add".format(
             test_object.randonLogin, json2_project
         ),
         {
+            "coll_uuid": jsongrp001_uuid,
             "coll_id": "jsongrp001",
             "coll_name": "jsongrp001",
             "coll_password": "123",
@@ -563,11 +572,13 @@ def t_e_s_t_json_logs_2(test_object):
     )
     assert "FS_error" not in mimic_res.headers
 
+    jsongrp002_uuid = str(uuid.uuid4())
     mimic_res = test_object.testapp.post(
         "/user/{}/project/{}/assistants/add".format(
             test_object.randonLogin, json2_project
         ),
         {
+            "coll_uuid": jsongrp002_uuid,
             "coll_id": "jsongrp002",
             "coll_name": "jsongrp002",
             "coll_password": "123",
@@ -578,11 +589,13 @@ def t_e_s_t_json_logs_2(test_object):
     )
     assert "FS_error" not in mimic_res.headers
 
+    jsongrp003_uuid = str(uuid.uuid4())
     mimic_res = test_object.testapp.post(
         "/user/{}/project/{}/assistants/add".format(
             test_object.randonLogin, json2_project
         ),
         {
+            "coll_uuid": jsongrp003_uuid,
             "coll_id": "jsongrp003",
             "coll_name": "jsongrp003",
             "coll_password": "123",
@@ -599,9 +612,11 @@ def t_e_s_t_json_logs_2(test_object):
             test_object.randonLogin, json2_project, "grp001"
         ),
         {
-            "assistants": "{}|{}".format(json2_project_id, "jsongrp001")
-            + ",{}|{}".format(json2_project_id, "jsongrp002")
-            + ",{}|{}".format(json2_project_id, "jsongrp003"),
+            "assistants": "{}|{}|{}".format(
+                json2_project_id, "jsongrp001", jsongrp001_uuid
+            )
+            + ",{}|{}|{}".format(json2_project_id, "jsongrp002", jsongrp002_uuid)
+            + ",{}|{}|{}".format(json2_project_id, "jsongrp003", jsongrp003_uuid),
         },
         status=302,
     )

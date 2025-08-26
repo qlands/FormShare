@@ -96,11 +96,13 @@ def t_e_s_t_crowdsourcing(test_object):
     )
     assert "FS_error" not in res.headers
 
+    crowdsourcingUUID = str(uuid.uuid4())
     mimic_res = test_object.testapp.post(
         "/user/{}/project/{}/assistants/add".format(
             test_object.randonLogin, json2_project
         ),
         {
+            "coll_uuid": crowdsourcingUUID,
             "coll_id": "crowdsourcing",
             "coll_name": "crowdsourcing",
             "coll_password": "123",
@@ -117,7 +119,9 @@ def t_e_s_t_crowdsourcing(test_object):
             test_object.randonLogin, json2_project, json2_form
         ),
         {
-            "coll_id": "{}|{}".format(json2_project_id, "crowdsourcing"),
+            "coll_id": "{}|{}|{}".format(
+                json2_project_id, "crowdsourcing", crowdsourcingUUID
+            ),
             "coll_can_clean": "1",
         },
         status=302,

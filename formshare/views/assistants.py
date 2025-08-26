@@ -90,6 +90,10 @@ class AddAssistantsView(PrivateView):
 
         if self.request.method == "POST":
             assistant_data = self.get_post_dict()
+            if "coll_uuid" not in assistant_data:
+                assistant_data["coll_uuid"] = str(uuid.uuid4())
+            assistant_data["coll_tenant"] = self.user.tenant
+            assistant_data["coll_type"] = 1
             if "coll_prjshare" in assistant_data.keys():
                 assistant_data["coll_prjshare"] = 1
             else:
@@ -547,6 +551,7 @@ class UploadAssistantsCSV(PrivateView):
                     )
                 if not error:
                     for an_assistant in assistants:
+                        an_assistant["coll_type"] = 1
                         if not re.match(r"^[A-Za-z0-9_]+$", an_assistant["coll_id"]):
                             error = True
                             message = self._(
@@ -612,6 +617,9 @@ class UploadAssistantsCSV(PrivateView):
                 messages = []
                 save_point = self.request.tm.savepoint()
                 for an_assistant in assistants:
+                    an_assistant["coll_uuid"] = str(uuid.uuid4())
+                    an_assistant["coll_tenant"] = self.user.tenant
+                    an_assistant["coll_type"] = 1
                     continue_creation = True
                     for plugin in p.PluginImplementations(p.IAssistant):
                         if continue_creation:

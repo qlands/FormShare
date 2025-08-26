@@ -74,11 +74,13 @@ def t_e_s_t_json_logs_3(test_object):
     )
     assert "FS_error" not in res.headers
 
+    json3001_uuid = str(uuid.uuid4())
     mimic_res = test_object.testapp.post(
         "/user/{}/project/{}/assistants/add".format(
             test_object.randonLogin, json3_project
         ),
         {
+            "coll_uuid": json3001_uuid,
             "coll_id": "json3001",
             "coll_name": "json3001",
             "coll_password": "123",
@@ -95,7 +97,7 @@ def t_e_s_t_json_logs_3(test_object):
             test_object.randonLogin, json3_project, json3_form
         ),
         {
-            "coll_id": "{}|{}".format(json3_project_id, "json3001"),
+            "coll_id": "{}|{}|{}".format(json3_project_id, "json3001", json3001_uuid),
             "coll_can_submit": "1",
             "coll_can_clean": "1",
         },

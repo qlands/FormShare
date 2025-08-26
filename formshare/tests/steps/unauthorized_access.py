@@ -374,8 +374,10 @@ def t_e_s_t_unauthorized_access(test_object):
             test_object.randonLogin, test_object.project, test_object.formID
         ),
         {
-            "coll_id": "{}|{}".format(
-                test_object.projectID, test_object.assistantLogin
+            "coll_id": "{}|{}|{}".format(
+                test_object.projectID,
+                test_object.assistantLogin,
+                test_object.assistantLoginUUID,
             ),
             "coll_can_submit": "1",
         },
@@ -1236,8 +1238,10 @@ def t_e_s_t_unauthorized_access(test_object):
             test_object.randonLogin, test_object.project, test_object.formID
         ),
         {
-            "coll_id": "{}|{}".format(
-                test_object.projectID, test_object.assistantLogin
+            "coll_id": "{}|{}|{}".format(
+                test_object.projectID,
+                test_object.assistantLogin,
+                test_object.assistantLoginUUID,
             ),
             "coll_can_submit": "1",
         },

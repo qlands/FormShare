@@ -164,6 +164,9 @@ class Project(Base):
         nullable=False,
         server_default=text("'UTC'"),
     )
+    project_tenant = Column(
+        ForeignKey("tenant.tenant_id", ondelete="RESTRICT"), nullable=False
+    )
     extras = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     tags = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
 
@@ -192,6 +195,7 @@ class Project(Base):
     )  # 1=swipe, 2=buttons, 3=swipe_buttons
 
     timezone = relationship("TimeZone")
+    tenant = relationship("Tenant")
 
 
 class Settings(Base):
@@ -223,16 +227,20 @@ class Userlog(Base):
 class Collaborator(Base):
     __tablename__ = "collaborator"
 
+    __table_args__ = (
+        Index("unique_project_coll_id", "project_id", "coll_id", unique=True),
+    )
+
     project_id = Column(
         ForeignKey("project.project_id", ondelete="CASCADE"),
-        primary_key=True,
-        nullable=False,
+        primary_key=False,
+        nullable=True,
     )
-    coll_uuid = Column(Unicode(120))
+    coll_uuid = Column(Unicode(120), primary_key=True, nullable=False)
     coll_type = Column(
         INTEGER, server_default=text("'1'")
     )  # 1 = Project assistant, 2=A collaborator
-    coll_id = Column(Unicode(120), primary_key=True, nullable=False)
+    coll_id = Column(Unicode(120), primary_key=False, nullable=True)
     coll_name = Column(Unicode(120))
     coll_password = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     coll_active = Column(INTEGER)
@@ -602,8 +610,8 @@ class Collingroup(Base):
     __tablename__ = "collingroup"
     __table_args__ = (
         ForeignKeyConstraint(
-            ["enum_project", "coll_id"],
-            ["collaborator.project_id", "collaborator.coll_id"],
+            ["coll_uuid"],
+            ["collaborator.coll_uuid"],
             ondelete="CASCADE",
         ),
         ForeignKeyConstraint(
@@ -611,14 +619,15 @@ class Collingroup(Base):
             ["collgroup.project_id", "collgroup.group_id"],
             ondelete="CASCADE",
         ),
-        Index("fk_enumingroup_enumerator1_idx", "enum_project", "coll_id"),
-        Index("fk_enumingroup_enumerator1", "enum_project", "coll_id"),
+        Index("fk_enumingroup_collaborator_idx", "coll_uuid"),
+        Index("fk_enumingroup_group_idx", "project_id", "group_id"),
     )
 
     project_id = Column(Unicode(64), primary_key=True, nullable=False)
     group_id = Column(Unicode(12), primary_key=True, nullable=False)
-    enum_project = Column(Unicode(64), primary_key=True, nullable=False)
-    coll_id = Column(Unicode(120), primary_key=True, nullable=False)
+    enum_project = Column(Unicode(64), primary_key=False, nullable=True)
+    coll_id = Column(Unicode(120), primary_key=False, nullable=True)
+    coll_uuid = Column(Unicode(120), primary_key=True, nullable=False)
     join_date = Column(DateTime)
 
     collaborator = relationship("Collaborator")
@@ -634,16 +643,17 @@ class Formacces(Base):
             ondelete="CASCADE",
         ),
         ForeignKeyConstraint(
-            ["project_id", "coll_id"],
-            ["collaborator.project_id", "collaborator.coll_id"],
+            ["coll_uuid"],
+            ["collaborator.coll_uuid"],
             ondelete="CASCADE",
         ),
-        Index("fk_submitter_form1_idx", "form_project", "form_id"),
-        Index("fk_submitter_form1", "form_project", "form_id"),
+        Index("fk_submitter_project", "form_project", "form_id"),
+        Index("fk_submitter_collaborator", "coll_uuid"),
     )
 
-    project_id = Column(Unicode(64), primary_key=True, nullable=False)
-    coll_id = Column(Unicode(120), primary_key=True, nullable=False)
+    project_id = Column(Unicode(64), primary_key=True, nullable=True)
+    coll_id = Column(Unicode(120), primary_key=True, nullable=True)
+    coll_uuid = Column(Unicode(120), primary_key=True, nullable=False)
     form_project = Column(Unicode(64), primary_key=True, nullable=False)
     form_id = Column(Unicode(120), primary_key=True, nullable=False)
     coll_can_submit = Column(INTEGER, server_default=text("'0'"))
@@ -692,8 +702,8 @@ class Jsonlog(Base):
     __tablename__ = "jsonlog"
     __table_args__ = (
         ForeignKeyConstraint(
-            ["enum_project", "coll_id"],
-            ["collaborator.project_id", "collaborator.coll_id"],
+            ["coll_uuid"],
+            ["collaborator.coll_uuid"],
         ),
         ForeignKeyConstraint(
             ["project_id", "form_id"],
@@ -701,7 +711,7 @@ class Jsonlog(Base):
             ondelete="CASCADE",
         ),
         Index("fk_jsonlog_form1_idx", "project_id", "form_id"),
-        Index("fk_jsonlog_enumerator1_idx", "enum_project", "coll_id"),
+        Index("fk_jsonlog_enumerator1_idx", "coll_uuid"),
     )
 
     form_id = Column(Unicode(120), primary_key=True, nullable=False)
@@ -714,6 +724,7 @@ class Jsonlog(Base):
     status = Column(INTEGER)
     enum_project = Column(Unicode(64), nullable=True)
     coll_id = Column(Unicode(120), nullable=True)
+    coll_uuid = Column(Unicode(120))
 
     collaborator = relationship("Collaborator")
     project = relationship("Odkform")
@@ -723,15 +734,15 @@ class Submission(Base):
     __tablename__ = "submission"
     __table_args__ = (
         ForeignKeyConstraint(
-            ["enum_project", "coll_id"],
-            ["collaborator.project_id", "collaborator.coll_id"],
+            ["coll_uuid"],
+            ["collaborator.coll_uuid"],
         ),
         ForeignKeyConstraint(
             ["project_id", "form_id"],
             ["odkform.project_id", "odkform.form_id"],
             ondelete="CASCADE",
         ),
-        Index("fk_submission_enumerator1_idx", "enum_project", "coll_id"),
+        Index("fk_submission_enumerator1_idx", "coll_uuid"),
         Index("fk_submission_form1_idx", "project_id", "form_id"),
         Index(
             "idx_submission_fast",
@@ -753,6 +764,7 @@ class Submission(Base):
     submission_status = Column(INTEGER)
     enum_project = Column(Unicode(64), nullable=True)
     coll_id = Column(Unicode(120), nullable=True)
+    coll_uuid = Column(Unicode(120))
     md5sum = Column(Unicode(120))
     original_md5sum = Column(Unicode(120))
     sameas = Column(Unicode(64))
@@ -784,15 +796,15 @@ class Jsonhistory(Base):
     __tablename__ = "jsonhistory"
     __table_args__ = (
         ForeignKeyConstraint(
-            ["enum_project", "coll_id"],
-            ["collaborator.project_id", "collaborator.coll_id"],
+            ["coll_uuid"],
+            ["collaborator.coll_uuid"],
         ),
         ForeignKeyConstraint(
             ["form_id", "project_id", "log_id"],
             ["jsonlog.form_id", "jsonlog.project_id", "jsonlog.log_id"],
             ondelete="CASCADE",
         ),
-        Index("fk_jsonhistory_enumerator1_idx", "enum_project", "coll_id"),
+        Index("fk_jsonhistory_enumerator1_idx", "coll_uuid"),
         Index("fk_jsonhistory_jsonlog1_idx", "form_id", "project_id", "log_id"),
     )
 
@@ -806,6 +818,7 @@ class Jsonhistory(Base):
     log_notes = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     enum_project = Column(Unicode(64), nullable=False)
     coll_id = Column(Unicode(120), nullable=False)
+    coll_uuid = Column(Unicode(120))
 
     collaborator = relationship("Collaborator")
     form = relationship("Jsonlog")

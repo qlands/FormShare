@@ -74,6 +74,7 @@ def t_e_s_t_form_access(test_object):
     assert "FS_error" not in res.headers
 
     access_assistant = str(uuid.uuid4())
+    access_assistant_uuid = str(uuid.uuid4())
     access_assistant = access_assistant[-12:]
 
     mimic_res = test_object.testapp.post(
@@ -81,6 +82,7 @@ def t_e_s_t_form_access(test_object):
             test_object.randonLogin, json2_project
         ),
         {
+            "coll_uuid": access_assistant_uuid,
             "coll_id": access_assistant,
             "coll_name": access_assistant,
             "coll_password": "123",
@@ -97,7 +99,9 @@ def t_e_s_t_form_access(test_object):
             test_object.randonLogin, json2_project, json2_form
         ),
         {
-            "coll_id": "{}|{}".format(json2_project_id, access_assistant),
+            "coll_id": "{}|{}|{}".format(
+                json2_project_id, access_assistant, access_assistant_uuid
+            ),
             "coll_can_clean": "1",
         },
         status=302,

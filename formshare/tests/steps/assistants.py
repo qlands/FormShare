@@ -1,4 +1,5 @@
 import os
+import uuid
 
 
 def t_e_s_t_assistants(test_object):
@@ -118,7 +119,9 @@ def t_e_s_t_assistants(test_object):
     )
 
     test_object.assistantLogin = "assistant001"
+    test_object.assistantLoginUUID = str(uuid.uuid4())
     test_object.assistantLogin2 = "assistant002"
+    test_object.assistantLogin2UUID = str(uuid.uuid4())
 
     # Add an assistant succeed
     res = test_object.testapp.post(
@@ -126,6 +129,7 @@ def t_e_s_t_assistants(test_object):
             test_object.randonLogin, test_object.project
         ),
         {
+            "coll_uuid": test_object.assistantLoginUUID,
             "coll_id": "assistant001",
             "coll_name": "assistant001",
             "coll_password": "123",
@@ -413,6 +417,7 @@ def t_e_s_t_assistants(test_object):
             test_object.randonLogin, test_object.project
         ),
         {
+            "coll_uuid": test_object.assistantLoginUUID,
             "coll_id": "assistant001",
             "coll_name": "assistant001",
             "coll_password": "123",
@@ -429,6 +434,7 @@ def t_e_s_t_assistants(test_object):
             test_object.randonLogin, test_object.project
         ),
         {
+            "coll_uuid": test_object.assistantLogin2UUID,
             "coll_id": "assistant002",
             "coll_name": "assistant002",
             "coll_password": "123",

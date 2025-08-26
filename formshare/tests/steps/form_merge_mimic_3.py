@@ -61,11 +61,13 @@ def t_e_s_t_form_merge_mimic_3(test_object):
     )
     assert "FS_error" not in res.headers
 
+    merge003_uuid = str(uuid.uuid4())
     mimic_res = test_object.testapp.post(
         "/user/{}/project/{}/assistants/add".format(
             test_object.randonLogin, merge_project
         ),
         {
+            "coll_uuid": merge003_uuid,
             "coll_id": "merge003",
             "coll_name": "merge003",
             "coll_password": "123",
@@ -144,7 +146,7 @@ def t_e_s_t_form_merge_mimic_3(test_object):
             test_object.randonLogin, merge_project, "tormenta20201117"
         ),
         {
-            "coll_id": "{}|{}".format(merge_project_id, "merge003"),
+            "coll_id": "{}|{}|{}".format(merge_project_id, "merge003", merge003_uuid),
             "coll_can_submit": "1",
             "coll_can_clean": "1",
         },

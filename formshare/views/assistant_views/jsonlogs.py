@@ -653,6 +653,9 @@ class JSONPushSubmission(AssistantView):
             data = get_submission_error_details(
                 self.request, self.projectID, form_id, submission_id
             )
+            print("lll*******2")
+            print(data)
+            print("lll*******2")
             if data is not None:
                 if data["status"] == 1:
                     if self.request.method == "POST":
@@ -668,6 +671,10 @@ class JSONPushSubmission(AssistantView):
                             project_of_assistant,
                             self.assistantID,
                         )
+                        print("lll*******3")
+                        print(res_code)
+                        print(message)
+                        print("lll*******3")
                         if res_code == 0:
                             fix_submission(
                                 self.request,

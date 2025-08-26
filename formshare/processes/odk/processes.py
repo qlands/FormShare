@@ -15,7 +15,10 @@ from formshare.models import (
     Formgrpacces,
 )
 from formshare.models import Odkform as Form
-from formshare.processes.db.assistant import get_project_from_assistant
+from formshare.processes.db.assistant import (
+    get_project_from_assistant,
+    get_assistant_uuid,
+)
 from formshare.processes.db.project import project_has_crowdsourcing
 from lxml import etree
 from sqlalchemy.event import listen
@@ -589,6 +592,7 @@ def get_form_data(project, form, request):
 def checkout_submission(
     request, project, form, submission, project_of_assistant, assistant
 ):
+    assistant_uuid = get_assistant_uuid(request, project_of_assistant, assistant)
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 2})
@@ -603,6 +607,7 @@ def checkout_submission(
         log_action=2,
         enum_project=project_of_assistant,
         coll_id=assistant,
+        coll_uuid=assistant_uuid,
     )
     save_point = request.tm.savepoint()
     try:
@@ -616,6 +621,7 @@ def checkout_submission(
 def cancel_checkout(
     request, project, form, submission, project_of_assistant, assistant
 ):
+    assistant_uuid = get_assistant_uuid(request, project_of_assistant, assistant)
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 1})
@@ -630,6 +636,7 @@ def cancel_checkout(
         log_action=5,
         enum_project=project_of_assistant,
         coll_id=assistant,
+        coll_uuid=assistant_uuid,
     )
     save_point = request.tm.savepoint()
     try:
@@ -647,6 +654,7 @@ def cancel_checkout(
 def cancel_revision(
     request, project, form, submission, project_of_assistant, assistant, revision
 ):
+    assistant_uuid = get_assistant_uuid(request, project_of_assistant, assistant)
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 1})
@@ -661,6 +669,7 @@ def cancel_revision(
         log_action=6,
         enum_project=project_of_assistant,
         coll_id=assistant,
+        coll_uuid=assistant_uuid,
         log_commit=revision,
     )
     save_point = request.tm.savepoint()
@@ -679,6 +688,7 @@ def cancel_revision(
 def fix_revision(
     request, project, form, submission, project_of_assistant, assistant, revision
 ):
+    assistant_uuid = get_assistant_uuid(request, project_of_assistant, assistant)
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 0})
@@ -693,6 +703,7 @@ def fix_revision(
         log_action=0,
         enum_project=project_of_assistant,
         coll_id=assistant,
+        coll_uuid=assistant_uuid,
         log_commit=revision,
     )
     save_point = request.tm.savepoint()
@@ -707,6 +718,7 @@ def fix_revision(
 
 
 def fix_submission(request, project, form, submission, project_of_assistant, assistant):
+    assistant_uuid = get_assistant_uuid(request, project_of_assistant, assistant)
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 0})
@@ -721,6 +733,7 @@ def fix_submission(request, project, form, submission, project_of_assistant, ass
         log_action=0,
         enum_project=project_of_assistant,
         coll_id=assistant,
+        coll_uuid=assistant_uuid,
     )
     save_point = request.tm.savepoint()
     try:
@@ -734,6 +747,7 @@ def fix_submission(request, project, form, submission, project_of_assistant, ass
 def fail_revision(
     request, project, form, submission, project_of_assistant, assistant, revision
 ):
+    assistant_uuid = get_assistant_uuid(request, project_of_assistant, assistant)
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 1})
@@ -748,6 +762,7 @@ def fail_revision(
         log_action=7,
         enum_project=project_of_assistant,
         coll_id=assistant,
+        coll_uuid=assistant_uuid,
         log_commit=revision,
     )
     save_point = request.tm.savepoint()
@@ -766,6 +781,7 @@ def fail_revision(
 def disregard_revision(
     request, project, form, submission, project_of_assistant, assistant, notes
 ):
+    assistant_uuid = get_assistant_uuid(request, project_of_assistant, assistant)
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 4})
@@ -780,6 +796,7 @@ def disregard_revision(
         log_action=4,
         enum_project=project_of_assistant,
         coll_id=assistant,
+        coll_uuid=assistant_uuid,
         log_notes=notes,
     )
     save_point = request.tm.savepoint()
@@ -796,6 +813,7 @@ def disregard_revision(
 def cancel_disregard_revision(
     request, project, form, submission, project_of_assistant, assistant, notes
 ):
+    assistant_uuid = get_assistant_uuid(request, project_of_assistant, assistant)
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 1})
@@ -810,6 +828,7 @@ def cancel_disregard_revision(
         log_action=8,
         enum_project=project_of_assistant,
         coll_id=assistant,
+        coll_uuid=assistant_uuid,
         log_notes=notes,
     )
     save_point = request.tm.savepoint()

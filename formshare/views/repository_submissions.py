@@ -366,7 +366,7 @@ class DeleteFormSubmission(PrivateView):
                 if "move_submission" in request_data.keys():
                     if request_data.get("rowuuid", "") != "":
                         assistant_data = request_data.get("coll_id", "").split("|")
-                        if len(assistant_data) == 2:
+                        if len(assistant_data) == 3:
                             delete_submission(
                                 self.request,
                                 user_id,

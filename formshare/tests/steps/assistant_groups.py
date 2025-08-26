@@ -169,7 +169,7 @@ def t_e_s_t_assistant_groups(test_object):
         "/user/{}/project/{}/group/{}/members".format(
             test_object.randonLogin, test_object.project, test_object.assistantGroupID
         ),
-        {"assistants": "{}|hello2".format(test_object.projectID)},
+        {"assistants": "{}|hello2|123".format(test_object.projectID)},
         status=302,
     )
     assert "FS_error" in res.headers
@@ -180,8 +180,10 @@ def t_e_s_t_assistant_groups(test_object):
             test_object.randonLogin, test_object.project, test_object.assistantGroupID
         ),
         {
-            "assistants": "{}|{}".format(
-                test_object.projectID, test_object.assistantLogin
+            "assistants": "{}|{}|{}".format(
+                test_object.projectID,
+                test_object.assistantLogin,
+                test_object.assistantLoginUUID,
             ),
         },
         status=302,
@@ -194,8 +196,10 @@ def t_e_s_t_assistant_groups(test_object):
             test_object.randonLogin, test_object.project, test_object.assistantGroupID
         ),
         {
-            "assistants": "{}|{}".format(
-                test_object.projectID, test_object.assistantLogin
+            "assistants": "{}|{}|{}".format(
+                test_object.projectID,
+                test_object.assistantLogin,
+                test_object.assistantLoginUUID,
             ),
         },
         status=302,
@@ -208,8 +212,10 @@ def t_e_s_t_assistant_groups(test_object):
             test_object.randonLogin, test_object.project, test_object.assistantGroupID
         ),
         {
-            "assistants": "{}|{}".format(
-                test_object.projectID, test_object.assistantLogin2
+            "assistants": "{}|{}|{}".format(
+                test_object.projectID,
+                test_object.assistantLogin2,
+                test_object.assistantLogin2UUID,
             ),
         },
         status=302,

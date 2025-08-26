@@ -29,6 +29,7 @@ def add_submission(
     form,
     project_of_assistant,
     assistant,
+    assistant_uuid,
     submission,
     md5sum,
     original_md5sum,
@@ -42,6 +43,7 @@ def add_submission(
         form_id=form,
         enum_project=project_of_assistant,
         coll_id=assistant,
+        coll_uuid=assistant_uuid,
         md5sum=md5sum,
         original_md5sum=original_md5sum,
     )
@@ -62,6 +64,7 @@ def add_submission_same_as(
     form,
     project_of_assistant,
     assistant,
+    assistant_uuid,
     submission,
     md5sum,
     status,
@@ -75,6 +78,7 @@ def add_submission_same_as(
         form_id=form,
         enum_project=project_of_assistant,
         coll_id=assistant,
+        coll_uuid=assistant_uuid,
         md5sum=md5sum,
         sameas=same_as,
     )

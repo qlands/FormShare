@@ -36,10 +36,20 @@ def add_submission(
 ):
     try:
         if project_of_assistant != "public" and assistant != "public":
+            result = engine.execute(
+                "SELECT coll_uuid "
+                "FROM collaborator "
+                "WHERE project_id = '{}' AND coll_id = '{}'".format(
+                    project_of_assistant, assistant
+                )
+            )
+            row = result.fetchone()
+            assistant_uuid = row[0] if row else None
+
             engine.execute(
                 "INSERT INTO submission (project_id,form_id,submission_id,submission_dtime,submission_status,"
-                "enum_project,coll_id,md5sum,original_md5sum)"
-                " VALUES ('{}','{}','{}','{}','{}','{}','{}','{}','{}')".format(
+                "enum_project,coll_id,coll_uuid,md5sum,original_md5sum)"
+                " VALUES ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')".format(
                     project,
                     form,
                     submission,
@@ -47,6 +57,7 @@ def add_submission(
                     status,
                     project_of_assistant,
                     assistant,
+                    assistant_uuid,
                     md5sum,
                     original_md5,
                 )
@@ -54,8 +65,8 @@ def add_submission(
         else:
             engine.execute(
                 "INSERT INTO submission (project_id,form_id,submission_id,submission_dtime,submission_status,"
-                "enum_project,coll_id,md5sum,original_md5sum)"
-                " VALUES ('{}','{}','{}','{}','{}',null,null,'{}','{}')".format(
+                "enum_project,coll_id,coll_uuid,md5sum,original_md5sum)"
+                " VALUES ('{}','{}','{}','{}','{}',null,null,null,'{}','{}')".format(
                     project,
                     form,
                     submission,
@@ -84,9 +95,19 @@ def add_json_log(
 ):
     try:
         if project_of_assistant != "public" and assistant != "public":
+            result = engine.execute(
+                "SELECT coll_uuid "
+                "FROM collaborator "
+                "WHERE project_id = '{}' AND coll_id = '{}'".format(
+                    project_of_assistant, assistant
+                )
+            )
+            row = result.fetchone()
+            assistant_uuid = row[0] if row else None
+
             engine.execute(
                 "INSERT INTO jsonlog (form_id,project_id,log_id,log_dtime,json_file,log_file,status,"
-                "enum_project,coll_id,command_executed) values ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')".format(
+                "enum_project,coll_id,coll_uuid,command_executed) values ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')".format(
                     form,
                     project,
                     submission,
@@ -96,14 +117,15 @@ def add_json_log(
                     status,
                     project_of_assistant,
                     assistant,
+                    assistant_uuid,
                     command_executed.replace("'", "|"),
                 )
             )
         else:
             engine.execute(
                 "INSERT INTO jsonlog (form_id,project_id,log_id,log_dtime,json_file,log_file,status,"
-                "enum_project,coll_id,command_executed) "
-                "values ('{}','{}','{}','{}','{}','{}','{}',null,null,'{}')".format(
+                "enum_project,coll_id,coll_uuid,command_executed) "
+                "values ('{}','{}','{}','{}','{}','{}','{}',null,null,null,'{}')".format(
                     form,
                     project,
                     submission,

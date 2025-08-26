@@ -29,6 +29,7 @@ from formshare.processes.db import (
     update_dictionary_field_desc,
     update_dictionary_field_sensitive,
     get_form_survey_columns,
+    get_assistant_uuid,
 )
 from formshare.processes.elasticsearch.record_index import (
     delete_form_records,
@@ -1687,6 +1688,7 @@ def delete_submission(
             xml_declaration=True,
             encoding="utf-8",
         )
+        assistant_uuid = get_assistant_uuid(request, project_of_assistant, assistant)
         added, message = add_json_log(
             request,
             project,
@@ -1697,6 +1699,7 @@ def delete_submission(
             1,
             project_of_assistant,
             assistant,
+            assistant_uuid,
             "",
         )
 

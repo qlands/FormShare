@@ -1,15 +1,17 @@
 from sqlalchemy import create_engine
 from sqlalchemy.pool import NullPool
-
+import uuid
 from .sql import get_form_details
 
 
 def t_e_s_t_clean_interface_unauthorized(test_object):
+    clean001UUID = str(uuid.uuid4())
     res = test_object.testapp.post(
         "/user/{}/project/{}/assistants/add".format(
             test_object.randonLogin, test_object.project
         ),
         {
+            "coll_uuid": clean001UUID,
             "coll_id": "clean001",
             "coll_name": "clean001",
             "coll_password": "123",
@@ -25,7 +27,9 @@ def t_e_s_t_clean_interface_unauthorized(test_object):
             test_object.randonLogin, test_object.project, test_object.formID
         ),
         {
-            "coll_id": "{}|{}".format(test_object.projectID, "clean001"),
+            "coll_id": "{}|{}|{}".format(
+                test_object.projectID, "clean001", clean001UUID
+            ),
             "coll_can_submit": "1",
         },
         status=302,

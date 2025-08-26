@@ -40,8 +40,10 @@ def t_e_s_t_data_columns(test_object):
             "data_columns_20230614",
         ),
         {
-            "coll_id": "{}|{}".format(
-                test_object.projectID, test_object.assistantLogin
+            "coll_id": "{}|{}|{}".format(
+                test_object.projectID,
+                test_object.assistantLogin,
+                test_object.assistantLoginUUID,
             ),
             "coll_can_submit": "1",
             "coll_can_clean": "1",
@@ -289,8 +291,10 @@ def t_e_s_t_data_columns(test_object):
             "data_columns_20230623",
         ),
         {
-            "coll_id": "{}|{}".format(
-                test_object.projectID, test_object.assistantLogin
+            "coll_id": "{}|{}|{}".format(
+                test_object.projectID,
+                test_object.assistantLogin,
+                test_object.assistantLoginUUID,
             ),
             "coll_can_submit": "1",
             "coll_can_clean": "1",

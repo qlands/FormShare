@@ -53,9 +53,12 @@ def t_e_s_t_one_user_assistant(test_object):
     assert "FS_error" not in res.headers
 
     # Add assistant
+
+    assistant001_uuid = str(uuid.uuid4())
     res = test_object.testapp.post(
         "/user/{}/project/{}/assistants/add".format(random_login, "test001"),
         {
+            "coll_uuid": assistant001_uuid,
             "coll_id": "assistant001",
             "coll_name": "assistant001",
             "coll_password": "123",
@@ -84,7 +87,7 @@ def t_e_s_t_one_user_assistant(test_object):
             random_login, "test001", "Justtest"
         ),
         {
-            "coll_id": "{}|{}".format(project_id, "assistant001"),
+            "coll_id": "{}|{}|{}".format(project_id, "assistant001", assistant001_uuid),
             "coll_can_submit": "1",
         },
         status=302,
@@ -126,9 +129,11 @@ def t_e_s_t_one_user_assistant(test_object):
     assert "FS_error" not in res.headers
 
     # Ass assistant to project 2
+    assistant002_uuid = str(uuid.uuid4())
     res = test_object.testapp.post(
         "/user/{}/project/{}/assistants/add".format(random_login, "test002"),
         {
+            "coll_uuid": assistant002_uuid,
             "coll_id": "assistant002",
             "coll_name": "assistant002",
             "coll_password": "123",
@@ -145,7 +150,7 @@ def t_e_s_t_one_user_assistant(test_object):
             random_login, "test001", "Justtest"
         ),
         {
-            "coll_id": "{}|{}".format(project_id, "assistant002"),
+            "coll_id": "{}|{}|{}".format(project_id, "assistant002", assistant002_uuid),
             "coll_can_submit": "1",
         },
         status=302,

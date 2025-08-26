@@ -51,8 +51,10 @@ def t_e_s_t_support_zip_file(test_object):
             test_object.randonLogin, test_object.project, "support_zip_file"
         ),
         {
-            "coll_id": "{}|{}".format(
-                test_object.projectID, test_object.assistantLogin
+            "coll_id": "{}|{}|{}".format(
+                test_object.projectID,
+                test_object.assistantLogin,
+                test_object.assistantLoginUUID,
             ),
             "coll_can_submit": "1",
             "coll_can_clean": "1",

@@ -46,11 +46,13 @@ def t_e_s_t_repository(test_object):
         assert "FS_error" not in mimic_res.headers
         mimic_form = "LB_Sequia_MAG_20190123"
 
+        mimic000_uuid = str(uuid.uuid4())
         mimic_res = test_object.testapp.post(
             "/user/{}/project/{}/assistants/add".format(
                 test_object.randonLogin, mimic_project
             ),
             {
+                "coll_uuid": mimic000_uuid,
                 "coll_id": "mimic000",
                 "coll_name": "mimic000",
                 "coll_password": "123",
@@ -66,7 +68,9 @@ def t_e_s_t_repository(test_object):
                 test_object.randonLogin, mimic_project, mimic_form
             ),
             {
-                "coll_id": "{}|{}".format(mimic_project_id, "mimic000"),
+                "coll_id": "{}|{}|{}".format(
+                    mimic_project_id, "mimic000", mimic000_uuid
+                ),
                 "coll_can_submit": "1",
                 "coll_can_clean": "1",
             },
@@ -202,11 +206,13 @@ def t_e_s_t_repository(test_object):
         assert "FS_error" not in mimic_res.headers
         mimic_form = "LB_Sequia_MAG_20190123"
 
+        mimic001_uuid = str(uuid.uuid4())
         mimic_res = test_object.testapp.post(
             "/user/{}/project/{}/assistants/add".format(
                 test_object.randonLogin, mimic_project
             ),
             {
+                "coll_uuid": mimic001_uuid,
                 "coll_id": "mimic001",
                 "coll_name": "mimic001",
                 "coll_password": "123",
@@ -223,7 +229,9 @@ def t_e_s_t_repository(test_object):
                 test_object.randonLogin, mimic_project, mimic_form
             ),
             {
-                "coll_id": "{}|{}".format(mimic_project_id, "mimic001"),
+                "coll_id": "{}|{}|{}".format(
+                    mimic_project_id, "mimic001", mimic001_uuid
+                ),
                 "coll_can_submit": "1",
                 "coll_can_clean": "1",
             },
@@ -359,11 +367,13 @@ def t_e_s_t_repository(test_object):
         assert "FS_error" not in mimic_res.headers
         mimic_form = "LB_Sequia_MAG_20190123"
 
+        mimic003_uuid = str(uuid.uuid4())
         mimic_res = test_object.testapp.post(
             "/user/{}/project/{}/assistants/add".format(
                 test_object.randonLogin, mimic_grp_project
             ),
             {
+                "coll_uuid": mimic003_uuid,
                 "coll_id": "mimic003",
                 "coll_name": "mimic003",
                 "coll_password": "123",
@@ -388,7 +398,9 @@ def t_e_s_t_repository(test_object):
                 test_object.randonLogin, mimic_grp_project, "grpmimic001"
             ),
             {
-                "assistants": "{}|{}".format(mimic_grp_project_id, "mimic003"),
+                "assistants": "{}|{}|{}".format(
+                    mimic_grp_project_id, "mimic003", mimic003_uuid
+                ),
             },
             status=302,
         )
@@ -556,8 +568,10 @@ def t_e_s_t_repository(test_object):
             test_object.randonLogin, test_object.project, test_object.formID
         ),
         {
-            "coll_id": "{}|{}".format(
-                test_object.projectID, test_object.assistantLogin
+            "coll_id": "{}|{}|{}".format(
+                test_object.projectID,
+                test_object.assistantLogin,
+                test_object.assistantLoginUUID,
             ),
             "coll_can_submit": "1",
             "coll_can_clean": "1",

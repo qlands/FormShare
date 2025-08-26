@@ -2402,6 +2402,16 @@ class AddAssistant(PrivateView):
                 parts = assistant_data["coll_id"].split("|")
                 assistant_data["project_id"] = parts[0]
                 assistant_data["coll_id"] = parts[1]
+                assistant_data["coll_uuid"] = parts[2]
+
+                print("*****************************5555")
+                print(user_id)
+                print(project_code)
+                print(form_id)
+                print(parts[0])
+                print(parts[1])
+                print(parts[2])
+                print("*****************************5555")
 
                 if "coll_can_submit" in assistant_data.keys():
                     assistant_data["coll_can_submit"] = 1
@@ -2426,7 +2436,7 @@ class AddAssistant(PrivateView):
                     )
                     return HTTPFound(location=next_page, headers={"FS_error": "true"})
 
-                if len(parts) == 2:
+                if len(parts) == 3:
                     continue_creation = True
                     for plugin in p.PluginImplementations(p.IFormAccess):
                         (

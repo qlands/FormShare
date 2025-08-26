@@ -55,7 +55,11 @@ def t_e_s_t_case_management(test_object):
             test_object.randonLogin, "case001", "case_start_20210311"
         ),
         {
-            "coll_id": "{}|{}".format(test_object.case_project_id, "caseassistant001"),
+            "coll_id": "{}|{}|{}".format(
+                test_object.case_project_id,
+                "caseassistant001",
+                test_object.caseassistantUUID,
+            ),
         },
         status=302,
     )
@@ -67,7 +71,11 @@ def t_e_s_t_case_management(test_object):
             test_object.randonLogin, "case001", "case_start_20210311"
         ),
         {
-            "coll_id": "{}|{}".format(test_object.case_project_id, "caseassistant001"),
+            "coll_id": "{}|{}|{}".format(
+                test_object.case_project_id,
+                "caseassistant001",
+                test_object.caseassistantUUID,
+            ),
             "coll_can_submit": "1",
             "coll_can_clean": "1",
         },
@@ -661,7 +669,11 @@ def t_e_s_t_case_management(test_object):
             test_object.randonLogin, "case001", "case_follow_up_20210319"
         ),
         {
-            "coll_id": "{}|{}".format(test_object.case_project_id, "caseassistant001"),
+            "coll_id": "{}|{}|{}".format(
+                test_object.case_project_id,
+                "caseassistant001",
+                test_object.caseassistantUUID,
+            ),
             "coll_can_submit": "1",
             "coll_can_clean": "1",
         },
@@ -1242,7 +1254,11 @@ def t_e_s_t_case_management(test_object):
             test_object.randonLogin, "case001", "case_deactivate_20210331"
         ),
         {
-            "coll_id": "{}|{}".format(test_object.case_project_id, "caseassistant001"),
+            "coll_id": "{}|{}|{}".format(
+                test_object.case_project_id,
+                "caseassistant001",
+                test_object.caseassistantUUID,
+            ),
             "coll_can_submit": "1",
         },
         status=302,
@@ -1402,7 +1418,11 @@ def t_e_s_t_case_management(test_object):
             test_object.randonLogin, "case001", "case_activate_20210331"
         ),
         {
-            "coll_id": "{}|{}".format(test_object.case_project_id, "caseassistant001"),
+            "coll_id": "{}|{}|{}".format(
+                test_object.case_project_id,
+                "caseassistant001",
+                test_object.caseassistantUUID,
+            ),
             "coll_can_submit": "1",
         },
         status=302,
@@ -1592,7 +1612,11 @@ def t_e_s_t_case_management(test_object):
             test_object.randonLogin, "case001", "case_start_20210331"
         ),
         {
-            "coll_id": "{}|{}".format(test_object.case_project_id, "caseassistant001"),
+            "coll_id": "{}|{}|{}".format(
+                test_object.case_project_id,
+                "caseassistant001",
+                test_object.caseassistantUUID,
+            ),
             "coll_can_submit": "1",
         },
         status=302,
@@ -1762,7 +1786,11 @@ def t_e_s_t_case_management(test_object):
             test_object.randonLogin, "case001", "case_deactivate_20210401"
         ),
         {
-            "coll_id": "{}|{}".format(test_object.case_project_id, "caseassistant001"),
+            "coll_id": "{}|{}|{}".format(
+                test_object.case_project_id,
+                "caseassistant001",
+                test_object.caseassistantUUID,
+            ),
             "coll_can_submit": "1",
         },
         status=302,
@@ -1993,7 +2021,11 @@ def t_e_s_t_case_management(test_object):
             test_object.randonLogin, "case001", "case_follow_up_barcode_20210428"
         ),
         {
-            "coll_id": "{}|{}".format(test_object.case_project_id, "caseassistant001"),
+            "coll_id": "{}|{}|{}".format(
+                test_object.case_project_id,
+                "caseassistant001",
+                test_object.caseassistantUUID,
+            ),
             "coll_can_submit": "1",
         },
         status=302,

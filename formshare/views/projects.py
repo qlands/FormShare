@@ -184,6 +184,7 @@ class AddProjectView(ProjectsView):
         if self.request.method == "POST":
             project_details = self.get_post_dict()
             project_details["project_public"] = 0
+            project_details["project_tenant"] = self.user.tenant
 
             if "project_case" in project_details.keys():
                 project_details["project_case"] = 1

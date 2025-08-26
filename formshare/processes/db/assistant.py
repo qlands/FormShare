@@ -37,6 +37,7 @@ __all__ = [
     "get_one_assistant",
     "get_assistant_with_token",
     "assistant_exist",
+    "get_assistant_uuid",
 ]
 
 logging.setLoggerClass(SecretLogger)
@@ -193,35 +194,44 @@ def get_all_assistants(request, project_user, project_id):
     for item in all_assistants:
         index = 0
         found = False
-        for assistant in assistants:
-            if assistant["project_id"] == item["project_id"]:
-                found = True
-                break
-            index = index + 1
-        if found:
-            assistants[index]["assistants"].append(
-                {
-                    "code": item["project_id"] + "|" + item["coll_id"],
-                    "id": item["coll_id"],
-                    "name": item["coll_name"],
-                    "used": False,
-                }
-            )
-        else:
-            assistants.append(
-                {
-                    "project_id": item["project_id"],
-                    "project_desc": item["project_name"],
-                    "assistants": [
-                        {
-                            "code": item["project_id"] + "|" + item["coll_id"],
-                            "id": item["coll_id"],
-                            "name": item["coll_name"],
-                            "used": False,
-                        }
-                    ],
-                }
-            )
+        if item["project_id"] is not None:
+            for assistant in assistants:
+                if assistant["project_id"] == item["project_id"]:
+                    found = True
+                    break
+                index = index + 1
+            if found:
+                assistants[index]["assistants"].append(
+                    {
+                        "code": item["project_id"]
+                        + "|"
+                        + item["coll_id"]
+                        + "|"
+                        + item["coll_uuid"],
+                        "id": item["coll_id"],
+                        "name": item["coll_name"],
+                        "used": False,
+                    }
+                )
+            else:
+                assistants.append(
+                    {
+                        "project_id": item["project_id"],
+                        "project_desc": item["project_name"],
+                        "assistants": [
+                            {
+                                "code": item["project_id"]
+                                + "|"
+                                + item["coll_id"]
+                                + "|"
+                                + item["coll_uuid"],
+                                "id": item["coll_id"],
+                                "name": item["coll_name"],
+                                "used": False,
+                            }
+                        ],
+                    }
+                )
 
     return assistants
 
@@ -289,17 +299,27 @@ def delete_assistant(request, project, assistant):
 
 
 def assistant_exist(request, user, project, assistant_data):
-    res = (
-        request.dbsession.query(func.count(Collaborator.coll_id))
-        .filter(Collaborator.project_id == Userproject.project_id)
-        .filter(Userproject.user_id == user)
-        .filter(Userproject.access_type == 1)
-        .filter(Collaborator.coll_id == assistant_data["coll_id"])
-        .filter(Collaborator.project_id != project)
-        .first()
-    )
-    if res[0] != 0:
-        return True
+    if assistant_data["coll_type"] == 1:
+        res = (
+            request.dbsession.query(func.count(Collaborator.coll_id))
+            .filter(Collaborator.project_id == Userproject.project_id)
+            .filter(Userproject.user_id == user)
+            .filter(Userproject.access_type == 1)
+            .filter(Collaborator.coll_id == assistant_data["coll_id"])
+            .filter(Collaborator.project_id != project)
+            .first()
+        )
+        if res[0] != 0:
+            return True
+    else:
+        res = (
+            request.dbsession.query(func.count(Collaborator.coll_id))
+            .filter(Collaborator.coll_email == assistant_data["coll_email"])
+            .filter(Collaborator.coll_tenant == assistant_data["coll_tenant"])
+            .first()
+        )
+        if res[0] != 0:
+            return True
     return False
 
 
@@ -393,6 +413,16 @@ def change_assistant_password(request, project, assistant, password):
             )
         )
         return False, str(e)
+
+
+def get_assistant_uuid(request, project, assistant):
+    res = (
+        request.dbsession.query(Collaborator.coll_uuid)
+        .filter(Collaborator.project_id == project)
+        .filter(Collaborator.coll_id == assistant)
+        .first()
+    )
+    return res[0]
 
 
 def get_project_from_assistant(request, user, requested_project, assistant):

@@ -1,9 +1,14 @@
+import uuid
+
+
 def t_e_s_t_group_assistant(test_object):
+    agrpssistant001_uuid = str(uuid.uuid4())
     res = test_object.testapp.post(
         "/user/{}/project/{}/assistants/add".format(
             test_object.randonLogin, test_object.project
         ),
         {
+            "coll_uuid": agrpssistant001_uuid,
             "coll_id": "agrpssistant001",
             "coll_name": "agrpssistant001",
             "coll_password": "123",
@@ -30,7 +35,9 @@ def t_e_s_t_group_assistant(test_object):
             test_object.randonLogin, test_object.project, "assgrp003"
         ),
         {
-            "assistants": "{}|{}".format(test_object.projectID, "agrpssistant001"),
+            "assistants": "{}|{}|{}".format(
+                test_object.projectID, "agrpssistant001", agrpssistant001_uuid
+            ),
         },
         status=302,
     )
@@ -90,7 +97,9 @@ def t_e_s_t_group_assistant(test_object):
             test_object.randonLogin, test_object.project, "Justtest"
         ),
         {
-            "coll_id": "{}|{}".format(test_object.projectID, "agrpssistant001"),
+            "coll_id": "{}|{}|{}".format(
+                test_object.projectID, "agrpssistant001", agrpssistant001_uuid
+            ),
             "coll_can_submit": "1",
         },
         status=302,

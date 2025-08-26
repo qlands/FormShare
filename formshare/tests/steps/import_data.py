@@ -285,8 +285,10 @@ def t_e_s_t_import_data(test_object):
             test_object.randonLogin, test_object.project, test_object.formID
         ),
         {
-            "coll_id": "{}|{}".format(
-                test_object.projectID, test_object.assistantLogin2
+            "coll_id": "{}|{}|{}".format(
+                test_object.projectID,
+                test_object.assistantLogin2,
+                test_object.assistantLogin2UUID,
             ),
             "coll_can_submit": "1",
             "coll_can_clean": "1",

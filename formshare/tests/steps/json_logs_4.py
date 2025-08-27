@@ -197,10 +197,6 @@ def t_e_s_t_json_logs_4(test_object):
         duplicated_ids.append(a_duplicate[0])
     engine.dispose()
 
-    print("lll*******0")
-    print(duplicated_ids)
-    print("lll*******0")
-
     test_object.testapp.post(
         "/user/{}/project/{}/form/{}/submissions/delete".format(
             test_object.randonLogin, json4_project, json4_form
@@ -238,12 +234,11 @@ def t_e_s_t_json_logs_4(test_object):
 
     # Change the assistant to submit only
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             json4_project,
             json4_form,
-            json4_project_id,
-            "json4001",
+            json4001_uuid,
         ),
         {"coll_can_submit": "1"},
         status=302,
@@ -259,12 +254,11 @@ def t_e_s_t_json_logs_4(test_object):
 
     # Change the assistant to both
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             json4_project,
             json4_form,
-            json4_project_id,
-            "json4001",
+            json4001_uuid,
         ),
         {"coll_can_submit": "1", "coll_can_clean": "1"},
         status=302,
@@ -292,10 +286,6 @@ def t_e_s_t_json_logs_4(test_object):
         status=302,
     )
     assert "FS_error" not in res.headers
-
-    print("lll*******1")
-    print(duplicated_ids[0])
-    print("lll*******1")
 
     test_object.testapp.post(
         "/user/{}/project/{}/assistantaccess/form/{}/{}/push".format(

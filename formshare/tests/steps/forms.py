@@ -1016,12 +1016,11 @@ def t_e_s_t_forms(test_object):
 
     # Edit an assistant of a project the does not exist goes to 404
     test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             "project_dont_exist",
             "Justtest",
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         {"coll_can_submit": "1", "coll_can_clean": "1"},
         status=404,
@@ -1029,12 +1028,11 @@ def t_e_s_t_forms(test_object):
 
     # Edit an assistant of a form the does not exist goes to 404
     test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             test_object.project,
             "justtest_dont_exist",
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         {"coll_can_submit": "1", "coll_can_clean": "1"},
         status=404,
@@ -1042,24 +1040,22 @@ def t_e_s_t_forms(test_object):
 
     # Edit an assistant with get gees to 404
     test_object.testapp.get(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             test_object.project,
             "Justtest",
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         status=404,
     )
 
     # Edit an assistant
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             test_object.project,
             "Justtest",
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         {"coll_can_submit": "1", "coll_can_clean": "1"},
         status=302,
@@ -1068,48 +1064,44 @@ def t_e_s_t_forms(test_object):
 
     # Remove assistant of a project that does not exist goes to 404
     test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/remove".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/remove".format(
             test_object.randonLogin,
             "project_dont_exist",
             "Justtest",
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         status=404,
     )
 
     # Remove assistant of a form that does not exist goes to 404
     test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/remove".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/remove".format(
             test_object.randonLogin,
             test_object.project,
             "justtest_not_exist",
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         status=404,
     )
 
     # Remove assistant with get goes to 404
     test_object.testapp.get(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/remove".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/remove".format(
             test_object.randonLogin,
             test_object.project,
             "Justtest",
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         status=404,
     )
 
     # Remove the assistant
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/remove".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/remove".format(
             test_object.randonLogin,
             test_object.project,
             "Justtest",
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         status=302,
     )

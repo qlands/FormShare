@@ -1476,6 +1476,7 @@ def delete_submission(
     move_to_logs=False,
     project_of_assistant=None,
     assistant=None,
+    assistant_uuid=None,
 ):
     schema = get_form_schema(request, project, form)
     sql = (
@@ -1688,7 +1689,7 @@ def delete_submission(
             xml_declaration=True,
             encoding="utf-8",
         )
-        assistant_uuid = get_assistant_uuid(request, project_of_assistant, assistant)
+
         added, message = add_json_log(
             request,
             project,

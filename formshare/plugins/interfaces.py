@@ -1457,8 +1457,7 @@ class IFormAccess(Interface):  # pragma: no cover
         user,
         project,
         form,
-        assistant_project,
-        assistant_id,
+        assistant_uuid,
         privilege_data,
     ):
         """
@@ -1467,8 +1466,7 @@ class IFormAccess(Interface):  # pragma: no cover
         :param user: User owner of the project
         :param project: Project ID
         :param form: Form ID
-        :param assistant_project: The project ID of the assistant
-        :param assistant_id: Assistant ID
+        :param assistant_uuid: Assistant UUID
         :param privilege_data: Privilege data
         :return: A modified version of privilege_data plus True or false if the project should be added. If False then
         a message should state why. Example: return privilege_data, False, "My message"
@@ -1484,8 +1482,7 @@ class IFormAccess(Interface):  # pragma: no cover
         user,
         project,
         form,
-        assistant_project,
-        assistant_id,
+        assistant_uuid,
         privilege_data,
     ):
         """
@@ -1494,8 +1491,7 @@ class IFormAccess(Interface):  # pragma: no cover
         :param user: User owner of the project
         :param project: project ID
         :param form: Form ID
-        :param assistant_project: The project ID of the assistant
-        :param assistant_id: Assistant ID
+        :param assistant_uuid: Assistant UUID
         :param privilege_data: Privilege data
         :return: None
         """
@@ -1509,8 +1505,7 @@ class IFormAccess(Interface):  # pragma: no cover
         user,
         project,
         form,
-        assistant_project,
-        assistant_id,
+        assistant_uuid,
         privilege_data,
     ):
         """
@@ -1519,8 +1514,7 @@ class IFormAccess(Interface):  # pragma: no cover
         :param user: User owner of the project
         :param project: Project ID
         :param form: Form ID
-        :param assistant_project: The project ID of the assistant
-        :param assistant_id: Assistant ID
+        :param assistant_uuid: Assistant UUID
         :param privilege_data: Privilege data
         :return: A modified version of privilege_data plus True or false if the project should be added. If False then
         a message should state why. Example: return privilege_data, False, "My message"
@@ -1536,8 +1530,7 @@ class IFormAccess(Interface):  # pragma: no cover
         user,
         project,
         form,
-        assistant_project,
-        assistant_id,
+        assistant_uuid,
         privilege_data,
     ):
         """
@@ -1546,8 +1539,7 @@ class IFormAccess(Interface):  # pragma: no cover
         :param user: User owner of the project
         :param project: project ID
         :param form: Form ID
-        :param assistant_project: The project ID of the assistant
-        :param assistant_id: Assistant ID
+        :param assistant_uuid: Assistant UUID
         :param privilege_data: Privilege data
         :return: None
         """
@@ -1556,7 +1548,7 @@ class IFormAccess(Interface):  # pragma: no cover
         )
 
     def before_revoking_assistant_access(
-        self, request, user, project, form, assistant_project, assistant_id
+        self, request, user, project, form, assistant_uuid
     ):
         """
         Called by FormShare so plugins can perform actions before revoking access to an assistant
@@ -1564,8 +1556,7 @@ class IFormAccess(Interface):  # pragma: no cover
         :param user: User owner of the project
         :param project: Project ID
         :param form: Form ID
-        :param assistant_project: The project ID of the assistant
-        :param assistant_id: Assistant ID
+        :param assistant_uuid: Assistant UUID
         :return: True or false if the project should be added. If False then
         a message should state why. Example: return False, "My message"
         or return True, ""
@@ -1575,7 +1566,7 @@ class IFormAccess(Interface):  # pragma: no cover
         )
 
     def after_revoking_assistant_access(
-        self, request, user, project, form, assistant_project, assistant_id
+        self, request, user, project, form, assistant_uuid
     ):
         """
         Called by FormShare so plugins can perform actions after giving access an assistant
@@ -1583,8 +1574,7 @@ class IFormAccess(Interface):  # pragma: no cover
         :param user: User owner of the project
         :param project: project ID
         :param form: Form ID
-        :param assistant_project: The project ID of the assistant
-        :param assistant_id: Assistant ID
+        :param assistant_uuid: Assistant UUID
         :return: None
         """
         raise NotImplementedError(

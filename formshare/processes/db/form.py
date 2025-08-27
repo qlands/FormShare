@@ -1783,7 +1783,7 @@ def add_assistant_to_form(request, project, form, privilege_data):
         return False, _("This form is blocked and cannot be changed at the moment.")
 
 
-def get_form_assistants(request, project, form, with_owner=False, for_user=None):
+def get_form_assistants(request, project, form, with_owner, for_user, tenant_id):
     res = (
         request.dbsession.query(Project, Collaborator, Formacces)
         .filter(Collaborator.project_id == Project.project_id)
@@ -1802,7 +1802,50 @@ def get_form_assistants(request, project, form, with_owner=False, for_user=None)
             an_assistant["access_type"] = _check_my_access(
                 request, for_user, an_assistant["project_id"]
             )
-    return mapped_data
+    final_assistants = []
+    for an_assistant in mapped_data:
+        a_final_assistant = {
+            "coll_can_submit": an_assistant["coll_can_submit"],
+            "coll_can_clean": an_assistant["coll_can_clean"],
+            "coll_uuid": an_assistant["coll_uuid"],
+            "coll_name": an_assistant["coll_name"],
+            "access_type": an_assistant["access_type"],
+            "coll_active": an_assistant["coll_active"],
+            "project_name": an_assistant["project_name"],
+            "owner_name": an_assistant["owner_name"],
+            "owner": an_assistant["owner"],
+            "project_code": an_assistant["project_code"],
+            "coll_id": an_assistant["coll_id"],
+        }
+        final_assistants.append(a_final_assistant)
+
+    global_assistants = (
+        request.dbsession.query(User, Collaborator, Formacces)
+        .filter(Collaborator.linked_user == User.user_id)
+        .filter(Collaborator.coll_uuid == Formacces.coll_uuid)
+        .filter(Formacces.form_project == project)
+        .filter(Formacces.form_id == form)
+        .filter(Collaborator.coll_tenant == tenant_id)
+        .filter(Collaborator.coll_type == 2)
+        .all()
+    )
+    for an_assistant in global_assistants:
+        a_final_assistant = {
+            "coll_can_submit": an_assistant["coll_can_submit"],
+            "coll_can_clean": an_assistant["coll_can_clean"],
+            "coll_uuid": an_assistant["coll_uuid"],
+            "coll_name": an_assistant["user_name"],
+            "access_type": 5,
+            "coll_active": an_assistant["user_active"],
+            "project_name": "",
+            "owner_name": "",
+            "owner": "",
+            "project_code": "",
+            "coll_id": "",
+        }
+        final_assistants.append(a_final_assistant)
+
+    return final_assistants
 
 
 def get_form_assistants_through_groups(request, project, form):
@@ -1821,9 +1864,7 @@ def get_form_assistants_through_groups(request, project, form):
     return mapped_data
 
 
-def update_assistant_privileges(
-    request, project, form, from_project, assistant, privilege_data
-):
+def update_assistant_privileges(request, project, form, assistant_uuid, privilege_data):
     _ = request.translate
     blocked = (
         request.dbsession.query(Odkform.form_blocked)
@@ -1836,10 +1877,8 @@ def update_assistant_privileges(
         try:
             mapped_data = map_to_schema(Formacces, privilege_data)
             request.dbsession.query(Formacces).filter(
-                Formacces.project_id == from_project
-            ).filter(Formacces.coll_id == assistant).filter(
-                Formacces.form_project == project
-            ).filter(
+                Formacces.coll_uuid == assistant_uuid
+            ).filter(Formacces.form_project == project).filter(
                 Formacces.form_id == form
             ).update(
                 mapped_data
@@ -1849,9 +1888,7 @@ def update_assistant_privileges(
         except Exception as e:
             log.error(
                 "Error {} while updating access to assistant {} of "
-                "project {} to form {} in project {}".format(
-                    str(e), assistant, from_project, project, form
-                )
+                "to form {} in project {}".format(str(e), assistant_uuid, project, form)
             )
             save_point.rollback()
             return False, str(e)
@@ -1859,7 +1896,7 @@ def update_assistant_privileges(
         return False, _("This form is blocked and cannot be changed at the moment.")
 
 
-def remove_assistant_from_form(request, project, form, from_project, assistant):
+def remove_assistant_from_form(request, project, form, assistant_uuid):
     _ = request.translate
     blocked = (
         request.dbsession.query(Odkform.form_blocked)
@@ -1871,10 +1908,8 @@ def remove_assistant_from_form(request, project, form, from_project, assistant):
         save_point = request.tm.savepoint()
         try:
             request.dbsession.query(Formacces).filter(
-                Formacces.project_id == from_project
-            ).filter(Formacces.coll_id == assistant).filter(
-                Formacces.form_project == project
-            ).filter(
+                Formacces.coll_uuid == assistant_uuid
+            ).filter(Formacces.form_project == project).filter(
                 Formacces.form_id == form
             ).delete()
             request.dbsession.flush()
@@ -1882,8 +1917,8 @@ def remove_assistant_from_form(request, project, form, from_project, assistant):
         except Exception as e:
             log.error(
                 "Error {} while removing assistant {} of "
-                "project {} from form {} in project {}".format(
-                    str(e), assistant, from_project, project, form
+                "from form {} in project {}".format(
+                    str(e), assistant_uuid, form, project
                 )
             )
             save_point.rollback()

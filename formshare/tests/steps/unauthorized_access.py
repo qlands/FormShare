@@ -386,12 +386,11 @@ def t_e_s_t_unauthorized_access(test_object):
 
     # Edit an assistant of a form the does not exist goes to 404
     test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             test_object.project,
             test_object.formID,
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         {"coll_can_submit": "1", "coll_can_clean": "1"},
         status=404,
@@ -399,12 +398,11 @@ def t_e_s_t_unauthorized_access(test_object):
 
     # Remove an assistant that does not have access goes to 404
     test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/remove".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/remove".format(
             test_object.randonLogin,
             test_object.project,
             test_object.formID,
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         status=404,
     )
@@ -1250,12 +1248,11 @@ def t_e_s_t_unauthorized_access(test_object):
 
     # Edit an assistant of a form the does not have acess goes to 404
     test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             test_object.project,
             test_object.formID,
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         {"coll_can_submit": "1", "coll_can_clean": "1"},
         status=404,
@@ -1263,12 +1260,11 @@ def t_e_s_t_unauthorized_access(test_object):
 
     # Remove an assistant that does not have access goes to 404
     test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/remove".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/remove".format(
             test_object.randonLogin,
             test_object.project,
             test_object.formID,
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         status=404,
     )

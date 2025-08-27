@@ -720,7 +720,7 @@ def load_routes(config, settings):
     routes.append(
         add_route(
             "form_edit_assistant",
-            "/user/{userid}/project/{projcode}/form/{formid}/assistant/{projectid}/{assistantid}/edit",
+            "/user/{userid}/project/{projcode}/form/{formid}/assistant/{assistant_uuid}/edit",
             EditAssistant,
             None,
         )
@@ -729,7 +729,7 @@ def load_routes(config, settings):
     routes.append(
         add_route(
             "form_remove_assistant",
-            "/user/{userid}/project/{projcode}/form/{formid}/assistant/{projectid}/{assistantid}/remove",
+            "/user/{userid}/project/{projcode}/form/{formid}/assistant/{assistant_uuid}/remove",
             RemoveAssistant,
             None,
         )

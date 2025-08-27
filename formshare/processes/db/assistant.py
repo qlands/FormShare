@@ -16,6 +16,7 @@ from formshare.models import (
     Formgrpacces,
     Collingroup,
     TimeZone,
+    User,
 )
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
@@ -159,7 +160,7 @@ def get_assigned_assistants(request, project, form):
     return assistants
 
 
-def get_all_assistants(request, project_user, project_id):
+def get_all_assistants(request, project_user, project_id, tenant_id=None):
     res = (
         request.dbsession.query(Project, Collaborator)
         .filter(Project.project_id == Collaborator.project_id)
@@ -191,6 +192,33 @@ def get_all_assistants(request, project_user, project_id):
             all_assistants.append(an_assistant)
 
     assistants = []
+
+    if tenant_id is not None:
+        #  Get global Assistants
+        res = (
+            request.dbsession.query(User, Collaborator)
+            .filter(Collaborator.linked_user == User.user_id)
+            .filter(Collaborator.coll_tenant == tenant_id)
+            .filter(Collaborator.coll_type == 2)
+            .all()
+        )
+        global_assistants = map_from_schema(res)
+        for a_global_assistant in global_assistants:
+            assistants.append(
+                {
+                    "project_id": "global",
+                    "project_desc": "Global assistants",
+                    "assistants": [
+                        {
+                            "code": "||" + a_global_assistant["coll_uuid"],
+                            "id": "global",
+                            "name": a_global_assistant["user_name"],
+                            "used": False,
+                        }
+                    ],
+                }
+            )
+
     for item in all_assistants:
         index = 0
         found = False
@@ -208,6 +236,7 @@ def get_all_assistants(request, project_user, project_id):
                         + item["coll_id"]
                         + "|"
                         + item["coll_uuid"],
+                        "uuid": item["coll_uuid"],
                         "id": item["coll_id"],
                         "name": item["coll_name"],
                         "used": False,

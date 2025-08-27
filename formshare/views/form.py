@@ -878,10 +878,17 @@ class FormDetails(PrivateView):
 
             form_files = get_form_files(self.request, project_id, form_id)
 
-            assistants = get_all_assistants(self.request, user_id, project_id)
+            assistants = get_all_assistants(
+                self.request, user_id, project_id, self.user.tenant
+            )
 
             form_assistants = get_form_assistants(
-                self.request, project_id, form_id, True, self.user.login
+                self.request,
+                project_id,
+                form_id,
+                True,
+                self.user.login,
+                self.user.tenant,
             )
             form_assistants_through_groups = get_form_assistants_through_groups(
                 self.request, project_id, form_id
@@ -2403,16 +2410,6 @@ class AddAssistant(PrivateView):
                 assistant_data["project_id"] = parts[0]
                 assistant_data["coll_id"] = parts[1]
                 assistant_data["coll_uuid"] = parts[2]
-
-                print("*****************************5555")
-                print(user_id)
-                print(project_code)
-                print(form_id)
-                print(parts[0])
-                print(parts[1])
-                print(parts[2])
-                print("*****************************5555")
-
                 if "coll_can_submit" in assistant_data.keys():
                     assistant_data["coll_can_submit"] = 1
                 else:
@@ -2448,8 +2445,7 @@ class AddAssistant(PrivateView):
                             user_id,
                             project_id,
                             form_id,
-                            assistant_data["project_id"],
-                            assistant_data["coll_id"],
+                            assistant_data["coll_uuid"],
                             assistant_data,
                         )
                         if not continue_creation:
@@ -2458,6 +2454,9 @@ class AddAssistant(PrivateView):
                             assistant_data = data
                         break  # Only one plugging will be called to extend before_giving_access
                     if continue_creation:
+                        if assistant_data["project_id"] == "":
+                            assistant_data["project_id"] = None
+                            assistant_data["coll_id"] = None
                         added, message = add_assistant_to_form(
                             self.request, project_id, form_id, assistant_data
                         )
@@ -2468,8 +2467,7 @@ class AddAssistant(PrivateView):
                                     user_id,
                                     project_id,
                                     form_id,
-                                    assistant_data["project_id"],
-                                    assistant_data["coll_id"],
+                                    assistant_data["coll_uuid"],
                                     assistant_data,
                                 )
 
@@ -2539,8 +2537,7 @@ class EditAssistant(PrivateView):
         user_id = self.request.matchdict["userid"]
         project_code = self.request.matchdict["projcode"]
         form_id = self.request.matchdict["formid"]
-        assistant_project_id = self.request.matchdict["projectid"]
-        assistant_id = self.request.matchdict["assistantid"]
+        assistant_uuid = self.request.matchdict["assistant_uuid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
 
         if project_id is not None:
@@ -2595,8 +2592,7 @@ class EditAssistant(PrivateView):
                     user_id,
                     project_id,
                     form_id,
-                    assistant_project_id,
-                    assistant_id,
+                    assistant_uuid,
                     assistant_data,
                 )
                 if not continue_editing:
@@ -2609,8 +2605,7 @@ class EditAssistant(PrivateView):
                     self.request,
                     project_id,
                     form_id,
-                    assistant_project_id,
-                    assistant_id,
+                    assistant_uuid,
                     assistant_data,
                 )
                 if updated:
@@ -2620,8 +2615,7 @@ class EditAssistant(PrivateView):
                             user_id,
                             project_id,
                             form_id,
-                            assistant_project_id,
-                            assistant_id,
+                            assistant_uuid,
                             assistant_data,
                         )
 
@@ -2667,8 +2661,7 @@ class RemoveAssistant(PrivateView):
         user_id = self.request.matchdict["userid"]
         project_code = self.request.matchdict["projcode"]
         form_id = self.request.matchdict["formid"]
-        assistant_project_id = self.request.matchdict["projectid"]
-        assistant_id = self.request.matchdict["assistantid"]
+        assistant_uuid = self.request.matchdict["assistant_uuid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
 
         if project_id is not None:
@@ -2697,8 +2690,7 @@ class RemoveAssistant(PrivateView):
                     user_id,
                     project_id,
                     form_id,
-                    assistant_project_id,
-                    assistant_id,
+                    assistant_uuid,
                 )
                 if not continue_remove:
                     self.add_error(error_message)
@@ -2708,8 +2700,7 @@ class RemoveAssistant(PrivateView):
                     self.request,
                     project_id,
                     form_id,
-                    assistant_project_id,
-                    assistant_id,
+                    assistant_uuid,
                 )
                 if removed:
                     for plugin in p.PluginImplementations(p.IFormAccess):
@@ -2718,8 +2709,7 @@ class RemoveAssistant(PrivateView):
                             user_id,
                             project_id,
                             form_id,
-                            assistant_project_id,
-                            assistant_id,
+                            assistant_uuid,
                         )
                     self.request.session.flash(
                         self._("The assistant was removed successfully")

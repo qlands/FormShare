@@ -247,18 +247,12 @@ class GroupMembersView(PrivateView):
                         == an_assistant["code"]
                     ):
                         an_assistant["used"] = True
-        print("***************************333")
-        print(assistants)
-        print("***************************333")
         group_data = get_group_data(self.request, project_id, group_id)
         if self.request.method == "POST":
             next_page = self.request.params.get("next") or self.request.route_url(
                 "group_members", userid=user_id, projcode=project_code, groupid=group_id
             )
             group_data = self.get_post_dict()
-            print("*************************222")
-            print(group_data.get("assistants", ""))
-            print("*************************222")
             self.returnRawViewResult = True
             assistants_str = group_data.get("assistants", "")
             if assistants_str != "":

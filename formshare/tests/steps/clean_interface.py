@@ -324,12 +324,11 @@ def t_e_s_t_clean_interface(test_object):
 
     # Set the assistant as nothing fails
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             test_object.project,
             test_object.formID,
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         {},
         status=302,
@@ -338,12 +337,11 @@ def t_e_s_t_clean_interface(test_object):
 
     # Set the assistant as only submit
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             test_object.project,
             test_object.formID,
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         {"coll_can_submit": "1"},
         status=302,
@@ -362,12 +360,11 @@ def t_e_s_t_clean_interface(test_object):
     )
 
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             test_object.project,
             test_object.formID,
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         {"coll_can_submit": "1", "coll_can_clean": "1"},
         status=302,

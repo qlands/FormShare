@@ -540,12 +540,11 @@ def t_e_s_t_repository(test_object):
 
     # Remove the assistant from the form
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/remove".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/remove".format(
             test_object.randonLogin,
             test_object.project,
             test_object.formID,
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         status=302,
     )

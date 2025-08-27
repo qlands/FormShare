@@ -86,12 +86,6 @@ def product_max_number(request, project, form, product):
         .filter(Product.product_id == product)
         .count()
     )
-    print("**********************************")
-    print(project)
-    print(form)
-    print(product)
-    print(res)
-    print("**********************************")
     max_products = int(request.registry.settings.get("max_products", "2"))
     if res <= max_products - 1:
         return False

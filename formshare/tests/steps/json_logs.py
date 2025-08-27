@@ -81,12 +81,11 @@ def t_e_s_t_json_logs(test_object):
 
     # Change the assistant to submit only
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             test_object.project,
             test_object.formID,
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         {"coll_can_submit": "1"},
         status=302,
@@ -107,12 +106,11 @@ def t_e_s_t_json_logs(test_object):
 
     # Change the assistant to both
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             test_object.project,
             test_object.formID,
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         {"coll_can_submit": "1", "coll_can_clean": "1"},
         status=302,
@@ -215,12 +213,11 @@ def t_e_s_t_json_logs(test_object):
 
     # Change the assistant to submit only
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             test_object.project,
             test_object.formID,
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         {"coll_can_submit": "1"},
         status=302,
@@ -241,12 +238,11 @@ def t_e_s_t_json_logs(test_object):
 
     # Change the assistant to both
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             test_object.project,
             test_object.formID,
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         {"coll_can_submit": "1", "coll_can_clean": "1"},
         status=302,
@@ -324,12 +320,11 @@ def t_e_s_t_json_logs(test_object):
 
     # Change the assistant to submit only
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             test_object.project,
             test_object.formID,
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         {"coll_can_submit": "1"},
         status=302,
@@ -350,12 +345,11 @@ def t_e_s_t_json_logs(test_object):
 
     # Change the assistant to submit only
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             test_object.project,
             test_object.formID,
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         {"coll_can_submit": "1", "coll_can_clean": "1"},
         status=302,
@@ -441,12 +435,11 @@ def t_e_s_t_json_logs(test_object):
 
     # Change the assistant to submit only
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             test_object.project,
             test_object.formID,
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         {"coll_can_submit": "1"},
         status=302,
@@ -466,12 +459,11 @@ def t_e_s_t_json_logs(test_object):
 
     # Change the assistant to clean and submit
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             test_object.project,
             test_object.formID,
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         {"coll_can_submit": "1", "coll_can_clean": "1"},
         status=302,
@@ -548,12 +540,11 @@ def t_e_s_t_json_logs(test_object):
 
     # Change the assistant to submit only
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             test_object.project,
             test_object.formID,
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         {"coll_can_submit": "1"},
         status=302,
@@ -573,12 +564,11 @@ def t_e_s_t_json_logs(test_object):
 
     # Change the assistant to submit only
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             test_object.project,
             test_object.formID,
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         {"coll_can_submit": "1", "coll_can_clean": "1"},
         status=302,
@@ -727,12 +717,11 @@ def t_e_s_t_json_logs(test_object):
 
     # Change the assistant to submit only
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             test_object.project,
             test_object.formID,
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         {"coll_can_submit": "1"},
         status=302,
@@ -765,12 +754,11 @@ def t_e_s_t_json_logs(test_object):
 
     # Change the assistant to submit only
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             test_object.project,
             test_object.formID,
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         {"coll_can_submit": "1", "coll_can_clean": "1"},
         status=302,
@@ -890,12 +878,11 @@ def t_e_s_t_json_logs(test_object):
 
     # Change the assistant to submit only
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             test_object.project,
             test_object.formID,
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         {"coll_can_submit": "1"},
         status=302,
@@ -917,12 +904,11 @@ def t_e_s_t_json_logs(test_object):
 
     # Change the assistant to both
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             test_object.project,
             test_object.formID,
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         {"coll_can_submit": "1", "coll_can_clean": "1"},
         status=302,
@@ -974,12 +960,11 @@ def t_e_s_t_json_logs(test_object):
 
     # Change the assistant to submit only
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             test_object.project,
             test_object.formID,
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         {"coll_can_submit": "1"},
         status=302,
@@ -1000,12 +985,11 @@ def t_e_s_t_json_logs(test_object):
 
     # Change the assistant to both
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             test_object.project,
             test_object.formID,
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         {"coll_can_submit": "1", "coll_can_clean": "1"},
         status=302,
@@ -1145,12 +1129,11 @@ def t_e_s_t_json_logs(test_object):
 
     # Change the assistant to submit only
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             test_object.project,
             test_object.formID,
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         {"coll_can_submit": "1"},
         status=302,
@@ -1171,12 +1154,11 @@ def t_e_s_t_json_logs(test_object):
 
     # Change the assistant to both
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             test_object.project,
             test_object.formID,
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         {"coll_can_submit": "1", "coll_can_clean": "1"},
         status=302,
@@ -1220,12 +1202,11 @@ def t_e_s_t_json_logs(test_object):
 
     # Edit an assistant to clean only
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             test_object.project,
             test_object.formID,
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         {"coll_can_submit": "1"},
         status=302,
@@ -1257,12 +1238,11 @@ def t_e_s_t_json_logs(test_object):
 
     # Edit an assistant to clean submit and clean
     res = test_object.testapp.post(
-        "/user/{}/project/{}/form/{}/assistant/{}/{}/edit".format(
+        "/user/{}/project/{}/form/{}/assistant/{}/edit".format(
             test_object.randonLogin,
             test_object.project,
             test_object.formID,
-            test_object.projectID,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
         ),
         {"coll_can_submit": "1", "coll_can_clean": "1"},
         status=302,

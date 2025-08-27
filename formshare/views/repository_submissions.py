@@ -51,7 +51,9 @@ class ManageSubmissions(PrivateView):
             raise HTTPNotFound
 
         form_data = get_form_details(self.request, user_id, project_id, form_id)
-        assistants = get_all_assistants(self.request, user_id, project_id)
+        assistants = get_all_assistants(
+            self.request, user_id, project_id, self.user.tenant
+        )
         if form_data is not None:
             if form_data["form_schema"] is None:
                 raise HTTPNotFound
@@ -367,6 +369,9 @@ class DeleteFormSubmission(PrivateView):
                     if request_data.get("rowuuid", "") != "":
                         assistant_data = request_data.get("coll_id", "").split("|")
                         if len(assistant_data) == 3:
+                            if assistant_data[0] == "":
+                                assistant_data[0] = None
+                                assistant_data[1] = None
                             delete_submission(
                                 self.request,
                                 user_id,
@@ -378,6 +383,7 @@ class DeleteFormSubmission(PrivateView):
                                 True,
                                 assistant_data[0],
                                 assistant_data[1],
+                                assistant_data[2],
                             )
                     self.returnRawViewResult = True
                     return HTTPFound(

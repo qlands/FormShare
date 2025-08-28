@@ -39,6 +39,7 @@ __all__ = [
     "get_assistant_with_token",
     "assistant_exist",
     "get_assistant_uuid",
+    "get_global_assistant_with_user",
 ]
 
 logging.setLoggerClass(SecretLogger)
@@ -90,15 +91,34 @@ def get_one_assistant(request, project, form):
             return None, None
 
 
-def get_assistant_timezone(request, project_id, coll_id):
+def get_assistant_timezone(request, assistant_uuid):
+    res = (
+        request.dbsession.query(Collaborator.linked_user)
+        .filter(Collaborator.coll_uuid == assistant_uuid)
+        .first()
+    )
+    if res[0] is not None:
+        res = (
+            request.dbsession.query(
+                User.user_timezone,
+                TimeZone.timezone_name,
+                TimeZone.timezone_utc_offset,
+            )
+            .filter(User.user_id == res[0])
+            .filter(User.user_timezone == TimeZone.timezone_code)
+            .first()
+        )
+        result = map_from_schema(res)
+        result["coll_timezone"] = result["user_timezone"]
+        return result
+
     res = (
         request.dbsession.query(
             Collaborator.coll_timezone,
             TimeZone.timezone_name,
             TimeZone.timezone_utc_offset,
         )
-        .filter(Collaborator.project_id == project_id)
-        .filter(Collaborator.coll_id == coll_id)
+        .filter(Collaborator.coll_uuid == assistant_uuid)
         .filter(Collaborator.coll_timezone == TimeZone.timezone_code)
         .first()
     )
@@ -309,21 +329,17 @@ def get_assistant_by_api_key(request, api_key):
     return res
 
 
-def delete_assistant(request, project, assistant):
+def delete_assistant(request, assistant_uuid):
     save_point = request.tm.savepoint()
     try:
         request.dbsession.query(Collaborator).filter(
-            Collaborator.project_id == project
-        ).filter(Collaborator.coll_id == assistant).delete()
+            Collaborator.coll_uuid == assistant_uuid
+        ).delete()
         request.dbsession.flush()
         return True, ""
     except Exception as e:
         save_point.rollback()
-        log.error(
-            "Error {} while removing assistant {} from project {}".format(
-                str(e), assistant, project
-            )
-        )
+        log.error("Error {} while removing assistant {}".format(str(e), assistant_uuid))
         return False, str(e)
 
 
@@ -396,7 +412,7 @@ def add_assistant(request, user, project, assistant_data, flush=True, check_exis
         return False, str(e)
 
 
-def modify_assistant(request, project, assistant, assistant_data):
+def modify_assistant(request, assistant_uuid, assistant_data):
     if (
         "coll_apikey" in assistant_data.keys()
         and "coll_apisecret" in assistant_data.keys()
@@ -409,36 +425,31 @@ def modify_assistant(request, project, assistant, assistant_data):
     save_point = request.tm.savepoint()
     try:
         request.dbsession.query(Collaborator).filter(
-            Collaborator.project_id == project
-        ).filter(Collaborator.coll_id == assistant).update(mapped_data)
+            Collaborator.coll_uuid == assistant_uuid
+        ).update(mapped_data)
         request.dbsession.flush()
         return True, ""
     except Exception as e:
         save_point.rollback()
-        log.error(
-            "Error {} while adding assistant {} in project {}".format(
-                str(e), assistant_data["coll_name"], project
-            )
-        )
+        log.error("Error {} while adding assistant {}.".format(str(e), assistant_uuid))
         return False, str(e)
 
 
-def change_assistant_password(request, project, assistant, password):
+def change_assistant_password(request, assistant_uuid, password):
     encrypted_password = encode_data(request, password)
     save_point = request.tm.savepoint()
     try:
         request.dbsession.query(Collaborator).filter(
-            Collaborator.project_id == project
-        ).filter(Collaborator.coll_id == assistant).update(
-            {"coll_password": encrypted_password}
-        )
+            Collaborator.coll_uuid == assistant_uuid
+        ).update({"coll_password": encrypted_password})
         request.dbsession.flush()
         return True, ""
     except Exception as e:
         save_point.rollback()
         log.error(
-            "Error {} while changing password for assistant {} in project {}".format(
-                str(e), assistant, project
+            "Error {} while changing password for assistant {}".format(
+                str(e),
+                assistant_uuid,
             )
         )
         return False, str(e)
@@ -452,6 +463,18 @@ def get_assistant_uuid(request, project, assistant):
         .first()
     )
     return res[0]
+
+
+def get_global_assistant_with_user(request, tenant_id, user_id):
+    res = (
+        request.dbsession.query(Collaborator)
+        .filter(Collaborator.tenant_id == tenant_id)
+        .filter(Collaborator.linked_user == user_id)
+        .firs()
+    )
+    if res is not None:
+        return res.coll_uuid
+    return None
 
 
 def get_project_from_assistant(request, user, requested_project, assistant):

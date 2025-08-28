@@ -1111,9 +1111,7 @@ def get_assistant_forms(request, requested_project, assistant_project, assistant
     return forms
 
 
-def get_assistant_forms_for_cleaning(
-    request, requested_project, assistant_project, assistant
-):
+def get_assistant_forms_for_cleaning(request, requested_project, assistant_uuid):
     # Get all the forms that the user can submit data to and are active
     assistant_forms = (
         request.dbsession.query(
@@ -1123,8 +1121,7 @@ def get_assistant_forms_for_cleaning(
         )
         .filter(Odkform.project_id == Formacces.form_project)
         .filter(Odkform.form_id == Formacces.form_id)
-        .filter(Formacces.project_id == assistant_project)
-        .filter(Formacces.coll_id == assistant)
+        .filter(Formacces.coll_uuid == assistant_uuid)
         .filter(Formacces.form_project == requested_project)
         .filter(Odkform.form_accsub == 1)
         .all()
@@ -1136,8 +1133,7 @@ def get_assistant_forms_for_cleaning(
     groups = (
         request.dbsession.query(Collingroup)
         .filter(Collingroup.project_id == requested_project)
-        .filter(Collingroup.enum_project == assistant_project)
-        .filter(Collingroup.coll_id == assistant)
+        .filter(Collingroup.coll_uuid == assistant_uuid)
         .all()
     )
 

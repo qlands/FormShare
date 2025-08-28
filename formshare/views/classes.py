@@ -22,13 +22,19 @@ import os
 from babel import Locale
 from formencode.variabledecode import variable_decode
 from formshare import plugins as p
-from formshare.config.auth import get_user_data, get_assistant_data, get_partner_data
+from formshare.config.auth import (
+    get_user_data,
+    get_assistant_data,
+    get_partner_data,
+    get_global_assistant_data,
+)
 from formshare.processes.db import (
     get_project_id_from_name,
     user_exists,
     get_user_details,
     get_active_project,
     get_project_from_assistant,
+    get_global_assistant_with_user,
     get_user_timezone,
     get_timezone_offset,
     get_timezone_name,
@@ -42,6 +48,8 @@ from formshare.processes.db import (
     update_last_login,
     get_project_access_type,
     get_user_with_token,
+    get_project_tenant,
+    get_assistant_uuid,
 )
 from pyramid.httpexceptions import HTTPFound
 from pyramid.httpexceptions import HTTPNotFound, exception_response
@@ -899,6 +907,8 @@ class AssistantView(object):
         self.projectID = ""
         self.project_has_crowdsourcing = False
         self.userID = ""
+        self.isGlobalAssistant = False
+        self.assistantUUID = ""
         self.projectCode = ""
         self.error_occurred = False
         self.api = False
@@ -1061,12 +1071,40 @@ class AssistantView(object):
                     self.assistant = get_assistant_data(
                         self.project_assistant, login_data["login"], self.request
                     )
+                    self.assistantUUID = get_assistant_uuid(
+                        self.request, self.project_assistant, login_data["login"]
+                    )
                     if self.assistant is None:
                         return HTTPFound(next_page)
                 else:
                     return HTTPFound(next_page)
             else:
-                return HTTPFound(next_page)
+                policy = self.get_policy("main")
+                login_data = policy.authenticated_userid(self.request)
+                if login_data is not None:
+                    login_data = literal_eval(login_data)
+                    if login_data["group"] == "mainApp":
+                        project_tenant = get_project_tenant(
+                            self.request, self.projectID
+                        )
+                        global_assistant_uuid = get_global_assistant_with_user(
+                            self.request, project_tenant, login_data["login"]
+                        )
+                        if global_assistant_uuid is not None:
+                            self.project_assistant = self.projectID
+                            self.assistantUUID = global_assistant_uuid
+                            self.assistant = get_global_assistant_data(
+                                self.request,
+                                global_assistant_uuid,
+                                login_data["login"],
+                            )
+                            self.isGlobalAssistant = True
+                        else:
+                            return HTTPFound(next_page)
+                    else:
+                        return HTTPFound(next_page)
+                else:
+                    return HTTPFound(next_page)
 
             if self.request.method == "POST":
                 if (
@@ -1091,6 +1129,8 @@ class AssistantView(object):
             self.resultDict["activeAssistant"] = self.assistant
         self.assistantID = self.assistant.login
         self.resultDict["assistant_id"] = self.assistantID
+        self.resultDict["assistant_uuid"] = self.assistantUUID
+        self.resultDict["isGlobalAssistant"] = self.isGlobalAssistant
         self.resultDict["userid"] = self.userID
         self.resultDict["projcode"] = self.projectCode
         self.resultDict["project_id"] = self.projectID
@@ -1100,11 +1140,9 @@ class AssistantView(object):
             self.request, self.projectID
         )
         self.resultDict["assistant_timezone"] = get_assistant_timezone(
-            self.request, self.project_assistant, self.assistantID
+            self.request, self.assistantUUID
         )
-        self.assistant_timezone = get_assistant_timezone(
-            self.request, self.project_assistant, self.assistantID
-        )
+        self.assistant_timezone = self.resultDict["assistant_timezone"]
 
         if self.request.matched_route is not None:
             for plugin in p.PluginImplementations(p.IAssistantView):

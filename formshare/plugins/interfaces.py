@@ -1285,68 +1285,82 @@ class IAssistant(Interface):  # pragma: no cover
         """
         raise NotImplementedError("after_create must be implemented in subclasses")
 
-    def before_editing_assistant(self, request, user, assistant_uuid, assistant_data):
+    def before_editing_assistant(
+        self, request, user, project, assistant, assistant_data
+    ):
         """
         Called by FormShare so plugins can perform actions before editing an assistant
         :param request: ``pyramid.request`` object
         :param user: User owner of the project
-        :param assistant_uuid: Assistant UUID
+        :param project: Project ID
+        :param assistant: Assistant ID
         :param assistant_data: Assistant information to be added
         :return: Return a modified version of assistant_data, true or false if the assistant should be added.
         If False then a message should state why. Example: return assistant_data, False, "My message"
         """
         raise NotImplementedError("before_create must be implemented in subclasses")
 
-    def after_editing_assistant(self, request, user, assistant_uuid, assistant_data):
+    def after_editing_assistant(
+        self, request, user, project, assistant, assistant_data
+    ):
         """
         Called by FormShare so plugins can perform actions before editing an assistant
         :param request: ``pyramid.request`` object
         :param user: User owner of the project
-        :param assistant_uuid: Assistant UUID
+        :param project: project ID
+        :param assistant: Assistant ID
         :param assistant_data: Assistant information
         :return: None
         """
         raise NotImplementedError("after_create must be implemented in subclasses")
 
-    def before_deleting_assistant(self, request, user, assistant_uuid):
+    def before_deleting_assistant(self, request, user, project, assistant):
         """
         Called by FormShare so plugins can perform actions before deleting an assistant
         :param request: ``pyramid.request`` object
         :param user: User owner of the project
-        :param assistant_uuid: Assistant UUID
+        :param project: Project ID
+        :param assistant: Assistant ID
         :return: Return True or false if the project should be deleted. If False then
         a message should state why. Example: return False, "My message"
         """
         raise NotImplementedError("before_create must be implemented in subclasses")
 
-    def after_deleting_assistant(self, request, user, assistant_uuid):
+    def after_deleting_assistant(self, request, user, project, assistant):
         """
         Called by FormShare so plugins can perform actions before deleting an assistant
         :param request: ``pyramid.request`` object
         :param user: User owner of the project
-        :param assistant_uuid: Assistant UUID
+        :param project: project ID
+        :param assistant: Assistant ID
         :return: None
         """
         raise NotImplementedError("after_create must be implemented in subclasses")
 
-    def before_assistant_password_change(self, request, user, assistant_id, password):
+    def before_assistant_password_change(
+        self, request, user, project, assistant, password
+    ):
         """
         Called by FormShare so plugins can perform actions changing the password an assistant
         :param request: ``pyramid.request`` object
         :param user: User owner of the project
-        :param assistant_id: Assistant UUID
+        :param project: Project ID
+        :param assistant: Assistant ID
         :param password: Assistant password
         :return: True or false if the password should be changed. If False then
         a message should state why. Example: return False, "My message"
         """
         raise NotImplementedError("before_create must be implemented in subclasses")
 
-    def after_assistant_password_change(self, request, user, assistant_uuid, password):
+    def after_assistant_password_change(
+        self, request, user, project, assistant, password
+    ):
         """
         Called by FormShare so plugins can perform actions before changing the password of an assistant
         :param request: ``pyramid.request`` object
         :param user: User owner of the project
-        :param assistant_uuid: Assistant UUID
+        :param project: project ID
+        :param assistant: Assistant ID
         :param password: Assistant password
         :return: None
         """

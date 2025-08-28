@@ -69,7 +69,6 @@ class Assistant(object):
         self.gravatarURL = "#"
         self.assistantData = assistant_data
         self.login = assistant_data["coll_id"]
-        self.loginUUID = assistant_data["coll_uuid"]
         self.projectID = project
         self.fullName = assistant_data["coll_name"]
         self.APIKey = assistant_data["coll_apikey"]
@@ -77,11 +76,7 @@ class Assistant(object):
 
     def check_password(self, password, request):
         self.set_gravatar_url(request, self.fullName, 45)
-        return check_assistant_login(
-            request,
-            self.loginUUID,
-            password,
-        )
+        return check_assistant_login(self.projectID, self.login, password, request)
 
     def set_gravatar_url(self, request, name, size):
         self.gravatarURL = request.route_url(
@@ -232,31 +227,6 @@ def get_assistant_data(project, assistant, request):
     return None
 
 
-def get_global_assistant_data(request, assistant_uuid, user_id):
-    user_data = map_from_schema(
-        request.dbsession.query(userModel).filter(userModel.user_id == user_id).first()
-    )
-
-    result = map_from_schema(
-        request.dbsession.query(collaboratorModel)
-        .filter(collaboratorModel.coll_uuid == assistant_uuid)
-        .filter(collaboratorModel.coll_active == 1)
-        .first()
-    )
-    if result:
-        result["coll_password"] = ""  # Remove the password form the result
-        result["coll_id"] = "~global"
-        result["project_id"] = "~global"
-        result["coll_name"] = user_data["user_name"]
-
-        result["coll_apikey"] = user_data["user_apikey"]
-        result["coll_apisecret"] = user_data["user_apisecret"]
-        result["coll_apitoken"] = user_data["user_apitoken"]
-        result["coll_apitoken_expires_on"] = user_data["user_apitoken_expires_on"]
-        return Assistant(result, "~global")
-    return None
-
-
 def get_partner_data(request, partner_email):
     result = map_from_schema(
         request.dbsession.query(partnerModel)
@@ -288,10 +258,11 @@ def check_login(user, password, request):
             return False
 
 
-def check_assistant_login(request, assistant_uuid, password):
+def check_assistant_login(project, assistant, password, request):
     result = (
         request.dbsession.query(collaboratorModel)
-        .filter(collaboratorModel.coll_uuid == assistant_uuid)
+        .filter(collaboratorModel.project_id == project)
+        .filter(collaboratorModel.coll_id == assistant)
         .filter(collaboratorModel.coll_active == 1)
         .first()
     )

@@ -26,7 +26,7 @@ from pyramid.response import FileResponse
 class AssistantForms(AssistantView):
     def process_view(self):
         assistant_forms = get_assistant_forms_for_cleaning(
-            self.request, self.projectID, self.project_assistant, self.assistant.login
+            self.request, self.projectID, self.assistantUUID
         )
         project_forms = get_project_forms(self.request, self.userID, self.projectID)
         forms = []
@@ -80,14 +80,10 @@ class ChangeMyAssistantPassword(AssistantView):
             assistant_data = self.get_post_dict()
             if assistant_data["coll_password"] != "":
                 if assistant_data["coll_password"] == assistant_data["coll_password2"]:
-                    project_of_assistant = get_project_from_assistant(
-                        self.request, self.userID, self.projectID, self.assistantID
-                    )
                     if check_assistant_login(
-                        project_of_assistant,
-                        self.assistantID,
-                        assistant_data["old_password"],
                         self.request,
+                        self.assistantUUID,
+                        assistant_data["old_password"],
                     ):
                         continue_change = True
                         for plugin in p.PluginImplementations(p.IAssistant):
@@ -98,8 +94,7 @@ class ChangeMyAssistantPassword(AssistantView):
                                 ) = plugin.before_assistant_password_change(
                                     self.request,
                                     user_id,
-                                    project_of_assistant,
-                                    self.assistantID,
+                                    self.assistantUUID,
                                     assistant_data["coll_password"],
                                 )
                                 if not continue_change:
@@ -108,8 +103,7 @@ class ChangeMyAssistantPassword(AssistantView):
                         if continue_change:
                             changed, message = change_assistant_password(
                                 self.request,
-                                project_of_assistant,
-                                self.assistantID,
+                                self.assistantUUID,
                                 assistant_data["coll_password"],
                             )
                             if changed:
@@ -117,8 +111,7 @@ class ChangeMyAssistantPassword(AssistantView):
                                     plugin.after_assistant_password_change(
                                         self.request,
                                         user_id,
-                                        project_of_assistant,
-                                        self.assistantID,
+                                        self.assistantUUID,
                                         assistant_data["coll_password"],
                                     )
                                 next_page = self.request.route_url(
@@ -179,12 +172,9 @@ class ChangeMyAPIKey(AssistantView):
                     self._("Unable to change the key. No API key and secret")
                 )
                 return HTTPFound(next_page, headers={"FS_error": "true"})
-            project_of_assistant = get_project_from_assistant(
-                self.request, self.userID, self.projectID, self.assistantID
-            )
 
             modified, message = modify_assistant(
-                self.request, project_of_assistant, self.assistantID, key_data
+                self.request, self.assistantUUID, key_data
             )
             if modified:
                 return HTTPFound(next_page)
@@ -208,12 +198,8 @@ class ChangeMyTimeZone(AssistantView):
             self.returnRawViewResult = True
             assistant_data = self.get_post_dict()
 
-            project_of_assistant = get_project_from_assistant(
-                self.request, self.userID, self.projectID, self.assistantID
-            )
-
             modified, message = modify_assistant(
-                self.request, project_of_assistant, self.assistantID, assistant_data
+                self.request, self.assistantUUID, assistant_data
             )
             if modified:
                 return HTTPFound(next_page)

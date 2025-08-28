@@ -21,6 +21,7 @@ from formshare.processes.db import (
     get_project_details,
     get_project_access_type,
     assistant_exist,
+    get_assistant_uuid,
 )
 from formshare.views.classes import PrivateView
 from sqlalchemy.exc import IntegrityError
@@ -202,6 +203,9 @@ class EditAssistantsView(PrivateView):
         project_code = self.request.matchdict["projcode"]
         assistant_id = self.request.matchdict["assistid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
+
+        assistant_uuid = get_assistant_uuid(self.request, project_id, assistant_id)
+
         if self.activeProject.get("project_id", None) == project_id:
             self.set_active_menu("assistants")
         else:
@@ -242,8 +246,7 @@ class EditAssistantsView(PrivateView):
                         ) = plugin.before_editing_assistant(
                             self.request,
                             user_id,
-                            project_id,
-                            assistant_id,
+                            assistant_uuid,
                             assistant_data,
                         )
                         if not continue_editing:
@@ -258,15 +261,14 @@ class EditAssistantsView(PrivateView):
                         "assistants", userid=user_id, projcode=project_code
                     )
                     edited, message = modify_assistant(
-                        self.request, project_id, assistant_id, assistant_data
+                        self.request, assistant_uuid, assistant_data
                     )
                     if edited:
                         for plugin in p.PluginImplementations(p.IAssistant):
                             plugin.after_editing_assistant(
                                 self.request,
                                 user_id,
-                                project_id,
-                                assistant_id,
+                                assistant_uuid,
                                 assistant_data,
                             )
                         self.request.session.flash(
@@ -291,8 +293,7 @@ class EditAssistantsView(PrivateView):
                                 ) = plugin.before_assistant_password_change(
                                     self.request,
                                     user_id,
-                                    project_id,
-                                    assistant_id,
+                                    assistant_uuid,
                                     assistant_data["coll_password"],
                                 )
                                 if not continue_change:
@@ -300,8 +301,7 @@ class EditAssistantsView(PrivateView):
                         if continue_change:
                             changed, message = change_assistant_password(
                                 self.request,
-                                project_id,
-                                assistant_id,
+                                assistant_uuid,
                                 assistant_data["coll_password"],
                             )
                             if changed:
@@ -309,8 +309,7 @@ class EditAssistantsView(PrivateView):
                                     plugin.after_assistant_password_change(
                                         self.request,
                                         user_id,
-                                        project_id,
-                                        assistant_id,
+                                        assistant_uuid,
                                         assistant_data["coll_password"],
                                     )
                                 self.request.session.flash(
@@ -375,25 +374,26 @@ class DeleteAssistant(PrivateView):
             next_page = self.request.params.get("next") or self.request.route_url(
                 "assistants", userid=user_id, projcode=project_code
             )
+
+            assistant_uuid = get_assistant_uuid(self.request, project_id, assistant_id)
+
             for plugin in p.PluginImplementations(p.IAssistant):
                 if continue_delete:
                     (
                         continue_delete,
                         error_message,
                     ) = plugin.before_deleting_assistant(
-                        self.request, user_id, project_id, assistant_id
+                        self.request, user_id, assistant_uuid
                     )
                     if not continue_delete:
                         self.add_error(error_message)
 
             if continue_delete:
-                removed, message = delete_assistant(
-                    self.request, project_id, assistant_id
-                )
+                removed, message = delete_assistant(self.request, assistant_uuid)
                 if removed:
                     for plugin in p.PluginImplementations(p.IAssistant):
                         plugin.after_deleting_assistant(
-                            self.request, user_id, project_id, assistant_id
+                            self.request, user_id, assistant_uuid
                         )
                     self.request.session.flash(
                         self._("The assistant was deleted successfully")

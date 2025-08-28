@@ -49,6 +49,7 @@ __all__ = [
     "invalid_aliases",
     "project_has_crowdsourcing",
     "get_forms_number",
+    "get_project_tenant",
 ]
 
 logging.setLoggerClass(SecretLogger)
@@ -814,6 +815,17 @@ def get_project_id_from_name(request, user, project_code):
     )
     if res is not None:
         return res.project_id
+    return None
+
+
+def get_project_tenant(request, project_id):
+    res = (
+        request.dbsession.query(Project)
+        .filter(Project.project_id == project_id)
+        .first()
+    )
+    if res is not None:
+        return res.project_tenant
     return None
 
 

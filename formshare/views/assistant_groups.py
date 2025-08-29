@@ -1,4 +1,4 @@
-from formshare.processes.db import get_all_assistants
+from formshare.processes.db import get_all_assistants, get_assistant_uuid
 from formshare.processes.db import (
     get_project_id_from_name,
     get_project_groups,
@@ -315,8 +315,11 @@ class RemoveMember(PrivateView):
             group_id = self.request.matchdict["groupid"]
             member_id = self.request.matchdict["memberid"]
             project_id2 = self.request.matchdict["projectid"]
+
+            member_uuid = get_assistant_uuid(self.request, project_id2, member_id)
+
             removed, message = remove_assistant_from_group(
-                self.request, project_id, group_id, project_id2, member_id
+                self.request, project_id, group_id, member_uuid
             )
             next_page = self.request.params.get("next") or self.request.route_url(
                 "group_members", userid=user_id, projcode=project_code, groupid=group_id

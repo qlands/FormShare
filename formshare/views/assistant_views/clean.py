@@ -42,7 +42,7 @@ class CleanInterface(AssistantView):
             t_fields = None
         form_data = get_form_data(self.request, self.projectID, form_id)
         permissions = get_assistant_permissions_on_a_form(
-            self.request, self.userID, self.projectID, self.assistantID, form_id
+            self.request, self.userID, self.projectID, self.assistantUUID, form_id
         )
 
         if permissions["enum_canclean"] == 1:
@@ -178,7 +178,7 @@ class DataRequest(AssistantView):
         table_name = self.request.matchdict["tablename"]
 
         permissions = get_assistant_permissions_on_a_form(
-            self.request, self.userID, self.projectID, self.assistantID, form_id
+            self.request, self.userID, self.projectID, self.assistantUUID, form_id
         )
 
         if permissions["enum_canclean"] == 1:
@@ -235,7 +235,7 @@ class PerformAction(AssistantView):
         table_name = self.request.matchdict["tablename"]
 
         permissions = get_assistant_permissions_on_a_form(
-            self.request, self.userID, self.projectID, self.assistantID, form_id
+            self.request, self.userID, self.projectID, self.assistantUUID, form_id
         )
 
         if is_form_blocked(self.request, self.projectID, form_id):
@@ -284,7 +284,7 @@ class CleanMultiSelect(AssistantView):
         row_uuid = row_uuid.strip()
 
         permissions = get_assistant_permissions_on_a_form(
-            self.request, self.userID, self.projectID, self.assistantID, form_id
+            self.request, self.userID, self.projectID, self.assistantUUID, form_id
         )
 
         if permissions["enum_canclean"] == 1:

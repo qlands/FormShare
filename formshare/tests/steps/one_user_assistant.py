@@ -174,16 +174,34 @@ def t_e_s_t_one_user_assistant(test_object):
     # Set the assistant as not shareable
     res = test_object.testapp.post(
         "/user/{}/project/{}/assistant/{}/edit".format(
-            random_login, "test001", "assistant002"
+            random_login, "test002", "assistant002"
         ),
-        {"coll_id": "assistant002"},
+        {"coll_id": "assistant002", "coll_active": "1"},
         status=302,
     )
     assert "FS_error" not in res.headers
 
+    # Login to this project fails because the assistant is not shareable
     res = test_object.testapp.post(
         "/user/{}/project/{}/assistantaccess/login".format(random_login, "test001"),
         {"login": "assistant002", "passwd": "123"},
+        status=200,
+    )
+    assert "FS_error" in res.headers
+
+    # Test getting the forms fails as it does not have access because it is not shared.
+    test_object.testapp.get(
+        "/user/{}/project/{}/formList".format(random_login, "test001"),
+        status=401,
+        extra_environ=dict(FS_for_testing="true", FS_user_for_testing="assistant002"),
+    )
+
+    # Set the assistant is shareable again
+    res = test_object.testapp.post(
+        "/user/{}/project/{}/assistant/{}/edit".format(
+            random_login, "test002", "assistant002"
+        ),
+        {"coll_id": "assistant002", "coll_active": "1", "coll_prjshare": "1"},
         status=302,
     )
     assert "FS_error" not in res.headers

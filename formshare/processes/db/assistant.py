@@ -136,8 +136,7 @@ def get_assigned_assistants(request, project, form):
     for group in groups:
         res = (
             request.dbsession.query(Collaborator, Collingroup)
-            .filter(Collingroup.enum_project == Collaborator.project_id)
-            .filter(Collingroup.coll_id == Collaborator.coll_id)
+            .filter(Collingroup.coll_uuid == Collaborator.coll_uuid)
             .filter(Collingroup.project_id == group.project_id)
             .filter(Collingroup.group_id == group.group_id)
             .all()
@@ -154,8 +153,7 @@ def get_assigned_assistants(request, project, form):
 
     res = (
         request.dbsession.query(Formacces, Collaborator)
-        .filter(Formacces.project_id == Collaborator.project_id)
-        .filter(Formacces.coll_id == Collaborator.coll_id)
+        .filter(Formacces.coll_uuid == Collaborator.coll_uuid)
         .filter(Formacces.form_project == project)
         .filter(Formacces.form_id == form)
         .all()
@@ -346,7 +344,7 @@ def delete_assistant(request, assistant_uuid):
 def assistant_exist(request, user, project, assistant_data):
     if assistant_data["coll_type"] == 1:
         res = (
-            request.dbsession.query(func.count(Collaborator.coll_id))
+            request.dbsession.query(func.count(Collaborator.coll_uuid))
             .filter(Collaborator.project_id == Userproject.project_id)
             .filter(Userproject.user_id == user)
             .filter(Userproject.access_type == 1)
@@ -358,7 +356,7 @@ def assistant_exist(request, user, project, assistant_data):
             return True
     else:
         res = (
-            request.dbsession.query(func.count(Collaborator.coll_id))
+            request.dbsession.query(func.count(Collaborator.coll_uuid))
             .filter(Collaborator.coll_email == assistant_data["coll_email"])
             .filter(Collaborator.coll_tenant == assistant_data["coll_tenant"])
             .first()

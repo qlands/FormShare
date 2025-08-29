@@ -526,7 +526,7 @@ class API1UpdateRepository(UpdateAPIView):
             }
 
         permissions = get_assistant_permissions_on_a_form(
-            self.request, user_id, project_id, assistan_data["coll_id"], form_id
+            self.request, user_id, project_id, assistan_data["coll_uuid"], form_id
         )
         if permissions["enum_canclean"] == 0:
             self.error_code = 401

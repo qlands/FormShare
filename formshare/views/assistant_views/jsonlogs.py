@@ -50,7 +50,7 @@ class JSONList(AssistantView):
         form_id = self.request.matchdict["formid"]
         project_code = self.request.matchdict["projcode"]
         permissions = get_assistant_permissions_on_a_form(
-            self.request, self.userID, self.projectID, self.assistantID, form_id
+            self.request, self.userID, self.projectID, self.assistantUUID, form_id
         )
         form_data = get_form_data(self.request, self.projectID, form_id)
         if permissions["enum_cansubmit"] == 1 or permissions["enum_canclean"] == 1:
@@ -162,7 +162,7 @@ class JSONCompare(AssistantView):
         form_id = self.request.matchdict["formid"]
         submission_id = self.request.matchdict["submissionid"]
         permissions = get_assistant_permissions_on_a_form(
-            self.request, self.userID, self.projectID, self.assistantID, form_id
+            self.request, self.userID, self.projectID, self.assistantUUID, form_id
         )
         if permissions["enum_canclean"] == 1:
             data = get_submission_error_details(
@@ -244,7 +244,7 @@ class JSONCheckout(AssistantView):
         form_id = self.request.matchdict["formid"]
         submission_id = self.request.matchdict["submissionid"]
         permissions = get_assistant_permissions_on_a_form(
-            self.request, self.userID, self.projectID, self.assistantID, form_id
+            self.request, self.userID, self.projectID, self.assistantUUID, form_id
         )
         if permissions["enum_canclean"] == 1:
             data = get_submission_error_details(
@@ -293,7 +293,7 @@ class JSONCancelCheckout(AssistantView):
         submission_id = self.request.matchdict["submissionid"]
 
         permissions = get_assistant_permissions_on_a_form(
-            self.request, self.userID, self.projectID, self.assistantID, form_id
+            self.request, self.userID, self.projectID, self.assistantUUID, form_id
         )
         if permissions["enum_canclean"] == 1:
             data = get_submission_error_details(
@@ -337,7 +337,7 @@ class JSONGetSubmission(AssistantView):
         form_id = self.request.matchdict["formid"]
         submission_id = self.request.matchdict["submissionid"]
         permissions = get_assistant_permissions_on_a_form(
-            self.request, self.userID, self.projectID, self.assistantID, form_id
+            self.request, self.userID, self.projectID, self.assistantUUID, form_id
         )
         if permissions["enum_canclean"] == 1:
             data = get_submission_error_details(
@@ -361,7 +361,7 @@ class JSONCheckin(AssistantView):
         form_id = self.request.matchdict["formid"]
         submission_id = self.request.matchdict["submissionid"]
         permissions = get_assistant_permissions_on_a_form(
-            self.request, self.userID, self.projectID, self.assistantID, form_id
+            self.request, self.userID, self.projectID, self.assistantUUID, form_id
         )
 
         if permissions["enum_canclean"] == 1:
@@ -463,7 +463,7 @@ class JSONViewRevision(AssistantView):
             pushed = "false"
 
         permissions = get_assistant_permissions_on_a_form(
-            self.request, self.userID, self.projectID, self.assistantID, form_id
+            self.request, self.userID, self.projectID, self.assistantUUID, form_id
         )
 
         if permissions["enum_canclean"] == 1:
@@ -507,7 +507,7 @@ class JSONCancelRevision(AssistantView):
         revision_id = self.request.matchdict["revisionid"]
 
         permissions = get_assistant_permissions_on_a_form(
-            self.request, self.userID, self.projectID, self.assistantID, form_id
+            self.request, self.userID, self.projectID, self.assistantUUID, form_id
         )
 
         if permissions["enum_canclean"] == 1:
@@ -570,7 +570,7 @@ class JSONPushRevision(AssistantView):
         revision_id = self.request.matchdict["revisionid"]
 
         permissions = get_assistant_permissions_on_a_form(
-            self.request, self.userID, self.projectID, self.assistantID, form_id
+            self.request, self.userID, self.projectID, self.assistantUUID, form_id
         )
 
         if is_form_blocked(self.request, self.projectID, form_id):
@@ -644,7 +644,7 @@ class JSONPushSubmission(AssistantView):
         submission_id = self.request.matchdict["submissionid"]
 
         permissions = get_assistant_permissions_on_a_form(
-            self.request, self.userID, self.projectID, self.assistantID, form_id
+            self.request, self.userID, self.projectID, self.assistantUUID, form_id
         )
 
         if is_form_blocked(self.request, self.projectID, form_id):
@@ -701,7 +701,7 @@ class JSONDisregard(AssistantView):
         submission_id = self.request.matchdict["submissionid"]
 
         permissions = get_assistant_permissions_on_a_form(
-            self.request, self.userID, self.projectID, self.assistantID, form_id
+            self.request, self.userID, self.projectID, self.assistantUUID, form_id
         )
 
         if permissions["enum_canclean"] == 1:
@@ -768,7 +768,7 @@ class JSONCancelDisregard(AssistantView):
         submission_id = self.request.matchdict["submissionid"]
 
         permissions = get_assistant_permissions_on_a_form(
-            self.request, self.userID, self.projectID, self.assistantID, form_id
+            self.request, self.userID, self.projectID, self.assistantUUID, form_id
         )
 
         if permissions["enum_canclean"] == 1:
@@ -844,7 +844,7 @@ class JSONCompareSubmissions(AssistantView):
         )
 
         permissions = get_assistant_permissions_on_a_form(
-            self.request, self.userID, self.projectID, self.assistantID, form_id
+            self.request, self.userID, self.projectID, self.assistantUUID, form_id
         )
 
         if permissions["enum_canclean"] == 1:
@@ -894,7 +894,7 @@ class JSONGetSubmissionsMedia(AssistantView):
         submission_b = self.request.matchdict["submissionb"]
 
         permissions = get_assistant_permissions_on_a_form(
-            self.request, self.userID, self.projectID, self.assistantID, form_id
+            self.request, self.userID, self.projectID, self.assistantUUID, form_id
         )
 
         if permissions["enum_canclean"] == 1:

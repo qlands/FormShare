@@ -204,8 +204,6 @@ class EditAssistantsView(PrivateView):
         assistant_id = self.request.matchdict["assistid"]
         project_id = get_project_id_from_name(self.request, user_id, project_code)
 
-        assistant_uuid = get_assistant_uuid(self.request, project_id, assistant_id)
-
         if self.activeProject.get("project_id", None) == project_id:
             self.set_active_menu("assistants")
         else:
@@ -224,6 +222,7 @@ class EditAssistantsView(PrivateView):
             raise HTTPNotFound
 
         if self.request.method == "POST":
+            assistant_uuid = get_assistant_uuid(self.request, project_id, assistant_id)
             assistant_data = self.get_post_dict()
             if "change_password" not in assistant_data.keys():
                 if "coll_prjshare" in assistant_data.keys():

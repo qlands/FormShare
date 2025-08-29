@@ -126,8 +126,7 @@ def get_error_description_from_file(request, project, form, log_file):
 def get_last_log_entry(request, user, project, form, submission_id):
     res = (
         request.dbsession.query(Jsonhistory, Collaborator)
-        .filter(Jsonhistory.enum_project == Collaborator.project_id)
-        .filter(Jsonhistory.coll_id == Collaborator.coll_id)
+        .filter(Jsonhistory.coll_uuid == Collaborator.coll_uuid)
         .filter(Jsonhistory.project_id == project)
         .filter(Jsonhistory.form_id == form)
         .filter(Jsonhistory.log_id == submission_id)
@@ -170,6 +169,10 @@ def get_last_log_entry(request, user, project, form, submission_id):
             "log_notes": notes,
         }
     else:
+        print("*********************7778")
+        print("get_last_log_entry return none")
+        print(request.url)
+        print("*********************7778")
         return None
 
 
@@ -191,8 +194,7 @@ def get_submission_details(request, project, form, submission):
     if not project_has_crowdsourcing(request, project):
         res = (
             request.dbsession.query(Submission, Collaborator)
-            .filter(Submission.enum_project == Collaborator.project_id)
-            .filter(Submission.coll_id == Collaborator.coll_id)
+            .filter(Submission.coll_uuid == Collaborator.coll_uuid)
             .filter(Submission.project_id == project)
             .filter(Submission.submission_id == submission)
             .first()
@@ -234,8 +236,7 @@ def get_submission_error_details(request, project, form, submission):
     if not project_has_crowdsourcing(request, project):
         res = (
             request.dbsession.query(Jsonlog, Collaborator)
-            .filter(Jsonlog.enum_project == Collaborator.project_id)
-            .filter(Jsonlog.coll_id == Collaborator.coll_id)
+            .filter(Jsonlog.coll_uuid == Collaborator.coll_uuid)
             .filter(Jsonlog.project_id == project)
             .filter(Jsonlog.form_id == form)
             .filter(Jsonlog.log_id == submission)
@@ -300,8 +301,7 @@ def get_number_of_errors_by_assistant(request, project, form, assistant, with_st
         if with_status is None:
             res = (
                 request.dbsession.query(Jsonlog, Collaborator)
-                .filter(Jsonlog.enum_project == Collaborator.project_id)
-                .filter(Jsonlog.coll_id == Collaborator.coll_id)
+                .filter(Jsonlog.coll_uuid == Collaborator.coll_uuid)
                 .filter(Jsonlog.project_id == project)
                 .filter(Jsonlog.form_id == form)
                 .order_by(Jsonlog.log_dtime.desc())
@@ -311,8 +311,7 @@ def get_number_of_errors_by_assistant(request, project, form, assistant, with_st
         else:
             res = (
                 request.dbsession.query(Jsonlog, Collaborator)
-                .filter(Jsonlog.enum_project == Collaborator.project_id)
-                .filter(Jsonlog.coll_id == Collaborator.coll_id)
+                .filter(Jsonlog.coll_uuid == Collaborator.coll_uuid)
                 .filter(Jsonlog.project_id == project)
                 .filter(Jsonlog.form_id == form)
                 .filter(Jsonlog.status == with_status)
@@ -324,8 +323,7 @@ def get_number_of_errors_by_assistant(request, project, form, assistant, with_st
         if with_status is None:
             res = (
                 request.dbsession.query(Jsonlog, Collaborator)
-                .filter(Jsonlog.enum_project == Collaborator.project_id)
-                .filter(Jsonlog.coll_id == Collaborator.coll_id)
+                .filter(Jsonlog.coll_uuid == Collaborator.coll_uuid)
                 .filter(Jsonlog.project_id == project)
                 .filter(Jsonlog.coll_id == assistant)
                 .filter(Jsonlog.form_id == form)
@@ -336,8 +334,7 @@ def get_number_of_errors_by_assistant(request, project, form, assistant, with_st
         else:
             res = (
                 request.dbsession.query(Jsonlog, Collaborator)
-                .filter(Jsonlog.enum_project == Collaborator.project_id)
-                .filter(Jsonlog.coll_id == Collaborator.coll_id)
+                .filter(Jsonlog.coll_uuid == Collaborator.coll_uuid)
                 .filter(Jsonlog.project_id == project)
                 .filter(Jsonlog.coll_id == assistant)
                 .filter(Jsonlog.form_id == form)
@@ -366,8 +363,7 @@ def get_errors_by_assistant(
             if with_status is None:
                 query = (
                     request.dbsession.query(Jsonlog, Collaborator)
-                    .filter(Jsonlog.enum_project == Collaborator.project_id)
-                    .filter(Jsonlog.coll_id == Collaborator.coll_id)
+                    .filter(Jsonlog.coll_uuid == Collaborator.coll_uuid)
                     .filter(Jsonlog.project_id == project)
                     .filter(Jsonlog.form_id == form)
                     .order_by(Jsonlog.log_dtime.desc())
@@ -375,8 +371,7 @@ def get_errors_by_assistant(
             else:
                 query = (
                     request.dbsession.query(Jsonlog, Collaborator)
-                    .filter(Jsonlog.enum_project == Collaborator.project_id)
-                    .filter(Jsonlog.coll_id == Collaborator.coll_id)
+                    .filter(Jsonlog.coll_uuid == Collaborator.coll_uuid)
                     .filter(Jsonlog.project_id == project)
                     .filter(Jsonlog.form_id == form)
                     .filter(Jsonlog.status == with_status)
@@ -388,8 +383,7 @@ def get_errors_by_assistant(
             if with_status is None:
                 query = (
                     request.dbsession.query(Jsonlog, Collaborator)
-                    .filter(Jsonlog.enum_project == Collaborator.project_id)
-                    .filter(Jsonlog.coll_id == Collaborator.coll_id)
+                    .filter(Jsonlog.coll_uuid == Collaborator.coll_uuid)
                     .filter(Jsonlog.project_id == project)
                     .filter(Jsonlog.coll_id == assistant)
                     .filter(Jsonlog.form_id == form)
@@ -398,8 +392,7 @@ def get_errors_by_assistant(
             else:
                 query = (
                     request.dbsession.query(Jsonlog, Collaborator)
-                    .filter(Jsonlog.enum_project == Collaborator.project_id)
-                    .filter(Jsonlog.coll_id == Collaborator.coll_id)
+                    .filter(Jsonlog.coll_uuid == Collaborator.coll_uuid)
                     .filter(Jsonlog.project_id == project)
                     .filter(Jsonlog.coll_id == assistant)
                     .filter(Jsonlog.form_id == form)
@@ -491,17 +484,13 @@ def get_errors_by_assistant(
 
 
 def get_assistant_permissions_on_a_form(
-    request, user, requested_project, assistant, form
+    request, user, requested_project, assistant_uuid, form
 ):
     privileges = {"enum_cansubmit": 0, "enum_canclean": 0}
-    assistant_project = get_project_from_assistant(
-        request, user, requested_project, assistant
-    )
     # Get all the forms that the user can submit data to and are active
     assistant_access = (
         request.dbsession.query(Formacces)
-        .filter(Formacces.project_id == assistant_project)
-        .filter(Formacces.coll_id == assistant)
+        .filter(Formacces.coll_uuid == assistant_uuid)
         .filter(Formacces.form_project == requested_project)
         .filter(Formacces.form_id == form)
         .first()
@@ -516,8 +505,7 @@ def get_assistant_permissions_on_a_form(
     groups = (
         request.dbsession.query(Collingroup)
         .filter(Collingroup.project_id == requested_project)
-        .filter(Collingroup.enum_project == assistant_project)
-        .filter(Collingroup.coll_id == assistant)
+        .filter(Collingroup.coll_uuid == assistant_uuid)
         .all()
     )
 

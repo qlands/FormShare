@@ -31,8 +31,7 @@ log = logging.getLogger("formshare")
 def get_members(request, project, group):
     res = (
         request.dbsession.query(Collaborator, Collingroup, Project)
-        .filter(Collaborator.project_id == Collingroup.enum_project)
-        .filter(Collaborator.coll_id == Collingroup.coll_id)
+        .filter(Collaborator.coll_uuid == Collingroup.coll_uuid)
         .filter(Collingroup.enum_project == Project.project_id)
         .filter(Collingroup.project_id == project)
         .filter(Collingroup.group_id == group)
@@ -205,16 +204,14 @@ def add_assistant_to_group(
         return False, str(e)
 
 
-def remove_assistant_from_group(request, project, group, assistant_project, assistant):
+def remove_assistant_from_group(request, project, group, assistant_uuid):
     _ = request.translate
     save_point = request.tm.savepoint()
     try:
         request.dbsession.query(Collingroup).filter(
             Collingroup.project_id == project
         ).filter(Collingroup.group_id == group).filter(
-            Collingroup.enum_project == assistant_project
-        ).filter(
-            Collingroup.coll_id == assistant
+            Collingroup.coll_uuid == assistant_uuid
         ).delete()
         request.dbsession.flush()
         return True, ""
@@ -222,7 +219,7 @@ def remove_assistant_from_group(request, project, group, assistant_project, assi
         save_point.rollback()
         log.error(
             "Cannot remove member {} from group {} of project {}".format(
-                assistant, group, project
+                assistant_uuid, group, project
             )
         )
         return False, _("Cannot remove the member")

@@ -13,9 +13,8 @@ from formshare.processes.db import (
     get_project_forms,
     get_number_of_submissions_by_assistant,
     get_project_details,
-    get_project_from_assistant,
     change_assistant_password,
-    get_assistant_password,
+    get_assistant_uuid_password,
     modify_assistant,
 )
 from formshare.views.classes import AssistantView
@@ -47,8 +46,7 @@ class AssistantForms(AssistantView):
                 self.request,
                 form["project_id"],
                 form["form_id"],
-                self.project_assistant,
-                self.assistant.login,
+                self.assistantUUID,
             )
             form["assistant_data"] = {
                 "submissions": submissions,
@@ -216,8 +214,8 @@ class GetQRCode(AssistantView):
         url = self.request.route_url(
             "project_details", userid=self.userID, projcode=self.projectCode
         )
-        assistant_password = get_assistant_password(
-            self.request, self.userID, self.projectID, self.assistantID
+        assistant_password = get_assistant_uuid_password(
+            self.request, self.assistantUUID
         )
         odk_settings = {
             "admin": {"change_server": True, "change_form_metadata": False},

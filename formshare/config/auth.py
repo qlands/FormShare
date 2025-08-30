@@ -69,6 +69,8 @@ class Assistant(object):
         self.gravatarURL = "#"
         self.assistantData = assistant_data
         self.login = assistant_data["coll_id"]
+        self.linked_user = assistant_data.get("linked_user", None)
+        self.type = assistant_data["coll_type"]
         self.loginUUID = assistant_data["coll_uuid"]
         self.projectID = project
         self.fullName = assistant_data["coll_name"]
@@ -248,7 +250,6 @@ def get_global_assistant_data(request, assistant_uuid, user_id):
         result["coll_id"] = "~global"
         result["project_id"] = "~global"
         result["coll_name"] = user_data["user_name"]
-
         result["coll_apikey"] = user_data["user_apikey"]
         result["coll_apisecret"] = user_data["user_apisecret"]
         result["coll_apitoken"] = user_data["user_apitoken"]

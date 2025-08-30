@@ -720,16 +720,13 @@ def get_number_of_submissions_in_database(request, project, form):
         return 0, None, in_db, in_db_from_logs, in_error, None
 
 
-def get_number_of_submissions_by_assistant(
-    request, project, form, assistant_project, assistant
-):
+def get_number_of_submissions_by_assistant(request, project, form, assistant_uuid):
     total = (
         request.dbsession.query(Submission)
         .filter(Submission.project_id == project)
         .filter(Submission.form_id == form)
         .filter(Submission.sameas.is_(None))
-        .filter(Submission.enum_project == assistant_project)
-        .filter(Submission.coll_id == assistant)
+        .filter(Submission.coll_uuid == assistant_uuid)
         .count()
     )
 
@@ -739,8 +736,7 @@ def get_number_of_submissions_by_assistant(
         .filter(Submission.form_id == form)
         .filter(Submission.submission_status == 0)
         .filter(Submission.sameas.is_(None))
-        .filter(Submission.enum_project == assistant_project)
-        .filter(Submission.coll_id == assistant)
+        .filter(Submission.coll_uuid == assistant_uuid)
         .count()
     )
 
@@ -749,8 +745,7 @@ def get_number_of_submissions_by_assistant(
         .filter(Jsonlog.project_id == project)
         .filter(Jsonlog.form_id == form)
         .filter(Jsonlog.status == 0)
-        .filter(Jsonlog.enum_project == assistant_project)
-        .filter(Jsonlog.coll_id == assistant)
+        .filter(Jsonlog.coll_uuid == assistant_uuid)
         .count()
     )
 
@@ -758,8 +753,7 @@ def get_number_of_submissions_by_assistant(
         request.dbsession.query(Jsonlog)
         .filter(Jsonlog.project_id == project)
         .filter(Jsonlog.form_id == form)
-        .filter(Jsonlog.enum_project == assistant_project)
-        .filter(Jsonlog.coll_id == assistant)
+        .filter(Jsonlog.coll_uuid == assistant_uuid)
         .count()
     )
 
@@ -768,8 +762,7 @@ def get_number_of_submissions_by_assistant(
         .filter(Jsonlog.project_id == project)
         .filter(Jsonlog.form_id == form)
         .filter(Jsonlog.status != 0, Jsonlog.status != 4)
-        .filter(Jsonlog.enum_project == assistant_project)
-        .filter(Jsonlog.coll_id == assistant)
+        .filter(Jsonlog.coll_uuid == assistant_uuid)
         .count()
     )
 
@@ -778,8 +771,7 @@ def get_number_of_submissions_by_assistant(
         .filter(Submission.project_id == project)
         .filter(Submission.form_id == form)
         .filter(Submission.sameas.is_(None))
-        .filter(Submission.enum_project == assistant_project)
-        .filter(Submission.coll_id == assistant)
+        .filter(Submission.coll_uuid == assistant_uuid)
         .order_by(Submission.submission_dtime.desc())
         .first()
     )

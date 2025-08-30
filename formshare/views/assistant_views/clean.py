@@ -247,6 +247,12 @@ class PerformAction(AssistantView):
                 post_data = self.get_post_dict()
                 operator = post_data["oper"]
                 row_uuid = post_data["id"]
+
+                if self.assistant.type == 1:
+                    who_updates = self.assistant.login
+                else:
+                    who_updates = self.assistant.linked_user
+
                 if operator == "edit":
                     post_data.pop("oper")
                     post_data.pop("id")
@@ -254,7 +260,7 @@ class PerformAction(AssistantView):
                     for key, value in post_data.items():
                         update_data(
                             self.request,
-                            self.assistant.login,
+                            who_updates,
                             self.projectID,
                             form_id,
                             table_name,
@@ -347,10 +353,15 @@ class CleanMultiSelect(AssistantView):
                 )
 
                 parts = multi_select_table_name.split("_msel_")
-                print("****{}***".format(row_uuid))
+
+                if self.assistant.type == 1:
+                    who_updates = self.assistant.login
+                else:
+                    who_updates = self.assistant.linked_user
+
                 updated = update_multiselect_data(
                     self.request,
-                    self.assistant.login,
+                    who_updates,
                     self.projectID,
                     form_id,
                     row_uuid,

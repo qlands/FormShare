@@ -13,12 +13,9 @@ from formshare.models import (
     Formacces,
     Collingroup,
     Formgrpacces,
+    User,
 )
 from formshare.models import Odkform as Form
-from formshare.processes.db.assistant import (
-    get_project_from_assistant,
-    get_assistant_uuid,
-)
 from formshare.processes.db.project import project_has_crowdsourcing
 from lxml import etree
 from sqlalchemy.event import listen
@@ -276,7 +273,9 @@ def get_submission_error_details(request, project, form, submission):
             return None
 
 
-def get_number_of_errors_by_assistant(request, project, form, assistant, with_status):
+def get_number_of_errors_by_assistant(
+    request, project, form, assistant_uuid, with_status
+):
     if project_has_crowdsourcing(request, project):
         if with_status is None:
             res = (
@@ -297,7 +296,7 @@ def get_number_of_errors_by_assistant(request, project, form, assistant, with_st
                 .count()
             )
             return res
-    if assistant is None:
+    if assistant_uuid is None:
         if with_status is None:
             res = (
                 request.dbsession.query(Jsonlog, Collaborator)
@@ -325,7 +324,7 @@ def get_number_of_errors_by_assistant(request, project, form, assistant, with_st
                 request.dbsession.query(Jsonlog, Collaborator)
                 .filter(Jsonlog.coll_uuid == Collaborator.coll_uuid)
                 .filter(Jsonlog.project_id == project)
-                .filter(Jsonlog.coll_id == assistant)
+                .filter(Jsonlog.coll_uuid == assistant_uuid)
                 .filter(Jsonlog.form_id == form)
                 .order_by(Jsonlog.log_dtime.desc())
                 .count()
@@ -336,7 +335,7 @@ def get_number_of_errors_by_assistant(request, project, form, assistant, with_st
                 request.dbsession.query(Jsonlog, Collaborator)
                 .filter(Jsonlog.coll_uuid == Collaborator.coll_uuid)
                 .filter(Jsonlog.project_id == project)
-                .filter(Jsonlog.coll_id == assistant)
+                .filter(Jsonlog.coll_uuid == assistant_uuid)
                 .filter(Jsonlog.form_id == form)
                 .filter(Jsonlog.status == with_status)
                 .order_by(Jsonlog.log_dtime.desc())
@@ -354,12 +353,20 @@ def apply_limit(start, page_size):
     return wrapped
 
 
+def get_collaborator_name(request, assistant_type, assistant_name, linked_user):
+    if assistant_type == 1:
+        return assistant_name
+    else:
+        user = request.dbsession.query(User).filter(User.user_id == linked_user).one()
+        return user.user_name
+
+
 def get_errors_by_assistant(
-    request, user, project, form, assistant, start, page_size, with_status
+    request, user, project, form, assistant_uuid, start, page_size, with_status
 ):
     if not project_has_crowdsourcing(request, project):
         result = []
-        if assistant is None:
+        if assistant_uuid is None:
             if with_status is None:
                 query = (
                     request.dbsession.query(Jsonlog, Collaborator)
@@ -385,7 +392,7 @@ def get_errors_by_assistant(
                     request.dbsession.query(Jsonlog, Collaborator)
                     .filter(Jsonlog.coll_uuid == Collaborator.coll_uuid)
                     .filter(Jsonlog.project_id == project)
-                    .filter(Jsonlog.coll_id == assistant)
+                    .filter(Jsonlog.coll_uuid == assistant_uuid)
                     .filter(Jsonlog.form_id == form)
                     .order_by(Jsonlog.log_dtime.desc())
                 )
@@ -394,7 +401,7 @@ def get_errors_by_assistant(
                     request.dbsession.query(Jsonlog, Collaborator)
                     .filter(Jsonlog.coll_uuid == Collaborator.coll_uuid)
                     .filter(Jsonlog.project_id == project)
-                    .filter(Jsonlog.coll_id == assistant)
+                    .filter(Jsonlog.coll_uuid == assistant_uuid)
                     .filter(Jsonlog.form_id == form)
                     .filter(Jsonlog.status == with_status)
                     .order_by(Jsonlog.log_dtime.desc())
@@ -416,14 +423,19 @@ def get_errors_by_assistant(
                     "lastentry": get_last_log_entry(
                         request, user, project, form, error["log_id"]
                     ),
-                    "enum_name": error["coll_name"],
+                    "enum_name": get_collaborator_name(
+                        request,
+                        error["coll_type"],
+                        error["coll_name"],
+                        error["linked_user"],
+                    ),
                     "log_short": error["log_id"][-12:],
                 }
             )
         return result
     else:
         result = []
-        if assistant is None:
+        if assistant_uuid is None:
             if with_status is None:
                 query = (
                     request.dbsession.query(Jsonlog)
@@ -446,7 +458,7 @@ def get_errors_by_assistant(
                 query = (
                     request.dbsession.query(Jsonlog)
                     .filter(Jsonlog.project_id == project)
-                    .filter(Jsonlog.coll_id == assistant)
+                    .filter(Jsonlog.coll_uuid == assistant_uuid)
                     .filter(Jsonlog.form_id == form)
                     .order_by(Jsonlog.log_dtime.desc())
                 )
@@ -454,7 +466,7 @@ def get_errors_by_assistant(
                 query = (
                     request.dbsession.query(Jsonlog)
                     .filter(Jsonlog.project_id == project)
-                    .filter(Jsonlog.coll_id == assistant)
+                    .filter(Jsonlog.coll_uuid == assistant_uuid)
                     .filter(Jsonlog.form_id == form)
                     .filter(Jsonlog.status == with_status)
                     .order_by(Jsonlog.log_dtime.desc())
@@ -577,10 +589,7 @@ def get_form_data(project, form, request):
     return res
 
 
-def checkout_submission(
-    request, project, form, submission, project_of_assistant, assistant
-):
-    assistant_uuid = get_assistant_uuid(request, project_of_assistant, assistant)
+def checkout_submission(request, project, form, submission, assistant_uuid):
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 2})
@@ -593,8 +602,6 @@ def checkout_submission(
         log_sequence=sequence,
         log_dtime=datetime.datetime.now(),
         log_action=2,
-        enum_project=project_of_assistant,
-        coll_id=assistant,
         coll_uuid=assistant_uuid,
     )
     save_point = request.tm.savepoint()
@@ -606,10 +613,7 @@ def checkout_submission(
         log.error("Error {} when checking out submission {}".format(str(e), submission))
 
 
-def cancel_checkout(
-    request, project, form, submission, project_of_assistant, assistant
-):
-    assistant_uuid = get_assistant_uuid(request, project_of_assistant, assistant)
+def cancel_checkout(request, project, form, submission, assistant_uuid):
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 1})
@@ -622,8 +626,6 @@ def cancel_checkout(
         log_sequence=sequence,
         log_dtime=datetime.datetime.now(),
         log_action=5,
-        enum_project=project_of_assistant,
-        coll_id=assistant,
         coll_uuid=assistant_uuid,
     )
     save_point = request.tm.savepoint()
@@ -639,10 +641,7 @@ def cancel_checkout(
         )
 
 
-def cancel_revision(
-    request, project, form, submission, project_of_assistant, assistant, revision
-):
-    assistant_uuid = get_assistant_uuid(request, project_of_assistant, assistant)
+def cancel_revision(request, project, form, submission, assistant_uuid, revision):
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 1})
@@ -655,8 +654,6 @@ def cancel_revision(
         log_sequence=sequence,
         log_dtime=datetime.datetime.now(),
         log_action=6,
-        enum_project=project_of_assistant,
-        coll_id=assistant,
         coll_uuid=assistant_uuid,
         log_commit=revision,
     )
@@ -673,10 +670,7 @@ def cancel_revision(
         )
 
 
-def fix_revision(
-    request, project, form, submission, project_of_assistant, assistant, revision
-):
-    assistant_uuid = get_assistant_uuid(request, project_of_assistant, assistant)
+def fix_revision(request, project, form, submission, assistant_uuid, revision):
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 0})
@@ -689,8 +683,6 @@ def fix_revision(
         log_sequence=sequence,
         log_dtime=datetime.datetime.now(),
         log_action=0,
-        enum_project=project_of_assistant,
-        coll_id=assistant,
         coll_uuid=assistant_uuid,
         log_commit=revision,
     )
@@ -705,8 +697,7 @@ def fix_revision(
         )
 
 
-def fix_submission(request, project, form, submission, project_of_assistant, assistant):
-    assistant_uuid = get_assistant_uuid(request, project_of_assistant, assistant)
+def fix_submission(request, project, form, submission, assistant_uuid):
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 0})
@@ -719,8 +710,6 @@ def fix_submission(request, project, form, submission, project_of_assistant, ass
         log_sequence=sequence,
         log_dtime=datetime.datetime.now(),
         log_action=0,
-        enum_project=project_of_assistant,
-        coll_id=assistant,
         coll_uuid=assistant_uuid,
     )
     save_point = request.tm.savepoint()
@@ -732,10 +721,7 @@ def fix_submission(request, project, form, submission, project_of_assistant, ass
         log.error("Error {} when fixing submission {}".format(str(e), submission))
 
 
-def fail_revision(
-    request, project, form, submission, project_of_assistant, assistant, revision
-):
-    assistant_uuid = get_assistant_uuid(request, project_of_assistant, assistant)
+def fail_revision(request, project, form, submission, assistant_uuid, revision):
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 1})
@@ -748,8 +734,6 @@ def fail_revision(
         log_sequence=sequence,
         log_dtime=datetime.datetime.now(),
         log_action=7,
-        enum_project=project_of_assistant,
-        coll_id=assistant,
         coll_uuid=assistant_uuid,
         log_commit=revision,
     )
@@ -766,10 +750,7 @@ def fail_revision(
         )
 
 
-def disregard_revision(
-    request, project, form, submission, project_of_assistant, assistant, notes
-):
-    assistant_uuid = get_assistant_uuid(request, project_of_assistant, assistant)
+def disregard_revision(request, project, form, submission, assistant_uuid, notes):
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 4})
@@ -782,8 +763,6 @@ def disregard_revision(
         log_sequence=sequence,
         log_dtime=datetime.datetime.now(),
         log_action=4,
-        enum_project=project_of_assistant,
-        coll_id=assistant,
         coll_uuid=assistant_uuid,
         log_notes=notes,
     )
@@ -799,9 +778,8 @@ def disregard_revision(
 
 
 def cancel_disregard_revision(
-    request, project, form, submission, project_of_assistant, assistant, notes
+    request, project, form, submission, assistant_uuid, notes
 ):
-    assistant_uuid = get_assistant_uuid(request, project_of_assistant, assistant)
     request.dbsession.query(Jsonlog).filter(Jsonlog.project_id == project).filter(
         Jsonlog.form_id == form, Jsonlog.log_id == submission
     ).update({"status": 1})
@@ -814,8 +792,6 @@ def cancel_disregard_revision(
         log_sequence=sequence,
         log_dtime=datetime.datetime.now(),
         log_action=8,
-        enum_project=project_of_assistant,
-        coll_id=assistant,
         coll_uuid=assistant_uuid,
         log_notes=notes,
     )

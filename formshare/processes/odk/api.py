@@ -4443,7 +4443,7 @@ def generate_diff(request, project, form_a, json_file_a, form_b, json_file_b):
 
 
 def store_new_version(
-    request, user, project, form, submission, assistant, sequence, new_file, notes
+    request, user, project, form, submission, assistant_uuid, sequence, new_file, notes
 ):
     odk_dir = get_odk_path(request)
     form_directory = get_form_directory(request, project, form)
@@ -4497,12 +4497,6 @@ def store_new_version(
                 final.close()
                 if p.returncode == 1:
                     update_json_status(request, project, form, submission, 3)
-                    project_of_assistant = get_project_from_assistant(
-                        request, user, project, assistant
-                    )
-                    assistant_uuid = get_assistant_uuid(
-                        request, project_of_assistant, assistant
-                    )
                     added, message = add_json_history(
                         request,
                         project,
@@ -4510,8 +4504,6 @@ def store_new_version(
                         submission,
                         sequence,
                         3,
-                        project_of_assistant,
-                        assistant,
                         assistant_uuid,
                         notes,
                     )
@@ -4576,9 +4568,7 @@ def restore_from_revision(request, project, form, submission, sequence):
         return 1, "Cannot restore from revision " + sequence
 
 
-def push_revision(
-    request, user, project, form, submission, project_of_assistant, assistant
-):
+def push_revision(request, user, project, form, submission):
     odk_dir = get_odk_path(request)
     form_directory = get_form_directory(request, project, form)
     schema = get_form_schema(request, project, form)

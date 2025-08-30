@@ -95,8 +95,6 @@ def add_json_history(
     submission,
     sequence,
     status,
-    project_of_assistant,
-    assistant,
     assistant_uuid,
     notes,
 ):
@@ -107,8 +105,6 @@ def add_json_history(
         log_sequence=sequence,
         log_dtime=datetime.datetime.now(),
         log_action=status,
-        enum_project=project_of_assistant,
-        coll_id=assistant,
         coll_uuid=assistant_uuid,
         log_commit=sequence,
         log_notes=notes,

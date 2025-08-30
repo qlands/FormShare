@@ -31,6 +31,7 @@ __all__ = [
     "get_all_assistants",
     "is_assistant_active",
     "get_assistant_password",
+    "get_assistant_uuid_password",
     "get_project_from_assistant",
     "get_assigned_assistants",
     "get_assistant_by_api_key",
@@ -591,6 +592,19 @@ def get_assistant_password(request, user, project, assistant, decrypt=True):
         request.dbsession.query(Collaborator)
         .filter(Collaborator.project_id == project_assistant)
         .filter(Collaborator.coll_id == assistant)
+        .first()
+    )
+    if decrypt:
+        decrypted = decode_data(request, enum.coll_password.encode())
+        return decrypted
+    else:
+        return enum.coll_password
+
+
+def get_assistant_uuid_password(request, assistant_uuid, decrypt=True):
+    enum = (
+        request.dbsession.query(Collaborator)
+        .filter(Collaborator.coll_uuid == assistant_uuid)
         .first()
     )
     if decrypt:

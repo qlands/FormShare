@@ -79,7 +79,11 @@ class JSONList(AssistantView):
                 )
             else:
                 number_of_errors = get_number_of_errors_by_assistant(
-                    self.request, self.projectID, form_id, self.assistantID, status_code
+                    self.request,
+                    self.projectID,
+                    form_id,
+                    self.assistantUUID,
+                    status_code,
                 )
             page_size = 6
             item_collection = range(number_of_errors)
@@ -134,7 +138,7 @@ class JSONList(AssistantView):
                     self.userID,
                     self.projectID,
                     form_id,
-                    self.assistantID,
+                    self.assistantUUID,
                     start,
                     page_size,
                     status_code,
@@ -253,16 +257,12 @@ class JSONCheckout(AssistantView):
             if data is not None:
                 if data["status"] == 1:
                     if self.request.method == "POST":
-                        project_of_assistant = get_project_from_assistant(
-                            self.request, self.userID, self.projectID, self.assistantID
-                        )
                         checkout_submission(
                             self.request,
                             self.projectID,
                             form_id,
                             submission_id,
-                            project_of_assistant,
-                            self.assistantID,
+                            self.assistantUUID,
                         )
                         return HTTPFound(
                             location=self.request.route_url(
@@ -302,16 +302,12 @@ class JSONCancelCheckout(AssistantView):
             if data is not None:
                 if data["status"] == 2:
                     if self.request.method == "POST":
-                        project_of_assistant = get_project_from_assistant(
-                            self.request, self.userID, self.projectID, self.assistantID
-                        )
                         cancel_checkout(
                             self.request,
                             self.projectID,
                             form_id,
                             submission_id,
-                            project_of_assistant,
-                            self.assistantID,
+                            self.assistantUUID,
                         )
                         return HTTPFound(
                             location=self.request.route_url(
@@ -402,7 +398,7 @@ class JSONCheckin(AssistantView):
                                             self.projectID,
                                             form_id,
                                             submission_id,
-                                            self.assistantID,
+                                            self.assistantUUID,
                                             sequence,
                                             input_file,
                                             notes,
@@ -525,19 +521,12 @@ class JSONCancelRevision(AssistantView):
                             revision_id,
                         )
                         if res_code == 0:
-                            project_of_assistant = get_project_from_assistant(
-                                self.request,
-                                self.userID,
-                                self.projectID,
-                                self.assistantID,
-                            )
                             cancel_revision(
                                 self.request,
                                 self.projectID,
                                 form_id,
                                 submission_id,
-                                project_of_assistant,
-                                self.assistantID,
+                                self.assistantUUID,
                                 revision_id,
                             )
                         return HTTPFound(
@@ -583,17 +572,12 @@ class JSONPushRevision(AssistantView):
             if data is not None:
                 if data["status"] == 3:
                     if self.request.method == "POST":
-                        project_of_assistant = get_project_from_assistant(
-                            self.request, self.userID, self.projectID, self.assistantID
-                        )
                         res_code, message = push_revision(
                             self.request,
                             self.userID,
                             self.projectID,
                             form_id,
                             submission_id,
-                            project_of_assistant,
-                            self.assistantID,
                         )
                         if res_code == 0:
                             fix_revision(
@@ -601,8 +585,7 @@ class JSONPushRevision(AssistantView):
                                 self.projectID,
                                 form_id,
                                 submission_id,
-                                project_of_assistant,
-                                self.assistantID,
+                                self.assistantUUID,
                                 revision_id,
                             )
                         else:
@@ -611,8 +594,7 @@ class JSONPushRevision(AssistantView):
                                 self.projectID,
                                 form_id,
                                 submission_id,
-                                project_of_assistant,
-                                self.assistantID,
+                                self.assistantUUID,
                                 revision_id,
                             )
                         return HTTPFound(
@@ -656,17 +638,12 @@ class JSONPushSubmission(AssistantView):
             if data is not None:
                 if data["status"] == 1:
                     if self.request.method == "POST":
-                        project_of_assistant = get_project_from_assistant(
-                            self.request, self.userID, self.projectID, self.assistantID
-                        )
                         res_code, message = push_revision(
                             self.request,
                             self.userID,
                             self.projectID,
                             form_id,
                             submission_id,
-                            project_of_assistant,
-                            self.assistantID,
                         )
                         if res_code == 0:
                             fix_submission(
@@ -674,8 +651,7 @@ class JSONPushSubmission(AssistantView):
                                 self.projectID,
                                 form_id,
                                 submission_id,
-                                project_of_assistant,
-                                self.assistantID,
+                                self.assistantUUID,
                             )
                         return HTTPFound(
                             location=self.request.route_url(
@@ -715,19 +691,12 @@ class JSONDisregard(AssistantView):
                         post_data = self.get_post_dict()
                         notes = post_data["notes"]
                         if notes != "":
-                            project_of_assistant = get_project_from_assistant(
-                                self.request,
-                                self.userID,
-                                self.projectID,
-                                self.assistantID,
-                            )
                             disregard_revision(
                                 self.request,
                                 self.projectID,
                                 form_id,
                                 submission_id,
-                                project_of_assistant,
-                                self.assistantID,
+                                self.assistantUUID,
                                 notes,
                             )
                             self.returnRawViewResult = True
@@ -782,19 +751,12 @@ class JSONCancelDisregard(AssistantView):
                         post_data = self.get_post_dict()
                         notes = post_data["notes"]
                         if notes != "":
-                            project_of_assistant = get_project_from_assistant(
-                                self.request,
-                                self.userID,
-                                self.projectID,
-                                self.assistantID,
-                            )
                             cancel_disregard_revision(
                                 self.request,
                                 self.projectID,
                                 form_id,
                                 submission_id,
-                                project_of_assistant,
-                                self.assistantID,
+                                self.assistantUUID,
                                 notes,
                             )
                             self.returnRawViewResult = True

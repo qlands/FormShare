@@ -7,7 +7,6 @@ import uuid
 import paginate
 from formshare.processes.db import (
     get_form_data,
-    get_project_from_assistant,
     is_form_blocked,
 )
 from formshare.processes.odk.api import (
@@ -257,13 +256,14 @@ class JSONCheckout(AssistantView):
             if data is not None:
                 if data["status"] == 1:
                     if self.request.method == "POST":
-                        checkout_submission(
+                        if not checkout_submission(
                             self.request,
                             self.projectID,
                             form_id,
                             submission_id,
                             self.assistantUUID,
-                        )
+                        ):
+                            self.append_to_errors("Error checkout_submission")
                         return HTTPFound(
                             location=self.request.route_url(
                                 "errorlist",
@@ -302,13 +302,14 @@ class JSONCancelCheckout(AssistantView):
             if data is not None:
                 if data["status"] == 2:
                     if self.request.method == "POST":
-                        cancel_checkout(
+                        if not cancel_checkout(
                             self.request,
                             self.projectID,
                             form_id,
                             submission_id,
                             self.assistantUUID,
-                        )
+                        ):
+                            self.append_to_errors("Error cancel_checkout")
                         return HTTPFound(
                             location=self.request.route_url(
                                 "errorlist",
@@ -521,14 +522,15 @@ class JSONCancelRevision(AssistantView):
                             revision_id,
                         )
                         if res_code == 0:
-                            cancel_revision(
+                            if not cancel_revision(
                                 self.request,
                                 self.projectID,
                                 form_id,
                                 submission_id,
                                 self.assistantUUID,
                                 revision_id,
-                            )
+                            ):
+                                self.append_to_errors("Error cancel_revision")
                         return HTTPFound(
                             location=self.request.route_url(
                                 "errorlist",
@@ -580,23 +582,25 @@ class JSONPushRevision(AssistantView):
                             submission_id,
                         )
                         if res_code == 0:
-                            fix_revision(
+                            if not fix_revision(
                                 self.request,
                                 self.projectID,
                                 form_id,
                                 submission_id,
                                 self.assistantUUID,
                                 revision_id,
-                            )
+                            ):
+                                self.append_to_errors("Error fix_revision")
                         else:
-                            fail_revision(
+                            if not fail_revision(
                                 self.request,
                                 self.projectID,
                                 form_id,
                                 submission_id,
                                 self.assistantUUID,
                                 revision_id,
-                            )
+                            ):
+                                self.append_to_errors("Error fail_revision")
                         return HTTPFound(
                             location=self.request.route_url(
                                 "errorlist",
@@ -646,13 +650,14 @@ class JSONPushSubmission(AssistantView):
                             submission_id,
                         )
                         if res_code == 0:
-                            fix_submission(
+                            if not fix_submission(
                                 self.request,
                                 self.projectID,
                                 form_id,
                                 submission_id,
                                 self.assistantUUID,
-                            )
+                            ):
+                                self.append_to_errors("Error fix_submission")
                         return HTTPFound(
                             location=self.request.route_url(
                                 "errorlist",
@@ -691,14 +696,15 @@ class JSONDisregard(AssistantView):
                         post_data = self.get_post_dict()
                         notes = post_data["notes"]
                         if notes != "":
-                            disregard_revision(
+                            if not disregard_revision(
                                 self.request,
                                 self.projectID,
                                 form_id,
                                 submission_id,
                                 self.assistantUUID,
                                 notes,
-                            )
+                            ):
+                                self.append_to_errors("Error disregard_revision")
                             self.returnRawViewResult = True
                             return HTTPFound(
                                 location=self.request.route_url(
@@ -751,14 +757,15 @@ class JSONCancelDisregard(AssistantView):
                         post_data = self.get_post_dict()
                         notes = post_data["notes"]
                         if notes != "":
-                            cancel_disregard_revision(
+                            if not cancel_disregard_revision(
                                 self.request,
                                 self.projectID,
                                 form_id,
                                 submission_id,
                                 self.assistantUUID,
                                 notes,
-                            )
+                            ):
+                                self.append_to_errors("Error cancel_disregard_revision")
                             self.returnRawViewResult = True
                             return HTTPFound(
                                 location=self.request.route_url(

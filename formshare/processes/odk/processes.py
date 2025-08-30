@@ -608,9 +608,11 @@ def checkout_submission(request, project, form, submission, assistant_uuid):
     try:
         request.dbsession.add(new_record)
         request.dbsession.flush()
+        return True
     except Exception as e:
         save_point.rollback()
         log.error("Error {} when checking out submission {}".format(str(e), submission))
+        raise e
 
 
 def cancel_checkout(request, project, form, submission, assistant_uuid):
@@ -632,6 +634,7 @@ def cancel_checkout(request, project, form, submission, assistant_uuid):
     try:
         request.dbsession.add(new_record)
         request.dbsession.flush()
+        return True
     except Exception as e:
         save_point.rollback()
         log.error(
@@ -639,6 +642,7 @@ def cancel_checkout(request, project, form, submission, assistant_uuid):
                 str(e), submission
             )
         )
+        raise e
 
 
 def cancel_revision(request, project, form, submission, assistant_uuid, revision):
@@ -661,6 +665,7 @@ def cancel_revision(request, project, form, submission, assistant_uuid, revision
     try:
         request.dbsession.add(new_record)
         request.dbsession.flush()
+        return True
     except Exception as e:
         save_point.rollback()
         log.error(
@@ -668,6 +673,7 @@ def cancel_revision(request, project, form, submission, assistant_uuid, revision
                 str(e), submission
             )
         )
+        raise e
 
 
 def fix_revision(request, project, form, submission, assistant_uuid, revision):
@@ -690,11 +696,13 @@ def fix_revision(request, project, form, submission, assistant_uuid, revision):
     try:
         request.dbsession.add(new_record)
         request.dbsession.flush()
+        return True
     except Exception as e:
         save_point.rollback()
         log.error(
             "Error {} when fixing revision for submission {}".format(str(e), submission)
         )
+        raise e
 
 
 def fix_submission(request, project, form, submission, assistant_uuid):
@@ -716,9 +724,11 @@ def fix_submission(request, project, form, submission, assistant_uuid):
     try:
         request.dbsession.add(new_record)
         request.dbsession.flush()
+        return True
     except Exception as e:
         save_point.rollback()
         log.error("Error {} when fixing submission {}".format(str(e), submission))
+        raise e
 
 
 def fail_revision(request, project, form, submission, assistant_uuid, revision):
@@ -741,6 +751,7 @@ def fail_revision(request, project, form, submission, assistant_uuid, revision):
     try:
         request.dbsession.add(new_record)
         request.dbsession.flush()
+        return True
     except Exception as e:
         save_point.rollback()
         log.error(
@@ -748,6 +759,7 @@ def fail_revision(request, project, form, submission, assistant_uuid, revision):
                 str(e), submission
             )
         )
+        raise e
 
 
 def disregard_revision(request, project, form, submission, assistant_uuid, notes):
@@ -770,11 +782,13 @@ def disregard_revision(request, project, form, submission, assistant_uuid, notes
     try:
         request.dbsession.add(new_record)
         request.dbsession.flush()
+        return True
     except Exception as e:
         save_point.rollback()
         log.error(
             "Error {} when disregarding for submission {}".format(str(e), submission)
         )
+        raise e
 
 
 def cancel_disregard_revision(
@@ -799,6 +813,7 @@ def cancel_disregard_revision(
     try:
         request.dbsession.add(new_record)
         request.dbsession.flush()
+        return True
     except Exception as e:
         save_point.rollback()
         log.error(
@@ -806,3 +821,4 @@ def cancel_disregard_revision(
                 str(e), submission
             )
         )
+        raise e

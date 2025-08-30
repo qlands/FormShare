@@ -816,8 +816,8 @@ class Jsonhistory(Base):
     log_action = Column(INTEGER)
     log_commit = Column(Unicode(12))
     log_notes = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
-    enum_project = Column(Unicode(64), nullable=False)
-    coll_id = Column(Unicode(120), nullable=False)
+    enum_project = Column(Unicode(64), nullable=True)
+    coll_id = Column(Unicode(120), nullable=True)
     coll_uuid = Column(Unicode(120))
 
     collaborator = relationship("Collaborator")

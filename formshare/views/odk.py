@@ -13,6 +13,7 @@ from formshare.processes.odk.api import (
     store_submission,
     store_json_submission,
 )
+from formshare.processes.db.assistant import get_odk_assistant_uuid
 from formshare.views.classes import ODKView
 from pyramid.response import Response
 
@@ -24,10 +25,11 @@ class ODKFormList(ODKView):
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         if project_id is not None:
             if not project_has_crowdsourcing(self.request, project_id):
+                assistant_uuid = get_odk_assistant_uuid(
+                    self.request, user_id, project_id, self.user
+                )
                 if not self.api:
-                    if is_assistant_active(
-                        self.request, user_id, project_id, self.user
-                    ):
+                    if is_assistant_active(self.request, assistant_uuid):
                         if self.authorize(
                             get_assistant_password(
                                 self.request, user_id, project_id, self.user
@@ -65,9 +67,10 @@ class ODKPushData(ODKView):
         if project_id is not None:
             if self.request.method == "POST":
                 if not project_has_crowdsourcing(self.request, project_id):
-                    if is_assistant_active(
+                    assistant_uuid = get_odk_assistant_uuid(
                         self.request, user_id, project_id, self.user
-                    ):
+                    )
+                    if is_assistant_active(self.request, assistant_uuid):
                         if self.authorize(
                             get_assistant_password(
                                 self.request, user_id, project_id, self.user
@@ -114,9 +117,10 @@ class ODKPushJSONData(ODKView):
         if project_id is not None:
             if self.request.method == "POST":
                 if not project_has_crowdsourcing(self.request, project_id):
-                    if is_assistant_active(
+                    assistant_uuid = get_odk_assistant_uuid(
                         self.request, user_id, project_id, self.user
-                    ):
+                    )
+                    if is_assistant_active(self.request, assistant_uuid):
                         if self.authorize(
                             get_assistant_password(
                                 self.request, user_id, project_id, self.user
@@ -163,9 +167,10 @@ class ODKSubmission(ODKView):
         if project_id is not None:
             if self.request.method == "HEAD":
                 if not project_has_crowdsourcing(self.request, project_id):
-                    if is_assistant_active(
+                    assistant_uuid = get_odk_assistant_uuid(
                         self.request, user_id, project_id, self.user
-                    ):
+                    )
+                    if is_assistant_active(self.request, assistant_uuid):
                         headers = [
                             (
                                 "Location",
@@ -194,9 +199,10 @@ class ODKSubmission(ODKView):
             else:
                 if self.request.method == "POST":
                     if not project_has_crowdsourcing(self.request, project_id):
-                        if is_assistant_active(
+                        assistant_uuid = get_odk_assistant_uuid(
                             self.request, user_id, project_id, self.user
-                        ):
+                        )
+                        if is_assistant_active(self.request, assistant_uuid):
                             if self.authorize(
                                 get_assistant_password(
                                     self.request, user_id, project_id, self.user
@@ -242,10 +248,11 @@ class ODKXMLForm(ODKView):
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         if project_id is not None:
             if not project_has_crowdsourcing(self.request, project_id):
+                assistant_uuid = get_odk_assistant_uuid(
+                    self.request, user_id, project_id, self.user
+                )
                 if not self.api:
-                    if is_assistant_active(
-                        self.request, user_id, project_id, self.user
-                    ):
+                    if is_assistant_active(self.request, assistant_uuid):
                         if assistant_has_form(
                             self.request, user_id, project_id, form_id, self.user
                         ):
@@ -278,10 +285,11 @@ class ODKManifest(ODKView):
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         if project_id is not None:
             if not project_has_crowdsourcing(self.request, project_id):
+                assistant_uuid = get_odk_assistant_uuid(
+                    self.request, user_id, project_id, self.user
+                )
                 if not self.api:
-                    if is_assistant_active(
-                        self.request, user_id, project_id, self.user
-                    ):
+                    if is_assistant_active(self.request, assistant_uuid):
                         if assistant_has_form(
                             self.request, user_id, project_id, form_id, self.user
                         ):
@@ -331,10 +339,11 @@ class ODKMediaFile(ODKView):
         project_id = get_project_id_from_name(self.request, user_id, project_code)
         if project_id is not None:
             if not project_has_crowdsourcing(self.request, project_id):
+                assistant_uuid = get_odk_assistant_uuid(
+                    self.request, user_id, project_id, self.user
+                )
                 if not self.api:
-                    if is_assistant_active(
-                        self.request, user_id, project_id, self.user
-                    ):
+                    if is_assistant_active(self.request, assistant_uuid):
                         if assistant_has_form(
                             self.request, user_id, project_id, form_id, self.user
                         ):

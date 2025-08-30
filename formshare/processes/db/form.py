@@ -3,8 +3,6 @@ import datetime
 import glob
 import json
 import logging
-
-from formshare.config.auth import Assistant
 from formshare.processes.logging.loggerclass import SecretLogger
 import mimetypes
 import os

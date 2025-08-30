@@ -39,7 +39,6 @@ from formshare.processes.db import (
     add_json_history,
     form_file_exists,
     get_project_from_assistant,
-    get_assistant_uuid,
     get_form_files,
     get_project_code_from_id,
     get_form_geopoints,

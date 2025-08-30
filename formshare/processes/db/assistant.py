@@ -3,7 +3,8 @@ import logging
 from formshare.processes.logging.loggerclass import SecretLogger
 import secrets
 from uuid import uuid4
-
+import validators
+import re
 from formshare.config.encdecdata import decode_data
 from formshare.config.encdecdata import encode_data
 from formshare.models import (
@@ -20,6 +21,7 @@ from formshare.models import (
 )
 from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
+
 
 __all__ = [
     "get_project_assistants",
@@ -40,7 +42,9 @@ __all__ = [
     "get_assistant_with_token",
     "assistant_exist",
     "get_assistant_uuid",
+    "get_assistant_uuid_with_email",
     "get_global_assistant_with_user",
+    "get_odk_assistant_uuid",
 ]
 
 logging.setLoggerClass(SecretLogger)
@@ -454,6 +458,42 @@ def change_assistant_password(request, assistant_uuid, password):
         return False, str(e)
 
 
+def _get_project_tenant(request, project_id):
+    res = (
+        request.dbsession.query(Project)
+        .filter(Project.project_id == project_id)
+        .first()
+    )
+    if res is not None:
+        return res.project_tenant
+    return None
+
+
+def get_odk_assistant_uuid(request, user, project, assistant):
+    if validators.email(assistant) and re.match(r"^[A-Za-z0-9._@-]+$", assistant):
+        project_tenant = _get_project_tenant(request, project)
+        return get_assistant_uuid_with_email(request, project_tenant, assistant)
+    else:
+        project_of_assistant = get_project_from_assistant(
+            request, user, project, assistant
+        )
+        return get_assistant_uuid(request, project_of_assistant, assistant)
+
+
+def get_assistant_uuid_with_email(request, tenant, assistant_email):
+    res = (
+        request.dbsession.query(User, Collaborator)
+        .filter(Collaborator.linked_user == User.user_id)
+        .filter(Collaborator.coll_tenant == tenant)
+        .filter(User.user_email == assistant_email)
+        .first()
+    )
+    if res is not None:
+        return res.coll_uuid
+    else:
+        return None
+
+
 def get_assistant_uuid(request, project, assistant):
     res = (
         request.dbsession.query(Collaborator.coll_uuid)
@@ -461,7 +501,10 @@ def get_assistant_uuid(request, project, assistant):
         .filter(Collaborator.coll_id == assistant)
         .first()
     )
-    return res[0]
+    if res is not None:
+        return res[0]
+    else:
+        return None
 
 
 def get_global_assistant_with_user(request, tenant_id, user_id):
@@ -513,92 +556,119 @@ def get_project_from_assistant(request, user, requested_project, assistant):
         return None
 
 
-def is_assistant_active(request, user, project, assistant):
-    # Get all the assistants the user has with that name across projects
-    num_assistants = (
-        request.dbsession.query(Userproject, Collaborator)
-        .filter(Userproject.project_id == Collaborator.project_id)
-        .filter(Userproject.user_id == user)
-        .filter(Userproject.access_type == 1)
-        .filter(Collaborator.coll_id == assistant)
-        .count()
+def is_assistant_active(request, assistant_uuid):
+    enum = (
+        request.dbsession.query(Collaborator)
+        .filter(Collaborator.coll_uuid == assistant_uuid)
+        .first()
     )
-    if num_assistants > 0:
-        if num_assistants == 1:
-            # If the user has just one assistant with that name then gets his data
-            assistant_data = (
-                request.dbsession.query(Collaborator)
-                .filter(Userproject.project_id == Collaborator.project_id)
-                .filter(Userproject.user_id == user)
-                .filter(Userproject.access_type == 1)
-                .filter(Collaborator.coll_id == assistant)
-                .first()
-            )
-            # Is the assistant from the same project?
-            if assistant_data.project_id == project:
-                enum = (
-                    request.dbsession.query(Collaborator)
-                    .filter(Collaborator.project_id == assistant_data.project_id)
-                    .filter(Collaborator.coll_id == assistant)
-                    .first()
-                )
-                if enum is not None:
-                    if enum.coll_active == 1:
-                        return True
-                    else:
-                        return False
-                else:
-                    return False
-            else:
-                # Is the assistant shareable across projects?
-                if assistant_data.coll_prjshare == 1:
-                    enum = (
-                        request.dbsession.query(Collaborator)
-                        .filter(Collaborator.project_id == assistant_data.project_id)
-                        .filter(Collaborator.coll_id == assistant)
-                        .first()
-                    )
-                    if enum is not None:
-                        if enum.coll_active == 1:
-                            return True
-                        else:
-                            return False
-                    else:
-                        return False
-                else:
-                    return False
-        else:
-            # If there are more than one assistant then use the project in the URL
-            enum = (
-                request.dbsession.query(Collaborator)
-                .filter(Collaborator.project_id == project)
-                .filter(Collaborator.coll_id == assistant)
-                .first()
-            )
-            if enum is not None:
-                if enum.coll_active == 1:
-                    return True
-                else:
-                    return False
-            else:
-                return False
-    else:
-        return False
+    if enum is not None:
+        if enum.coll_active == 1:
+            return True
+    return False
+
+    # # Get all the assistants the user has with that name across projects
+    # num_assistants = (
+    #     request.dbsession.query(Userproject, Collaborator)
+    #     .filter(Userproject.project_id == Collaborator.project_id)
+    #     .filter(Userproject.user_id == user)
+    #     .filter(Userproject.access_type == 1)
+    #     .filter(Collaborator.coll_id == assistant)
+    #     .count()
+    # )
+    # if num_assistants > 0:
+    #     if num_assistants == 1:
+    #         # If the user has just one assistant with that name then gets his data
+    #         assistant_data = (
+    #             request.dbsession.query(Collaborator)
+    #             .filter(Userproject.project_id == Collaborator.project_id)
+    #             .filter(Userproject.user_id == user)
+    #             .filter(Userproject.access_type == 1)
+    #             .filter(Collaborator.coll_id == assistant)
+    #             .first()
+    #         )
+    #         # Is the assistant from the same project?
+    #         if assistant_data.project_id == project:
+    #             enum = (
+    #                 request.dbsession.query(Collaborator)
+    #                 .filter(Collaborator.project_id == assistant_data.project_id)
+    #                 .filter(Collaborator.coll_id == assistant)
+    #                 .first()
+    #             )
+    #             if enum is not None:
+    #                 if enum.coll_active == 1:
+    #                     return True
+    #                 else:
+    #                     return False
+    #             else:
+    #                 return False
+    #         else:
+    #             # Is the assistant shareable across projects?
+    #             if assistant_data.coll_prjshare == 1:
+    #                 enum = (
+    #                     request.dbsession.query(Collaborator)
+    #                     .filter(Collaborator.project_id == assistant_data.project_id)
+    #                     .filter(Collaborator.coll_id == assistant)
+    #                     .first()
+    #                 )
+    #                 if enum is not None:
+    #                     if enum.coll_active == 1:
+    #                         return True
+    #                     else:
+    #                         return False
+    #                 else:
+    #                     return False
+    #             else:
+    #                 return False
+    #     else:
+    #         # If there are more than one assistant then use the project in the URL
+    #         enum = (
+    #             request.dbsession.query(Collaborator)
+    #             .filter(Collaborator.project_id == project)
+    #             .filter(Collaborator.coll_id == assistant)
+    #             .first()
+    #         )
+    #         if enum is not None:
+    #             if enum.coll_active == 1:
+    #                 return True
+    #             else:
+    #                 return False
+    #         else:
+    #             return False
+    # else:
+    #     return False
 
 
 def get_assistant_password(request, user, project, assistant, decrypt=True):
-    project_assistant = get_project_from_assistant(request, user, project, assistant)
-    enum = (
-        request.dbsession.query(Collaborator)
-        .filter(Collaborator.project_id == project_assistant)
-        .filter(Collaborator.coll_id == assistant)
-        .first()
-    )
-    if decrypt:
-        decrypted = decode_data(request, enum.coll_password.encode())
-        return decrypted
+    if validators.email(assistant) and re.match(r"^[A-Za-z0-9._@-]+$", assistant):
+        project_tenant = _get_project_tenant(request, project)
+        res = (
+            request.dbsession.query(User)
+            .filter(Collaborator.linked_user == User.user_id)
+            .filter(Collaborator.coll_tenant == project_tenant)
+            .filter(User.user_email == assistant)
+            .first()
+        )
+        if decrypt:
+            decrypted = decode_data(request, res.user_assistant_password.encode())
+            return decrypted
+        else:
+            return res.user_assistant_password
     else:
-        return enum.coll_password
+        project_assistant = get_project_from_assistant(
+            request, user, project, assistant
+        )
+        enum = (
+            request.dbsession.query(Collaborator)
+            .filter(Collaborator.project_id == project_assistant)
+            .filter(Collaborator.coll_id == assistant)
+            .first()
+        )
+        if decrypt:
+            decrypted = decode_data(request, enum.coll_password.encode())
+            return decrypted
+        else:
+            return enum.coll_password
 
 
 def get_assistant_uuid_password(request, assistant_uuid, decrypt=True):

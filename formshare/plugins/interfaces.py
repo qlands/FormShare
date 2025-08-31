@@ -934,11 +934,10 @@ class IImportExternalData(Interface):  # pragma: no cover
         odk_dir,
         form_directory,
         schema,
-        assistant,
+        assistant_uuid,
         temp_dir,
         project_code,
         geopoint_variables,
-        project_of_assistant,
         import_type,
         post_data,
         ignore_xform,
@@ -953,11 +952,10 @@ class IImportExternalData(Interface):  # pragma: no cover
         :param odk_dir: Path to the ODK repository directory
         :param form_directory: Path to the directory of the form
         :param schema: Schema holding the data of the form
-        :param assistant: Assistant ID importing the data
+        :param assistant_uuid: Assistant UUID importing the data
         :param temp_dir: Path to the files to be imported
         :param project_code: Project code
-        :param geopoint_variable: Which variable should be used to pull the geo localtion
-        :param project_of_assistant: Project ID of the assistant
+        :param geopoint_variable: Which variable should be used to pull the geo location
         :param import_type: Type of import > 2
         :param post_data: Data from the import page
         :param ignore_xform: Whether to ignore the ignore_xform ID while importing

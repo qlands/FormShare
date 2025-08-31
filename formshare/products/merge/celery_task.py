@@ -512,7 +512,7 @@ def get_one_assistant(db_session, project, form):
         .first()
     )
     if res[0] == 0:
-        return "public", "public"
+        return "public"
 
     res = (
         db_session.query(Formacces)
@@ -522,7 +522,7 @@ def get_one_assistant(db_session, project, form):
         .first()
     )
     if res is not None:
-        return res.coll_id, res.project_id
+        return res.coll_uuid
     else:
         res = (
             db_session.query(Formgrpacces)
@@ -541,14 +541,11 @@ def get_one_assistant(db_session, project, form):
                 .first()
             )
             if res is not None:
-                return (
-                    res.coll_id,
-                    res.enum_project,
-                )
+                return res.coll_uuid
             else:
-                return None, None
+                return None
         else:
-            return None, None
+            return None
 
 
 def update_dictionary_tables(db_session, form_id, xml_create_file, survey_data_columns):
@@ -913,9 +910,7 @@ def internal_merge_into_repository(
             if not discard_testing_data:
                 log.info("Storing testing data")
                 send_task_status_to_form(settings, task_id, _("Storing testing data"))
-                assistant, project_of_assistant = get_one_assistant(
-                    db_session, project_id, a_form_id
-                )
+                assistant_uuid = get_one_assistant(db_session, project_id, a_form_id)
                 geo_point_variables = get_geopoint_variables(
                     db_session, project_id, a_form_id
                 )
@@ -1052,7 +1047,7 @@ def internal_merge_into_repository(
             if files:
                 for file in files:
                     shutil.copy(file, temp_path)
-                if assistant is not None and project_of_assistant is not None:
+                if assistant_uuid is not None:
                     internal_import_json_files(
                         user,
                         project_id,
@@ -1060,11 +1055,10 @@ def internal_merge_into_repository(
                         odk_dir,
                         a_form_directory,
                         b_schema_name,
-                        assistant,
+                        assistant_uuid,
                         temp_path,
                         project_code,
                         geo_point_variables,
-                        project_of_assistant,
                         settings,
                         locale,
                         False,

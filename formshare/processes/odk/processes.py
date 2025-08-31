@@ -166,10 +166,6 @@ def get_last_log_entry(request, user, project, form, submission_id):
             "log_notes": notes,
         }
     else:
-        print("*********************7778")
-        print("get_last_log_entry return none")
-        print(request.url)
-        print("*********************7778")
         return None
 
 

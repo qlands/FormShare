@@ -31,9 +31,7 @@ class ODKFormList(ODKView):
                 if not self.api:
                     if is_assistant_active(self.request, assistant_uuid):
                         if self.authorize(
-                            get_assistant_password(
-                                self.request, user_id, project_id, self.user
-                            )
+                            get_assistant_password(self.request, assistant_uuid)
                         ):
                             return self.create_xmll_response(
                                 get_form_list(
@@ -72,9 +70,7 @@ class ODKPushData(ODKView):
                     )
                     if is_assistant_active(self.request, assistant_uuid):
                         if self.authorize(
-                            get_assistant_password(
-                                self.request, user_id, project_id, self.user
-                            )
+                            get_assistant_password(self.request, assistant_uuid)
                         ):
                             stored, error = store_submission(
                                 self.request, user_id, project_id, self.user
@@ -122,9 +118,7 @@ class ODKPushJSONData(ODKView):
                     )
                     if is_assistant_active(self.request, assistant_uuid):
                         if self.authorize(
-                            get_assistant_password(
-                                self.request, user_id, project_id, self.user
-                            )
+                            get_assistant_password(self.request, assistant_uuid)
                         ):
                             stored, error = store_json_submission(
                                 self.request, user_id, project_id, self.user
@@ -204,9 +198,7 @@ class ODKSubmission(ODKView):
                         )
                         if is_assistant_active(self.request, assistant_uuid):
                             if self.authorize(
-                                get_assistant_password(
-                                    self.request, user_id, project_id, self.user
-                                )
+                                get_assistant_password(self.request, assistant_uuid)
                             ):
                                 stored, error = store_submission(
                                     self.request, user_id, project_id, self.user
@@ -257,9 +249,7 @@ class ODKXMLForm(ODKView):
                             self.request, user_id, project_id, form_id, self.user
                         ):
                             if self.authorize(
-                                get_assistant_password(
-                                    self.request, user_id, project_id, self.user
-                                )
+                                get_assistant_password(self.request, assistant_uuid)
                             ):
                                 return get_xml_form(self.request, project_id, form_id)
                             else:
@@ -294,9 +284,7 @@ class ODKManifest(ODKView):
                             self.request, user_id, project_id, form_id, self.user
                         ):
                             if self.authorize(
-                                get_assistant_password(
-                                    self.request, user_id, project_id, self.user
-                                )
+                                get_assistant_password(self.request, assistant_uuid)
                             ):
                                 return self.create_xmll_response(
                                     get_manifest(
@@ -348,9 +336,7 @@ class ODKMediaFile(ODKView):
                             self.request, user_id, project_id, form_id, self.user
                         ):
                             if self.authorize(
-                                get_assistant_password(
-                                    self.request, user_id, project_id, self.user
-                                )
+                                get_assistant_password(self.request, assistant_uuid)
                             ):
                                 return get_media_file(
                                     self.request, project_id, form_id, file_id

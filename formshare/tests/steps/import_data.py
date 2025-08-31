@@ -251,11 +251,10 @@ def t_e_s_t_import_data(test_object):
             odk_dir,
             form_directory,
             form_schema,
-            test_object.assistantLogin,
+            test_object.assistantLoginUUID,
             path_to_files,
             test_object.project,
             ["si_participa/SECTION/GPS"],
-            test_object.projectID,
             test_object.server_config,
             "en",
             False,
@@ -335,9 +334,7 @@ def t_e_s_t_import_data(test_object):
         {
             "import_type": "1",
             "ignore_xform": "",
-            "assistant": "{}@{}".format(
-                test_object.assistantLogin, test_object.projectID
-            ),
+            "assistant": test_object.assistantLoginUUID,
         },
         status=302,
         upload_files=[("file", resource_file)],
@@ -359,9 +356,7 @@ def t_e_s_t_import_data(test_object):
         ),
         {
             "import_type": "1",
-            "assistant": "{}@{}".format(
-                test_object.assistantLogin, test_object.projectID
-            ),
+            "assistant": test_object.assistantLoginUUID,
         },
         status=200,
         upload_files=[("file", resource_file)],
@@ -377,9 +372,7 @@ def t_e_s_t_import_data(test_object):
         ),
         {
             "import_type": "3",
-            "assistant": "{}@{}".format(
-                test_object.assistantLogin, test_object.projectID
-            ),
+            "assistant": test_object.assistantLoginUUID,
         },
         status=302,
         upload_files=[("file", resource_file)],
@@ -395,9 +388,7 @@ def t_e_s_t_import_data(test_object):
         ),
         {
             "import_type": "1",
-            "assistant": "{}@{}".format(
-                test_object.assistantLogin, test_object.projectID
-            ),
+            "assistant": test_object.assistantLoginUUID,
         },
         status=302,
         upload_files=[("file", resource_file)],
@@ -421,9 +412,7 @@ def t_e_s_t_import_data(test_object):
         ),
         {
             "import_type": "2",
-            "assistant": "{}@{}".format(
-                test_object.assistantLogin, test_object.projectID
-            ),
+            "assistant": test_object.assistantLoginUUID,
         },
         status=200,
         upload_files=[("file", resource_file)],
@@ -446,9 +435,7 @@ def t_e_s_t_import_data(test_object):
         ),
         {
             "import_type": "2",
-            "assistant": "{}@{}".format(
-                test_object.assistantLogin, test_object.projectID
-            ),
+            "assistant": test_object.assistantLoginUUID,
         },
         status=302,
         upload_files=[("file", resource_file)],

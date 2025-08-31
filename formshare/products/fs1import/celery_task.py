@@ -27,36 +27,23 @@ def add_submission(
     engine,
     project,
     form,
-    project_of_assistant,
-    assistant,
+    assistant_uuid,
     submission,
     md5sum,
     original_md5,
     status,
 ):
     try:
-        if project_of_assistant != "public" and assistant != "public":
-            result = engine.execute(
-                "SELECT coll_uuid "
-                "FROM collaborator "
-                "WHERE project_id = '{}' AND coll_id = '{}'".format(
-                    project_of_assistant, assistant
-                )
-            )
-            row = result.fetchone()
-            assistant_uuid = row[0] if row else None
-
+        if assistant_uuid != "public":
             engine.execute(
                 "INSERT INTO submission (project_id,form_id,submission_id,submission_dtime,submission_status,"
-                "enum_project,coll_id,coll_uuid,md5sum,original_md5sum)"
-                " VALUES ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')".format(
+                "coll_uuid,md5sum,original_md5sum)"
+                " VALUES ('{}','{}','{}','{}','{}','{}','{}','{}')".format(
                     project,
                     form,
                     submission,
                     datetime.datetime.now().isoformat(),
                     status,
-                    project_of_assistant,
-                    assistant,
                     assistant_uuid,
                     md5sum,
                     original_md5,
@@ -65,8 +52,8 @@ def add_submission(
         else:
             engine.execute(
                 "INSERT INTO submission (project_id,form_id,submission_id,submission_dtime,submission_status,"
-                "enum_project,coll_id,coll_uuid,md5sum,original_md5sum)"
-                " VALUES ('{}','{}','{}','{}','{}',null,null,null,'{}','{}')".format(
+                "coll_uuid,md5sum,original_md5sum)"
+                " VALUES ('{}','{}','{}','{}','{}',null,'{}','{}')".format(
                     project,
                     form,
                     submission,
@@ -77,7 +64,9 @@ def add_submission(
                 )
             )
     except Exception as e:
-        return False, str(e)
+        print("!!!!!!!!!!!AAAAA!!!!!!!!!!!!!!")
+        raise e
+        # return False, str(e)
     return True, ""
 
 
@@ -89,25 +78,14 @@ def add_json_log(
     json_file,
     log_file,
     status,
-    project_of_assistant,
-    assistant,
+    assistant_uuid,
     command_executed,
 ):
     try:
-        if project_of_assistant != "public" and assistant != "public":
-            result = engine.execute(
-                "SELECT coll_uuid "
-                "FROM collaborator "
-                "WHERE project_id = '{}' AND coll_id = '{}'".format(
-                    project_of_assistant, assistant
-                )
-            )
-            row = result.fetchone()
-            assistant_uuid = row[0] if row else None
-
+        if assistant_uuid != "public":
             engine.execute(
                 "INSERT INTO jsonlog (form_id,project_id,log_id,log_dtime,json_file,log_file,status,"
-                "enum_project,coll_id,coll_uuid,command_executed) values ('{}','{}','{}','{}','{}','{}','{}','{}','{}','{}','{}')".format(
+                "coll_uuid,command_executed) values ('{}','{}','{}','{}','{}','{}','{}','{}','{}')".format(
                     form,
                     project,
                     submission,
@@ -115,8 +93,6 @@ def add_json_log(
                     json_file,
                     log_file,
                     status,
-                    project_of_assistant,
-                    assistant,
                     assistant_uuid,
                     command_executed.replace("'", "|"),
                 )
@@ -124,8 +100,8 @@ def add_json_log(
         else:
             engine.execute(
                 "INSERT INTO jsonlog (form_id,project_id,log_id,log_dtime,json_file,log_file,status,"
-                "enum_project,coll_id,coll_uuid,command_executed) "
-                "values ('{}','{}','{}','{}','{}','{}','{}',null,null,null,'{}')".format(
+                "coll_uuid,command_executed) "
+                "values ('{}','{}','{}','{}','{}','{}','{}',null,'{}')".format(
                     form,
                     project,
                     submission,
@@ -133,14 +109,35 @@ def add_json_log(
                     json_file,
                     log_file,
                     status,
-                    project_of_assistant,
-                    assistant,
                     command_executed.replace("'", "|"),
                 )
             )
     except Exception as e:
-        return False, str(e)
+        print("!!!!!!OOOHHHNOOO!!!!!!!")
+        raise e
+        # return False, str(e)
     return True, ""
+
+
+def get_assistant_name(engine, assistant_uuid):
+    if assistant_uuid != "public":
+        result = engine.execute(
+            "SELECT user_id FROM fsuser,collaborator "
+            "WHERE collaborator.linked_user = fsuser.user_id "
+            "AND collaborator.coll_uuid = '{}'".format(assistant_uuid)
+        )
+        row = result.fetchone()
+        if row is not None:
+            return row[0]
+        else:
+            result = engine.execute(
+                "SELECT coll_id FROM collaborator "
+                "WHERE collaborator.coll_uuid = '{}'".format(assistant_uuid)
+            )
+            row = result.fetchone()
+            return row[0]
+    else:
+        return assistant_uuid
 
 
 def store_json_file(
@@ -154,10 +151,9 @@ def store_json_file(
     user,
     project,
     form,
-    assistant,
+    assistant_uuid,
     project_code,
     geopoint_variables,
-    project_of_assistant,
     settings,
     ignore_xform_check=False,
 ):
@@ -184,7 +180,7 @@ def store_json_file(
                 return 1, ""
         else:
             submission_data["_xform_id_string"] = form
-        submission_data["_submitted_by"] = assistant
+        submission_data["_submitted_by"] = get_assistant_name(engine, assistant_uuid)
         submission_data["_submitted_date"] = datetime.datetime.now().isoformat()
         submission_data["_user_id"] = user
         submission_data.pop("_version", "")
@@ -317,8 +313,7 @@ def store_json_file(
                 engine,
                 project,
                 form,
-                project_of_assistant,
-                assistant,
+                assistant_uuid,
                 submission_id,
                 md5sum,
                 original_md5,
@@ -338,8 +333,7 @@ def store_json_file(
                     json_file,
                     log_file,
                     1,
-                    project_of_assistant,
-                    assistant,
+                    assistant_uuid,
                     " ".join(args),
                 )
                 if not added:
@@ -408,11 +402,10 @@ def internal_import_json_files(
     odk_dir,
     form_directory,
     schema,
-    assistant,
+    assistant_uuid,
     path_to_files,
     project_code,
     geopoint_variables,
-    project_of_assistant,
     settings,
     locale,
     ignore_xform_check=False,
@@ -475,10 +468,9 @@ def internal_import_json_files(
             user,
             project,
             form,
-            assistant,
+            assistant_uuid,
             project_code,
             geopoint_variables,
-            project_of_assistant,
             settings,
             ignore_xform_check,
         )
@@ -495,11 +487,10 @@ def import_json_files(
     odk_dir,
     form_directory,
     schema,
-    assistant,
+    assistant_uuid,
     path_to_files,
     project_code,
     geopoint_variables,
-    project_of_assistant,
     settings,
     locale,
     ignore_xform_check=False,
@@ -517,11 +508,10 @@ def import_json_files(
         odk_dir,
         form_directory,
         schema,
-        assistant,
+        assistant_uuid,
         path_to_files,
         project_code,
         geopoint_variables,
-        project_of_assistant,
         settings,
         locale,
         ignore_xform_check,

@@ -33,6 +33,7 @@ __all__ = [
     "get_all_assistants",
     "is_assistant_active",
     "get_assistant_password",
+    "get_assistant_login",
     "get_assistant_uuid_password",
     "get_project_from_assistant",
     "get_assigned_assistants",
@@ -152,6 +153,7 @@ def get_assigned_assistants(request, project, form):
                 {
                     "project": assistant["enum_project"],
                     "assistant": assistant["coll_id"],
+                    "assistant_uuid": assistant["coll_uuid"],
                     "name": assistant["coll_name"],
                 }
             )
@@ -177,6 +179,7 @@ def get_assigned_assistants(request, project, form):
                 {
                     "project": an_assistant["project_id"],
                     "assistant": an_assistant["coll_id"],
+                    "assistant_uuid": an_assistant["coll_uuid"],
                     "name": an_assistant["coll_name"],
                 }
             )
@@ -639,36 +642,43 @@ def is_assistant_active(request, assistant_uuid):
     #     return False
 
 
-def get_assistant_password(request, user, project, assistant, decrypt=True):
-    if validators.email(assistant) and re.match(r"^[A-Za-z0-9._@-]+$", assistant):
-        project_tenant = _get_project_tenant(request, project)
+def get_assistant_login(request, assistant_uuid):
+    assistant_data = (
+        request.dbsession.query(Collaborator)
+        .filter(Collaborator.coll_uuid == assistant_uuid)
+        .first()
+    )
+    if assistant_data.linked_user is not None:
         res = (
             request.dbsession.query(User)
-            .filter(Collaborator.linked_user == User.user_id)
-            .filter(Collaborator.coll_tenant == project_tenant)
-            .filter(User.user_email == assistant)
+            .filter(User.user_id == assistant_data.linked_user)
             .first()
         )
-        if decrypt:
-            decrypted = decode_data(request, res.user_assistant_password.encode())
-            return decrypted
-        else:
-            return res.user_assistant_password
+        return res.user_email
+
     else:
-        project_assistant = get_project_from_assistant(
-            request, user, project, assistant
-        )
-        enum = (
-            request.dbsession.query(Collaborator)
-            .filter(Collaborator.project_id == project_assistant)
-            .filter(Collaborator.coll_id == assistant)
+        return assistant_data.coll_id
+
+
+def get_assistant_password(request, assistant_uuid):
+
+    assistant_data = (
+        request.dbsession.query(Collaborator)
+        .filter(Collaborator.coll_uuid == assistant_uuid)
+        .first()
+    )
+    if assistant_data.linked_user is not None:
+        res = (
+            request.dbsession.query(User)
+            .filter(User.user_id == assistant_data.linked_user)
             .first()
         )
-        if decrypt:
-            decrypted = decode_data(request, enum.coll_password.encode())
-            return decrypted
-        else:
-            return enum.coll_password
+        decrypted = decode_data(request, res.user_assistant_password.encode())
+        return decrypted
+
+    else:
+        decrypted = decode_data(request, assistant_data.coll_password.encode())
+        return decrypted
 
 
 def get_assistant_uuid_password(request, assistant_uuid, decrypt=True):

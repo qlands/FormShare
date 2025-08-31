@@ -56,7 +56,7 @@
                                 <select id="assistants" name="assistant" class="assistants form-control" required="">
                                         <option></option>
                                         {% for assitant in assistants %}
-                                            <option value="{{ assitant.assistant }}@{{ assitant.project }}">{{ assitant.name }}</option>
+                                            <option value="{{ assitant.assistant_uuid }}">{{ assitant.name }}</option>
                                         {% endfor %}
                                 </select>
                                 <span class="form-text m-b-none">{{ _('Select an assistant who could help you fixing any issues with your data') }}</span>

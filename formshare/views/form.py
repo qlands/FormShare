@@ -3754,7 +3754,7 @@ class ImportData(PrivateView):
                 form_post_data = self.get_post_dict()
                 if "file" in form_post_data.keys():
                     form_post_data.pop("file")
-                parts = form_post_data["assistant"].split("@")
+                assistant_uuid = form_post_data["assistant"]
                 import_type = int(form_post_data["import_type"])
                 if "ignore_xform" in form_post_data:
                     ignore_xform = True
@@ -3769,7 +3769,7 @@ class ImportData(PrivateView):
                     odk_path,
                     form_data["form_directory"],
                     form_data["form_schema"],
-                    parts[0],
+                    assistant_uuid,
                     import_type,
                     ignore_xform,
                     form_post_data,

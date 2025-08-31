@@ -54,6 +54,7 @@ from formshare.processes.db import (
     get_case_form,
     get_field_details,
     get_assistant_password,
+    get_assistant_login,
     project_has_crowdsourcing,
     get_all_project_forms,
     is_file_a_lookup,
@@ -274,7 +275,7 @@ def import_external_data(
     odk_dir,
     form_directory,
     schema,
-    assistant,
+    assistant_uuid,
     import_type,
     ignore_xform,
     form_post_data,
@@ -314,7 +315,6 @@ def import_external_data(
 
     project_code = get_project_code_from_id(request, user, project)
     geopoint_variables = get_form_geopoints(request, project, form)
-    project_of_assistant = get_project_from_assistant(request, user, project, assistant)
 
     if import_type == 1:
         # Call the background Celery task
@@ -326,11 +326,10 @@ def import_external_data(
             odk_dir,
             form_directory,
             schema,
-            assistant,
+            assistant_uuid,
             temp_dir,
             project_code,
             geopoint_variables,
-            project_of_assistant,
             ignore_xform,
         )
         next_page = request.route_url(
@@ -342,16 +341,15 @@ def import_external_data(
             _anchor="products_and_tasks",
         )
     if import_type == 2:
-        assistant_password = get_assistant_password(
-            request, user, project_of_assistant, assistant
-        )
+        assistant_password = get_assistant_password(request, assistant_uuid)
+        assistant_login = get_assistant_login(request, assistant_uuid)
         xml_import(
             request,
             user,
             project,
             project_code,
             form,
-            assistant,
+            assistant_login,
             assistant_password,
             temp_dir,
         )
@@ -376,11 +374,10 @@ def import_external_data(
                 odk_dir,
                 form_directory,
                 schema,
-                assistant,
+                assistant_uuid,
                 temp_dir,
                 project_code,
                 geopoint_variables,
-                project_of_assistant,
                 import_type,
                 form_post_data,
                 ignore_xform,

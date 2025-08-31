@@ -170,7 +170,7 @@ def get_one_assistant(db_session, project, form):
         .first()
     )
     if res[0] == 0:
-        return "public", "public"
+        return "public"
     res = (
         db_session.query(Formacces)
         .filter(Formacces.form_project == project)
@@ -179,7 +179,7 @@ def get_one_assistant(db_session, project, form):
         .first()
     )
     if res is not None:
-        return res.coll_id, res.project_id
+        return res.coll_uuid
     else:
         res = (
             db_session.query(Formgrpacces)
@@ -198,14 +198,11 @@ def get_one_assistant(db_session, project, form):
                 .first()
             )
             if res is not None:
-                return (
-                    res.coll_id,
-                    res.enum_project,
-                )
+                return res.coll_uuid
             else:
-                return None, None
+                return None
         else:
-            return None, None
+            return None
 
 
 def update_dictionary_tables(
@@ -492,9 +489,7 @@ def internal_create_mysql_repository(
         }
         update_form(db_session, project_id, form, form_data)
         if not discard_testing_data:
-            assistant, project_of_assistant = get_one_assistant(
-                db_session, project_id, form
-            )
+            assistant_uuid = get_one_assistant(db_session, project_id, form)
             geo_point_variables = get_geopoint_variables(db_session, project_id, form)
         update_dictionary_tables(
             db_session,
@@ -540,7 +535,7 @@ def internal_create_mysql_repository(
         if files:
             for file in files:
                 shutil.copy(file, temp_path)
-            if assistant is not None and project_of_assistant is not None:
+            if assistant_uuid is not None:
                 internal_import_json_files(
                     user,
                     project_id,
@@ -548,11 +543,10 @@ def internal_create_mysql_repository(
                     odk_dir,
                     form_directory,
                     schema,
-                    assistant,
+                    assistant_uuid,
                     temp_path,
                     project_code,
                     geo_point_variables,
-                    project_of_assistant,
                     settings,
                     locale,
                     False,

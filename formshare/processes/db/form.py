@@ -3,6 +3,8 @@ import datetime
 import glob
 import json
 import logging
+
+from formshare.processes.db import get_assistant_uuid
 from formshare.processes.logging.loggerclass import SecretLogger
 import mimetypes
 import os
@@ -1048,14 +1050,13 @@ def get_all_project_forms(request, project_id):
     return forms
 
 
-def get_assistant_forms(request, requested_project, assistant_project, assistant):
+def get_assistant_forms(request, requested_project, assistant_uuid):
     # Get all the forms that the user can submit data to and are active
     assistant_forms = (
         request.dbsession.query(Odkform)
         .filter(Odkform.project_id == Formacces.form_project)
         .filter(Odkform.form_id == Formacces.form_id)
-        .filter(Formacces.project_id == assistant_project)
-        .filter(Formacces.coll_id == assistant)
+        .filter(Formacces.coll_uuid == assistant_uuid)
         .filter(Formacces.form_project == requested_project)
         .filter(Formacces.coll_can_submit == 1)
         .filter(Odkform.form_accsub == 1)
@@ -1068,8 +1069,7 @@ def get_assistant_forms(request, requested_project, assistant_project, assistant
     groups = (
         request.dbsession.query(Collingroup)
         .filter(Collingroup.project_id == requested_project)
-        .filter(Collingroup.enum_project == assistant_project)
-        .filter(Collingroup.coll_id == assistant)
+        .filter(Collingroup.coll_uuid == assistant_uuid)
         .all()
     )
     for group in groups:
@@ -1161,7 +1161,8 @@ def get_assistant_forms_for_cleaning(request, requested_project, assistant_uuid)
 
 def assistant_has_form(request, user, project, form, assistant):
     assistant_project = get_project_from_assistant(request, user, project, assistant)
-    forms = get_assistant_forms(request, project, assistant_project, assistant)
+    assistant_uuid = get_assistant_uuid(request, assistant_project, assistant)
+    forms = get_assistant_forms(request, project, assistant_uuid)
     found = False
     for cform in forms:
         if cform["project_id"] == project and cform["form_id"] == form:

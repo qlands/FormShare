@@ -2179,16 +2179,13 @@ def generate_manifest(media_file_array):
     return etree.tostring(root, encoding="utf-8")
 
 
-def get_form_list(request, user, project_code, assistant, api=False):
+def get_form_list(request, user, project_code, assistant_uuid, api=False):
     project_id = get_project_id_from_name(request, user, project_code)
-    assistant_project = get_project_from_assistant(request, user, project_id, assistant)
     prj_list = []
     odk_dir = get_odk_path(request)
     if not project_has_crowdsourcing(request, project_id):
         if not api:
-            forms = get_assistant_forms(
-                request, project_id, assistant_project, assistant
-            )
+            forms = get_assistant_forms(request, project_id, assistant_uuid)
         else:
             forms = get_all_project_forms(request, project_id)
     else:

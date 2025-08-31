@@ -35,7 +35,7 @@ class ODKFormList(ODKView):
                         ):
                             return self.create_xmll_response(
                                 get_form_list(
-                                    self.request, user_id, project_code, self.user
+                                    self.request, user_id, project_code, assistant_uuid
                                 )
                             )
                         else:
@@ -45,12 +45,12 @@ class ODKFormList(ODKView):
                 else:
                     return self.create_xmll_response(
                         get_form_list(
-                            self.request, user_id, project_code, self.user, True
+                            self.request, user_id, project_code, assistant_uuid, True
                         )
                     )
             else:
                 return self.create_xmll_response(
-                    get_form_list(self.request, user_id, project_code, self.user)
+                    get_form_list(self.request, user_id, project_code, "NA")
                 )
         else:
             response = Response(status=404)

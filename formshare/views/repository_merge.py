@@ -50,8 +50,8 @@ class RepositoryMergeForm(PrivateView):
             raise HTTPNotFound
 
         has_submit_assistant = True
-        project, assistant = get_one_assistant(self.request, project_id, new_form_id)
-        if project is None:
+        assistant_uuid = get_one_assistant(self.request, project_id, new_form_id)
+        if assistant_uuid is None:
             has_submit_assistant = False
 
         new_form_data = get_form_data(project_id, new_form_id, self.request)

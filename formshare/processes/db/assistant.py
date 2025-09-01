@@ -46,6 +46,7 @@ __all__ = [
     "get_assistant_uuid_with_email",
     "get_global_assistant_with_user",
     "get_odk_assistant_uuid",
+    "get_assistant_data_for_user",
 ]
 
 logging.setLoggerClass(SecretLogger)
@@ -59,7 +60,7 @@ def get_one_assistant(request, project, form):
         .first()
     )
     if res[0] == 0:
-        return "public", "public"
+        return "public"
     res = (
         request.dbsession.query(Formacces)
         .filter(Formacces.form_project == project)
@@ -68,7 +69,7 @@ def get_one_assistant(request, project, form):
         .first()
     )
     if res is not None:
-        return res.coll_id, res.project_id
+        return res.coll_uuid
     else:
         res = (
             request.dbsession.query(Formgrpacces)
@@ -87,14 +88,11 @@ def get_one_assistant(request, project, form):
                 .first()
             )
             if res is not None:
-                return (
-                    res.coll_id,
-                    res.enum_project,
-                )
+                return res.coll_uuid
             else:
-                return None, None
+                return None
         else:
-            return None, None
+            return None
 
 
 def get_assistant_timezone(request, assistant_uuid):
@@ -314,6 +312,21 @@ def get_project_assistants(request, project, return_max=0):
             else:
                 break
         return result, more
+
+
+def get_assistant_data_for_user(request, tenant_id, user_email):
+    res = (
+        request.dbsession.query(User)
+        .filter(User.user_email == user_email)
+        .filter(User.user_tenant == tenant_id)
+        .first()
+    )
+    return {
+        "coll_name": res.user_name,
+        "coll_id": user_email,
+        "coll_email": user_email,
+        "project_id": "global",
+    }
 
 
 def get_assistant_data(request, project, assistant):

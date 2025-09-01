@@ -3,8 +3,8 @@ import datetime
 import glob
 import json
 import logging
-
-from formshare.processes.db import get_assistant_uuid
+import re
+import validators
 from formshare.processes.logging.loggerclass import SecretLogger
 import mimetypes
 import os
@@ -34,6 +34,7 @@ from formshare.processes.color_hash import ColorHash
 from formshare.processes.db.assistant import (
     get_project_from_assistant,
     get_assistant_data,
+    get_assistant_data_for_user,
 )
 from formshare.processes.elasticsearch.repository_index import (
     get_dataset_stats_for_form,
@@ -952,9 +953,26 @@ def get_form_details(request, user, project, form):
         return None
 
 
+def _get_project_tenant(request, project_id):
+    res = (
+        request.dbsession.query(Project)
+        .filter(Project.project_id == project_id)
+        .first()
+    )
+    if res is not None:
+        return res.project_tenant
+    return None
+
+
 def get_by_details(request, user, project, assistant):
-    project_assistant = get_project_from_assistant(request, user, project, assistant)
-    return get_assistant_data(request, project_assistant, assistant)
+    if validators.email(assistant) and re.match(r"^[A-Za-z0-9._@-]+$", assistant):
+        project_tenant = _get_project_tenant(request, project)
+        return get_assistant_data_for_user(request, project_tenant, assistant)
+    else:
+        project_assistant = get_project_from_assistant(
+            request, user, project, assistant
+        )
+        return get_assistant_data(request, project_assistant, assistant)
 
 
 def get_project_forms(request, user, project):
@@ -1742,12 +1760,8 @@ def add_assistant_to_form(request, project, form, privilege_data):
             save_point.rollback()
             log.error(
                 "Error {} while adding access to assistant {} of "
-                "project {} to form {} in project {}".format(
-                    str(e),
-                    privilege_data["coll_id"],
-                    privilege_data["project_id"],
-                    project,
-                    form,
+                "to form {} in project {}".format(
+                    str(e), privilege_data["coll_uuid"], form, project
                 )
             )
             return False, "The assistant already exists in this form"
@@ -1755,12 +1769,8 @@ def add_assistant_to_form(request, project, form, privilege_data):
             save_point.rollback()
             log.error(
                 "Error {} while adding access to assistant {} of "
-                "project {} to form {} in project {}".format(
-                    str(e),
-                    privilege_data["coll_id"],
-                    privilege_data["project_id"],
-                    project,
-                    form,
+                "to form {} in project {}".format(
+                    str(e), privilege_data["coll_uuid"], form, project
                 )
             )
             return False, str(e)

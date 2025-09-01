@@ -2407,9 +2407,8 @@ class AddAssistant(PrivateView):
             assistant_data = self.get_post_dict()
             if assistant_data.get("coll_id", "") != "":
                 parts = assistant_data["coll_id"].split("|")
-                assistant_data["project_id"] = parts[0]
-                assistant_data["coll_id"] = parts[1]
                 assistant_data["coll_uuid"] = parts[2]
+                assistant_data.pop("coll_id")
                 if "coll_can_submit" in assistant_data.keys():
                     assistant_data["coll_can_submit"] = 1
                 else:
@@ -2454,9 +2453,6 @@ class AddAssistant(PrivateView):
                             assistant_data = data
                         break  # Only one plugging will be called to extend before_giving_access
                     if continue_creation:
-                        if assistant_data["project_id"] == "":
-                            assistant_data["project_id"] = None
-                            assistant_data["coll_id"] = None
                         added, message = add_assistant_to_form(
                             self.request, project_id, form_id, assistant_data
                         )

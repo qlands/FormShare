@@ -19,8 +19,6 @@ def add_json_log(
     json_file,
     log_file,
     status,
-    project_of_assistant,
-    assistant,
     assistant_uuid,
     command_executed,
 ):
@@ -41,8 +39,6 @@ def add_json_log(
                 json_file=json_file,
                 log_file=log_file,
                 status=status,
-                enum_project=project_of_assistant,
-                coll_id=assistant,
                 coll_uuid=assistant_uuid,
                 log_dtime=datetime.datetime.now(),
                 command_executed=command_executed,
@@ -61,8 +57,7 @@ def add_json_log(
                     "json_file": json_file,
                     "log_file": log_file,
                     "status": status,
-                    "enum_project": project_of_assistant,
-                    "coll_id": assistant,
+                    "coll_uuid": assistant_uuid,
                     "log_dtime": datetime.datetime.now(),
                     "command_executed": command_executed,
                 }

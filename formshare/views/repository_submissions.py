@@ -381,8 +381,6 @@ class DeleteFormSubmission(PrivateView):
                                 project_code,
                                 self.userID,
                                 True,
-                                assistant_data[0],
-                                assistant_data[1],
                                 assistant_data[2],
                             )
                     self.returnRawViewResult = True

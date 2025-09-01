@@ -1474,8 +1474,6 @@ def delete_submission(
     project_code,
     deleted_by,
     move_to_logs=False,
-    project_of_assistant=None,
-    assistant=None,
     assistant_uuid=None,
 ):
     schema = get_form_schema(request, project, form)
@@ -1698,8 +1696,6 @@ def delete_submission(
             submission_file,
             new_log_file,
             1,
-            project_of_assistant,
-            assistant,
             assistant_uuid,
             "",
         )

@@ -3183,7 +3183,7 @@ def store_json_file(
     user,
     project,
     form,
-    assistant,
+    assistant_uuid,
 ):
     if schema is not None:
         if schema != "":
@@ -3193,7 +3193,9 @@ def store_json_file(
             shutil.copyfile(temp_json_file, original_file)
             with open(temp_json_file, "r") as f:
                 submission_data = json.load(f)
-                submission_data["_submitted_by"] = assistant
+                submission_data["_submitted_by"] = get_assistant_login(
+                    request, assistant_uuid
+                )
                 submission_data["_submitted_date"] = datetime.datetime.now().isoformat()
                 submission_data["_user_id"] = user
                 submission_data.pop("_version", "")
@@ -3340,23 +3342,12 @@ def store_json_file(
                     stdout, stderr = p.communicate()
                     # An error 2 is an SQL error that goes to the logs
                     if p.returncode == 0 or p.returncode == 2:
-                        if not project_has_crowdsourcing(request, project):
-                            project_of_assistant = get_project_from_assistant(
-                                request, user, project, assistant
-                            )
-                            assistant_uuid = get_assistant_uuid(
-                                request, project_of_assistant, assistant
-                            )
-                        else:
-                            project_of_assistant = None
-                            assistant = None
+                        if project_has_crowdsourcing(request, project):
                             assistant_uuid = None
                         added, message = add_submission(
                             request,
                             project,
                             form,
-                            project_of_assistant,
-                            assistant,
                             assistant_uuid,
                             submission_id,
                             md5sum,
@@ -3392,7 +3383,7 @@ def store_json_file(
                                     user,
                                     project,
                                     form,
-                                    assistant,
+                                    assistant_uuid,
                                     submission_id,
                                     json_file,
                                     file,
@@ -3412,8 +3403,6 @@ def store_json_file(
                                 json_file,
                                 log_file,
                                 1,
-                                project_of_assistant,
-                                assistant,
                                 assistant_uuid,
                                 " ".join(args),
                             )
@@ -3473,7 +3462,7 @@ def store_json_file(
                                 user,
                                 project,
                                 form,
-                                assistant,
+                                assistant_uuid,
                                 submission_id,
                                 p.returncode,
                                 json_file,
@@ -3504,12 +3493,7 @@ def store_json_file(
                     # This will fix the issue when the media files are so big
                     # that multiple posts are done by ODK Collect for the same
                     # submission
-                    project_of_assistant = get_project_from_assistant(
-                        request, user, project, assistant
-                    )
-                    assistant_uuid = get_assistant_uuid(
-                        request, project_of_assistant, assistant
-                    )
+
                     if (
                         request.registry.settings.get(
                             "store_submission_same_as", "True"
@@ -3520,8 +3504,6 @@ def store_json_file(
                             request,
                             project,
                             form,
-                            project_of_assistant,
-                            assistant,
                             assistant_uuid,
                             submission_id,
                             md5sum,
@@ -3546,7 +3528,7 @@ def store_json_file(
                                 user,
                                 project,
                                 form,
-                                assistant,
+                                assistant_uuid,
                                 sameas.submission_id,
                                 json_file,
                                 file,
@@ -3564,7 +3546,7 @@ def store_json_file(
                             user,
                             project,
                             form,
-                            assistant,
+                            assistant_uuid,
                             sameas.submission_id,
                             0,
                             json_file,
@@ -3596,7 +3578,9 @@ def store_json_file(
             project_code = get_project_code_from_id(request, user, project)
             with open(json_file, "r") as f:
                 submission_data = json.load(f)
-                submission_data["_submitted_by"] = assistant
+                submission_data["_submitted_by"] = get_assistant_login(
+                    request, assistant_uuid
+                )
                 submission_data["_submitted_date"] = datetime.datetime.now().isoformat()
                 submission_data["_user_id"] = user
                 submission_data["_submission_id"] = submission_id
@@ -3690,7 +3674,7 @@ def store_json_file(
                             user,
                             project,
                             form,
-                            assistant,
+                            assistant_uuid,
                             submission_id,
                             json_file,
                             file,
@@ -3702,7 +3686,7 @@ def store_json_file(
                         user,
                         project,
                         form,
-                        assistant,
+                        assistant_uuid,
                         submission_id,
                         json_file,
                     )
@@ -3730,7 +3714,7 @@ def store_json_file(
                             user,
                             project,
                             form,
-                            assistant,
+                            assistant_uuid,
                             target_submission_id,
                             json_file,
                             file,
@@ -3753,7 +3737,7 @@ def store_json_file(
                         user,
                         project,
                         form,
-                        assistant,
+                        assistant_uuid,
                         target_submission_id,
                         json_file,
                     )
@@ -3778,7 +3762,7 @@ def convert_xml_to_json(
     user,
     project,
     form,
-    assistant,
+    assistant_uuid,
     request,
 ):
     xml_to_json = os.path.join(
@@ -3807,7 +3791,7 @@ def convert_xml_to_json(
                 user,
                 project,
                 form,
-                assistant,
+                assistant_uuid,
                 temp_json_file,
             )
         if continue_processing == 0:
@@ -3823,7 +3807,7 @@ def convert_xml_to_json(
                 user,
                 project,
                 form,
-                assistant,
+                assistant_uuid,
             )
             return stored, message
         else:
@@ -3844,7 +3828,7 @@ def convert_xml_to_json(
         return 1, ""
 
 
-def store_json_submission(request, user, project, assistant):
+def store_json_submission(request, user, project, assistant_uuid):
     odk_dir = get_odk_path(request)
     unique_id = uuid4()
     path = os.path.join(odk_dir, *["submissions", str(unique_id)])
@@ -3876,7 +3860,7 @@ def store_json_submission(request, user, project, assistant):
             else:
                 log.error(
                     "Incomplete submission {} in project {} of user {} with assistant {}".format(
-                        unique_id, project, user, assistant
+                        unique_id, project, user, assistant_uuid
                     )
                 )
         except Exception as e:
@@ -3910,7 +3894,7 @@ def store_json_submission(request, user, project, assistant):
                         form_data["form_blocked"] = 1
                     if form_data["form_blocked"] == 0:
                         if assistant_has_form(
-                            request, user, project, xform_id, assistant
+                            request, user, project, xform_id, assistant_uuid
                         ) or project_has_crowdsourcing(request, project):
                             media_path = os.path.join(
                                 odk_dir,
@@ -3973,7 +3957,7 @@ def store_json_submission(request, user, project, assistant):
                                         user,
                                         project,
                                         xform_id,
-                                        assistant,
+                                        assistant_uuid,
                                         temp_json_file,
                                     )
                                 if continue_processing == 0:
@@ -3989,7 +3973,7 @@ def store_json_submission(request, user, project, assistant):
                                         user,
                                         project,
                                         xform_id,
-                                        assistant,
+                                        assistant_uuid,
                                     )
                                 else:
                                     res_code = continue_processing
@@ -4005,7 +3989,7 @@ def store_json_submission(request, user, project, assistant):
                         else:
                             log.error(
                                 "Enumerator %s cannot submit data to %s",
-                                assistant,
+                                assistant_uuid,
                                 xform_id,
                             )
                             return False, 404
@@ -4034,7 +4018,7 @@ def store_json_submission(request, user, project, assistant):
         return False, 500
 
 
-def store_submission(request, user, project, assistant):
+def store_submission(request, user, project, assistant_uuid):
     odk_dir = get_odk_path(request)
     unique_id = uuid4()
     path = os.path.join(odk_dir, *["submissions", str(unique_id)])
@@ -4046,14 +4030,14 @@ def store_submission(request, user, project, assistant):
             submission_message = (
                 "Received submission {}. user: {}, project: {}, assistant: {}. "
                 "It contains the following files:\n".format(
-                    unique_id, user, project, assistant
+                    unique_id, user, project, assistant_uuid
                 )
             )
         else:
             submission_message = (
                 "Received incomplete submission {}. user: {}, project: {}, assistant: {}. "
                 "It contains the following files:\n".format(
-                    unique_id, user, project, assistant
+                    unique_id, user, project, assistant_uuid
                 )
             )
     for key in request.POST.keys():
@@ -4110,7 +4094,7 @@ def store_submission(request, user, project, assistant):
             else:
                 log.error(
                     "Incomplete submission {} in project {} of user {} with assistant {}".format(
-                        unique_id, project, user, assistant
+                        unique_id, project, user, assistant_uuid
                     )
                 )
         except Exception as e:
@@ -4146,7 +4130,7 @@ def store_submission(request, user, project, assistant):
                             user,
                             project,
                             form_data,
-                            assistant,
+                            assistant_uuid,
                             str(unique_id),
                             request.POST,
                         )
@@ -4160,7 +4144,7 @@ def store_submission(request, user, project, assistant):
                             form_data["form_blocked"] = 1
                     if form_data["form_blocked"] == 0:
                         if assistant_has_form(
-                            request, user, project, xform_id, assistant
+                            request, user, project, xform_id, assistant_uuid
                         ) or project_has_crowdsourcing(request, project):
                             media_path = os.path.join(
                                 odk_dir,
@@ -4216,7 +4200,7 @@ def store_submission(request, user, project, assistant):
                                         user,
                                         project,
                                         xform_id,
-                                        assistant,
+                                        assistant_uuid,
                                         xml_file,
                                     )
                                 if continue_processing:
@@ -4229,7 +4213,7 @@ def store_submission(request, user, project, assistant):
                                         user,
                                         project,
                                         xform_id,
-                                        assistant,
+                                        assistant_uuid,
                                         request,
                                     )
                                     for a_plugin in plugins.PluginImplementations(
@@ -4240,7 +4224,7 @@ def store_submission(request, user, project, assistant):
                                             user,
                                             project,
                                             xform_id,
-                                            assistant,
+                                            assistant_uuid,
                                             res_code,
                                             xml_file,
                                         )
@@ -4256,7 +4240,7 @@ def store_submission(request, user, project, assistant):
                         else:
                             log.error(
                                 "Enumerator %s cannot submit data to %s",
-                                assistant,
+                                assistant_uuid,
                                 xform_id,
                             )
                             return False, 404

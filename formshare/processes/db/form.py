@@ -1159,9 +1159,7 @@ def get_assistant_forms_for_cleaning(request, requested_project, assistant_uuid)
     return forms
 
 
-def assistant_has_form(request, user, project, form, assistant):
-    assistant_project = get_project_from_assistant(request, user, project, assistant)
-    assistant_uuid = get_assistant_uuid(request, assistant_project, assistant)
+def assistant_has_form(request, user, project, form, assistant_uuid):
     forms = get_assistant_forms(request, project, assistant_uuid)
     found = False
     for cform in forms:

@@ -73,7 +73,7 @@ class ODKPushData(ODKView):
                             get_assistant_password(self.request, assistant_uuid)
                         ):
                             stored, error = store_submission(
-                                self.request, user_id, project_id, self.user
+                                self.request, user_id, project_id, assistant_uuid
                             )
                             if stored:
                                 response = Response(status=201)
@@ -87,9 +87,8 @@ class ODKPushData(ODKView):
                         response = Response(status=401)
                         return response
                 else:
-                    self.user = "public"
                     stored, error = store_submission(
-                        self.request, user_id, project_id, self.user
+                        self.request, user_id, project_id, "public"
                     )
                     if stored:
                         response = Response(status=201)
@@ -121,7 +120,7 @@ class ODKPushJSONData(ODKView):
                             get_assistant_password(self.request, assistant_uuid)
                         ):
                             stored, error = store_json_submission(
-                                self.request, user_id, project_id, self.user
+                                self.request, user_id, project_id, assistant_uuid
                             )
                             if stored:
                                 response = Response(status=201)
@@ -135,9 +134,8 @@ class ODKPushJSONData(ODKView):
                         response = Response(status=401)
                         return response
                 else:
-                    self.user = "public"
                     stored, error = store_json_submission(
-                        self.request, user_id, project_id, self.user
+                        self.request, user_id, project_id, "public"
                     )
                     if stored:
                         response = Response(status=201)
@@ -201,7 +199,7 @@ class ODKSubmission(ODKView):
                                 get_assistant_password(self.request, assistant_uuid)
                             ):
                                 stored, error = store_submission(
-                                    self.request, user_id, project_id, self.user
+                                    self.request, user_id, project_id, assistant_uuid
                                 )
                                 if stored:
                                     response = Response(status=201)
@@ -214,9 +212,8 @@ class ODKSubmission(ODKView):
                         else:
                             return self.ask_for_credentials()
                     else:
-                        self.user = "public"
                         stored, error = store_submission(
-                            self.request, user_id, project_id, self.user
+                            self.request, user_id, project_id, "public"
                         )
                         if stored:
                             response = Response(status=201)
@@ -246,7 +243,7 @@ class ODKXMLForm(ODKView):
                 if not self.api:
                     if is_assistant_active(self.request, assistant_uuid):
                         if assistant_has_form(
-                            self.request, user_id, project_id, form_id, self.user
+                            self.request, user_id, project_id, form_id, assistant_uuid
                         ):
                             if self.authorize(
                                 get_assistant_password(self.request, assistant_uuid)
@@ -281,7 +278,7 @@ class ODKManifest(ODKView):
                 if not self.api:
                     if is_assistant_active(self.request, assistant_uuid):
                         if assistant_has_form(
-                            self.request, user_id, project_id, form_id, self.user
+                            self.request, user_id, project_id, form_id, assistant_uuid
                         ):
                             if self.authorize(
                                 get_assistant_password(self.request, assistant_uuid)
@@ -333,7 +330,7 @@ class ODKMediaFile(ODKView):
                 if not self.api:
                     if is_assistant_active(self.request, assistant_uuid):
                         if assistant_has_form(
-                            self.request, user_id, project_id, form_id, self.user
+                            self.request, user_id, project_id, form_id, assistant_uuid
                         ):
                             if self.authorize(
                                 get_assistant_password(self.request, assistant_uuid)

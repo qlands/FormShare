@@ -560,6 +560,8 @@ def get_project_from_assistant(request, user, requested_project, assistant):
 
 
 def is_assistant_active(request, assistant_uuid):
+    if assistant_uuid is None:
+        return False
     enum = (
         request.dbsession.query(Collaborator)
         .filter(Collaborator.coll_uuid == assistant_uuid)
@@ -643,6 +645,8 @@ def is_assistant_active(request, assistant_uuid):
 
 
 def get_assistant_login(request, assistant_uuid):
+    if assistant_uuid == "public":
+        return "public"
     assistant_data = (
         request.dbsession.query(Collaborator)
         .filter(Collaborator.coll_uuid == assistant_uuid)

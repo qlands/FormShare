@@ -651,8 +651,6 @@ class Formacces(Base):
         Index("fk_submitter_collaborator", "coll_uuid"),
     )
 
-    project_id = Column(Unicode(64), primary_key=True, nullable=True)
-    coll_id = Column(Unicode(120), primary_key=True, nullable=True)
     coll_uuid = Column(Unicode(120), primary_key=True, nullable=False)
     form_project = Column(Unicode(64), primary_key=True, nullable=False)
     form_id = Column(Unicode(120), primary_key=True, nullable=False)
@@ -722,8 +720,6 @@ class Jsonlog(Base):
     log_file = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     command_executed = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
     status = Column(INTEGER)
-    enum_project = Column(Unicode(64), nullable=True)
-    coll_id = Column(Unicode(120), nullable=True)
     coll_uuid = Column(Unicode(120))
 
     collaborator = relationship("Collaborator")
@@ -762,8 +758,6 @@ class Submission(Base):
     submission_id = Column(Unicode(64), primary_key=True, nullable=False)
     submission_dtime = Column(DateTime)
     submission_status = Column(INTEGER)
-    enum_project = Column(Unicode(64), nullable=True)
-    coll_id = Column(Unicode(120), nullable=True)
     coll_uuid = Column(Unicode(120))
     md5sum = Column(Unicode(120))
     original_md5sum = Column(Unicode(120))
@@ -816,8 +810,6 @@ class Jsonhistory(Base):
     log_action = Column(INTEGER)
     log_commit = Column(Unicode(12))
     log_notes = Column(MEDIUMTEXT(collation="utf8mb4_unicode_ci"))
-    enum_project = Column(Unicode(64), nullable=True)
-    coll_id = Column(Unicode(120), nullable=True)
     coll_uuid = Column(Unicode(120))
 
     collaborator = relationship("Collaborator")

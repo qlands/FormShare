@@ -715,7 +715,7 @@ def get_number_of_submissions_in_database(request, project, form):
     )
     if res is not None:
         last = res.submission_dtime
-        by = res.coll_id
+        by = res.coll_uuid
         return total, last, in_db, in_db_from_logs, in_error, by
     else:
         return 0, None, in_db, in_db_from_logs, in_error, None
@@ -1798,10 +1798,6 @@ def get_form_assistants(request, project, form, with_owner, for_user, tenant_id)
                 request, for_user, an_assistant["project_id"]
             )
 
-    print("************************333")
-    print(mapped_data)
-    print("************************333")
-
     final_assistants = []
     for an_assistant in mapped_data:
         a_final_assistant = {
@@ -1838,16 +1834,13 @@ def get_form_assistants(request, project, form, with_owner, for_user, tenant_id)
             "coll_name": an_assistant["user_name"],
             "access_type": 5,
             "coll_active": an_assistant["user_active"],
-            "project_name": "",
-            "owner_name": "",
-            "owner": "",
-            "project_code": "",
-            "coll_id": "",
+            "project_name": "Global",
+            "owner_name": "Global",
+            "owner": "Global",
+            "project_code": "Global",
+            "coll_id": "Global",
         }
         final_assistants.append(a_final_assistant)
-    print("************************777")
-    print(final_assistants)
-    print("************************777")
     return final_assistants
 
 

@@ -699,9 +699,15 @@
                         {
                             var project_name = $(this).attr('data-assistant-project_name');
                             var owner_name = $(this).attr('data-assistant-owner_name');
-                            $("#assistant_project_name").text(project_name)
-                            $("#assistant_owner_name").text(owner_name)
-                            $("#assistant_readonly_note").show();
+                            if (project_name !== "Global")
+                            {
+                                $("#assistant_project_name").text(project_name)
+                                $("#assistant_owner_name").text(owner_name)
+                                $("#assistant_readonly_note").show();
+                            }
+                            else {
+                                $("#assistant_readonly_note").hide();
+                            }
                             $("#edit_assistant_details").prop('disabled', true)
                         }
 

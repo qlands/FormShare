@@ -115,7 +115,7 @@
                         {% endif %}
                         {% if error.status == 2 %}
                             <a class="btn btn-default btn-sm action-buttons" href="{{ request.route_url('comparejsons',userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id) }}" title="{{ _('Compare submission') }}"><i style="color: orange" class="fa fa-random"></i></a>
-                            {% if error.lastentry.enum_id == activeAssistant.login %}
+                            {% if error.lastentry.enum_uuid == activeAssistant.loginUUID %}
                                 <a class="btn btn-warning btn-sm action-buttons" href="{{ request.route_url('checkinjson',userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id) }}" title="{{ _('Check-in new version') }}"><i class="fa fa-arrow-left"></i></a>
                                 <a class="btn btn-default btn-sm action-buttons" href="{{ request.route_url('getsubmission', userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id) }}" title="{{ _('Download current version') }}"><i class="fa fa-download"></i></a>
                                 <a class="btn btn-primary btn-sm action-buttons" href="https://jsoneditoronline.org/" target="_blank" title="{{ _('Open JSON editor') }}"><i class="fa fa-edit"></i></a>
@@ -124,7 +124,7 @@
                         {% endif %}
                         {% if error.status == 3 %}
                             <a class="btn btn-default btn-sm action-buttons" href="{{ request.route_url('comparejsons',userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id) }}" title="{{ _('Compare submission') }}"><i style="color: orange" class="fa fa-random"></i></a>
-                            {% if error.lastentry.enum_id == activeAssistant.login %}
+                            {% if error.lastentry.enum_uuid == activeAssistant.loginUUID %}
                                 <a class="btn btn-primary btn-sm action-buttons action-required"  data-title="{{ _('Push revision into the repository') }}" data-message="{{ _('Are you sure that you want to push this revision?') }}" urn="{{ request.route_url('pushrevision', userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id,revisionid=error.lastentry.log_commit) }}" title="{{ _('Push revision') }}"><i style="color: white" class="fa fa-arrow-left"></i></a>
                                 <a class="btn btn-default btn-sm action-buttons action-required" data-title="{{ _('Cancel revision') }}" data-message="{{ _('Are you sure that you want to cancel this revision?') }}" urn="{{ request.route_url('cancelrevision', userid=userid,projcode=projcode,formid=formid,submissionid=error.log_id,revisionid=error.lastentry.log_commit) }}" title="{{ _('Cancel revision') }}" ><i style="color: red" class="fa fa-ban"></i></a>
                             {% endif %}

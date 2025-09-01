@@ -162,7 +162,13 @@ def get_last_log_entry(request, user, project, form, submission_id):
             "log_action": last_entry["log_action"],
             "log_commit": last_entry["log_commit"],
             "enum_id": last_entry["coll_id"],
-            "enum_name": last_entry["coll_name"],
+            "enum_uuid": last_entry["coll_uuid"],
+            "enum_name": get_collaborator_name(
+                request,
+                last_entry["coll_type"],
+                last_entry["coll_id"],
+                last_entry["linked_user"],
+            ),
             "log_notes": notes,
         }
     else:

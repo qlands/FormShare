@@ -1785,6 +1785,7 @@ def get_form_assistants(request, project, form, with_owner, for_user, tenant_id)
         .filter(Collaborator.coll_uuid == Formacces.coll_uuid)
         .filter(Formacces.form_project == project)
         .filter(Formacces.form_id == form)
+        .filter(Collaborator.coll_type == 1)
         .all()
     )
     mapped_data = map_from_schema(res)
@@ -1796,6 +1797,11 @@ def get_form_assistants(request, project, form, with_owner, for_user, tenant_id)
             an_assistant["access_type"] = _check_my_access(
                 request, for_user, an_assistant["project_id"]
             )
+
+    print("************************333")
+    print(mapped_data)
+    print("************************333")
+
     final_assistants = []
     for an_assistant in mapped_data:
         a_final_assistant = {
@@ -1823,6 +1829,7 @@ def get_form_assistants(request, project, form, with_owner, for_user, tenant_id)
         .filter(Collaborator.coll_type == 2)
         .all()
     )
+    global_assistants = map_from_schema(global_assistants)
     for an_assistant in global_assistants:
         a_final_assistant = {
             "coll_can_submit": an_assistant["coll_can_submit"],
@@ -1838,7 +1845,9 @@ def get_form_assistants(request, project, form, with_owner, for_user, tenant_id)
             "coll_id": "",
         }
         final_assistants.append(a_final_assistant)
-
+    print("************************777")
+    print(final_assistants)
+    print("************************777")
     return final_assistants
 
 

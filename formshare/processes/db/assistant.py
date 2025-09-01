@@ -526,9 +526,9 @@ def get_assistant_uuid(request, project, assistant):
 def get_global_assistant_with_user(request, tenant_id, user_id):
     res = (
         request.dbsession.query(Collaborator)
-        .filter(Collaborator.tenant_id == tenant_id)
+        .filter(Collaborator.coll_tenant == tenant_id)
         .filter(Collaborator.linked_user == user_id)
-        .firs()
+        .first()
     )
     if res is not None:
         return res.coll_uuid

@@ -35,6 +35,7 @@ from formshare.processes.db.assistant import (
     get_project_from_assistant,
     get_assistant_data,
     get_assistant_data_for_user,
+    get_assistant_data_with_uuid,
 )
 from formshare.processes.elasticsearch.repository_index import (
     get_dataset_stats_for_form,
@@ -924,7 +925,12 @@ def get_form_details(request, user, project, form):
             result["fixedlast"] = fixed_last
             cleaned_by_details = get_by_details(request, user, project, cleaned_by)
             if not cleaned_by_details:
-                result["cleanedby"] = cleaned_by
+                project_tenant = _get_project_tenant(request, project)
+                user_name = _get_user_name(request, project_tenant, cleaned_by)
+                if user_name is not None:
+                    result["cleanedby"] = user_name
+                else:
+                    result["cleanedby"] = cleaned_by
             else:
                 result["cleanedby"] = cleaned_by_details["coll_name"]
             result["bydetails"] = get_by_details(request, user, project, by)
@@ -964,15 +970,43 @@ def _get_project_tenant(request, project_id):
     return None
 
 
+def _get_user_name(request, tenant_id, user_id):
+    res = (
+        request.dbsession.query(User)
+        .filter(User.user_id == user_id)
+        .filter(User.user_active == 1)
+        .filter(User.user_tenant == tenant_id)
+        .first()
+    )
+    if res is not None:
+        return res.user_name
+    return None
+
+
+def _is_uuid4(assistant):
+    uuid_pattern = re.compile(
+        r"^[0-9a-f]{8}-"
+        r"[0-9a-f]{4}-"
+        r"[0-9a-f]{4}-"
+        r"[0-9a-f]{4}-"
+        r"[0-9a-f]{12}$",
+        re.IGNORECASE,
+    )
+    return uuid_pattern.match(str(assistant))
+
+
 def get_by_details(request, user, project, assistant):
     if validators.email(assistant) and re.match(r"^[A-Za-z0-9._@-]+$", assistant):
         project_tenant = _get_project_tenant(request, project)
         return get_assistant_data_for_user(request, project_tenant, assistant)
     else:
-        project_assistant = get_project_from_assistant(
-            request, user, project, assistant
-        )
-        return get_assistant_data(request, project_assistant, assistant)
+        if not _is_uuid4(assistant):
+            project_assistant = get_project_from_assistant(
+                request, user, project, assistant
+            )
+            return get_assistant_data(request, project_assistant, assistant)
+        else:
+            return get_assistant_data_with_uuid(request, assistant)
 
 
 def get_project_forms(request, user, project):

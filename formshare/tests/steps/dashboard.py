@@ -90,6 +90,7 @@ def t_e_s_t_dashboard(test_object):
             "user_password2": "123",
             "user_email": random_login + "@qlands.com",
             "user_name": random_login,
+            "roles": ["can_forms", "can_projects"],
         },
         status=302,
     )
@@ -105,6 +106,7 @@ def t_e_s_t_dashboard(test_object):
             "user_email": random_login + "_b@qlands.com",
             "user_name": random_login + "_b",
             "user_super": "",
+            "roles": ["can_forms", "can_projects"],
         },
         status=302,
     )

@@ -39,6 +39,7 @@ __all__ = [
     "get_query_password",
     "update_api_key",
     "get_user_with_token",
+    "get_user_roles",
 ]
 
 logging.setLoggerClass(SecretLogger)
@@ -279,6 +280,15 @@ def get_users(request):
     res = request.dbsession.query(User).all()
     res = map_from_schema(res)
     return res
+
+
+def get_user_roles(request, user):
+    user_roles = []
+    res = request.dbsession.query(UserRoles).filter(UserRoles.user_id == user).all()
+    res = map_from_schema(res)
+    for role in res:
+        user_roles.append(role["role_id"])
+    return user_roles
 
 
 def get_user_details(request, user, just_active=True, get_stats=True):

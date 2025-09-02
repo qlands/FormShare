@@ -16,6 +16,7 @@ from formshare.processes.db import (
     email_exists,
     user_exists,
     register_user,
+    get_user_roles,
 )
 from formshare.processes.db.user import update_password
 from formshare.processes.elasticsearch.user_index import get_user_index_manager
@@ -71,6 +72,7 @@ class EditUserView(PrivateView):
             ):
                 raise HTTPNotFound
         user_data = get_user_details(self.request, user_to_modify, False)
+        user_roles = get_user_roles(self.request, user_to_modify)
         if not user_data:
             raise HTTPNotFound
         if self.request.method == "POST":
@@ -100,9 +102,11 @@ class EditUserView(PrivateView):
                             user_details["user_super"] = 0
 
                         user_roles = []
-                        if "roles" not in user_details.keys():
-                            user_roles.append("can_forms")
-                            user_roles.append("can_projects")
+                        if "roles" in user_details.keys():
+                            if isinstance(user_details["roles"], list):
+                                user_roles = user_details["roles"]
+                            else:
+                                user_roles.append(user_details["roles"])
                         user_details["roles"] = user_roles
 
                         if "user_tenant" not in user_details.keys():
@@ -238,7 +242,12 @@ class EditUserView(PrivateView):
                     self.append_to_errors(self._("The password cannot be empty"))
         else:
             action = None
-        return {"userid": user_id, "userData": user_data, "action": action}
+        return {
+            "userid": user_id,
+            "userData": user_data,
+            "action": action,
+            "user_roles": user_roles,
+        }
 
 
 class AddUserView(PrivateView):
@@ -262,6 +271,7 @@ class AddUserView(PrivateView):
             ):
                 raise HTTPNotFound
         user_details = {}
+        user_roles = []
         if self.request.method == "POST":
             user_details = self.get_post_dict()
             if re.match(r"^[A-Za-z0-9._]+$", user_details["user_id"]):
@@ -308,10 +318,11 @@ class AddUserView(PrivateView):
                                     else:
                                         user_details["user_super"] = 0
 
-                                    user_roles = []
-                                    if "roles" not in user_details.keys():
-                                        user_roles.append("can_forms")
-                                        user_roles.append("can_projects")
+                                    if "roles" in user_details.keys():
+                                        if isinstance(user_details["roles"], list):
+                                            user_roles = user_details["roles"]
+                                        else:
+                                            user_roles.append(user_details["roles"])
                                     user_details["roles"] = user_roles
 
                                     if "user_tenant" not in user_details.keys():
@@ -425,4 +436,4 @@ class AddUserView(PrivateView):
                     )
                 )
 
-        return {"userid": user_id, "userData": user_details}
+        return {"userid": user_id, "userData": user_details, "user_roles": user_roles}

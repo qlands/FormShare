@@ -19,6 +19,8 @@ import uuid
 from ast import literal_eval
 import io
 import os
+import validators
+import re
 from babel import Locale
 from formencode.variabledecode import variable_decode
 from formshare import plugins as p
@@ -50,6 +52,7 @@ from formshare.processes.db import (
     get_user_with_token,
     get_project_tenant,
     get_assistant_uuid,
+    get_user_id_with_email,
 )
 from pyramid.httpexceptions import HTTPFound
 from pyramid.httpexceptions import HTTPNotFound, exception_response
@@ -1087,6 +1090,12 @@ class AssistantView(object):
                         project_tenant = get_project_tenant(
                             self.request, self.projectID
                         )
+                        if validators.email(login_data["login"]) and re.match(
+                            r"^[A-Za-z0-9._@-]+$", login_data["login"]
+                        ):
+                            login_data["login"] = get_user_id_with_email(
+                                self.request, login_data["login"]
+                            )
                         global_assistant_uuid = get_global_assistant_with_user(
                             self.request, project_tenant, login_data["login"]
                         )

@@ -47,6 +47,7 @@ __all__ = [
     "get_global_assistant_with_user",
     "get_odk_assistant_uuid",
     "get_assistant_data_for_user",
+    "get_assistant_data_with_uuid",
 ]
 
 logging.setLoggerClass(SecretLogger)
@@ -329,6 +330,25 @@ def get_assistant_data_for_user(request, tenant_id, user_email):
     }
 
 
+def get_assistant_data_with_uuid(request, assistant_uuid):
+    res = map_from_schema(
+        request.dbsession.query(Collaborator)
+        .filter(Collaborator.coll_uuid == assistant_uuid)
+        .first()
+    )
+    if res["linked_user"] is None:
+        return res
+    else:
+        linked_user = res["linked_user"]
+        res = request.dbsession.query(User).filter(User.user_id == linked_user).first()
+        return {
+            "coll_name": res.user_name,
+            "coll_id": res.user_id,
+            "coll_email": res.user_email,
+            "project_id": "global",
+        }
+
+
 def get_assistant_data(request, project, assistant):
     res = map_from_schema(
         request.dbsession.query(Collaborator)
@@ -504,8 +524,9 @@ def get_assistant_uuid_with_email(request, tenant, assistant_email):
         .filter(User.user_email == assistant_email)
         .first()
     )
+    res = map_from_schema(res)
     if res is not None:
-        return res.coll_uuid
+        return res["coll_uuid"]
     else:
         return None
 

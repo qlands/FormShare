@@ -116,11 +116,11 @@ Releases
 ------------
 The current stable release is 2.44.0 and it is available [here](https://github.com/qlands/FormShare/tree/stable-2.44.0) 
 
-The database signature for stable 2.44.0 is 84032d0b43d2
+The database signature for stable 2.44.0 is 58d91afe341f
 
 The Docker image for stable 2.44.0 is 20250902
 
-Requires ODKTools [2.15](https://github.com/qlands/odktools/tree/stable-2.15)
+Requires ODKTools [2.17](https://github.com/qlands/odktools/tree/stable-2.17)
 
 Installation
 ------------

@@ -38,10 +38,16 @@ python configure_flatten.py
 chmod +x /opt/formshare/formshare/scripts/flatten_jsons.py
 python setup.py develop
 python setup.py compile_catalog
-disable_ssl ./development.ini
+if [ $mysql_use_ssl = "false" ]; then
+  disable_ssl ./development.ini
+fi
 configure_alembic ./development.ini .
 configure_mysql ./development.ini .
 configure_tests ./development.ini .
+
+ln -s ./alembic.ini /opt/formshare_config/alembic.ini
+ln -s ./mysql.cnf /opt/formshare_config/mysql.cnf
+
 configure_fluent="${CONFIGURE_FLUENT:=false}"
 if [ $configure_fluent = "true" ]; then
   if [ $elastic_search_ssl = "false" ]; then

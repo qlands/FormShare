@@ -27,7 +27,9 @@ def upgrade():
     )
     op.drop_index("fk_submitter_form1", table_name="formaccess")
     op.drop_index("fk_submitter_form1_idx", table_name="formaccess")
+    op.execute("SET sql_generate_invisible_primary_key=OFF")
     op.execute("ALTER TABLE formaccess DROP PRIMARY KEY")
+    op.execute("SET sql_generate_invisible_primary_key=ON")
     # ### end Alembic commands ###
 
 

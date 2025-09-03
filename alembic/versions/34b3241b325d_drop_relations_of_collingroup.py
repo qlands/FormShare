@@ -26,7 +26,9 @@ def upgrade():
     )
     op.drop_index("fk_enumingroup_enumerator1", table_name="collingroup")
     op.drop_index("fk_enumingroup_enumerator1_idx", table_name="collingroup")
+    op.execute("SET sql_generate_invisible_primary_key=OFF")
     op.execute("ALTER TABLE collingroup DROP PRIMARY KEY")
+    op.execute("SET sql_generate_invisible_primary_key=OFF")
 
 
 def downgrade():

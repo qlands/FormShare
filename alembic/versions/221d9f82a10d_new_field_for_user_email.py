@@ -78,9 +78,7 @@ def upgrade():
     if user_index_found:
         user_index = configure_user_index_manager(settings)
         es_connection = user_index.create_connection()
-        es_connection.indices.put_mapping(
-            new_mapping, index=user_index.index_name, doc_type="_doc"
-        )
+        es_connection.indices.put_mapping(new_mapping, index=user_index.index_name)
 
         if use_ssl == "False":
             r = requests.post(

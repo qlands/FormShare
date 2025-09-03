@@ -21,7 +21,9 @@ def upgrade():
     op.drop_constraint(
         "fk_collaborator_project_id_project", "collaborator", type_="foreignkey"
     )
+    op.execute("SET sql_generate_invisible_primary_key=OFF")
     op.execute("ALTER TABLE collaborator DROP PRIMARY KEY")
+    op.execute("SET sql_generate_invisible_primary_key=ON")
 
 
 def downgrade():

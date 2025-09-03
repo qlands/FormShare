@@ -18,7 +18,11 @@ pyramid.includes =
 # Database connection
 ###
 #For MySQL
+{% if mysql_use_ssl == False %}
 sqlalchemy.url = mysql+mysqlconnector://{{ mysql_user_name }}:{{ mysql_user_password }}@{{ mysql_host }}:{{ mysql_port }}/{{ mysql_schema }}?charset=utf8mb4&ssl_disabled=True
+{% else %}
+sqlalchemy.url = mysql+mysqlconnector://{{ mysql_user_name }}:{{ mysql_user_password }}@{{ mysql_host }}:{{ mysql_port }}/{{ mysql_schema }}?charset=utf8mb4
+{% endif %}
 
 ###
 # Security settings. You must change this parameters for every installation of FormShare. Each password must be different
@@ -124,6 +128,9 @@ mysql.host = {{ mysql_host }}
 mysql.port = {{ mysql_port }}
 mysql.user = {{ mysql_user_name }}
 mysql.password = {{ mysql_user_password }}
+{% if mysql_use_ssl == True %}
+mysql.use.ssl = true
+{% endif %}
 
 ###
 # Mail server configuration

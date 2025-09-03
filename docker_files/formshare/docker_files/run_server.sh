@@ -9,15 +9,28 @@ if [ ! -f /etc/mosquitto/conf.d/mosquitto.conf ]; then
 fi
 /etc/init.d/mosquitto stop
 /etc/init.d/mosquitto start
-mysql -h $MYSQL_HOST_NAME -u $MYSQL_USER_NAME --ssl-mode=DISABLED --password=$MYSQL_USER_PASSWORD --execute='CREATE SCHEMA IF NOT EXISTS formshare'
+mysql_use_ssl="${MYSQL_USE_SSL:=false}"
+if [ $mysql_use_ssl = "false" ]; then
+  mysql -h $MYSQL_HOST_NAME -u $MYSQL_USER_NAME --ssl-mode=DISABLED --password=$MYSQL_USER_PASSWORD --execute='CREATE SCHEMA IF NOT EXISTS formshare'
+else
+  mysql -h $MYSQL_HOST_NAME -u $MYSQL_USER_NAME --password=$MYSQL_USER_PASSWORD --execute='CREATE SCHEMA IF NOT EXISTS formshare'
+fi
 mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u $MYSQL_USER_NAME --password=$MYSQL_USER_PASSWORD mysql
 source /opt/formshare_env/bin/activate
 cd /opt/formshare
 elastic_search_ssl="${ELASTIC_SEARCH_SSL:=false}"
 if [ $elastic_search_ssl = "false" ]; then
-  python create_config.py --daemon --capture_output --mysql_host $MYSQL_HOST_NAME --mysql_user_name $MYSQL_USER_NAME --mysql_user_password $MYSQL_USER_PASSWORD --repository_path /opt/formshare_repository --odktools_path /opt/odktools --elastic_search_host $ELASTIC_SEARCH_HOST --elastic_search_port $ELASTIC_SEARCH_PORT --formshare_host $FORMSHARE_HOST --formshare_port $FORMSHARE_PORT --forwarded_allow_ip $FORWARDED_ALLOW_IP --pid_file /opt/formshare_gunicorn/formshare.pid --error_log_file /opt/formshare_log/error_log /opt/formshare_config/development.ini
+  if [ $mysql_use_ssl = "false" ]; then
+    python create_config.py --daemon --capture_output --mysql_host $MYSQL_HOST_NAME --mysql_user_name $MYSQL_USER_NAME --mysql_user_password $MYSQL_USER_PASSWORD --repository_path /opt/formshare_repository --odktools_path /opt/odktools --elastic_search_host $ELASTIC_SEARCH_HOST --elastic_search_port $ELASTIC_SEARCH_PORT --formshare_host $FORMSHARE_HOST --formshare_port $FORMSHARE_PORT --forwarded_allow_ip $FORWARDED_ALLOW_IP --pid_file /opt/formshare_gunicorn/formshare.pid --error_log_file /opt/formshare_log/error_log /opt/formshare_config/development.ini
+  else
+    python create_config.py --daemon --capture_output --mysql_use_ssl --mysql_host $MYSQL_HOST_NAME --mysql_user_name $MYSQL_USER_NAME --mysql_user_password $MYSQL_USER_PASSWORD --repository_path /opt/formshare_repository --odktools_path /opt/odktools --elastic_search_host $ELASTIC_SEARCH_HOST --elastic_search_port $ELASTIC_SEARCH_PORT --formshare_host $FORMSHARE_HOST --formshare_port $FORMSHARE_PORT --forwarded_allow_ip $FORWARDED_ALLOW_IP --pid_file /opt/formshare_gunicorn/formshare.pid --error_log_file /opt/formshare_log/error_log /opt/formshare_config/development.ini
+  fi
 else
-  python create_config.py --daemon --capture_output --mysql_host $MYSQL_HOST_NAME --mysql_user_name $MYSQL_USER_NAME --mysql_user_password $MYSQL_USER_PASSWORD --repository_path /opt/formshare_repository --odktools_path /opt/odktools --elastic_search_host $ELASTIC_SEARCH_HOST --elastic_search_port $ELASTIC_SEARCH_PORT --elastic_search_ssl --formshare_host $FORMSHARE_HOST --formshare_port $FORMSHARE_PORT --forwarded_allow_ip $FORWARDED_ALLOW_IP --pid_file /opt/formshare_gunicorn/formshare.pid --error_log_file /opt/formshare_log/error_log /opt/formshare_config/development.ini
+  if [ $mysql_use_ssl = "false" ]; then
+    python create_config.py --daemon --capture_output --mysql_host $MYSQL_HOST_NAME --mysql_user_name $MYSQL_USER_NAME --mysql_user_password $MYSQL_USER_PASSWORD --repository_path /opt/formshare_repository --odktools_path /opt/odktools --elastic_search_host $ELASTIC_SEARCH_HOST --elastic_search_port $ELASTIC_SEARCH_PORT --elastic_search_ssl --formshare_host $FORMSHARE_HOST --formshare_port $FORMSHARE_PORT --forwarded_allow_ip $FORWARDED_ALLOW_IP --pid_file /opt/formshare_gunicorn/formshare.pid --error_log_file /opt/formshare_log/error_log /opt/formshare_config/development.ini
+  else
+    python create_config.py --daemon --capture_output --mysql_use_ssl --mysql_host $MYSQL_HOST_NAME --mysql_user_name $MYSQL_USER_NAME --mysql_user_password $MYSQL_USER_PASSWORD --repository_path /opt/formshare_repository --odktools_path /opt/odktools --elastic_search_host $ELASTIC_SEARCH_HOST --elastic_search_port $ELASTIC_SEARCH_PORT --elastic_search_ssl --formshare_host $FORMSHARE_HOST --formshare_port $FORMSHARE_PORT --forwarded_allow_ip $FORWARDED_ALLOW_IP --pid_file /opt/formshare_gunicorn/formshare.pid --error_log_file /opt/formshare_log/error_log /opt/formshare_config/development.ini
+  fi
 fi
 ln -s /opt/formshare_config/development.ini ./development.ini
 python configure_celery.py ./development.ini

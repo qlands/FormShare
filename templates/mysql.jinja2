@@ -4,8 +4,12 @@ port     = {{ port }}
 user     = {{ user }}
 password = {{ password }}
 default-character-set = utf8mb4
+{% if mysql_use_ssl == False %}
 ssl-mode = DISABLED
+{% endif %}
 [mysqldump]
 column-statistics=0
+{% if mysql_use_ssl == False %}
 ssl-mode = DISABLED
+{% endif %}
 default-character-set = utf8mb4

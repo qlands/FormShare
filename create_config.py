@@ -89,6 +89,7 @@ def main():
     parser.add_argument(
         "--elastic_search_ssl", action="store_true", help="ElasticSearch use SSL"
     )
+    parser.add_argument("--mysql_use_ssl", action="store_false", help="MySQL use SSL")
     args = parser.parse_args()
     formshare_path = "."
 
@@ -112,6 +113,7 @@ def main():
         "mysql_schema": args.mysql_schema,
         "mysql_user_name": args.mysql_user_name,
         "mysql_user_password": args.mysql_user_password,
+        "mysql_use_ssl": args.mysql_use_ssl,
         "main_secret": main_secret,
         "assistant_secret": assistant_secret,
         "auth_secret": auth_secret,

@@ -21,6 +21,7 @@ import io
 import os
 import validators
 import re
+from itsdangerous import URLSafeSerializer
 from babel import Locale
 from formencode.variabledecode import variable_decode
 from formshare import plugins as p
@@ -488,6 +489,8 @@ class PrivateView(object):
         self.checkCSRF = True
         self.queryProjects = True
         self.stripApiResult = False
+        self.token_required = False
+        self.token_data = {}
         self.activeProject = {}
         self.api = False
         locale = Locale(request.locale_name)
@@ -530,6 +533,22 @@ class PrivateView(object):
             self.classResult["system_timezone_name"] = "UTC"
             self.system_timezone_offset = "+00:00"
             self.system_timezone_name = "UTC"
+
+    def get_token_from_data(self, dict_data):
+        key = self.request.registry.settings["aes.key"]
+        auth_s = URLSafeSerializer(key, self.user.login)
+        token = auth_s.dumps(dict_data)
+        return token
+
+    def get_data_from_token(self, token):
+        key = self.request.registry.settings["aes.key"]
+        auth_s = URLSafeSerializer(key, self.user.login)
+        try:
+            data = auth_s.loads(token)
+            return data
+        except Exception as e:
+            log.error("Token error: {}".format(e))
+            return None
 
     def append_to_errors(self, error):
         """
@@ -826,6 +845,13 @@ class PrivateView(object):
             for key, value in dct.items():
                 if isinstance(value, str):
                     dct[key] = value.strip()
+            if self.token_required:
+                if "token" not in dct.keys():
+                    raise HTTPNotFound()
+                token_data = self.get_data_from_token(dct["token"])
+                if token_data is None:
+                    raise HTTPNotFound()
+                self.token_data = token_data
             return dct
         else:
             try:
@@ -835,6 +861,13 @@ class PrivateView(object):
                 for key, value in dct.items():
                     if isinstance(value, str):
                         dct[key] = value.strip()
+                if self.token_required:
+                    if "token" not in dct.keys():
+                        raise HTTPNotFound()
+                    token_data = self.get_data_from_token(dct["token"])
+                    if token_data is None:
+                        raise HTTPNotFound()
+                    self.token_data = token_data
                 return dct
 
     def reload_user_details(self):

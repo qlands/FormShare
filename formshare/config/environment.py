@@ -236,6 +236,6 @@ def load_environment(settings, config, apppath, policy_array):
     wsgi_app = config.make_wsgi_app()
     # Finally called connected plugins to IEnvironment
     for plugin in p.PluginImplementations(p.IEnvironment):
-        plugin.after_environment_load(config)
+        plugin.after_environment_load(config, settings)
 
     return wsgi_app

@@ -1,18 +1,24 @@
 <div class="middle-box text-center animated fadeInDown" style="margin-top: 0px">
     {% block no_forms_info %}
         {% if projectData.access_type < 4 %}
+            {% block big_plus_button %}
             <h1><a data-toggle="modal" data-target="#upload_form"><i class="far fa-plus-square"></i></a></h1>
+            {% endblock big_plus_button %}
         {% endif %}
         <h3 class="font-bold">{{ _('This project has no forms.') }}</h3>
         <div class="error-desc">
             {% if request.h.user_has_role(activeUser,"can_forms") %}
                 {% if projectData.access_type < 4 %}
                     {% if projectData.project_case == 0 %}
-                        <button id="add_form" data-toggle="modal" data-target="#upload_form" type="button" class="btn btn-block btn-outline btn-primary">{{ _('Add new form') }}</button>
+                        {% block no_forms_upload_button %}
+                            <button id="add_form" data-toggle="modal" data-target="#upload_form" type="button" class="btn btn-block btn-outline btn-primary">{{ _('Add new form') }}</button>
+                        {% endblock no_forms_upload_button %}
                     {% else %}
                         {% if projectData.total_case_creators == 0 or (projectData.total_case_creators > 0 and projectData.total_case_creators_with_repository > 0) %}
                             {% if projectData.has_case_lookup_table or forms|length == 0 %}
-                                <button id="add_form" data-toggle="modal" data-target="#upload_form" type="button" class="btn btn-block btn-outline btn-primary">{{ _('Add new form') }}</button>
+                                {% block no_forms_case_upload_button %}
+                                    <button id="add_form" data-toggle="modal" data-target="#upload_form" type="button" class="btn btn-block btn-outline btn-primary">{{ _('Add new form') }}</button>
+                                {% endblock no_forms_case_upload_button %}
                             {% else %}
                                 <button type="button" class="btn btn-block btn-outline btn-default" title="{{ _('Create the case lookup table before adding new forms') }}">{{ _('Add new form (Inactive)') }}</button>
                             {% endif %}

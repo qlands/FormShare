@@ -120,7 +120,9 @@
                                         {% endif %}
                                     {% endif %}
                                     {% if request.h.user_has_role(activeUser,"can_forms") %}
-                                        <li><a id="update_form_btn" class="btn btn-xs btn-white" data-toggle="modal" data-target="#update_form"><i class="fas fa-file-upload"></i> {{ _('Update ODK form') }} </a></li>
+                                        {% block info_tab_update_form_button %}
+                                            <li><a id="update_form_btn" class="btn btn-xs btn-white" data-toggle="modal" data-target="#update_form"><i class="fas fa-file-upload"></i> {{ _('Update ODK form') }} </a></li>
+                                        {% endblock info_tab_update_form_button %}
                                     {% endif %}
                                     {% set data_columns = False %}
                                     {% if form_survey_columns|length > 0 %}

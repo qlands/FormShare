@@ -366,15 +366,18 @@ def update_profile(request, user, profile_data):
     save_point = request.tm.savepoint()
     try:
         request.dbsession.query(User).filter(User.user_id == user).update(mapped_data)
-        request.dbsession.query(UserRoles).filter(UserRoles.user_id == user).delete()
-        for a_role in profile_data["roles"]:
-            role_data = {
-                "user_id": user,
-                "role_id": a_role,
-                "grant_date": datetime.datetime.now(),
-            }
-            new_role = UserRoles(**role_data)
-            request.dbsession.add(new_role)
+        if "roles" in profile_data.keys():
+            request.dbsession.query(UserRoles).filter(
+                UserRoles.user_id == user
+            ).delete()
+            for a_role in profile_data["roles"]:
+                role_data = {
+                    "user_id": user,
+                    "role_id": a_role,
+                    "grant_date": datetime.datetime.now(),
+                }
+                new_role = UserRoles(**role_data)
+                request.dbsession.add(new_role)
 
         request.dbsession.flush()
         return True, ""

@@ -50,6 +50,7 @@ __all__ = [
     "IDatabaseEncryption",
     "IFormFileGenerator",
     "IAuthenticationPolicy",
+    "IRoles"
 ]
 
 

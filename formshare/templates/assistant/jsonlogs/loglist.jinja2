@@ -103,10 +103,16 @@
                             <hr class="hr-line-solid">
                         </div>
                         <div id="posts">
-                            {% for error in errors %}
-                                {% set error_count = loop.index %}
-                                {% include 'assistant/jsonlogs/snippets/error_item.jinja2' %}
-                            {% endfor %}
+                            {% if errors|length > 0 %}
+                                {% for error in errors %}
+                                    {% set error_count = loop.index %}
+                                    {% include 'assistant/jsonlogs/snippets/error_item.jinja2' %}
+                                {% endfor %}
+                            {% else %}
+                                {% if show_my_errors %}
+                                    <h2>You cannot clean errors in this form and don't have errors assigned to you</h2>
+                                {% endif %}
+                            {% endif %}
                         </div>
                     </div>
                 </div>

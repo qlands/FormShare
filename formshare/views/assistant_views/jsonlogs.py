@@ -120,6 +120,9 @@ class JSONList(AssistantView):
             if self.api:
                 start = int(self.request.params.get("start", "0"))
                 page_size = int(self.request.params.get("page_size", "10000"))
+
+            show_my_errors = False
+
             if permissions["enum_canclean"] == 1:
                 errors = get_errors_by_assistant(
                     self.request,
@@ -142,6 +145,8 @@ class JSONList(AssistantView):
                     page_size,
                     status_code,
                 )
+                show_my_errors = True
+
             return {
                 "errors": errors,
                 "num_errors": number_of_errors,
@@ -151,6 +156,7 @@ class JSONList(AssistantView):
                 "allPages": all_pages,
                 "status": status,
                 "project_has_crowdsourcing": self.project_has_crowdsourcing,
+                "show_my_errors": show_my_errors,
             }
         else:
             raise HTTPForbidden()

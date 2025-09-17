@@ -121,15 +121,22 @@ def get_user_roles(request, user_id):
     # These are the basic roles
     roles = ["can_projects", "can_forms"]
     # Call plugins so they can add new roles
+
+    plugins_roles = []
     for plugin in PluginImplementations(IRoles):
-        plugin_roles = plugin.get_roles(request)
-        roles = roles + plugin_roles
+        plugin_roles = plugin.get_roles(request.registry.settings)
+        plugins_roles = plugins_roles + plugin_roles
+
+    for a_role in plugins_roles:
+        roles.append(a_role["role_id"])
+
     # Get the roles from the roles table
     res = (
         request.dbsession.query(UserRoles.role_id)
         .filter(UserRoles.user_id == user_id)
         .all()
     )
+
     final_roles = ["can_projects", "can_forms"]
     # Only add to the final list of roles those that have been defined through plugins
     for a_role in res:
@@ -181,6 +188,7 @@ def get_formshare_user_data(request, user, is_email):
             request.dbsession.query(userModel)
             .filter(func.lower(userModel.user_email) == func.lower(user))
             .filter(userModel.user_active == 1)
+            .filter(userModel.user_is_workspace == 0)
             .first()
         )
     else:
@@ -188,6 +196,7 @@ def get_formshare_user_data(request, user, is_email):
             request.dbsession.query(userModel)
             .filter(userModel.user_id == user)
             .filter(userModel.user_active == 1)
+            .filter(userModel.user_is_workspace == 0)
             .first()
         )
 
@@ -275,6 +284,7 @@ def check_login(user, password, request):
         request.dbsession.query(userModel)
         .filter(userModel.user_id == user)
         .filter(userModel.user_active == 1)
+        .filter(userModel.user_is_workspace == 0)
         .first()
     )
     if result is None:

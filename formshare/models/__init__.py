@@ -33,7 +33,6 @@ from formshare.models.formshare import (
     PartnerForm,
     TimeZone,
     Tenant,
-    UserWorkSpace,
     Roles,
     UserRoles,
 )
@@ -41,6 +40,8 @@ from formshare.models.schema import *
 from sqlalchemy import engine_from_config
 from sqlalchemy.orm import configure_mappers
 from sqlalchemy.orm import sessionmaker
+from formshare.plugins.core import PluginImplementations
+from formshare.plugins.interfaces import IRoles
 
 logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
@@ -141,6 +142,21 @@ def includeme(config):
                         myfile.write(
                             "DROP TABLE {}.{};\n".format(an_schema[0], a_table[0])
                         )
+
+    # Get all plugin roles and try to insert them into the roles table
+    plugins_roles = []
+    for plugin in PluginImplementations(IRoles):
+        plugin_roles = plugin.get_roles(settings)
+        plugins_roles = plugins_roles + plugin_roles
+    for a_role in plugins_roles:
+        sql = "INSERT IGNORE INTO role (role_id, role_name) VALUES ('{}', '{}')".format(
+            a_role["role_id"], a_role["role_name"]
+        )
+        try:
+            engine.execute(sql)
+        except Exception as e:
+            log.error("Unable to add role {} Error: {}".format(a_role.role_id, str(e)))
+
     session_factory = get_session_factory(engine)
     config.registry["dbsession_factory"] = session_factory
     config.registry["dbsession_metadata"] = Base.metadata

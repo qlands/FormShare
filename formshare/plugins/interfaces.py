@@ -2064,9 +2064,9 @@ class IRoles(Interface):
     Plugin into the definition of roles
     """
 
-    def get_roles(self, request):
+    def get_roles(self, settings):
         """Called by FormShare so plugins can add new roles.
-        This function must return an array of roles
+        This function must return an array of roles like {"role_id": "can_action", "role_name": "Description"}
         """
         raise NotImplementedError("get_roles must be implemented in subclasses")
 

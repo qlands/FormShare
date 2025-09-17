@@ -43,6 +43,7 @@ class TokenView(object):
                     self.request.dbsession.query(User)
                     .filter(User.user_apikey == api_key)
                     .filter(User.user_active == 1)
+                    .filter(User.user_is_workspace == 0)
                     .first()
                 )
                 if res is not None:

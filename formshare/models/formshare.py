@@ -587,25 +587,6 @@ class Userproject(Base):
     user = relationship("User")
 
 
-class UserWorkSpace(Base):
-    __tablename__ = "userworkspace"
-
-    workspace_id = Column(
-        ForeignKey("fsuser.user_id", ondelete="CASCADE"),
-        primary_key=True,
-        nullable=False,
-    )
-    user_id = Column(
-        ForeignKey("fsuser.user_id", ondelete="CASCADE"),
-        primary_key=True,
-        nullable=False,
-    )
-    access_date = Column(DateTime)
-    access_type = Column(INTEGER)  # 1=Creator,2=Admin,3=Editor
-
-    __table_args__ = (PrimaryKeyConstraint("workspace_id", "user_id"),)
-
-
 class Collingroup(Base):
     __tablename__ = "collingroup"
     __table_args__ = (

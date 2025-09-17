@@ -297,6 +297,7 @@ def get_user_details(request, user, just_active=True, get_stats=True):
             request.dbsession.query(User)
             .filter(User.user_id == user)
             .filter(User.user_active == 1)
+            .filter(User.user_is_workspace == 0)
             .first()
         )
     else:
@@ -327,6 +328,7 @@ def get_user_name(request, user):
         request.dbsession.query(User)
         .filter(User.user_id == user)
         .filter(User.user_active == 1)
+        .filter(User.user_is_workspace == 0)
         .first()
     )
     if res is not None:
@@ -340,6 +342,7 @@ def get_user_id_with_email(request, email):
         request.dbsession.query(User)
         .filter(func.lower(User.user_email) == func.lower(email))
         .filter(User.user_active == 1)
+        .filter(User.user_is_workspace == 0)
         .first()
     )
     if res is not None:
@@ -423,6 +426,7 @@ def get_user_by_api_key(request, api_key, api_secret, with_stats=True):
         .filter(User.user_apikey == api_key)
         .filter(User.user_apisecret == api_secret)
         .filter(User.user_active == 1)
+        .filter(User.user_is_workspace == 0)
         .first()
     )
     if res is not None:
@@ -470,6 +474,7 @@ def get_user_with_token(request, token):
         request.dbsession.query(User)
         .filter(User.user_apitoken == token)
         .filter(User.user_active == 1)
+        .filter(User.user_is_workspace == 0)
         .filter(User.user_apitoken_expires_on >= datetime.datetime.now())
         .first()
     )

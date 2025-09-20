@@ -108,7 +108,7 @@ def set_collaborator_role(request, project, collaborator, role):
         return False, str(e)
 
 
-def add_collaborator_to_project(request, project, collaborator):
+def add_collaborator_to_project(request, project, collaborator, access_type=4):
     _ = request.translate
     active_projects = (
         request.dbsession.query(Userproject)
@@ -133,7 +133,7 @@ def add_collaborator_to_project(request, project, collaborator):
     new_collaborator = Userproject(
         user_id=collaborator,
         project_id=project,
-        access_type=4,
+        access_type=access_type,
         access_date=datetime.datetime.now(),
         project_active=project_active,
         project_accepted=project_accepted,

@@ -1282,15 +1282,12 @@ def delete_project(request, user, project):
         log.error("Error {} while deleting project {}".format(str(e), project))
         return (
             False,
-            _(
-                "If you have forms with submissions, first you need to delete such forms"
-            ),
+            _("If this project has forms, first you need to delete such forms"),
         )
     except Exception as e:
         save_point.rollback()
         log.error("Error {} while deleting project {}".format(str(e), project))
         return False, str(e)
-    return True, ""
 
 
 def set_project_as_active(request, user, project):

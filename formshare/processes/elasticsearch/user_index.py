@@ -124,6 +124,7 @@ class UserIndexManager(object):
             timeout=700,
             request_timeout=800,
         )
+        connection.ping()
         if connection.ping():
             return connection
         else:

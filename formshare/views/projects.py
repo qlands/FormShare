@@ -567,7 +567,6 @@ class DeleteProjectView(ProjectsView):
                         self.request, user_id, project_id
                     )
             if continue_delete:
-                project_forms = get_all_project_forms(self.request, project_id)
                 self.returnRawViewResult = True
                 deleted, message = delete_project(
                     self.request, self.user.login, project_id
@@ -582,13 +581,10 @@ class DeleteProjectView(ProjectsView):
                     feed_object = Object(project_id, "project")
                     activity = Activity("delete", actor, feed_object)
                     feed_manager.add_activity_feed(activity)
-                    # Deletes the project from the dataset index
-                    delete_dataset_index_by_project(
-                        self.request.registry.settings, project_id
-                    )
+
                     for plugin in p.PluginImplementations(p.IProject):
                         plugin.after_deleting_project(
-                            self.request, user_id, project_id, project_forms
+                            self.request, user_id, project_id, []
                         )
                     self.request.session.flash(
                         self._("The project was deleted successfully")

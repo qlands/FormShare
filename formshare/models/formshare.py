@@ -440,7 +440,7 @@ class Odkform(Base):
     )
 
     project_id = Column(
-        ForeignKey("project.project_id", ondelete="CASCADE"),
+        ForeignKey("project.project_id", ondelete="RESTRICT"),
         primary_key=True,
         nullable=False,
     )
@@ -567,7 +567,7 @@ class Userproject(Base):
     __tablename__ = "userproject"
 
     user_id = Column(
-        ForeignKey("fsuser.user_id", ondelete="CASCADE"),
+        ForeignKey("fsuser.user_id", ondelete="RESTRICT"),
         primary_key=True,
         nullable=False,
     )

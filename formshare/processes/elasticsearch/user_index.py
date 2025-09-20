@@ -282,19 +282,63 @@ class UserIndexManager(object):
         else:
             raise UserNotExistError()
 
-    def query_user(self, q, query_from, query_size):
+    def query_user(self, q, query_from, query_size, tenant_id=None):
         query = q.replace("*", "")
         if query.find("@") == -1:
             if query.find(" ") == -1:
+                if tenant_id is None:
+                    query_dict = {
+                        "query": {
+                            "wildcard": {"all_data": {"value": "*" + query + "*"}}
+                        }
+                    }
+                else:
+                    query_dict = {
+                        "query": {
+                            "bool": {
+                                "must": [
+                                    {
+                                        "wildcard": {
+                                            "all_data": {"value": "*" + query + "*"}
+                                        }
+                                    }
+                                ],
+                                "filter": [{"term": {"tenant_id": tenant_id}}],
+                            }
+                        }
+                    }
+            else:
+                if tenant_id is None:
+                    query_dict = {"query": {"match_phrase": {"all_data": query}}}
+                else:
+                    query_dict = {
+                        "query": {
+                            "bool": {
+                                "must": [{"match_phrase": {"all_data": query}}],
+                                "filter": [{"term": {"tenant_id": tenant_id}}],
+                            }
+                        }
+                    }
+        else:
+            if tenant_id is None:
                 query_dict = {
-                    "query": {"wildcard": {"all_data": {"value": "*" + query + "*"}}}
+                    "query": {"wildcard": {"user_email2": {"value": "*" + query + "*"}}}
                 }
             else:
-                query_dict = {"query": {"match_phrase": {"all_data": query}}}
-        else:
-            query_dict = {
-                "query": {"wildcard": {"user_email2": {"value": "*" + query + "*"}}}
-            }
+                query_dict = {
+                    "query": {
+                        "bool": {
+                            "must": [
+                                {
+                                    "wildcard": {
+                                        "user_email2": {"value": "*" + query + "*"}
+                                    }
+                                }
+                            ],
+                            "filter": [{"term": {"tenant_id": tenant_id}}],
+                        }
+                    }
+                }
         if query_from is not None:
             query_dict["from"] = query_from
         if query_size is not None:

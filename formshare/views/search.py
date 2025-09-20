@@ -9,6 +9,15 @@ class APIUserSearchSelect2(PrivateView):
     def process_view(self):
         index_manager = get_user_index_manager(self.request)
         q = self.request.params.get("q", "")
+
+        allow_cross_tenant_collaboration = self.request.registry.settings.get(
+            "allow_cross_tenant_collaboration", False
+        )
+        if allow_cross_tenant_collaboration:
+            tenant_id = None
+        else:
+            tenant_id = self.user.tenant
+
         include_me = self.request.params.get("include_me", "False")
         if include_me == "False":
             include_me = False
@@ -23,12 +32,12 @@ class APIUserSearchSelect2(PrivateView):
         self.returnRawViewResult = True
         if q is not None:
             q = q.lower()
-            query_result, total = index_manager.query_user(q, 0, query_size)
+            query_result, total = index_manager.query_user(q, 0, query_size, tenant_id)
             if total > 0:
                 collection = list(range(total))
                 page = paginate.Page(collection, current_page, 10)
                 query_result, total = index_manager.query_user(
-                    q, page.first_item - 1, query_size
+                    q, page.first_item - 1, query_size, tenant_id
                 )
                 select2_result = []
                 for result in query_result:

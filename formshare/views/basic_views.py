@@ -598,6 +598,10 @@ class RegisterView(PublicView):
     def process_view(self):
         if self.request.registry.settings["auth.register_users_via_web"] == "false":
             raise HTTPNotFound()
+
+        if self.request.registry.settings.get("auth.use_roles", "false") == "true":
+            raise HTTPNotFound()
+
         # If we logged in then go to dashboard
         if self.request.method == "GET":
             data = {}
@@ -653,12 +657,7 @@ class RegisterView(PublicView):
                                         self.request, data["user_password"]
                                     )
                                 data["user_active"] = 1
-
-                                user_roles = []
-                                if "roles" not in data.keys():
-                                    user_roles.append("can_forms")
-                                    user_roles.append("can_projects")
-                                data["roles"] = user_roles
+                                data["roles"] = ["can_projects", "can_forms"]
 
                                 if "user_tenant" not in data.keys():
                                     data["user_tenant"] = "main"

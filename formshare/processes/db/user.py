@@ -12,6 +12,7 @@ from formshare.models import (
     Odkform,
     Project,
     TimeZone,
+    Tenant,
 )
 from sqlalchemy import create_engine
 from sqlalchemy import func
@@ -40,6 +41,7 @@ __all__ = [
     "update_api_key",
     "get_user_with_token",
     "get_user_roles",
+    "get_tenants",
 ]
 
 logging.setLoggerClass(SecretLogger)
@@ -289,6 +291,11 @@ def get_user_roles(request, user):
     for role in res:
         user_roles.append(role["role_id"])
     return user_roles
+
+
+def get_tenants(request):
+    res = request.dbsession.query(Tenant).all()
+    return map_from_schema(res)
 
 
 def get_user_details(request, user, just_active=True, get_stats=True):

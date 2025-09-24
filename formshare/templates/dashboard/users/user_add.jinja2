@@ -6,11 +6,17 @@
 {% block css %}
     {{ super() }}
     {% cssresource request,'formshare','switchery' %}
+    {% if use_roles or use_tenants %}
+        {% cssresource request,'formshare','select2' %}
+    {% endif %}
 {% endblock css %}
 
 {% block topScripts %}
     {{ super() }}
     {% jsresource request,'formshare','switchery' %}
+    {% if use_roles or use_tenants %}
+        {% jsresource request,'formshare','select2' %}
+    {% endif %}
 {% endblock topScripts %}
 
 {% block breadcrumbs %}
@@ -48,6 +54,13 @@
         $(document).ready(function() {
             var elem = document.querySelector('.js-switch');
             var switchery = new Switchery(elem, { color: '#1AB394' });
+
+            {% if use_roles %}
+                $("#user_roles").select2();
+            {% endif %}
+            {% if use_tenants %}
+                $("#user_tenant").select2();
+            {% endif %}
         });
     </script>
 {% endblock scripts %}

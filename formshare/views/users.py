@@ -17,6 +17,7 @@ from formshare.processes.db import (
     user_exists,
     register_user,
     get_user_roles,
+    get_tenants,
 )
 from formshare.processes.db.user import update_password
 from formshare.processes.elasticsearch.user_index import get_user_index_manager
@@ -73,6 +74,20 @@ class EditUserView(PrivateView):
                 raise HTTPNotFound
         user_data = get_user_details(self.request, user_to_modify, False)
         user_roles = get_user_roles(self.request, user_to_modify)
+        tenants = get_tenants(self.request)
+
+        available_roles = [
+            {"role_id": "can_projects", "role_name": "Can create projects"},
+            {"role_id": "can_forms", "role_name": "Can upload forms"},
+        ]
+        for plugin in p.PluginImplementations(p.IRoles):
+            plugin_roles = plugin.get_roles(self.request.registry.settings)
+            available_roles = available_roles + plugin_roles
+
+        for a_role in available_roles:
+            if "role_internal" not in a_role.keys():
+                a_role["role_internal"] = False
+
         if not user_data:
             raise HTTPNotFound
         if self.request.method == "POST":
@@ -101,16 +116,27 @@ class EditUserView(PrivateView):
                         else:
                             user_details["user_super"] = 0
 
-                        user_roles = []
-                        if "roles" in user_details.keys():
-                            if isinstance(user_details["roles"], list):
-                                user_roles = user_details["roles"]
-                            else:
-                                user_roles.append(user_details["roles"])
-                        user_details["roles"] = user_roles
+                        if (
+                            self.request.registry.settings.get(
+                                "auth.use_roles", "false"
+                            )
+                            == "true"
+                        ):
+                            user_roles = []
+                            if "roles" in user_details.keys():
+                                if isinstance(user_details["roles"], list):
+                                    user_roles = user_details["roles"]
+                                else:
+                                    user_roles.append(user_details["roles"])
+                            user_details["roles"] = user_roles
+                        else:
+                            user_details["roles"] = ["can_projects", "can_forms"]
 
-                        if "user_tenant" not in user_details.keys():
-                            user_details["user_tenant"] = "main"
+                        if self.user.tenant == "main":
+                            if "user_tenant" not in user_details.keys():
+                                user_details["user_tenant"] = "main"
+                        else:
+                            user_details["user_tenant"] = self.user.tenant
 
                         if "user_active" in user_details.keys():
                             user_details["user_active"] = 1
@@ -242,11 +268,29 @@ class EditUserView(PrivateView):
                     self.append_to_errors(self._("The password cannot be empty"))
         else:
             action = None
+
+        if self.request.registry.settings.get("auth.use_roles", "false") == "true":
+            use_roles = True
+        else:
+            use_roles = False
+
+        if self.request.registry.settings.get("auth.use_tenants", "false") == "true":
+            if self.user.tenant == "main":
+                use_tenants = True
+            else:
+                use_tenants = False
+        else:
+            use_tenants = False
+
         return {
             "userid": user_id,
             "userData": user_data,
             "action": action,
             "user_roles": user_roles,
+            "available_roles": available_roles,
+            "use_roles": use_roles,
+            "tenants": tenants,
+            "use_tenants": use_tenants,
         }
 
 
@@ -272,6 +316,18 @@ class AddUserView(PrivateView):
                 raise HTTPNotFound
         user_details = {}
         user_roles = []
+
+        available_roles = [
+            {"role_id": "can_projects", "role_name": "Can create projects"},
+            {"role_id": "can_forms", "role_name": "Can upload forms"},
+        ]
+
+        for plugin in p.PluginImplementations(p.IRoles):
+            plugin_roles = plugin.get_roles(self.request.registry.settings)
+            available_roles = available_roles + plugin_roles
+
+        tenants = get_tenants(self.request)
+
         if self.request.method == "POST":
             user_details = self.get_post_dict()
             if re.match(r"^[A-Za-z0-9._]+$", user_details["user_id"]):
@@ -318,15 +374,39 @@ class AddUserView(PrivateView):
                                     else:
                                         user_details["user_super"] = 0
 
-                                    if "roles" in user_details.keys():
-                                        if isinstance(user_details["roles"], list):
-                                            user_roles = user_details["roles"]
-                                        else:
-                                            user_roles.append(user_details["roles"])
-                                    user_details["roles"] = user_roles
+                                    if (
+                                        self.request.registry.settings.get(
+                                            "auth.use_roles", "false"
+                                        )
+                                        == "true"
+                                    ):
+                                        if "roles" in user_details.keys():
+                                            if isinstance(user_details["roles"], list):
+                                                user_roles = user_details["roles"]
+                                            else:
+                                                user_roles.append(user_details["roles"])
+                                        user_details["roles"] = user_roles
+                                    else:
+                                        user_details["roles"] = [
+                                            "can_projects",
+                                            "can_forms",
+                                        ]
 
-                                    if "user_tenant" not in user_details.keys():
-                                        user_details["user_tenant"] = "main"
+                                    if self.user.tenant == "main":
+                                        if "user_tenant" not in user_details.keys():
+                                            user_details["user_tenant"] = "main"
+                                    else:
+                                        user_details["user_tenant"] = self.user.tenant
+
+                                    if user_details["user_tenant"] != "main":
+                                        user_details["user_id"] = (
+                                            user_details["user_tenant"]
+                                            + "_"
+                                            + user_details["user_id"]
+                                        )
+                                        user_details["user_id"] = user_details[
+                                            "user_id"
+                                        ].replace("__", "_")
 
                                     user_details["user_password"] = encoded_password
                                     user_details.pop("user_password2", None)
@@ -435,5 +515,25 @@ class AddUserView(PrivateView):
                         "and dot are allowed"
                     )
                 )
+        if self.request.registry.settings.get("auth.use_roles", "false") == "true":
+            use_roles = True
+        else:
+            use_roles = False
 
-        return {"userid": user_id, "userData": user_details, "user_roles": user_roles}
+        if self.request.registry.settings.get("auth.use_tenants", "false") == "true":
+            if self.user.tenant == "main":
+                use_tenants = True
+            else:
+                use_tenants = False
+        else:
+            use_tenants = False
+
+        return {
+            "userid": user_id,
+            "userData": user_details,
+            "user_roles": user_roles,
+            "available_roles": available_roles,
+            "use_roles": use_roles,
+            "tenants": tenants,
+            "use_tenants": use_tenants,
+        }

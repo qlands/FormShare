@@ -6,11 +6,17 @@
 {% block css %}
     {{ super() }}
     {% cssresource request,'formshare','switchery' %}
+    {% if use_roles or use_tenants %}
+        {% cssresource request,'formshare','select2' %}
+    {% endif %}
 {% endblock css %}
 
 {% block topScripts %}
     {{ super() }}
     {% jsresource request,'formshare','switchery' %}
+    {% if use_roles or use_tenants %}
+        {% jsresource request,'formshare','select2' %}
+    {% endif %}
 {% endblock topScripts %}
 
 {% block breadcrumbs %}
@@ -95,6 +101,13 @@
             $('#gensecret').click(function () {
                 $('#user_apisecret').val(genRanHex(32));
             });
+
+            {% if use_roles %}
+                $("#user_roles").select2();
+            {% endif %}
+            {% if use_tenants %}
+                $("#user_tenant").select2();
+            {% endif %}
 
         });
     </script>

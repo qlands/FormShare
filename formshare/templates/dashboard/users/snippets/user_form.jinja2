@@ -33,17 +33,45 @@
             </div>
             <div class="hr-line-dashed"></div>
         {% endblock user_form_passwords %}
+
+        {% block user_form_roles %}
+            {% if use_roles %}
+                <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Roles') }}</label>
+                    <div class="col-sm-10">
+                        <select name="roles" multiple="multiple" id="user_roles" style="width: 100%">
+                            {% for a_role in available_roles %}
+                                {% if not a_role.role_internal %}
+                                    <option value="{{ a_role.role_id }}" {% if a_role.role_id in user_roles %} selected {% endif %}>{{ a_role.role_name }}</option>
+                                {% endif %}
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="hr-line-dashed"></div>
+            {% endif %}
+        {% endblock user_form_roles %}
+
+        {% block user_form_tenant %}
+            {% if use_tenants %}
+                <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Tenant') }}</label>
+                    <div class="col-sm-10">
+                        <select name="user_tenant" id="user_tenant" style="width: 25%">
+                            {% for a_tenant in tenants %}
+                                <option value="{{ a_tenant.tenant_id }}" {% if userData.user_tenant == a_tenant.tenant_id %} selected {% endif %}>{{ a_tenant.tenant_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="hr-line-dashed"></div>
+            {% endif %}
+        {% endblock user_form_tenant %}
+
+        <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Is super user') }}</label>
+            <div class="col-sm-10"><input type="checkbox" name="user_super" class="js-switch" {% if userData|length > 0 %} {% if userData.user_super == 1 %}checked{% endif %}{% endif %} /></div>
+        </div>
+        <div class="hr-line-dashed"></div>
         {% block user_form_controls_extra %}
-            {# Note: By default we send this to the process of creating users. This can be overwriten by plugins #}
-            <select name="roles"  multiple="multiple" style="display:none;">
-                <option value="can_forms" selected >{{ _("Can upload forms") }}</option>
-                <option value="can_projects" selected >{{ _("Can create projects") }}</option>
-            </select>
-            {# End of note #}
-            <div class="form-group row"><label class="col-sm-2 col-form-label">{{ _('Is super user') }}</label>
-                <div class="col-sm-10"><input type="checkbox" name="user_super" class="js-switch" {% if userData|length > 0 %} {% if userData.user_super == 1 %}checked{% endif %}{% endif %} /></div>
-            </div>
-            <div class="hr-line-dashed"></div>
+
         {% endblock user_form_controls_extra %}
         {% block user_form_actions %}
             <div class="form-group row">

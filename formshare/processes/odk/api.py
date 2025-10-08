@@ -2670,7 +2670,7 @@ def get_xml_form(request, project, form):
         response.content_disposition = 'attachment; filename="' + file_name + '"'
         return response
     else:
-        raise HTTPNotFound()
+        return None
 
 
 def get_media_file(request, project_id, form_id, file_id):

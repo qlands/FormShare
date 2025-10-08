@@ -1,3 +1,5 @@
+from webob.exc import HTTPNotFound
+
 from formshare.processes.db import (
     get_project_id_from_name,
     is_assistant_active,
@@ -248,7 +250,11 @@ class ODKXMLForm(ODKView):
                             if self.authorize(
                                 get_assistant_password(self.request, assistant_uuid)
                             ):
-                                return get_xml_form(self.request, project_id, form_id)
+                                res = get_xml_form(self.request, project_id, form_id)
+                                if res is not None:
+                                    return res
+                                else:
+                                    return self.ask_for_credentials()
                             else:
                                 return self.ask_for_credentials()
                         else:
@@ -256,9 +262,17 @@ class ODKXMLForm(ODKView):
                     else:
                         return self.ask_for_credentials()
                 else:
-                    return get_xml_form(self.request, project_id, form_id)
+                    res = get_xml_form(self.request, project_id, form_id)
+                    if res is not None:
+                        return res
+                    else:
+                        return self.ask_for_credentials()
             else:
-                return get_xml_form(self.request, project_id, form_id)
+                res = get_xml_form(self.request, project_id, form_id)
+                if res is not None:
+                    return res
+                else:
+                    raise HTTPNotFound
         else:
             response = Response(status=404)
             return response

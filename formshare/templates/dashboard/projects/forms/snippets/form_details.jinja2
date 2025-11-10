@@ -1,6 +1,12 @@
 <div class="row">
     <div class="col-lg-6">
         {% block form_details_header %}
+            {% if formDetails.form_schema != None %}
+                <dl class="row mb-0">
+                    <div class="col-sm-4 text-sm-right"><dt>{{ _('Database ID') }}:</dt> </div>
+                    <div class="col-sm-8 text-sm-left"><dd class="mb-1">{{ formDetails.form_schema }}</dd> </div>
+                </dl>
+            {% endif %}
             <dl class="row mb-0">
                 <div class="col-sm-4 text-sm-right"><dt>{{ _('Created by') }}:</dt> </div>
                 <div class="col-sm-8 text-sm-left"><dd class="mb-1">{{ formDetails.pubby.user_name }}</dd> </div>

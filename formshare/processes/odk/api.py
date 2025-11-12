@@ -480,6 +480,10 @@ def check_jxform_file(
                 )
 
                 # Remove any note or notes columns
+                remove_column_from_array("fa", extra_columns_in_survey)
+                remove_column_from_array("fa", extra_columns_in_choices)
+                remove_column_from_array("fa::testing", extra_columns_in_survey)
+                remove_column_from_array("fa::testing", extra_columns_in_choices)
                 remove_column_from_array("note", extra_columns_in_survey)
                 remove_column_from_array("note", extra_columns_in_choices)
                 remove_column_from_array("notes", extra_columns_in_survey)

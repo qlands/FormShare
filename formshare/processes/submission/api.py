@@ -907,6 +907,9 @@ def field_is_editable(field_name):
         "_latitude",
         "instanceid",
         "rowuuid",
+        "root_rowuuid",
+        "_lastupdate",
+        "_cellid",
         "rowindex",
     ]
     if field_name in read_only_fields:

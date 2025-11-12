@@ -1055,6 +1055,8 @@ class AssistantView(object):
                     self.assistant = get_assistant_data(
                         self.project_assistant, token_assistant, self.request
                     )
+                    self.assistantUUID = self.assistant.loginUUID
+
                     if self.assistant is None:
                         response = Response(
                             content_type="application/json",

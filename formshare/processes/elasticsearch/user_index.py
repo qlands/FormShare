@@ -60,15 +60,12 @@ def _get_user_index_definition(number_of_shards, number_of_replicas):
         },
         "mappings": {
             "properties": {
-                "user_id": {"type": "keyword", "copy_to": "all_data"},
-                "user_email": {
-                    "type": "text",
-                    "copy_to": ["all_data", "user_email2"],
-                },
-                "user_name": {"type": "text", "copy_to": "all_data"},
-                "all_data": {"type": "text", "analyzer": "standard"},
+                "user_id": {"type": "keyword", "copy_to": ["all_data"]},
+                "user_email": {"type": "text", "copy_to": ["all_data", "user_email2"]},
                 "user_email2": {"type": "text", "analyzer": "email"},
-                "tenant_id": {"type": "text", "copy_to": "all_data"},
+                "user_name": {"type": "text", "copy_to": ["all_data"]},
+                "tenant_id": {"type": "text", "copy_to": ["all_data"]},
+                "all_data": {"type": "text", "analyzer": "standard"},
             }
         },
     }
@@ -112,16 +109,16 @@ class UserIndexManager(object):
                 raise ValueError("URL prefix must be string")
         if not isinstance(self.use_ssl, bool):
             raise ValueError("Use SSL must be boolean")
-        cnt_params = {"host": self.host, "port": self.port}
+        cnt_params = {"host": self.host, "port": self.port, "scheme": self.scheme}
         if self.url_prefix is not None:
             cnt_params["url_prefix"] = self.url_prefix
         if self.use_ssl:
             cnt_params["use_ssl"] = self.use_ssl
         connection = Elasticsearch(
             [cnt_params],
+            basic_auth=(self.user_name, self.user_password),
             max_retries=100,
             retry_on_timeout=True,
-            timeout=700,
             request_timeout=800,
         )
         connection.ping()
@@ -137,6 +134,10 @@ class UserIndexManager(object):
         for more information about shards and replicas
         :param settings: Pyramid settings.
         """
+
+        self.user_name = settings.get("elasticsearch.user.name", "empty")
+        self.user_password = settings.get("elasticsearch.user.password", "empty")
+        self.scheme = settings.get("elasticsearch.user.scheme", "http")
 
         try:
             self.host = settings["elasticsearch.user.host"]
@@ -179,10 +180,10 @@ class UserIndexManager(object):
 
         connection = self.create_connection()
         if connection is not None:
-            if not connection.indices.exists(self.index_name):
+            if not connection.indices.exists(index=self.index_name):
                 try:
                     connection.indices.create(
-                        self.index_name,
+                        index=self.index_name,
                         body=_get_user_index_definition(
                             number_of_shards, number_of_replicas
                         ),

@@ -10,6 +10,7 @@ from formshare.processes.elasticsearch.partner_index import (
 from formshare.processes.elasticsearch.record_index import create_record_index
 from formshare.processes.elasticsearch.repository_index import create_dataset_index
 from formshare.processes.elasticsearch.user_index import configure_user_index_manager
+from requests.auth import HTTPBasicAuth
 
 logging.setLoggerClass(SecretLogger)
 log = logging.getLogger("formshare")
@@ -18,16 +19,18 @@ log = logging.getLogger("formshare")
 def configure_indexes(settings):
     es_host = settings.get("elasticsearch.repository.host", "localhost")
     es_port = settings.get("elasticsearch.repository.port", 9200)
-    use_ssl = settings.get("elasticsearch.repository.use_ssl", "False")
+
+    es_user = settings.get("elasticsearch.user.name", "empty")
+    es_password = settings.get("elasticsearch.user.password", "empty")
+    es_scheme = settings.get("elasticsearch.user.scheme", "http")
+
     ready = False
     print("Waiting for ES to be ready")
     while not ready:
-        if use_ssl == "False":
-            resp = requests.get("http://{}:{}/_cluster/health".format(es_host, es_port))
-        else:
-            resp = requests.get(
-                "https://{}:{}/_cluster/health".format(es_host, es_port)
-            )
+        resp = requests.get(
+            "{}://{}:{}/_cluster/health".format(es_scheme, es_host, es_port),
+            auth=HTTPBasicAuth(es_user, es_password),
+        )
         data = resp.json()
         if data["status"] == "yellow" or data["status"] == "green":
             ready = True
@@ -35,14 +38,17 @@ def configure_indexes(settings):
             time.sleep(30)
     print("ES is ready")
 
-    resp = requests.get("http://{}:{}/".format(es_host, es_port))
+    resp = requests.get(
+        "{}://{}:{}/".format(es_scheme, es_host, es_port),
+        auth=HTTPBasicAuth(es_user, es_password),
+    )
     data = resp.json()
     version = data["version"]["number"].split(".")
-    if version[0] != "7":
-        log.error("This version of FormShare requires ElasticSearch version 7.14.X")
+    if version[0] != "9":
+        log.error("This version of FormShare requires ElasticSearch version 9.2.X")
     else:
-        if version[1] != "14":
-            log.error("This version of FormShare requires ElasticSearch version 7.14.X")
+        if version[1] != "2":
+            log.error("This version of FormShare requires ElasticSearch version 9.2.X")
 
     # Load the feeds manager
     configure_manager(settings)

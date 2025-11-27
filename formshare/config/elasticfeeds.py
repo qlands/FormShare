@@ -2,6 +2,10 @@ from elasticfeeds.manager import Manager
 
 
 def configure_manager(settings):
+    es_user = settings.get("elasticsearch.user.name", "empty")
+    es_password = settings.get("elasticsearch.user.password", "empty")
+    es_scheme = settings.get("elasticsearch.user.scheme", "http")
+
     try:
         host = settings["elasticfeeds.host"]
     except KeyError:
@@ -74,6 +78,9 @@ def configure_manager(settings):
         network_index,
         host,
         port,
+        es_user,
+        es_password,
+        es_scheme,
         url_prefix,
         use_ssl,
         number_of_shards_in_feeds,

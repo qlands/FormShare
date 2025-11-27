@@ -37,8 +37,8 @@ def _get_record_index_definition(number_of_shards, number_of_replicas):
         },
         "mappings": {
             "properties": {
-                "project_id": {"type": "keyword"},
                 "form_id": {"type": "keyword"},
+                "project_id": {"type": "keyword"},
                 "schema": {"type": "keyword"},
                 "table": {"type": "keyword"},
             }
@@ -52,6 +52,10 @@ def create_connection(settings):
     Creates a connection to ElasticSearch and pings it.
     :return: A tested (pinged) connection to ElasticSearch
     """
+    user_name = settings.get("elasticsearch.user.name", "empty")
+    user_password = settings.get("elasticsearch.user.password", "empty")
+    scheme = settings.get("elasticsearch.user.scheme", "http")
+
     try:
         host = settings["elasticsearch.records.host"]
     except KeyError:
@@ -76,16 +80,16 @@ def create_connection(settings):
     except KeyError:
         use_ssl = False
 
-    cnt_params = {"host": host, "port": port}
+    cnt_params = {"host": host, "port": port, "scheme": scheme}
     if url_prefix is not None:
         cnt_params["url_prefix"] = url_prefix
     if use_ssl:
         cnt_params["use_ssl"] = use_ssl
     connection = Elasticsearch(
         [cnt_params],
+        basic_auth=(user_name, user_password),
         max_retries=100,
         retry_on_timeout=True,
-        timeout=700,
         request_timeout=800,
     )
     connection.ping()
@@ -121,7 +125,7 @@ def _get_record_search_dict(project_id, form_id):
 
 def index_exists(connection, index_name):
     if connection is not None:
-        if connection.indices.exists(index_name):
+        if connection.indices.exists(index=index_name):
             return True
         else:
             return False
@@ -146,7 +150,7 @@ def create_record_index(settings):
         if not index_exists(connection, index_name):
             try:
                 connection.indices.create(
-                    index_name,
+                    index=index_name,
                     body=_get_record_index_definition(
                         number_of_shards, number_of_replicas
                     ),

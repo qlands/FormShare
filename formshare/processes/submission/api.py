@@ -1,6 +1,6 @@
 import datetime
 import glob
-import imghdr
+import filetype
 import json
 import logging
 from formshare.processes.logging.loggerclass import SecretLogger
@@ -124,11 +124,7 @@ def list_submission_media_files(request, project, form, submission):
     files = glob.glob(submissions_path)
     if files:
         for file in files:
-            image = imghdr.what(file)
-            if image is None:
-                image = False
-            else:
-                image = True
+            image = filetype.is_image(file)
             files_array.append({"file": os.path.basename(file), "image": image})
             if image:
                 thumbnail_file = os.path.join(

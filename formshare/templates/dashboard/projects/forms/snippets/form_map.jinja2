@@ -19,7 +19,11 @@
         {% block form_map_content %}
             <div id="mapbox">
                 {% if formDetails.submissions > 0 and formDetails.form_geopoint != None and withgps > 0 %}
-                    <div id="projmap" style="height: 600px"></div>
+                    <div id="projmap" style="height:600px; position:relative;">
+                    {% block map_internal_content %}
+
+                    {% endblock map_internal_content %}
+                    </div>
                 {% else %}
                     {% if formDetails.form_geopoint == None %}
                         {{ _('This form is not geo-referenced') }}

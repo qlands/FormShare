@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-    formshare.resources.resources
-    ~~~~~~~~~~~~~~~~~~
+formshare.resources.resources
+~~~~~~~~~~~~~~~~~~
 
-    Provides the basic view classes for FormShare and
-    the Digest Authorization for ODK
+Provides the basic view classes for FormShare and
+the Digest Authorization for ODK
 
-    :copyright: (c) 2017 by QLands Technology Consultants.
-    :license: AGPL, see LICENSE for more details.
+:copyright: (c) 2017 by QLands Technology Consultants.
+:license: AGPL, see LICENSE for more details.
 """
 
 import datetime

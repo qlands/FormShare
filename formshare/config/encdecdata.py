@@ -3,7 +3,7 @@ import logging
 from formshare.processes.logging.loggerclass import SecretLogger
 import traceback
 
-from Crypto.Cipher import AES
+# from Crypto.Cipher import AES
 from cryptography.fernet import Fernet
 
 logging.setLoggerClass(SecretLogger)
@@ -18,13 +18,7 @@ def old_decode_data_with_key(data, key):  # pragma: no cover
     :param key: Key to use
     :return:
     """
-    byte_padding = b"|"
-
-    def decode_aes(c, e):
-        return c.decrypt(base64.b64decode(e)).rstrip(byte_padding)
-
-    cipher = AES.new(key, 1)
-    return decode_aes(cipher, data)
+    raise NotImplementedError()
 
 
 def encode_data(request, data):
